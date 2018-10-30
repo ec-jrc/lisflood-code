@@ -1,10 +1,12 @@
-# About this user guide
+## About this user guide
 
-```R
-  # Needs to be revised. A link to the "LISFLOOD model description" (separate document) is essential
-```
-This revised __User Manual__ documents LISFLOOD version December 1 2013, and replaces all previous documentation of the model (e.g. van der Knijff & de Roo, 2008; de Roo *et. al.*, 2003). The scope of this document is to give model users all the information that is needed for successfully using LISFLOOD.
-Chapter 2 explains the theory behind the model, including all model equations and the changes to the previous version. The remaining chapters cover all practical aspects of working with LISFLOOD. Chapter 3 to 8 explains how to setup LISFLOOD, how to modify the settings and the outputs.
-A series of Annexes at the end of this document describe some optional features that can be activated  when running the model. Most model users will not need these features (which are disabled by default), and for the sake of clarity we therefore decided to keep their description out of the main text. The  current document does not cover the calculation of the potential evapo (transpi)ration rates that are  needed as input to the model. A separate pre-processor (LISVAP) exists that calculates these variables  from standard (gridded) meteorological observations. LISVAP is documented in a separate volume (van  der Knijff, 2006). 
+This Github repository contains beside the latest stable version of the LISFLOOD code, this LISFLOOD User Guide. It is most up-to-date and complete user instruction of the LISFLOOD model. It contains a detaied step-by-step guide on what you need to do and know through the whole chain from the system requirements to receiving the LISFLOOD output. In order to apply this knowledge into practise we have created two use cases, one in Germany (Mulde catchemnt) and one in Brasil (), which should help you to set up and test the model on your PC. Once you have mastered this step, you can check and verify that the model has been installed and used by you correctly. Then it will be time for you to move onto your own set-up whereever you like to model.
 
-[:top:](#top)
+In order to ease the set-up of your own catchment we have created another Github repository called lisflood-utilities that contains all kind of useful tools that should help you preparing your own set-up. Each tool is documented and will explain you how to use it.
+
+Note, this document is **not a LISFLOOD model documentation!** The [lisflood-model repository](https://ec-jrc.github.io/lisflood-model/) contains the most up-to-date and complete technical documentation of the LISFLOOD model. This includes all the concepts and model equations of all the standard LISFLOOD processes, but also all the optional modulars. 
+
+Lastly, we also share with you two other tools: 1) LISVAP, our tool to calculate the evapotranspiration and 2) our calibration tool that we are developed. They can be found including user documentation in their respective repositories: 
+<span style="color:red"> **INSERT NAMES HERE**</span>.
+
+[🔝](#top)
