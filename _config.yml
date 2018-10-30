@@ -16,7 +16,7 @@ minimal_mistakes_skin    : "default" # "air", "aqua", "contrast", "dark", "dirt"
 
 # Site Settings
 locale                   : "en-US"
-title                    : "Lisflood User Guide"
+title                    : "LISFLOOD"
 title_separator          : "-"
 name                     : "JRC D2,E1"
 description              : "Lisflood User Guide"
