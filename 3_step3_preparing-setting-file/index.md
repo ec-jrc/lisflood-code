@@ -1,18 +1,10 @@
-## Step 3: Preparing the Settings file
+# Step 3: Preparing the Settings file
 
 ```R
   # Add more detail to all those steps!!
 ```
 
-•	specify the file path
-•	time related specifications
-•	parameter options
-•	chose optional model routines (which ones are available; what they do; and how to “activate” them)
-
-
-
-This chapter describes how to prepare your own settings file. Instead of writing the settings file completely from scratch, we suggest to use the settings template that is provided with LISFLOOD as a starting point. In
-order to use the template, you should make sure the following requirements are met:
+This page describes how to prepare your own settings file. Instead of writing the settings file completely from scratch, we suggest to use the settings template that is provided with LISFLOOD as a starting point. In order to use the template, you should make sure the following requirements are met:
 
   -   All input maps and tables are named according to default file names (see **Chapter XXXX** and **Annex XXXX**)
   -   All base maps are in the right directories
@@ -22,6 +14,14 @@ order to use the template, you should make sure the following requirements are m
   -   An (empty) directory where all model data can be written exists
 
 If this is all true, the settings file can be prepared very quickly by editing the items in the 'lfuser' element. The following is a detailed description of the different sections of the 'lfuser' element. The present LISFLOOD version contains process-related parameters (not taking into account the parameters that are defined through the maps). These are all defined in the 'lfuser' element, and default values are given for each of them. Even though *any* of these parameters can be treated as calibration constants, doing so for *all* of them would lead to serious over-parameterisation problems. In the description of these parameters we will therefore provide some suggestions as to which parameters should be used for calibration, and which one are better left untouched.
+
+For simplicity reasons, we suggest to follow the following steps:
+1)	specify the file path
+2)	time related specifications
+3) 	parameter options
+4)	chose optional model routines (which ones are available; what they do; and how to “activate” them)
+
+
 
 ### Time-related constants
 
@@ -411,85 +411,6 @@ This category only contains one parameter at the moment, which can only be a sin
 **CourantCrit** ($C_{crit}$ in Eq 2-36) is the critical Courant number which controls the numerical accuracy of the simulated soil moisture fluxes [-]. Any value between 0 and 1 can be used, but using values that are too high can lead to unrealistic "jumps" in the simulated soil moisture, whereas very low values result in reduced computational performance (because many iterations will be necessary to obtain the required accuracy). Values above 1 should never be used, as they will result in a loss of mass balance. In most cases the default value of 0.4 results in sufficiently realistic simulations using just a few iterations.
 
 
-### File paths 
-
-Here you can specify where all the input files are located, and where output should be written. Note that you can use both forward and backward slashes on both Windows and Linux-based systems without any problem (when LISFLOOD reads the settings file it automatically formats these paths according to the conventions used by the operating system used). The default settings template contains relative paths, which in most cases allows you to run the model directly without changing these settings (assuming that you execute LISFLOOD from the root directory of your catchment).
-
-```xml
-	<comment>                                                           
-	**************************************************************               
-	FILE PATHS                                                            
-	**************************************************************               
-	</comment>                                                          
-	<textvar name="PathOut" value="./out">                          
-	<comment>                                                           
-	Output path                                                           
-	</comment>                                                          
-	</textvar>                                                          
-	<textvar name="PathInit" value="./out">                         
-	<comment>                                                           
-	Path of the initial value maps e.g. lzavin.map                        
-	</comment>                                                          
-	</textvar>                                                          
-	<textvar name="PathMaps" value="./maps">                        
-	<comment>                                                           
-	Maps path                                                             
-	</comment>                                                          
-	</textvar>                                                          
-	<textvar name="PathSoilHyd" value="./maps/soilhyd">             
-	<comment>                                                           
-	Maps instead tables for soil hydraulics path                          
-	</comment>                                                          
-	</textvar>                                                          
-	<textvar name="PathMapsFraction" value="./maps/fraction">       
-	<comment>                                                           
-	Maps of fraction of land cover (forest, water, sealed,other)          
-	</comment>                                                          
-	</textvar                                                            
-	<textvar name="PathMapsTables" value="./maps/table2map">        
-	<comment>                                                           
-	Maps which replaced tables e.g. CropCoeff                             
-	/comment>                                                            
-	</textvar>                                                          
-	<textvar name="PathTables" value="./tables">                    
-	<comment>                                                           
-	Tables path                                                           
-	</comment>                                                          	
-	</textvar>                                                          
-	<textvar name="PathMeteo" value="./meteo">                      
-	<comment>                                                           
-	Meteo path                                                            
-	</comment>                                                          
-	</textvar>                                                          
-	<textvar name="PathLAI" value="./lai">                          
-	<comment>                                                           
-	Leaf Area Index maps path                                             
-	</comment>                                                          
-	</textvar>                                                          
-	<textvar name="PathWaterUse" value="./wateruse">                
-	<comment>                                                           
-	Water use maps path                                                   
-	</comment>                                                          
-	</textvar>                                                          
-```
-
-**PathOut** is the directory where all output files are written. It must be an existing directory (if not you will get an error message -- not immediately but after 256 timesteps, when the time series are written for the first time)
-
-**PathInit** is the directory where the initial files are located, to initialize a "warm" start. It can be also the PathOut directory
-
-**PathMaps** is the directory where all input base maps are located **PathSoilHyd** is the directory where the soil hydraulic property maps are located
-
-**PathMapsFraction** is the directory where the land cover fraction maps are located
-
-**PathMapsTables** is the directory where maps are located which were calculated from lookup tables in the previous version (e.g. cropcoeff)
-
-**PathTables** is the directory where all input tables are located 
-
-**PathMeteo** is the directory where all maps with meteorological input are located (rain, evapo(transpi)ration, temperature)
-
-**PathLAI** is the directory where you Leaf Area Index maps are located
-
-**PathWaterUse** is the directory where water use maps are located (optional)
 
 
 ### Prefixes of meteo and vegetation related variables
