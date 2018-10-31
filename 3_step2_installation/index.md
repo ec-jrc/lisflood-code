@@ -4,7 +4,7 @@
 
 For Windows users the installation involves two steps:
 
-1.  Unzip the contents of 'lisflood\_win32.zip' to an empty folder on your PC (e.g. 'lisflood')
+1.  Unzip the contents of 'lisflood\_win32.zip' <span style="color:red"> (insert link)</span> to an empty folder on your PC (e.g. 'lisflood')
 
 2.  Open the file 'config.xml' in a text editor. This file contains the full path to all files and applications that are used by LISFLOOD. The items in the file are:
 
@@ -30,10 +30,8 @@ For Windows users the installation involves two steps:
       ```
 
 
-The lisflood executable is a command-line application which can be called from the command prompt ('DOS' prompt). To make life easier you may include the full path to 'lisflood.exe' in the 'Path' environment
-variable. In Windows XP you can do this by selecting 'settings' from the 'Start' menu; then go to 'control panel'/'system' and go to the 'advanced' tab. Click on the 'environment variables' button. Finally, locate the 'Path' variable in the 'system variables' window and click on 'Edit' (this requires local Administrator privileges).
+The lisflood executable is a command-line application which can be called from the command prompt ('DOS' prompt). To make life easier you may include the full path to 'lisflood.exe' in the 'Path' environment variable. In Windows XP you can do this by selecting 'settings' from the 'Start' menu; then go to 'control panel'/'system' and go to the 'advanced' tab. Click on the 'environment variables' button. Finally, locate the 'Path' variable in the 'system variables' window and click on 'Edit' (this requires local Administrator privileges).
 
-[[🔝](#top)](#top)
 
 
 ### On Linux systems
@@ -42,7 +40,7 @@ Under Linux LISFLOOD requires that the Python interpreter (version 2.7 or more r
 
 The installation process is largely identical to the Windows procedure:
 
-1.  unzip the contents of 'lisflood\_llinux.zip' to an empty directory.
+1.  unzip the contents of 'lisflood\_llinux.zip' <span style="color:red"> (insert link)</span> to an empty directory.
 2.  Check if the file 'lisflood' is executable. If not, make it executable using: "chmod 755 lisflood"
 3.  Then update the paths in the configuration file. The configuration file will look something like this:
 
