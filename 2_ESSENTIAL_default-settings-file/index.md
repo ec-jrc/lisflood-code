@@ -147,7 +147,7 @@ The following parameters are all related to the simulation of evapo(transpi)rati
 
 - **CalEvaporation** is a multiplier that is applied to the potential evapo(transpi)ration input (**ET0**, **EW0** and **ES0**) [-]
 
-- **LeafDrainageTimeConstant** ($T_{int}$ in Eq 2-11) is the time constant for the interception store $[days]$
+- **LeafDrainageTimeConstant** ([$T_{int}$](https://ec-jrc.github.io/lisflood-model/2_stdLISFLOOD_evaporation-intercepted-water/)) is the time constant for the interception store $[days]$
 
 - **kdf** is the average extinction for the diffuse radiation flux (Goudriaan, 1977). it is used to calculate the extinction coefficient for global radiation, $κ_{gb}$ ,which is used in Equations 2-9, 2-14 and 2-19 [-]
 
