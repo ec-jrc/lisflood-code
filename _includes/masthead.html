@@ -1,17 +1,26 @@
 <div class="masthead">
+<div style="display: flow; float: left">{{ site.title }}</div>
   <div class="masthead__inner-wrap">
+
     <div class="masthead__menu">
       <nav id="site-nav" class="greedy-nav">
-        <a class="site-title" href="{{ '/' | relative_url }}">{{ site.title }}</a>
+
         <ul class="visible-links">
+          <!-- {{page.url}} - {{link.url}}-->
           {% for link in site.data.navigation.main %}
             {% if link.url contains 'http' %}
               {% assign domain = '' %}
             {% else %}
               {% assign domain = site.url | append: site.baseurl %}
             {% endif %}
-            <li class="masthead__menu-item">
-              <a href="{{ domain }}{{ link.url }}" {% if link.description %}title="{{ link.description }}"{% endif %}>{{ link.title }}</a>
+
+            {% if page.url contains link.url %}
+              {% assign navclass = 'active' %}
+            {% else %}
+              {% assign navclass = '' %}
+            {% endif %}
+            <li class="masthead__menu-item {{ navclass }}">
+              <a href="{{ domain }}{{ link.url }}" class="{{ navclass }}" {% if link.description %}title="{{ link.description }}"{% endif %}>{{ link.title }}</a>
             </li>
           {% endfor %}
         </ul>

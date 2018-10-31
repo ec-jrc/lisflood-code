@@ -8,8 +8,14 @@
         <li>
            <span class="nav__sub-title">{{ s.section_title }}</span>
            <ul>
+             {% assign pageUrl = page.url | replace: '/', '' %}
              {% for i in s.items %}
-                 <li><a href="{{ i.url|relative_url }}" class="">{{ i.title }}</a></li>
+
+               {% if pageUrl == i.url %}
+               <li class="active"><a href="{{ i.url|relative_url }}" class="active">{{ i.title }}</a></li>
+               {% else %}
+               <li><a href="{{ i.url|relative_url }}">{{ i.title }}</a></li>
+               {% endif %}
              {% endfor %}
            </ul>
         </li>
