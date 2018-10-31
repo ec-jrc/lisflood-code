@@ -45,7 +45,7 @@ The following sections explain the function of each element in more detail.
 
 ### lfuser element
 
-The 'lfuser' element is used to **define user-defined text variables** such as e.g. paths to input maps, tables, meteorological data and parameter values. By defining them once under the Lfuser element, these text variables can be used to substitute repeatedly used expressions in the binding element. This greatly reduces the amount of work that is needed to prepare the settings file. 
+The 'lfuser' element is used to **define user-defined text variables** such as e.g. paths to input maps, tables, meteorological data but also parameter values. By defining them once under the Lfuser element, these text variables can then be used repeatedly to substitute expressions in the binding element. This greatly reduces the amount of work that is needed to prepare the settings file. 
 
 
 Each variable is defined as a 'textvar' element with the attributes 'name' and 'value'. The following example demonstrates the main principle:
@@ -68,18 +68,12 @@ Each variable is defined as a 'textvar' element with the attributes 'name' and '
     </lfsettings>                                                   
 ```
 
-In the example two input files (maps) are defined. Both maps are in the same directory. Instead of entering the full file path for every map, we define a variable called *PathMaps* in the 'lfuser' element. This variable can then be used in the 'lfbinding' element. 
-
-Since the names of the in- and output files are usually the same for each model run, the use of user-defined variables greatly simplifies setting up the model for new catchments.  
+In the example above two input files (maps) are defined. Both maps are in the same directory. Instead of entering the full file path for every map, we define the file path once as a variable called *PathMaps* in the 'lfuser' element and then use it whereever applicable in the 'lfbinding' element. 
 
 <u>Note</u> that in the 'lfbinding' element you should always wrap user-defined variables in brackets and add a leading dollar sign, e.g. *\$(PathMaps)*. 
 
 
-
-
-
-
-Now for a somewhat more realistic example:
+Another example:
 
 ```xml
    <?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>  
@@ -105,8 +99,7 @@ Now for a somewhat more realistic example:
    **************************************************************               
 
    </comment>                                                          
-   <textvar name="PathMeteo"                                          
-   value="//cllx01/floods2/knijfjo/test/meteo">                       
+   <textvar name="PathMeteo" value="//cllx01/floods2/knijfjo/test/meteo">                       
    <comment>                                                           
    Meteo path                                                            
    </comment>                                                          
@@ -126,14 +119,12 @@ Now for a somewhat more realistic example:
    </lfuser>                                                       
    <lfoptions> </lfoptions>                                      
    <lfbinding>                                                     
-   <textvar name="UpperZoneTimeConstant"                              
-   value="$(UpperZoneTimeConstant)">                                 
+   <textvar name="UpperZoneTimeConstant" value="$(UpperZoneTimeConstant)">                                 
    <comment>                                                           
    Time constant for water in upper zone [days\*mm\^GwAlpha]           
    </comment>                                                          
    </textvar>                                                          
-   <textvar name="PrecipitationMaps"                                  
-   value="$(PathMeteo)/$(PrefixPrecipitation)">                     
+   <textvar name="PrecipitationMaps" value="$(PathMeteo)/$(PrefixPrecipitation)">                     
    <comment>                                                           
    precipitation [mm/day]                                              
    </comment>                                                          
@@ -142,8 +133,12 @@ Now for a somewhat more realistic example:
    </lfsettings>                                                   
 ```
 
-From this example, note that *anything* can be defined with 'lfuser' variables, whether it be paths, file prefixes or parameter value. At first sight it might seem odd to define model parameter like *UpperZoneTimeConstant* as a text variable when it is already defined in the 'lfbinding' element. However, in practice it is much easier to have all the important variables defined in the same element: in total the
-model needs around 200 variables, parameters and file names. By specifying each of those in the 'lfbinding' element you need to specify each of them separately. Using the 'lfuser' variables this can be reduced to about 50, which greatly simplifies things. You should think of the 'lfbinding' element as a low-level way of describing the model in- and output structure: anything can be changed and any file can be in any given location, but the price to pay for this flexibility is that the definition of the input structure will take a lot of work. By using the 'lfuser' variables in a smart way, custom template settings files can be created for specific model applications (calibration, scenario modelling, operational flood forecasting). Typically, each of these applications requires its own input structure, and you can use the 'lfuser' variables to define this structure. Also, note that both the *name* and *value* of each variable must be wrapped in (single or double) quotes. Dedicated XML-editors like XmlSpy take care of this automatically, so you won't usually have to worry about this.
+From this example, note that *anything* can be defined with 'lfuser' variables, whether it be paths, file prefixes or parameter value. 
+
+At first sight it might seem odd to define model parameter like *UpperZoneTimeConstant* as a text variable when it is already defined in the 'lfbinding' element. However, in practice it is much easier to have all the important variables defined in the same element! In total the model needs around 200 variables, parameters and file names. By specifying each of those in the 'lfbinding' element you need to specify each of them separately. Using the 'lfuser' variables this can be reduced to about 50, which greatly simplifies things. 
+
+Hence, by using the 'lfuser' variables in a smart way, custom template settings files can be created for specific model applications (calibration, scenario modelling, operational flood forecasting). Typically, each of these applications requires its own input structure, and you can use the 'lfuser' variables to define this structure. Also, note that both the *name* and *value* of each variable must be wrapped in (single or double) quotes. Dedicated XML-editors like XmlSpy take care of this automatically, so you won't usually have to worry about this.
+
 
 **NOTES:**
 
@@ -151,8 +146,7 @@ model needs around 200 variables, parameters and file names. By specifying each 
 
 ```xml
   <lfuser>                                                        
-  <textvar name="PathInit"                                           
-  value="//cllx01/floods2/knijfjo/test/init">                        
+  <textvar name="PathInit" value="//cllx01/floods2/knijfjo/test/init">                        
   <comment>                                                           
    Path to initial conditions maps                                       
   </comment>                                                          
@@ -175,115 +169,90 @@ model needs around 200 variables, parameters and file names. By specifying each 
 
 ### lfbinding elements
 
-The 'lfbinding' element provides a very low-level way to define all model parameter values as well as all in- and output maps, time series and tables. 
+The 'lfbinding' element provides a very low-level way to define all model parameter values as well as all in- and output maps, time series and tables. The variables that are defined in the 'lfbinding' element fall in either of the following categories:
 
-
-
-### Variables in the lfbinding element
-
-The variables that are defined in the 'lfbinding' element fall in either of the following categories:
-
-1.  **Single map** (example)
+1)  **Single map** (example)
 
 ```xml
+<lfbinding>                                                     
 <textvar name="LandUse" value="$(PathMaps)/landuse.map">\
 <comment>\
 Land Use Classes\
 </comment>\
 </textvar>
+</lfbinding>                                                     
 ```
 
-2. **Table** (example)
+2) **Table** (example)
 
 ```xml
+<lfbinding>                                                     
 <textvar name="TabKSat1" value="$(PathTables)/ksat1.txt">\
 <comment>\
 Saturated conductivity [cm/day]\
 </comment>\
 </textvar>
+</lfbinding>                                                     
 ```
 
-3.  **Stack of maps** (example)
+3)  **Stack of maps** (example)
 
 ```xml
-<textvar name="PrecipitationMaps"\
-value="$(PathMeteo)/$(PrefixPrecipitation)">\
+<lfbinding>                                                     
+<textvar name="PrecipitationMaps" value="$(PathMeteo)/$(PrefixPrecipitation)">\
 <comment>\
 precipitation [mm/day]\
 </comment>\
 </textvar>
+</lfbinding>                                                     
 ```
 
+<span style="color:red"> I guess that is different for NetCDF stacks:</span>
 
+<u>**Note:**</u> Taking -as an example- a prefix that equals "*pr*", the name of each map in the stack starts with "*pr*", and ends with the number of the time step. The name of each map is made up of a total of 11 characters: 8 characters, a dot and a 3-character suffix. For instance: 
 
-> __**Note:**__ Taking -as an example- a prefix that equals "*pr*", the name of each map in the stack starts with "*pr*", and ends with the number of the time step. The name of each map is made up of a total of 11 characters: 8 characters, a dot and a 3-character suffix. For instance: 
->
-> - pr000000.007   : at time step 7
-> - pr000035.260   : at time step 35260
->
-> To avoid unexpected behaviour, do **not** use numbers in the prefix!
+- pr000000.007   : at time step 7
+- pr000035.260   : at time step 35260
+
+To avoid unexpected behaviour, do **not** use numbers in the prefix!
 
 ```xml
-<textvar name="PrecipitationMaps"\
-value=\"$(PathMeteo)/pr10">\
+<lfbinding>                                                     
+<textvar name="PrecipitationMaps" value=\"$(PathMeteo)/pr10">\
 <comment>\
 precipitation [mm/day]\
 </comment>\
 </textvar>
+</lfbinding>                                                     
 ```
 
->  For the first time step this yields the following file name: pr100000.001   But this is actually interpreted as time step 100,000,001!
+For the first time step this yields the following file name: pr100000.001   But this is actually interpreted as time step 100,000,001!
 
-4.  **Time series file** (example)
+4)  **Time series file** (example)
 
 ```xml
+<lfbinding>                                                     
 <textvar name="DisTS"\ 
 value="$(PathOut)/dis.tss">\
 <comment>\
 Reported discharge [cu m/s]\
 </comment>\
 </textvar>
+</lfbinding>                                                     
 ```
 
-5.  **Single parameter value** (example)
+5)  **Single parameter value** (example)
 
 ```xml
+<lfbinding>                                                     
 <textvar name="UpperZoneTimeConstant"\
 value="$(UpperZoneTimeConstant)">\
 <comment>\
 Time constant for water in upper zone [days]\
 </comment>\
 </textvar>
+</lfbinding>                                                     
 ```
-
-
-
-[:top:](#top)
-
-### Variables in the lfuser element
-
-As said before the variables in the 'lfuser' elements are all text variables, and they are used simply to substitute text in the 'lfbinding' element. In practice it is sometimes convenient to use the same name for a text variable that is defined in the 'lfuser' element and a 'lfbinding' variable. For example:
-
-```xml
-<lfuser>\                                                        
-<textvar name="UpperZoneTimeConstant" value="10">\               
-<comment>\                                                           
-Time constant for water in upper zone [days]\                        
-</comment>\                                                          
-</textvar>\                                                          
-</lfuser>\                                                       
-<lfbinding>\                                                     
-<textvar name="UpperZoneTimeConstant"\                              
-value="$(UpperZoneTimeConstant)">\                                 
-<comment>\                                                           
-Time constant for water in upper zone [days]\                        
-</comment>\                                                          
-</textvar>\		                                                          
-</lfbinding>
-```
-
-
-In this case 'UpperZoneTimeConstant' in the 'lfuser' element (just a text variable) is something different from 'UpperZoneTimeConstant' in the 'lfbinding' element!
 
 ### lfoption element
 
@@ -292,6 +261,8 @@ The 'lfoption' element effectively allows you to switch certain parts of the mod
 1.  Options to activate the reporting of **additional output** maps and time series (e.g. soil moisture maps)
 
 2.  Options that activate **special LISFLOOD modules**, such as inflow hydrographs and the simulation of reservoirs
+
+You find a full documentation of all the options in the [LISFLOOD Model Documentation](https://ec-jrc.github.io/lisflood-model/) under the section 'OPTIONAL LISFLOOD PROCESSES'.
 
 **Viewing available options**
 
@@ -309,8 +280,7 @@ The information on the reporting options is a little bit different (and slightly
 
   repDischargeMaps choices=(1) noDefault
 
-By default, discharge maps are not reported, so you would expect  something like "default=0". However, due to the way options are defined internally in the model, in this case we have no default value, which
-means it is switched off.[^4] Report options that are switched *on* by default look like this:
+By default, discharge maps are not reported, so you would expect something like "default=0". However, due to the way options are defined internally in the model, in this case we have no default value, which means it is switched off. Report options that are switched *on* by default look like this:
 
 repStateMaps choices=(1) default=1
 
