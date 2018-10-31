@@ -1,12 +1,15 @@
 # LISFLOOD settings file
 
+## Purpose
+
 In LISFLOOD, all file and parameter specifications are defined in a settings file. The purpose of the settings file is to link variables and parameters in the model to in- and output files (maps, time series, tables) and numerical values. In addition, the settings file can be used to specify several *options*. The settings file has a special (XML) structure. In the next sections the general layout of the settings file is explained. Although the file layout is not particularly complex, a basic understanding of the general principles explained here is essential for doing any successful model runs.
 
-The settings file has an XML ('E**x**tensible **M**arkup **L**anguage') structure. You can edit it using any text editor (e.g. Notepad, Editpad, Emacs, vi). Alternatively, you can also use a dedicated XML editor such as XMLSpy.
 
 ## Layout of the settings file
 
-A LISFLOOD settings file is made up of 4 elements, each of which has a specific function. The general structure of the file is described using XML-tags. XML stands for 'E**x**tensible **M**arkup **L**anguage', and it is really nothing more than a way to describe data in a file. It works by putting information that goes into a (text) file between tags, and this makes it very easy add structure. For a LISFLOOD settings file, the basic structure looks like this:
+The settings file has an XML structure. XML stands for 'E**x**tensible **M**arkup **L**anguage', and it is really nothing more than a way to describe data in a file by putting information that goes into a (text) file between tags. You can edit it using any text editor (e.g. Notepad, Editpad, Emacs, vi). Alternatively, you can also use a dedicated XML editor such as XMLSpy.
+
+For a LISFLOOD settings file, the basic structure looks like this:
 
 ```xml
     <?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>  
@@ -17,22 +20,20 @@ A LISFLOOD settings file is made up of 4 elements, each of which has a specific 
        \</lfoptions>  End of element with options
        \<lfbinding>   Start of element with 'binding' variables
        \</lfbinding>  End of element with 'binding' variables
-       \<prolog>      Start of prolog
-       \</prolog>     End of prolog
     \<lfsettings>     End of settings element
 ```
 
 From this you can see the following things:
 
--   The settings file is made up of the elements 'lfuser', 'lfoptions' and 'lfbinding'; in addition, there is a 'prolog' element (but this will ultimately disappear in future LISFLOOD versions)
+-   Beside the root element called '\<lfsettings\>', the settings file is made up of 3 elements: 'lfuser', 'lfoptions' and 'lfbinding'
 
--   The start of each element is indicated by the element's name wrapped in square brackets, e.g. \<element\>
+-   The start of each element is indicated by the element's name wrapped in angle brackets, e.g. \<element\>
 
--   The end of each element is indicated by a forward slash followed by the element's name, all wrapped in square brackets, e.g. \</element\>
+-   The end of each element is indicated by a forward slash followed by the element's name, all wrapped in angle brackets, e.g. \</element\>
 
--   All elements are part of a 'root' element called '\<lfsettings\>'.
+## Main elements of the settings file
 
-In brief, the main function of each element is:
+A LISFLOOD settings file is made up of three elements, each of which has a specific function. In brief, the main function of each element is:
 
 | element   | main function                                                |
 | --------- | ------------------------------------------------------------ |
@@ -40,20 +41,20 @@ In brief, the main function of each element is:
 | lfbinding | definition of all **individual** in- and output **files and model parameters** |
 | lfoptions | **switches** to turn specific components of the model on or off |
 
-The following sections explain the function of each element in more detail. This is mainly to illustrate the main concepts and how it all fits together. A detailed description of all the variables that are relevant for setting up and running LISFLOOD is given in **Chapter XXX**.
+The following sections explain the function of each element in more detail. 
 
-### lfuser and lfbinding elements
+### lfuser element
 
-The 'lfbinding' element provides a very low-level way to define all model parameter values as well as all in- and output maps, time series and tables. 
+The 'lfuser' element is used to **define user-defined text variables** such as e.g. paths to input maps, tables, meteorological data and parameter values. By defining them once under the Lfuser element, these text variables can be used to substitute repeatedly used expressions in the binding element. This greatly reduces the amount of work that is needed to prepare the settings file. 
 
-The 'lfuser' element is used to define (user-defined) text variables. These text variables can be used to substitute repeatedly used expressions in the binding element. This greatly reduces the amount of work that is needed to prepare the settings file. Each variable is defined as a 'textvar' element within 'lfuser'/'lfbinding'. Each 'textvar' element has the attributes 'name' and 'value'. The following example demonstrates the main principle (note that in the examples below the prolog element is left out, but you will never need to edit this anyway) :
+
+Each variable is defined as a 'textvar' element with the attributes 'name' and 'value'. The following example demonstrates the main principle:
 
 ```xml
     <?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>  
     <lfsettings>                                                    
     <lfuser>                                                        
-    <textvar name="PathMaps"                                           
-    value="//cllx01/floods2/knijfjo/test/maps">                        
+    <textvar name="PathMaps" value="//cllx01/floods2/knijfjo/test/maps">                        
     </textvar>                                                          
     </lfuser>                                                       
     <lfoptions>                                                     
@@ -67,7 +68,16 @@ The 'lfuser' element is used to define (user-defined) text variables. These text
     </lfsettings>                                                   
 ```
 
-In the example two input files (maps) are defined. Both maps are in the same directory. Instead of entering the full file path for every map, we define a variable called *PathMaps* in the 'lfuser' element. This variable can then be used in the 'lfbinding' element. Note that in the 'lfbinding' element you should always wrap user-defined variables in brackets and add a leading dollar sign, e.g. *\$(PathMaps)*. Since the names of the in- and output files are usually the same for each model run, the use of user-defined variables greatly simplifies setting up the model for new catchments. In general, it is a good idea to use user-defined variables for *everything* that needs to be changed on a regular basis (paths to input maps, tables, meteorological data, parameter values). This way you only have to deal with the variables in the 'lfuser' element, without having to worry about anything in 'lfbinding' at all.
+In the example two input files (maps) are defined. Both maps are in the same directory. Instead of entering the full file path for every map, we define a variable called *PathMaps* in the 'lfuser' element. This variable can then be used in the 'lfbinding' element. 
+
+Since the names of the in- and output files are usually the same for each model run, the use of user-defined variables greatly simplifies setting up the model for new catchments.  
+
+<u>Note</u> that in the 'lfbinding' element you should always wrap user-defined variables in brackets and add a leading dollar sign, e.g. *\$(PathMaps)*. 
+
+
+
+
+
 
 Now for a somewhat more realistic example:
 
@@ -135,9 +145,9 @@ Now for a somewhat more realistic example:
 From this example, note that *anything* can be defined with 'lfuser' variables, whether it be paths, file prefixes or parameter value. At first sight it might seem odd to define model parameter like *UpperZoneTimeConstant* as a text variable when it is already defined in the 'lfbinding' element. However, in practice it is much easier to have all the important variables defined in the same element: in total the
 model needs around 200 variables, parameters and file names. By specifying each of those in the 'lfbinding' element you need to specify each of them separately. Using the 'lfuser' variables this can be reduced to about 50, which greatly simplifies things. You should think of the 'lfbinding' element as a low-level way of describing the model in- and output structure: anything can be changed and any file can be in any given location, but the price to pay for this flexibility is that the definition of the input structure will take a lot of work. By using the 'lfuser' variables in a smart way, custom template settings files can be created for specific model applications (calibration, scenario modelling, operational flood forecasting). Typically, each of these applications requires its own input structure, and you can use the 'lfuser' variables to define this structure. Also, note that both the *name* and *value* of each variable must be wrapped in (single or double) quotes. Dedicated XML-editors like XmlSpy take care of this automatically, so you won't usually have to worry about this.
 
-__**NOTES:**__
+**NOTES:**
 
-1.  It is important to remember that the *only* function of the 'lfuser' element is to *define* text variables; you can not *use* any of these text variables within the 'lfuser' element. For example, the following 'lfuser' element is *wrong* and *will not work*:
+1)  It is important to remember that the *only* function of the 'lfuser' element is to *define* text variables; you can not *use* any of these text variables within the 'lfuser' element. For example, the following 'lfuser' element is *wrong* and *will not work*:
 
 ```xml
   <lfuser>                                                        
@@ -157,9 +167,17 @@ __**NOTES:**__
   </lfuser>                                                       
 ```
 
-2.  It *is* possible to define *everything* directly in the 'lfbinding' element without using any text variables at all! In that case the 'lfuser' element can remain empty, even though it *has* to be present (i.e. <lfuser> </lfuser>). In general this is not recommended.
+2)  It *is* possible to define *everything* directly in the 'lfbinding' element without using any text variables at all! In that case the 'lfuser' element can remain empty, even though it *has* to be present (i.e. <lfuser> </lfuser>). In general this is not recommended.
 
-3.  Within the *lfuser* and *lfbinding* elements, model variables are organised into *groups*. This is just to make navigation in an xml editor easier.
+3)  Within the *lfuser* and *lfbinding* elements, model variables are organised into *groups*. This is just to make navigation in an xml editor easier.
+
+
+
+### lfbinding elements
+
+The 'lfbinding' element provides a very low-level way to define all model parameter values as well as all in- and output maps, time series and tables. 
+
+
 
 ### Variables in the lfbinding element
 
