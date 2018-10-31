@@ -43,7 +43,7 @@ A LISFLOOD settings file is made up of three elements, each of which has a speci
 
 The following sections explain the function of each element in more detail. 
 
-### lfuser element
+### LFUSER ELEMENT
 
 The 'lfuser' element is used to **define user-defined text variables** such as e.g. paths to input maps, tables, meteorological data but also parameter values. By defining them once under the Lfuser element, these text variables can then be used repeatedly to substitute expressions in the binding element. This greatly reduces the amount of work that is needed to prepare the settings file. 
 
@@ -140,7 +140,7 @@ At first sight it might seem odd to define model parameter like *UpperZoneTimeCo
 Hence, by using the 'lfuser' variables in a smart way, custom template settings files can be created for specific model applications (calibration, scenario modelling, operational flood forecasting). Typically, each of these applications requires its own input structure, and you can use the 'lfuser' variables to define this structure. Also, note that both the *name* and *value* of each variable must be wrapped in (single or double) quotes. Dedicated XML-editors like XmlSpy take care of this automatically, so you won't usually have to worry about this.
 
 
-**NOTES:**
+**NOTES**
 
 1)  It is important to remember that the *only* function of the 'lfuser' element is to *define* text variables; you can not *use* any of these text variables within the 'lfuser' element. For example, the following 'lfuser' element is *wrong* and *will not work*:
 
@@ -167,7 +167,7 @@ Hence, by using the 'lfuser' variables in a smart way, custom template settings 
 
 
 
-### lfbinding elements
+### LFBINDING ELEMENT
 
 The 'lfbinding' element provides a very low-level way to define all model parameter values as well as all in- and output maps, time series and tables. The variables that are defined in the 'lfbinding' element fall in either of the following categories:
 
@@ -254,7 +254,7 @@ Time constant for water in upper zone [days]\
 </lfbinding>                                                     
 ```
 
-### lfoption element
+### LFOPTION ELEMENT 
 
 The 'lfoption' element effectively allows you to switch certain parts of the model on or off. Within LISFLOOD, there are **two categories** of options:
 
