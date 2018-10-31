@@ -149,9 +149,9 @@ The following parameters are all related to the simulation of evapo(transpi)rati
 
 - **LeafDrainageTimeConstant** ([$T_{int}$](https://ec-jrc.github.io/lisflood-model/2_stdLISFLOOD_evaporation-intercepted-water/)) is the time constant for the interception store $[days]$
 
-- **kdf** is the average extinction for the diffuse radiation flux (Goudriaan, 1977). it is used to calculate the extinction coefficient for global radiation, $κ_{gb}$ ,which is used in Equations 2-9, 2-14 and 2-19 [-]
+- **kdf** is the average extinction for the diffuse radiation flux (Goudriaan, 1977). it is used to calculate the extinction coefficient for global radiation, $κ_{gb}$ ,which is used in Equations for [$EW_{max}$](https://ec-jrc.github.io/lisflood-model/2_stdLISFLOOD_evaporation-intercepted-water/), [$T_{max}$](https://ec-jrc.github.io/lisflood-model/2_stdLISFLOOD_plant-water-uptake/) and [$ES_{max}$](https://ec-jrc.github.io/lisflood-model/2_stdLISFLOOD_soil-evaporation/) [-]
 
-- **AvWaterRateThreshold** defines a critical amount of water that is used as a threshold for resetting the variable $D_{slr}$ in Eq 2-20. Because the equation was originally developed for daily timesteps only, the threshold is currently defined (somewhat confusingly) as an equivalent **intensity** in $[\frac{mm}{day}]$
+- **AvWaterRateThreshold** defines a critical amount of water that is used as a threshold for resetting the variable $D_{slr}$ in the Equation for[$ES_a$](https://ec-jrc.github.io/lisflood-model/2_stdLISFLOOD_soil-evaporation/). Because the equation was originally developed for daily timesteps only, the threshold is currently defined (somewhat confusingly) as an equivalent **intensity** in $[\frac{mm}{day}]$
 
 - **SMaxSealed** is the maximum depression storage on impervious surface $[mm]$. This storage is emptied by evaporation (EW0).
 
