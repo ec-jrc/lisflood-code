@@ -224,23 +224,23 @@ The following parameters are all related to the simulation of snow accumulation,
 
 - **SnowFactor** is a multiplier that is applied to the rate of precipitation in case the precipitation falls as snow. Since snow is commonly underestimated in meteorological observation data, setting this multiplier to some value greater than 1 can counteract for this [-]
 
-- **SnowSeasonAdj** is the range [mm C-1 d-1] of the seasonal variation of snow melt. SnowMeltCoef is the average value.
+- **SnowSeasonAdj** is the range [mm C-1 d-1 <span style="color:red"> (What's that?)</span>] of the seasonal variation of snow melt. SnowMeltCoef is the average value.
 
-- **SnowMeltCoef** ($C_m$ in Eq 2-3) is the degree-day factor that controls the rate of snowmelt $[\frac{mm}{°C \cdot day}]$
+- **SnowMeltCoef** ([$C_m$](https://ec-jrc.github.io/lisflood-model/2_stdLISFLOOD_rain-snow/)) is the degree-day factor that controls the rate of snowmelt $[\frac{mm}{°C \cdot day}]$
 
-- **TempMelt** ($T_m$ in Eq 2-3) is the average temperature above which snow starts to melt $[°C]$
+- **TempMelt** ([$T_m$](https://ec-jrc.github.io/lisflood-model/2_stdLISFLOOD_rain-snow/)) is the average temperature above which snow starts to melt $[°C]$
 
 - **TempSnow** is the average temperature below which precipitation is assumed to be snow $[°C]$
 
-- **TemperatureLapseRate** (**L** in Figure 2.2) is the temperature lapse rate that is used to estimate average temperature at the centroid of each pixel's elevation zones $[\frac{°C}{m}]$
+- **TemperatureLapseRate** (**L** in [last Figure](https://ec-jrc.github.io/lisflood-model/2_stdLISFLOOD_rain-snow/)) is the temperature lapse rate that is used to estimate average temperature at the centroid of each pixel's elevation zones $[\frac{°C}{m}]$
 
-- **Afrost** (**A** in Eq 2-4) is the frost index decay coefficient $[day^{-1}]$. It has a value in the range 0-1.
+- **Afrost** ([$A$](https://ec-jrc.github.io/lisflood-model/2_stdLISFLOOD_rain-snow/)) is the frost index decay coefficient $[day^{-1}]$. It has a value in the range 0-1.
 
-- **Kfrost** (**K** in Eq 2-4) is a snow depth reduction coefficient $[cm^{-1}]$
+- **Kfrost** ([$K$](https://ec-jrc.github.io/lisflood-model/2_stdLISFLOOD_rain-snow/)) is a snow depth reduction coefficient $[cm^{-1}]$
 
-- **SnowWaterEquivalent** ($we_s$ in Eq 2-4) is the equivalent water depth of a given snow cover, expressed as a fraction [-]
+- **SnowWaterEquivalent** ([$we_s$](https://ec-jrc.github.io/lisflood-model/2_stdLISFLOOD_rain-snow/)) is the equivalent water depth of a given snow cover, expressed as a fraction [-]
 
-- **FrostIndexThreshold** is the critical value of the frost index (Eq 2-5) above which the soil is considered frozen $[\frac{°C}{day}]$
+- **FrostIndexThreshold** is the critical value of the [frost index](https://ec-jrc.github.io/lisflood-model/2_stdLISFLOOD_rain-snow/) above which the soil is considered frozen $[\frac{°C}{day}]$
 
 
 ## Infiltration parameters
