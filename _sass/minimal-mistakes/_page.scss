@@ -4,9 +4,9 @@
 
 #main {
   @include clearfix;
-  margin-left: auto;
+  margin-left: 2em;
   margin-top: 2em;
-  margin-right: auto;
+  margin-right: 0;
   padding-left: 1em;
   padding-right: 1em;
   -webkit-animation: $intro-transition;
@@ -36,7 +36,7 @@
     float: left;
     margin-left: 0;
     margin-right: 0;
-    width: 100%;
+    width: 130%;
     clear: both;
 
     .page__content,
@@ -44,7 +44,7 @@
     .page__share {
       position: relative;
       float: left;
-      margin-left: 0;
+      margin-left: 1em;
       margin-right: 0;
       width: 100%;
       clear: both;

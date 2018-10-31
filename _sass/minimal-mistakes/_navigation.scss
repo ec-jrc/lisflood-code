@@ -174,12 +174,17 @@
      ========================================================================== */
 
 .greedy-nav {
-  position: relative;
+  position: fixed;
+  float: left;
+  top: 0;
+  width: 100%;
   display: -webkit-box;
   display: flex;
   -webkit-box-align: center;
-  align-items: center;
+  align-items: stretch;
   background: $background-color;
+  margin-left: -1em;
+  margin-right: -1em;
 
   a {
     display: block;
@@ -210,11 +215,13 @@
   .visible-links {
     display: -webkit-box;
     display: flex;
+    float: left;
+    align-items: stretch;
     -webkit-box-pack: end;
-    justify-content: flex-end;
+    //justify-content: flex-end;
     -webkit-box-flex: 1;
     flex: 1;
-    overflow: hidden;
+    overflow: auto;
 
     li {
       -webkit-box-flex: 0;
