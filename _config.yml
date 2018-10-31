@@ -281,8 +281,10 @@ defaults:
 
       - section_title: "Essential before getting started"
         items:
-        - title: "LISFLOOD settings file"
+        - title: "Technical Layout of the LISFLOOD settings file"
           url: 2_ESSENTIAL_setting-file
+        - title: "Sections & parameters of the LISFLOOD settings file"
+          url: 2_ESSENTIAL_default-settings-file
 
       - section_title: "Step-by-step user guide"
         items:
