@@ -13,6 +13,24 @@ For a LISFLOOD settings file, the basic structure looks like this:
 <br>
 **\<lfsettings\>**&nbsp;&nbsp;&nbsp;&nbsp;Start of settings elements<br>
 &nbsp;&nbsp;<span style="color:blue"> **\<lfoptions\>**</span>&nbsp;&nbsp;&nbsp;&nbsp;Start of element with options<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:blue"> **LISFLOOD options (switches)**</span><br>
+<br>
+&nbsp;&nbsp;<span style="color:blue"> **\</lfoptions\>**</span>&nbsp;&nbsp;&nbsp;&nbsp;End of element with options<br>
+<br>
+&nbsp;&nbsp;<span style="color:green"> **\<lfuser>**</span>&nbsp;&nbsp;&nbsp;&nbsp;Start of element with user-defined variables<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:green"> **User's specific parameters and settings**</span><br>
+<br>
+&nbsp;&nbsp;<span style="color:green"> **\</lfuser\>**</span>&nbsp;&nbsp;&nbsp;&nbsp;End of element with user-defined variables<br>
+<br>
+&nbsp;&nbsp;<span style="color:pink"> **\<lfbinding\>**</span>&nbsp;&nbsp;&nbsp;&nbsp;Start of element with 'binding' variables<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:pink"> **LISFLOOD model general settings**</span><br>
+<br>
+&nbsp;&nbsp;<span style="color:pink"> **\</lfbinding\>**</span>&nbsp;&nbsp;&nbsp;&nbsp;End of element with 'binding' variables<br>
+<br>
+**\</lfsettings\>**&nbsp;&nbsp;&nbsp;&nbsp;End of settings element<br>
 
 
 This file contains settings for LISFLOOD model. It is made up of 3 elements ‘lfuser’, ‘lfoptions’ and ‘lfbinding’ whose function can be briefly described as follows:
