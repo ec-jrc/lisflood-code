@@ -13,23 +13,23 @@ For a LISFLOOD settings file, the basic structure looks like this:
 <br>
 \<lfsettings\>          Start of settings elements<br>
 <br>
-\<span style="color:blue"\> **\<lfoptions\>**\</span\>     Start of element with options<br>
+<span style="color:blue"> **\<lfoptions\>**</span>     Start of element with options<br>
 <br>
-\<span style="color:blue"\> **LISFLOOD options (switches)**</span><br>
+<span style="color:blue"> **LISFLOOD options (switches)**</span><br>
 <br>
-\<span style="color:blue"\> **\</lfoptions\>**\</span\>    End of element with options<br>
+<span style="color:blue"> **\</lfoptions\>**</span>    End of element with options<br>
 <br>
-\<span style="color:green"\> **\<lfuser>**\</span\>         Start of element with user-defined variables<br>
+<span style="color:green"> **\<lfuser>**</span>         Start of element with user-defined variables<br>
 <br>
-\<span style="color:green"\> **User's specific parameters and settings**</span><br>
+<span style="color:green"> **User's specific parameters and settings**</span><br>
 <br>
-\<span style="color:green"\> **\</lfuser\>**\</span\>        End of element with user-defined variables<br>
+<span style="color:green"> **\</lfuser\>**</span>        End of element with user-defined variables<br>
 <br>
-\<span style="color:pink"\> **\<lfbinding\>**\</span\>     Start of element with 'binding' variables<br>
+<span style="color:pink"> **\<lfbinding\>**</span>     Start of element with 'binding' variables<br>
 <br>
-\<span style="color:pink"\> **LISFLOOD model general settings**</span><br>
+<span style="color:pink"> **LISFLOOD model general settings**</span><br>
 <br>
-\<span style="color:pink"\> **\</lfbinding\>**\</span\>    End of element with 'binding' variables<br>
+<span style="color:pink"> **\</lfbinding\>**</span>    End of element with 'binding' variables<br>
 <br>
 \</lfsettings\>         End of settings element<br>
 
