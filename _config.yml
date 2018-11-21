@@ -285,6 +285,9 @@ defaults:
           url: 2_ESSENTIAL_setting-file
         - title: "OptionsTserieMaps.xml"
           url: 2_ESSENTIAL_default-settings-file
+        - title: "Time convention within LISFLOOD model"
+          url: 2_ESSENTIAL_time-management
+
 
       - section_title: "Step-by-step user guide"
         items:
