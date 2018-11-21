@@ -16,11 +16,9 @@ OptionTserieMaps.xml file is organized into three different sections:
     - 0 in default = this option is by default not used;
     - 1 in default = this is used by default
 
-All switches are set to the default value. In order to activate/dis-activate a switch, it must be copied to Settings.xml. Values in Settings.xml file will overwrite values in OptionsTserieMaps.xml file.
+    All switches are set to the default value. In order to activate/dis-activate a switch, it must be copied to Settings.xml. Values in Settings.xml file will overwrite values in OptionsTserieMaps.xml file.
 
-A list of all available switches can be found in the following file:
-
-LISFLOOD_switches_list.xlsx
+    A list of all available switches can be found in the following file: LISFLOOD_switches_list.xlsx
 
 + **lftime:** it contains the list of all possible outputs as time series.
     Different keys can be used to describe what to store in the time series file:
@@ -32,9 +30,9 @@ LISFLOOD_switches_list.xlsx
     - restrictoption:  time series is only reported if this option(s) are active
     - operation:       operation to be done before reporting e.g. mapmaximum, total (=catchmenttotal)
 
-```xml
-<setserie name="RainAvUpsTS"  outputVar="Rain"  where="Gauges"  repoption="repRateUpsGauges"  restrictoption="nonInit"  operation="total" /
-```
+    ```xml
+    <setserie name="RainAvUpsTS"  outputVar="Rain"  where="Gauges"  repoption="repRateUpsGauges"  restrictoption="nonInit"  operation="total" /
+    ```
 
 + **lfmaps:** it contains the list of all possible outputs as maps.
     Different keys can be used to describe what to store in the map file:
@@ -47,6 +45,6 @@ LISFLOOD_switches_list.xlsx
     - all:                  reported on all steps (one of the reporting switch names must be specified here)
     - restrictoption:  map is only reported if this option(s) are active
 
-```xml
-<setmap name="WaterDepthState"  outputVar="WaterDepth"  unit="m"  end=""  steps="repStateMaps"  all=""  restrictoption="nonInit" />
-```
+    ```xml
+    <setmap name="WaterDepthState"  outputVar="WaterDepth"  unit="m"  end=""  steps="repStateMaps"  all=""  restrictoption="nonInit" />
+    ```
