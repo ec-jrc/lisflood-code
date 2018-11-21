@@ -1,16 +1,16 @@
-# # Time management (start, end, re-start simulations)
+# Time management (start, end, re-start simulations)
 
-# ## Time convention within LISFLOOD model
+## Time convention within LISFLOOD model
 
 LISFLOOD model follows an "end of timestep" naming convention for timestamps of both input (forcings) and output data.
 
 Accordingly,  if timestamp "02/01/2017 06:00" is used for naming a time step of daily  accumulated rainfall data, that time step will contain rainfall  accumulation between  "01/01/2017 06:00" and "02/01/2017 06:00" (see  following figure)
 
-![img](https://efascom.smhi.se/confluence/download/attachments/19663957/Timestamp_naming.png?version=1&modificationDate=1513338861383&api=v2)
+![](../media/image62.png)
 
 Outputs  of LISFLOOD model will use the same naming convention. If timestamp  "02/01/2017 06:00" is used for naming a time step of daily dischage  (output), that time step will contain average discharge over the period  between  "01/01/2017 06:00" and "02/01/2017 06:00" (see following  figure)
 
-![img](https://efascom.smhi.se/confluence/download/attachments/19663957/Discharge_naming.png?version=1&modificationDate=1513339334735&api=v2)
+![](../media/image63.png)
 
 In Settings file, three different keys are used to specify start date, end date and state file date for LISFLOOD simulation:
 
@@ -23,9 +23,9 @@ In Settings file, three different keys are used to specify start date, end date 
 - **timestepInit:**  this key is used to specify which timestamp must be used to retrieve  information from existing state files (i.e. from a previous simulation)
   For  example, if we want to start a new simulation at "03/01/2017 06:00" and  we want to use hydrological state information from the last time step,  we will set timestepInit to "02/01/2017 06:00". Outputs with timestamp  "02/01/2017 06:00" will be used to initialize the model, while the first  output of the simulation will be be store with timestamp "03/01/2017  06:00"
 
-![img](https://efascom.smhi.se/confluence/download/attachments/19663957/Restart_naming.png?version=1&modificationDate=1513346713993&api=v2)
+![](../media/image64.png)
 
-**BOTH TIMESTAMPS AND TIME STEPS ALWAYS REFER TO THE END OF THE TIME INTERVAL**
+> BOTH TIMESTAMPS AND TIME STEPS ALWAYS REFER TO THE END OF THE TIME INTERVAL!
 
 ## Using timestamps
 
@@ -56,4 +56,48 @@ All steps numbers are referred to CalendarDayStart
 
 When  using time steps, dates (including hours and minutes) to retrieve data  for forcings and state variables are automatically determined by  LISFLOOD.
 
-![img](https://efascom.smhi.se/confluence/download/attachments/19663957/CalendarDayStart.png?version=1&modificationDate=1513787043043&api=v2)
+```xml
+	<comment>                                                           	
+	**************************************************************               
+	TIME-RELATED CONSTANTS                                                
+	**************************************************************               
+	</comment>                                                          
+	<textvar name="CalendarDayStart" value="01/01/1990">            
+	<comment>                                                           
+	Calendar day of 1st day in model run                                  
+	Day of the year of first map (e.g. xx0.001) even if the model start   
+	from map e.g. 500                                                     
+	e.g. 1st of January: 1; 1st of June 151 (or 152 in leap year)         
+	Needed to read out LAI tables correctly                               
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="DtSec" value="86400">                            
+	<comment>                                                           
+	timestep [seconds]                                                  
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="DtSecChannel" value="86400">                     
+	<comment>                                                           
+	Sub time step used for kinematic wave channel routing [seconds]     
+	Within the model,the smallest out of DtSecChannel and DtSec is used   
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="StepStart" value="1">                            
+	<comment>                                                           
+	Number of first time step in simulation                               
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="StepEnd" value="10">                             
+	<comment>                                                           
+	Number of last time step in simulation                                
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="ReportSteps" value="endtime">                    
+	<comment>                                                           
+	Time steps at which to write model state maps (i.e. only              
+	those maps that would be needed to define initial conditions          
+	for succeeding model run)                                             
+	</comment>                                                          
+	</textvar>                                                          
+```
+
