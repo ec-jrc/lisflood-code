@@ -10,27 +10,28 @@ In LISFLOOD, all file and parameter specifications are defined in a settings fil
 A LISFLOOD settings file is made up of 4 elements, each of which has a specific function. The general structure of the file is described using XML-tags. XML stands for ‘Extensible Markup Language’, and it is really nothing more than a way to describe data in a file. It works by putting information that goes into a (text) file between tags, and this makes it very easy add structure.
 
 For a LISFLOOD settings file, the basic structure looks like this:
-
-\<lfsettings\>          Start of settings elements
-
-\<span style="color:blue"\> **\<lfoptions\>**\</span\>     Start of element with options
-
-\<span style="color:blue"\> **LISFLOOD options (switches)**</span>
-\<span style="color:blue"\> **\</lfoptions\>**\</span\>    End of element with options
-
-\<span style="color:green"\> **\<lfuser>**\</span\>         Start of element with user-defined variables
-
-\<span style="color:green"\> **User's specific parameters and settings**</span>
-
-\<span style="color:green"\> **\</lfuser\>**\</span\>        End of element with user-defined variables
-
-\<span style="color:pink"\> **\<lfbinding\>**\</span\>     Start of element with 'binding' variables
-
-\<span style="color:pink"\> **LISFLOOD model general settings**</span>
-
-\<span style="color:pink"\> **\</lfbinding\>**\</span\>    End of element with 'binding' variables
-
-\</lfsettings\>         End of settings element
+<br>
+\<lfsettings\>          Start of settings elements<br>
+<br>
+\<span style="color:blue"\> **\<lfoptions\>**\</span\>     Start of element with options<br>
+<br>
+\<span style="color:blue"\> **LISFLOOD options (switches)**</span><br>
+<br>
+\<span style="color:blue"\> **\</lfoptions\>**\</span\>    End of element with options<br>
+<br>
+\<span style="color:green"\> **\<lfuser>**\</span\>         Start of element with user-defined variables<br>
+<br>
+\<span style="color:green"\> **User's specific parameters and settings**</span><br>
+<br>
+\<span style="color:green"\> **\</lfuser\>**\</span\>        End of element with user-defined variables<br>
+<br>
+\<span style="color:pink"\> **\<lfbinding\>**\</span\>     Start of element with 'binding' variables<br>
+<br>
+\<span style="color:pink"\> **LISFLOOD model general settings**</span><br>
+<br>
+\<span style="color:pink"\> **\</lfbinding\>**\</span\>    End of element with 'binding' variables<br>
+<br>
+\</lfsettings\>         End of settings element<br>
 
 
 This file contains settings for LISFLOOD model. It is made up of 3 elements ‘lfuser’, ‘lfoptions’ and ‘lfbinding’ whose function can be briefly described as follows:
