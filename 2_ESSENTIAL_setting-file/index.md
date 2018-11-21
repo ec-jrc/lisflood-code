@@ -13,20 +13,20 @@ For a LISFLOOD settings file, the basic structure looks like this:
 <br>
 **\<lfsettings\>**&nbsp;&nbsp;&nbsp;&nbsp;Start of settings elements<br>
 &nbsp;&nbsp;<span style="color:blue"> **\<lfoptions\>**</span>&nbsp;&nbsp;&nbsp;&nbsp;Start of element with options<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:blue"> **LISFLOOD options (switches)**</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:blue"> LISFLOOD options (switches)</span><br>
 &nbsp;&nbsp;<span style="color:blue"> **\</lfoptions\>**</span>&nbsp;&nbsp;&nbsp;&nbsp;End of element with options<br>
 &nbsp;&nbsp;<span style="color:green"> **\<lfuser>**</span>&nbsp;&nbsp;&nbsp;&nbsp;Start of element with user-defined variables<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:green"> **User's specific parameters and settings**</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:green"> User's specific parameters and settings</span><br>
 &nbsp;&nbsp;<span style="color:green"> **\</lfuser\>**</span>&nbsp;&nbsp;&nbsp;&nbsp;End of element with user-defined variables<br>
 &nbsp;&nbsp;<span style="color:pink"> **\<lfbinding\>**</span>&nbsp;&nbsp;&nbsp;&nbsp;Start of element with 'binding' variables<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:pink"> **LISFLOOD model general settings**</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:pink"> LISFLOOD model general settings</span><br>
 &nbsp;&nbsp;<span style="color:pink"> **\</lfbinding\>**</span>&nbsp;&nbsp;&nbsp;&nbsp;End of element with 'binding' variables<br>
 **\</lfsettings\>**&nbsp;&nbsp;&nbsp;&nbsp;End of settings element<br>
 
 
 This file contains settings for LISFLOOD model. It is made up of 3 elements ‘lfuser’, ‘lfoptions’ and ‘lfbinding’ whose function can be briefly described as follows:
 
-+ **lfoptions:** it contains switches to turn on/off specific components of the model . Within LISFLOOD, there are two categories of options:
++ <span style="color:blue"> **lfoptions:**</span> it contains switches to turn on/off specific components of the model . Within LISFLOOD, there are two categories of options:
     - Options that activate special LISFLOOD features, such as simulate reservoirs, perform split routing, etc.
     - Options to activate the reporting of additional output maps and time series (e.g. soil moisture maps)
 
@@ -37,14 +37,14 @@ This file contains settings for LISFLOOD model. It is made up of 3 elements ‘l
     Default option values can be found in file OptionTserieMaps.xml  in LISFLOOD code folder.
 
 
-+ **lfuser:** it contains user-defined definition of LISFLOOD parameters, paths to all in- and output files.
++ <span style="color:green"> **lfuser:**</span> it contains user-defined definition of LISFLOOD parameters, paths to all in- and output files.
 
     The ‘lfuser’ element is used to define (user-defined) text variables. These text variables are used to substitute repeatedly used expressions in the binding element. The only function of the ‘lfuser’ element is to define text variables. Users cannot use any of these text variables within the ‘lfuser’ element.
 
     The variables in the ‘lfuser’ elements are all text variables, and they are used simply to substitute text in the ‘lfbinding’ element. In practice, it is sometimes convenient to use the same name for a text variable that is defined in the ‘lfuser’ element and a ‘lfbinding’ variable.
 
 
-+ **lfbinding:** it contains definition of all parameter values of LISFLOOD model as well as all in- and output maps, time series and tables.
++ <span style="color:pink"> **lfbinding:**</span> it contains definition of all parameter values of LISFLOOD model as well as all in- and output maps, time series and tables.
 
     It is possible to define everything directly in the ‘lfbinding’ element without using any text variables at al. In that case, the ‘lfuser’ element can remain empty, even though it has to be present (i.e. <lfuser> </lfuser>) [NOT recommended]
 
