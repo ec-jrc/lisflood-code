@@ -32,23 +32,23 @@ This file contains settings for LISFLOOD model. It is made up of 3 elements ‘l
 
     The complete list of available options is contained in OptionTserieMaps.xml file located in LISFLOOD's code folder.  Users are not obliged to include all available options in Settings.xml file: if one option is not specified in Settings.xml, the default option will be automatically used.
 
- If Users leave the ‘lfoptions’ element empty, LISFLOOD will simply run using default options (i.e. run model without optional modules; only report most basic output files). However, the ‘lfoptions’ element itself (i.e. <lfoptions> </lfoptions>) has to be present, even if empty.
+    If Users leave the ‘lfoptions’ element empty, LISFLOOD will simply run using default options (i.e. run model without optional modules; only report most basic output files). However, the ‘lfoptions’ element itself (i.e. <lfoptions> </lfoptions>) has to be present, even if empty.
 
- Default option values can be found in file OptionTserieMaps.xml  in LISFLOOD code folder.
+    Default option values can be found in file OptionTserieMaps.xml  in LISFLOOD code folder.
 
 
 + **lfuser:** it contains user-defined definition of LISFLOOD parameters, paths to all in- and output files.
 
- The ‘lfuser’ element is used to define (user-defined) text variables. These text variables are used to substitute repeatedly used expressions in the binding element. The only function of the ‘lfuser’ element is to define text variables. Users cannot use any of these text variables within the ‘lfuser’ element.
+    The ‘lfuser’ element is used to define (user-defined) text variables. These text variables are used to substitute repeatedly used expressions in the binding element. The only function of the ‘lfuser’ element is to define text variables. Users cannot use any of these text variables within the ‘lfuser’ element.
 
- The variables in the ‘lfuser’ elements are all text variables, and they are used simply to substitute text in the ‘lfbinding’ element. In practice, it is sometimes convenient to use the same name for a text variable that is defined in the ‘lfuser’ element and a ‘lfbinding’ variable.
+    The variables in the ‘lfuser’ elements are all text variables, and they are used simply to substitute text in the ‘lfbinding’ element. In practice, it is sometimes convenient to use the same name for a text variable that is defined in the ‘lfuser’ element and a ‘lfbinding’ variable.
 
 
 + **lfbinding:** it contains definition of all parameter values of LISFLOOD model as well as all in- and output maps, time series and tables.
 
- It is possible to define everything directly in the ‘lfbinding’ element without using any text variables at al. In that case, the ‘lfuser’ element can remain empty, even though it has to be present (i.e. <lfuser> </lfuser>) [NOT recommended]
+    It is possible to define everything directly in the ‘lfbinding’ element without using any text variables at al. In that case, the ‘lfuser’ element can remain empty, even though it has to be present (i.e. <lfuser> </lfuser>) [NOT recommended]
 
- In general, it is a good idea to use user-defined variables for everything that needs to be changed on a regular basis (paths to input maps, tables, meteorological data, and parameter values). This way Users only have to deal with the variables in the ‘lfuser’ element, without having to worry about anything in ‘lfbinding’ at all. “lfuser” allows to have all the important variables defined in the same element.
+    In general, it is a good idea to use user-defined variables for everything that needs to be changed on a regular basis (paths to input maps, tables, meteorological data, and parameter values). This way Users only have to deal with the variables in the ‘lfuser’ element, without having to worry about anything in ‘lfbinding’ at all. “lfuser” allows to have all the important variables defined in the same element.
 
 
 
