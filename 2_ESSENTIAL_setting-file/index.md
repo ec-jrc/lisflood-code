@@ -12,25 +12,15 @@ A LISFLOOD settings file is made up of 4 elements, each of which has a specific 
 For a LISFLOOD settings file, the basic structure looks like this:
 <br>
 **\<lfsettings\>**&nbsp;&nbsp;&nbsp;&nbsp;Start of settings elements<br>
-<br>
 &nbsp;&nbsp;<span style="color:blue"> **\<lfoptions\>**</span>&nbsp;&nbsp;&nbsp;&nbsp;Start of element with options<br>
-<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:blue"> **LISFLOOD options (switches)**</span><br>
-<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:blue"> **LISFLOOD options (switches)**</span><br>
 &nbsp;&nbsp;<span style="color:blue"> **\</lfoptions\>**</span>&nbsp;&nbsp;&nbsp;&nbsp;End of element with options<br>
-<br>
 &nbsp;&nbsp;<span style="color:green"> **\<lfuser>**</span>&nbsp;&nbsp;&nbsp;&nbsp;Start of element with user-defined variables<br>
-<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:green"> **User's specific parameters and settings**</span><br>
-<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:green"> **User's specific parameters and settings**</span><br>
 &nbsp;&nbsp;<span style="color:green"> **\</lfuser\>**</span>&nbsp;&nbsp;&nbsp;&nbsp;End of element with user-defined variables<br>
-<br>
 &nbsp;&nbsp;<span style="color:pink"> **\<lfbinding\>**</span>&nbsp;&nbsp;&nbsp;&nbsp;Start of element with 'binding' variables<br>
-<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:pink"> **LISFLOOD model general settings**</span><br>
-<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:pink"> **LISFLOOD model general settings**</span><br>
 &nbsp;&nbsp;<span style="color:pink"> **\</lfbinding\>**</span>&nbsp;&nbsp;&nbsp;&nbsp;End of element with 'binding' variables<br>
-<br>
 **\</lfsettings\>**&nbsp;&nbsp;&nbsp;&nbsp;End of settings element<br>
 
 
@@ -40,7 +30,7 @@ This file contains settings for LISFLOOD model. It is made up of 3 elements ‘l
     - Options that activate special LISFLOOD features, such as simulate reservoirs, perform split routing, etc.
     - Options to activate the reporting of additional output maps and time series (e.g. soil moisture maps)
 
- The complete list of available options is contained in OptionTserieMaps.xml file located in LISFLOOD's code folder.  Users are not obliged to include all available options in Settings.xml file: if one option is not specified in Settings.xml, the default option will be automatically used.
+    The complete list of available options is contained in OptionTserieMaps.xml file located in LISFLOOD's code folder.  Users are not obliged to include all available options in Settings.xml file: if one option is not specified in Settings.xml, the default option will be automatically used.
 
  If Users leave the ‘lfoptions’ element empty, LISFLOOD will simply run using default options (i.e. run model without optional modules; only report most basic output files). However, the ‘lfoptions’ element itself (i.e. <lfoptions> </lfoptions>) has to be present, even if empty.
 
