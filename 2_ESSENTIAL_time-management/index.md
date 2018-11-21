@@ -25,7 +25,8 @@ In Settings file, three different keys are used to specify start date, end date 
 
 ![](../media/image64.png)
 
-> BOTH TIMESTAMPS AND TIME STEPS ALWAYS REFER TO THE END OF THE TIME INTERVAL!
+> <span style="color:red"> **Both timestamps and time steps ALWAYS refer to the END of the TIME INTERVAL!**</span>
+
 
 ## Using timestamps
 
@@ -62,7 +63,7 @@ When  using time steps, dates (including hours and minutes) to retrieve data  fo
 	TIME-RELATED CONSTANTS                                                
 	**************************************************************               
 	</comment>                                                          
-	<textvar name="CalendarDayStart" value="01/01/1990">            
+	<textvar name="CalendarDayStart" value="01/01/2015 06:00">            
 	<comment>                                                           
 	Calendar day of 1st day in model run                                  
 	Day of the year of first map (e.g. xx0.001) even if the model start   
@@ -76,23 +77,23 @@ When  using time steps, dates (including hours and minutes) to retrieve data  fo
 	timestep [seconds]                                                  
 	</comment>                                                          
 	</textvar>                                                          
-	<textvar name="DtSecChannel" value="86400">                     
+	<textvar name="DtSecChannel" value="3600">                     
 	<comment>                                                           
 	Sub time step used for kinematic wave channel routing [seconds]     
 	Within the model,the smallest out of DtSecChannel and DtSec is used   
 	</comment>                                                          
 	</textvar>                                                          
-	<textvar name="StepStart" value="1">                            
+	<textvar name="StepStart" value="03/01/2015 06:00">                            
 	<comment>                                                           
 	Number of first time step in simulation                               
 	</comment>                                                          
 	</textvar>                                                          
-	<textvar name="StepEnd" value="10">                             
+	<textvar name="StepEnd" value="05/01/2015 06:00">                             
 	<comment>                                                           
 	Number of last time step in simulation                                
 	</comment>                                                          
 	</textvar>                                                          
-	<textvar name="ReportSteps" value="endtime">                    
+	<textvar name="ReportSteps" value="1..5">                    
 	<comment>                                                           
 	Time steps at which to write model state maps (i.e. only              
 	those maps that would be needed to define initial conditions          
