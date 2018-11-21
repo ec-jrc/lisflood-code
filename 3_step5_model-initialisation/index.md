@@ -9,10 +9,9 @@ In this subsection we will first demonstrate the effect of the model's initial s
 
 To better understand the impact of the initial model state on the results of a simulation, let's start with a simple example. The Figure below shows 3 LISFLOOD simulations of soil moisture for the upper soil layer. In the first simulation, it was assumed that the soil is initially completely saturated. In the second one, the soil was assumed to be completely dry (i.e. at residual moisture content). Finally, a third simulation was done where the initial soil moisture content was assumed to be in between these two extremes.
 
-  ![](https://ec-jrc.github.io/lisflood_manual/media/image37.png){width="5.625in"
-  height="3.6979166666666665in"}
+  ![](../media/image37.png)
 
-  ***Figure 7.1** Simulation of soil moisture in upper soil layer for a soil that is initially at saturation (s), at residual moisture content (r) and in between (\[s+r\]/2) *
+  **Figure:** *Simulation of soil moisture in upper soil layer for a soil that is initially at saturation (s), at residual moisture content (r) and in between (\[s+r\]/2) *
 
 What is clear from the Figure is that the initial amount of moisture in the soil only has a marked effect on the start of each simulation; after a couple of months the three curves converge. In other words, the  "memory" of the upper soil layer only goes back a couple of months (or, more precisely, for time lags of more than about 8 months the autocorrelation in time is negligible).
 
@@ -24,7 +23,7 @@ When setting up a model run that includes a warm-up period, most of the internal
 
 For the remaining state variables, initialisation is somewhat less straightforward. The amount of water in the channel (defined by *TotalCrossSectionAreaInitValue*) is highly spatially variable (and limited by the channel geometry). The amount of water that can be stored in the upper and lower soil layers (*ThetaInit1Value*, *ThetaInit2Value*) is limited by the soil's porosity. The lower groundwater zone poses special problems because of its overall slow response (discussed in a separate section below). Because of this, LISFLOOD provides the possibility to initialise these variables internally, and these special initialisation methods can be activated by setting the initial values of each of these variables to a special 'bogus' value of *-9999*. The following Table summarises these special initialisation methods:
 
-***Table:*** *LISFLOOD special initialisation methods*$^1$ 
+**Table:** *LISFLOOD special initialisation methods*$^1$ 
 
 | **Variable**          | **Description**       | **Initialisation method**     |
 |-------------------------------|-------------------------------|-------------------------------|
@@ -48,69 +47,111 @@ An actual LISFLOOD simulation differs from the theoretical *steady state* in 2 w
 
 ## What you need to do:  
 
-First **do a "pre-run" to calculate the average inflow into the lower zone**. This average inflow can be reported as a map, which is then used in the actual run. This involves the following steps:
+### Option 1: If using Kinematic routing only (no split routing):
 
-1.  Set all the initial conditions to either 0,1 or -9999
+1) Set  initial state of all state variables to either 0,1 or -9999 (i.e. cold start with default values or internally initialized values) in Settings.XML file
 
-2.  Activate the "InitLisflood" option by setting it active in the 'lfoptions' in the settings file:
+2) Activate the “InitLisfloodwithoutsplit” option in <lfoptions> section of Settings.XML file using:
+```xml
+    <setoption choice="1" name="InitLisfloodwithoutsplit"/>
+    <setoption choice="0" name="InitLisflood"/>
+```
+  
+3) Activate reporting maps (in NetCDF format) in <lfoptions> section of Settings.XML file using::
+```xml
+    <setoption choice="1" name="repLZAvInflowMap"/>
+    <setoption choice="1" name="repEndMaps"/>
+    <setoption choice="1"  name="writeNetcdf"/>
+```
+
+4) Set split routing option to not active in in <lfoptions> section of Settings.XML file using:
+```xml
+    <setoption choice="0" name="SplitRouting"/>
+```
+
+5) Set the name of the reporting map for average percolation rate from upper to lower groundwater zone in <lfuser> section of Settings.XML file using:
+```xml
+    <textvar name="LZAvInflowMap" value="initrun/lzavin.end">
+```
+
+6) Set the name of the reporting map for average discharge map in <lfuser> section of Settings.XML file using:
+```xml
+    <textvar name="AvgDis" value="initrun/avgdis.end">
+```
+
+7) Run the model for a longer period (if possible more than 3 years, best for the whole modelling period)
+
+8) Go back to the LISFLOOD settings file, and set the InitLisfloodwithoutsplit to inactive, leaving all other switches as before:
 
 ```xml
-  <setoption choice="1" name="InitLisflood"/>
-```
-3.  Run the model for a longer period (if possible more than 3 years, best for the whole modelling period)
-
-To run the model, start up a command prompt (Windows) or a console window (Linux) and type 'lisflood' followed by the name of the settings file, e.g.:
-
-```unix
-lisflood settings.xml
+    <setoption choice="0" name="InitLisfloodwithoutsplit"/>
+    <setoption choice="0" name="InitLisflood"/>
 ```
 
-If everything goes well you should see something like this:
+### If using Split routing:
 
-```unix
-LISFLOOD version March 01 2013 PCR2009W2M095
+1) Set  initial state of all state variables to either 0,1 or -9999 (i.e. cold start with default values or internally initialized values) in Settings.XML file
 
-Water balance and flood simulation model for large catchments
-
-(C) Institute for Environment and Sustainability
-
-Joint Research Centre of the European Commission
-
-TP261, I-21020 Ispra (Va), Italy
-
-Todo report checking within pcrcalc/newcalc
-
-Created: /nahaUsers/burekpe/newVersion/CWstjlDpeO.tmp
-
-pcrcalc version: Mar 22 2011 (linux/x86_64)
-
-Executing timestep 1
-
-The LISFLOOD version "March 01 2013 PCR2009W2M095" indicates the date of the source code (01/03/2013), the oldest PCRASTER version it works with (PCR2009), the version of XML wrapper (W2) and the model version (M095).
-
+2) Activate the “InitLisflood” option in <lfoptions> section of Settings.XML file using:
+```xml
+    <setoption choice="0" name="InitLisfloodwithoutsplit"/>
+    <setoption choice="1" name="InitLisflood"/>
 ```
 
-4.  Go back to the LISFLOOD settings file, and set the InitLisflood inactive:
+3) Activate reporting maps (in NetCDF format) in <lfoptions> section of Settings.XML file using:
+```xml
+    <setoption choice="1" name="repLZAvInflowMap"/>
+    <setoption choice="1" name="repEndMaps"/>
+    <setoption choice="1"  name="writeNetcdf"/>
+```
+
+4) Set split routing option to not active in in <lfoptions> section of Settings.XML file using:
+```xml
+    <setoption choice="1" name="SplitRouting"/>
+```
+
+5) Set the name of the reporting map for average percolation rate from upper to lower groundwater zone in <lfuser> section of Settings.XML file using:
+```xml
+    <textvar name="LZAvInflowMap" value="initrun/lzavin.end">
+```
+
+6) Set the name of the reporting map for average discharge map in <lfuser> section of Settings.XML file using:
+```xml
+    <textvar name="AvgDis" value="initrun/avgdis.end">
+```
+
+7) Run the model for a longer period (if possible more than 3 years, best for the whole modelling period)
+
+8) Go back to the LISFLOOD settings file, and set the InitLisflood inactive, leaving all other switches as before:
 
 ```xml
-  <setoption choice="0" name="InitLisflood"/>
+    <setoption choice="0" name="InitLisfloodwithoutsplit"/>
+    <setoption choice="0" name="InitLisflood"/>
 ```
 
-5.  Run the model again using the modified settings file
+### What to do after the initialization run
+At the end of the initialization run two files will be created in NetCDF format (**):
 
-In this case, the initial state of $LZ$ is computed for the correct average inflow, and the simulated storage in the lower zone throughout the simulation should not show any systematic (long-term) trends. The obvious price to pay for this is that the pre-run increase the computational load. However the pre-run will use a simplified routing to decrease the computational run-time. As long as the simulation period for the actual run and the pre-run are identical, the procedure gives a 100% guarantee that the development of the lower zone storage will be free of any systematic bias. Since the computed recharge values are dependent on the model parameterisation used, in a calibration setting the whole procedure must be repeated for each parameter set!
+    lzavin.end.nc
+    avgdis.end.nc
 
-6. Check the lower zone initialisation 
+9) Checking the lower zone initialisation
 
-The presence of any initialisation problems of the lower zone can be checked by adding the following line to the 'lfoptions' element of the settings file:
-
+The presence of any initialisation problems of the lower zone can be checked by adding the following line to the ‘lfoptions’ element of the settings file:
 ```xml
-  <setoption name=" repStateUpsGauges" choice="1"> </setoption\>
+<setoption name=" repStateUpsGauges" choice="1"></setoption>
 ```
 
-This tells the model to write the values of all state variables (averages, upstream of contributing area to each gauge) to time series files. The default name of the lower zone time series is 'lzUps.tss'. Figure below shows an example of an 8-year simulation that was done both without (dashed line) and with a pre-run. The simulation without the pre-run shows a steady decreasing trend throughout the 8-year period, whereas the simulation for which the pre-run was used doesn't show this long-term trend (although in this specific case a modest increasing trend is visible throughout the first 6 years of the simulation, but this is related to trends in the meteorological input).
+This tells the model to write the values of all state variables (averages, upstream of contributing area to each gauge) to time series files. The default name of the lower zone time series is ‘lzUps.tss’.
 
-![initLZDemo](https://ec-jrc.github.io/lisflood_manual/media/image40.png){width="5.770833333333333in"
-height="3.2395833333333335in"}
+
+
+![initLZDemo](../media/image40.png)
 
 ***Figure:*** *Initialisation of lower groundwater zone with and without using a pre-run. Note the strong decreasing trend in the simulation without pre-run. *
+
+
+> Important note:
+> - Calibration parameters obtained with no split routing should never be used to run simulations with split routing and vice versa.
+> - Using option InitLisfloodwithoutsplit=1 will result in an AvgDis file with zero values everywhere.
+> - In case of doubts, check content of AvgDis file: if it's all zero, then split routing must be off. Note that an AvgDis file containing all zero values will automatically set LISFLOOD to no split routing, even if SplitRouting=1.
