@@ -279,11 +279,11 @@ defaults:
         - title: "About this user guide"
           url: 1_introduction_usermanual
 
-      - section_title: "LISFLOOD settings file"
+      - section_title: "LISFLOOD settings files"
         items:
-        - title: "Technical Layout"
+        - title: "Settings.xml"
           url: 2_ESSENTIAL_setting-file
-        - title: "Sections & parameters"
+        - title: "OptionsTserieMaps.xml"
           url: 2_ESSENTIAL_default-settings-file
 
       - section_title: "Step-by-step user guide"
