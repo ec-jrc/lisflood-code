@@ -279,9 +279,9 @@ defaults:
         - title: "About this user guide"
           url: 1_introduction_usermanual
 
-      - section_title: "LISFLOOD settings files"
+      - section_title: "ESSENTIALS before getting started"
         items:
-        - title: "Settings.xml"
+        - title: "LISFLOOD settings file: Settings.xml"
           url: 2_ESSENTIAL_setting-file
         - title: "OptionsTserieMaps.xml"
           url: 2_ESSENTIAL_default-settings-file
