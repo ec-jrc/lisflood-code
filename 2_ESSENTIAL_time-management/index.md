@@ -2,7 +2,7 @@
 
 ## Time convention within LISFLOOD model
 
-LISFLOOD model follows an "end of timestep" naming convention for timestamps of both input (forcings) and output data.
+**LISFLOOD model follows an "end of timestep" naming convention** for timestamps of both input (forcings) and output data.
 
 Accordingly,  if timestamp "02/01/2017 06:00" is used for naming a time step of daily  accumulated rainfall data, that time step will contain rainfall  accumulation between  "01/01/2017 06:00" and "02/01/2017 06:00" (see  following figure)
 
