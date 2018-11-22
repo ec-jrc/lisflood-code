@@ -155,3 +155,75 @@ This tells the model to write the values of all state variables (averages, upstr
 > - Calibration parameters obtained with no split routing should never be used to run simulations with split routing and vice versa.
 > - Using option InitLisfloodwithoutsplit=1 will result in an AvgDis file with zero values everywhere.
 > - In case of doubts, check content of AvgDis file: if it's all zero, then split routing must be off. Note that an AvgDis file containing all zero values will automatically set LISFLOOD to no split routing, even if SplitRouting=1.
+
+
+### Proceed with a LISFLOOD run
+
+
+10) Copy the output maps of the initialisation run (found in folder "out") into the folder "init"
+
+11) Replace in the LISFLOOD settings file the 'bogus' values of -9999 for *LZAvInflowMap* and *AvgDis* with the actual map: 
+
+```xml
+**************************************************************
+INITIAL CONDITIONS FOR THE WATER BALANCE MODEL
+(can be either maps or single values)
+**************************************************************
+</comment>
+
+<textvar name="LZAvInflowMap" value="$(PathInit)/lzavin.map">
+<comment>
+$(PathInit)/lzavin.map
+Reported map of average percolation rate from upper to
+lower groundwater zone (reported for end of simulation)
+</comment>
+</textvar>
+
+<textvar name="AvgDis" value="$(PathInit)/avgdis.map">
+<comment>
+$(PathInit)/avgdis.map
+CHANNEL split routing in two lines
+Average discharge map [m3/s]
+</comment>
+</textvar>
+```
+
+12) Switch of the initialisation option in the LISFLOOD settings file
+
+```xml
+<setoption choice="0" name="InitLisflood"/>
+```
+
+
+13) launch LISFLOOD
+
+To run the model, start up a command prompt (Windows) or a console window (Linux) and type 'lisflood' followed by the name of the settings file, e.g.:
+
+```unix
+lisflood settings.xml
+```
+
+If everything goes well you should see something like this:
+
+```xml
+LISFLOOD version March 01 2013 PCR2009W2M095
+
+Water balance and flood simulation model for large catchments
+
+(C) Institute for Environment and Sustainability
+
+Joint Research Centre of the European Commission
+
+TP261, I-21020 Ispra (Va), Italy
+
+Todo report checking within pcrcalc/newcalc
+
+Created: /nahaUsers/burekpe/newVersion/CWstjlDpeO.tmp
+
+pcrcalc version: Mar 22 2011 (linux/x86_64)
+
+Executing timestep 1
+
+The LISFLOOD version "March 01 2013 PCR2009W2M095" indicates the date of the source code (01/03/2013), the oldest PCRASTER version it works with (PCR2009), the version of XML wrapper (W2) and the model version (M095).
+
+```
