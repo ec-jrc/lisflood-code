@@ -129,6 +129,9 @@ An actual LISFLOOD simulation differs from the theoretical *steady state* in 2 w
     <setoption choice="0" name="InitLisflood"/>
 ```
 
+### What to do after the initialization run - Proceed with a LISFLOOD run
+
+
 9) Checking the lower zone initialisation
 
 The presence of any initialisation problems of the lower zone can be checked by adding the following line to the ‘lfoptions’ element of the settings file:
@@ -146,7 +149,6 @@ This tells the model to write the values of all state variables (averages, upstr
 ***Figure:*** *Initialisation of lower groundwater zone with and without using a pre-run. Note the strong decreasing trend in the simulation without pre-run. *
 
 
-### What to do after the initialization run - Proceed with a LISFLOOD run
 
 
 10) At the end of the initialization run two files will be created in NetCDF format. Copy those (found in folder "out") into the folder "init":
