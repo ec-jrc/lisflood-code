@@ -312,6 +312,10 @@ defaults:
           url: 4_annex_input-files
         - title: "LISFLOOD output files"
           url: 4_annex_output-files
+        - title: "LISFLOOD settings and options"
+          url: 4_annex_settings_and_options
+        - title: "LISFLOOD state variables"
+          url: 4_annex_state-variables
 
       - section_title: "Not to forget"
         items:
