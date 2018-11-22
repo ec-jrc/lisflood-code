@@ -6,70 +6,33 @@ This is particularly useful if you are simulating individual flood events on a s
 In any case, you should be aware that values of some **internal state variables of the model** (especially lower zone storage) **are very much dependent on the parameterisation used**. Hence, suppose we have 'end maps' that were created using some parameterisation of the model (let's say parameter set *A*), then these maps should **not** be used as initial conditions for a model run with another parameterisation (parameter set *B*). If you decide to do this anyway, you are likely to encounter serious initialisation problems (but these may not be immediately visible in the output!). If you do this while calibrating the model (i.e. parameter set *B* is the calibration set), this will render the calibration exercise pretty much useless (since the output is the result of a mix of different parameter sets). However, for *FrostIndexInitValue* and *DSLRInitValue* it is perfectly safe to use the 'end maps', since the values of these maps do not depend on any calibration parameters (that is, only if you do not calibrate on any of the frost-related parameters!). If you need to calibrate for individual events (i.e.hourly), you should apply *each* parameterisation on *both * the (daily) pre-run and the 'event' run! This may seem awkward, but there is no way of getting around this (except from avoiding event-based calibration at all, which may be a good idea anyway).
 
 ## What you need to do
-1. Copy the output maps of the initialisation run (found in folder "out") into the folder "init"
+1) Save and use state/end maps
 
-2. Replace in the LISFLOOD settings file the 'bogus' values of -9999 for *LZAvInflowMap* and *AvgDis* with the actual map: 
+At the end of each model run, LISFLOOD writes maps of all internal state variables. Two different sets of maps can be stored (both sets can be saved at the same time):
 
-```xml
-**************************************************************
-INITIAL CONDITIONS FOR THE WATER BALANCE MODEL
-(can be either maps or single values)
-**************************************************************
-</comment>
+- End maps: NetCDF single maps containing internal state variables values for the last simulation timestep (*StepEnd*)
+- State maps: NetCDF stack maps containing internal state variables values for the *ReportSteps* period
 
-<textvar name="LZAvInflowMap" value="$(PathInit)/lzavin.map">
-<comment>
-$(PathInit)/lzavin.map
-Reported map of average percolation rate from upper to
-lower groundwater zone (reported for end of simulation)
-</comment>
-</textvar>
+You can use either state maps or end maps as the initial conditions for a succeeding simulation. This is particularly useful if you are simulating individual flood events on a small time interval (e.g. hourly). For instance, to estimate the initial conditions just before the flood you can do a ‘pre-run’ on a daily time interval for the year before the flood. You can then use the ‘end maps’ as the initial conditions for the hourly simulation.
 
-<textvar name="AvgDis" value="$(PathInit)/avgdis.map">
-<comment>
-$(PathInit)/avgdis.map
-CHANNEL split routing in two lines
-Average discharge map [m3/s]
-</comment>
-</textvar>
-```
+- **Saving end maps**
+    To save end maps to be used for later model runs, activate the "repEndMaps" option in <lfoptions> section of Settings.XML:
+    ```xml
+    <setoption choice="1" name="repEndMaps"/>
+    ```
 
-3. Switch of the initialisation option in the LISFLOOD settings file
+- **Saving state maps**
+    To save state maps to be used for later model runs, activate the "repStateMaps" option in <lfoptions> section of Settings.XML:
+    ```xml
+    <setoption choice="1" name="repStateMaps"/>
+    ```
+  
+Some internal state variables of the model (especially lower zone storage) are very much dependent on the parametrisation used. Hence, suppose we have ‘end maps’ that were created using some parametrisation of the model (let’s say parameter set A), then these maps should not be used as initial conditions for a model run with another parametrisation (parameter set B).
+Using state/end maps
 
-```xml
-<setoption choice="0" name="InitLisflood"/>
-```
+LISFLOOD warm start is managed by two keys in Settings XML file:
+
+    "StepStart" which is the first output step/date from LISFLOOD model (forecast);
+    "timestepInit" which is the step/date to use as the initial state (usually it's one model step before "StepStart", but it can be any date/step).
 
 
-4. launch LISFLOOD
-
-To run the model, start up a command prompt (Windows) or a console window (Linux) and type 'lisflood' followed by the name of the settings file, e.g.:
-
-```unix
-lisflood settings.xml
-```
-
-If everything goes well you should see something like this:
-
-```unix
-LISFLOOD version March 01 2013 PCR2009W2M095
-
-Water balance and flood simulation model for large catchments
-
-(C) Institute for Environment and Sustainability
-
-Joint Research Centre of the European Commission
-
-TP261, I-21020 Ispra (Va), Italy
-
-Todo report checking within pcrcalc/newcalc
-
-Created: /nahaUsers/burekpe/newVersion/CWstjlDpeO.tmp
-
-pcrcalc version: Mar 22 2011 (linux/x86_64)
-
-Executing timestep 1
-
-The LISFLOOD version "March 01 2013 PCR2009W2M095" indicates the date of the source code (01/03/2013), the oldest PCRASTER version it works with (PCR2009), the version of XML wrapper (W2) and the model version (M095).
-
-```
