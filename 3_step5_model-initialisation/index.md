@@ -1,4 +1,4 @@
-# Step 5: Initialisation of LISFLOOD
+# Step 5: Initialisation & cold start of LISFLOOD
 
 Just as any other hydrological model, LISFLOOD needs to know the initial state (i.e. amount of water stored) of its internal state variables in order to be able to produce reasonable discharge simulations. However, in practice we hardly ever know the initial state of all state variables at a given time. Hence, we have to estimate the state of the initial storages in a reasonable way, which is also called the initialisation of a hydrological model.
 
