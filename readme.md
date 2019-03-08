@@ -5,7 +5,7 @@ Temporary Readme file for Collaborators only.
 
 To compile this Cython module to enable OpenMP multithreading (parallel kinematic wave):  
 1)Delete the files *.so (if any) in directory hydrological-modules  
-2) execute "python compile_kinematic_wave_parallel_tools.py build_ext --inplace"  
+2) Inside the hydrological_modules folder, execute "python2 compile_kinematic_wave_parallel_tools.py build_ext --inplace"  
 
 Important: the module has to be compiled on the machine where the model is run - the resulting binary is not portable.  
 
