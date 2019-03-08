@@ -1,9 +1,9 @@
 # Lisflood code
 
-Source code of lisflood model
-Temporary Readme file for Collaborators only. 
+Source code of lisflood model  
+Temporary Readme file for Collaborators only.  
 
-To compile this Cython module to enable OpenMP multithreading (parallel kinematic wave):
+To compile this Cython module to enable OpenMP multithreading (parallel kinematic wave):  
 1)Delete the files *.so (if any) in directory hydrological-modules  
 2) execute "python compile_kinematic_wave_parallel_tools.py build_ext --inplace"  
 
