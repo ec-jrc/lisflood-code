@@ -376,7 +376,17 @@ class routing(object):
                 # lower discharge limit for second line of routing
                 # set to mutiple of average discharge (map from prerun)
                 # QSplitMult =2 is around 90 to 95% of Q
-                self.var.QLimit = self.var.QLimit / self.var.NoRoutSteps
+
+                ###############################################
+                # CM mod
+                # QLimit should NOT be dependent on the NoRoutSteps (number of routing steps)
+                # self.var.QLimit = self.var.QLimit / self.var.NoRoutSteps #original
+
+                # TEMPORARY WORKAROUND FOR EFAS XDOM!!!!!!!!!!
+                # This must be removed
+                self.var.QLimit = self.var.QLimit / 24.0
+                ###############################################
+
                 self.var.Chan2M3Start = self.var.ChannelAlpha2 * self.var.ChanLength * (self.var.QLimit ** self.var.Beta)
                 # virtual amount of water in the channel through second line
                 self.var.Chan2QStart = self.var.QLimit - compressArray(upstream(self.var.LddKinematic, decompress(self.var.QLimit)))
