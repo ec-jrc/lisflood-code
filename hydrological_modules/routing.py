@@ -373,6 +373,7 @@ class routing(object):
 
                 self.var.QLimit = loadmap('AvgDis') * loadmap('QSplitMult')
                 self.var.M3Limit = self.var.ChannelAlpha * self.var.ChanLength * (self.var.QLimit ** self.var.Beta)
+                # Over bankful discharge starts at QLimit
                 # lower discharge limit for second line of routing
                 # set to mutiple of average discharge (map from prerun)
                 # QSplitMult =2 is around 90 to 95% of Q
@@ -485,7 +486,7 @@ class routing(object):
                 # ChanQKin in [cu m / s]
                 self.river_router.kinematicWaveRouting(self.var.ChanQKin, SideflowChan, "main_channel")
                 self.var.ChanM3Kin = self.var.ChanLength * self.var.ChannelAlpha * self.var.ChanQKin**self.var.Beta
-
+                # Volume in channel at end of computation step
                 #self.var.ChanQKin=pcraster.max(self.var.ChanQKin,0)
                 self.var.ChanQ=np.maximum(self.var.ChanQKin,0)
                 # at single kin. ChanQ is the same
@@ -523,11 +524,14 @@ class routing(object):
                 # Main channel routing
                 self.river_router.kinematicWaveRouting(self.var.ChanQKin, self.var.Sideflow1Chan, "main_channel")
                 self.var.ChanM3Kin = self.var.ChanLength * self.var.ChannelAlpha * self.var.ChanQKin**self.var.Beta
+
                 # Floodplains routing
                 self.river_router.kinematicWaveRouting(self.var.Chan2QKin, Sideflow2Chan, "floodplains")
                 self.var.Chan2M3Kin = self.var.ChanLength * self.var.ChannelAlpha2 * self.var.Chan2QKin**self.var.Beta
                 self.var.CrossSection2Area = (self.var.Chan2M3Kin - self.var.Chan2M3Start) * self.var.InvChanLength # wet cross-section area of floodplain
                 self.var.ChanQ = np.maximum(self.var.ChanQKin + self.var.Chan2QKin - self.var.QLimit, 0)
+                # Main channel routing and floodplains routing
+
                 # ChanQ=max(ChanQKin+Chan2QKin-QLimit,0.0);
                 # Channel discharge: equal to ChanQKin [cu m / s]
                 # End splitrouting

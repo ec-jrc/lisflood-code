@@ -180,6 +180,8 @@ class waterbalance(object):
             # only, which is why we need to multiply with PermeableFraction to get the volumes right (no soil moisture
             # or groundwater is stored at all in the direct runoff fraction!)
 
+            # OverlandM3 = self.var.OFM3Other + self.var.OFM3Forest + self.var.OFM3Direct
+
             #WaterStored = areatotal(decompress(ChannelStoredM3), catch) + areatotal(decompress(HillslopeStoredM3), catch)
             WaterStored = np.take(np.bincount(self.var.Catchments,weights=ChannelStoredM3),self.var.Catchments)
             WaterStored += np.take(np.bincount(self.var.Catchments,weights=HillslopeStoredM3),self.var.Catchments)

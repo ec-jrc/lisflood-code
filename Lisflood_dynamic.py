@@ -186,6 +186,7 @@ class LisfloodModel_dyn(DynamicModel):
         self.sumDis += self.sumDisDay
         self.ChanQAvg = self.sumDisDay/self.NoRoutSteps
         self.TotalCrossSectionArea = self.ChanM3 * self.InvChanLength
+            # Total volume of water in channel per inv channel length
             # New cross section area (kinematic wave)
             # This is the value after the kinematic wave, so we use ChanM3Kin here
             # (NOT ChanQKin, which is average discharge over whole step, we need state at the end of all iterations!)

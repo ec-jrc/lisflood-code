@@ -718,6 +718,7 @@ class TimeoutputTimeseries(TimeoutputTimeseries):
         #outputFile.write("timeseries " + self._spatialDatatype.lower() + "\n")
         outputFile.write("timeseries " + self._spatialDatatype.lower() + " settingsfile: "+os.path.realpath(sys.argv[1])+" date: " + xtime.ctime(xtime.time())+ "\n")
         sys.argv[1]
+        # write number of outlets points +1
         outputFile.write(str(self._maxId + 1) + "\n")
         outputFile.write("timestep\n")
         for colId in range(1, self._maxId + 1):
