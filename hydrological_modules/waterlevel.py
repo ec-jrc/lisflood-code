@@ -55,8 +55,11 @@ class waterlevel(object):
 
         if option['simulateWaterLevels']:
 
-            ChanCrossSectionArea = ifthenelse(self.var.IsChannelKinematic, pcraster.min(self.var.TotalCrossSectionArea,
-                                              self.var.TotalCrossSectionAreaBankFull),scalar(0.0))
+           # menta: changed to numpy api form pcraster
+           #ChanCrossSectionArea = ifthenelse(self.var.IsChannelKinematic, pcraster.min(self.var.TotalCrossSectionArea,
+           #                                  self.var.TotalCrossSectionAreaBankFull),scalar(0.0))
+            ChanCrossSectionArea = np.min(np.array([self.var.TotalCrossSectionArea, self.var.TotalCrossSectionAreaBankFull]), 0)
+            ChanCrossSectionArea[~self.var.IsChannelKinematic] = 0
             # Cross-sectional area for channel only (excluding floodplain) [sq m]
             FloodPlainCrossSectionArea = self.var.TotalCrossSectionArea - ChanCrossSectionArea
             # Floodplain area [sq m]
@@ -67,7 +70,10 @@ class waterlevel(object):
             WaterLevelKin = ChanWaterDepth+FloodPlainWaterDepth
             # Total water level [m]
 
-            self.var.WaterLevel = ifthenelse(self.var.IsChannelKinematic, WaterLevelKin,scalar(0.0))
+           # menta: changed to numpy api from pcraster
+           #self.var.WaterLevel = ifthenelse(self.var.IsChannelKinematic, WaterLevelKin,scalar(0.0))
+            self.var.WaterLevel = np.zeros(ChanCrossSectionArea.shape)
+            self.var.WaterLevel[self.var.IsChannelKinematic] = WaterLevelKin[self.var.IsChannelKinematic]
             # Use WaterLevelKin if kinematic wave routing is used ...
 
             if option['dynamicWave']:
