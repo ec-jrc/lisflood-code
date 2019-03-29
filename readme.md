@@ -14,5 +14,6 @@ Then in the settings file the option "numberParallelThreadsKinematicWave" may ta
     - "1"           : serial execution (not parallel)  
     - "2", "3", ... : manual setting of the number of parallel threads.  
                       (if exceeding the number of CPUs, the option is set to "0") -->  
-
+```xml
 <textvar name="numCPUs_parallelKinematicWave" value="30"/>
+```
