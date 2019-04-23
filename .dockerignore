@@ -1,0 +1,10 @@
+_site/**
+.mypy_cache/
+.pytest_cache/
+**/.mypy_cache/
+.git/
+**/__pycache__/
+.jekyll-metadata
+build/**
+dist/**
+lisflood.egg-info/**
