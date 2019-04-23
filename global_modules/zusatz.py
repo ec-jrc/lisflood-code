@@ -16,7 +16,7 @@ import os
 from netCDF4 import Dataset, netcdftime, date2num, num2date
 from dateutil import parser
 from platform import system as operating_system
-from pandas.core.datetools import parse_time_string
+# from pandas.core.datetools import parse_time_string
 
 from pcraster import*
 from pcraster.framework import *

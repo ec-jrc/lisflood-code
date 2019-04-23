@@ -3,3 +3,6 @@
 __pycache__/
 build/
 *.so
+*.xml
+!settingsEUMerged.xml
+!OptionTserieMaps.xml
