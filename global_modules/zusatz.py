@@ -23,6 +23,7 @@ from pcraster.framework import *
 
 from globals import *
 
+import numpy as np
 MAX_READ_TRIALS = 100 # max number of trial allowed re-read an input file: to avoid crashes due to temporary network interruptions
 READ_PAUSE = 0.1      # pause (seconds) between each re-read trial over the network
 try:
@@ -719,10 +720,11 @@ class TimeoutputTimeseries(TimeoutputTimeseries):
         outputFile.write("timeseries " + self._spatialDatatype.lower() + " settingsfile: "+os.path.realpath(sys.argv[1])+" date: " + xtime.ctime(xtime.time())+ "\n")
         sys.argv[1]
         # write number of outlets points +1
-        outputFile.write(str(self._maxId + 1) + "\n")
+        outputFile.write(str(self._ncodesId + 1) + "\n")
         outputFile.write("timestep\n")
-        for colId in range(1, self._maxId + 1):
-            outputFile.write(str(colId) + "\n")
+
+        for colId in range(0, self._ncodesId):
+            outputFile.write(str(self._codesId[colId]) + "\n")
         outputFile.close()
 
     def _configureOutputFilename(self, filename):
@@ -783,7 +785,7 @@ class TimeoutputTimeseries(TimeoutputTimeseries):
             row = ""
             row += " %8g" % timestep
             if self._spatialIdGiven:
-                for cellId in range(0, self._maxId):
+                for cellId in range(0, self._ncodesId):
                     value = self._sampleValues[timestep - start][cellId]
                     if isinstance(value, Decimal):
                         row += "           1e31"
@@ -813,6 +815,7 @@ class TimeoutputTimeseries(TimeoutputTimeseries):
 
         self._outputFilename = tssFilename
         self._maxId = 1
+        self._ncodesId = 1
         self._spatialId = None
         self._spatialDatatype = None
         self._spatialIdGiven = False
@@ -855,8 +858,21 @@ class TimeoutputTimeseries(TimeoutputTimeseries):
             if self._spatialId.isSpatial():
                 self._maxId, valid = pcraster.cellvalue(
                     pcraster.mapmaximum(pcraster.ordinal(self._spatialId)), 1)
+                # convert to numpy array
+                outletsmapnp = pcr2numpy(self._spatialId,np.nan)
+                # get outlets codes from outlets map
+                codesId = numpy.unique(outletsmapnp)
+                # drop negative values (= missing data in pcraster map)
+                codesId = codesId[codesId > 0]
+                # get number of outlets points
+                self._ncodesId = len(codesId)
+                # prepare array to store outlets codes
+                self._codesId = [-9999 for i in xrange(self._ncodesId)]
+
             else:
                 self._maxId = 1
+                self._codesId = [1]
+                self._ncodesId = len(self._codesId)
 
             # cell indices of the sample locations
 
@@ -864,18 +880,27 @@ class TimeoutputTimeseries(TimeoutputTimeseries):
             # for cellId in range(1, self._maxId + 1):
             # self._sampleAddresses.append(self._getIndex(cellId))
 
-            self._sampleAddresses = [1 for i in xrange(self._maxId)]
+
+            # prepare array to store outlets points raster numbers
+            self._sampleAddresses = [-9999 for i in xrange(self._ncodesId)]
             # init with the left/top cell - could also be 0 but then you have to catch it in
             # the sample routine and put an exeption in
+           # number of cells in map
             nrCells = pcraster.clone().nrRows() * pcraster.clone().nrCols()
             for cell in xrange(1, nrCells + 1):
                 if (pcraster.cellvalue(self._spatialId, cell)[1]):
-                    self._sampleAddresses[
-                        pcraster.cellvalue(self._spatialId, cell)[0] - 1] = cell
+                    # get point code from outlets map for pixel cell
+                    outlet_code = pcraster.cellvalue(self._spatialId, cell)[0]
+                    # get index of the point code in the sorted list of outlets codes
+                    outlet_idx = np.where(codesId == outlet_code)[0][0]
+                    # store point code
+                    self._codesId[outlet_idx] = outlet_code
+                    # store outlets location (cell)
+                    self._sampleAddresses[outlet_idx] = cell
 
             self._spatialIdGiven = True
 
-            nrCols = self._maxId
+            nrCols = self._ncodesId
             self._sampleValues = [
                 [Decimal("NaN")] * nrCols for _ in [0] * nrRows]
         else:

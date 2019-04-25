@@ -980,3 +980,36 @@ def perturbState(var, method = "normal", minVal=0, maxVal=1, mu=0, sigma=1, spat
       else:
         out = list(np.random.uniform(minVal, maxVal, numVals))
   return(out)
+
+
+def read_tss_header(tssfilename):
+    """ Read header of a tss file (used in inflow)
+        :param tssfilename  path and name of the tss
+        :returns outlets_id  list of column names in tss file 
+    """
+    with open(tssfilename) as fp:
+        rec = fp.readline()
+        if rec.split()[0] == 'timeseries':
+            # LISFLOOD tss file with header
+            # get total number of outlets
+            outlets_tot_number = int(fp.readline())
+            fp.readline()
+            outlets_id = []
+            for i in range(0, outlets_tot_number - 1):
+                rec = fp.readline()
+                rec = int(rec.strip())
+                outlets_id.append(rec)  #Lisflood ID code for output points
+            # read tss data
+            # tssdata = pd.read_table(tssfilename, delim_whitespace=True, header=None, names=outlets_id, index_col=0,
+            #                        skiprows=outlets_tot_number + 2)
+
+        else:
+            # LISFLOOD tss file without header (table)
+            numserie = len(rec.split())
+            outlets_id = []
+            for i in range(1, numserie):
+                outlets_id.append(i)  #Lisflood progressive ID code for output points
+            # read tss data
+            # tssdata = pd.read_table(tssfilename, delim_whitespace=True, header=None, names=outlets_id, index_col=0)
+    fp.close()
+    return outlets_id

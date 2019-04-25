@@ -397,6 +397,7 @@ class routing(object):
                 self.var.ChanM3Kin = np.maximum(self.var.ChanM3 - self.var.Chan2M3Kin + self.var.Chan2M3Start, 0) # TEMPORARY SOLUTION TO VIRTUAL WATER PROBLEM
                 self.var.Chan2QKin = (self.var.Chan2M3Kin*self.var.InvChanLength*self.var.InvChannelAlpha2)**(self.var.InvBeta)
                 self.var.ChanQKin = (self.var.ChanM3Kin*self.var.InvChanLength*self.var.InvChannelAlpha)**(self.var.InvBeta)
+
         # Initialise parallel kinematic wave router: main channel-only routing if self.var.ChannelAlpha2 is None; else split-routing(main channel + floodplains)
         self.river_router = kinematicWave(compressArray(self.var.LddKinematic), ~maskinfo["mask"], self.var.ChannelAlpha,\
                                           self.var.Beta, self.var.ChanLength, self.var.DtRouting,\
