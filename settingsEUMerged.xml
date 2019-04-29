@@ -1581,7 +1581,11 @@ TIMESTEP RELATED PARAMETERS
 **************************************************************
 </comment>
 
-<!-- menta -->
+<!-- menta
+Valid calendars `'standard', 'gregorian', 'proleptic_gregorian'
+    'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'`.
+    `'standard'`  is a mixed Julian/Gregorian calendar.
+-->
 <textvar name="CalendarConvention" value="proleptic_gregorian"/>
 
 <textvar name="CalendarDayStart" value="$(CalendarDayStart)">
