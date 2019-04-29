@@ -93,6 +93,7 @@ class snow(object):
         # Snowmelt
         hemisphere_N = self.var.lat_rad > 0
         snowmelt_coeff = np.sin(np.radians((self.var.CalendarDay - 81) * self.var.SnowDayDegrees))
+
         SeasSnowMeltCoef = self.var.SnowSeason * np.where(hemisphere_N, snowmelt_coeff, -snowmelt_coeff) + self.var.SnowMeltCoef # N and S hemispheres have opposite-sign cycles
 
         # Icemelt

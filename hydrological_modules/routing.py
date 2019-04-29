@@ -373,10 +373,21 @@ class routing(object):
 
                 self.var.QLimit = loadmap('AvgDis') * loadmap('QSplitMult')
                 self.var.M3Limit = self.var.ChannelAlpha * self.var.ChanLength * (self.var.QLimit ** self.var.Beta)
+                # Over bankful discharge starts at QLimit
                 # lower discharge limit for second line of routing
                 # set to mutiple of average discharge (map from prerun)
                 # QSplitMult =2 is around 90 to 95% of Q
-                self.var.QLimit = self.var.QLimit / self.var.NoRoutSteps
+
+                ###############################################
+                # CM mod
+                # QLimit should NOT be dependent on the NoRoutSteps (number of routing steps)
+                # self.var.QLimit = self.var.QLimit / self.var.NoRoutSteps #original
+
+                # TEMPORARY WORKAROUND FOR EFAS XDOM!!!!!!!!!!
+                # This must be removed
+                self.var.QLimit = self.var.QLimit / 24.0
+                ###############################################
+
                 self.var.Chan2M3Start = self.var.ChannelAlpha2 * self.var.ChanLength * (self.var.QLimit ** self.var.Beta)
                 # virtual amount of water in the channel through second line
                 self.var.Chan2QStart = self.var.QLimit - compressArray(upstream(self.var.LddKinematic, decompress(self.var.QLimit)))
@@ -386,6 +397,7 @@ class routing(object):
                 self.var.ChanM3Kin = np.maximum(self.var.ChanM3 - self.var.Chan2M3Kin + self.var.Chan2M3Start, 0) # TEMPORARY SOLUTION TO VIRTUAL WATER PROBLEM
                 self.var.Chan2QKin = (self.var.Chan2M3Kin*self.var.InvChanLength*self.var.InvChannelAlpha2)**(self.var.InvBeta)
                 self.var.ChanQKin = (self.var.ChanM3Kin*self.var.InvChanLength*self.var.InvChannelAlpha)**(self.var.InvBeta)
+
         # Initialise parallel kinematic wave router: main channel-only routing if self.var.ChannelAlpha2 is None; else split-routing(main channel + floodplains)
         self.river_router = kinematicWave(compressArray(self.var.LddKinematic), ~maskinfo["mask"], self.var.ChannelAlpha,\
                                           self.var.Beta, self.var.ChanLength, self.var.DtRouting,\
@@ -475,7 +487,7 @@ class routing(object):
                 # ChanQKin in [cu m / s]
                 self.river_router.kinematicWaveRouting(self.var.ChanQKin, SideflowChan, "main_channel")
                 self.var.ChanM3Kin = self.var.ChanLength * self.var.ChannelAlpha * self.var.ChanQKin**self.var.Beta
-
+                # Volume in channel at end of computation step
                 #self.var.ChanQKin=pcraster.max(self.var.ChanQKin,0)
                 self.var.ChanQ=np.maximum(self.var.ChanQKin,0)
                 # at single kin. ChanQ is the same
@@ -489,7 +501,13 @@ class routing(object):
 
                 # Ad
                 SideflowRatio=np.where((self.var.ChanM3Kin + self.var.Chan2M3Kin) > 0,self.var.ChanM3Kin/(self.var.ChanM3Kin+self.var.Chan2M3Kin),0.0)
-                self.var.Sideflow1Chan = np.where(self.var.ChanM3Kin > self.var.M3Limit, SideflowRatio*SideflowChan, SideflowChan)
+
+                # CM ##################################
+                # self.var.Sideflow1Chan = np.where(self.var.ChanM3Kin > self.var.M3Limit, SideflowRatio*SideflowChan, SideflowChan)
+                # This is creating instability because ChanM3Kin can be < M3Limit between two routing sub-steps
+                #######################################
+                self.var.Sideflow1Chan = np.where((self.var.ChanM3Kin + self.var.Chan2M3Kin-self.var.Chan2M3Start) > self.var.M3Limit,
+                                                  SideflowRatio*SideflowChan, SideflowChan)
 
                 # Peter
                 # self.var.Sideflow1Chan = np.where(self.var.ChanM3Kin > self.var.M3Limit, self.var.Sideflow1Chan, SideflowChan)
@@ -507,11 +525,14 @@ class routing(object):
                 # Main channel routing
                 self.river_router.kinematicWaveRouting(self.var.ChanQKin, self.var.Sideflow1Chan, "main_channel")
                 self.var.ChanM3Kin = self.var.ChanLength * self.var.ChannelAlpha * self.var.ChanQKin**self.var.Beta
+
                 # Floodplains routing
                 self.river_router.kinematicWaveRouting(self.var.Chan2QKin, Sideflow2Chan, "floodplains")
                 self.var.Chan2M3Kin = self.var.ChanLength * self.var.ChannelAlpha2 * self.var.Chan2QKin**self.var.Beta
                 self.var.CrossSection2Area = (self.var.Chan2M3Kin - self.var.Chan2M3Start) * self.var.InvChanLength # wet cross-section area of floodplain
                 self.var.ChanQ = np.maximum(self.var.ChanQKin + self.var.Chan2QKin - self.var.QLimit, 0)
+                # Main channel routing and floodplains routing
+
                 # ChanQ=max(ChanQKin+Chan2QKin-QLimit,0.0);
                 # Channel discharge: equal to ChanQKin [cu m / s]
                 # End splitrouting

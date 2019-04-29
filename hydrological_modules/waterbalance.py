@@ -73,8 +73,10 @@ class waterbalance(object):
             Hill1 += self.var.IrrigationFraction * (self.var.CumInterception[2] + self.var.W1[2] + self.var.W2[2] + self.var.UZ[2])
             Hill1 += self.var.LZ
 
-            HillslopeInitM3 = (self.var.WaterDepthInit + self.var.SnowCoverInit + Hill1 +
-                               self.var.DirectRunoffFraction * self.var.CumInterSealed) * self.var.MMtoM3
+            OverlandInitM3 = self.var.OFM3Other + self.var.OFM3Forest + self.var.OFM3Direct
+
+            HillslopeInitM3 = (self.var.SnowCoverInit + Hill1 +
+                               self.var.DirectRunoffFraction * self.var.CumInterSealed) * self.var.MMtoM3 + OverlandInitM3
             # Initial water stored at hillslope elements [m3]
             # Note that WInit1, WInit2 and TotalGroundWaterInit are defined for the pixel's permeable fraction
             # only, which is why we need to multiply with PermeableFraction to get the volumes right (no soil moisture
@@ -179,6 +181,8 @@ class waterbalance(object):
             # Note that W1, W2 and TotalGroundWater are defined for the pixel's permeable fraction
             # only, which is why we need to multiply with PermeableFraction to get the volumes right (no soil moisture
             # or groundwater is stored at all in the direct runoff fraction!)
+
+            # OverlandM3 = self.var.OFM3Other + self.var.OFM3Forest + self.var.OFM3Direct
 
             #WaterStored = areatotal(decompress(ChannelStoredM3), catch) + areatotal(decompress(HillslopeStoredM3), catch)
             WaterStored = np.take(np.bincount(self.var.Catchments,weights=ChannelStoredM3),self.var.Catchments)

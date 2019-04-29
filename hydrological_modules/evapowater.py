@@ -118,8 +118,10 @@ class evapowater(object):
            # ***********************************************
           UpstreamEva = self.var.EWRef*self.var.MMtoM3*self.var.WaterFraction
              # evaporation for loop is amount of water per timestep [cu m]
+             # Volume of potential evaporation from water surface  per time step (conversion to [m3])
           ChanMIter = self.var.ChanM3Kin.copy()
              # for Iteration loop: First value is amount of water in the channel
+             # amount of water in bankful (first line of routing)
           ChanLeft = ChanMIter*0.1
              # 10% of the discharge must stay in the river
           self.var.EvaAddM3 = globals.inZero.copy()

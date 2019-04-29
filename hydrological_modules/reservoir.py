@@ -170,9 +170,8 @@ class reservoir(object):
         if option['simulateReservoirs']:
 
             #
-            #InvDtSecDay = 1/86400
-
-            InvDtSecDay=self.var.InvDtSec
+            InvDtSecDay = 1/86400
+            # InvDtSecDay=self.var.InvDtSec
             #ReservoirInflow = cover(ifthen(defined(self.var.ReservoirSites), upstream(
             #    self.var.LddStructuresKinematic, self.var.ChanQ)), scalar(0.0))
 
@@ -194,7 +193,7 @@ class reservoir(object):
             # New reservoir fill (fraction)
 
 
-            ReservoirOutflow1 = np.minimum( self.var.MinReservoirOutflowCC, self.var.ReservoirStorageM3CC * self.var.InvDtSec)
+            ReservoirOutflow1 = np.minimum( self.var.MinReservoirOutflowCC, self.var.ReservoirStorageM3CC * InvDtSecDay)
             # Reservoir outflow [m3/s] if ReservoirFill le
             # 2*ConservativeStorageLimit
 
@@ -212,7 +211,7 @@ class reservoir(object):
             #    self.var.TotalReservoirStorageM3CC * self.var.InvDtSec, self.var.NonDamagingReservoirOutflowCC)
             temp = np.minimum(self.var.NonDamagingReservoirOutflowCC,np.maximum(ReservoirInflowCC * 1.2,self.var.NormalReservoirOutflowCC))
             ReservoirOutflow4 = np.maximum((self.var.ReservoirFillCC - self.var.FloodStorageLimitCC-0.01) *
-                self.var.TotalReservoirStorageM3CC * self.var.InvDtSec, temp)
+                                           self.var.TotalReservoirStorageM3CC * InvDtSecDay, temp)
 
 
 

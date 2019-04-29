@@ -97,7 +97,7 @@ class groundwater(object):
     def dynamic(self):
         # outflow from LZ to channel stops when LZ is below its threshold. LZ can be below its threshold because of water abstractions
         self.var.LZOutflow = np.minimum(self.var.LowerZoneK * self.var.LZ,self.var.LZ - self.var.LZThreshold)
-      	# Outflow out of lower zone [mm]
+      	# Outflow out of lower zone [mm per model timestep]
 
         self.var.LZOutflow = np.maximum(self.var.LZOutflow, 0)        
         # No outflow if LZ is below threshold
@@ -109,9 +109,11 @@ class groundwater(object):
 
         self.var.UZOutflowPixel = self.var.deffraction(self.var.UZOutflow)
           # outflow from upper zone as pixel flow
+          # to surface routing
 
         self.var.GwPercUZLZPixel = self.var.deffraction(self.var.GwPercUZLZ)
           #  Compute pixel-average flux
+          # to Lower Zone
 
         self.var.LZ += self.var.GwPercUZLZPixel
       	# (ground)water in lower response box [mm]
