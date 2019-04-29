@@ -524,7 +524,6 @@ def Calendar(input):
             msg = "Wrong step or date format in XML settings file\n" \
                   "Input " + str(input)
             raise LisfloodError(msg)
-            quit(1)
 
     return date
 
