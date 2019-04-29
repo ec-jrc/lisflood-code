@@ -503,15 +503,11 @@ class routing(object):
                 SideflowRatio=np.where((self.var.ChanM3Kin + self.var.Chan2M3Kin) > 0,self.var.ChanM3Kin/(self.var.ChanM3Kin+self.var.Chan2M3Kin),0.0)
 
                 # CM ##################################
-                # self.var.Sideflow1Chan = np.where(self.var.ChanM3Kin > self.var.M3Limit, SideflowRatio*SideflowChan, SideflowChan)
+                self.var.Sideflow1Chan = np.where(self.var.ChanM3Kin > self.var.M3Limit, SideflowRatio*SideflowChan, SideflowChan)
                 # This is creating instability because ChanM3Kin can be < M3Limit between two routing sub-steps
                 #######################################
-                self.var.Sideflow1Chan = np.where((self.var.ChanM3Kin + self.var.Chan2M3Kin-self.var.Chan2M3Start) > self.var.M3Limit,
-                                                  SideflowRatio*SideflowChan, SideflowChan)
-
-                # Peter
-                # self.var.Sideflow1Chan = np.where(self.var.ChanM3Kin > self.var.M3Limit, self.var.Sideflow1Chan, SideflowChan)
-                # self.var.Sideflow1Chan = np.where(SideflowChan < self.var.Sideflow1Chan, SideflowChan, self.var.Sideflow1Chan)
+                # self.var.Sideflow1Chan = np.where((self.var.ChanM3Kin + self.var.Chan2M3Kin-self.var.Chan2M3Start) > self.var.M3Limit,
+                #                                   SideflowRatio*SideflowChan, SideflowChan)
 
                 self.var.Sideflow1Chan = np.where(np.abs(SideflowChan) < 1e-7, SideflowChan, self.var.Sideflow1Chan)
                 # too small values are avoided
