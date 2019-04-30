@@ -16,7 +16,7 @@ import os
 from netCDF4 import Dataset, netcdftime, date2num, num2date
 from dateutil import parser
 from platform import system as operating_system
-# from pandas.core.datetools import parse_time_string
+from pandas._libs.tslibs.parsing import parse_time_string
 
 from pcraster import*
 from pcraster.framework import *
@@ -513,19 +513,18 @@ def Calendar(input):
 
     try:
         # try reading step number from number or string
-        date = float(input)
-        return date
+        return float(input)
     except:
         # try reading a date in one of available formats
         try:
-            date=parser.parse(input,dayfirst=True)
+            date = parse_time_string(input)[0] # datetime.datetime type
+            step = date2num(date, self.var.time_units, self.var.calendar_type) # float type
+            return num2date(step, self.var.time_units, self.var.calendar_type) # calendar-dependent type from netCDF4.netcdftime._netcdftime module
         except:    
             # if cannot read input then stop
             msg = "Wrong step or date format in XML settings file\n" \
                   "Input " + str(input)
             raise LisfloodError(msg)
-
-    return date
 
 
 def datetoInt(dateIn,both=False):

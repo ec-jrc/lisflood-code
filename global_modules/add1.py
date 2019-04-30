@@ -861,7 +861,7 @@ def writenet(flag, inputmap, netfile, DtDay, value_standard_name, value_long_nam
             units_time = 'days since %s' % startdate.strftime("%Y-%m-%d %H:%M:%S.0")
             steps = (int(binding["DtSec"]) / 86400.) * np.arange(int(binding["StepStart"]) - 1, int(binding["StepEnd"]))
             if frequency != "all":
-                dates = num2date(steps, units_time, binding["CalendarConvention"])
+                dates = num2date(steps, units_time, self.var.calendar_type)
                 next_date_times = np.array([j + datetime.timedelta(seconds=int(binding["DtSec"])) for j in dates])
                 if frequency == "monthly":
                     months_end = np.array([dates[j].month != next_date_times[j].month for j in xrange(steps.size)])

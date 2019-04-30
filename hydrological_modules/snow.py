@@ -39,10 +39,6 @@ class snow(object):
     def initial(self):
         """ initial part of the snow module
         """
-       
-        
-        self.var.lat_rad = loadmap('Latitude')
-        # latitude map
         
         self.var.DeltaTSnow = 0.9674 * loadmap('ElevationStD') * loadmap('TemperatureLapseRate')
 

@@ -10,6 +10,8 @@
 # -------------------------------------------------------------------------
 
 from global_modules.add1 import *
+import netCDF4
+import xarray as xr
 
 
 class miscInitial(object):
@@ -158,3 +160,26 @@ class miscInitial(object):
 
         self.var.SumETpot =  globals.inZero
         self.var.SumETpotact =   globals.inZero
+
+        # Read the calendar type, time units, and the latitude (radians) from the precipitation forcing NetCDF file
+        _pr_path = binding["PrecipitationMaps"] + ".nc"
+        with netCDF4.Dataset(_pr_path) as nc:
+            _time_var = nc.variables["time"]
+            self.var.time_units = _time_var.units
+            try:
+                self.var.calendar_type = _time_var.calendar
+            except AttributeError:
+                self.var.calendar_convention = "proleptic_gregorian"
+                print("Warning: the 'calendar' attribute of the 'time' variable of {} is not set:
+                      '{}' is set by default - check the forcing files!".format(_pr_path, self.var.calendar_convention))
+        with xr.open_dataset(_pr_path) as nc:
+            if all([co in nc.dims for co in ("x", "y")]):
+                try:
+                    proj_var = [v for v in nc.data_vars.keys() if 'proj4_params' in nc[v].attrs.keys()][0] # look for the projection variable
+                except IndexError:
+                    raise Exception("If using projected coordinates (x, y), a variable with the 'proj4_params' attribute must be included in the precipitation file!")
+                projection = Proj(nc[proj_var].attrs['proj4_params']) # projection object obtained from the PROJ4 string
+                _, lat_deg = projection(*coordinatesLand(nc.x.values, nc.y.values), inverse=True) # latitude (degrees)
+            else:
+                _, lat_deg = coordinatesLand(nc.lon.values, nc.lat.values) # latitude (degrees)
+        self.var.lat_rad = np.radians(lat_deg)  # latitude (radians)
