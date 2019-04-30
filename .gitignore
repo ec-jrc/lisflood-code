@@ -4,5 +4,7 @@ __pycache__/
 build/
 *.so
 *.xml
+kinematic_wave_parallel_tools.c
+kinematic_wave_parallel_tools.html
 !settingsEUMerged.xml
 !OptionTserieMaps.xml
