@@ -12,7 +12,16 @@
 from global_modules.add1 import *
 import netCDF4
 import xarray as xr
+from pyproj import Proj
 
+def coordinatesLand(eastings_forcing, northings_forcing):
+    """"""
+    half_cell = maskmapAttr['cell'] / 2.
+    top_row = np.where(northings_forcing == maskmapAttr['y'] - half_cell)[0][0]
+    left_col = np.where(eastings_forcing == maskmapAttr['x'] + half_cell)[0][0]
+    row_slice = slice(top_row, top_row + maskmapAttr['row'])
+    col_slice = slice(left_col, left_col + maskmapAttr['col'])
+    return [co[row_slice,col_slice][~maskinfo["mask"]] for co in np.meshgrid(eastings_forcing, northings_forcing)]
 
 class miscInitial(object):
 
@@ -161,18 +170,8 @@ class miscInitial(object):
         self.var.SumETpot =  globals.inZero
         self.var.SumETpotact =   globals.inZero
 
-        # Read the calendar type, time units, and the latitude (radians) from the precipitation forcing NetCDF file
-        _pr_path = binding["PrecipitationMaps"] + ".nc"
-        with netCDF4.Dataset(_pr_path) as nc:
-            _time_var = nc.variables["time"]
-            self.var.time_units = _time_var.units
-            try:
-                self.var.calendar_type = _time_var.calendar
-            except AttributeError:
-                self.var.calendar_convention = "proleptic_gregorian"
-                print("Warning: the 'calendar' attribute of the 'time' variable of {} is not set:
-                      '{}' is set by default - check the forcing files!".format(_pr_path, self.var.calendar_convention))
-        with xr.open_dataset(_pr_path) as nc:
+        # Read the latitude (radians) from the precipitation forcing NetCDF file
+        with xr.open_dataset(binding["PrecipitationMaps"] + ".nc") as nc:
             if all([co in nc.dims for co in ("x", "y")]):
                 try:
                     proj_var = [v for v in nc.data_vars.keys() if 'proj4_params' in nc[v].attrs.keys()][0] # look for the projection variable

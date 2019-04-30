@@ -95,6 +95,15 @@ class waterabstraction(object):
                 self.var.LivestockDemandMM = loadmap('LivestockDemandMaps',timestampflag='closest') * self.var.DtDay
                 self.var.EnergyDemandMM = loadmap('EnergyDemandMaps',timestampflag='closest') * self.var.DtDay
 
+            # Check consistency with the reference calendar that is read from the precipitation forcing file (global_modules.zusatz.optionBinding)
+            if option['TransientWaterDemandChange'] and option['readNetcdfStack']:
+                for k in ('DomesticDemandMaps', 'IndustrialDemandMaps', 'LivestockDemandMaps', 'EnergyDemandMaps'):
+                    with Dataset(binding[k] + '.nc') as nc:
+                        if getCalendarType(nc) != binding['calendar_type']:
+                            print(CalendarInconsistencyWarning(binding[k]))
+
+
+
 
             if option['groundwaterSmooth']:
                 self.var.GroundwaterBodiesPcr = decompress(self.var.GroundwaterBodies)

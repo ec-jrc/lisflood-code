@@ -214,6 +214,10 @@ def optionBinding(settingsfile, optionxml):
     outputDir.append(pathout)
     #outputDir.append(user["PathOut"])
 
+    # Read the calendar type from the precipitation forcing NetCDF file
+    with Dataset(binding["PrecipitationMaps"] + ".nc") as nc:
+        binding["calendar_type"] = getCalendarType(nc)
+
 # ---------------------------------------------
     # Split the string ReportSteps into an int array
     # replace endtime with number
@@ -517,9 +521,10 @@ def Calendar(input):
     except:
         # try reading a date in one of available formats
         try:
+            _t_units = "hours since 1970-01-01 00:00:00" # units used for date type conversion (datetime.datetime -> calendar-specific if needed)
             date = parse_time_string(input)[0] # datetime.datetime type
-            step = date2num(date, self.var.time_units, self.var.calendar_type) # float type
-            return num2date(step, self.var.time_units, self.var.calendar_type) # calendar-dependent type from netCDF4.netcdftime._netcdftime module
+            step = date2num(date, _t_units, binding["calendar_type"]) # float type
+            return num2date(step, _t_units, binding["calendar_type"]) # calendar-dependent type from netCDF4.netcdftime._netcdftime module
         except:    
             # if cannot read input then stop
             msg = "Wrong step or date format in XML settings file\n" \
@@ -547,7 +552,7 @@ def datetoInt(dateIn,both=False):
     # get model time step as float form 'DtSec' in Settings.xml file
     DtSec = float(binding['DtSec'])
     # compute fraction of day corresponding to model time step as float
-    DtDay = float(DtSec / 86400)
+    DtDay = float(DtSec / 86400.)
     # Time step, expressed as fraction of day (same as self.var.DtSec and self.var.DtDay)
 
     if type(date1) is datetime.datetime:
@@ -968,3 +973,16 @@ def remoteInputAccess(function, file_path, error_msg):
                 print("Trying to access file {0}: attempt n. {1}".format(file_path, num_trials))
                 xtime.sleep(READ_PAUSE)
     return obj
+
+def getCalendarType(nc):
+    """Get the type of calendar of the open netCDF file passed as argument (http://cfconventions.org/)"""
+    try:
+        calendar_type = nc.variables["time"].calendar
+    except AttributeError:
+        calendar_type = "proleptic_gregorian"
+        print(LisfloodWarning("""The 'calendar' attribute of the 'time' variable of {} is not set: the default '{}' is used
+                              (http://cfconventions.org/Data/cf-conventions/cf-conventions-1.7/cf-conventions.pdf)""".format(path_nc, calendar_type)))
+    return calendar_type
+        
+def CalendarInconsistencyWarning(filename):        
+    return LisfloodWarning("The time.calendar attribute of {} differs from that of precipitation!".format(filename))

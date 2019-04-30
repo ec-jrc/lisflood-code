@@ -228,18 +228,13 @@ The option "numberParallelThreadsKinematicWave" may take the following values:
 <textvar name="numCPUs_parallelKinematicWave" value="30"/>
 
 
-<!-- menta -->
-<!--<textvar name="PathRoot" value="/H01_Fresh_Water/Europe/LisfloodEurope">-->
 <textvar name="PathRoot" value="/FLOODS/lisflood/Europe">
 <comment>
 Root directory
 </comment>
 </textvar>
 
-<!-- menta -->
 <textvar name="MaskMap" value="$(PathRoot)/maps_netcdf/area.nc">
-<!--<textvar name="MaskMap" value="$(PathRoot)/areamaps/area1Danube.map">-->
-<!--<textvar name="MaskMap" value="./outH01_Fresh_Water/Europe/LisfloodEurope/areamaps/area1Danube.map">-->
 <comment>
 70 40 0.1 -8.6 43.3  # Douro
 30 30 0.1 6.0 52.0
@@ -296,13 +291,6 @@ Calendar day number of 1st day in model run
 Day of the year of first map (e.g. xx000.001) even if the model start from map e.g. 500
 e.g. 1st of January: 1; 1st of June 151 (or 152 in leap year)
 Needed to read out LAI tables correctly
-</comment>
-</textvar>
-
-
-<textvar name="Latitude" value="$(PathMaps)/lat.map">
-<comment>
-latitude map to be used for snow/ice modelling
 </comment>
 </textvar>
 
@@ -591,15 +579,12 @@ Maps for land use fractions and related land use maps
 </comment>
 </textvar>
 
-<!--menta-->
-<!--<textvar name="PathWaterUse" value="/H01_Fresh_Water/Europe/BernyRuns/waterdemand/static/hist">-->
 <textvar name="PathWaterUse" value="$(PathRoot)/maps_netcdf/wateruse2006">
 <comment>
 Water use maps path
 </comment>
 </textvar>
 
-<!--menta-->
 <textvar name="PathMeteo" value="/FLOODS/lisflood/Europe/meteo_19900102_20180101">
 <comment>
 ./meteoWatch
@@ -1581,12 +1566,6 @@ TIMESTEP RELATED PARAMETERS
 **************************************************************
 </comment>
 
-<!-- menta
-Valid calendars `'standard', 'gregorian', 'proleptic_gregorian'
-    'noleap', '365_day', '360_day', 'julian', 'all_leap', '366_day'`.
-    `'standard'`  is a mixed Julian/Gregorian calendar.
--->
-<textvar name="CalendarConvention" value="proleptic_gregorian"/>
 
 <textvar name="CalendarDayStart" value="$(CalendarDayStart)">
 <comment>
@@ -1619,14 +1598,6 @@ Number of first time step in simulation
 <textvar name="StepEnd" value="$(StepEnd)">
 <comment>
 Number of last time step in simulation
-</comment>
-</textvar>
-
-
-
-<textvar name="Latitude" value="$(Latitude)">
-<comment>
-latitude map to be used for snow/ice modelling
 </comment>
 </textvar>
 

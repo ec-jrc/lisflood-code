@@ -4,3 +4,6 @@ python-dateutil
 cython
 docopt
 numexpr
+pandas
+xarray
+pyproj

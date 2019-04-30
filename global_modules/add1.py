@@ -341,10 +341,7 @@ def loadmap(name,pcr=False, lddflag=False, timestampflag='exact', averageyearfla
                 #get information from netCDF stack
                 t_steps = nf1.variables['time'][:]  # get values for timesteps ([  0.,  24.,  48.,  72.,  96.])
                 t_unit = nf1.variables['time'].units  # get unit (u'hours since 2015-01-01 06:00:00')
-                try:
-                    t_cal = nf1.variables['time'].calendar  # get calendar from netCDF file
-                except AttributeError:  # Attribute does not exist
-                    t_cal = u"gregorian"  # Use standard calendar
+                t_cal = getCalendarType(nf1)
                 #get year from time unit in case average year is used
                 if averageyearflag:
                     #get date of the first step in netCDF file containing average year values
@@ -569,10 +566,7 @@ def readnetcdf(name, time, timestampflag='exact', averageyearflag=False):
     variable_name = nf1.variables.items()[-1][0]        # get name of the last variable
     t_steps = nf1.variables['time'][:]    # get values for timesteps ([  0.,  24.,  48.,  72.,  96.])
     t_unit = nf1.variables['time'].units  # get unit (u'hours since 2015-01-01 06:00:00')
-    try:
-        t_cal = nf1.variables['time'].calendar  # get calendar from netCDF file
-    except AttributeError:          # Attribute does not exist
-        t_cal = u"gregorian"        # Use standard calendar
+    t_cal = getCalendarType(nf1)
     # CM: get year from time unit in case average year is used
     if averageyearflag:
         # CM: get date of the first step in netCDF file containing average year values
@@ -679,10 +673,9 @@ def checknetcdf(name, start, end):
     # read information from netCDF file
     t_steps = nf1.variables['time'][:]    # get values for timesteps ([  0.,  24.,  48.,  72.,  96.])
     t_unit = nf1.variables['time'].units  # get unit (u'hours since 2015-01-01 06:00:00')
-    try:
-        t_cal = nf1.variables['time'].calendar  # get calendar from netCDF file
-    except AttributeError:          # Attribute does not exist
-        t_cal = u"gregorian"        # Use standard calendar
+    t_cal = getCalendarType(nf1)
+    if t_cal != binding['calendar_type']:
+        print(CalendarInconsistencyWarning(filename))
 
     # get date of first available timestep in netcdf file
     date_first_step_in_ncdf = num2date(t_steps[0], units=t_unit, calendar=t_cal)
@@ -861,7 +854,7 @@ def writenet(flag, inputmap, netfile, DtDay, value_standard_name, value_long_nam
             units_time = 'days since %s' % startdate.strftime("%Y-%m-%d %H:%M:%S.0")
             steps = (int(binding["DtSec"]) / 86400.) * np.arange(int(binding["StepStart"]) - 1, int(binding["StepEnd"]))
             if frequency != "all":
-                dates = num2date(steps, units_time, self.var.calendar_type)
+                dates = num2date(steps, units_time, binding["calendar_type"])
                 next_date_times = np.array([j + datetime.timedelta(seconds=int(binding["DtSec"])) for j in dates])
                 if frequency == "monthly":
                     months_end = np.array([dates[j].month != next_date_times[j].month for j in xrange(steps.size)])
@@ -886,8 +879,8 @@ def writenet(flag, inputmap, netfile, DtDay, value_standard_name, value_long_nam
                 # CM: minutes to hours model time step
                 time.units = 'minutes since %s' % startdate.strftime("%Y-%m-%d %H:%M:%S.0")
 
-            time.calendar = 'proleptic_gregorian'
-            nf1.variables["time"][:] = date2num(time_stamps, time.units)
+            time.calendar = binding["calendar_type"]
+            nf1.variables["time"][:] = date2num(time_stamps, time.units, time.calendar)
             # for i in metadataNCDF['time']: exec('%s="%s"') % ("time."+i, metadataNCDF['time'][i])
             # value = nf1.createVariable(prefix,fillval,('time','y','x'),zlib=True)
             if 'x' in metadataNCDF.keys():
