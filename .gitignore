@@ -6,5 +6,10 @@ build/
 *.xml
 kinematic_wave_parallel_tools.c
 kinematic_wave_parallel_tools.html
+/tests/data/Drina/outputs/**
+/src/lisflood_model.egg-info/
+/dist/
 !settingsEUMerged.xml
 !OptionTserieMaps.xml
+!/tests/data/Drina/settings/*.xml
+!/tests/data/Drina/maps_netcdf/parameters/params_adjust_Normal_Flood.nc.aux.xml

@@ -23,7 +23,7 @@ WORKDIR /opt
 RUN wget https://cmake.org/files/LatestRelease/cmake-3.14.1-Linux-x86_64.tar.gz && tar -xzvf cmake-3.14.1-Linux-x86_64.tar.gz \
     && wget http://pcraster.geo.uu.nl/pcraster/4.2.1/pcraster-4.2.1.tar.bz2 && tar xf pcraster-4.2.1.tar.bz2 \
     && mkdir /lisflood && mkdir /input && mkdir /output \
-    && mkdir /tests && mkdir /basemaps \
+    && mkdir /tests && mkdir /usecases \
     && cd pcraster-4.2.1 && mkdir build && cd build \
     && cmake -DFERN_BUILD_ALGORITHM:BOOL=TRUE -DCMAKE_INSTALL_PREFIX:PATH=/opt/pcraster /opt/pcraster-4.2.1/ && cmake --build ./ && make install
 
