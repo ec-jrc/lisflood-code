@@ -1,13 +1,14 @@
+"""
+To upload new package on PyPi:
+twine upload dist/*
+"""
+
 import os
-import sys
 from glob import glob
 
 from Cython.Build import cythonize
 
 from setuptools import setup, find_packages, Extension
-
-current_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.join(current_dir, './src/'))
 
 from lisflood.lisf1 import __version__
 
@@ -20,6 +21,7 @@ ext_modules = [
     )
 ]
 
+current_dir = os.path.dirname(os.path.abspath(__file__))
 readme_file = os.path.join(current_dir, 'readme.md')
 
 with open(readme_file, 'r') as f:

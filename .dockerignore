@@ -8,5 +8,5 @@ _site/**
 build/**
 dist/**
 lisflood.egg-info/**
-/src/lisflood_model.egg-info/
+lisflood_model.egg-info
 /dist/

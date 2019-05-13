@@ -1,7 +1,18 @@
-#  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
 """
+
+Copyright 2019 European Union
+
+Licensed under the EUPL, Version 1.2 or as soon they will be approved by the European Commission  subsequent versions of the EUPL (the "Licence");
+
+You may not use this work except in compliance with the Licence.
+You may obtain a copy of the Licence at:
+
+https://joinup.ec.europa.eu/sites/default/files/inline-files/EUPL%20v1_2%20EN(1).txt
+
+Unless required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an "AS IS" basis,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the Licence for the specific language governing permissions and limitations under the Licence.
+
  ######################################################################
 
  ##       ####  ######  ######## ##        #######   #######  ########
@@ -17,14 +28,11 @@
 
 __authors__ = "Ad de Roo, Peter Burek, Johan van der Knijff, Niko Wanders"
 __version__ = "Version: 2.02"
-__date__ ="23 Apr 2016"
+__date__ = "23 Apr 2016"
 __copyright__ = "Copyright 2016, European Commission - Joint Research Centre"
 __maintainer__ = "Ad de Roo"
 __status__ = "Operation"
 
-
-#  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 # to work with the new grid engine JRC - workaround with error on pyexpat
 from pyexpat import *
@@ -33,15 +41,12 @@ from netCDF4 import Dataset
 from pcraster import *
 from pcraster.framework import *
 
-# ---------------------------
-
-
 from Lisflood_initial import *
 from Lisflood_dynamic import *
 from Lisflood_monteCarlo import *
 from Lisflood_EnKF import *
 
-#class LisfloodModel(LisfloodModel_ini, LisfloodModel_dyn):
+
 class LisfloodModel(LisfloodModel_ini, LisfloodModel_dyn, LisfloodModel_monteCarlo, LisfloodModel_EnKF):
     """ Joining the initial and the dynamic part
         of the Lisflood model

@@ -1,15 +1,30 @@
+#cython: language_level=2, boundscheck=False
 """
+
+Copyright 2019 European Union
+
+Licensed under the EUPL, Version 1.2 or as soon they will be approved by the European Commission  subsequent versions of the EUPL (the "Licence");
+
+You may not use this work except in compliance with the Licence.
+You may obtain a copy of the Licence at:
+
+https://joinup.ec.europa.eu/sites/default/files/inline-files/EUPL%20v1_2%20EN(1).txt
+
+Unless required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an "AS IS" basis,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the Licence for the specific language governing permissions and limitations under the Licence.
+
 Collection of functions called by the Python module kinematic_wave_parallel.py. These functions are
 implemented in Cython to achieve compiled-code performance when executing loops over numpy arrays.
 To compile this Cython module to enable OpenMP multithreading, execute:
 $ python compile_kinematic_wave_parallel_tools.py build_ext --inplace
 Important: the module has to be compiled on the machine where the model is run - the resulting binary is not portable.
 """
+
 __author__ = "Emiliano Gelati"
 __contact__ = "emiliano.gelati@ec.europa.eu"
 __version__ = "1.0"
 __date__ = "2016/06/01"
-
 
 import numpy as np
 from cython import boundscheck, wraparound, cdivision

@@ -27,12 +27,12 @@ RUN wget https://cmake.org/files/LatestRelease/cmake-3.14.1-Linux-x86_64.tar.gz 
     && cd pcraster-4.2.1 && mkdir build && cd build \
     && cmake -DFERN_BUILD_ALGORITHM:BOOL=TRUE -DCMAKE_INSTALL_PREFIX:PATH=/opt/pcraster /opt/pcraster-4.2.1/ && cmake --build ./ && make install
 
-WORKDIR /
 COPY requirements.txt /
 RUN pip install -r /requirements.txt
 COPY LICENSE /
 COPY docker-entrypoint.sh /
-COPY . /lisflood
+COPY src/lisflood/. /lisflood/
+COPY src/settingsEUMerged.xml /lisflood/
 WORKDIR /lisflood/hydrological_modules
 RUN python compile_kinematic_wave_parallel_tools.py build_ext --inplace
 
