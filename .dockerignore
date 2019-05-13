@@ -10,3 +10,4 @@ dist/**
 lisflood.egg-info/**
 lisflood_model.egg-info
 *.py[c|o]
+.eggs
