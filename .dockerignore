@@ -9,4 +9,4 @@ build/**
 dist/**
 lisflood.egg-info/**
 lisflood_model.egg-info
-/dist/
+*.py[c|o]
