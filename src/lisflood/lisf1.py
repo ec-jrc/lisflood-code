@@ -26,17 +26,6 @@ See the Licence for the specific language governing permissions and limitations 
 ######################################################################
 """
 
-__authors__ = "Ad de Roo, Emiliano Gelati, Peter Burek, Johan van der Knijff, Niko Wanders"
-__version__ = "2.08.05"
-__date__ = "13 May 2019"
-__copyright__ = "Copyright 2019, European Commission - Joint Research Centre"
-__maintainer__ = "Emiliano Gelati, Domenico Nappo, Valerio Lorini, Ad de Roo"
-__status__ = "Operation"
-
-
-#  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 # to work with the new grid engine JRC - workaround with error on pyexpat
 from pyexpat import *
 import xml.dom.minidom
@@ -51,8 +40,9 @@ from Lisflood_initial import *
 from Lisflood_dynamic import *
 from Lisflood_monteCarlo import *
 from Lisflood_EnKF import *
+from metainfo import __authors__, __version__, __date__, __status__
 
-#class LisfloodModel(LisfloodModel_ini, LisfloodModel_dyn):
+
 class LisfloodModel(LisfloodModel_ini, LisfloodModel_dyn, LisfloodModel_monteCarlo, LisfloodModel_EnKF):
     """ Joining the initial and the dynamic part
         of the Lisflood model
@@ -61,6 +51,7 @@ class LisfloodModel(LisfloodModel_ini, LisfloodModel_dyn, LisfloodModel_monteCar
 # ==================================================
 # ============== LISFLOOD execute ==================
 # ==================================================
+
 
 def Lisfloodexe(settings, optionxml):
 
@@ -202,6 +193,7 @@ def usage():
     """ prints some lines describing how to use this program
         which arguments and parameters it accepts, etc
     """
+
     print 'LisfloodPy - Lisflood using pcraster Python framework'
     print 'Authors: ', __authors__
     print 'Version: ', __version__
