@@ -110,7 +110,7 @@
             </comment>
 
 
-            <textvar name="PathRoot" value="$(SettingsDir)/../">
+            <textvar name="PathRoot" value="$(SettingsDir)/..">
 
                 <comment>
 

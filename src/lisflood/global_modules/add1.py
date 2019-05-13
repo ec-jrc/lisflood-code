@@ -142,7 +142,9 @@ def loadsetclone(name):
     :param name: name of the key in Settings.xml containing path and name of mask map as string
     :return: map: mask map (False=include in modelling; True=exclude from modelling) as pcraster
     """
-    filename = binding[name]
+    filename = os.path.normpath(binding[name])
+    if not os.path.exists(filename):
+        raise LisfloodError('File not existing: {}'.format(filename))
     coord = filename.split()    #returns a list of all the words in the string
     if len(coord) == 5:
         # changed order of x, y i- in setclone y is first in Lisflood
@@ -167,7 +169,9 @@ def loadsetclone(name):
             flagmap = True
             mapnp = pcr2numpy(map,np.nan)
 
-        except:
+        except Exception as e:
+            print(type(e))
+            print(str(e))
             # try to read a netcdf file
             filename = os.path.splitext(binding[name])[0] + '.nc'
             nf1 = iterOpenNetcdf(filename, "", "r")
