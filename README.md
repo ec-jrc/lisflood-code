@@ -90,7 +90,7 @@ LISFLOOD is also distributed as a standard python package. You can install the p
 pip install lisflood-model
 ```
 
-Commando above will also install the executable `lisflood` in the virtualenv, so that you can run LISFLOOD with the following:
+Command above will also install the executable `lisflood` in the virtualenv, so that you can run LISFLOOD with the following:
 
 ```bash
 lisflood /absolute_path/to/my/local/folder/Drina/settings/lisfloodSettings_cold_day_base.xml
