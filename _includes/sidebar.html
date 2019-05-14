@@ -12,7 +12,7 @@
              {% for i in s.items %}
 
                {% if pageUrl == i.url %}
-               <li class="active"><a href="{{ i.url|relative_url }}" class="active">{{ i.title }}</a></li>
+               <li class="active">{{ i.title }}</li>
                {% else %}
                <li><a href="{{ i.url|relative_url }}">{{ i.title }}</a></li>
                {% endif %}
