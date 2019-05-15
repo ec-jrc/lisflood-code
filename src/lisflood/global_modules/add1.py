@@ -118,11 +118,8 @@ def mapattrNetCDF(name):
     """
     filename = os.path.splitext(name)[0] + '.nc'
     nf1 = iterOpenNetcdf(filename, "Checking netcdf map \n", 'r')
-    x1 = nf1.variables['x'][0]
-    x2 = nf1.variables['x'][1]
-    y1 = nf1.variables['y'][0]
-    y2 = nf1.variables['y'][1]
-    #x1, x2, y1, y2 = [round(nf1.variables.values()[var_ix][j], 5) for var_ix in range(2) for j in range(2)]
+    spatial_dims = ('x', 'y') if 'x' in nf1.variables else ('lon', 'lat')
+    x1, x2, y1, y2 = [round(nf1.variables[v][j], 5) for v in spatial_dims for j in (0, 1)]
     nf1.close()
     if maskmapAttr['cell'] != round(np.abs(x2 - x1), 5) or maskmapAttr['cell'] != round(np.abs(y2 - y1), 5):
         raise LisfloodError("Cell size different in maskmap {} and {}".format(binding['MaskMap'], filename))
