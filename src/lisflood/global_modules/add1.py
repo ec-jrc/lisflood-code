@@ -574,7 +574,7 @@ def readnetcdf(name, time, timestampflag='exact', averageyearflag=False):
     nf1 = iterOpenNetcdf(filename, "Netcdf map stacks: \n", "r")
 
     # read information from netCDF file
-    variable_name = nf1.variables.items()[-1][0]        # get name of the last variable  # FIXME danger!!!
+    variable_name = [k for k in nf1.variables if len(nf1.variables[k].dimensions) == 3][0] # get the variable with 3 dimensions (variable order not relevant)
     t_steps = nf1.variables['time'][:]    # get values for timesteps ([  0.,  24.,  48.,  72.,  96.])
     t_unit = nf1.variables['time'].units  # get unit (u'hours since 2015-01-01 06:00:00')
     t_cal = getCalendarType(nf1)
