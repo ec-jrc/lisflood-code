@@ -1,7 +1,8 @@
 ## About LISFLOOD
 
 LISFLOOD is a spatially distributed, semi-physical hydrological rainfall-runoff model that has been developed by the Joint Research Centre (JRC) of the European Commission in late 90ies. 
-Since then LISFLOOD has been applied to a wide range of applications such as all kind of water resourses assessments looking at e.g. the effects of climate and land-use change as well as river regulation measures. 
+Since then LISFLOOD has been applied to a wide range of applications such as all kind of water resourses assessments looking at e.g. 
+the effects of climate and land-use change as well as river regulation measures. 
 Its most prominent application is probably within the [European Flood Awareness System](https://www.efas.eu/) (EFAS) 
 operated under [Copernicus Emergency Management System](http://emergency.copernicus.eu/) (EMS).
 

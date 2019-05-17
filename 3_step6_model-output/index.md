@@ -1,6 +1,4 @@
-[//]: # (Step7: Model output) 
-
-# Default LISFLOOD output
+# Step 6: Default LISFLOOD output
 
 LISFLOOD can generate a wide variety of output. Output is generated as either maps or time series (PCRaster format, which can be visualised with PCRaster's 'aguila' application). Reporting of output files can be switched on and off using options in the LISFLOOD settings file. Also, a number of output files are specific to other optional modules, such as the simulation of reservoirs. The following table lists all the output time series that are reported by default (note that the file names can always be changed by the user, although this is not recommended):
 
@@ -89,18 +87,3 @@ In addition, some additional maps and time series may be reported for debugging 
 Note again the domains for which variables are valid: all *rate variables* are reported as pixel-average values. Soil moisture and groundwater storage are reported for the permeable fraction of each pixel only. The reported snow cover is the average of the snow depths in snow zones A, B and C.
 
 By default, the names of the reported discharge maps start with the prefix '*dis*' and end with the time step number (the naming conventions are identical to the ones used for the input maps with meteorological variables, which is explained in **Chapter XXXX**). **Annex XXXXX** summarises all options to report additional output maps. The previous remarks related to the domains for which the state variable values are valid also apply to the maps listed in **Annex XXXXX**.
-
-```R
-
-6.	Getting started: Mulde test catchment
-•	introduction
-•	steps:
-o	follow Step 1-2 from the step-by-step guide
-o	download the “Mulde test case” package onto your local drive, which cover step 4 and mostly step 3 out of the guide (only thing is left to do is to specify your local path in the settings file in xxx)
-o	click on the batch file to let the model run
-o	compare your output to the one delivered in the “Mulde test case” package delivered. If it is identical, congratulations LISFLOOD works and you just have to adopt it for your area of interest
-
-7.	Advancing: Set-up LISFLOOD for your own area
-•	xxx
-
-```

@@ -32,20 +32,9 @@ In Settings file, three different keys are used to specify start date, end date 
 
 Timestamps  (dates) can now be used to set start date and end date of LISFLOOD  simulation. Dates can be used for keys: StepStart, StepEnd and  timestepInit in Settings.xml file. ReportSteps can only be provided as  time steps numbers and are referred to CalendarDayStart.
 
-Date formats accepted include:
-
-```
-DATE_FORMATS = ['%d/%m/%Y %H:%M', '%Y/%m/%d %H:%M', '%d/%m/%Y', '%Y/%m/%d',
-                '%d/%m/%y %H:%M', '%y/%m/%d %H:%M', '%d/%m/%y', '%y/%m/%d',
-                '%d-%m-%Y %H:%M', '%Y-%m-%d %H:%M', '%d-%m-%Y', '%Y-%m-%d',
-                '%d-%m-%y %H:%M', '%y-%m-%d %H:%M', '%d-%m-%y', '%y-%m-%d',
-                '%d.%m.%Y %H:%M', '%Y.%m.%d %H:%M', '%d-%m-%Y', '%Y.%m.%d',
-                '%d.%m.%y %H:%M', '%y.%m.%d %H:%M', '%d.%m.%y', '%y.%m.%d']
-```
-
 If hours:minutes are not specified, LISFLOOD will automatically set them to 00:00
 
-When  using timestamps, CalendarDayStart key in Settings.xml is only used  internally to transform timestamps to model's time steps and it is  usually set equal to StepStart,
+When using timestamps, CalendarDayStart key in Settings.xml is only used  internally to transform timestamps to model's time steps and it is  usually set equal to StepStart,
 
 StepStart, StepEnd and  timestepInit are used to access NetCDF files containing forcings and  state variables, and to create output NetCDF files.
 

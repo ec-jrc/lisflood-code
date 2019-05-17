@@ -1,57 +1,100 @@
-## Step 2: Installation of the LISFLOOD model
+## Step 1: Installation of the LISFLOOD model
 
-### On Windows systems
+You can download code and datasets for testing the model.
+Follow this instruction for a basic test (Drina catchment, included in this repository under [tests/data/Drina](https://github.com/ec-jrc/lisflood-code/tree/master/tests/data/Drina))
 
-For Windows users the installation involves two steps:
+1. **Clone the master branch of this repository (you need to have git installed on your machine).**
 
-1.  Unzip the contents of 'lisflood\_win32.zip' <span style="color:red"> (insert link)</span> to an empty folder on your PC (e.g. 'lisflood')
+    ```bash
+    git clone --single-branch --branch master https://github.com/ec-jrc/lisflood-code.git
+    ```
 
-2.  Open the file 'config.xml' in a text editor. This file contains the full path to all files and applications that are used by LISFLOOD. The items in the file are:
+2. **Install requirements into a python 2.7 virtualenv**
+    
+    ```bash
+    cd lisflood-code
+    pip install -r requirements.txt
+    ```
 
-    - *Pcrcalc application* : this is the name of the pcrcalc application, including the full path
+    You need to install PCRaster and include its python interface in PYTHONPATH environment variable.
+    For details, please follow instruction on [official docs](http://pcraster.geo.uu.nl/getting-started/pcraster-on-linux/).
 
-    - *LISFLOOD Master Code* (optional). This item is usually omitted, and LISFLOOD assumes that the master code is called 'lisflood.xml', and that it is located in the root of the 'lisflood' directory (i.e. the directory that contains  'lisflood.exe' and all libraries). If --for whatever reason- you want to overrule this behaviour, you can add a 'mastercode' element, e.g.:
+3. **Compile the cython module kinematic_wave_parallel_tool**
+   
+   To compile this Cython module to enable OpenMP multithreading (parallel kinematic wave):
+    
+     * Delete the files *.so (if any) in directory hydrological-modules  
+  
+     * Inside the hydrological_modules folder, execute "python2 compile_kinematic_wave_parallel_tools.py build_ext --inplace"  
 
-      ```
-      <mastercode\>d:\\Lisflood\\mastercode\\lisflood.xml<\mastercode>
-      ```
+   Important: the module has to be compiled on the machine where the model is run - the resulting binary is not portable.  
+  
+   Then in the settings file the option "numberParallelThreadsKinematicWave" may take the following values:
+  
+      * "0"           : auto-detection of the machine/node's number of CPUs (all CPUs are used minus 1) (do not set it if other simulations are running on the same machine/node)
+      * "1"           : serial execution (not parallel)
+      * "2", "3", ... : manual setting of the number of parallel threads.
+                        (if exceeding the number of CPUs, the option is set to "0")
+                        
+   ```xml
+   <textvar name="numCPUs_parallelKinematicWave" value="3"/>
+   ```
+  
+4. **Run a cold run for the Drina test catchment**
 
-      The configuration file should look something like this:
+    Now that your environment should be set up to run lisflood, you may try with a prepared settings file for Drina catchment:
+    
+    ```bash
+    python src/lisflood/lisf1.py tests/data/Drina/settings/lisfloodSettings_cold_day_base.xml
+    ```
 
-      ```xml
-      <?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>  
-      <!-- Lisflood configuration file, JvdK, 8 July 2004 -->
-      <!-- !! This file MUST be in the same directory as lisflood.exe -->
-      <!-- (or lisflood) !!! -->
-      <lfconfig>
-      <!-- location of pcrcalc application -->
-      <pcrcalcapp>C:\pcraster\apps\pcrcalc.exe</pcrcalcapp>
-      </lfconfig>
-      ```
+If commands above succeeded without errors, producing dis.nc into tests/data/Drina/outputs folder, your lisflood installation was correct.
 
-
-The lisflood executable is a command-line application which can be called from the command prompt ('DOS' prompt). To make life easier you may include the full path to 'lisflood.exe' in the 'Path' environment variable. In Windows XP you can do this by selecting 'settings' from the 'Start' menu; then go to 'control panel'/'system' and go to the 'advanced' tab. Click on the 'environment variables' button. Finally, locate the 'Path' variable in the 'system variables' window and click on 'Edit' (this requires local Administrator privileges).
-
-
-
-### On Linux systems
-
-Under Linux LISFLOOD requires that the Python interpreter (version 2.7 or more recent) is installed on the system. Most Linux distributions already have Python pre-installed. If needed you can download Python free of any charge from *http://www.python.org/*
-
-The installation process is largely identical to the Windows procedure:
-
-1.  unzip the contents of 'lisflood\_llinux.zip' <span style="color:red"> (insert link)</span> to an empty directory.
-2.  Check if the file 'lisflood' is executable. If not, make it executable using: "chmod 755 lisflood"
-3.  Then update the paths in the configuration file. The configuration file will look something like this:
-
-      ```xml
-      <?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>  
-      <!-- Lisflood configuration file, JvdK, 8 July 2004 -->
-      <!-- !! This file MUST be in the same directory as lisflood.exe -->
-      <!-- (or lisflood) !!! \--\><lfconfig\><!\-- location of pcrcalc application -->
-      <pcrcalcapp>/software/PCRaster/bin/pcrcalc</pcrcalcapp>
-      </lfconfig>
-      ```
+### Docker image
 
 
-[[🔝](#top)](#top)
+You can use the updated docker image to run lisflood, so without taking care to install dependencies on your system.
+First, you pull image from repository.
+
+```bash
+docker pull efas/lisflood:latest
+```
+
+Copy Drina catchment files from container to your host, using mapped directories.
+
+```bash
+docker run -v /absolute_path/to/my/local/folder:/usecases efas/lisflood:latest usecases
+```
+
+After this command, you can find all files to run a test against Drina catchment under the directory you mapped: `/absolute_path/to/my/local/folder/Drina`
+
+
+Now, you can run LISFLOOD as a docker container to test the Drina catchment. Only thing you need to do is to map the Drina folder to the container folder `input`, by using -v option. 
+In the XML settings file, all paths are adjusted to be relative to the very same settings file, so you don't need to edit paths, as long as you keep same folders structure.
+
+
+Execute the following to run the simulation:
+
+```bash
+docker run -v /absolute_path/to/my/local/folder/Drina:/input efas/lisflood /input/settings/lisfloodSettings_cold_day_base.xml
+```
+
+Once LISFLOOD finished, you can find reported maps in `/absolute_path/to/my/local/folder/Drina/outputs/` folder.
+
+### Pypi packaged LISFLOOD
+
+LISFLOOD is also distributed as a standard python package. You can install the pip package in your Python 2.7<sup>[1](#footnote1)</sup> virtualenv:
+
+```bash
+pip install lisflood-model
+```
+
+Command above will also install the executable `lisflood` in the virtualenv, so that you can run LISFLOOD with the following:
+
+```bash
+lisflood /absolute_path/to/my/local/folder/Drina/settings/lisfloodSettings_cold_day_base.xml
+```
+
+<a id="footnote1" name="footnote1">1</a>: We planned to migrate to Python 3 in a few months.
+
+[🔝](#top)](#top)

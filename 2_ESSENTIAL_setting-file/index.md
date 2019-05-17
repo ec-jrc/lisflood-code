@@ -7,7 +7,7 @@ In LISFLOOD, all file and parameter specifications are defined in a settings fil
 
 ## Layout of the settings file
 
-A LISFLOOD settings file is made up of 4 elements, each of which has a specific function. The general structure of the file is described using XML-tags. XML stands for ‘Extensible Markup Language’, and it is really nothing more than a way to describe data in a file. It works by putting information that goes into a (text) file between tags, and this makes it very easy add structure.
+A LISFLOOD settings file is made up of 4 elements, each of which has a specific function. The general structure of the file is described using XML. 
 
 For a LISFLOOD settings file, the basic structure looks like this:
 <br>
@@ -31,11 +31,12 @@ This file contains settings for LISFLOOD model. It is made up of 3 elements ‘l
     - Options that activate special LISFLOOD features, such as simulate reservoirs, perform split routing, etc.
     - Options to activate the reporting of additional output maps and time series (e.g. soil moisture maps)
 
-    The complete list of available options is contained in [OptionTserieMaps.xml file](https://ec-jrc.github.io/lisflood-code/2_ESSENTIAL_default-settings-file/).  Users are not obliged to include all available options in Settings.xml file: if one option is not specified in Settings.xml, the default option will be automatically used.
+    The complete list of available options and default values is contained in [OptionTserieMaps.xml file](https://github.com/ec-jrc/lisflood-code/blob/master/src/lisflood/OptionTserieMaps.xml).
 
-    If Users leave the ‘lfoptions’ element empty, LISFLOOD will simply run using default options (i.e. run model without optional modules; only report most basic output files). However, the ‘lfoptions’ element itself (i.e. <lfoptions> </lfoptions>) has to be present, even if empty.
-
-    Default option values can be found in file [OptionTserieMaps.xml file](https://ec-jrc.github.io/lisflood-code/2_ESSENTIAL_default-settings-file/) in LISFLOOD code folder.
+    
+    Users are not obliged to include all available options in Settings.xml file: if one option is not specified in Settings.xml, the default option will be automatically used.
+    If Users leave the ‘lfoptions’ element empty, LISFLOOD will simply run using default options (i.e. run model without optional modules; only report most basic output files). 
+    However, the ‘lfoptions’ element itself (i.e. <lfoptions> </lfoptions>) has to be present, even if empty.
 
 
 + <span style="color:green"> **lfuser:**</span> it contains user-defined definition of **paths** to all in- and output files, and main model parameters (calibration + time-related).
@@ -67,7 +68,7 @@ The 'lfuser' section starts with a number of constants that are related to the s
 	TIME-RELATED CONSTANTS                                                
 	**************************************************************               
 	</comment>                                                          
-	<textvar name="CalendarDayStart" value="01/01/1990">            
+	<textvar name="CalendarDayStart" value="01/01/1990 06:00">            
 	<comment>                                                           
 	Calendar day of 1st day in model run                                  
 	Day of the year of first map (e.g. xx0.001) even if the model start   
@@ -87,12 +88,12 @@ The 'lfuser' section starts with a number of constants that are related to the s
 	Within the model,the smallest out of DtSecChannel and DtSec is used   
 	</comment>                                                          
 	</textvar>                                                          
-	<textvar name="StepStart" value="1">                            
+	<textvar name="StepStart" value="01/01/1990 06:00">                            
 	<comment>                                                           
 	Number of first time step in simulation                               
 	</comment>                                                          
 	</textvar>                                                          
-	<textvar name="StepEnd" value="10">                             
+	<textvar name="StepEnd" value="15/01/1990 06:00">                             
 	<comment>                                                           
 	Number of last time step in simulation                                
 	</comment>                                                          
@@ -107,13 +108,11 @@ The 'lfuser' section starts with a number of constants that are related to the s
 ```
 
 
-- **CalendarDayStart** is the calendar day of the first map in a map stack e.g. pr000000.001. Even if you start the model from time step 500, this has to be set to the calendar day of the 001 map in your map stacks. Format can be 
-  <br> a) a number:
-    <br> *Value="1" = $1^{st}$ January* 
-    <br> Value="151" = $1^{st}$ July
-  <br> Or b) a date (in different format):
+- **CalendarDayStart** is the calendar day of the first timestep of input mapstacks. 
+  Even if you start the model from time step 500, this has to be set to the calendar day of the first map. 
+  Format can be a date in several formats, as long as day number is in first position. eg:
     <br> *Value="01/01/1990" = $1^{st}$ January 1990* 
-    <br> Value="05.07.1990" = $5^{st}$July 1990
+    <br> *Value="05.07.1990" = $5^{st}$July 1990*
     <br> *Value="15-11-1990" = $15^{st}$ November 1990*
 
 - **DtSec** is the simulation time interval in seconds. It has a value of 86400 for a daily time interval, 3600 for an hourly interval, etcetera
@@ -122,34 +121,34 @@ The 'lfuser' section starts with a number of constants that are related to the s
 
 - **DtSec** may result in a better simulation of the overall shape the calculated hydrograph (at the expense of requiring more computing time)
 
-- **StepStart** is the number of the first time step in your simulation. It is normally set to 1. Other (larger) values can be used if you want to run LISFLOOD for only a part of the time period for which you have meteo and LAI maps.
+- **StepStart** is the date of the first time step in your simulation.
 
-- **StepEnd** is the number of the last time step in your simulation.
+- **StepEnd** is the date of the last time step in your simulation.
 
 - **ReportSteps** defines the time step number(s) at which the model state (i.e. all maps that you would need to define the initial conditions of a succeeding model run) is written. You can define this parameter in the following ways:
 
 1) **At specific time steps**. If you like to have the state maps being written at certain time steps you can define those in a (comma separated) list. For example if you like to have the state maps for the time steps 10, 20 and 40, you need to write:
 
 ```xml
-    \<textvar name="ReportSteps" value="10,20,40"\
+    <textvar name="ReportSteps" value="10,20,40" />
 ```
 
 2) If you like to have the state maps for the **last time step** of a model run you can use the special     'endtime' keyword, e.g.:
 
 ```xml
-    \<textvar name="ReportSteps" value="endtime"\
+    <textvar name="ReportSteps" value="endtime" />
 ```
 
 3) Alternatively, in some cases you may need the state maps **at regular intervals**. In that case you can use the following syntax:
 
 ```xml
-    \<textvar name="ReportSteps" value="start+increment..end"\
+    <textvar name="ReportSteps" value="start+increment..end" />
 ```
 
 For instance, in the following example state maps are written every $5^{st}$ time step, starting at time step 10, until the last time step:
 
 ```xml
-    \<textvar name="ReportSteps" value="10+5..endtime"\
+    <textvar name="ReportSteps" value="10+5..endtime" />
 ```
 
 ### Parameters related to evapo(transpi)ration and interception
@@ -215,10 +214,6 @@ The following parameters are all related to the simulation of evapo(transpi)rati
 The following parameters are all related to the simulation of snow accumulation, snowmelt and frost. All these parameters can be defined as either single values or maps. We recommend to start out by leaving them all at their default values. If prior data suggest major under- or overcatch problems in the observed snowfall, *SnowFactor* can be adjusted accordingly. *SnowMeltCoef* may be used as a calibration constant, but since snow observations are typically associated with large uncertainty bands, the calibration may effectively just be compensating for these input errors.
 
 ```xml
-	**************************************************************               
-	SNOW AND FROST RELATED PARAMETERS                                     	
-	**************************************************************               
-	</comment>                                                          
 	<textvar name="SnowFactor" value="1">                           
 	<comment>                                                           
 	Multiplier applied to precipitation that falls as snow                

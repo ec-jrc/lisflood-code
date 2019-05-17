@@ -1,4 +1,4 @@
-# Step 3: Preparing the Settings file
+# Step 2: Preparing the Settings file
 
 ```R
   # Add more detail to all those steps!!

@@ -1,4 +1,4 @@
-## Step 4: Input files (maps and tables)
+## Step 3: Input files (maps and tables)
 
 In the current version of LISFLOOD, all model input is provided as either maps (grid files in PCRaster format) or tables. This chapter describes all the data that are required to run the model. Files that are specific to *optional* LISFLOOD features (e.g. inflow hydrographs, reservoirs) are not listed here; they are described in the documentation for each option.
 

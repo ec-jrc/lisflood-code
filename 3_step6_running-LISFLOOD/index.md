@@ -1,4 +1,4 @@
-# Step 6: Running LISFLOOD (warm start)
+# Step 5: Running LISFLOOD (warm start)
 
 Once you have initiallized LISFLOOD you can launch a "warm start". That means you can use all internal state variables ('end maps') that you have received during the initialization (see Step 5) as the initial conditions for a succeeding simulation. 
 This is particularly useful if you are simulating individual flood events on a small time interval (e.g. hourly). For instance, to estimate the initial conditions just before the flood event you can do an initialization also called 'pre-run' on a *daily* time interval for the year before the flood event. Then you  can use the resulting 'end maps' as the initial conditions for the hourly simulation of the flood event.

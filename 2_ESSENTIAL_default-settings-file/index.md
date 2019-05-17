@@ -1,5 +1,7 @@
 # OptionsTserieMaps.xml
 
+**DEPRECATED doc** file was moved deeper in source code and it's not easy accessible. As this file should not be edited, we could remove this page
+ 
 ## Purpose
 
 OptionTserieMaps.xml file is part of LISFLOOD code and it's located in the same folder as lisf1.py file. 
