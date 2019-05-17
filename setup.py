@@ -82,7 +82,7 @@ setup(
             'cython',
     ],
     install_requires=[
-        'numpy>=1.15', 'pytest', 'netCDF4', 'python-dateutil',
+        'numpy>=1.15', 'pytest', 'netCDF4', 'python-dateutil', 'netcdftime',
         'numexpr', 'cython', 'docopt', 'pandas', 'xarray', 'pyproj'
     ],
     entry_points={'console_scripts': ['lisflood = lisflood.lisf1:main']},

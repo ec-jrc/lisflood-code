@@ -19,7 +19,13 @@ import xml.dom.minidom
 import datetime
 import time as xtime
 import os
-from netCDF4 import Dataset, netcdftime, date2num, num2date
+from netCDF4 import Dataset, date2num, num2date
+
+try:
+    from netCDF4 import netcdftime
+except ImportError:
+    import netcdftime  # newer versions of netCDF4 don't include netcdftime
+
 from dateutil import parser
 from platform import system as operating_system
 from pandas._libs.tslibs.parsing import parse_time_string
@@ -35,7 +41,7 @@ READ_PAUSE = 0.1      # pause (seconds) between each re-read trial over the netw
 try:
     NC_DATE_TYPE = netcdftime._netcdftime.datetime
 except:
-    NC_DATE_TYPE = netcdftime.datetime # work-around for older versions of the netCDF4 library (< 1.2.7 ?)
+    NC_DATE_TYPE = netcdftime.datetime  # work-around for older versions of the netCDF4 library (< 1.2.7 ?)
 
 
 project_dir = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..'))
