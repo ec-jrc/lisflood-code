@@ -77,10 +77,8 @@ Execute the following to run the simulation:
 ```bash
 docker run -v /absolute_path/to/my/local/folder/Drina:/input efas/lisflood /input/settings/lisfloodSettings_cold_day_base.xml
 ```
-<<<<<<< HEAD
 
 Once LISFLOOD finished, you can find reported maps in `/absolute_path/to/my/local/folder/Drina/outputs/` folder.
-
 
 ### Pypi packaged LISFLOOD
 
