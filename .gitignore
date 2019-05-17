@@ -4,10 +4,9 @@ __pycache__/
 build/
 *.so
 *.xml
-kinematic_wave_parallel_tools.c
 kinematic_wave_parallel_tools.html
 /tests/data/Drina/outputs/**
-/src/lisflood_model.egg-info/
+lisflood_model.egg-info
 /dist/
 !settingsEUMerged.xml
 !OptionTserieMaps.xml

@@ -41,10 +41,10 @@ except ImportError:
 
 from setuptools import setup, find_packages, Extension
 
-from lisflood.metainfo import __version__, __authors__
-
 current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(current_dir, './src/'))
+from lisflood.metainfo import __version__, __authors__
+
 readme_file = os.path.join(current_dir, 'README.md')
 
 ext_modules = [
@@ -62,8 +62,8 @@ with open(readme_file, 'r') as f:
 setup(
     name='lisflood-model',
     version=__version__,
-    package_dir={'': 'src'},
-    py_modules=[os.path.splitext(os.path.basename(path))[0] for path in glob('src/*.py')],
+    package_dir={'lisflood': 'src/lisflood/'},
+    py_modules=[os.path.splitext(os.path.basename(path))[0] for path in glob('src/*.py*')],
     include_package_data=True,
     package_data={'lisflood': ['*.xml']},
     packages=find_packages('src'),
