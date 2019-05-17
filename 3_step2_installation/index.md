@@ -24,7 +24,6 @@ Follow this instruction for a basic test (Drina catchment, included in this repo
    To compile this Cython module to enable OpenMP multithreading (parallel kinematic wave):
     
      * Delete the files *.so (if any) in directory hydrological-modules  
-  
      * Inside the hydrological_modules folder, execute "python2 compile_kinematic_wave_parallel_tools.py build_ext --inplace"  
 
    Important: the module has to be compiled on the machine where the model is run - the resulting binary is not portable.  
@@ -50,6 +49,7 @@ Follow this instruction for a basic test (Drina catchment, included in this repo
 
 If commands above succeeded without errors, producing dis.nc into tests/data/Drina/outputs folder, your lisflood installation was correct.
 
+
 ### Docker image
 
 
@@ -73,7 +73,7 @@ Now, you can run LISFLOOD as a docker container to test the Drina catchment. Onl
 In the XML settings file, all paths are adjusted to be relative to the very same settings file, so you don't need to edit paths, as long as you keep same folders structure.
 
 
-Execute the following to run the simulation:
+Execute the following docker command to run the simulation:
 
 ```bash
 docker run -v /absolute_path/to/my/local/folder/Drina:/input efas/lisflood /input/settings/lisfloodSettings_cold_day_base.xml
@@ -81,7 +81,9 @@ docker run -v /absolute_path/to/my/local/folder/Drina:/input efas/lisflood /inpu
 
 Once LISFLOOD finished, you can find reported maps in `/absolute_path/to/my/local/folder/Drina/outputs/` folder.
 
+
 ### Pypi packaged LISFLOOD
+
 
 LISFLOOD is also distributed as a standard python package. You can install the pip package in your Python 2.7<sup>[1](#footnote1)</sup> virtualenv:
 
@@ -97,4 +99,4 @@ lisflood /absolute_path/to/my/local/folder/Drina/settings/lisfloodSettings_cold_
 
 <a id="footnote1" name="footnote1">1</a>: We planned to migrate to Python 3 in a few months.
 
-[🔝](#top)](#top)
+[🔝](#top)
