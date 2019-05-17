@@ -1,6 +1,21 @@
-# Lisflood code
+# Lisflood OS
 
-Source code of lisflood model.
+This repository hosts source code of LISFLOOD model.
+Go to [Lisflood OS page](https://ec-jrc.github.io/lisflood/) for more information.
+
+Other useful resources
+
+| **Project**         | **Documentation**                                         | **Source code**                                              |
+| ------------------- | --------------------------------------------------------- | ------------------------------------------------------------ |
+| Lisflood            | [Model docs](https://ec-jrc.github.io/lisflood-model/)    | https://github.com/ec-jrc/lisflood-code (this repository)    |
+|                     | [User guide](https://ec-jrc.github.io/lisflood-code/)     |                                                              |
+| Lisvap              | [Docs](https://ec-jrc.github.io/lisflood-lisvap/)         | https://github.com/ec-jrc/lisflood-lisvap                    |
+| Calibration tool    | [Docs](https://ec-jrc.github.io/lisflood-calibration/)    | https://github.com/ec-jrc/lisflood-calibration               |
+| Lisflood Utilities  |                                                           | https://github.com/ec-jrc/lisflood-utilities                 |
+| Lisflood Usecases   |                                                           | https://github.com/ec-jrc/lisflood-usecases                  |
+
+
+## Quick start
 
 You can download code and datasets for testing the model.
 Follow this instruction for a basic test (Drina catchment, included in this repository under [tests/data/Drina](https://github.com/ec-jrc/lisflood-code/tree/master/tests/data/Drina))
