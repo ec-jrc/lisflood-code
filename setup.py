@@ -43,6 +43,7 @@ from setuptools import setup, find_packages, Extension
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(current_dir, './src/'))
+
 from lisflood.metainfo import __version__, __authors__
 
 readme_file = os.path.join(current_dir, 'README.md')
@@ -79,14 +80,15 @@ setup(
     setup_requires=[
             # Setuptools 18.0 properly handles Cython extensions.
             'setuptools>=18.0',
+            'numpy>=1.15',
             'cython',
     ],
     install_requires=[
-        'numpy>=1.15', 'pytest', 'netCDF4', 'python-dateutil', 'netcdftime',
-        'numexpr', 'cython', 'docopt', 'pandas', 'xarray', 'pyproj'
+        'python-dateutil', 'pytest', 'docopt',
+        'numpy>=1.15', 'cython', 'netCDF4',
+        'numexpr', 'pandas', 'xarray', 'pyproj', 'cftime',
     ],
     entry_points={'console_scripts': ['lisflood = lisflood.lisf1:main']},
-    # ext_modules=cythonize(ext_modules, annotate=True),
     ext_modules=ext_modules,
     zip_safe=True,
     classifiers=[

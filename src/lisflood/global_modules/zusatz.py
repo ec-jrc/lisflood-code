@@ -24,7 +24,7 @@ from netCDF4 import Dataset, date2num, num2date
 try:
     from netCDF4 import netcdftime
 except ImportError:
-    import netcdftime  # newer versions of netCDF4 don't include netcdftime
+    import cftime as netcdftime  # newer versions of netCDF4 don't include netcdftime
 
 from dateutil import parser
 from platform import system as operating_system

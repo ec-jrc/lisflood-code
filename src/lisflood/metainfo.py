@@ -15,7 +15,7 @@ See the Licence for the specific language governing permissions and limitations 
 """
 
 __authors__ = "Ad de Roo, Emiliano Gelati, Peter Burek, Johan van der Knijff, Niko Wanders"
-__version__ = "2.8.10"
+__version__ = "2.8.13"
 __date__ = "17 May 2019"
 __copyright__ = "Copyright 2019, European Commission - Joint Research Centre"
 __maintainer__ = "Emiliano Gelati, Domenico Nappo, Valerio Lorini, Ad de Roo"
