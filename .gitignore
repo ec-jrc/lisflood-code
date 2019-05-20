@@ -5,7 +5,6 @@ build/
 *.so
 *.xml
 kinematic_wave_parallel_tools.html
-/tests/data/Drina/outputs/**
 lisflood_model.egg-info
 /dist/
 !settingsEUMerged.xml
