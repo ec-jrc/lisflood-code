@@ -118,11 +118,8 @@ def mapattrNetCDF(name):
     """
     filename = os.path.splitext(name)[0] + '.nc'
     nf1 = iterOpenNetcdf(filename, "Checking netcdf map \n", 'r')
-    x1 = nf1.variables['x'][0]
-    x2 = nf1.variables['x'][1]
-    y1 = nf1.variables['y'][0]
-    y2 = nf1.variables['y'][1]
-    #x1, x2, y1, y2 = [round(nf1.variables.values()[var_ix][j], 5) for var_ix in range(2) for j in range(2)]
+    spatial_dims = ('x', 'y') if 'x' in nf1.variables else ('lon', 'lat')
+    x1, x2, y1, y2 = [round(nf1.variables[v][j], 5) for v in spatial_dims for j in (0, 1)]
     nf1.close()
     if maskmapAttr['cell'] != round(np.abs(x2 - x1), 5) or maskmapAttr['cell'] != round(np.abs(y2 - y1), 5):
         raise LisfloodError("Cell size different in maskmap {} and {}".format(binding['MaskMap'], filename))
@@ -577,7 +574,7 @@ def readnetcdf(name, time, timestampflag='exact', averageyearflag=False):
     nf1 = iterOpenNetcdf(filename, "Netcdf map stacks: \n", "r")
 
     # read information from netCDF file
-    variable_name = nf1.variables.items()[-1][0]        # get name of the last variable  # FIXME danger!!!
+    variable_name = [k for k in nf1.variables if len(nf1.variables[k].dimensions) == 3][0] # get the variable with 3 dimensions (variable order not relevant)
     t_steps = nf1.variables['time'][:]    # get values for timesteps ([  0.,  24.,  48.,  72.,  96.])
     t_unit = nf1.variables['time'].units  # get unit (u'hours since 2015-01-01 06:00:00')
     t_cal = getCalendarType(nf1)
