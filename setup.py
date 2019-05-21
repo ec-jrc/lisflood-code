@@ -13,26 +13,40 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 ---------------------------------------------------------------------------------------------------------------------------------------
-python setup.py sdist
+Use python setup.y upload to publish versioned tags and pypi package
 
-To upload new package on PyPi Test:
+Manually step by step:
+
+1. python setup.py sdist
+
+2a. To upload new package on PyPi Test:
 twine upload --repository-url https://test.pypi.org/legacy/ dist/*
 
-To upload new package on PyPi:
+2b. To upload new package on PyPi:
 twine upload dist/*
 
-Test package install
+3a. Test package install
 pip install --index-url https://test.pypi.org/simple/ lisflood-model==2.8.14
 
-In prod:
+3b. In prod:
 pip install lisflood-model
 """
 
 import os
 import sys
 from glob import glob
+from shutil import rmtree
 
-from setuptools import find_packages, Extension, setup
+from setuptools import find_packages, Extension, setup, Command, __path__ as setuppath
+
+pip_package = os.path.join(setuppath[0], '../lisflood')
+if os.path.exists(pip_package) and pip_package in sys.path:
+    sys.path.remove(pip_package)
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.join(current_dir, './src/'))
+
+from lisflood.metainfo import __version__, __authors__
 
 try:
     # noinspection PyUnresolvedReferences
@@ -42,13 +56,6 @@ except ImportError:
     USE_CYTHON = False
 
 extension_ext = 'pyx' if USE_CYTHON else 'c'
-
-current_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.join(current_dir, './src/'))
-
-from lisflood.metainfo import __version__, __authors__
-
-readme_file = os.path.join(current_dir, 'README.md')
 
 ext_modules = [
     Extension(
@@ -62,8 +69,46 @@ ext_modules = [
 if USE_CYTHON:
     ext_modules = cythonize(ext_modules)
 
+readme_file = os.path.join(current_dir, 'README.md')
 with open(readme_file, 'r') as f:
     long_description = f.read()
+
+
+class UploadCommand(Command):
+    """Support setup.py upload."""
+
+    description = 'Publish lisflood-model package.'
+    user_options = []
+
+    @staticmethod
+    def print_console(s):
+        print('\033[1m{0}\033[0m'.format(s))
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        try:
+            self.print_console('Removing previous builds...')
+            rmtree(os.path.join(current_dir, 'dist'))
+        except OSError:
+            pass
+
+        self.print_console('Building Source and Wheel (universal) distribution...')
+        os.system('{0} setup.py sdist'.format(sys.executable))
+
+        self.print_console('Uploading the package to PyPI via Twine...')
+        os.system('twine upload dist/*')
+
+        self.print_console('Pushing git tags...')
+        os.system('git tag v{0}'.format(__version__))
+        os.system('git push --tags')
+
+        sys.exit()
+
 
 setup(
     name='lisflood-model',
@@ -113,4 +158,8 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Topic :: Scientific/Engineering :: Physics',
     ],
+    # setup.py publish to pypi.
+    cmdclass={
+        'upload': UploadCommand,
+    },
 )
