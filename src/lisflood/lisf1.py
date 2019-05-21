@@ -35,6 +35,13 @@ from pcraster.framework import *
 
 # ---------------------------
 
+import os
+import sys
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+src_dir = os.path.join(current_dir, '../')
+if os.path.exists(src_dir):
+    sys.path.append(src_dir)
 
 from Lisflood_initial import *
 from Lisflood_dynamic import *
@@ -231,6 +238,7 @@ Water balance and flood simulation model for large catchments\n
 
 def main():
     # if arguments are missing display usage info
+
     if len(sys.argv) < 2:
         usage()
 
@@ -258,7 +266,6 @@ def get_optionxml_path():
     # OptionTserieMaps.xml file
     optionxml = os.path.normpath(os.path.join(LF_Path, "OptionTserieMaps.xml"))
     if not os.path.exists(optionxml):
-        current_dir = os.path.dirname(os.path.abspath(__file__))
         optionxml = os.path.normpath(os.path.join(current_dir, "OptionTserieMaps.xml"))
     return optionxml
 

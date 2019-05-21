@@ -22,7 +22,7 @@ To upload new package on PyPi:
 twine upload dist/*
 
 Test package install
-pip install --index-url https://test.pypi.org/simple/ lisflood-model==2.8.6
+pip install --index-url https://test.pypi.org/simple/ lisflood-model==2.8.14
 
 In prod:
 pip install lisflood-model
@@ -32,14 +32,16 @@ import os
 import sys
 from glob import glob
 
-try:
-    from Cython.Build import cythonize
-except ImportError:
-    def cythonize(*args, **kwargs):
-        from Cython.Build import cythonize
-        return cythonize(*args, **kwargs)
+from setuptools import find_packages, Extension, setup
 
-from setuptools import setup, find_packages, Extension
+try:
+    # noinspection PyUnresolvedReferences
+    from Cython.Build import cythonize
+    USE_CYTHON = True
+except ImportError:
+    USE_CYTHON = False
+
+extension_ext = 'pyx' if USE_CYTHON else 'c'
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(current_dir, './src/'))
@@ -51,11 +53,14 @@ readme_file = os.path.join(current_dir, 'README.md')
 ext_modules = [
     Extension(
         "lisflood.hydrological_modules.kinematic_wave_parallel_tools",
-        ["src/lisflood/hydrological_modules/kinematic_wave_parallel_tools.pyx"],
+        ["src/lisflood/hydrological_modules/kinematic_wave_parallel_tools.{}".format(extension_ext)],
         extra_compile_args=["-O3", "-ffast-math", "-march=native", "-fopenmp"],
         extra_link_args=["-fopenmp"]
     )
 ]
+
+if USE_CYTHON:
+    ext_modules = cythonize(ext_modules)
 
 with open(readme_file, 'r') as f:
     long_description = f.read()
@@ -79,7 +84,7 @@ setup(
     download_url='https://github.com/ec-jrc/lisflood-code/archive/{}.tar.gz'.format(__version__),
     setup_requires=[
             # Setuptools 18.0 properly handles Cython extensions.
-            'setuptools>=18.0',
+            'setuptools>=41.0',
             'numpy>=1.15',
             'cython',
     ],
@@ -88,7 +93,7 @@ setup(
         'numpy>=1.15', 'cython', 'netCDF4',
         'numexpr', 'pandas', 'xarray', 'pyproj', 'cftime',
     ],
-    entry_points={'console_scripts': ['lisflood = lisflood.lisf1:main']},
+    scripts=['bin/lisflood'],
     ext_modules=ext_modules,
     zip_safe=True,
     classifiers=[

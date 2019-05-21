@@ -45,7 +45,7 @@ SRC = ROOT + ".pyx"
 BIN = ROOT + (".pyd" if WINDOWS_OS else ".so")
 
 
-if (not os.path.exists(BIN)) or os.stat(BIN).st_mtime < os.stat(SRC).st_mtime:
+if not os.path.exists(BIN) or (os.path.exists(BIN) and os.path.exists(SRC) and os.stat(BIN).st_mtime < os.stat(SRC).st_mtime):
     import pyximport                         # Activate the direct import from source of Cython modules.
     setup_args = {"script_args": ["--compiler=mingw32"]} if WINDOWS_OS else None # Extra compiler argument under Windows
     pyximport.install(setup_args=setup_args) # If this is executed, the binary .so file will be ignored and the routing is executed serially.
