@@ -1,5 +1,18 @@
 ## Step 1: Installation of the LISFLOOD model
 
+There are several ways to get lisflood model and to run it on your machines: 
+
+1. Obtaining the source code, by cloning repository or downloading source distribution.
+2. Pulling the Docker image
+3. Using pip tool
+
+The suggested way is using the official Docker image, since it's not trivial to install PCRaster and GDAL for average users.
+
+In this page all different options are described. Feel free to pick up what suits you best.
+
+ 
+### A) Cloning the repository with git
+
 You can download code and datasets for testing the model.
 Follow this instruction for a basic test (Drina catchment, included in this repository under [tests/data/Drina](https://github.com/ec-jrc/lisflood-code/tree/master/tests/data/Drina))
 
@@ -50,7 +63,7 @@ Follow this instruction for a basic test (Drina catchment, included in this repo
 If commands above succeeded without errors, producing dis.nc into tests/data/Drina/outputs folder, your lisflood installation was correct.
 
 
-### Docker image
+### B) Docker image (suggested)
 
 
 You can use the updated docker image to run lisflood, so without taking care to install dependencies on your system.
@@ -82,7 +95,7 @@ docker run -v /absolute_path/to/my/local/folder/Drina:/input efas/lisflood /inpu
 Once LISFLOOD finished, you can find reported maps in `/absolute_path/to/my/local/folder/Drina/outputs/` folder.
 
 
-### Pypi packaged LISFLOOD
+### C) Pypi packaged LISFLOOD
 
 
 LISFLOOD is also distributed as a standard python package. You can install the pip package in your Python 2.7<sup>[1](#footnote1)</sup> virtualenv:
