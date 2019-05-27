@@ -18,7 +18,7 @@ See the Licence for the specific language governing permissions and limitations 
 import os
 
 from lisflood.global_modules.globals import binding
-from lisflood.lisf1 import Lisfloodexe, get_optionxml_path
+from lisf1 import Lisfloodexe, get_optionxml_path
 
 from tests import listest, reference_files
 

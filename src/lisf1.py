@@ -38,16 +38,15 @@ from pcraster.framework import *
 import os
 import sys
 
-current_dir = os.path.dirname(os.path.abspath(__file__))
-src_dir = os.path.join(current_dir, '../')
+src_dir = os.path.dirname(os.path.abspath(__file__))
 if os.path.exists(src_dir):
     sys.path.append(src_dir)
 
-from Lisflood_initial import *
-from Lisflood_dynamic import *
-from Lisflood_monteCarlo import *
-from Lisflood_EnKF import *
-from metainfo import __authors__, __version__, __date__, __status__
+from lisflood.Lisflood_initial import *
+from lisflood.Lisflood_dynamic import *
+from lisflood.Lisflood_monteCarlo import *
+from lisflood.Lisflood_EnKF import *
+from lisflood import __authors__, __version__, __date__, __status__
 
 
 class LisfloodModel(LisfloodModel_ini, LisfloodModel_dyn, LisfloodModel_monteCarlo, LisfloodModel_EnKF):
@@ -70,10 +69,6 @@ def Lisfloodexe(settings, optionxml):
     # and the choosen option for mdelling and output
     bindkey = sorted(binding.keys())
 
-    #os.chdir(outputDir[0])
-    # this prevent from using relative path in settings!
-
-
     checkifDate('StepStart','StepEnd')
     # check 'StepStart' and 'StepEnd' to be >0 and 'StepStart'>'StepEnd'
     # return modelSteps
@@ -85,11 +80,9 @@ def Lisfloodexe(settings, optionxml):
 
     if option['InitLisflood']: print "INITIALISATION RUN"
 
-    #print start step and end step
     print "Start Step - End Step: ",modelSteps[0]," - ", modelSteps[1]
     print "Start Date - End Date: ",inttoDate(modelSteps[0]-1,Calendar(binding['CalendarDayStart']))," - ",\
         inttoDate(modelSteps[1]-1,Calendar(binding['CalendarDayStart']))
-
 
     if Flags['loud']:
         # print state file date
@@ -107,7 +100,6 @@ def Lisfloodexe(settings, optionxml):
 
         # messages at model start
         print"%-6s %10s %11s\n" %("Step","Date","Discharge"),
-
 
     # Lisflood is an instance of the class LisfloodModel
     # LisfloodModel includes 2 methods : initial and dynamic (formulas applied at every timestep)
@@ -261,12 +253,13 @@ def main():
 
 
 def get_optionxml_path():
+    # FIXME
     # read OptionTserieMaps.xml in the same folder as Lisflood main (lisf1.py)
     LF_Path = os.path.dirname(os.path.abspath(sys.argv[0]))
     # OptionTserieMaps.xml file
     optionxml = os.path.normpath(os.path.join(LF_Path, "OptionTserieMaps.xml"))
     if not os.path.exists(optionxml):
-        optionxml = os.path.normpath(os.path.join(current_dir, "OptionTserieMaps.xml"))
+        optionxml = os.path.normpath(os.path.join(src_dir, "lisflood/OptionTserieMaps.xml"))
     return optionxml
 
 

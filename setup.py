@@ -46,27 +46,28 @@ if os.path.exists(pip_package) and pip_package in sys.path:
 current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(current_dir, './src/'))
 
-from lisflood.metainfo import __version__, __authors__
+from lisflood import __version__, __authors__
 
 try:
     # noinspection PyUnresolvedReferences
     from Cython.Build import cythonize
-    USE_CYTHON = True
+    HAS_CYTHON = True
 except ImportError:
-    USE_CYTHON = False
+    HAS_CYTHON = False
 
-extension_ext = 'pyx' if USE_CYTHON else 'c'
+src_ext = 'src/lisflood/hydrological_modules/kinematic_wave_parallel_tools.{}'
+extension_ext = 'pyx' if HAS_CYTHON else 'c'
 
 ext_modules = [
     Extension(
-        "lisflood.hydrological_modules.kinematic_wave_parallel_tools",
-        ["src/lisflood/hydrological_modules/kinematic_wave_parallel_tools.{}".format(extension_ext)],
-        extra_compile_args=["-O3", "-ffast-math", "-march=native", "-fopenmp"],
-        extra_link_args=["-fopenmp"]
+        'lisflood.hydrological_modules.kinematic_wave_parallel_tools',
+        [src_ext.format(extension_ext)],
+        extra_compile_args=['-O3', '-ffast-math', "-march=native", '-fopenmp'],
+        extra_link_args=['-fopenmp']
     )
 ]
 
-if USE_CYTHON:
+if HAS_CYTHON:
     ext_modules = cythonize(ext_modules)
 
 readme_file = os.path.join(current_dir, 'README.md')
@@ -113,7 +114,7 @@ class UploadCommand(Command):
 setup(
     name='lisflood-model',
     version=__version__,
-    package_dir={'lisflood': 'src/lisflood/'},
+    package_dir={'': 'src/'},
     py_modules=[os.path.splitext(os.path.basename(path))[0] for path in glob('src/*.py*')],
     include_package_data=True,
     package_data={'lisflood': ['*.xml']},
@@ -135,8 +136,8 @@ setup(
     ],
     install_requires=[
         'python-dateutil', 'pytest', 'docopt',
-        'numpy>=1.15', 'cython', 'netCDF4',
-        'numexpr', 'pandas', 'xarray', 'pyproj', 'cftime',
+        'numpy>=1.15', 'cython', 'netCDF4>=1.5',
+        'numexpr', 'pandas>=0.24.2', 'xarray', 'pyproj', 'cftime',
     ],
     scripts=['bin/lisflood'],
     ext_modules=ext_modules,
