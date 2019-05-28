@@ -628,6 +628,8 @@ def readnetcdf(name, time, timestampflag='exact', averageyearflag=False):
     if Flags['check']:
         timename = os.path.basename(name) + str(time)
         checkmap(timename, filename, decompress(mapC), True, 1)
+    if np.isnan(mapC).any():
+        print(LisfloodWarning('Warning: NaN values on simulated domain in ' + filename))
     return mapC
 
 
