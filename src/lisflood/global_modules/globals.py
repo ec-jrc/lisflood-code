@@ -17,6 +17,7 @@ See the Licence for the specific language governing permissions and limitations 
 
 #getopt module is a parser for command line options (consider using argparse module instead)
 import getopt
+from collections import OrderedDict
 
 #defining global variables
 
@@ -33,8 +34,6 @@ binding = {}
 
 global option           #dictionary of all model's options and settings for running ang managing the model
 option = {}
-
-global FlagName         #dictionary of flags defining model's behavior (quiet,veryquiet, loud, checkfiles, noheader,printtime, debug)
 
 global Flags            #dictionary of flags defining model's behavior (quiet,veryquiet, loud, checkfiles, noheader,printtime, debug)
 
@@ -92,13 +91,9 @@ nrCores = []
 # ----------------------------------
 #set names of input arguments
 #initializing Flags to false values
-Flags = {'quiet': False, 'veryquiet': False, 'loud': False,
-         'check': False, 'noheader': False, 'printtime': False,
-         'debug':False}
-
-FlagName = ['quiet', 'veryquiet', 'loud',
-            'checkfiles', 'noheader', 'printtime',
-            'debug']
+Flags = OrderedDict([('quiet', False), ('veryquiet', False), ('loud', False),
+                     ('check', False), ('noheader', False), ('printtime', False),
+                     ('debug', False), ('nancheck', False)])
 
 def globalFlags(arg):
     """ Read flags for model launching options
@@ -110,22 +105,24 @@ def globalFlags(arg):
     :return: 
     """
     try:
-        opts, args = getopt.getopt(arg, 'qvlchtd', FlagName)
+        opts, args = getopt.getopt(arg, 'qvlchtdn', Flags.keys())
     except getopt.GetoptError:
         usage()
 
     for o, a in opts:
         if o in ('-q', '--quiet'):
-            Flags['quiet'] = True          # Flag[0]=1
+            Flags['quiet'] = True
         if o in ('-v', '--veryquiet'):
-            Flags['veryquiet'] = True      # Flag[1]=1
+            Flags['veryquiet'] = True
         if o in ('-l', '--loud'):
-            Flags['loud'] = True  # Loud=True
+            Flags['loud'] = True
         if o in ('-c', '--checkfiles'):
-            Flags['check'] = True  # Check=True
+            Flags['check'] = True
         if o in ('-h', '--noheader'):
-            Flags['noheader'] = True  # NoHeader=True
+            Flags['noheader'] = True
         if o in ('-t', '--printtime'):
-            Flags['printtime'] = True      # Flag[2]=1
+            Flags['printtime'] = True
         if o in ('-d', '--debug'):
             Flags['debug'] = True
+        if o in ('-n', '--nancheck'):
+            Flags['nancheck'] = True

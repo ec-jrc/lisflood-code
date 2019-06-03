@@ -237,6 +237,8 @@ def loadsetclone(name):
     maskinfo['maskall'] =np.ma.masked_all(maskinfo['shapeflat'])  # empty map 1D but with mask
     maskinfo['maskall'].mask = maskinfo['maskflat']
     globals.inZero=np.zeros(maskinfo['mapC'])
+    if Flags['nancheck']:
+        nanCheckMap(ldd, binding['Ldd'], 'Ldd')
     return map
 
 
@@ -454,10 +456,14 @@ def loadmap(name,pcr=False, lddflag=False, timestampflag='exact', averageyearfla
                 map= decompress(mapC)
                 checkmap(name, filename, map, flagmap, 0)
     if pcr:
+        if Flags['nancheck'] and name != 'Ldd': 
+            nanCheckMap(map, filename, name)
         return map
     elif isinstance(mapC, np.ndarray):
         return mapC.astype(float)
     else:
+        if Flags['nancheck'] and name != 'Ldd': 
+            nanCheckMap(mapC, filename, name)
         return mapC
 
 
@@ -515,8 +521,14 @@ def loadLAI(value, pcrvalue, i,pcr=False):
     if pcrmap: mapC = compressArray(map,name=filename)
     if Flags['check']:
         checkmap(os.path.basename(pcrvalue), filename, map, True, 0)
-    if pcr: return map
-    return mapC
+    if pcr:
+        if Flags['nancheck']: 
+            nanCheckMap(map, filename, "'LAI*Maps' or 'WFractionMaps'")
+        return map
+    else:
+        if Flags['nancheck']: 
+            nanCheckMap(mapC, filename, "'LAI*Maps' or 'WFractionMaps'")
+        return mapC
 
 
 def readmapsparse(name, time, oldmap):
@@ -546,6 +558,8 @@ def readmapsparse(name, time, oldmap):
                 print s,
     if Flags['check']:
         checkmap(os.path.basename(name), filename, map, True, find)
+    if Flags['nancheck']: 
+        nanCheckMap(map, filename, name)
     mapC = compressArray(map,name=filename)
     return mapC
 
@@ -628,8 +642,8 @@ def readnetcdf(name, time, timestampflag='exact', averageyearflag=False):
     if Flags['check']:
         timename = os.path.basename(name) + str(time)
         checkmap(timename, filename, decompress(mapC), True, 1)
-        if np.isnan(mapC).any():
-            print(LisfloodWarning('Warning: NaN values on simulated domain in ' + filename))
+    if Flags['nancheck']: 
+        nanCheckMap(mapC, filename, name)
     return mapC
 
 
@@ -915,7 +929,8 @@ def writenet(flag, inputmap, netfile, DtDay,
                 value.esri_pe_string = metadataNCDF[var]['esri_pe_string']
     else:
         nf1 = iterOpenNetcdf(netfile, "", 'a',format='NETCDF4')
-
+    if Flags['nancheck']:
+        nanCheckMap(inputmap, netfile, value_standard_name)
     mapnp = maskinfo['maskall'].copy()
     mapnp[~maskinfo['maskflat']] = inputmap[:]
     #mapnp = mapnp.reshape(maskinfo['shape']).data
@@ -1012,3 +1027,9 @@ def read_tss_header(tssfilename):
             # tssdata = pd.read_table(tssfilename, delim_whitespace=True, header=None, names=outlets_id, index_col=0)
     fp.close()
     return outlets_id
+
+def nanCheckMap(data, filename, name):
+    """Checks for numpy.nan on simulated pixels: if any is found, a warning is raised"""
+    is_nan = np.isnan(compressArray(data) if isinstance(data, pcraster._pcraster.Field) else data)
+    if is_nan.any():
+        print(LisfloodWarning("Warning: {} of {} land values of {} (binding: '{}') are NaN".format(is_nan.sum(), is_nan.size, filename, name)))
