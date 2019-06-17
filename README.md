@@ -34,9 +34,9 @@ cd lisflood-code  # move into lisflood-code project directory
 pip install -r requirements.txt
 ```
 
-* Gdal should be installed as well. To install GDAL C library and gdal python library on debian/ubuntu systems, we found good instructions [here](https://mothergeo-py.readthedocs.io/en/latest/development/how-to/gdal-ubuntu-pkg.html).
+* GDAL should be installed as well. To install GDAL C library and gdal python library on debian/ubuntu systems, we found good instructions [here](https://mothergeo-py.readthedocs.io/en/latest/development/how-to/gdal-ubuntu-pkg.html).
  
-If you already have install Gdal in your computer, make sure that the GDAL and the python gdal library have the same version. It is recommended to install the gdal python library in your virtual envronment.
+If you already have GDAL installed in your computer, make sure that the GDAL and the python gdal library have the same version.
 
 
 You need to install PCRaster and include its python interface in PYTHONPATH environment variable.
