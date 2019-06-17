@@ -52,6 +52,10 @@ LISFLOOD is also distributed as a standard python package. You can install the p
 pip install lisflood-model
 ```
 
+* GDAL should be installed as well. To install GDAL C library and gdal python library on debian/ubuntu systems, we found good instructions [here](https://mothergeo-py.readthedocs.io/en/latest/development/how-to/gdal-ubuntu-pkg.html).
+ 
+If you already have GDAL installed in your computer, make sure that the GDAL and the python gdal library have the same version.
+
 Command above will also install the executable `lisflood` in the virtualenv, so that you can run LISFLOOD with the following:
 
 ```bash
@@ -70,14 +74,24 @@ Follow this instruction for a basic test (Drina catchment, included in this repo
     ```
 
 2. **Install requirements into a python 2.7 virtualenv**
-    
-    ```bash
-    cd lisflood-code
-    pip install -r requirements.txt
-    ```
 
-    You need to install PCRaster and include its python interface in PYTHONPATH environment variable.
-    For details, please follow instruction on [official docs](http://pcraster.geo.uu.nl/getting-started/pcraster-on-linux/).
+
+We recommend to follow the instructions on [virtualenv docs](https://virtualenv.pypa.io/en/latest/). Assuming you activated your virtual environment:
+
+    
+```bash
+cd lisflood-code
+pip install -r requirements.txt
+```
+
+* Gdal should be installed as well. To install GDAL C library and gdal python library on debian/ubuntu systems, we found good instructions [here](https://mothergeo-py.readthedocs.io/en/latest/development/how-to/gdal-ubuntu-pkg.html).
+ 
+If you already have GDAL installed in your computer, make sure that the GDAL and the python gdal library have the same version. 
+
+
+You need to install PCRaster and include its python interface in PYTHONPATH environment variable.
+For details, please follow instruction on [official docs](http://pcraster.geo.uu.nl/getting-started/pcraster-on-linux/).
+    
 
 3. **Compile the cython module kinematic_wave_parallel_tool**
    
