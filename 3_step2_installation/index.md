@@ -84,7 +84,7 @@ Follow this instruction for a basic test (Drina catchment, included in this repo
    To compile this Cython module to enable OpenMP multithreading (parallel kinematic wave):
     
      * Delete the files *.so (if any) in directory hydrological-modules  
-     * Inside the hydrological_modules folder, execute "python2 compile_kinematic_wave_parallel_tools.py build_ext --inplace"  
+     * Inside the hydrological_modules folder, execute `python2 compile_kinematic_wave_parallel_tools.py build_ext --inplace`  
 
    Important: the module has to be compiled on the machine where the model is run - the resulting binary is not portable.  
   
@@ -104,7 +104,7 @@ Follow this instruction for a basic test (Drina catchment, included in this repo
     Now that your environment should be set up to run lisflood, you may try with a prepared settings file for Drina catchment:
     
     ```bash
-    python src/lisflood/lisf1.py tests/data/Drina/settings/lisfloodSettings_cold_day_base.xml
+    python src/lisf1.py tests/data/Drina/settings/lisfloodSettings_cold_day_base.xml
     ```
 
 If commands above succeeded without errors, producing dis.nc into tests/data/Drina/outputs folder, your lisflood installation was correct.
