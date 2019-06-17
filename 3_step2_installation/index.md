@@ -2,18 +2,65 @@
 
 There are several ways to get lisflood model and to run it on your machines: 
 
-1. Obtaining the source code, by cloning repository or downloading source distribution.
-2. Pulling the Docker image
-3. Using pip tool
+1. Pulling the Docker image
+2. Using pip tool
+3. Obtaining the source code, by cloning repository or downloading source distribution.
 
 The suggested way is using the official Docker image, since it's not trivial to install PCRaster and GDAL for average users.
 
 In this page all different options are described. Feel free to pick up what suits you best.
 
  
-### A) Cloning the repository with git
+### A) Docker image (suggested)
 
-You can download code and datasets for testing the model.
+
+You can use the updated docker image to run lisflood, so without taking care to install dependencies on your system.
+First, you pull image from repository.
+
+```bash
+docker pull efas/lisflood:latest
+```
+
+Copy Drina catchment files from container to your host, using mapped directories.
+
+```bash
+docker run -v /absolute_path/to/my/local/folder:/usecases efas/lisflood:latest usecases
+```
+
+After this command, you can find all files to run a test against Drina catchment under the directory you mapped: `/absolute_path/to/my/local/folder/Drina`
+
+
+Now, you can run LISFLOOD as a docker container to test the Drina catchment. Only thing you need to do is to map the Drina folder to the container folder `input`, by using -v option. 
+In the XML settings file, all paths are adjusted to be relative to the very same settings file, so you don't need to edit paths, as long as you keep same folders structure.
+
+
+Execute the following docker command to run the simulation:
+
+```bash
+docker run -v /absolute_path/to/my/local/folder/Drina:/input efas/lisflood /input/settings/lisfloodSettings_cold_day_base.xml
+```
+
+Once LISFLOOD finished, you can find reported maps in `/absolute_path/to/my/local/folder/Drina/outputs/` folder.
+
+
+### B) Pypi packaged LISFLOOD
+
+
+LISFLOOD is also distributed as a standard python package. You can install the pip package in your Python 2.7<sup>[1](#footnote1)</sup> virtualenv:
+
+```bash
+pip install lisflood-model
+```
+
+Command above will also install the executable `lisflood` in the virtualenv, so that you can run LISFLOOD with the following:
+
+```bash
+lisflood /absolute_path/to/my/local/folder/Drina/settings/lisfloodSettings_cold_day_base.xml
+```
+
+### C) Cloning the repository with git
+
+You can download code and datasets for testing the model (or to contribute with bug fixes or new features).
 Follow this instruction for a basic test (Drina catchment, included in this repository under [tests/data/Drina](https://github.com/ec-jrc/lisflood-code/tree/master/tests/data/Drina))
 
 1. **Clone the master branch of this repository (you need to have git installed on your machine).**
@@ -63,52 +110,6 @@ Follow this instruction for a basic test (Drina catchment, included in this repo
 If commands above succeeded without errors, producing dis.nc into tests/data/Drina/outputs folder, your lisflood installation was correct.
 
 
-### B) Docker image (suggested)
-
-
-You can use the updated docker image to run lisflood, so without taking care to install dependencies on your system.
-First, you pull image from repository.
-
-```bash
-docker pull efas/lisflood:latest
-```
-
-Copy Drina catchment files from container to your host, using mapped directories.
-
-```bash
-docker run -v /absolute_path/to/my/local/folder:/usecases efas/lisflood:latest usecases
-```
-
-After this command, you can find all files to run a test against Drina catchment under the directory you mapped: `/absolute_path/to/my/local/folder/Drina`
-
-
-Now, you can run LISFLOOD as a docker container to test the Drina catchment. Only thing you need to do is to map the Drina folder to the container folder `input`, by using -v option. 
-In the XML settings file, all paths are adjusted to be relative to the very same settings file, so you don't need to edit paths, as long as you keep same folders structure.
-
-
-Execute the following docker command to run the simulation:
-
-```bash
-docker run -v /absolute_path/to/my/local/folder/Drina:/input efas/lisflood /input/settings/lisfloodSettings_cold_day_base.xml
-```
-
-Once LISFLOOD finished, you can find reported maps in `/absolute_path/to/my/local/folder/Drina/outputs/` folder.
-
-
-### C) Pypi packaged LISFLOOD
-
-
-LISFLOOD is also distributed as a standard python package. You can install the pip package in your Python 2.7<sup>[1](#footnote1)</sup> virtualenv:
-
-```bash
-pip install lisflood-model
-```
-
-Command above will also install the executable `lisflood` in the virtualenv, so that you can run LISFLOOD with the following:
-
-```bash
-lisflood /absolute_path/to/my/local/folder/Drina/settings/lisfloodSettings_cold_day_base.xml
-```
 
 <a id="footnote1" name="footnote1">1</a>: We planned to migrate to Python 3 in a few months.
 
