@@ -26,12 +26,18 @@ Follow this instruction for a basic test (Drina catchment, included in this repo
 git clone --single-branch --branch master https://github.com/ec-jrc/lisflood-code.git
 ```
 
-2. Install requirements into a python 2.7 virtualenv
+2. Install requirements into a python 2.7 virtualenv. 
+We recommend to follow the instructions on [virtualenv docs](https://virtualenv.pypa.io/en/latest/). Assuming you activated your virtual environment:
 
 ```bash
-cd lisflood-code
+cd lisflood-code  # move into lisflood-code project directory
 pip install -r requirements.txt
 ```
+
+* Gdal should be installed as well. To install GDAL C library and gdal python library on debian/ubuntu systems, we found good instructions [here](https://mothergeo-py.readthedocs.io/en/latest/development/how-to/gdal-ubuntu-pkg.html).
+ 
+If you already have install Gdal in your computer, make sure that the GDAL and the python gdal library have the same version. It is recommended to install the gdal python library in your virtual envronment.
+
 
 You need to install PCRaster and include its python interface in PYTHONPATH environment variable.
 For details, please follow instruction on [official docs](http://pcraster.geo.uu.nl/getting-started/pcraster-on-linux/).
@@ -59,7 +65,7 @@ Then in the settings file the option "numberParallelThreadsKinematicWave" may ta
 Now your environment should be set up to run lisflood. Try with a prepared settings file for Drina catchment:
 
 ```bash
-python src/lisflood/lisf1.py tests/data/Drina/settings/lisfloodSettings_cold_day_base.xml
+python src/lisf1.py tests/data/Drina/settings/lisfloodSettings_cold_day_base.xml
 ```
 
 If the command above successed without errors, producing dis.nc into tests/data/Drina/outputs folder, your lisflood installation was correct.
