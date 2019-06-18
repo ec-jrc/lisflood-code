@@ -7,5 +7,5 @@ if [[ "$1" = 'usecases' ]]; then
     cp -R /tests/data/Drina /usecases/
     chmod a+w /usecases/Drina/settings/*.xml
 else
-    exec python /lisflood/lisf1.py "$@"
+    exec python /lisf1.py "$@"
 fi

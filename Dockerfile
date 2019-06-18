@@ -32,6 +32,7 @@ RUN pip install -r /requirements.txt
 COPY LICENSE /
 COPY docker-entrypoint.sh /
 COPY src/lisflood/. /lisflood/
+COPY src/lisf1.py /
 COPY src/settingsEUMerged.xml /lisflood/
 WORKDIR /lisflood/hydrological_modules
 RUN python compile_kinematic_wave_parallel_tools.py build_ext --inplace
