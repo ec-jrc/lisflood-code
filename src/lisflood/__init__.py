@@ -1,4 +1,4 @@
-version = (2, 8, 16)
+version = (2, 8, 17)
 __authors__ = "Ad de Roo, Emiliano Gelati, Peter Burek, Johan van der Knijff, Niko Wanders"
 __version__ = '.'.join(list(map(str, version)))
 __date__ = "27 May 2019"
