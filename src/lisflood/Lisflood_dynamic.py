@@ -38,7 +38,8 @@ class LisfloodModel_dyn(DynamicModel):
 
         # model time step
         i = self.currentTimeStep()
-        if i==1:    globals.cdfFlag = [0, 0, 0, 0 ,0 ,0,0]
+        if i == 1:
+            globals.cdfFlag = [0, 0, 0, 0 ,0 ,0,0]
           # flag for netcdf output for all, steps and end
           # set back to 0,0,0,0,0,0 if new Monte Carlo run
 
@@ -133,7 +134,6 @@ class LisfloodModel_dyn(DynamicModel):
                 else: timeMesSum[i] += timeMes[i] - timeMes[0]
 
             return
-
 
         # *********  EVAPORATION FROM OPEN WATER *************
         self.evapowater_module.dynamic()
@@ -276,9 +276,6 @@ class LisfloodModel_dyn(DynamicModel):
 
         # garbage collector added to free memory at the end of computation step
         gc.collect()
-
-
-
 
 
         """
