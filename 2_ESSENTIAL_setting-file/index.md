@@ -273,7 +273,7 @@ The following parameters are all related to the simulation of snow accumulation,
 
 - **SnowFactor** is a multiplier that is applied to the rate of precipitation in case the precipitation falls as snow. Since snow is commonly underestimated in meteorological observation data, setting this multiplier to some value greater than 1 can counteract for this [-]
 
-- **SnowSeasonAdj** is the range [mm C-1 d-1 <span style="color:red"> (What's that?)</span>] of the seasonal variation of snow melt. SnowMeltCoef is the average value.
+- **SnowSeasonAdj** is the range [mm C-1 d-1] of the seasonal variation of snow melt. SnowMeltCoef is the average value.
 
 - **SnowMeltCoef** ([$C_m$](https://ec-jrc.github.io/lisflood-model/2_stdLISFLOOD_rain-snow/)) is the degree-day factor that controls the rate of snowmelt $[\frac{mm}{°C \cdot day}]$
 
@@ -529,7 +529,11 @@ Each variable is read as a stack of maps. The name of each map starts with prefi
 
 ### Initial conditions
 
-As with the calibration parameters you can use both maps and single values to define the catchment conditions at the start of a simulation. Note that a couple of variables can be initialized internally in the model (explained below)<span style="color:red"> Check if below or in another section.</span>. Also, be aware that the initial conditions define the state of the model at *t=(StepStart -1)*. As long as *StepStart* equals 1 this corresponds to *t=0*, but for larger values of *StepStart* this is (obviously) not the case!
+As with the calibration parameters you can use both maps and single values to define the catchment conditions at the start of a simulation. 
+Note that a couple of variables can be initialized internally in the model (explained below)<span style="color:red">.
+ 
+Check if below or in another section.</span>. Also, be aware that the initial conditions define the state of the model at *t=(StepStart -1)*. 
+As long as *StepStart* equals 1 this corresponds to *t=0*, but for larger values of *StepStart* this is (obviously) not the case!
 
 ```xml
 	<comment>                                                           
@@ -697,7 +701,15 @@ CumIntForestInitValue, UZForestInitValue, DSLRForestInitValue, LZForestInitValue
 
 As explained at the start of this page, the 'lfoptions' element gives you additional control over what LISFLOOD is doing. Using options it is possible to switch certain parts of the model on or off. This way you can tell the model exactly which output files are reported and which ones aren't. Also, they can be used to activate a number of additional model features, such as the simulation of reservoirs and inflow hydrographs.
 
-A list of all currently implemented options and their corresponding defaults can be found in the [corrisponding section](https://ec-jrc.github.io/lisflood-model/3_optLISFLOOD_overview/) within the LISFLOOD model documentation. All currently implemented options are switches (1= on, 0=off). You can set as many options as you want (or none at all). Note that each option generally requires additional items in the settings file. For instance, using the inflow hydrograph option requires an input map and time series, which have to be specified in the settings file. If you want to report discharge maps at each time step, you will first have to specify under which name they will be written. The template settings file that is provided with LISFLOOD always contains file definitions for all optional output maps and time series. The use of the *output* options is described in detail in **XXX** <span style="color:red"> (still needs to be done)</span>.
+A list of all currently implemented options and their corresponding defaults can be found in the [corrisponding section](https://ec-jrc.github.io/lisflood-model/3_optLISFLOOD_overview/) within the LISFLOOD model documentation. 
+All currently implemented options are switches (1= on, 0=off). 
+You can set as many options as you want (or none at all). Note that each option generally requires additional items in the settings file. 
+
+For instance, using the inflow hydrograph option requires an input map and time series, which have to be specified in the settings file. 
+If you want to report discharge maps at each time step, you will first have to specify under which name they will be written. 
+
+The template settings file that is provided with LISFLOOD always contains file definitions for all optional output maps and time series. 
+The use of the *output* options is described in detail in [a dedicated section](4_annex_input-files).
 
 Within the 'lfoptions' element of the settings file, each option is defined using a 'setoption' element, which has the attributes 'name' and 'choice' (i.e. the actual value). For example:
 
@@ -707,5 +719,3 @@ Within the 'lfoptions' element of the settings file, each option is defined usin
 	</lfoptions>                           	
 ```
 [:top:](#top)
-
-

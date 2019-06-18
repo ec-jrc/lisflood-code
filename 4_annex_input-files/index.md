@@ -16,10 +16,15 @@ The meteorological conditions provide the driving forces behind the water balanc
 | $ES0$     | Potential evaporation rate from bare soil surface  | $[\frac{mm}{day}]$ |
 | $T_{avg}$ | Average *daily* temperature                        | $^\circ C$         |
 
-> **Note** that the model needs *daily* average temperature values, even if the model is run on a smaller time interval (e.g. hourly). This is because the routines for snowmelt and soil freezing are use empirical relations which are based on daily temperature data <span style="color:red"> **Cinzia is that still correct??**</span>. Just as an example, feeding hourly temperature data into the snowmelt routine can result in a gross overestimation of snowmelt. This is because even on a day on which the average temperature is below $T_m$  (no snowmelt), the instantaneous (or hourly) temperature may be higher for a part of the day, leading to unrealistically high simulated snowmelt rates.
+> **Note** that the model needs *daily* average temperature values, even if the model is run on a smaller time interval (e.g. hourly). This is because the routines for snowmelt and soil freezing are use empirical relations which are based on daily temperature data.. Just as an example, feeding hourly temperature data into the snowmelt routine can result in a gross overestimation of snowmelt. This is because even on a day on which the average temperature is below $T_m$  (no snowmelt), the instantaneous (or hourly) temperature may be higher for a part of the day, leading to unrealistically high simulated snowmelt rates.
 
 
-Both precipitation and evaporation are internally converted from *intensities* $[\frac{mm}{day}]$ to *quantities per time step* $[mm]$ by multiplying them with the time step, $\Delta t$ (in $days$). For the sake of consistency, all in- and outgoing fluxes will also be described as *quantities per time step* $[mm]$ in the following, unless stated otherwise. $ET0$, $EW0$ and $ES0$ can be calculated using standard meteorological observations. To this end a dedicated pre-processing application has been developed (LISVAP), which is documented in a separate manual. <span style="color:red"> Insert link to LISVAP manual once it is produced</span>
+Both precipitation and evaporation are internally converted from *intensities* $[\frac{mm}{day}]$ to *quantities per time step* $[mm]$ by multiplying them with the time step, $\Delta t$ (in $days$). 
+For the sake of consistency, all in- and outgoing fluxes will also be described as *quantities per time step* $[mm]$ in the following, unless stated otherwise. 
+$ET0$, $EW0$ and $ES0$ can be calculated using standard meteorological observations.
+
+To this end a dedicated pre-processing application has been developed (LISVAP), which is documented in a separate [manual](https://ec-jrc.github.io/lisflood-lisvap/). 
+
 
 
 ## LISFLOOD input maps
@@ -101,9 +106,10 @@ Both precipitation and evaporation are internally converted from *intensities* $
 
 ## Tables
 
-<span style="color:red"> Is this section up to date??</span>
+In the previous version of LISFLOOD a number of model parameters are read through tables that are linked to the classes on the land use and soil (texture) maps. 
+Those tables are replaced by maps (e.g. soil hydraulic property maps) in order to include the sub-grid variability of each parameter. 
 
-In the previous version of LISFLOOD a number of model parameters are read through tables that are linked to the classes on the land use and soil (texture) maps. Those tables are replaced by maps (e.g. soil hydraulic property maps) in order to include the sub-grid variability of each parameter. Therefore only one default table is used in the standard LISFLOOD setting. The following table gives an overview:
+Therefore only one default table is used in the standard LISFLOOD setting. The following table gives an overview:
 
 ***Table:*** *LISFLOOD input tables.*                      
 
