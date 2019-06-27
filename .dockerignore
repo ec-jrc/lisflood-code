@@ -12,3 +12,4 @@ lisflood_model.egg-info
 *.py[c|o]
 .eggs
 .tox
+/src/dist/

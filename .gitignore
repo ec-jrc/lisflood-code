@@ -13,3 +13,4 @@ lisflood_model.egg-info
 !/tests/data/Drina/maps_netcdf/parameters/params_adjust_Normal_Flood.nc.aux.xml
 .eggs
 .tox
+/src/dist/

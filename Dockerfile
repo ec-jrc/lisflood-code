@@ -37,6 +37,7 @@ COPY src/settingsEUMerged.xml /lisflood/
 WORKDIR /lisflood/hydrological_modules
 RUN python compile_kinematic_wave_parallel_tools.py build_ext --inplace
 COPY tests/. /tests/
+RUN mkdir -p /data
 WORKDIR /
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
