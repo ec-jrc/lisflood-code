@@ -23,8 +23,8 @@ from pyproj import Proj
 def coordinatesLand(eastings_forcing, northings_forcing):
     """"""
     half_cell = maskmapAttr['cell'] / 2.
-    top_row = np.where(northings_forcing == maskmapAttr['y'] - half_cell)[0][0]
-    left_col = np.where(eastings_forcing == maskmapAttr['x'] + half_cell)[0][0]
+    top_row = np.where(np.round(northings_forcing, 5) == maskmapAttr['y'] - half_cell)[0][0]
+    left_col = np.where(np.round(eastings_forcing, 5) == maskmapAttr['x'] + half_cell)[0][0]
     row_slice = slice(top_row, top_row + maskmapAttr['row'])
     col_slice = slice(left_col, left_col + maskmapAttr['col'])
     return [co[row_slice,col_slice][~maskinfo["mask"]] for co in np.meshgrid(eastings_forcing, northings_forcing)]
