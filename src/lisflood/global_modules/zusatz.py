@@ -1001,14 +1001,17 @@ def remoteInputAccess(function, file_path, error_msg):
                 xtime.sleep(READ_PAUSE)
     return obj
 
+
 def getCalendarType(nc):
     """Get the type of calendar of the open netCDF file passed as argument (http://cfconventions.org/)"""
     try:
         calendar_type = nc.variables["time"].calendar
     except AttributeError:
         calendar_type = "proleptic_gregorian"
-        print(LisfloodWarning("""The 'calendar' attribute of the 'time' variable of {} is not set: the default '{}' is used
-                              (http://cfconventions.org/Data/cf-conventions/cf-conventions-1.7/cf-conventions.pdf)""".format(path_nc, calendar_type)))
+        print(LisfloodWarning("""
+The 'calendar' attribute of the 'time' variable of {} is not set: the default '{}' is used
+(http://cfconventions.org/Data/cf-conventions/cf-conventions-1.7/cf-conventions.pdf)
+""".format(nc, calendar_type)))
     return calendar_type
 
 

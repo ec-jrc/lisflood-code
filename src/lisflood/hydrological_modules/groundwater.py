@@ -51,8 +51,8 @@ class groundwater(object):
         else:
             try:
                 LZAvInflowGuess = np.minimum(loadmap('LZAvInflowMap'), self.var.GwPerc - self.var.GwLoss)
-            except:
-                msg = "Repeat InitLisflood: LZAvin.map does not exists or is not compatible with mask map"
+            except Exception as e:
+                msg = "{} Repeat InitLisflood: LZAvin map not existing or not compatible with mask map".format(str(e))
                 raise LisfloodError(msg)
             # Estimated average inflow rate into lower zone [mm/day]
             # By definition value cannot exceed GwPercValue!

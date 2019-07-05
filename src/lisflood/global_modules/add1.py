@@ -126,9 +126,9 @@ def mapattrNetCDF(name):
     half_cell = maskmapAttr['cell'] / 2
     x = x1 - half_cell # |
     y = y1 + half_cell # | coordinates of the upper left corner of the input file upper left pixel
-    cut0 = int(round(np.abs(maskmapAttr['x'] - x) / maskmapAttr['cell']))
+    cut0 = int(round(np.abs(maskmapAttr['x'] - x) / maskmapAttr['cell'], 5))
     cut1 = cut0 + maskmapAttr['col']
-    cut2 = int(round(np.abs(maskmapAttr['y'] - y) / maskmapAttr['cell']))
+    cut2 = int(round(np.abs(maskmapAttr['y'] - y) / maskmapAttr['cell'], 5))
     cut3 = cut2 + maskmapAttr['row']
     return cut0, cut1, cut2, cut3 # input data will be sliced using [cut0:cut1,cut2:cut3]
 
@@ -225,7 +225,6 @@ def loadsetclone(name):
     #compute mask (pixels in maskldd AND maskarea)
     mask = np.logical_not(np.logical_and(maskldd,maskarea))
 
-
     #return all the non-masked data as a 1-D array
     mapC = np.ma.compressed(np.ma.masked_array(mask,mask))
     # Definition of compressed array and info how to blow it up again
@@ -242,15 +241,15 @@ def loadsetclone(name):
     return map
 
 
-def compressArray(map,pcr=True,name="None"):
+def compressArray(map, pcr=True, name=None):
         if pcr:
             mapnp = pcr2numpy(map,np.nan)
             mapnp1 = np.ma.masked_array(mapnp,maskinfo['mask'])
         else:
             mapnp1 = np.ma.masked_array(map,maskinfo['mask'])
         mapC = np.ma.compressed(mapnp1)
-        #if fill: mapC[np.isnan(mapC)]=0
-        if name != "None":
+
+        if name is not None:
             if np.max(np.isnan(mapC)):
                 msg = name + " has less valid pixels than area or ldd \n"
                 raise LisfloodError(msg)
