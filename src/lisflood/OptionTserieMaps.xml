@@ -139,14 +139,15 @@
 <setoption   default="0"  name="repUZOutflowMaps"/>
 <setoption   default="0"  name="repWaterDepthMaps"/>
 <setoption   default="0"  name="repWaterLevelMaps"/>
-<setoption   default="0"  name="ETActMaps"/>          #Reported actual evapotranspiration [mm]
 <setoption   default="0"  name="repFastRunoffMaps"/>  #Surface runoff +  UZ [mm]
 <setoption   default="0"  name="repRWS"/>
 <setoption   default="0"  name="repStressDays"/>
 <setoption   default="0"  name="repTotalAbs"/>
 <setoption   default="0"  name="repTotalWUse"/>
 <setoption   default="0"  name="repWIndex"/>
-
+<setoption   default="0"  name="repE2O1"/>
+<setoption   default="0"  name="repE2O2"/>
+    
 </lfoptions>
 
 
