@@ -817,25 +817,29 @@ def writenet(flag, inputmap, netfile, DtDay,
             lon = nf1.createDimension('x', col)  # x 1000
             longitude = nf1.createVariable('x', 'f8', ('x',))
             for i in metadataNCDF['x']:
-                exec('%s="%s"') % ("longitude." + i, metadataNCDF['x'][i])
+                if i != '_FillValue': # to avoid AttributeError ("_FillValue attribute must be set when variable is created") when writing output nc attributes
+                    exec('%s="%s"') % ("longitude." + i, metadataNCDF['x'][i])
 
         if 'lon' in metadataNCDF.keys():
             lon = nf1.createDimension('lon', col)
             longitude = nf1.createVariable('lon', 'f8', ('lon',))
             for i in metadataNCDF['lon']:
-                exec('%s="%s"') % ("longitude." + i, metadataNCDF['lon'][i])
+                if i != '_FillValue': # to avoid AttributeError ("_FillValue attribute must be set when variable is created") when writing output nc attributes
+                    exec('%s="%s"') % ("longitude." + i, metadataNCDF['lon'][i])
 
         if 'y' in metadataNCDF.keys():
             lat = nf1.createDimension('y', row)  # x 950
             latitude = nf1.createVariable('y', 'f8', ('y',))
             for i in metadataNCDF['y']:
-                exec('%s="%s"') % ("latitude." + i, metadataNCDF['y'][i])
+                if i != '_FillValue': # to avoid AttributeError ("_FillValue attribute must be set when variable is created") when writing output nc attributes
+                    exec('%s="%s"') % ("latitude." + i, metadataNCDF['y'][i])
 
         if 'lat' in metadataNCDF.keys():
             lat = nf1.createDimension('lat', row)  # x 950
             latitude = nf1.createVariable('lat', 'f8', ('lat',))
             for i in metadataNCDF['lat']:
-                exec('%s="%s"') % ("latitude." + i, metadataNCDF['lat'][i])
+                if i != '_FillValue': # to avoid AttributeError ("_FillValue attribute must be set when variable is created") when writing output nc attributes
+                    exec('%s="%s"') % ("latitude." + i, metadataNCDF['lat'][i])
             # projection
 
         if 'laea' in metadataNCDF.keys():
