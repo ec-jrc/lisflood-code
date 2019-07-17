@@ -815,27 +815,30 @@ def writenet(flag, inputmap, netfile, DtDay,
         # Dimension
         if 'x' in metadataNCDF.keys():
             lon = nf1.createDimension('x', col)  # x 1000
-            longitude = nf1.createVariable('x', 'f8', ('x',))
+            longitude = nf1.createVariable('x', 'f8', ('x',), fill_value=metadataNCDF['x']['_FillValue'])
             for i in metadataNCDF['x']:
-                exec('%s="%s"') % ("longitude." + i, metadataNCDF['x'][i])
+                if i != '_FillValue': exec('%s="%s"') % ("longitude." + i, metadataNCDF['x'][i])
 
         if 'lon' in metadataNCDF.keys():
             lon = nf1.createDimension('lon', col)
-            longitude = nf1.createVariable('lon', 'f8', ('lon',))
+            longitude = nf1.createVariable('lon', 'f8', ('lon',), fill_value=metadataNCDF['lon']['_FillValue'])
             for i in metadataNCDF['lon']:
-                exec('%s="%s"') % ("longitude." + i, metadataNCDF['lon'][i])
+                if i != '_FillValue': exec('%s="%s"') % ("longitude." + i, metadataNCDF['lon'][i])
+
 
         if 'y' in metadataNCDF.keys():
             lat = nf1.createDimension('y', row)  # x 950
-            latitude = nf1.createVariable('y', 'f8', ('y',))
+            latitude = nf1.createVariable('y', 'f8', ('y',), fill_value=metadataNCDF['y']['_FillValue'])
             for i in metadataNCDF['y']:
-                exec('%s="%s"') % ("latitude." + i, metadataNCDF['y'][i])
+                if i != '_FillValue': exec('%s="%s"') % ("longitude." + i, metadataNCDF['y'][i])
+
 
         if 'lat' in metadataNCDF.keys():
             lat = nf1.createDimension('lat', row)  # x 950
-            latitude = nf1.createVariable('lat', 'f8', ('lat',))
+            latitude = nf1.createVariable('lat', 'f8', ('lat',), fill_value=metadataNCDF['lat']['_FillValue'])
             for i in metadataNCDF['lat']:
-                exec('%s="%s"') % ("latitude." + i, metadataNCDF['lat'][i])
+                if i != '_FillValue': exec('%s="%s"') % ("longitude." + i, metadataNCDF['lat'][i])
+
             # projection
 
         if 'laea' in metadataNCDF.keys():
