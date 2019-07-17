@@ -2996,6 +2996,12 @@ Reported discharge [m3/s] for lakes and reservoirs
 </comment>
 </textvar>
 
+<textvar name="ChanQEnd" value="$(PathOut)/ChanQ.end"/>
+
+<textvar name="OFDirectEnd" value="$(PathOut)/OFDirect.end"/>
+
+<textvar name="OFForestEnd" value="$(PathOut)/OFForest.end"/>
+
 <textvar name="DSLRForestEnd" value="$(PathOut)/dslf.end">
 <comment>
 Reported days since last rain
@@ -3037,6 +3043,7 @@ cumulative interception [mm]
 </comment>
 </textvar>
 
+<textvar name="OFIrrigationEnd" value="$(PathOut)/OFIrrigation.end"/>
 
 <textvar name="DSLRIrrigationEnd" value="$(PathOut)/dsli.end">
 <comment>
@@ -3188,6 +3195,8 @@ Reported storage in lower response box [mm]
 Reported storage in lower response box [mm]
 </comment>
 </textvar>
+
+<textvar name="OFOtherEnd" value="$(PathOut)/OFOther.end"/>
 
 <textvar name="DSLRMaps" value="$(PathOut)/dslr">
 <comment>
