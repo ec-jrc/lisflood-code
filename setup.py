@@ -136,7 +136,7 @@ setup(
     ],
     install_requires=[
         'python-dateutil', 'pytest', 'docopt',
-        'numpy>=1.15', 'cython', 'netCDF4>=1.5',
+        'numpy>=1.15,<1.17', 'cython', 'netCDF4>=1.5',
         'numexpr', 'pandas>=0.24.2', 'xarray', 'pyproj', 'cftime',
     ],
     scripts=['bin/lisflood'],
