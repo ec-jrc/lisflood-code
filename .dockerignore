@@ -12,4 +12,9 @@ lisflood_model.egg-info
 *.py[c|o]
 .eggs
 .tox
+tox.ini
+pytest.ini
+MANIFEST.in
 /src/dist/
+.gitignore
+.gitattributes

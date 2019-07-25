@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends software-proper
 RUN apt-file update
 
 RUN apt install -y --no-install-recommends gcc g++ git libboost-all-dev libpython-dev libxerces-c-dev libxml2 libxml2-utils libxslt1-dev qtbase5-dev \
-    libqwt-dev gfortran gdal-bin libgdal-dev python-gdal libqt5opengl5 libqt5opengl5-dev qtbase5-dev \
+    libqwt-dev gfortran gdal-bin libgdal-dev python-gdal libqt5opengl5 libqt5opengl5-dev \
     && pip install docopt numpy==1.15 pytest pandas
 
 WORKDIR /opt

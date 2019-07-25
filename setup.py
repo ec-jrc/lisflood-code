@@ -15,15 +15,19 @@ See the Licence for the specific language governing permissions and limitations 
 ---------------------------------------------------------------------------------------------------------------------------------------
 Use python setup.y upload to publish versioned tags and pypi package
 
-Manually step by step:
+python setup.py upload
+
+It's equivalent to:
 
 1. python setup.py sdist
+2. twine upload dist/*
+3. git tag {version}
+4. git push --tags
 
-2a. To upload new package on PyPi Test:
+Note: To upload new package on PyPi Test:
 twine upload --repository-url https://test.pypi.org/legacy/ dist/*
 
-2b. To upload new package on PyPi:
-twine upload dist/*
+Install
 
 3a. Test package install
 pip install --index-url https://test.pypi.org/simple/ lisflood-model==2.8.14
@@ -131,12 +135,12 @@ setup(
     setup_requires=[
             # Setuptools 18.0 properly handles Cython extensions.
             'setuptools>=41.0',
-            'numpy>=1.15',
+            'numpy>=1.15,<1.17',
             'cython',
     ],
     install_requires=[
         'python-dateutil', 'pytest', 'docopt',
-        'numpy>=1.15', 'cython', 'netCDF4>=1.5',
+        'numpy>=1.15,<1.17', 'cython', 'netCDF4>=1.5',
         'numexpr', 'pandas>=0.24.2', 'xarray', 'pyproj', 'cftime',
     ],
     scripts=['bin/lisflood'],
