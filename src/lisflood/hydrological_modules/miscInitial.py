@@ -131,9 +131,10 @@ class miscInitial(object):
         # computation of model steps is referred to CalendarStartDay
         self.var.CalendarDayStart = Calendar(binding['CalendarDayStart'])
         try:
-           # number of time step or date of the state map to be used to initialize model run
-           timestepInit.append(binding["timestepInit"])
-        except: pass
+            # number of time step or date of the state map to be used to initialize model run
+            timestepInit.append(binding["timestepInit"])
+        except:
+            pass
 
         self.var.PrScaling = loadmap('PrScaling')
         self.var.CalEvaporation = loadmap('CalEvaporation')
@@ -176,11 +177,21 @@ class miscInitial(object):
         with xr.open_dataset(binding["PrecipitationMaps"] + ".nc") as nc:
             if all([co in nc.dims for co in ("x", "y")]):
                 try:
-                    proj_var = [v for v in nc.data_vars.keys() if 'proj4_params' in nc[v].attrs.keys()][0]  # look for the projection variable
+                    # look for the projection variable
+                    proj_var = [v for v in nc.data_vars.keys() if 'proj4_params' in nc[v].attrs.keys()][0]
+                    # proj4 string
+                    proj4_params = nc[proj_var].attrs['proj4_params']
+                    # projection object obtained from the PROJ4 string
                 except IndexError:
-                    raise Exception("If using projected coordinates (x, y), a variable with the 'proj4_params' attribute must be included in the precipitation file!")
-                projection = Proj(nc[proj_var].attrs['proj4_params']) # projection object obtained from the PROJ4 string
-                _, lat_deg = projection(*coordinatesLand(nc.x.values, nc.y.values), inverse=True) # latitude (degrees)
+                    try:
+                        proj4_params = binding['proj4_params']
+                    except KeyError:
+                        raise Exception("If using projected coordinates (x, y), a variable with the 'proj4_params' "
+                                        "attribute must be included in the precipitation file or in settings file!")
+
+                # projection object obtained from the PROJ4 string
+                projection = Proj(proj4_params)
+                _, lat_deg = projection(*coordinatesLand(nc.x.values, nc.y.values), inverse=True)  # latitude (degrees)
             else:
                 _, lat_deg = coordinatesLand(nc.lon.values, nc.lat.values)  # latitude (degrees)
         self.var.lat_rad = np.radians(lat_deg)  # latitude (radians)
