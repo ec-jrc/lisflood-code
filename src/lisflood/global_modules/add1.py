@@ -795,7 +795,6 @@ def writenet(flag, inputmap, netfile, DtDay,
     :param frequency:[None,'all','monthly','annual'] save to netCDF stack; None save to netCDF single
     :return: 
     """
-
     # prefix = netfile.split('/')[-1].split('\\')[-1].split('.')[0]
     prefix = os.path.basename(netfile)
     netfile += ".nc"
@@ -813,35 +812,36 @@ def writenet(flag, inputmap, netfile, DtDay,
         nf1.keywords = "Lisflood, EFAS, GLOFAS"
         nf1.Conventions = 'CF-1.6'
         # Dimension
+        not_valid_attrs = ('_FillValue', )
         if 'x' in metadataNCDF.keys():
             lon = nf1.createDimension('x', col)  # x 1000
             longitude = nf1.createVariable('x', 'f8', ('x',))
-            for i in metadataNCDF['x']:
-                if i != '_FillValue': # to avoid AttributeError ("_FillValue attribute must be set when variable is created") when writing output nc attributes
-                    exec('%s="%s"') % ("longitude." + i, metadataNCDF['x'][i])
+            valid_attrs = [i for i in metadataNCDF['x'] if i not in not_valid_attrs]
+            for i in valid_attrs:
+                exec('%s="%s"') % ("longitude." + i, metadataNCDF['x'][i])
 
         if 'lon' in metadataNCDF.keys():
             lon = nf1.createDimension('lon', col)
             longitude = nf1.createVariable('lon', 'f8', ('lon',))
-            for i in metadataNCDF['lon']:
-                if i != '_FillValue': # to avoid AttributeError ("_FillValue attribute must be set when variable is created") when writing output nc attributes
-                    exec('%s="%s"') % ("longitude." + i, metadataNCDF['lon'][i])
+            valid_attrs = [i for i in metadataNCDF['lon'] if i not in not_valid_attrs]
+            for i in valid_attrs:
+                exec('%s="%s"') % ("longitude." + i, metadataNCDF['lon'][i])
 
         if 'y' in metadataNCDF.keys():
             lat = nf1.createDimension('y', row)  # x 950
             latitude = nf1.createVariable('y', 'f8', ('y',))
-            for i in metadataNCDF['y']:
-                if i != '_FillValue': # to avoid AttributeError ("_FillValue attribute must be set when variable is created") when writing output nc attributes
-                    exec('%s="%s"') % ("latitude." + i, metadataNCDF['y'][i])
+            valid_attrs = [i for i in metadataNCDF['y'] if i not in not_valid_attrs]
+            for i in valid_attrs:
+                exec('%s="%s"') % ("latitude." + i, metadataNCDF['y'][i])
 
         if 'lat' in metadataNCDF.keys():
             lat = nf1.createDimension('lat', row)  # x 950
             latitude = nf1.createVariable('lat', 'f8', ('lat',))
-            for i in metadataNCDF['lat']:
-                if i != '_FillValue': # to avoid AttributeError ("_FillValue attribute must be set when variable is created") when writing output nc attributes
-                    exec('%s="%s"') % ("latitude." + i, metadataNCDF['lat'][i])
-            # projection
+            valid_attrs = [i for i in metadataNCDF['lat'] if i not in not_valid_attrs]
+            for i in valid_attrs:
+                exec('%s="%s"') % ("latitude." + i, metadataNCDF['lat'][i])
 
+        # projection
         if 'laea' in metadataNCDF.keys():
             proj = nf1.createVariable('laea', 'i4')
             for i in metadataNCDF['laea']:
