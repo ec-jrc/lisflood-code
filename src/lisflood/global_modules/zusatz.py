@@ -140,15 +140,10 @@ def optionBinding(settingsfile, optionxml):
     repTimeserie = {}
     repMaps = {}
 
-    # domopt = xml.dom.minidom.parseString(optionxml)
+    # read xml optionxml i.e. OptionTserieMaps.xml file
+    if not os.path.exists(optionxml):
+        raise LisfloodFileError(optionxml, "Cannot find option file: " + optionxml)
 
-    #read xml optionxml i.e. OptionTserieMaps.xml file
-    try:
-        f=open(optionxml)
-        f.close()
-    except:
-        msg = "Cannot find option file: " + optionxml
-        raise LisfloodFileError(optionxml,msg)
     try:
         #DOM object representing content of optionxml file
         domopt = xml.dom.minidom.parse(optionxml)
@@ -156,7 +151,7 @@ def optionBinding(settingsfile, optionxml):
         msg = "Error using option file: " + optionxml
         raise LisfloodError(msg)
 
-    #read file settings (settingsfile)
+    # read file settings (settingsfile)
     try:
        f = open(settingsfile,'r')
        xmlstring1 = ""

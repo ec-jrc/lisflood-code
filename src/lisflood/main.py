@@ -225,11 +225,11 @@ def main():
 
 
 def get_optionxml_path():
-    # FIXME
     # read OptionTserieMaps.xml in the same folder as Lisflood main (lisf1.py)
-    LF_Path = os.path.dirname(os.path.abspath(sys.argv[0]))
+    lisflood_path = os.path.dirname(os.path.abspath(sys.argv[0]))
     # OptionTserieMaps.xml file
-    optionxml = os.path.normpath(os.path.join(LF_Path, "OptionTserieMaps.xml"))
+    optionxml = os.path.normpath(os.path.join(lisflood_path, "OptionTserieMaps.xml"))
+    # second attempt: read from source folder
     if not os.path.exists(optionxml):
-        optionxml = os.path.normpath(os.path.join(src_dir, "lisflood/OptionTserieMaps.xml"))
+        optionxml = os.path.normpath(os.path.join(src_dir, "OptionTserieMaps.xml"))
     return optionxml
