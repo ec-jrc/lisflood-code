@@ -28,7 +28,7 @@ if os.path.exists(src_dir):
 
 from lisflood.global_modules.add1 import readnetcdf
 from lisflood.global_modules.globals import modelSteps, binding
-from lisf1 import Lisfloodexe, get_optionxml_path
+from lisflood.main import Lisfloodexe, get_optionxml_path
 
 
 class TestLis(object):

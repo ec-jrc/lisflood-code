@@ -816,28 +816,28 @@ def writenet(flag, inputmap, netfile, DtDay,
         if 'x' in metadataNCDF.keys():
             lon = nf1.createDimension('x', col)  # x 1000
             longitude = nf1.createVariable('x', 'f8', ('x',))
-            valid_attrs = (i for i in metadataNCDF['x'] if i not in not_valid_attrs)
+            valid_attrs = [i for i in metadataNCDF['x'] if i not in not_valid_attrs]
             for i in valid_attrs:
                 exec('%s="%s"') % ("longitude." + i, metadataNCDF['x'][i])
 
         if 'lon' in metadataNCDF.keys():
             lon = nf1.createDimension('lon', col)
             longitude = nf1.createVariable('lon', 'f8', ('lon',))
-            valid_attrs = (i for i in metadataNCDF['lon'] if i not in not_valid_attrs)
+            valid_attrs = [i for i in metadataNCDF['lon'] if i not in not_valid_attrs]
             for i in valid_attrs:
                 exec('%s="%s"') % ("longitude." + i, metadataNCDF['lon'][i])
 
         if 'y' in metadataNCDF.keys():
             lat = nf1.createDimension('y', row)  # x 950
             latitude = nf1.createVariable('y', 'f8', ('y',))
-            valid_attrs = (i for i in metadataNCDF['y'] if i not in not_valid_attrs)
+            valid_attrs = [i for i in metadataNCDF['y'] if i not in not_valid_attrs]
             for i in valid_attrs:
                 exec('%s="%s"') % ("latitude." + i, metadataNCDF['y'][i])
 
         if 'lat' in metadataNCDF.keys():
             lat = nf1.createDimension('lat', row)  # x 950
             latitude = nf1.createVariable('lat', 'f8', ('lat',))
-            valid_attrs = (i for i in metadataNCDF['lat'] if i not in not_valid_attrs)
+            valid_attrs = [i for i in metadataNCDF['lat'] if i not in not_valid_attrs]
             for i in valid_attrs:
                 exec('%s="%s"') % ("latitude." + i, metadataNCDF['lat'][i])
             # projection
