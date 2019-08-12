@@ -42,39 +42,36 @@ class inflow(object):
 
         if option['inflow']:
             self.var.InflowPoints = loadmap('InflowPoints')
-            self.var.QInM3Old = np.where(self.var.InflowPoints>0,self.var.ChanQ * self.var.DtSec,0)
+            self.var.QInM3Old = np.where(self.var.InflowPoints > 0, self.var.ChanQ * self.var.DtSec, 0)
 
             # read inflow map
-            inflowmapprc = loadmap('InflowPoints',pcr=True)
-            inflowmapnp = (inflowmapprc, -9999)
-            inflowmapnp = np.where(inflowmapnp>0,inflowmapnp,0)
+            inflowmapprc = loadmap('InflowPoints', pcr=True)
+            inflowmapnp = pcr2numpy(inflowmapprc, -9999)
+            inflowmapnp = np.where(inflowmapnp > 0, inflowmapnp, 0)
 
             # get outlets ids from outlets map
-            inflowId = np.unique(inflowmapnp)
+            inflow_ids = np.unique(inflowmapnp)
             # drop negative values (= missing data in pcraster map)
-            inflowId = inflowId[inflowId > 0]
+            inflow_ids = inflow_ids[inflow_ids > 0]
 
             # read tss ids from tss file
-            tssId = read_tss_header(binding['QInTS'])
+            tss_ids = read_tss_header(binding['QInTS'])
 
             # create a dictionary of tss id : tss id index
             id_dict = {}
-            for i in range(len(tssId)):
-                id_dict[tssId[i]] = tssId.index(tssId[i]) +1
+            for i in range(len(tss_ids)):
+                id_dict[tss_ids[i]] = tss_ids.index(tss_ids[i]) + 1
 
             # remove inflow point if not available in tss file
-            for i in range(len(inflowId)):
-                if inflowId[i] in tssId:
-                    pass
-                else:
-                    id_dict[inflowId[i]] = 0
-                    msg = "Inflow point was removed ID:", str(inflowId[i]) ,"\n"
-                    print LisfloodWarning(msg)
-
+            for inf_id in inflow_ids:
+                if inf_id not in tss_ids:
+                    id_dict[inf_id] = 0
+                    print LisfloodWarning("Inflow point was removed ID: %d\n" % inf_id)
 
             # substitute indexes to id in map
             self.var.InflowPointsMap = np.copy(inflowmapnp)
-            for k, v in id_dict.iteritems(): self.var.InflowPointsMap[inflowmapnp==k] = v
+            for k, v in id_dict.iteritems():
+                self.var.InflowPointsMap[inflowmapnp == k] = v
 
             # convert map to pcraster format
             # self.var.InflowPointsMap = decompress(self.var.InflowPointsMap)

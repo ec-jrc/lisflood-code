@@ -50,7 +50,6 @@ class landusechange(object):
         self.var.RiceFraction = loadmap('RiceFraction',timestampflag='closest')
         self.var.OtherFraction = loadmap('OtherFraction',timestampflag='closest')
 
-
     def dynamic(self):
         """dynamic part of the landusechange module
         """
