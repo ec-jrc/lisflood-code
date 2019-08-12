@@ -124,8 +124,8 @@ def mapattrNetCDF(name):
     if maskmapAttr['cell'] != round(np.abs(x2 - x1), 5) or maskmapAttr['cell'] != round(np.abs(y2 - y1), 5):
         raise LisfloodError("Cell size different in maskmap {} and {}".format(binding['MaskMap'], filename))
     half_cell = maskmapAttr['cell'] / 2
-    x = x1 - half_cell # |
-    y = y1 + half_cell # | coordinates of the upper left corner of the input file upper left pixel
+    x = x1 - half_cell  # |
+    y = y1 + half_cell  # | coordinates of the upper left corner of the input file upper left pixel
     cut0 = int(round(np.abs(maskmapAttr['x'] - x) / maskmapAttr['cell'], 5))
     cut1 = cut0 + maskmapAttr['col']
     cut2 = int(round(np.abs(maskmapAttr['y'] - y) / maskmapAttr['cell'], 5))
@@ -188,7 +188,7 @@ def loadsetclone(name):
                 xlast = nf1.variables['lat'][-1]
                 ylast = nf1.variables['lon'][-1]
 
-            cellSize = round(np.abs(x2 - x1),4)
+            cellSize = round(np.abs(x2 - x1), 4)
             nrRows = int(0.5+np.abs(ylast - y1) / cellSize + 1)
             nrCols = int(0.5+np.abs(xlast - x1) / cellSize + 1)
             x = x1 - cellSize / 2
@@ -203,9 +203,7 @@ def loadsetclone(name):
         if Flags['check']:
             checkmap(name, filename, map, flagmap, 0)
     else:
-        msg = "Maskmap: " + Mask + \
-            " is not a valid mask map nor valid coordinates"
-        raise LisfloodError(msg)
+        raise LisfloodError("Maskmap: {} is not a valid mask map nor valid coordinates".format(name))
 
     # Definition of cellsize, coordinates of the meteomaps and maskmap
     # need some love for error handling
@@ -246,7 +244,7 @@ def compressArray(map, pcr=True, name=None):
             mapnp = pcr2numpy(map,np.nan)
             mapnp1 = np.ma.masked_array(mapnp,maskinfo['mask'])
         else:
-            mapnp1 = np.ma.masked_array(map,maskinfo['mask'])
+            mapnp1 = np.ma.masked_array(map, maskinfo['mask'])
         mapC = np.ma.compressed(mapnp1)
 
         if name is not None:
@@ -286,7 +284,7 @@ def makenumpy(map):
     else: return map
 
 
-def loadmap(name,pcr=False, lddflag=False, timestampflag='exact', averageyearflag=False):
+def loadmap(name, pcr=False, lddflag=False, timestampflag='exact', averageyearflag=False):
     """ Load a static map either value or pcraster map or netcdf (single or stack)
     
     Load a static map either value or pcraster map or netcdf (single or stack)
@@ -305,23 +303,22 @@ def loadmap(name,pcr=False, lddflag=False, timestampflag='exact', averageyearfla
     :except: pcr: maps must have the same size of clone.map
              netCDF: time step timestepInit must be included into the stack 
     """
-
-    #name of the key in Settimgs.xml file containing path and name of the map file
+    # name of the key in Settimgs.xml file containing path and name of the map file
     value = binding[name]
-    #path and name of the map file
+    # path and name of the map file
     filename = value
     load = False
     pcrmap = False
-    #try reading in PCRaster map format
+    # try reading in PCRaster map format
     try:
-        #try reading pcraster map
+        # try reading pcraster map
         mapC = float(value)
         flagmap = False
         load = True
         if pcr: map=mapC
     except ValueError:
         try:
-            #try reading pcraster map exploiting the iterAccess class
+            # try reading pcraster map exploiting the iterAccess class
             map = iterReadPCRasterMap(value)
             flagmap = True
             load = True
@@ -331,12 +328,13 @@ def loadmap(name,pcr=False, lddflag=False, timestampflag='exact', averageyearfla
     if load and pcrmap:
         #map is loaded and it is in pcraster format
         try:
-           test = pcraster.scalar(map) + pcraster.scalar(map)    # test if map is same size as clone map, if not it will make an error
+            # test if map is same size as clone map, if not it will make an error
+           test = pcraster.scalar(map) + pcraster.scalar(map)
         except:
            msg = value +" might be of a different size than clone size "
            raise LisfloodError(msg)
-    #if failed before try reading from netCDF map format
-    if not(load):
+    # if failed before try reading from netCDF map format
+    if not load:
         # read a netcdf  (single one not a stack)
         filename = os.path.splitext(value)[0] + '.nc'
         # get mapextend of netcdf map and calculate the cutting
@@ -346,7 +344,7 @@ def loadmap(name,pcr=False, lddflag=False, timestampflag='exact', averageyearfla
         value = nf1.variables.items()[-1][0]
         # get the last variable name (it must be the variable to be read by Lisflood)
         if not timestepInit:
-            #if timestepInit is missing, read netcdf as single static map
+            # if timestepInit is missing, read netcdf as single static map
             mapnp = nf1.variables[value][cut2:cut3, cut0:cut1]
         else:
             if 'time' in nf1.variables:
@@ -411,20 +409,21 @@ def loadmap(name,pcr=False, lddflag=False, timestampflag='exact', averageyearfla
                 itime = np.where(nf1.variables['time'][:] == timestepI)[0][0]
                 mapnp = nf1.variables[value][itime,cut2:cut3, cut0:cut1]
             else:
-                # read a netcdf  (single one)
+                # read a netcdf (single one)
                 mapnp = nf1.variables[value][cut2:cut3, cut0:cut1]
 
-        #masking
+        # masking
         try:
             if any(maskinfo):
                 mapnp.mask = maskinfo['mask']
         except:
             pass
         nf1.close()
+
         # if a map should be pcraster
         if pcr:
             # check if integer map (like outlets, lakes etc
-            checkint=str(mapnp.dtype)
+            checkint = str(mapnp.dtype)
             if checkint=="int16" or checkint=="int32":
                 mapnp[mapnp.mask]=-9999
                 map = numpy2pcr(Nominal, mapnp, -9999)
@@ -435,14 +434,15 @@ def loadmap(name,pcr=False, lddflag=False, timestampflag='exact', averageyearfla
                 mapnp[np.isnan(mapnp)] = -9999
                 map = numpy2pcr(Scalar, mapnp, -9999)
             # if the map is a ldd
-            #if value.split('.')[0][:3] == 'ldd':
-            if lddflag: map = ldd(nominal(map))
+            if lddflag:
+                map = ldd(nominal(map))
         else:
-            mapC = compressArray(mapnp,pcr=False,name=filename)
+            mapC = compressArray(mapnp, pcr=False, name=filename)
         flagmap = True
+
     # pcraster map but it has to be an array
-    if pcrmap and not(pcr):
-        mapC = compressArray(map,name=filename)
+    if pcrmap and not pcr:
+        mapC = compressArray(map, name=filename)
     if Flags['check']:
         print name, filename
         if flagmap == False:
