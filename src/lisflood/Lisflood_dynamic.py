@@ -50,7 +50,7 @@ class LisfloodModel_dyn(DynamicModel):
         if Flags['loud']:
             print("%-6i %10s" %(self.currentTimeStep(),self.CalendarDate.strftime("%d/%m/%Y %H:%M")))
         else:
-            if not(Flags['check']):
+            if not(Flags['checkfiles']):
                 if (Flags['quiet']) and (not(Flags['veryquiet'])):
                     sys.stdout.write(".")
                 if (not(Flags['quiet'])) and (not(Flags['veryquiet'])):
@@ -65,7 +65,7 @@ class LisfloodModel_dyn(DynamicModel):
         self.readmeteo_module.dynamic()     
         timemeasure("Read meteo") # 1. timing after read input maps
 
-        if Flags['check']: return  # if check than finish here
+        if Flags['checkfiles']: return  # if check than finish here
 
         """ Here it starts with hydrological modules:
         """

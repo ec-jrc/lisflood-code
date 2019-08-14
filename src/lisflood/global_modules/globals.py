@@ -14,6 +14,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
+from __future__ import absolute_import
 
 #getopt module is a parser for command line options (consider using argparse module instead)
 import getopt
@@ -92,7 +93,7 @@ nrCores = []
 #set names of input arguments
 #initializing Flags to false values
 Flags = OrderedDict([('quiet', False), ('veryquiet', False), ('loud', False),
-                     ('check', False), ('noheader', False), ('printtime', False),
+                     ('checkfiles', False), ('noheader', False), ('printtime', False),
                      ('debug', False), ('nancheck', False)])
 
 def globalFlags(arg):
@@ -107,6 +108,7 @@ def globalFlags(arg):
     try:
         opts, args = getopt.getopt(arg, 'qvlchtdn', Flags.keys())
     except getopt.GetoptError:
+        from ..main import usage
         usage()
 
     for o, a in opts:
@@ -117,7 +119,7 @@ def globalFlags(arg):
         if o in ('-l', '--loud'):
             Flags['loud'] = True
         if o in ('-c', '--checkfiles'):
-            Flags['check'] = True
+            Flags['checkfiles'] = True
         if o in ('-h', '--noheader'):
             Flags['noheader'] = True
         if o in ('-t', '--printtime'):

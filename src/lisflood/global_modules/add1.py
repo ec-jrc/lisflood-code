@@ -140,6 +140,7 @@ def loadsetclone(name):
     :param name: name of the key in Settings.xml containing path and name of mask map as string
     :return: map: mask map (False=include in modelling; True=exclude from modelling) as pcraster
     """
+    print(binding)
     filename = os.path.normpath(binding[name])
     if not os.path.exists(filename):
         raise LisfloodError('File not existing: {}'.format(filename))
@@ -199,7 +200,7 @@ def loadsetclone(name):
             map = numpy2pcr(Boolean, mapnp, 0)
             #map = boolean(map)
             flagmap = True
-        if Flags['check']:
+        if Flags['checkfiles']:
             checkmap(name, filename, map, flagmap, 0)
     else:
         raise LisfloodError("Maskmap: {} is not a valid mask map nor valid coordinates".format(name))
@@ -442,7 +443,7 @@ def loadmap(name, pcr=False, lddflag=False, timestampflag='exact', averageyearfl
     # pcraster map but it has to be an array
     if pcrmap and not pcr:
         mapC = compressArray(map, name=filename)
-    if Flags['check']:
+    if Flags['checkfiles']:
         print(name, filename)
         if flagmap == False:
             checkmap(name, filename, mapC, flagmap, 0)
@@ -514,10 +515,10 @@ def loadLAI(value, pcrvalue, i,pcr=False):
         # mapnp[np.isnan(mapnp)] = -9999
         # map = numpy2pcr(Scalar, mapnp, -9999)
         # if check use a pcraster map
-        if Flags['check' or pcr]:
+        if Flags['checkfiles'] or pcr:
             map = decompress(mapC)
     if pcrmap: mapC = compressArray(map,name=filename)
-    if Flags['check']:
+    if Flags['checkfiles']:
         checkmap(os.path.basename(pcrvalue), filename, map, True, 0)
     if pcr:
         if Flags['nancheck']: 
@@ -554,7 +555,7 @@ def readmapsparse(name, time, oldmap):
             if Flags['loud']:
                 s = " last_%s" % (os.path.basename(name))
                 print(s)
-    if Flags['check']:
+    if Flags['checkfiles']:
         checkmap(os.path.basename(name), filename, map, True, find)
     if Flags['nancheck']: 
         nanCheckMap(map, filename, name)
@@ -637,7 +638,7 @@ def readnetcdf(name, time, timestampflag='exact', averageyearflag=False):
     nf1.close()
 
     mapC = compressArray(mapnp, pcr=False, name=filename)
-    if Flags['check']:
+    if Flags['checkfiles']:
         timename = os.path.basename(name) + str(time)
         checkmap(timename, filename, decompress(mapC), True, 1)
     if Flags['nancheck']: 

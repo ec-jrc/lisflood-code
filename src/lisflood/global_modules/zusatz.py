@@ -15,7 +15,7 @@ See the Licence for the specific language governing permissions and limitations 
 
 """
 from __future__ import print_function, absolute_import
-from nine import range
+from nine import range, map
 
 import xml.dom.minidom
 import datetime
@@ -154,6 +154,7 @@ def optionBinding(settingsfile, optionxml):
         raise LisfloodError(msg)
 
     # read file settings (settingsfile)
+    # FIXME ...?!?...
     try:
        f = open(settingsfile,'r')
        xmlstring1 = ""
@@ -166,8 +167,9 @@ def optionBinding(settingsfile, optionxml):
     except:
         msg = "Cannot find settings file: " + settingsfile
         raise LisfloodFileError(settingsfile,msg)
+
     try:
-        #DOM object representing content of settings file
+        # DOM object representing content of settings file
         dom = xml.dom.minidom.parse(settingsfile)
     except:
         msg = "Error using: " + settingsfile
@@ -255,12 +257,12 @@ def optionBinding(settingsfile, optionxml):
     jjj = []
     for i in repsteps:
         if '..' in i:
-            j = map(int, i.split('..'))
+            j = list(map(int, i.split('..')))
             for jj in range(j[0], j[1] + 1):
                 jjj.append(jj)
         else:
             jjj.append(i)
-    ReportSteps['rep'] = map(datetoInt, jjj)
+    ReportSteps['rep'] = list(map(datetoInt, jjj))
     # maps are reported at these time steps
 
 # -----------------------------------------------
@@ -460,12 +462,12 @@ def counted(fn):
     return wrapper
 
 @counted
-def checkmap(name, value, map, flagmap, find):
-    """ Check if maps fit to the mask map
+def checkmap(name, value, map_to_check, flagmap, find):
+    """ Check if maps fit to the mask mamap_to_checkp
     
     :param name: key in Settings.xml containing path and name of the map to be checked as string (map name)
     :param value: name and path of the map to be checked as string
-    :param map: map to be used for checking in pcraster format
+    :param map_to_check: map to be used for checking in pcraster format
     :param flagmap: flag for maps
     :param find: 
     :return: 
@@ -474,7 +476,7 @@ def checkmap(name, value, map, flagmap, find):
     if flagmap:
         amap = scalar(defined(MMaskMap))
         try:
-            smap = scalar(defined(map))
+            smap = scalar(defined(map_to_check))
         except:
             msg = "Map: " + name + " in " + value + " does not fit"
             if name == "LZAvInflowMap":
@@ -487,14 +489,14 @@ def checkmap(name, value, map, flagmap, find):
 
         less = maptotal(ifthenelse(defined(MMaskMap), amap - smap, scalar(0)))
         s.append(cellvalue(less, 1, 1)[0])
-        less = mapminimum(scalar(map))
+        less = mapminimum(scalar(map_to_check))
         s.append(cellvalue(less, 1, 1)[0])
-        less = maptotal(scalar(map))
+        less = maptotal(scalar(map_to_check))
         if mv > 0:
             s.append(cellvalue(less, 1, 1)[0] / mv)
         else:
             s.append('0')
-        less = mapmaximum(scalar(map))
+        less = mapmaximum(scalar(map_to_check))
         s.append(cellvalue(less, 1, 1)[0])
         if find > 0:
             if find == 2:
@@ -505,9 +507,9 @@ def checkmap(name, value, map, flagmap, find):
     else:
         s.append(0)
         s.append(0)
-        s.append(float(map))
-        s.append(float(map))
-        s.append(float(map))
+        s.append(float(map_to_check))
+        s.append(float(map_to_check))
+        s.append(float(map_to_check))
 
     # print check results
     if checkmap.called == 1:
