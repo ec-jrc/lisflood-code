@@ -14,8 +14,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
+from __future__ import absolute_import
 
-from lisflood.global_modules.add1 import *
+from .add1 import *
 
 # CM: new-style class in Python 2.x
 class stateVar(object):
@@ -81,7 +82,8 @@ class stateVar(object):
                 dumpObject("Tss", self.var.Tss, sample)
             except:
                 foo = 0
-	    dumpObject("cdfFlag", globals.cdfFlag, sample)
+
+        dumpObject("cdfFlag", globals.cdfFlag, sample)
 
     def resume(self):
 

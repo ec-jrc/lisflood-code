@@ -14,7 +14,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
-
+from __future__ import print_function, absolute_import
 
 from lisflood.hydrological_modules.miscInitial import *
 
@@ -46,8 +46,8 @@ from lisflood.hydrological_modules.waterbalance import *
 from lisflood.hydrological_modules.waterlevel import *
 from lisflood.hydrological_modules.structures import *
 
-from global_modules.output import *
-from global_modules.stateVar import *
+from .global_modules.output import *
+from .global_modules.stateVar import *
 
 # --------------------------------------------
 class LisfloodModel_ini(DynamicModel):
@@ -173,10 +173,10 @@ class LisfloodModel_ini(DynamicModel):
             nelements = len(self.ChanM3)
             for i in range(0,nelements-1):
                 if  hasattr(self,'CrossSection2Area'):
-                    print >> ftemp1, i, self.TotalCrossSectionArea[i], self.CrossSection2Area[i], self.ChanM3[i], \
-                    self.Chan2M3Kin[i]
+                    print(i, self.TotalCrossSectionArea[i], self.CrossSection2Area[i], self.ChanM3[i], \
+                    self.Chan2M3Kin[i], file=ftemp1)
                 else:
-                    print >> ftemp1, i, self.TotalCrossSectionArea[i], self.ChanM3[i]
+                    print(i, self.TotalCrossSectionArea[i], self.ChanM3[i], file=ftemp1)
 
             ftemp1.close()
 

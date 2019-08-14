@@ -1,3 +1,22 @@
+"""
+
+Copyright 2019 European Union
+
+Licensed under the EUPL, Version 1.2 or as soon they will be approved by the European Commission  subsequent versions of the EUPL (the "Licence");
+
+You may not use this work except in compliance with the Licence.
+You may obtain a copy of the Licence at:
+
+https://joinup.ec.europa.eu/sites/default/files/inline-files/EUPL%20v1_2%20EN(1).txt
+
+Unless required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an "AS IS" basis,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the Licence for the specific language governing permissions and limitations under the Licence.
+
+"""
+
+from __future__ import print_function, absolute_import
+
 # to work with the new grid engine JRC - workaround with error on pyexpat
 from pyexpat import *
 import xml.dom.minidom
@@ -50,28 +69,28 @@ def Lisfloodexe(settings, optionxml):
         ReportSteps[key] = [x for x in ReportSteps[key] if x >= modelSteps[0]]
         ReportSteps[key] = [x for x in ReportSteps[key] if x <= modelSteps[1]]
 
-    if option['InitLisflood']: print "INITIALISATION RUN"
+    if option['InitLisflood']: print("INITIALISATION RUN")
 
-    print "Start Step - End Step: ",modelSteps[0]," - ", modelSteps[1]
-    print "Start Date - End Date: ",inttoDate(modelSteps[0]-1,Calendar(binding['CalendarDayStart']))," - ",\
-        inttoDate(modelSteps[1]-1,Calendar(binding['CalendarDayStart']))
+    print("Start Step - End Step: ",modelSteps[0]," - ", modelSteps[1])
+    print("Start Date - End Date: ",inttoDate(modelSteps[0]-1,Calendar(binding['CalendarDayStart']))," - ",\
+        inttoDate(modelSteps[1]-1,Calendar(binding['CalendarDayStart'])))
 
     if Flags['loud']:
         # print state file date
-        print "State file Date: ",
+        print("State file Date: ")
         try:
-            print inttoDate(Calendar(binding["timestepInit"]), Calendar(binding['CalendarDayStart']))
+            print(inttoDate(Calendar(binding["timestepInit"]), Calendar(binding['CalendarDayStart'])))
         except:
-            print Calendar(binding["timestepInit"])
+            print(Calendar(binding["timestepInit"]))
 
         # CM: print start step and end step for reporting model state maps
-        print "Start Rep Step  - End Rep Step: ", ReportSteps['rep'][0], " - ", ReportSteps['rep'][-1]
-        print "Start Rep Date  - End Rep Date: ", inttoDate(Calendar(ReportSteps['rep'][0] - 1),
+        print("Start Rep Step  - End Rep Step: ", ReportSteps['rep'][0], " - ", ReportSteps['rep'][-1])
+        print("Start Rep Date  - End Rep Date: ", inttoDate(Calendar(ReportSteps['rep'][0] - 1),
                                                             Calendar(binding['CalendarDayStart'])), \
-            " - ", inttoDate(Calendar(ReportSteps['rep'][-1] - 1), Calendar(binding['CalendarDayStart']))
+            " - ", inttoDate(Calendar(ReportSteps['rep'][-1] - 1), Calendar(binding['CalendarDayStart'])))
 
         # messages at model start
-        print"%-6s %10s %11s\n" %("Step","Date","Discharge"),
+        print("%-6s %10s %11s\n" %("Step","Date","Discharge"))
 
     # Lisflood is an instance of the class LisfloodModel
     # LisfloodModel includes 2 methods : initial and dynamic (formulas applied at every timestep)
@@ -106,11 +125,11 @@ def Lisfloodexe(settings, optionxml):
         raise LisfloodError(msg)
     if EnKFset and FilterSteps[0] == 0:
         msg = "Trying to run EnKF without filter timestep specified \nRunning LISFLOOD in Monte Carlo mode \n"
-        print LisfloodWarning(msg)
+        print(LisfloodWarning(msg))
         EnKFset = 0
     if MCset and EnsMembers[0] <= 1:
         msg = "Trying to run Monte Carlo simulation with only 1 member \nRunning LISFLOOD in deterministic mode \n"
-        print LisfloodWarning(msg)
+        print(LisfloodWarning(msg))
         MCset = 0
     if MCset:
         mcLisflood = MonteCarloFramework(stLisflood, nrSamples=EnsMembers[0])
@@ -119,10 +138,10 @@ def Lisfloodexe(settings, optionxml):
         if EnKFset:
             kfLisflood = EnsKalmanFilterFramework(mcLisflood)
             kfLisflood.setFilterTimesteps(FilterSteps)
-            print LisfloodRunInfo(mode = "Ensemble Kalman Filter", outputDir = outputDir[0], Steps = len(FilterSteps), ensMembers=EnsMembers[0], Cores=nrCores[0])
+            print(LisfloodRunInfo(mode = "Ensemble Kalman Filter", outputDir = outputDir[0], Steps = len(FilterSteps), ensMembers=EnsMembers[0], Cores=nrCores[0]))
             kfLisflood.run()
         else:
-            print LisfloodRunInfo(mode = "Monte Carlo", outputDir = outputDir[0], ensMembers=EnsMembers[0], Cores=nrCores[0])
+            print(LisfloodRunInfo(mode = "Monte Carlo", outputDir = outputDir[0], ensMembers=EnsMembers[0], Cores=nrCores[0]))
             mcLisflood.run()
     else:
         """
@@ -130,7 +149,7 @@ def Lisfloodexe(settings, optionxml):
         Deterministic run
         ----------------------------------------------
         """
-        print LisfloodRunInfo(mode = "Deterministic", outputDir = outputDir[0])
+        print(LisfloodRunInfo(mode = "Deterministic", outputDir = outputDir[0]))
     # run of the model inside the DynamicFramework
         stLisflood.run()
     # cProfile.run('stLisflood.run()')
@@ -138,8 +157,8 @@ def Lisfloodexe(settings, optionxml):
     # gprof2dot -f pstats l1.pstats | dot -Tpng -o callgraph.png
 
     if Flags['printtime']:
-        print "\n\nTime profiling"
-        print "%2s %-17s %10s %8s" %("No","Name","time[s]","%")
+        print("\n\nTime profiling")
+        print("%2s %-17s %10s %8s" %("No","Name","time[s]","%"))
         div = 1
         timeSum = np.array(timeMesSum)
         if MCset:
@@ -152,8 +171,8 @@ def Lisfloodexe(settings, optionxml):
                 timePrint[i] = np.sum(timeSum[range(i, len(timeSum), len(timeSum)/div)])
         else:
             timePrint = timeSum
-        for i in xrange(len(timePrint)):
-            print "%2i %-17s %10.2f %8.1f"  %(i,timeMesString[i],timePrint[i],100 * timePrint[i] / timePrint[-1])
+        for i in range(len(timePrint)):
+            print("%2i %-17s %10.2f %8.1f"  %(i,timeMesString[i],timePrint[i],100 * timePrint[i] / timePrint[-1]))
 
 # ==================================================
 # ============== USAGE ==============================
@@ -165,12 +184,12 @@ def usage():
         which arguments and parameters it accepts, etc
     """
 
-    print 'LisfloodPy - Lisflood using pcraster Python framework'
-    print 'Authors: ', __authors__
-    print 'Version: ', __version__
-    print 'Date: ', __date__
-    print 'Status: ', __status__
-    print """
+    print('LisfloodPy - Lisflood using pcraster Python framework')
+    print('Authors: ', __authors__)
+    print('Version: ', __version__)
+    print('Date: ', __date__)
+    print('Status: ', __status__)
+    print("""
     Arguments list:
     settings.xml     settings file
 
@@ -181,18 +200,18 @@ def usage():
     -h --noheader    .tss file have no header and start immediately with the time series
     -t --printtime   the computation time for hydrological modules are printed
     -d --debug       debug outputs
-    """
+    """)
     sys.exit(1)
 
 
 def headerinfo():
 
-   print "LisfloodPy ", __version__, " ", __date__,
-   print """
+   print("LisfloodPy ", __version__, " ", __date__)
+   print("""
 Water balance and flood simulation model for large catchments\n
 (C) Institute for Environment and Sustainability
     Joint Research Centre of the European Commission
-    TP122, I-21020 Ispra (Va), Italy\n"""
+    TP122, I-21020 Ispra (Va), Italy\n""")
 
 
 # ==================================================

@@ -14,6 +14,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
+from __future__ import print_function, absolute_import
 
 from pcraster import*
 from pcraster.framework import *
@@ -23,7 +24,7 @@ import string
 import math
 
 from lisflood.global_modules.globals import *
-from lisflood.global_modules.add1 import *
+from .add1 import *
 
 
 def trimPCRasterOutputPath(output_path):
@@ -108,7 +109,7 @@ class outputTssMap(object):
                 # print the discharge of the first output map loc
                 #print " %10.2f"  %cellvalue(maptotal(decompress(eval('self.var.' + reportTimeSerieAct["DisTS"]['outputVar'][0]))),1,1)[0]
                 try:
-                    print " %10.2f"  %self.var.Tss["DisTS"].firstout(decompress(self.var.ChanQAvg))
+                    print(" %10.2f"  %self.var.Tss["DisTS"].firstout(decompress(self.var.ChanQAvg)))
                 except:
                     pass
 
@@ -163,9 +164,9 @@ class outputTssMap(object):
                                          'outputVar'][0], reportMapsEnd[maps]['unit'][0], 'f4', reportStartDate,
                                          self.var.currentTimeStep(),self.var.currentTimeStep())
                             except:
-                                print "END",what, where, self.var.DtDay, maps, reportMapsEnd[maps][
+                                print("END",what, where, self.var.DtDay, maps, reportMapsEnd[maps][
                                     'outputVar'][0], reportMapsEnd[maps]['unit'][0], 'f4', reportStartDate,
-                                self.var.currentTimeStep(),self.var.currentTimeStep()
+                                self.var.currentTimeStep(),self.var.currentTimeStep())
                             ################################
 
 
@@ -179,9 +180,9 @@ class outputTssMap(object):
                                          maps]['outputVar'][0], reportMapsEnd[maps]['unit'][0], 'f4', reportStartDate,
                                          self.var.currentTimeStep(), self.var.currentTimeStep())
                             except:
-                                print "END", what, where, self.var.DtDay, maps, reportMapsEnd[
+                                print("END", what, where, self.var.DtDay, maps, reportMapsEnd[
                                     maps]['outputVar'][0], reportMapsEnd[maps]['unit'][0], 'f4', reportStartDate,
-                                self.var.currentTimeStep(), self.var.currentTimeStep()
+                                self.var.currentTimeStep(), self.var.currentTimeStep())
                             ###########################
                         else:
                             self.var.report(decompress(eval(what)), where)
@@ -229,13 +230,12 @@ class outputTssMap(object):
                                          reportMapsSteps[maps]['outputVar'][0], reportMapsSteps[maps]['unit'][0], 'f4',
                                          reportStartDate, reportStepStart, reportStepEnd, frequency)
                             except Exception as e:
-                                raw_input('error...')
-                                print " +----> ERR: {} - {}".format(type(e), e)
-                                print "REP flag:{} - {} {} {} {} {} {} {} {} {} {}".format(
+                                print(" +----> ERR: {} - {}".format(type(e), e))
+                                print("REP flag:{} - {} {} {} {} {} {} {} {} {} {}".format(
                                     globals.cdfFlag[flagcdf], what, where, self.var.DtDay, maps,
                                     reportMapsSteps[maps]['outputVar'][0], reportMapsSteps[maps]['unit'][0], 'f4',
                                     reportStartDate, reportStepStart, reportStepEnd
-                                )
+                                ))
 
                     else:
                         self.var.report(decompress(eval(what)), where)
@@ -285,8 +285,8 @@ class outputTssMap(object):
                             writenet(globals.cdfFlag[flagcdf], eval(what), where, self.var.DtDay, maps, reportMapsAll[
                                 maps]['outputVar'][0], reportMapsAll[maps]['unit'][0], 'f4', reportStartDate,reportStepStart,reportStepEnd,frequency)
                         except:
-                            print "ALL",what, where, self.var.DtDay, maps, reportMapsAll[
-                            maps]['outputVar'][0], reportMapsAll[maps]['unit'][0], 'f4', reportStartDate,reportStepStart,reportStepEnd
+                            print("ALL",what, where, self.var.DtDay, maps, reportMapsAll[
+                            maps]['outputVar'][0], reportMapsAll[maps]['unit'][0], 'f4', reportStartDate,reportStepStart,reportStepEnd)
                         ##############################
 
                         # writenet(globals.cdfFlag[flagcdf], eval(what), where, self.var.currentTimeStep(), maps, reportMapsAll[

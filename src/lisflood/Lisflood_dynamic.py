@@ -14,6 +14,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
+from __future__ import print_function, absolute_import
+from nine import range
 
 from lisflood.global_modules.add1 import *
 import gc
@@ -46,7 +48,7 @@ class LisfloodModel_dyn(DynamicModel):
         self.TimeSinceStart = self.currentTimeStep() - self.firstTimeStep() + 1
 
         if Flags['loud']:
-            print "%-6i %10s" %(self.currentTimeStep(),self.CalendarDate.strftime("%d/%m/%Y %H:%M")) ,
+            print("%-6i %10s" %(self.currentTimeStep(),self.CalendarDate.strftime("%d/%m/%Y %H:%M")))
         else:
             if not(Flags['check']):
                 if (Flags['quiet']) and (not(Flags['veryquiet'])):
@@ -93,7 +95,7 @@ class LisfloodModel_dyn(DynamicModel):
         # ****Looping soil 2 times - second time for forest fraction *
         # ************************************************************
 
-        for soilLoop in xrange(3):
+        for soilLoop in range(3):
             self.soilloop_module.dynamic(soilLoop)
             # soil module is repeated 2 times:
             # 1. for remaining areas: no forest, no impervious, no water
@@ -128,7 +130,7 @@ class LisfloodModel_dyn(DynamicModel):
             self.output_module.dynamic() # only lzavin
 
             timemeasure("After fast init")
-            for i in xrange(len(timeMes)):
+            for i in range(len(timeMes)):
                 if self.currentTimeStep() == self.firstTimeStep():
                    timeMesSum.append(timeMes[i] - timeMes[0])
                 else: timeMesSum[i] += timeMes[i] - timeMes[0]
@@ -155,7 +157,7 @@ class LisfloodModel_dyn(DynamicModel):
         # ************************************************************
         self.sumDisDay = globals.inZero.copy()
         # sums up discharge of the sub steps
-        for NoRoutingExecuted in xrange(self.NoRoutSteps):
+        for NoRoutingExecuted in range(self.NoRoutSteps):
             self.routing_module.dynamic(NoRoutingExecuted)
             #   routing sub steps
         timemeasure("Routing",loops = NoRoutingExecuted + 1)  # 9 timing after routing
@@ -248,10 +250,10 @@ class LisfloodModel_dyn(DynamicModel):
             nelements = len(self.ChanM3)
             for i in range(0,nelements-1):
                 if  hasattr(self,'CrossSection2Area'):
-                    print >> ftemp1, i, self.TotalCrossSectionArea[i], self.CrossSection2Area[i], self.ChanM3[i], \
-                    self.Chan2M3Kin[i]
+                    print(i, self.TotalCrossSectionArea[i], self.CrossSection2Area[i], self.ChanM3[i], \
+                    self.Chan2M3Kin[i], file=ftemp1)
                 else:
-                    print >> ftemp1, i, self.TotalCrossSectionArea[i], self.ChanM3[i]
+                    print(i, self.TotalCrossSectionArea[i], self.ChanM3[i], file=ftemp1)
             ftemp1.close()
 
 
@@ -263,7 +265,7 @@ class LisfloodModel_dyn(DynamicModel):
         timemeasure("All dynamic")
 
 
-        for i in xrange(len(timeMes)):
+        for i in range(len(timeMes)):
             if self.currentTimeStep() == self.firstTimeStep():
                 timeMesSum.append(timeMes[i] - timeMes[0])
             else: timeMesSum[i] += timeMes[i] - timeMes[0]

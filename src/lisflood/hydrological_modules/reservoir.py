@@ -273,7 +273,7 @@ class reservoir(object):
             for i in range(0,nel-1):
                 if np.isnan(self.var.ReservoirFillCC[i]) or self.var.ReservoirFillCC[i] < 0:
                     msg = "Negative or NaN volume for reservoir fill set to 0. Increase computation time step for routing (DtSecChannel) \n"
-                    print LisfloodError(msg)
+                    print(LisfloodWarning(msg))
                     self.var.ReservoirFillCC[self.var.ReservoirFillCC < 0] = 0
                     self.var.ReservoirFillCC[np.isnan(self.var.ReservoirFillCC)] = 0
 

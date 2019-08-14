@@ -14,16 +14,17 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
+from __future__ import print_function, absolute_import
 
 from pcraster._pcraster import Scalar
 
-from zusatz import *
+from .zusatz import *
 from netCDF4 import num2date, date2num, default_fillvals
 from pandas import date_range
 import numpy as np
 import time as xtime
 import os
-import globals
+from . import globals
 from bisect import bisect_left
 
 # ------------------------------
@@ -167,8 +168,6 @@ def loadsetclone(name):
             mapnp = pcr2numpy(map,np.nan)
 
         except Exception as e:
-            print(type(e))
-            print(str(e))
             # try to read a netcdf file
             filename = os.path.splitext(binding[name])[0] + '.nc'
             nf1 = iterOpenNetcdf(filename, "", "r")
@@ -444,13 +443,13 @@ def loadmap(name, pcr=False, lddflag=False, timestampflag='exact', averageyearfl
     if pcrmap and not pcr:
         mapC = compressArray(map, name=filename)
     if Flags['check']:
-        print name, filename
+        print(name, filename)
         if flagmap == False:
             checkmap(name, filename, mapC, flagmap, 0)
         elif pcr:
             checkmap(name, filename, map, flagmap, 0)
         else:
-            print name, mapC.size
+            print(name, mapC.size)
             if mapC.size >0:
                 map= decompress(mapC)
                 checkmap(name, filename, map, flagmap, 0)
@@ -554,7 +553,7 @@ def readmapsparse(name, time, oldmap):
             map = oldmap
             if Flags['loud']:
                 s = " last_%s" % (os.path.basename(name))
-                print s,
+                print(s)
     if Flags['check']:
         checkmap(os.path.basename(name), filename, map, True, find)
     if Flags['nancheck']: 

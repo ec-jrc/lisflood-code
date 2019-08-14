@@ -117,7 +117,7 @@ class waterabstraction(object):
 
             if option['wateruseRegion']:
                 WUseRegion = nominal(loadmap('WUseRegion',pcr=True))
-                pitWuse1 =  ifthen(self.var.AtLastPoint <> 0,pcraster.boolean(1))
+                pitWuse1 =  ifthen(self.var.AtLastPoint != 0,pcraster.boolean(1))
                 pitWuse1b = ifthen(defined(pitWuse1),WUseRegion)
                 # use every existing pit in the Ldd and number them by the water regions
                 # coastal water regions can have more than one pit per water region

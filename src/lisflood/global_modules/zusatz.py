@@ -14,6 +14,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
+from __future__ import print_function, absolute_import
+from nine import range
 
 import xml.dom.minidom
 import datetime
@@ -33,7 +35,7 @@ from pandas._libs.tslibs.parsing import parse_time_string
 from pcraster import*
 from pcraster.framework import *
 
-from globals import *
+from .globals import *
 
 import numpy as np
 MAX_READ_TRIALS = 100 # max number of trial allowed re-read an input file: to avoid crashes due to temporary network interruptions
@@ -216,7 +218,7 @@ def optionBinding(settingsfile, optionxml):
             try:
                 s2 = user[expr[a1 + 2:a2]]
             except KeyError:
-                print 'no ', expr[a1 + 2:a2],'for',binding[i] ,' in lfuser defined'
+                print('no ', expr[a1 + 2:a2],'for',binding[i] ,' in lfuser defined')
             expr = expr.replace(expr[a1:a2 + 1], s2)
         binding[i] = expr
 
@@ -228,7 +230,7 @@ def optionBinding(settingsfile, optionxml):
         try:
             s2 = user[pathout[a1 + 2:a2]]
         except KeyError:
-            print 'no ', expr[a1 + 2:a2],'for',pathout,' in lfuser defined'
+            print('no ', expr[a1 + 2:a2],'for',pathout,' in lfuser defined')
         pathout = pathout.replace(pathout[a1:a2 + 1], s2)
 
     #CM: output folder
@@ -254,7 +256,7 @@ def optionBinding(settingsfile, optionxml):
     for i in repsteps:
         if '..' in i:
             j = map(int, i.split('..'))
-            for jj in xrange(j[0], j[1] + 1):
+            for jj in range(j[0], j[1] + 1):
                 jjj.append(jj)
         else:
             jjj.append(i)
@@ -509,8 +511,8 @@ def checkmap(name, value, map, flagmap, find):
 
     # print check results
     if checkmap.called == 1:
-        print "%-25s%-40s%11s%11s%11s%11s%11s" %("Name","File/Value","nonMV","MV","min","mean","max")
-    print "%-25s%-40s%11i%11i%11.2f%11.2f%11.2f" %(s[0],s[1][-39:],s[2],s[3],s[4],s[5],s[6])
+        print("%-25s%-40s%11s%11s%11s%11s%11s" %("Name","File/Value","nonMV","MV","min","mean","max"))
+    print("%-25s%-40s%11i%11i%11.2f%11.2f%11.2f" %(s[0],s[1][-39:],s[2],s[3],s[4],s[5],s[6]))
     return
 
 

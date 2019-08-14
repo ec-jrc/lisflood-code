@@ -66,7 +66,7 @@ class inflow(object):
             for inf_id in inflow_ids:
                 if inf_id not in tss_ids:
                     id_dict[inf_id] = 0
-                    print LisfloodWarning("Inflow point was removed ID: %d\n" % inf_id)
+                    print(LisfloodWarning("Inflow point was removed ID: %d\n" % inf_id))
 
             # substitute indexes to id in map
             self.var.InflowPointsMap = np.copy(inflowmapnp)

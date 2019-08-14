@@ -14,6 +14,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
+from __future__ import print_function
+from nine import range
 
 import os
 import sys
@@ -95,9 +97,9 @@ class TestLis(object):
     def listest(cls, variable):
         reference_path = cls.reference_files[variable]['outpath']
         output_path = os.path.normpath(binding[cls.reference_files[variable]['report_map']])
-        print '>>> Reference: {} - Current Output: {}'.format(reference_path, output_path)
+        print('>>> Reference: {} - Current Output: {}'.format(reference_path, output_path))
         results = []
         start_step, end_step = modelSteps[0], modelSteps[1]
-        for step in xrange(start_step, end_step + 1):
+        for step in range(start_step, end_step + 1):
             results.append(cls.check_var_step(variable, step))
         assert all(results)

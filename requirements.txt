@@ -8,3 +8,5 @@ numexpr
 pandas>=0.24.2
 xarray
 pyproj
+nine
+future

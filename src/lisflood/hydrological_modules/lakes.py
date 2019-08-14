@@ -227,7 +227,7 @@ class lakes(object):
                 # Check LakeStorageM3CC for negative values and set them to zero
                 if any(np.isnan(self.var.LakeStorageM3CC)) or any(self.var.LakeStorageM3CC < 0):
                     msg = "Negative or NaN volume for lake storage set to 0. Increase computation time step for routing (DtSecChannel) \n"
-                    print LisfloodWarning(msg)
+                    print(LisfloodWarning(msg))
                     self.var.LakeStorageM3CC[self.var.LakeStorageM3CC < 0] = 0
                     self.var.LakeStorageM3CC[np.isnan(self.var.LakeStorageM3CC)] = 0
 
