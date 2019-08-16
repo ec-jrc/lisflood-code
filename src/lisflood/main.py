@@ -18,11 +18,6 @@ See the Licence for the specific language governing permissions and limitations 
 from __future__ import print_function, absolute_import
 
 # to work with the new grid engine JRC - workaround with error on pyexpat
-from pyexpat import *
-import xml.dom.minidom
-from netCDF4 import Dataset
-from pcraster import *
-from pcraster.framework import *
 
 # ---------------------------
 
@@ -33,11 +28,13 @@ src_dir = os.path.dirname(os.path.abspath(__file__))
 if os.path.exists(src_dir):
     sys.path.append(src_dir)
 
-from lisflood.Lisflood_initial import *
-from lisflood.Lisflood_dynamic import *
-from lisflood.Lisflood_monteCarlo import *
-from lisflood.Lisflood_EnKF import *
-from lisflood import __authors__, __version__, __date__, __status__
+from .Lisflood_initial import *
+from .Lisflood_dynamic import *
+from .Lisflood_monteCarlo import *
+from .Lisflood_EnKF import *
+from .global_modules.settings import LisSettings
+from .global_modules.utils import LisfloodRunInfo
+from . import __authors__, __version__, __date__, __status__
 
 
 class LisfloodModel(LisfloodModel_ini, LisfloodModel_dyn, LisfloodModel_monteCarlo, LisfloodModel_EnKF):
@@ -54,7 +51,9 @@ def Lisfloodexe(settings, optionxml):
 
     # read options and bindings and launch Lisflood model computation
     # returns option binding and ReportSteps - global dictionaries
+
     optionBinding(settings, optionxml)
+    lissettings = LisSettings(settings)
     # read all the possible option for modelling and for generating output
     # read the settingsfile with all information about the catchments(s)
     # and the choosen option for mdelling and output

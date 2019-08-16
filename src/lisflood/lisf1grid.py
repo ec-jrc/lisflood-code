@@ -26,7 +26,8 @@ See the Licence for the specific language governing permissions and limitations 
 ######################################################################
 """
 from __future__ import print_function, absolute_import
-from nine import range
+
+from lisflood.global_modules.utils import LisfloodRunInfo
 
 __authors__ = "Ad de Roo, Peter Burek, Johan van der Knijff, Niko Wanders"
 __version__ = "Version: 2.02"
@@ -37,11 +38,6 @@ __status__ = "Operation"
 
 
 # to work with the new grid engine JRC - workaround with error on pyexpat
-from pyexpat import *
-import xml.dom.minidom
-from netCDF4 import Dataset
-from pcraster import *
-from pcraster.framework import *
 
 from .Lisflood_initial import *
 from .Lisflood_dynamic import *

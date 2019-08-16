@@ -18,9 +18,10 @@ from __future__ import print_function, absolute_import
 
 from pcraster._pcraster import Scalar
 
+from lisflood.global_modules.settings import calendar_inconsistency_warning
+from lisflood.global_modules.utils import LisfloodWarning
 from .zusatz import *
-from netCDF4 import num2date, date2num, default_fillvals
-from pandas import date_range
+from netCDF4 import num2date, date2num
 import numpy as np
 import time as xtime
 import os
@@ -352,7 +353,7 @@ def loadmap(name, pcr=False, lddflag=False, timestampflag='exact', averageyearfl
                 #get information from netCDF stack
                 t_steps = nf1.variables['time'][:]  # get values for timesteps ([  0.,  24.,  48.,  72.,  96.])
                 t_unit = nf1.variables['time'].units  # get unit (u'hours since 2015-01-01 06:00:00')
-                t_cal = getCalendarType(nf1)
+                t_cal = get_calendar_type(nf1)
                 #get year from time unit in case average year is used
                 if averageyearflag:
                     #get date of the first step in netCDF file containing average year values
@@ -590,7 +591,7 @@ def readnetcdf(name, time, timestampflag='exact', averageyearflag=False):
     variable_name = [k for k in nf1.variables if len(nf1.variables[k].dimensions) == 3][0] # get the variable with 3 dimensions (variable order not relevant)
     t_steps = nf1.variables['time'][:]    # get values for timesteps ([  0.,  24.,  48.,  72.,  96.])
     t_unit = nf1.variables['time'].units  # get unit (u'hours since 2015-01-01 06:00:00')
-    t_cal = getCalendarType(nf1)
+    t_cal = get_calendar_type(nf1)
     # CM: get year from time unit in case average year is used
     if averageyearflag:
         # CM: get date of the first step in netCDF file containing average year values
@@ -697,9 +698,9 @@ def checknetcdf(name, start, end):
     # read information from netCDF file
     t_steps = nf1.variables['time'][:]    # get values for timesteps ([  0.,  24.,  48.,  72.,  96.])
     t_unit = nf1.variables['time'].units  # get unit (u'hours since 2015-01-01 06:00:00')
-    t_cal = getCalendarType(nf1)
+    t_cal = get_calendar_type(nf1)
     if t_cal != binding['calendar_type']:
-        print(CalendarInconsistencyWarning(filename, t_cal, binding['calendar_type']))
+        print(calendar_inconsistency_warning(filename, t_cal, binding['calendar_type']))
 
     # get date of first available timestep in netcdf file
     date_first_step_in_ncdf = num2date(t_steps[0], units=t_unit, calendar=t_cal)

@@ -16,6 +16,7 @@ See the Licence for the specific language governing permissions and limitations 
 """
 
 from lisflood.global_modules.add1 import *
+from lisflood.global_modules.utils import LisfloodWarning
 
 
 class inflow(object):

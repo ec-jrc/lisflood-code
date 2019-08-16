@@ -17,6 +17,7 @@ See the Licence for the specific language governing permissions and limitations 
 
 
 from lisflood.global_modules.add1 import *
+from lisflood.global_modules.settings import get_calendar_type, calendar_inconsistency_warning
 
 
 class waterabstraction(object):
@@ -104,9 +105,9 @@ class waterabstraction(object):
             if option['TransientWaterDemandChange'] and option['readNetcdfStack']:
                 for k in ('DomesticDemandMaps', 'IndustrialDemandMaps', 'LivestockDemandMaps', 'EnergyDemandMaps'):
                     with Dataset(binding[k] + '.nc') as nc:
-                        cal_type = getCalendarType(nc)
+                        cal_type = get_calendar_type(nc)
                         if cal_type != binding['calendar_type']:
-                            print(CalendarInconsistencyWarning(binding[k], cal_type, binding['calendar_type']))
+                            print(calendar_inconsistency_warning(binding[k], cal_type, binding['calendar_type']))
 
             if option['groundwaterSmooth']:
                 self.var.GroundwaterBodiesPcr = decompress(self.var.GroundwaterBodies)

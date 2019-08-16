@@ -16,9 +16,10 @@ See the Licence for the specific language governing permissions and limitations 
 """
 
 from lisflood.global_modules.add1 import *
-import netCDF4
 import xarray as xr
 from pyproj import Proj
+
+from lisflood.global_modules.utils import Calendar
 
 
 def coordinatesLand(eastings_forcing, northings_forcing):
