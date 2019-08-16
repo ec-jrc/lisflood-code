@@ -14,9 +14,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
+from __future__ import print_function, absolute_import
 
-from lisflood.global_modules.add1 import *
-from lisflood.global_modules.utils import LisfloodWarning
+from ..global_modules.settings import LisSettings
+from ..global_modules.add1 import *
+from ..global_modules.errors import LisfloodWarning
 
 
 class inflow(object):
@@ -40,7 +42,8 @@ class inflow(object):
         # ************************************************************
         # ***** INFLOW INIT
         # ************************************************************
-
+        settings = LisSettings.instance()
+        option = settings.options
         if option['inflow']:
             self.var.InflowPoints = loadmap('InflowPoints')
             self.var.QInM3Old = np.where(self.var.InflowPoints > 0, self.var.ChanQ * self.var.DtSec, 0)
@@ -56,7 +59,8 @@ class inflow(object):
             inflow_ids = inflow_ids[inflow_ids > 0]
 
             # read tss ids from tss file
-            tss_ids = read_tss_header(binding['QInTS'])
+            settings = LisSettings.instance()
+            tss_ids = read_tss_header(settings.binding['QInTS'])
 
             # create a dictionary of tss id : tss id index
             id_dict = {}
@@ -95,6 +99,8 @@ class inflow(object):
         # ************************************************************
         # ***** INLETS INIT
         # ************************************************************
+        settings = LisSettings.instance()
+        option = settings.options
         if option['inflow']:
             self.var.QDelta = (self.var.QInM3 - self.var.QInM3Old) * self.var.InvNoRoutSteps
             # difference between old and new inlet flow  per sub step
@@ -103,9 +109,11 @@ class inflow(object):
     def dynamic(self):
         """ dynamic part of the inflow module
         """
-
+        settings = LisSettings.instance()
+        option = settings.options
         if option['inflow']:
-            QIn = timeinputscalar(binding['QInTS'], self.var.InflowPointsMap)
+            settings = LisSettings.instance()
+            QIn = timeinputscalar(settings.binding['QInTS'], self.var.InflowPointsMap)
 
             # Get inflow hydrograph at each inflow point [m3/s]
             QIn = compressArray(QIn)
@@ -116,8 +124,7 @@ class inflow(object):
             self.var.TotalQInM3 += self.var.QInM3
             # Map of total inflow from inflow hydrographs [m3]
 
-
-    def dynamic_inloop(self,NoRoutingExecuted):
+    def dynamic_inloop(self, NoRoutingExecuted):
         """ dynamic part of the inflow routine
            inside the sub time step routing routine
         """
@@ -125,6 +132,8 @@ class inflow(object):
         # ************************************************************
         # ***** INLFLOW **********************************************
         # ************************************************************
+        settings = LisSettings.instance()
+        option = settings.options
         if option['inflow']:
             self.var.QInDt = (self.var.QInM3Old + (NoRoutingExecuted + 1) * self.var.QDelta) * self.var.InvNoRoutSteps
             # flow from inlets per sub step

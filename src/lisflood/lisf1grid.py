@@ -28,6 +28,7 @@ See the Licence for the specific language governing permissions and limitations 
 from __future__ import print_function, absolute_import
 
 from lisflood.global_modules.utils import LisfloodRunInfo
+from lisflood.global_modules.settings import check_simulation_dates
 
 __authors__ = "Ad de Roo, Peter Burek, Johan van der Knijff, Niko Wanders"
 __version__ = "Version: 2.02"
@@ -62,11 +63,9 @@ def Lisfloodexe():
     # and the choosen option for mdelling and output
     bindkey = sorted(binding.keys())
 
-    #os.chdir(outputDir[0])
     # this prevent from using relative path in settings!
 
-
-    checkifDate('StepStart','StepEnd')
+    check_simulation_dates('StepStart', 'StepEnd')
 
     if option['InitLisflood']: print("INITIALISATION RUN")
     print("Start - End: ",modelSteps[0]," - ", modelSteps[1])

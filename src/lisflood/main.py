@@ -17,10 +17,6 @@ See the Licence for the specific language governing permissions and limitations 
 
 from __future__ import print_function, absolute_import
 
-# to work with the new grid engine JRC - workaround with error on pyexpat
-
-# ---------------------------
-
 import os
 import sys
 
@@ -28,12 +24,15 @@ src_dir = os.path.dirname(os.path.abspath(__file__))
 if os.path.exists(src_dir):
     sys.path.append(src_dir)
 
-from .Lisflood_initial import *
-from .Lisflood_dynamic import *
-from .Lisflood_monteCarlo import *
-from .Lisflood_EnKF import *
+from .global_modules.zusatz import DynamicFramework
+from .Lisflood_EnKF import LisfloodModel_EnKF, EnsKalmanFilterFramework
+from .Lisflood_dynamic import LisfloodModel_dyn
+
+from .Lisflood_initial import LisfloodModel_ini
+from .Lisflood_monteCarlo import LisfloodModel_monteCarlo, MonteCarloFramework
 from .global_modules.settings import LisSettings
-from .global_modules.utils import LisfloodRunInfo
+from .global_modules.errors import LisfloodRunInfo, LisfloodWarning, LisfloodError
+from .global_modules.settings import calendar, inttodate
 from . import __authors__, __version__, __date__, __status__
 
 
@@ -41,6 +40,7 @@ class LisfloodModel(LisfloodModel_ini, LisfloodModel_dyn, LisfloodModel_monteCar
     """ Joining the initial and the dynamic part
         of the Lisflood model
     """
+    pass
 
 # ==================================================
 # ============== LISFLOOD execute ==================
@@ -52,54 +52,61 @@ def Lisfloodexe(settings, optionxml):
     # read options and bindings and launch Lisflood model computation
     # returns option binding and ReportSteps - global dictionaries
 
-    optionBinding(settings, optionxml)
+    # optionBinding(settings, optionxml)
     lissettings = LisSettings(settings)
+    binding = lissettings.binding
+    option = lissettings.options
+    report_steps = lissettings.report_steps
+    flags = lissettings.flags
+    model_steps = lissettings.model_steps
+    filter_steps = lissettings.filter_steps
     # read all the possible option for modelling and for generating output
     # read the settingsfile with all information about the catchments(s)
     # and the choosen option for mdelling and output
-    bindkey = sorted(binding.keys())
-
-    checkifDate('StepStart','StepEnd')
-    # check 'StepStart' and 'StepEnd' to be >0 and 'StepStart'>'StepEnd'
-    # return modelSteps
+    # bindkey = sorted(binding.keys())
 
     # remove steps from ReportSteps that are not included in simulation period
-    for key in list(ReportSteps.keys()):  ## creates a list of all keys
-        ReportSteps[key] = [x for x in ReportSteps[key] if x >= modelSteps[0]]
-        ReportSteps[key] = [x for x in ReportSteps[key] if x <= modelSteps[1]]
+    for key in report_steps:
+        report_steps[key] = [x for x in report_steps[key] if model_steps[0] <= x <= model_steps[1]]
+        # ReportSteps[key] = [x for x in ReportSteps[key] if x >= modelSteps[0]]
+        # ReportSteps[key] = [x for x in ReportSteps[key] if x <= modelSteps[1]]
 
-    if option['InitLisflood']: print("INITIALISATION RUN")
+    if option['InitLisflood']:
+        print("INITIALISATION RUN")
 
-    print("Start Step - End Step: ",modelSteps[0]," - ", modelSteps[1])
-    print("Start Date - End Date: ",inttoDate(modelSteps[0]-1,Calendar(binding['CalendarDayStart']))," - ",\
-        inttoDate(modelSteps[1]-1,Calendar(binding['CalendarDayStart'])))
+    print("Start Step - End Step: ", model_steps[0], " - ", model_steps[1])
+    print("Start Date - End Date: ",
+          inttodate(model_steps[0] - 1, calendar(binding['CalendarDayStart'], binding['calendar_type'])),
+          " - ",
+          inttodate(model_steps[1] - 1, calendar(binding['CalendarDayStart'], binding['calendar_type'])))
 
-    if Flags['loud']:
+    if flags['loud']:
         # print state file date
         print("State file Date: ")
         try:
-            print(inttoDate(Calendar(binding["timestepInit"]), Calendar(binding['CalendarDayStart'])))
+            print(inttodate(calendar(binding["timestepInit"], binding['calendar_type']),
+                            calendar(binding['CalendarDayStart'], binding['calendar_type'])))
         except:
-            print(Calendar(binding["timestepInit"]))
+            print(calendar(binding["timestepInit"], binding['calendar_type']))
 
         # CM: print start step and end step for reporting model state maps
-        print("Start Rep Step  - End Rep Step: ", ReportSteps['rep'][0], " - ", ReportSteps['rep'][-1])
-        print("Start Rep Date  - End Rep Date: ", inttoDate(Calendar(ReportSteps['rep'][0] - 1),
-                                                            Calendar(binding['CalendarDayStart'])), \
-            " - ", inttoDate(Calendar(ReportSteps['rep'][-1] - 1), Calendar(binding['CalendarDayStart'])))
+        print("Start Rep Step  - End Rep Step: ", report_steps['rep'][0], " - ", report_steps['rep'][-1])
+        print("Start Rep Date  - End Rep Date: ",
+              inttodate(calendar(report_steps['rep'][0] - 1, binding['calendar_type']), calendar(binding['CalendarDayStart'], binding['calendar_type'])),
+              " - ",
+              inttodate(calendar(report_steps['rep'][-1] - 1), calendar(binding['CalendarDayStart'], binding['calendar_type'])))
 
         # messages at model start
-        print("%-6s %10s %11s\n" %("Step","Date","Discharge"))
+        print("%-6s %10s %11s\n" % ("Step", "Date", "Discharge"))
 
     # Lisflood is an instance of the class LisfloodModel
     # LisfloodModel includes 2 methods : initial and dynamic (formulas applied at every timestep)
     Lisflood = LisfloodModel()
     # stLisflood is an instance of the class DynamicFramework
 
-    stLisflood = DynamicFramework(Lisflood, firstTimestep=modelSteps[0], lastTimeStep=modelSteps[1])
+    stLisflood = DynamicFramework(Lisflood, firstTimestep=model_steps[0], lastTimeStep=model_steps[1])
     stLisflood.rquiet = True
     stLisflood.rtrace = False
-
 
     """
     ----------------------------------------------
@@ -122,25 +129,28 @@ def Lisfloodexe(settings, optionxml):
     if EnKFset and not MCset:
         msg = "Trying to run EnKF with only 1 ensemble member \n"
         raise LisfloodError(msg)
-    if EnKFset and FilterSteps[0] == 0:
+    if EnKFset and filter_steps[0] == 0:
         msg = "Trying to run EnKF without filter timestep specified \nRunning LISFLOOD in Monte Carlo mode \n"
         print(LisfloodWarning(msg))
         EnKFset = 0
-    if MCset and EnsMembers[0] <= 1:
+    if MCset and lissettings.ens_members[0] <= 1:
         msg = "Trying to run Monte Carlo simulation with only 1 member \nRunning LISFLOOD in deterministic mode \n"
         print(LisfloodWarning(msg))
         MCset = 0
     if MCset:
-        mcLisflood = MonteCarloFramework(stLisflood, nrSamples=EnsMembers[0])
-        if nrCores[0] > 1:
-            mcLisflood.setForkSamples(True, nrCPUs=nrCores[0])
+        mcLisflood = MonteCarloFramework(stLisflood, nrSamples=lissettings.ens_members[0])
+        if lissettings.nrcores[0] > 1:
+            mcLisflood.setForkSamples(True, nrCPUs=lissettings.nrcores[0])
         if EnKFset:
             kfLisflood = EnsKalmanFilterFramework(mcLisflood)
-            kfLisflood.setFilterTimesteps(FilterSteps)
-            print(LisfloodRunInfo(mode = "Ensemble Kalman Filter", outputDir = outputDir[0], Steps = len(FilterSteps), ensMembers=EnsMembers[0], Cores=nrCores[0]))
+            kfLisflood.setFilterTimesteps(filter_steps)
+            print(LisfloodRunInfo(mode="Ensemble Kalman Filter", outputDir=lissettings.output_dir[0],
+                                  Steps=len(filter_steps),
+                                  ensMembers=lissettings.ens_members[0], Cores=lissettings.nrcores[0]))
             kfLisflood.run()
         else:
-            print(LisfloodRunInfo(mode = "Monte Carlo", outputDir = outputDir[0], ensMembers=EnsMembers[0], Cores=nrCores[0]))
+            print(LisfloodRunInfo(mode = "Monte Carlo", outputDir=lissettings.output_dir[0],
+                                  ensMembers=lissettings.ens_members[0], Cores=lissettings.nrcores[0]))
             mcLisflood.run()
     else:
         """
@@ -148,22 +158,19 @@ def Lisfloodexe(settings, optionxml):
         Deterministic run
         ----------------------------------------------
         """
-        print(LisfloodRunInfo(mode = "Deterministic", outputDir = outputDir[0]))
-    # run of the model inside the DynamicFramework
+        print(LisfloodRunInfo(mode="Deterministic", outputDir=lissettings.output_dir[0]))
         stLisflood.run()
-    # cProfile.run('stLisflood.run()')
-    # python -m cProfile -o  l1.pstats lisf1.py settingsNew3.xml
-    # gprof2dot -f pstats l1.pstats | dot -Tpng -o callgraph.png
 
-    if Flags['printtime']:
+    if flags['printtime']:
+        import numpy as np
         print("\n\nTime profiling")
         print("%2s %-17s %10s %8s" %("No","Name","time[s]","%"))
         div = 1
         timeSum = np.array(timeMesSum)
         if MCset:
-            div = div * EnsMembers[0]
+            div = div * lissettings.ens_members[0]
         if EnKFset:
-            div = div * (len(FilterSteps)+1)
+            div = div * (len(filter_steps) + 1)
         if EnKFset or MCset:
             timePrint = np.zeros(len(timeSum)/div)
             for i in range(len(timePrint)):
@@ -171,7 +178,7 @@ def Lisfloodexe(settings, optionxml):
         else:
             timePrint = timeSum
         for i in range(len(timePrint)):
-            print("%2i %-17s %10.2f %8.1f"  %(i,timeMesString[i],timePrint[i],100 * timePrint[i] / timePrint[-1]))
+            print("%2i %-17s %10.2f %8.1f" % (i, timeMesString[i], timePrint[i], 100 * timePrint[i] / timePrint[-1]))
 
 # ==================================================
 # ============== USAGE ==============================

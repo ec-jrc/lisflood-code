@@ -16,12 +16,14 @@ See the Licence for the specific language governing permissions and limitations 
 
 """
 from __future__ import (absolute_import, division, print_function, unicode_literals)
+from nine import iteritems
 
 import copy
 import getopt
 import sys
 
 import datetime
+from cftime._cftime import date2num, num2date
 from future.backports import OrderedDict
 from future.utils import with_metaclass
 from nine import (IS_PYTHON2, str, range, map, nine)
@@ -31,10 +33,11 @@ import inspect
 
 import xml.dom.minidom
 from netCDF4 import Dataset, date2num, num2date
+from pandas._libs.tslibs.parsing import parse_time_string
 
+from .errors import LisfloodError, LisfloodWarning
 from .decorators import cached
 from .default_options import default_options
-from lisflood.global_modules.utils import LisfloodWarning, datetoInt
 
 project_dir = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../..'))
 
@@ -71,20 +74,74 @@ class Singleton(type):
 class LisSettings(with_metaclass(Singleton)):
     printer = pprint.PrettyPrinter(indent=4, width=120)
 
+    def __str__(self):
+        res = """
+    Binding: {binding}
+    Options: {options}
+    report_steps: {report_steps}
+    report_timeseries: {report_timeseries}
+    report_maps_steps: {report_maps_steps}
+    report_maps_all: {report_maps_all}
+    report_maps_end: {report_maps_end}
+    """.format(binding=self.printer.pformat(self.binding), options=self.printer.pformat(self.options),
+               report_steps=self.printer.pformat(self.report_steps),
+               report_timeseries=self.printer.pformat(self.report_timeseries),
+               report_maps_steps=self.printer.pformat(self.report_maps_steps),
+               report_maps_all=self.printer.pformat(self.report_maps_all),
+               report_maps_end=self.printer.pformat(self.report_maps_end))
+        return res
+
     def __init__(self, settings_file):
         dom = xml.dom.minidom.parse(settings_file)
         self.settings_path = os.path.normpath(os.path.dirname((os.path.abspath(settings_file))))
-        self.flags = self._flags()
         user_settings, bindings = self._bindings(dom)
         self.output_dir = self._out_dirs(user_settings)
         self.ncores = self._ncores(user_settings)
         self.binding = bindings
         self.options = self._options(dom)
+        self.flags = self._flags()
+        self.model_steps = self._model_steps()
         self.report_steps = self._report_steps(user_settings, bindings)
         self.filter_steps = self._filter_steps(user_settings)
         self.ens_members = self._ens_members(user_settings)
         self.report_timeseries = self._report_tss()
         self.report_maps_steps, self.report_maps_all, self.report_maps_end = self._reported_maps()
+        self.report_timeseries = {k: v for k, v in iteritems(self.report_timeseries) if v}
+        self.report_maps_steps = {k: v for k, v in iteritems(self.report_maps_steps) if v}
+        self.report_maps_all = {k: v for k, v in iteritems(self.report_maps_all) if v}
+        self.report_maps_end = {k: v for k, v in iteritems(self.report_maps_end) if v}
+        # print(self)
+
+    def _check_simulation_dates(self):
+        """ Check simulation start and end dates or timesteps
+
+        Check simulation start and end dates/timesteps to be later than begin date (CalendarStartDay).
+        If dates are used for binding[start] and binding[end], it substitutes dates with time step numbers.
+
+        :return int_start, int_end
+        :rtype tuple
+        :raise LisfloodError if dates are not compatible
+        """
+        begin = calendar(self.binding['CalendarDayStart'], self.binding['calendar_type'])
+
+        int_start, str_start = datetoint(self.binding['StepStart'], self.binding)
+        int_end, str_end = datetoint(self.binding['StepEnd'], self.binding)
+
+        # test if start and end > begin
+        if (int_start < 0) or (int_end < 0) or ((int_end - int_start) < 0):
+            str_begin = begin.strftime("%d/%m/%Y %H:%M")
+            msg = "Simulation start date and/or simulation end date are wrong or do not match CalendarStartDate!\n" + \
+                  "CalendarStartDay: " + str_begin + "\n" + \
+                  "Simulation start: " + str_start + " - " + str(int_start) + "\n" + \
+                  "Simulation end: " + str_end + " - " + str(int_end)
+            raise LisfloodError(msg)
+        self.binding['StepStartInt'] = int_start
+        self.binding['StepEndInt'] = int_end
+        return int_start, int_end
+
+    def _model_steps(self):
+        int_start, int_end = self._check_simulation_dates()
+        return [int_start, int_end]
 
     @staticmethod
     def _ncores(user_settings):
@@ -241,7 +298,7 @@ class LisSettings(with_metaclass(Singleton)):
             except:
                 val = int(i)
 
-            stependint = datetoInt(self.binding['StepEnd'])
+            stependint = self.binding['StepEndInt']
             # if int(val) < int(binding['StepEnd']):
             if val < stependint:
                 try:
@@ -254,10 +311,9 @@ class LisSettings(with_metaclass(Singleton)):
         report_time_series_act = {}
         # running through all times series
         timeseries = self.options['timeseries']
-        for ts in timeseries:
-            rep_opt = ts.repoption.split(',') if ts.repoption else []
-            rest_opt = ts.restrictoption.split(',') if ts.restrictoption else []
-            self._set_active_options(ts, report_time_series_act, rep_opt, rest_opt)
+        for ts in timeseries.values():
+            key = ts.name
+            report_time_series_act[key] = self._set_active_options(ts, ts.repoption, ts.restrictoption)
 
         return report_time_series_act
 
@@ -268,20 +324,24 @@ class LisSettings(with_metaclass(Singleton)):
 
         # running through all maps
         reportedmaps = self.options['reportedmaps']
-        for rm in reportedmaps:
-            rep_opt_all = rm.all.split(',') if rm.all else []
-            rep_opt_steps = rm.steps.split(',') if rm.steps else []
-            rep_opt_end = rm.end.split(',') if rm.end else []
-            restricted_options = rm.restrictoption.split(',') if rm.restrictoption else []
-
-            self._set_active_options(rm, report_maps_all, rep_opt_all, restricted_options)
-            self._set_active_options(rm, report_maps_steps, rep_opt_steps, restricted_options)
-            self._set_active_options(rm, report_maps_end, rep_opt_end, restricted_options)
+        for rm in reportedmaps.values():
+            key = rm.name
+            report_maps_all[key] = self._set_active_options(rm, rm.all, rm.restrictoption)
+            report_maps_steps[key] = self._set_active_options(rm, rm.steps, rm.restrictoption)
+            report_maps_end[key] = self._set_active_options(rm, rm.end, rm.restrictoption)
 
         return report_maps_steps, report_maps_all, report_maps_end
 
-    def _set_active_options(self, obj, reported, report_options, restricted_options):
-        key = obj.name
+    def _set_active_options(self, obj, report_options, restricted_options):
+        """
+        Check report options (when to report/write the map) and restricted_options (when not to report/write map)
+        Return ReportMap tuple if is to write, according report and restrict options
+        :param obj: `lisflood.global_modules.default_options.ReportMap` tuple
+        :param report_options: list of option keys enabling report
+        :param restricted_options: list of option keys disabling report (has precedence over report_options)
+        :return: obj or None
+        """
+        allow = False
         for rep in report_options:
             if self.options.get(rep):
                 # option is set so temporarily allow = True
@@ -289,10 +349,14 @@ class LisSettings(with_metaclass(Singleton)):
                 # checking that restricted_options are not set
                 for ro in restricted_options:
                     if ro in self.options and not self.options[ro]:
-                        allow = False
+                        print('restricted option found!!!', ro)
+                        allow = False  # map must not be written
                         break
-                if allow:
-                    reported[key] = obj
+        if allow:
+            print('ALLOWED --------> ', obj)
+            return obj
+        else:
+            return None
 
 
 def get_calendar_type(nc):
@@ -310,3 +374,95 @@ The 'calendar' attribute of the 'time' variable of {} is not set: the default '{
 
 def calendar_inconsistency_warning(filename, file_calendar, precipitation_calendar):
     return LisfloodWarning("In file {}, time.calendar attribute ({}) differs from that of precipitation ({})!".format(filename, file_calendar, precipitation_calendar))
+
+
+def calendar(date_in, calendar_type='proleptic_gregorian'):
+    """ Get date or number of steps from input.
+
+    Get date from input string using one of the available formats or get time step number from input number or string.
+    Used to get the date from CalendarDayStart (input) in the settings xml
+
+    :param date_in: string containing a date in one of the available formats or time step number as number or string
+    :param calendar_type:
+    :rtype: datetime object or float number
+    :returns: date as datetime or time step number as float
+    :raises ValueError: stop if input is not a step number AND it is in wrong date format
+    """
+    try:
+        # try reading step number from number or string
+        return float(date_in)
+    except ValueError:
+        # try reading a date in one of available formats
+        try:
+            _t_units = "hours since 1970-01-01 00:00:00"  # units used for date type conversion (datetime.datetime -> calendar-specific if needed)
+            date = parse_time_string(date_in, dayfirst=True)[0]  # datetime.datetime type
+            step = date2num(date, _t_units, calendar_type)  # float type
+            return num2date(step, _t_units, calendar_type)  # calendar-dependent type from netCDF4.netcdftime._netcdftime module
+        except:
+            # if cannot read input then stop
+            msg = "Wrong step or date format in XML settings file\n Input {}".format(date_in)
+            raise LisfloodError(msg)
+
+
+def datetoint(date_in, binding=None):
+    """ Get number of steps between dateIn and CalendarDayStart.
+
+    Get the number of steps between dateIn and CalendarDayStart and return it as integer number.
+    It can now compute the number of sub-daily steps.
+    dateIn can be either a date or a number. If dateIn is a number, it must be the number of steps between
+    dateIn and CalendarDayStart.
+
+    :param date_in: date as string or number
+    :param binding: obptional binding dictionary
+    :return number of steps as integer and input date as string
+    :rtype tuple(<int>, <str>)
+    """
+    if not binding:
+        settings = LisSettings.instance()
+        binding = settings.binding
+    # get reference date to be used with step numbers from 'CalendarDayStart' in Settings.xml file
+    date1 = calendar(date_in, binding['calendar_type'])
+    begin = calendar(binding['CalendarDayStart'], binding['calendar_type'])
+    # get model time step as float form 'DtSec' in Settings.xml file
+    dt_sec = float(binding['DtSec'])
+    # compute fraction of day corresponding to model time step as float
+    # DtDay = float(DtSec / 86400.)
+    # Time step, expressed as fraction of day (same as self.var.DtSec and self.var.DtDay)
+
+    if type(date1) is datetime.datetime:
+        str1 = date1.strftime("%d/%m/%Y %H:%M")
+        # get total number of seconds corresponding to the time interval between dateIn and CalendarDayStart
+        timeinterval_in_sec = int((date1 - begin).total_seconds())
+        # get total number of steps between dateIn and CalendarDayStart
+        int1 = int(timeinterval_in_sec/dt_sec + 1)
+        # int1 = (date1 - begin).days + 1
+    else:
+        int1 = int(date1)
+        str1 = str(date1)
+    return int1, str1
+
+
+def inttodate(int_in, ref_date):
+    """ Get date corresponding to a number of steps from a reference date.
+
+    Get date corresponding to a number of steps from a reference date and return it as datetime.
+    It can now use sub-daily steps.
+    intIn is a number of steps from the reference date refDate.
+
+    :param int_in: number of steps as integer
+    :param ref_date: reference date as datetime
+    :return: stepDate: date as datetime corresponding to intIn steps from refDate
+    """
+    settings = LisSettings.instance()
+    binding = settings.binding
+
+    # CM: get model time step as float form 'DtSec' in Settings.xml file
+    DtSec = float(binding['DtSec'])
+    # CM: compute fraction of day corresponding to model time step as float
+    DtDay = float(DtSec / 86400)
+    # Time step, expressed as fraction of day (same as self.var.DtSec and self.var.DtDay)
+
+    # CM: compute date corresponding to intIn steps from reference date refDate
+    stepDate = ref_date + datetime.timedelta(days=(int_in * DtDay))
+
+    return stepDate

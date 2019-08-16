@@ -18,9 +18,6 @@ from __future__ import print_function, absolute_import
 
 from pcraster._pcraster import Scalar
 
-from lisflood.global_modules.settings import calendar_inconsistency_warning
-from lisflood.global_modules.utils import LisfloodWarning
-from .zusatz import *
 from netCDF4 import num2date, date2num
 import numpy as np
 import time as xtime
@@ -28,7 +25,10 @@ import os
 from . import globals
 from bisect import bisect_left
 
-# ------------------------------
+from .settings import calendar_inconsistency_warning, get_calendar_type, calendar
+from .errors import LisfloodWarning
+from .zusatz import *
+
 
 def defsoil(name1, name2=None, name3=None):
     """ loads 3 array in a list
@@ -95,6 +95,8 @@ def metaNetCDF():
     
     :return: metadataNCDF as global dictionary
     """
+    settings = LisSettings.instance()
+    binding = settings.binding
     try:
         # using ncdftemplate
         filename = os.path.splitext(binding['netCDFtemplate'])[0] + '.nc'
@@ -141,7 +143,9 @@ def loadsetclone(name):
     :param name: name of the key in Settings.xml containing path and name of mask map as string
     :return: map: mask map (False=include in modelling; True=exclude from modelling) as pcraster
     """
-    print(binding)
+    settings = LisSettings.instance()
+    binding = settings.binding
+    flags = settings.flags
     filename = os.path.normpath(binding[name])
     if not os.path.exists(filename):
         raise LisfloodError('File not existing: {}'.format(filename))
@@ -170,6 +174,8 @@ def loadsetclone(name):
             mapnp = pcr2numpy(map,np.nan)
 
         except Exception as e:
+            print(str(e))
+            print(type(e))
             # try to read a netcdf file
             filename = os.path.splitext(binding[name])[0] + '.nc'
             nf1 = iterOpenNetcdf(filename, "", "r")
@@ -201,7 +207,8 @@ def loadsetclone(name):
             map = numpy2pcr(Boolean, mapnp, 0)
             #map = boolean(map)
             flagmap = True
-        if Flags['checkfiles']:
+
+        if flags['checkfiles']:
             checkmap(name, filename, map, flagmap, 0)
     else:
         raise LisfloodError("Maskmap: {} is not a valid mask map nor valid coordinates".format(name))
@@ -235,7 +242,7 @@ def loadsetclone(name):
     maskinfo['maskall'] =np.ma.masked_all(maskinfo['shapeflat'])  # empty map 1D but with mask
     maskinfo['maskall'].mask = maskinfo['maskflat']
     globals.inZero=np.zeros(maskinfo['mapC'])
-    if Flags['nancheck']:
+    if flags['nancheck']:
         nanCheckMap(ldd, binding['Ldd'], 'Ldd')
     return map
 
@@ -305,6 +312,9 @@ def loadmap(name, pcr=False, lddflag=False, timestampflag='exact', averageyearfl
              netCDF: time step timestepInit must be included into the stack 
     """
     # name of the key in Settimgs.xml file containing path and name of the map file
+    settings = LisSettings.instance()
+    binding = settings.binding
+    flags = settings.flags
     value = binding[name]
     # path and name of the map file
     filename = value
@@ -362,7 +372,7 @@ def loadmap(name, pcr=False, lddflag=False, timestampflag='exact', averageyearfl
                     t_ref_year = first_date.year
 
                 #select timestep to use for reading from netCDF stack based on timestepInit (state file time step)
-                timestepI = Calendar(timestepInit[0])
+                timestepI = calendar(timestepInit[0], binding['calendar_type'])
                 if type(timestepI) is datetime.datetime:
                     #reading dates in XML settings file
                     #get step id number in netCDF stack for timestepInit date
@@ -375,17 +385,17 @@ def loadmap(name, pcr=False, lddflag=False, timestampflag='exact', averageyearfl
                             timestepI = timestepI.replace(year=t_ref_year)
                     timestepI = date2num(timestepI,nf1.variables['time'].units)
                 else:
-                    #reading step numbers in XML file
-                    #timestepI = int(timestepI) -1
-                    begin = Calendar(binding['CalendarDayStart'])
+                    # reading step numbers in XML file
+                    # timestepI = int(timestepI) -1
+                    begin = calendar(binding['CalendarDayStart'])
                     DtSec = float(binding['DtSec'])
                     DtDay = float(DtSec / 86400)
                     # Time step, expressed as fraction of day (same as self.var.DtSec and self.var.DtDay)
                     # get date for step number timestepI (referred to CalendarDayStart)
                     timestepIDate = begin + datetime.timedelta(days=(timestepI - 1) * DtDay)
-                    #get step id number in netCDF stack for step timestepInit
-                    #timestepInit refers to CalenradDayStart
-                    #timestepI now refers to first date in netCDF stack
+                    # get step id number in netCDF stack for step timestepInit
+                    # timestepInit refers to CalenradDayStart
+                    # timestepI now refers to first date in netCDF stack
                     if averageyearflag:
                         #using an average year, don't care about the year in timestepIDate and change it to the netCDF time unit year
                         try:
@@ -394,14 +404,14 @@ def loadmap(name, pcr=False, lddflag=False, timestampflag='exact', averageyearfl
                             #if simulation year is leap and average year is not, switch 29/2 with 28/2
                             timestepIDate = timestepIDate.replace(day=28)
                             timestepIDate = timestepIDate.replace(year=t_ref_year)
-                    timestepI = date2num(timestepIDate,units = t_unit, calendar = t_cal)
+                    timestepI = date2num(timestepIDate, units=t_unit, calendar=t_cal)
 
                 if not(timestepI in nf1.variables['time'][:]):
-                    if (timestampflag == 'exact'):
+                    if timestampflag == 'exact':
                         #look for exact time stamp when loading data
                         msg = "time step " + str(int(timestepI)+1)+" is not stored in "+ filename
                         raise LisfloodError(msg)
-                    elif (timestampflag == 'closest'):
+                    elif timestampflag == 'closest':
                         #get the closest value
                         timestepInew = takeClosest(t_steps, timestepI)
                         #set timestepI to the closest available time step in netCDF file
@@ -444,7 +454,7 @@ def loadmap(name, pcr=False, lddflag=False, timestampflag='exact', averageyearfl
     # pcraster map but it has to be an array
     if pcrmap and not pcr:
         mapC = compressArray(map, name=filename)
-    if Flags['checkfiles']:
+    if flags['checkfiles']:
         print(name, filename)
         if flagmap == False:
             checkmap(name, filename, mapC, flagmap, 0)
@@ -456,16 +466,15 @@ def loadmap(name, pcr=False, lddflag=False, timestampflag='exact', averageyearfl
                 map= decompress(mapC)
                 checkmap(name, filename, map, flagmap, 0)
     if pcr:
-        if Flags['nancheck'] and name != 'Ldd': 
+        if flags['nancheck'] and name != 'Ldd':
             nanCheckMap(map, filename, name)
         return map
     elif isinstance(mapC, np.ndarray):
         return mapC.astype(float)
     else:
-        if Flags['nancheck'] and name != 'Ldd': 
+        if flags['nancheck'] and name != 'Ldd':
             nanCheckMap(mapC, filename, name)
         return mapC
-
 
 
 def takeClosest(myList, myNumber):
@@ -492,13 +501,14 @@ def takeClosest(myList, myNumber):
     return before
 
 
-
-
 def loadLAI(value, pcrvalue, i,pcr=False):
     """
     load Leaf are map stacks  or water use maps stacks
     """
     pcrmap = False
+    settings = LisSettings.instance()
+    flags = settings.flags
+
     try:
         map = iterReadPCRasterMap(pcrvalue)
         filename = pcrvalue
@@ -516,17 +526,17 @@ def loadLAI(value, pcrvalue, i,pcr=False):
         # mapnp[np.isnan(mapnp)] = -9999
         # map = numpy2pcr(Scalar, mapnp, -9999)
         # if check use a pcraster map
-        if Flags['checkfiles'] or pcr:
+        if flags['checkfiles'] or pcr:
             map = decompress(mapC)
     if pcrmap: mapC = compressArray(map,name=filename)
-    if Flags['checkfiles']:
+    if flags['checkfiles']:
         checkmap(os.path.basename(pcrvalue), filename, map, True, 0)
     if pcr:
-        if Flags['nancheck']: 
+        if flags['nancheck']:
             nanCheckMap(map, filename, "'LAI*Maps' or 'WFractionMaps'")
         return map
     else:
-        if Flags['nancheck']: 
+        if flags['nancheck']:
             nanCheckMap(mapC, filename, "'LAI*Maps' or 'WFractionMaps'")
         return mapC
 
@@ -588,7 +598,7 @@ def readnetcdf(name, time, timestampflag='exact', averageyearflag=False):
     nf1 = iterOpenNetcdf(filename, "Netcdf map stacks: \n", "r")
 
     # read information from netCDF file
-    variable_name = [k for k in nf1.variables if len(nf1.variables[k].dimensions) == 3][0] # get the variable with 3 dimensions (variable order not relevant)
+    variable_name = [k for k in nf1.variables if len(nf1.variables[k].dimensions) == 3][0]  # get the variable with 3 dimensions (variable order not relevant)
     t_steps = nf1.variables['time'][:]    # get values for timesteps ([  0.,  24.,  48.,  72.,  96.])
     t_unit = nf1.variables['time'].units  # get unit (u'hours since 2015-01-01 06:00:00')
     t_cal = get_calendar_type(nf1)
@@ -598,16 +608,18 @@ def readnetcdf(name, time, timestampflag='exact', averageyearflag=False):
         first_date = num2date(t_steps[0], t_unit, t_cal)
         # CM: get year of the first step in netCDF file containing average year values
         t_ref_year = first_date.year
-
-    begin = Calendar(binding['CalendarDayStart'])
-    DtSec = float(binding['DtSec'])
-    DtDay = float(DtSec / 86400)
+    settings = LisSettings.instance()
+    binding = settings.binding
+    flags = settings.flags
+    begin = calendar(binding['CalendarDayStart'], binding['calendar_type'])
+    dt_sec = float(binding['DtSec'])
+    dt_day = float(dt_sec / 86400)
     # Time step, expressed as fraction of day (same as self.var.DtSec and self.var.DtDay)
 
     # get date of current simulation step
-    currentDate = Calendar(time)
+    currentDate = calendar(time, binding['calendar_type'])
     if type(currentDate) is not datetime.datetime:
-        currentDate = begin + datetime.timedelta(days=(currentDate - 1) * DtDay)
+        currentDate = begin + datetime.timedelta(days=(currentDate - 1) * dt_day)
 
     # if reading from an average year NetCDF stack, ignore the year in current simulation date and change it to the netCDF time unit year
     if averageyearflag:
@@ -639,10 +651,10 @@ def readnetcdf(name, time, timestampflag='exact', averageyearflag=False):
     nf1.close()
 
     mapC = compressArray(mapnp, pcr=False, name=filename)
-    if Flags['checkfiles']:
+    if flags['checkfiles']:
         timename = os.path.basename(name) + str(time)
         checkmap(timename, filename, decompress(mapC), True, 1)
-    if Flags['nancheck']: 
+    if flags['nancheck']:
         nanCheckMap(mapC, filename, name)
     return mapC
 
@@ -671,8 +683,10 @@ def readnetcdfsparse(name, time, oldmap):
                 msg = "no map in stack has a smaller time stamp than: " + str(time)
                 raise LisfloodError(msg)
         else:
+            settings = LisSettings.instance()
+            flags = settings.flags
             mapC = oldmap
-            if Flags['loud']:
+            if flags['loud']:
                 s = " last_" + (os.path.basename(name)) + str(time)
                 # print s,
     return mapC
@@ -691,7 +705,8 @@ def checknetcdf(name, start, end):
     :return: none
     :raises Exception: stop if netCDF maps do not cover simulation time period
     """
-
+    settings = LisSettings.instance()
+    binding = settings.binding
     filename = name + ".nc"
     nf1 = iterOpenNetcdf(filename, "Netcdf map stacks: \n", "r")
 
@@ -708,15 +723,13 @@ def checknetcdf(name, start, end):
     date_last_step_in_ncdf = num2date(t_steps[-1], units=t_unit, calendar=t_cal)
 
     nf1.close()
-
     #calendar date start (CalendarDayStart)
-    begin = Calendar(binding['CalendarDayStart'])
+    begin = calendar(binding['CalendarDayStart'], binding['calendar_type'])
     DtSec = float(binding['DtSec'])
     DtDay = float(DtSec / 86400)
     # Time step, expressed as fraction of day (same as self.var.DtSec and self.var.DtDay)
 
-
-    date_first_sim_step = Calendar(start)
+    date_first_sim_step = calendar(start, binding['calendar_type'])
     if type(date_first_sim_step) is not datetime.datetime:
         date_first_sim_step = begin + datetime.timedelta(days=(date_first_sim_step - 1) * DtDay)
     if (date_first_sim_step < date_first_step_in_ncdf):
@@ -725,9 +738,8 @@ def checknetcdf(name, start, end):
               "netCDF start date: "+ date_first_step_in_ncdf.strftime('%d/%m/%Y %H:%M') +"\n" \
               "simulation start date: "+ date_first_sim_step.strftime('%d/%m/%Y %H:%M')
         raise LisfloodError(msg)
-        quit(1)
 
-    date_last_sim_step = Calendar(end)
+    date_last_sim_step = calendar(end, binding['calendar_type'])
     if type(date_last_sim_step) is not datetime.datetime:
         date_last_sim_step = begin + datetime.timedelta(days=(date_last_sim_step - 1) * DtDay)
     if (date_last_sim_step > date_last_step_in_ncdf):
@@ -736,10 +748,7 @@ def checknetcdf(name, start, end):
               "netCDF last date: " + date_last_step_in_ncdf.strftime('%d/%m/%Y %H:%M') +"\n" \
               "simulation last date: " + date_last_sim_step.strftime('%d/%m/%Y %H:%M')
         raise LisfloodError(msg)
-        quit(1)
-
     return
-
 
 
 def generateName(name, time):
@@ -797,6 +806,9 @@ def writenet(flag, inputmap, netfile, DtDay,
     :return: 
     """
     # prefix = netfile.split('/')[-1].split('\\')[-1].split('.')[0]
+    settings = LisSettings.instance()
+    binding = settings.binding
+    flags = settings.flags
     prefix = os.path.basename(netfile)
     netfile += ".nc"
     row = np.abs(cutmap[3] - cutmap[2])
@@ -876,7 +888,7 @@ def writenet(flag, inputmap, netfile, DtDay,
         lons = np.linspace(xl, xr, col, endpoint=False)
         latitude[:] = lats
         longitude[:] = lons
-        if frequency is not None: # output file with "time" dimension
+        if frequency is not None:  # output file with "time" dimension
             #Get initial and final dates for data to be stored in nerCDF file
             first_date, last_date = [startdate + datetime.timedelta(days=(int(k) - 1)*DtDay) for k in
                                      (repstepstart, repstepend)]
@@ -884,15 +896,15 @@ def writenet(flag, inputmap, netfile, DtDay,
             time_stamps = [first_date + datetime.timedelta(days=d*DtDay) for d in xrange(repstepend - repstepstart +1)]
 
             units_time = 'days since %s' % startdate.strftime("%Y-%m-%d %H:%M:%S.0")
-            steps = (int(binding["DtSec"]) / 86400.) * np.arange(int(binding["StepStart"]) - 1, int(binding["StepEnd"]))
+            steps = (int(binding["DtSec"]) / 86400.) * np.arange(binding["StepStartInt"] - 1, binding["StepEndInt"])
             if frequency != "all":
                 dates = num2date(steps, units_time, binding["calendar_type"])
                 next_date_times = np.array([j + datetime.timedelta(seconds=int(binding["DtSec"])) for j in dates])
                 if frequency == "monthly":
-                    months_end = np.array([dates[j].month != next_date_times[j].month for j in xrange(steps.size)])
+                    months_end = np.array([dates[j].month != next_date_times[j].month for j in range(steps.size)])
                     steps = steps[months_end]
                 elif frequency == "annual":
-                    years_end = np.array([dates[j].year != next_date_times[j].year for j in xrange(steps.size)])
+                    years_end = np.array([dates[j].year != next_date_times[j].year for j in range(steps.size)])
                     steps = steps[years_end]
             nf1.createDimension('time', steps.size)
             time = nf1.createVariable('time', float, ('time'))
@@ -933,7 +945,7 @@ def writenet(flag, inputmap, netfile, DtDay,
                 value.esri_pe_string = metadataNCDF[var]['esri_pe_string']
     else:
         nf1 = iterOpenNetcdf(netfile, "", 'a',format='NETCDF4')
-    if Flags['nancheck']:
+    if flags['nancheck']:
         nanCheckMap(inputmap, netfile, value_standard_name)
     mapnp = maskinfo['maskall'].copy()
     mapnp[~maskinfo['maskflat']] = inputmap[:]
@@ -947,11 +959,13 @@ def writenet(flag, inputmap, netfile, DtDay,
         nf1.variables[prefix][:, :] = mapnp
     nf1.close()
 
+
 def dumpObject(name, var, num):
   path1 = os.path.join(str(num), 'stateVar',name)
   file_object1 = open(path1, 'w')
   pickle.dump(var, file_object1)
   file_object1.close()
+
 
 def loadObject(name, num):
   path1 = os.path.join(str(num), 'stateVar', name)
@@ -961,9 +975,11 @@ def loadObject(name, num):
   filehandler1.close()
   return(var)
 
+
 def dumpPCRaster(name, var, num):
   path1 = os.path.join(str(num), 'stateVar',name)
   report(var, path1)
+
 
 def loadPCRaster(name, num):
   path1 = os.path.join(str(num), 'stateVar',name)

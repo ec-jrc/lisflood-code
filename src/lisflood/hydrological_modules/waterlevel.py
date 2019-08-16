@@ -18,8 +18,8 @@ See the Licence for the specific language governing permissions and limitations 
 from pcraster import *
 from pcraster.framework import *
 
-from lisflood.global_modules.add1 import *
-from lisflood.global_modules.globals import *
+from ..global_modules.add1 import *
+from ..global_modules.globals import *
 
 
 class waterlevel(object):
@@ -38,7 +38,8 @@ class waterlevel(object):
     def initial(self):
         """ initial part of the water level module
         """
-
+        settings = LisSettings.instance()
+        option = settings.options
         if option['simulateWaterLevels']:
             self.var.FloodPlainWidth = loadmap('FloodPlainWidth')
 
@@ -50,6 +51,8 @@ class waterlevel(object):
         # Activating this option doesn't affect LISFLOOD's behaviour in any way, option only
         # included to allow reporting of water level maps / time series
         # Actual reporting activated using separate options!
+        settings = LisSettings.instance()
+        option = settings.options
         if option['simulateWaterLevels']:
             ChanCrossSectionArea = np.where(
                 self.var.IsChannelKinematic,

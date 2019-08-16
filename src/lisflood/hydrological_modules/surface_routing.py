@@ -14,7 +14,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 from ..global_modules.add1 import *
 from .kinematic_wave_parallel import kinematicWave
@@ -71,8 +71,7 @@ class surface_routing(object):
         # 2 times fixed reference depth
         # (Note that using grid size as flow width is a bit odd, as results will depend on cell size!)
 
-        AlpTermOF = [(self.var.NManning[0] / (np.sqrt(Grad))) ** self.var.Beta, (self.var.NManning[1] /
-                (np.sqrt(Grad))) ** self.var.Beta, (self.var.NManning[2] / (np.sqrt(Grad))) ** self.var.Beta]
+        AlpTermOF = [(self.var.NManning[0] / (np.sqrt(Grad))) ** self.var.Beta, (self.var.NManning[1] / (np.sqrt(Grad))) ** self.var.Beta, (self.var.NManning[2] / (np.sqrt(Grad))) ** self.var.Beta]
         # self.var.OFAlpha = [AlpTermOF[0]*(OFWettedPerimeter**AlpPow),AlpTermOF[1]*(OFWettedPerimeter**AlpPow),AlpTermOF[2]*(OFWettedPerimeter**AlpPow)]
 
         self.var.OFAlphaOther = (AlpTermOF[0] * (OFWettedPerimeter ** self.var.AlpPow)).astype(float)
@@ -84,17 +83,16 @@ class surface_routing(object):
 
         # Alpha to separate int 3 different overland routing: forest, water and sealed area, remaining area
         # overland flow Alpha for kinematic wave
-        OFCrossSectionArea = self.var.MMtoM * self.var.WaterDepth * self.var.PixelLength
+        # OFCrossSectionArea = self.var.MMtoM * self.var.WaterDepth * self.var.PixelLength
         # Overland flow initial cross-sectional area [m2]
-        OFM3all = OFCrossSectionArea * self.var.PixelLength
+        # OFM3all = OFCrossSectionArea * self.var.PixelLength
         # Initial overland flow storage [m3]
         # self.var.OFM3=[cover(OFM3all*self.var.OtherFraction,scalar(0.0)),cover(OFM3all*self.var.ForestFraction,scalar(0.0)),cover(OFM3all*(self.var.DirectRunoffFraction+self.var.WaterFraction),scalar(0.0))]
 
-
         # Initial overland discharge [m3 s-1]
-        self.var.OFQDirect = ((self.var.OFM3Direct * self.var.InvPixelLength * self.var.InvOFAlphaDirect)**(self.var.InvBeta)).astype(float)
-        self.var.OFQOther = ((self.var.OFM3Other * self.var.InvPixelLength * self.var.InvOFAlphaOther)**(self.var.InvBeta)).astype(float)
-        self.var.OFQForest = ((self.var.OFM3Forest * self.var.InvPixelLength * self.var.InvOFAlphaForest)**(self.var.InvBeta)).astype(float)
+        self.var.OFQDirect = ((self.var.OFM3Direct * self.var.InvPixelLength * self.var.InvOFAlphaDirect) ** self.var.InvBeta).astype(float)
+        self.var.OFQOther = ((self.var.OFM3Other * self.var.InvPixelLength * self.var.InvOFAlphaOther) ** self.var.InvBeta).astype(float)
+        self.var.OFQForest = ((self.var.OFM3Forest * self.var.InvPixelLength * self.var.InvOFAlphaForest) ** self.var.InvBeta).astype(float)
 
     def initialSecond(self):
         """ 2nd initialisation part of the surface routing module:
@@ -103,6 +101,8 @@ class surface_routing(object):
         """
         dt_surf_routing = self.var.DtSec / self.var.NoSubStepsOF
         land_mask = ~maskinfo["mask"]
+        settings = LisSettings.instance()
+        binding = settings.binding
         num_threads = int(binding["numCPUs_parallelKinematicWave"])
         self.direct_surface_router = kinematicWave(compressArray(self.var.LddToChan), land_mask, self.var.OFAlphaDirect, self.var.Beta,\
                                                    self.var.PixelLength, dt_surf_routing, num_threads)
@@ -110,7 +110,6 @@ class surface_routing(object):
                                                   self.var.PixelLength, dt_surf_routing, num_threads)
         self.forest_surface_router = kinematicWave(compressArray(self.var.LddToChan), land_mask, self.var.OFAlphaForest, self.var.Beta,\
                                                    self.var.PixelLength, dt_surf_routing, num_threads)
-
 
     def dynamic(self):
         """ dynamic part of the surface routing module
@@ -124,7 +123,6 @@ class surface_routing(object):
             np.maximum(self.var.AvailableWaterForInfiltration[1] - self.var.Infiltration[1], 0)
         self.var.SurfaceRunIrrigation = self.var.IrrigationFraction * \
             np.maximum(self.var.AvailableWaterForInfiltration[2] - self.var.Infiltration[2], 0)
-
 
         self.var.SurfaceRunoff = self.var.DirectRunoff + self.var.SurfaceRunOther + self.var.SurfaceRunForest + self.var.SurfaceRunIrrigation
         # Surface runoff for this time step (mm)

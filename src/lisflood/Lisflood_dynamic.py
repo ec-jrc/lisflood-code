@@ -29,6 +29,9 @@ class LisfloodModel_dyn(DynamicModel):
         """ Dynamic part of LISFLOOD
             calls the dynamic part of the hydrological modules
         """
+        settings = LisSettings.instance()
+        option = settings.options
+        flags = settings.flags
         del timeMes[:]
         # get time for operation "Start dynamic"
         timemeasure("Start dynamic")
@@ -47,13 +50,13 @@ class LisfloodModel_dyn(DynamicModel):
 
         self.TimeSinceStart = self.currentTimeStep() - self.firstTimeStep() + 1
 
-        if Flags['loud']:
+        if flags['loud']:
             print("%-6i %10s" %(self.currentTimeStep(),self.CalendarDate.strftime("%d/%m/%Y %H:%M")))
         else:
-            if not(Flags['checkfiles']):
-                if (Flags['quiet']) and (not(Flags['veryquiet'])):
+            if not flags['checkfiles']:
+                if flags['quiet'] and not flags['veryquiet']:
                     sys.stdout.write(".")
-                if (not(Flags['quiet'])) and (not(Flags['veryquiet'])):
+                if not flags['quiet'] and not flags['veryquiet']:
                     # Print step number and date to console
                     sys.stdout.write("\r%d" % i), sys.stdout.write("%s" % " - "+self.CalendarDate.strftime("%d/%m/%Y %H:%M"))
                     sys.stdout.flush()
@@ -65,7 +68,8 @@ class LisfloodModel_dyn(DynamicModel):
         self.readmeteo_module.dynamic()     
         timemeasure("Read meteo") # 1. timing after read input maps
 
-        if Flags['checkfiles']: return  # if check than finish here
+        if flags['checkfiles']:
+            return  # if check than finish here
 
         """ Here it starts with hydrological modules:
         """
@@ -227,24 +231,17 @@ class LisfloodModel_dyn(DynamicModel):
         # *******  Calculate CUMULATIVE MASS BALANCE ERROR  **********
         # ************************************************************
         self.waterbalance_module.dynamic()
-
-
-
         self.indicatorcalc_module.dynamic()
-
-
 
         # ************************************************************
         # ***** WRITING RESULTS: TIME SERIES AND MAPS ****************
         # ************************************************************
-
         self.output_module.dynamic()
         timemeasure("Water balance")
 
-
         # debug 
         # Print value of variables after computation (from state files)
-        if Flags['debug']:
+        if flags['debug']:
             nomefile = 'Debug_out_'+str(self.currentStep)+'.txt'
             ftemp1 = open(nomefile, 'w+')
             nelements = len(self.ChanM3)
@@ -256,69 +253,19 @@ class LisfloodModel_dyn(DynamicModel):
                     print(i, self.TotalCrossSectionArea[i], self.ChanM3[i], file=ftemp1)
             ftemp1.close()
 
-
-
         ### Report states if EnKF is used and filter moment
         self.stateVar_module.dynamic()
         timemeasure("State report")
 
         timemeasure("All dynamic")
 
-
         for i in range(len(timeMes)):
             if self.currentTimeStep() == self.firstTimeStep():
                 timeMesSum.append(timeMes[i] - timeMes[0])
             else: timeMesSum[i] += timeMes[i] - timeMes[0]
 
-
-
         self.indicatorcalc_module.dynamic_setzero()
-           # setting monthly and yearly dindicator to zero at the end of the month (year)
-
+        # setting monthly and yearly dindicator to zero at the end of the month (year)
 
         # garbage collector added to free memory at the end of computation step
         gc.collect()
-
-
-        """
-     # self.var.WaterRegionOutflowPoints self.var.WaterRegionInflowPoints
-        report(self.WaterRegionOutflowPoints,'D:\Lisflood_runs\LisfloodWorld2\out\wateroutpt.map')
-        report(self.WaterRegionInflowPoints,'D:\Lisflood_runs\LisfloodWorld2\out\waterInpt.map')
-
-        # report(self.map2,'mapx.map')
-        # self.Tss['UZTS'].sample(Precipitation)
-        # self.report(self.Precipitation,binding['TaMaps'])
-
-
-
-
-
-       #WUse=(WUse*PixelArea*0.001)/2592000;
-       # if mm maps are used:
-	   # mm per month to m3/s  : x Pixelarea * mmtom / sec in a month
-
-        #self.SumETpot += self.ETRef
-        #self.SumET = SumET + MonthETact + TaInterception + TaPixel + ESActPixel + EvaAddM3 * M3toMM;
-        #SumTrun += ToChanM3Runoff;
-
-
-
-        WUse = decompress((self.TotalAbstractionFromGroundwaterM3 + self.TotalAbstractionFromSurfaceWaterM3) * self.DtSec)
-        WaterDemandM3= areatotal(cover(WUse,0.0),wreg)
-        WaterUseM3 = areatotal(cover(decompress(self.WUseAddM3),0.0),wreg)
-        self.FlagDemandBiggerUse = self.FlagDemandBiggerUse + ifthenelse((WaterDemandM3*0.9) > WaterUseM3,scalar(1.0),scalar(0.0))
-
-
-
-
-        self.TotWEI = self.TotWEI + ifthenelse(EndOfMonth > 0,WEI_Use,scalar(0.0))
-        self.TotWEI = ifthenelse(self.currentTimeStep() < 365,scalar(0.0),self.TotWEI)
-        self.TotlWEI =  self.TotlWEI + ifthenelse(EndOfMonth > 0,lWEI_Use,scalar(0.0))
-        self.TotlWEI = ifthenelse(self.currentTimeStep() < 365,scalar(0.0),self.TotlWEI)
-        self.TotCount = self.TotCount + ifthenelse(EndOfMonth > 0 ,scalar(1.0),scalar(0.0))
-        self.TotCount = ifthenelse(self.currentTimeStep() < 365,scalar(0.0),self.TotCount)
-
-
-        # self.CalendarDate.strftime("%d/%m/%Y"))
-        """
-

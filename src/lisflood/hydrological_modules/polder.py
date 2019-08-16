@@ -15,8 +15,9 @@ See the Licence for the specific language governing permissions and limitations 
 
 """
 
+from __future__ import absolute_import, print_function
 
-from lisflood.global_modules.add1 import *
+from ..global_modules.add1 import *
 
 
 class polder(object):
@@ -40,7 +41,9 @@ class polder(object):
         # ************************************************************
         # ***** POLDERS
         # ************************************************************
-
+        settings = LisSettings.instance()
+        option = settings.options
+        binding = settings.binding
 
         if option['simulatePolders']:
 
@@ -49,47 +52,38 @@ class polder(object):
             expPolder = 3 / 2
             # Exponent in weir equation [-]
             PolderSites = loadmap('PolderSites')
-            PolderSites = ifthen(
-                (defined(PolderSites) & self.var.IsChannel), PolderSites)
+            PolderSites = ifthen((defined(PolderSites) & self.var.IsChannel), PolderSites)
             # Get rid of any polders that are not part of the channel network
             # IMPORTANT: current implementation can become unstable with kin.
             # wave!!
             IsPolder = pcraster.boolean(PolderSites)
             # Flag that is boolean(1) for polder sites and boolean(0) otherwise
-            PolderTotalCapacity = lookupscalar(
-                binding['TabPolderTotalCapacity'], PolderSites)
+            PolderTotalCapacity = lookupscalar(binding['TabPolderTotalCapacity'], PolderSites)
             # total storage capacity of Polder area [m3]
             PolderArea = lookupscalar(binding['TabPolderArea'], PolderSites)
             # Area of polder [m2]
-            PolderOFWidth = lookupscalar(
-                binding['TabPolderOFWidth'], PolderSites)
+            PolderOFWidth = lookupscalar(binding['TabPolderOFWidth'], PolderSites)
             # Width of polder in-/outflow weir [m]
-            PolderBottomLevel = lookupscalar(
-                binding['TabPolderBottomLevel'], PolderSites)
+            PolderBottomLevel = lookupscalar(binding['TabPolderBottomLevel'], PolderSites)
             # Bottom level of polder, measured above bottom level of channel
             # [m]
-            PolderOpeningTime = lookupscalar(
-                binding['TabPolderOpeningTime'], PolderSites)
+            PolderOpeningTime = lookupscalar(binding['TabPolderOpeningTime'], PolderSites)
             # Time step at which each polder is opened (regulated mode)
-            PolderReleaseTime = lookupscalar(
-                binding['TabPolderReleaseTime'], PolderSites)
+            PolderReleaseTime = lookupscalar(binding['TabPolderReleaseTime'], PolderSites)
             # Time step at which water stored in each polder is released back
             # to the channel (regulated mode)
 
             PolderOpeningTime = loadmap('PolderOpeningTime')
             PolderReleaseTime = loadmap('PolderReleaseTime')
-            UnregulatedFlag = ifthen(
-                (PolderOpeningTime == -9999) | (PolderReleaseTime == -9999), pcraster.nominal(1))
+            UnregulatedFlag = ifthen((PolderOpeningTime == -9999) | (PolderReleaseTime == -9999), pcraster.nominal(1))
             # Flag to indicate all polders that are unregulated
-            PolderLevel = PolderInitialLevelValue
+            PolderLevel = binding['PolderInitialLevelValue']
             # Initial polder level [m]
-            self.var.PolderStorageIniM3 = cover(
-                PolderLevel * PolderArea, scalar(0.0))
+            self.var.PolderStorageIniM3 = cover(PolderLevel * PolderArea, scalar(0.0))
             # Compute polder storage [m3]
             self.var.PolderStorageM3 = self.var.PolderStorageIniM3
             # Set to initial value
-            PolderCapacity = pcraster.max(
-                PolderTotalCapacity - PolderStorageM3, scalar(0.0))
+            PolderCapacity = pcraster.max(PolderTotalCapacity - self.var.PolderStorageM3, scalar(0.0))
             # Remaining storage capacity of polder [m3]
 
 #        else:

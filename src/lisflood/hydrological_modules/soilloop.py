@@ -14,6 +14,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
+from __future__ import absolute_import, print_function
+from nine import range
 
 from lisflood.global_modules.add1 import *
 
@@ -28,10 +30,6 @@ class soilloop(object):
 
     def __init__(self, soilloop_variable):
         self.var = soilloop_variable
-
-
-# --------------------------------------------------------------------------
-# --------------------------------------------------------------------------
 
     def dynamic(self, sLoop):
         """ dynamic part of the soil loop module
@@ -68,8 +66,6 @@ class soilloop(object):
         self.var.CumInterception[sLoop] += self.var.Interception[sLoop]
         # total interception in [mm] per timestep
 
-
-
         # ************************************************************
         # ***** EVAPORATION OF INTERCEPTED WATER *********************
         # ************************************************************
@@ -105,7 +101,6 @@ class soilloop(object):
             np.maximum(self.var.Rain + self.var.SnowMelt + self.var.LeafDrainage[sLoop] - self.var.Interception[sLoop], globals.inZero)
         # Water available for infiltration during this timestep [mm]
 
-
         # ************************************************************
         # ***** SOIL WATER STRESS ************************************
         # ************************************************************
@@ -126,17 +121,19 @@ class soilloop(object):
         WCrit1 = ((1 - p) * (self.var.WFC1[sLoop] - self.var.WWP1[sLoop])) + self.var.WWP1[sLoop]
         WCrit1a = ((1 - p) * (self.var.WFC1a[sLoop] - self.var.WWP1a[sLoop])) + self.var.WWP1a[sLoop]
         WCrit1b= ((1 - p) * (self.var.WFC1b[sLoop] - self.var.WWP1b[sLoop])) + self.var.WWP1b[sLoop]
-             # critical moisture amount ([mm] water slice) for all layers
-
+        # critical moisture amount ([mm] water slice) for all layers
+        settings = LisSettings.instance()
+        option = settings.options
         if option['wateruse']:
-            if sLoop==2:
+            if sLoop == 2:
                 self.var.WFilla = np.minimum(WCrit1a,self.var.WPF3a[2])
                 self.var.WFillb = np.minimum(WCrit1b,self.var.WPF3b[2])
                 # if water use is calculated, get the filling of the soil layer for either pF3 or WCrit1
                 # that is the amount of water the soil gets filled by water from irrigation
 
-      #  with np.errstate(invalid='ignore',divide='ignore'):
-           #  bc the divisor can have 0 -> this calculation is done first and raise a warning - zero encountered - even if it is catched afterwards
+        #  with np.errstate(invalid='ignore',divide='ignore'):
+        #  bc the divisor can have 0 -> this calculation is done first and raise a warning - zero encountered -
+        #  even if it is catched afterwards
         self.var.RWS[sLoop] = np.where((WCrit1 - self.var.WWP1[sLoop]) > 0, (self.var.W1[sLoop] - self.var.WWP1[sLoop]) / (WCrit1 - self.var.WWP1[sLoop]), 1.0)
 
         # Transpiration reduction factor (in case of water stress)
@@ -154,18 +151,14 @@ class soilloop(object):
         # ***** MAXIMUM TRANSPIRATION RATE ***************************
         # ************************************************************
         # Domain: permeable fraction of pixel only
-
         TranspirMax = self.var.CropCoef[sLoop] * self.var.ETRef * (1 - self.var.LAITerm[sLoop])
         # maximum transpiration rate ([mm] per timestep)
         # crop coefficient is mostly 1, except for excessively transpirating crops,
         # such as sugarcane and some forests (coniferous forests)
-
         self.var.TranspirMaxCorrected = np.maximum(TranspirMax - self.var.TaInterception[sLoop], globals.inZero)
         # subtract TaInterception from TranspirMax to ensure energy balance is respected
         # (maximize statement because TranspirMax and TaInterception are calculated from
         # reference surfaces with slightly diferent properties)
-
-
         # ************************************************************
         # ***** ACTUAL TRANSPIRATION RATE ****************************
         # ************************************************************
@@ -369,7 +362,7 @@ class soilloop(object):
         #NoSubS = int(mapmaximum(self.var.NoSubSteps))
         #NoSubS = self.var.NoSubSteps
 
-        for i in xrange(self.var.NoSubSteps):
+        for i in range(self.var.NoSubSteps):
             if i > 0:
                 KUnSat1a, KUnSat1b, KUnSat2 = self.unsaturatedConductivity(sLoop, (WTemp1a, WTemp1b, WTemp2)) # Unsaturated conductivity [mm/day]
             SeepTopToSubSubStepA = np.minimum(KUnSat1a * DtSub, CapacityLayer1)
@@ -505,8 +498,6 @@ class soilloop(object):
         # GwPercValue*DtDay)
         self.var.UZ[sLoop] = np.maximum(self.var.UZ[sLoop] - self.var.GwPercUZLZ[sLoop], globals.inZero)
         # (ground)water in upper response box [mm]
-
-
 
     def unsaturatedConductivity(self, fract, tmpW=None):
         """"""

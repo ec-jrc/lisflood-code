@@ -18,6 +18,7 @@ from __future__ import absolute_import
 
 from .add1 import *
 
+
 # CM: new-style class in Python 2.x
 class stateVar(object):
 
@@ -35,11 +36,15 @@ class stateVar(object):
     def dynamic(self):
         """ reporting of state variables in dynamic part
         """
+        settings = LisSettings.instance()
+        option = settings.options
+        filter_steps = settings.filter_steps
         try:
             EnKFset = option['EnKF']
         except:
             EnKFset = 0
-        if EnKFset and self.var.currentTimeStep() in FilterSteps:
+
+        if EnKFset and self.var.currentTimeStep() in filter_steps:
             sample = str(self.var.currentSampleNumber())
             dumpObject("StartDate", self.var.CalendarDayStart, sample)
             ## Snow
@@ -83,7 +88,7 @@ class stateVar(object):
             except:
                 foo = 0
 
-        dumpObject("cdfFlag", globals.cdfFlag, sample)
+            dumpObject("cdfFlag", globals.cdfFlag, sample)
 
     def resume(self):
 
@@ -107,6 +112,8 @@ class stateVar(object):
         self.var.UZ = loadObject("UZ", sample)
         self.var.LZ = loadObject("LZ", sample)
         ## Lakes
+        settings = LisSettings.instance()
+        option = settings.options
         if option['simulateLakes']:
             self.var.LakeStorageM3CC = loadObject("LakeStorageM3", sample)
             self.var.LakeOutflow = loadObject("LakeOutflow", sample)

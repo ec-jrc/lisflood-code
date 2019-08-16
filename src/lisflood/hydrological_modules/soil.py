@@ -51,18 +51,9 @@ class soil(object):
         # Soil properties for percentage of pixel area without forest, water ,
         # impervious soil
 
-        #np.seterr(invalid='ignore',divide='ignore')
-
-#        self.var.RiceFraction = loadmap('RiceFraction')
-#        self.var.ForestFraction = loadmap('ForestFraction')
-#        self.var.OtherFraction = loadmap('OtherFraction')
-#        self.var.IrrigationFraction = loadmap('IrrigationFraction')
-#        self.var.DirectRunoffFraction = loadmap('DirectRunoffFraction')
-#        self.var.WaterFraction = loadmap('WaterFraction')
-
         self.var.OtherFraction += self.var.RiceFraction
-           # for the moment rice is treated as other fraction	        if option['varfractionwater']:
-            # if the fraction of water varies then the other fraction are stored
+        # for the moment rice is treated as other fraction
+        # if the fraction of water varies then the other fraction are stored
         self.var.WaterFractionBase = self.var.WaterFraction.copy()
         self.var.OtherFractionBase = self.var.OtherFraction.copy()
         self.var.IrrigationFractionBase = self.var.IrrigationFraction.copy()
@@ -79,9 +70,9 @@ class soil(object):
 
         self.var.SoilDepth1a = defsoil('SoilDepth1','SoilDepth1Forest')
         self.var.SoilDepth1b = defsoil('SoilDepth2','SoilDepth2Forest')
-        self.var.SoilDepth2  = defsoil('SoilDepth3','SoilDepth3Forest')
+        self.var.SoilDepth2 = defsoil('SoilDepth3','SoilDepth3Forest')
 
-# ----------------- miscParameters ---------------------------
+        # ----------------- miscParameters ---------------------------
 
         self.var.CourantCrit = loadmap('CourantCrit')
         self.var.LeafDrainageK = np.minimum(self.var.DtDay * (1 / loadmap('LeafDrainageTimeConstant')), 1)
@@ -95,18 +86,16 @@ class soil(object):
         # to [mm] per time step
 
 
-# ************************************************************
-# ***** LAND USE RELATED MAPS ********************************
-# ************************************************************
+        # ************************************************************
+        # ***** LAND USE RELATED MAPS ********************************
+        # ************************************************************
 
         # using maps instead of table to be more sensitive to landuse change
         # Soil properties for percentage of pixel area without forest, water ,
         # impervious soil
-        #self.var.CropCoef = [loadmap('MapCropCoef'), loadmap('MapForestCropCoef')]
         self.var.CropCoef = defsoil('MapCropCoef','MapForestCropCoef','MapIrrigationCropCoef')
 
         # crop coefficients for each land use class
-
         self.var.CropGroupNumber = defsoil('MapCropGroupNumber','MapForestCropGroupNumber','MapIrrigationCropGroupNumber')
 
         # crop group numbers for soil water depletion factor
@@ -117,9 +106,9 @@ class soil(object):
         # self.var.NManningDirect=scalar(0.02)
 
 
-# ************************************************************
-# ***** MAPS DERIVED FROM SOIL TEXTURE AND SOIL DEPTH ********
-# ************************************************************
+        # ************************************************************
+        # ***** MAPS DERIVED FROM SOIL TEXTURE AND SOIL DEPTH ********
+        # ************************************************************
 
         # HYPRES Parameters for TopSoil:
 
@@ -171,13 +160,11 @@ class soil(object):
         # reported in the literature, which makes any comparison easier)
         # Inverse values computed once here for improved performance
         # (inverse of N and Alpha only needed if option simulatePF is used)
-
         # self.var.WS1=ThetaS1*self.var.SoilDepth1
         self.var.WS1a = [x * y for x, y in zip(ThetaS1a, self.var.SoilDepth1a)]
         self.var.WS1b = [x * y for x, y in zip(ThetaS1b, self.var.SoilDepth1b)]
         self.var.WS2 = [x * y for x, y in zip(ThetaS2, self.var.SoilDepth2)]
         self.var.WS1 = np.add(self.var.WS1a, self.var.WS1b)
-
         # self.var.WRes1=ThetaRes1*self.var.SoilDepth1
         self.var.WRes1a = [x * y for x, y in zip(ThetaRes1a, self.var.SoilDepth1a)]
         self.var.WRes1b = [x * y for x, y in zip(ThetaRes1b, self.var.SoilDepth1b)]
@@ -190,45 +177,36 @@ class soil(object):
         self.var.WS2WRes = [x - y for x, y in zip(self.var.WS2, self.var.WRes2)]
 
         # Express volume fractions in [mm] water slice
-
         # self.var.WFC1=self.var.WRes1+(self.var.WS1-self.var.WRes1)/((1+(GenuAlpha1*100)**GenuN1)**self.var.GenuM1)
-        self.var.WFC1a = map(lambda res, s, ga, gn, gm: res + (s - res) / ((1 + (ga * 100)
-                       ** gn) ** gm), self.var.WRes1a, self.var.WS1a, GenuAlpha1a, GenuN1a, self.var.GenuM1a)
-        self.var.WFC1b = map(lambda res, s, ga, gn, gm: res + (s - res) / ((1 + (ga * 100)
-                       ** gn) ** gm), self.var.WRes1b, self.var.WS1b, GenuAlpha1b, GenuN1b, self.var.GenuM1b)
+        self.var.WFC1a = map(lambda res, s, ga, gn, gm: res + (s - res) / ((1 + (ga * 100) ** gn) ** gm), self.var.WRes1a, self.var.WS1a, GenuAlpha1a, GenuN1a, self.var.GenuM1a)
+        self.var.WFC1b = map(lambda res, s, ga, gn, gm: res + (s - res) / ((1 + (ga * 100) ** gn) ** gm), self.var.WRes1b, self.var.WS1b, GenuAlpha1b, GenuN1b, self.var.GenuM1b)
         self.var.WFC1 = np.add(self.var.WFC1a, self.var.WFC1b)
-        self.var.WFC2 = map(lambda res, s, ga, gn, gm: res + (s - res) / ((1 + (ga * 100)
-                       ** gn) ** gm), self.var.WRes2, self.var.WS2, GenuAlpha2, GenuN2, self.var.GenuM2)
+        self.var.WFC2 = map(lambda res, s, ga, gn, gm: res + (s - res) / ((1 + (ga * 100) ** gn) ** gm), self.var.WRes2, self.var.WS2, GenuAlpha2, GenuN2, self.var.GenuM2)
         # Soil moisture at field capacity (pF2, 100 cm) [mm water slice]
         # Mualem equation (van Genuchten, 1980)
 
-        self.var.WPF3a = map(lambda res, s, ga, gn, gm: res + (s - res) / ((1 + (ga * 1000)
-                        ** gn) ** gm), self.var.WRes1a, self.var.WS1a, GenuAlpha1a, GenuN1a, self.var.GenuM1a)
-        self.var.WPF3b = map(lambda res, s, ga, gn, gm: res + (s - res) / ((1 + (ga * 1000)
-                        ** gn) ** gm), self.var.WRes1b, self.var.WS1b, GenuAlpha1b, GenuN1b, self.var.GenuM1b)
+        self.var.WPF3a = map(lambda res, s, ga, gn, gm: res + (s - res) / ((1 + (ga * 1000) ** gn) ** gm), self.var.WRes1a, self.var.WS1a, GenuAlpha1a, GenuN1a, self.var.GenuM1a)
+        self.var.WPF3b = map(lambda res, s, ga, gn, gm: res + (s - res) / ((1 + (ga * 1000) ** gn) ** gm), self.var.WRes1b, self.var.WS1b, GenuAlpha1b, GenuN1b, self.var.GenuM1b)
         self.var.WPF3 = np.add(self.var.WPF3a, self.var.WPF3b)
 
         # Soil moisture at field capacity (pF3, 1000 cm) [mm water slice]
         # Mualem equation (van Genuchten, 1980)        # self.var.WWP1=self.var.WRes1+(self.var.WS1-self.var.WRes1)/  ((1+(GenuAlpha1*(10**4.2))**GenuN1)**self.var.GenuM1)
-        self.var.WWP1a = map(lambda res, s, ga, gn, gm: res + (s - res) / ((1 + (ga * 15000)
-                       ** gn) ** gm), self.var.WRes1a, self.var.WS1a, GenuAlpha1a, GenuN1a, self.var.GenuM1a)
-        self.var.WWP1b = map(lambda res, s, ga, gn, gm: res + (s - res) / ((1 + (ga * 15000)
-                       ** gn) ** gm), self.var.WRes1b, self.var.WS1b, GenuAlpha1b, GenuN1b, self.var.GenuM1b)
+        self.var.WWP1a = map(lambda res, s, ga, gn, gm: res + (s - res) / ((1 + (ga * 15000) ** gn) ** gm), self.var.WRes1a, self.var.WS1a, GenuAlpha1a, GenuN1a, self.var.GenuM1a)
+        self.var.WWP1b = map(lambda res, s, ga, gn, gm: res + (s - res) / ((1 + (ga * 15000) ** gn) ** gm), self.var.WRes1b, self.var.WS1b, GenuAlpha1b, GenuN1b, self.var.GenuM1b)
         self.var.WWP1 = np.add(self.var.WWP1a, self.var.WWP1b)
-        self.var.WWP2 = map(lambda res, s, ga, gn, gm: res + (s - res) / ((1 + (ga * 15000)
-                       ** gn) ** gm), self.var.WRes2, self.var.WS2, GenuAlpha2, GenuN2, self.var.GenuM2)
+        self.var.WWP2 = map(lambda res, s, ga, gn, gm: res + (s - res) / ((1 + (ga * 15000) ** gn) ** gm), self.var.WRes2, self.var.WS2, GenuAlpha2, GenuN2, self.var.GenuM2)
         # Soil moisture at wilting point (pF4.2, 10**4.2 cm) in [mm] water slice
         # Mualem equation (van Genuchten, 1980)
 
         self.var.PoreSpaceNotZero1a = splitlanduse(np.bool8((self.var.SoilDepth1a[0] != 0) & (self.var.WS1a[0] != 0)),
-             np.bool8((self.var.SoilDepth1a[1] != 0) & (self.var.WS1a[1] != 0)),
-             np.bool8((self.var.SoilDepth1a[2] != 0) & (self.var.WS1a[2] != 0)))
+                                                   np.bool8((self.var.SoilDepth1a[1] != 0) & (self.var.WS1a[1] != 0)),
+                                                   np.bool8((self.var.SoilDepth1a[2] != 0) & (self.var.WS1a[2] != 0)))
         self.var.PoreSpaceNotZero1b = splitlanduse(np.bool8((self.var.SoilDepth1b[0] != 0) & (self.var.WS1b[0] != 0)),
-             np.bool8((self.var.SoilDepth1b[1] != 0) & (self.var.WS1b[1] != 0)),
-             np.bool8((self.var.SoilDepth1b[2] != 0) & (self.var.WS1b[2] != 0)))
+                                                   np.bool8((self.var.SoilDepth1b[1] != 0) & (self.var.WS1b[1] != 0)),
+                                                   np.bool8((self.var.SoilDepth1b[2] != 0) & (self.var.WS1b[2] != 0)))
         self.var.PoreSpaceNotZero2 = splitlanduse(np.bool8((self.var.SoilDepth2[0] != 0) & (self.var.WS2[0] != 0)),
-             np.bool8((self.var.SoilDepth2[1] != 0) & (self.var.WS2[1] != 0)),
-             np.bool8((self.var.SoilDepth2[2] != 0) & (self.var.WS2[2] != 0)))
+                                                  np.bool8((self.var.SoilDepth2[1] != 0) & (self.var.WS2[1] != 0)),
+                                                  np.bool8((self.var.SoilDepth2[2] != 0) & (self.var.WS2[2] != 0)))
 
 #        self.var.PoreSpaceNotZero1 = [np.bool8((self.var.SoilDepth1[0] != 0) & (self.var.WS1[0] != 0)),
 #            np.bool8((self.var.SoilDepth1[1] != 0) & (self.var.WS1[1] != 0))]
@@ -284,10 +262,10 @@ class soil(object):
         self.var.Sat2 = splitlanduse(globals.inZero.copy())
 
 
-# ************************************************************
-# ***** REPEATEDLY USED EXPRESSIONS IN XINANJIANG
-# ***** INFILTRATION MODEL
-# ************************************************************
+        # ************************************************************
+        # ***** REPEATEDLY USED EXPRESSIONS IN XINANJIANG
+        # ***** INFILTRATION MODEL
+        # ************************************************************
         self.var.b_Xinanjiang = loadmap('b_Xinanjiang')
         self.var.PowerInfPot = (self.var.b_Xinanjiang + 1) / self.var.b_Xinanjiang
         # Power in infiltration equation
@@ -298,16 +276,15 @@ class soil(object):
         # Maximum soil moisture storage in pervious fraction of
         # pixel (expressed as [mm] water slice)
 
-
-# ********************************************
-# ****  PowerPrefFlow
-# ********************************************
+        # ********************************************
+        # ****  PowerPrefFlow
+        # ********************************************
         self.var.PowerPrefFlow = loadmap('PowerPrefFlow')
 
-# ************************************************************
-# ***** INITIAL VALUES
-# ************************************************************
-# Inputs in waterbalance model and/or initial assumption
+        # ************************************************************
+        # ***** INITIAL VALUES
+        # ************************************************************
+        # Inputs in waterbalance model and/or initial assumption
         # CMmod
         # DSLRInit = defsoil('DSLRInitValue', 'DSLRForestInitValue','DSLRIrrigationInitValue')
 
@@ -319,12 +296,10 @@ class soil(object):
 
         # CumInterceptionInit=ifthen(defined(MaskMap),scalar(loadmap('CumIntInitValue')))
         self.var.CumInterception = defsoil('CumIntInitValue', 'CumIntForestInitValue', 'CumIntIrrigationInitValue')
-        #self.var.CumInterception = [CumInterceptionInit[0], CumInterceptionInit[1]]
         # initial cumulative interception, [mm]
 
         # Initialising cumulative output variables
         # These are all needed to compute the cumulative mass balance error
-
 
         self.var.TotalPrecipitation = globals.inZero.copy()
         # precipitation [mm]
@@ -340,12 +315,11 @@ class soil(object):
 
         self.var.Theta1a = splitlanduse(globals.inZero.copy())
         self.var.Theta1b = splitlanduse(globals.inZero.copy())
-        self.var.Theta2 =  splitlanduse(globals.inZero.copy())
+        self.var.Theta2 = splitlanduse(globals.inZero.copy())
 
         self.var.TaInterception = defsoil(globals.inZero.copy())
         self.var.Interception = defsoil(globals.inZero.copy())
         self.var.LeafDrainage = defsoil(globals.inZero.copy())
-
         self.var.Ta = splitlanduse(globals.inZero.copy())
         self.var.ESAct = splitlanduse(globals.inZero.copy())
         self.var.PrefFlow = splitlanduse(globals.inZero.copy())
@@ -358,16 +332,18 @@ class soil(object):
         self.var.AvailableWaterForInfiltration = splitlanduse(globals.inZero.copy())
         self.var.RWS = splitlanduse(globals.inZero.copy())
 
-
-# ************************************************************
-# ***** INITIALIZATION OF IMPERVIOUS SOIL     ****************
-# ************************************************************
+        # ************************************************************
+        # ***** INITIALIZATION OF IMPERVIOUS SOIL     ****************
+        # ************************************************************
 
         self.var.CumInterSealed = loadmap('CumIntSealedInitValue')
         # cumulative depression storage
         self.var.SMaxSealed = loadmap('SMaxSealed')
         # maximum depression storage for water on impervious surface
         # which is not immediately causing surface runoff  [mm]
+
+        settings = LisSettings.instance()
+        option = settings.options
 
         if option['drainedIrrigation']:
             self.var.DrainedFraction = loadmap('DrainedFraction')
@@ -400,14 +376,12 @@ class soil(object):
         # (no evaporation from direct runoff fraction)
         self.var.ESActCUM += self.var.ESActPixel
 
-
         self.var.PrefFlowPixel = self.var.deffraction(self.var.PrefFlow)
         # Pixel-average preferential flow in [mm] per timestep
         # (no preferential flow from direct runoff fraction)
         self.var.InfiltrationPixel = self.var.deffraction(self.var.Infiltration)
         # Pixel-average infiltration in [mm] per timestep
         # (no infiltration in direct runoff fraction)
-
 
         self.var.Theta[0] = self.var.OtherFraction * (self.var.W1a[0] + self.var.W1b[0] + self.var.W2[0]) / (
             self.var.SoilDepth1a[0] + self.var.SoilDepth1b[0] + self.var.SoilDepth2[0])

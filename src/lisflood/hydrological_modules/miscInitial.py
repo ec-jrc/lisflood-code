@@ -19,7 +19,7 @@ from lisflood.global_modules.add1 import *
 import xarray as xr
 from pyproj import Proj
 
-from lisflood.global_modules.utils import Calendar
+from lisflood.global_modules.settings import calendar
 
 
 def coordinatesLand(eastings_forcing, northings_forcing):
@@ -47,6 +47,9 @@ class miscInitial(object):
     def initial(self):
         """ initial part of the misc module
         """
+        settings = LisSettings.instance()
+        option = settings.options
+        binding = settings.binding
 
         if option['gridSizeUserDefined']:
 
@@ -130,7 +133,7 @@ class miscInitial(object):
         # ************************************************************
         # date of the first possible model run
         # computation of model steps is referred to CalendarStartDay
-        self.var.CalendarDayStart = Calendar(binding['CalendarDayStart'])
+        self.var.CalendarDayStart = calendar(binding['CalendarDayStart'], binding['calendar_type'])
         try:
             # number of time step or date of the state map to be used to initialize model run
             timestepInit.append(binding["timestepInit"])

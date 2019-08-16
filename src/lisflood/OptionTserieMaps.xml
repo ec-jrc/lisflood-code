@@ -507,8 +507,8 @@
         <setmap name="LZState" outputVar="LZ" unit="mm" end="" steps="repStateMaps" all="" restrictoption="nonInit"/>
         <setmap name="CumIntSealedState" outputVar="CumInterSealed" unit="mm" end="" steps="repStateMaps" all=""
                 restrictoption="nonInit"/>
-        <setmap name="DischargeMaps" outputVar="ChanQAvg" unit="m3/s" end="" steps="repStateMaps" all=""
-                restrictoption="nonInit"/>
+<!--        <setmap name="DischargeMaps" outputVar="ChanQAvg" unit="m3/s" end="" steps="repStateMaps" all=""-->
+<!--                restrictoption="nonInit"/>-->
         <setmap name="ChanQState" outputVar="ChanQ" unit="m3/s" end="" steps="repStateMaps" all=""
                 restrictoption="nonInit"/>
 

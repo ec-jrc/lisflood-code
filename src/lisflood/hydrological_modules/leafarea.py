@@ -54,7 +54,8 @@ class leafarea(object):
                 j += 1
             self.var.L1.append(j)
             # print i,self.L1[i],LAINr1[self.L1[i]]
-
+        settings = LisSettings.instance()
+        binding = settings.binding
         for i in xrange(36):
             LAIName = generateName(binding['LAIOtherMaps'], LAINr[i])
             self.var.LAIX[0][i] = loadLAI(binding['LAIOtherMaps'], LAIName, i)

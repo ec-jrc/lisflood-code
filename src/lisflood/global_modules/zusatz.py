@@ -14,16 +14,18 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
-from __future__ import print_function, absolute_import
-from nine import range, map
+from __future__ import print_function, absolute_import, unicode_literals
+
+from nine import range
 
 import xml.dom.minidom
 import datetime
 import time as xtime
 from netCDF4 import Dataset
 
-from lisflood.global_modules.settings import get_calendar_type
-from lisflood.global_modules.utils import LisfloodError, LisfloodFileError, Calendar, datetoInt
+from .decorators import counted
+from .settings import datetoint, LisSettings
+from .errors import LisfloodError, LisfloodFileError
 
 try:
     from netCDF4 import netcdftime
@@ -47,351 +49,343 @@ except:
 project_dir = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..'))
 
 
-def optionBinding(settingsfile, optionxml):
-    """ Read XML settings and options files 
-    
-    Read Settings.XML and Options.XML input files and return:
-    binding = key and value (filename or value)
-    option  = control of Lisflood to use certain subroutines
-    ReportSteps = maps are reported at these time steps
-    
-    :param settingsfile: path and name of Settings.xml
-    :param optionxml: path and name of Options.xml
-    :return: binding, option, ReportSteps (as global variables)
-    """
-    settings_path = os.path.normpath(os.path.abspath(os.path.dirname(settingsfile)))
-    optionSetting = {}
+# def optionBinding(settingsfile, optionxml):
+#     """ Read XML settings and options files
+#
+#     Read Settings.XML and Options.XML input files and return:
+#     binding = key and value (filename or value)
+#     option  = control of Lisflood to use certain subroutines
+#     ReportSteps = maps are reported at these time steps
+#
+#     :param settingsfile: path and name of Settings.xml
+#     :param optionxml: path and name of Options.xml
+#     :return: binding, option, ReportSteps (as global variables)
+#     """
+#     settings_path = os.path.normpath(os.path.abspath(os.path.dirname(settingsfile)))
+#     optionSetting = {}
+#
+#     # user defined path, parameters, calibration parameters, dates, ect from settingsxml
+#     # we add here some built-in user variables
+#     user = {
+#         'ProjectDir': project_dir, 'ProjectPath': project_dir,
+#         'SettingsDir': settings_path, 'SettingsPath': settings_path,
+#     }
+#     repTimeserie = {}
+#     repMaps = {}
+#
+#     # read xml optionxml i.e. OptionTserieMaps.xml file
+#     if not os.path.exists(optionxml):
+#         raise LisfloodFileError(optionxml, "Cannot find option file: " + optionxml)
+#
+#     try:
+#         #DOM object representing content of optionxml file
+#         domopt = xml.dom.minidom.parse(optionxml)
+#     except:
+#         msg = "Error using option file: " + optionxml
+#         raise LisfloodError(msg)
+#
+#     # read file settings (settingsfile)
+#     # FIXME ...?!?...
+#     try:
+#        f = open(settingsfile,'r')
+#        xmlstring1 = ""
+#        while 1:
+#           line = f.readline()
+#           if not line:break
+#           xmlstring1 += line
+#        f.close()
+#        xmlstring.append(xmlstring1)
+#     except:
+#         msg = "Cannot find settings file: " + settingsfile
+#         raise LisfloodFileError(settingsfile, msg)
+#
+#     try:
+#         # DOM object representing content of settings file
+#         dom = xml.dom.minidom.parse(settingsfile)
+#     except:
+#         msg = "Error using: " + settingsfile
+#         raise LisfloodError(msg)
+#
+#     # getting all posssible option from the general optionxml
+#     # and setting them to their default value
+#     # list of elements "lfoptions" in optionxml file
+#     optDef = domopt.getElementsByTagName("lfoptions")[0]
+#     for optset in optDef.getElementsByTagName("setoption"):
+#         option[optset.attributes['name'].value] = bool(
+#             int(optset.attributes['default'].value))
+#
+#     # getting option set in the specific settings file
+#     # and resetting them to their choice value
+#     # list of elements "lfoptions" in settings file
+#     optSet = dom.getElementsByTagName("lfoptions")[0]
+#     for optset in optSet.getElementsByTagName("setoption"):
+#         optionSetting[optset.attributes['name'].value] = bool(
+#             int(optset.attributes['choice'].value))
+#     for key in optionSetting.keys():
+#         # set the same value for corresponding keys, settings overwrites optionxml
+#         option[key] = optionSetting[key]
+#
+#     # reverse the initLisflood option to use it as a restriction for output
+#     # eg. produce output if not(initLisflood)
+#     option['nonInit'] = not(option['InitLisflood'])
+# # -----------------------------------------
+#
+#     # get all the bindings in the first part of the settingsfile = lfuser
+#     # list of elements "lfuser" in settings file
+#     lfuse = dom.getElementsByTagName("lfuser")[0]
+#     for userset in lfuse.getElementsByTagName("textvar"):
+#         user[userset.attributes['name'].value] = str(userset.attributes['value'].value)
+#
+#     # get all the binding in the last part of the settingsfile  = lfbinding
+#     # list of elements "lfbinding" in settings file
+#     bind = dom.getElementsByTagName("lfbinding")[0]
+#     for bindset in bind.getElementsByTagName("textvar"):
+#         binding[bindset.attributes['name'].value] = str(bindset.attributes['value'].value)
+#
+#     # replace/add the information from lfuser to lfbinding
+#     for i in binding.keys():
+#         expr = binding[i]
+#         while expr.find('$(') > -1:
+#             a1 = expr.find('$(')
+#             a2 = expr.find(')')
+#             try:
+#                 s2 = user[expr[a1 + 2:a2]]
+#             except KeyError:
+#                 print('no ', expr[a1 + 2:a2],'for',binding[i] ,' in lfuser defined')
+#             expr = expr.replace(expr[a1:a2 + 1], s2)
+#         binding[i] = expr
+#
+#     # if pathout has some placeholders, they are replace here
+#     pathout = user["PathOut"]
+#     while pathout.find('$(') > -1:
+#         a1 = pathout.find('$(')
+#         a2 = pathout.find(')')
+#         try:
+#             s2 = user[pathout[a1 + 2:a2]]
+#         except KeyError:
+#             print('no ', expr[a1 + 2:a2],'for',pathout,' in lfuser defined')
+#         pathout = pathout.replace(pathout[a1:a2 + 1], s2)
+#
+#     #CM: output folder
+#     outputDir.append(pathout)
+#     #outputDir.append(user["PathOut"])
+#
+#     # Read the calendar type from the precipitation forcing NetCDF file
+#     with Dataset(binding["PrecipitationMaps"] + ".nc") as nc:
+#         binding["calendar_type"] = get_calendar_type(nc)
+#
+# # ---------------------------------------------
+#     # Split the string ReportSteps into an int array
+#     # replace endtime with number
+#     # replace .. with sequence
+#
+#     try:
+#         repsteps = user['ReportSteps'].split(',')
+#     except:
+#         repsteps = 'endtime'
+#     if repsteps[-1] == 'endtime':
+#         repsteps[-1] = binding['StepEnd']
+#     jjj = []
+#     for i in repsteps:
+#         if '..' in i:
+#             j = list(map(int, i.split('..')))
+#             for jj in range(j[0], j[1] + 1):
+#                 jjj.append(jj)
+#         else:
+#             jjj.append(i)
+#     ReportSteps['rep'] = list(map(datetoInt, jjj))
+#     # maps are reported at these time steps
+#
+# # -----------------------------------------------
+#
+#     # Get output Directory from settings file
+#     try:
+#         nrCores.append(int(user["nrCores"]))
+#     except:
+#         nrCores.append(int(1))
+#
+# # -------------------------------------------
+#
+#     # Split the string FilterSteps into an int array
+#     # remove endtime if present
+#     # replace .. with sequence
+#
+#     try:
+#         filterSteps = user['FilterSteps'].split(',')
+#     except:
+#         filterSteps = int(0)
+#     #try:
+#     #    filterSteps = user['FilterSteps'].split(' ')
+#     #except:
+#     #    filterSteps = int(0)
+#     if filterSteps[-1] == 'endtime' or filterSteps[-1] == binding['StepEnd'] or filterSteps[-1] == binding['StepEnd']:
+#         filterSteps[-1] = int(0)
+#     for i in filterSteps:
+#         try:
+#             timeDif = datetime.datetime.strptime(i, "%d/%m/%Y") - datetime.datetime.strptime(binding['CalendarDayStart'], "%d/%m/%Y")
+#             val = int(timeDif.days)
+#         except:
+#             val = int(i)
+#         stependint = datetoInt(binding['StepEnd'])
+#         #if int(val) < int(binding['StepEnd']):
+#         if int(val) < stependint:
+#             try:
+#                 FilterSteps.append(int(i))
+#             except:
+#                 FilterSteps.append(int(timeDif.days))
+#     # maps are reported at these time steps
+#
+# #----------------------------------------------
+#
+#     # Number of Ensemble members for MonteCarlo or EnKF
+#     try:
+#         EnsMembers.append(int(user["EnsMembers"]))
+#     except:
+#         EnsMembers.append(int(1))
+#
+#     # Number of cores for MonteCarlo or EnKF
+#     try:
+#         nrCores.append(int(user["nrCores"]))
+#     except:
+#         nrCores.append(int(1))
+#
+# # -------------------------
+#     # running through all times series
+#     # list of elements "lftime" in optionxml file
+#     reportTimeSerie = domopt.getElementsByTagName("lftime")[0]
+#     for repTime in reportTimeSerie.getElementsByTagName("setserie"):
+#         d = {}
+#         for key in repTime.attributes.keys():
+#             if key != 'name':
+#                 value = repTime.attributes[key].value
+#                 d[key] = value.split(',')
+#         key = repTime.attributes['name'].value
+#         repTimeserie[key] = d
+#         repOpt = repTimeserie[key]['repoption']
+#         try:
+#             restOpt = repTimeserie[key]['restrictoption']
+#         except:
+#             # add restricted option if not in already
+#             repTimeserie[key]['restrictoption'] = ['']
+#             restOpt = repTimeserie[key]['restrictoption']
+#         try:
+#             test = repTimeserie[key]['operation']
+#         except:
+#             # add operation if not in already
+#             repTimeserie[key]['operation'] = ['']
+#
+#         # sort out if this option is not active
+#         # put in if one of this option is active
+#         for i in repOpt:
+#             for o1key in option.keys():
+#                 if option[o1key]:  # if option is active = 1
+#                     # print o1key, option[o1key],i
+#                     if o1key == i:
+#                         # option is active and time series has this option to select it
+#                         # now test if there is any restrictions
+#                         allow = True
+#                         for j in restOpt:
+#                             for o2key in option.keys():
+#                                 if o2key == j:
+#                                     # print o2key, option[o2key],j
+#                                     if not(option[o2key]):
+#                                         allow = False
+#                         if allow:
+#                             reportTimeSerieAct[key] = repTimeserie[key]
+#
+# # -------------------------
+#     # running through all maps
+#
+#     reportMap = domopt.getElementsByTagName("lfmaps")[0]
+#
+#     for repMap in reportMap.getElementsByTagName("setmap"):
+#         d = {}
+#         for key in repMap.attributes.keys():
+#             if key != 'name':
+#                 value = repMap.attributes[key].value
+#                 d[key] = value.split(',')
+#         key = repMap.attributes['name'].value
+#         repMaps[key] = d
+#         try:
+#             repAll = repMaps[key]['all']
+#         except:
+#             repMaps[key]['all'] = ['']
+#             repAll = ['']
+#         try:
+#             repSteps = repMaps[key]['steps']
+#         except:
+#             repMaps[key]['steps'] = ['']
+#             repSteps = ['']
+#         try:
+#             repEnd = repMaps[key]['end']
+#         except:
+#             repMaps[key]['end'] = ['']
+#             repEnd = ['']
+#         try:
+#             restOpt = repMaps[key]['restrictoption']
+#         except:
+#             # add restricted option if not in already
+#             repMaps[key]['restrictoption'] = ['']
+#             restOpt = repMaps[key]['restrictoption']
+#         try:
+#             repUnit = repMaps[key]['unit']
+#         except:
+#             repMaps[key]['unit'] = ['-']
+#         #  -------- All -----------------
+#         # sort out if this option is not active
+#         # put in if one of this option is active
+#         for i in repAll:
+#             # run through all the output option
+#             for o1key in option.keys():
+#                 # run through all the options
+#                 if option[o1key]:  # if option is active = 1
+#                     # print o1key, option[o1key],i
+#                     if o1key == i:
+#                         # option is active and time series has this option to select it
+#                         # now test if there is any restrictions
+#                         allow = True
+#                         for j in restOpt:
+#                             # running through all the restrictions
+#                             for o2key in option.keys():
+#                                 if (o2key == j) and (not(option[o2key])):
+#                                     allow = False
+#                         if allow:
+#                             reportMapsAll[key] = repMaps[key]
+#
+#         #  -------- Steps -----------------
+#         for i in repSteps:
+#             for o1key in option.keys():
+#                 if option[o1key]:  # if option is active = 1
+#                     if o1key == i:
+#                         allow = True
+#                         for j in restOpt:
+#                             for o2key in option.keys():
+#                                 if (o2key == j) and (not(option[o2key])):
+#                                     allow = False
+#                         if allow:
+#                             reportMapsSteps[key] = repMaps[key]
+#
+#         #  -------- End -----------------
+#         for i in repEnd:
+#             for o1key in option.keys():
+#                 if option[o1key]:  # if option is active = 1
+#                     if o1key == i:
+#                         allow = True
+#                         for j in restOpt:
+#                             for o2key in option.keys():
+#                                 if (o2key == j) and (not(option[o2key])):
+#                                     allow = False
+#                         if allow:
+#                             reportMapsEnd[key] = repMaps[key]
+#
+#     # return option,binding,ReportSteps
+#     # ???
+#     # return option,ReportSteps
+#     # ??
+#     # return ReportSteps
+#     # ?
+#     return
 
-    # user defined path, parameters, calibration parameters, dates, ect from settingsxml
-    # we add here some built-in user variables
-    user = {
-        'ProjectDir': project_dir, 'ProjectPath': project_dir,
-        'SettingsDir': settings_path, 'SettingsPath': settings_path,
-    }
-    repTimeserie = {}
-    repMaps = {}
-
-    # read xml optionxml i.e. OptionTserieMaps.xml file
-    if not os.path.exists(optionxml):
-        raise LisfloodFileError(optionxml, "Cannot find option file: " + optionxml)
-
-    try:
-        #DOM object representing content of optionxml file
-        domopt = xml.dom.minidom.parse(optionxml)
-    except:
-        msg = "Error using option file: " + optionxml
-        raise LisfloodError(msg)
-
-    # read file settings (settingsfile)
-    # FIXME ...?!?...
-    try:
-       f = open(settingsfile,'r')
-       xmlstring1 = ""
-       while 1:
-          line = f.readline()
-          if not line:break
-          xmlstring1 += line
-       f.close()
-       xmlstring.append(xmlstring1)
-    except:
-        msg = "Cannot find settings file: " + settingsfile
-        raise LisfloodFileError(settingsfile, msg)
-
-    try:
-        # DOM object representing content of settings file
-        dom = xml.dom.minidom.parse(settingsfile)
-    except:
-        msg = "Error using: " + settingsfile
-        raise LisfloodError(msg)
-
-    # getting all posssible option from the general optionxml
-    # and setting them to their default value
-    # list of elements "lfoptions" in optionxml file
-    optDef = domopt.getElementsByTagName("lfoptions")[0]
-    for optset in optDef.getElementsByTagName("setoption"):
-        option[optset.attributes['name'].value] = bool(
-            int(optset.attributes['default'].value))
-
-    # getting option set in the specific settings file
-    # and resetting them to their choice value
-    # list of elements "lfoptions" in settings file
-    optSet = dom.getElementsByTagName("lfoptions")[0]
-    for optset in optSet.getElementsByTagName("setoption"):
-        optionSetting[optset.attributes['name'].value] = bool(
-            int(optset.attributes['choice'].value))
-    for key in optionSetting.keys():
-        # set the same value for corresponding keys, settings overwrites optionxml
-        option[key] = optionSetting[key]
-
-    # reverse the initLisflood option to use it as a restriction for output
-    # eg. produce output if not(initLisflood)
-    option['nonInit'] = not(option['InitLisflood'])
-# -----------------------------------------
-
-    # get all the bindings in the first part of the settingsfile = lfuser
-    # list of elements "lfuser" in settings file
-    lfuse = dom.getElementsByTagName("lfuser")[0]
-    for userset in lfuse.getElementsByTagName("textvar"):
-        user[userset.attributes['name'].value] = str(userset.attributes['value'].value)
-
-    # get all the binding in the last part of the settingsfile  = lfbinding
-    # list of elements "lfbinding" in settings file
-    bind = dom.getElementsByTagName("lfbinding")[0]
-    for bindset in bind.getElementsByTagName("textvar"):
-        binding[bindset.attributes['name'].value] = str(bindset.attributes['value'].value)
-
-    # replace/add the information from lfuser to lfbinding
-    for i in binding.keys():
-        expr = binding[i]
-        while expr.find('$(') > -1:
-            a1 = expr.find('$(')
-            a2 = expr.find(')')
-            try:
-                s2 = user[expr[a1 + 2:a2]]
-            except KeyError:
-                print('no ', expr[a1 + 2:a2],'for',binding[i] ,' in lfuser defined')
-            expr = expr.replace(expr[a1:a2 + 1], s2)
-        binding[i] = expr
-
-    # if pathout has some placeholders, they are replace here
-    pathout = user["PathOut"]
-    while pathout.find('$(') > -1:
-        a1 = pathout.find('$(')
-        a2 = pathout.find(')')
-        try:
-            s2 = user[pathout[a1 + 2:a2]]
-        except KeyError:
-            print('no ', expr[a1 + 2:a2],'for',pathout,' in lfuser defined')
-        pathout = pathout.replace(pathout[a1:a2 + 1], s2)
-
-    #CM: output folder
-    outputDir.append(pathout)
-    #outputDir.append(user["PathOut"])
-
-    # Read the calendar type from the precipitation forcing NetCDF file
-    with Dataset(binding["PrecipitationMaps"] + ".nc") as nc:
-        binding["calendar_type"] = get_calendar_type(nc)
-
-# ---------------------------------------------
-    # Split the string ReportSteps into an int array
-    # replace endtime with number
-    # replace .. with sequence
-
-    try:
-        repsteps = user['ReportSteps'].split(',')
-    except:
-        repsteps = 'endtime'
-    if repsteps[-1] == 'endtime':
-        repsteps[-1] = binding['StepEnd']
-    jjj = []
-    for i in repsteps:
-        if '..' in i:
-            j = list(map(int, i.split('..')))
-            for jj in range(j[0], j[1] + 1):
-                jjj.append(jj)
-        else:
-            jjj.append(i)
-    ReportSteps['rep'] = list(map(datetoInt, jjj))
-    # maps are reported at these time steps
-
-# -----------------------------------------------
-
-    # Get output Directory from settings file
-    try:
-        nrCores.append(int(user["nrCores"]))
-    except:
-        nrCores.append(int(1))
-
-# -------------------------------------------
-
-    # Split the string FilterSteps into an int array
-    # remove endtime if present
-    # replace .. with sequence
-
-    try:
-        filterSteps = user['FilterSteps'].split(',')
-    except:
-        filterSteps = int(0)
-    #try:
-    #    filterSteps = user['FilterSteps'].split(' ')
-    #except:
-    #    filterSteps = int(0)
-    if filterSteps[-1] == 'endtime' or filterSteps[-1] == binding['StepEnd'] or filterSteps[-1] == binding['StepEnd']:
-        filterSteps[-1] = int(0)
-    for i in filterSteps:
-        try:
-            timeDif = datetime.datetime.strptime(i, "%d/%m/%Y") - datetime.datetime.strptime(binding['CalendarDayStart'], "%d/%m/%Y")
-            val = int(timeDif.days)
-        except:
-            val = int(i)
-        stependint = datetoInt(binding['StepEnd'])
-        #if int(val) < int(binding['StepEnd']):
-        if int(val) < stependint:
-            try:
-                FilterSteps.append(int(i))
-            except:
-                FilterSteps.append(int(timeDif.days))
-    # maps are reported at these time steps
-
-#----------------------------------------------
-
-    # Number of Ensemble members for MonteCarlo or EnKF
-    try:
-        EnsMembers.append(int(user["EnsMembers"]))
-    except:
-        EnsMembers.append(int(1))
-
-    # Number of cores for MonteCarlo or EnKF
-    try:
-        nrCores.append(int(user["nrCores"]))
-    except:
-        nrCores.append(int(1))
-
-# -------------------------
-    # running through all times series
-    # list of elements "lftime" in optionxml file
-    reportTimeSerie = domopt.getElementsByTagName("lftime")[0]
-    for repTime in reportTimeSerie.getElementsByTagName("setserie"):
-        d = {}
-        for key in repTime.attributes.keys():
-            if key != 'name':
-                value = repTime.attributes[key].value
-                d[key] = value.split(',')
-        key = repTime.attributes['name'].value
-        repTimeserie[key] = d
-        repOpt = repTimeserie[key]['repoption']
-        try:
-            restOpt = repTimeserie[key]['restrictoption']
-        except:
-            # add restricted option if not in already
-            repTimeserie[key]['restrictoption'] = ['']
-            restOpt = repTimeserie[key]['restrictoption']
-        try:
-            test = repTimeserie[key]['operation']
-        except:
-            # add operation if not in already
-            repTimeserie[key]['operation'] = ['']
-
-        # sort out if this option is not active
-        # put in if one of this option is active
-        for i in repOpt:
-            for o1key in option.keys():
-                if option[o1key]:  # if option is active = 1
-                    # print o1key, option[o1key],i
-                    if o1key == i:
-                        # option is active and time series has this option to select it
-                        # now test if there is any restrictions
-                        allow = True
-                        for j in restOpt:
-                            for o2key in option.keys():
-                                if o2key == j:
-                                    # print o2key, option[o2key],j
-                                    if not(option[o2key]):
-                                        allow = False
-                        if allow:
-                            reportTimeSerieAct[key] = repTimeserie[key]
-
-# -------------------------
-    # running through all maps
-
-    reportMap = domopt.getElementsByTagName("lfmaps")[0]
-
-    for repMap in reportMap.getElementsByTagName("setmap"):
-        d = {}
-        for key in repMap.attributes.keys():
-            if key != 'name':
-                value = repMap.attributes[key].value
-                d[key] = value.split(',')
-        key = repMap.attributes['name'].value
-        repMaps[key] = d
-        try:
-            repAll = repMaps[key]['all']
-        except:
-            repMaps[key]['all'] = ['']
-            repAll = ['']
-        try:
-            repSteps = repMaps[key]['steps']
-        except:
-            repMaps[key]['steps'] = ['']
-            repSteps = ['']
-        try:
-            repEnd = repMaps[key]['end']
-        except:
-            repMaps[key]['end'] = ['']
-            repEnd = ['']
-        try:
-            restOpt = repMaps[key]['restrictoption']
-        except:
-            # add restricted option if not in already
-            repMaps[key]['restrictoption'] = ['']
-            restOpt = repMaps[key]['restrictoption']
-        try:
-            repUnit = repMaps[key]['unit']
-        except:
-            repMaps[key]['unit'] = ['-']
-        #  -------- All -----------------
-        # sort out if this option is not active
-        # put in if one of this option is active
-        for i in repAll:
-            # run through all the output option
-            for o1key in option.keys():
-                # run through all the options
-                if option[o1key]:  # if option is active = 1
-                    # print o1key, option[o1key],i
-                    if o1key == i:
-                        # option is active and time series has this option to select it
-                        # now test if there is any restrictions
-                        allow = True
-                        for j in restOpt:
-                            # running through all the restrictions
-                            for o2key in option.keys():
-                                if (o2key == j) and (not(option[o2key])):
-                                    allow = False
-                        if allow:
-                            reportMapsAll[key] = repMaps[key]
-
-        #  -------- Steps -----------------
-        for i in repSteps:
-            for o1key in option.keys():
-                if option[o1key]:  # if option is active = 1
-                    if o1key == i:
-                        allow = True
-                        for j in restOpt:
-                            for o2key in option.keys():
-                                if (o2key == j) and (not(option[o2key])):
-                                    allow = False
-                        if allow:
-                            reportMapsSteps[key] = repMaps[key]
-
-        #  -------- End -----------------
-        for i in repEnd:
-            for o1key in option.keys():
-                if option[o1key]:  # if option is active = 1
-                    if o1key == i:
-                        allow = True
-                        for j in restOpt:
-                            for o2key in option.keys():
-                                if (o2key == j) and (not(option[o2key])):
-                                    allow = False
-                        if allow:
-                            reportMapsEnd[key] = repMaps[key]
-
-    # return option,binding,ReportSteps
-    # ???
-    # return option,ReportSteps
-    # ??
-    # return ReportSteps
-    # ?
-    return
-
-
-def counted(fn):
-    def wrapper(*args, **kwargs):
-        wrapper.called+= 1
-        return fn(*args, **kwargs)
-    wrapper.called= 0
-    wrapper.__name__= fn.__name__
-    return wrapper
 
 @counted
 def checkmap(name, value, map_to_check, flagmap, find):
@@ -461,39 +455,6 @@ def timemeasure(name,loops=0, update = False, sample = 1):
     return
 
 
-def checkifDate(start,end):
-    """ Check simulation start and end dates or timesteps
-    
-    Check simulation start and end dates/timesteps to be later than begin date (CalendarStartDay).
-    If dates are used for binding[start] and binding[end], it substitutes dates with time step numbers.
-    
-    :param start: start date for model run (# or date as string)
-    :param end: end date for model run (# or date as string)
-    :returns: modelSteps (modelSteps[0] = intStart 
-    modelSteps.append(intEnd)
-    """
-    # calendar date start (CalendarDayStart)
-    begin = Calendar(binding['CalendarDayStart'])
-
-    intStart,strStart = datetoInt(binding[start], True)
-    # overwrite date with time step
-    binding[start] = intStart
-    intEnd,strEnd = datetoInt(binding[end], True)
-    binding[end] = intEnd
-
-    # test if start and end > begin
-    if (intStart<0) or (intEnd<0) or ((intEnd-intStart)<0):
-        strBegin = begin.strftime("%d/%m/%Y %H:%M")
-        msg="Simulation start date and/or simulation end date are wrong or do not match CalendarStartDate!\n"+ \
-            "CalendarStartDay: "+strBegin +"\n" + \
-            "Simulation start: "+strStart + " - "+str(intStart)+"\n" + \
-            "Simulation end: "+strEnd + " - "+str(intEnd)
-        raise LisfloodError(msg)
-    modelSteps.append(intStart)
-    modelSteps.append(intEnd)
-    return
-
-
 class DynamicFramework(DynamicFramework):
     """
     Framework class for dynamic models.
@@ -512,28 +473,26 @@ class DynamicFramework(DynamicFramework):
         This method depends on the filter frameworks concept. Shouldn't its run
         method call _runSuspend()?
         """
+        settings = LisSettings.instance()
+        binding = settings.binding
         self._atStartOfScript()
-        if(hasattr(self._userModel(), "resume")):
-            #if self._userModel().firstTimeStep() == 1:
+        if hasattr(self._userModel(), "resume"):
+            # if self._userModel().firstTimeStep() == 1:
             # replaced this because starting date is not always the 1
-            if self._userModel().firstTimeStep() == datetoInt(binding['StepStart']):
-               self._runInitial()
+            if self._userModel().firstTimeStep() == datetoint(binding['StepStart'])[0]:
+                self._runInitial()
             else:
-               self._runResume()
+                self._runResume()
         else:
             self._runInitial()
 
         self._runDynamic()
 
         # Only execute this section while running filter frameworks.
-        if hasattr(self._userModel(), "suspend") and \
-        hasattr(self._userModel(), "filterPeriod"):
-          self._runSuspend()
+        if hasattr(self._userModel(), "suspend") and hasattr(self._userModel(), "filterPeriod"):
+            self._runSuspend()
 
         return 0
-
-
-
 
     """Adjusting the def _atStartOfTimeStep defined in DynamicFramework
        for a real quiet output
@@ -554,26 +513,26 @@ class DynamicFramework(DynamicFramework):
 
 
 class EnsKalmanFilterFramework(EnsKalmanFilterFramework):
-  """
-   Framework for particle filter runs
-   Updated by zusatz
-  """
-  def _startEndOfPeriod(self, currentPeriod, lastPeriod):
-    # determine start end end timestep of current period
-    if currentPeriod == 0:
-      #startTimestep = 1  # use first timestep instead of hardcode 1
-      startTimestep = self._userModel().firstTimeStep()
+    """
+    Framework for particle filter runs
+    Updated by zusatz
+    """
+    def _startEndOfPeriod(self, currentPeriod, lastPeriod):
+        # determine start end end timestep of current period
+        if currentPeriod == 0:
+          #startTimestep = 1  # use first timestep instead of hardcode 1
+          startTimestep = self._userModel().firstTimeStep()
 
-      endTimestep = self._userModel()._d_filterTimesteps[currentPeriod]
-    elif currentPeriod == lastPeriod:
-      startTimestep = self._userModel()._d_filterTimesteps[currentPeriod -1] + 1
-      endTimestep = self._d_totalTimesteps
-    else:
-      startTimestep = self._userModel()._d_filterTimesteps[currentPeriod - 1] + 1
-      endTimestep = self._userModel()._d_filterTimesteps[currentPeriod]
+          endTimestep = self._userModel()._d_filterTimesteps[currentPeriod]
+        elif currentPeriod == lastPeriod:
+          startTimestep = self._userModel()._d_filterTimesteps[currentPeriod -1] + 1
+          endTimestep = self._d_totalTimesteps
+        else:
+          startTimestep = self._userModel()._d_filterTimesteps[currentPeriod - 1] + 1
+          endTimestep = self._userModel()._d_filterTimesteps[currentPeriod]
 
-    assert startTimestep <= endTimestep
-    return startTimestep, endTimestep
+        assert startTimestep <= endTimestep
+        return startTimestep, endTimestep
 
 
 class TimeoutputTimeseries(TimeoutputTimeseries):
@@ -627,25 +586,23 @@ class TimeoutputTimeseries(TimeoutputTimeseries):
         writing timeseries to disk
         """
         #
-        outputFilename =  self._configureOutputFilename(self._outputFilename)
-        a= option['EnKF']
-        outputFile = None
+        option = LisSettings.instance().options
+        outputFilename = self._configureOutputFilename(self._outputFilename)
         if option['EnKF']:
-            if os.path.exists(outputFilename) == False:
-               if self._writeHeader == True:
-                  self._writeFileHeader(outputFilename)
-                  outputFile = open(outputFilename, "a")
-               else:
-                  outputFile = open(outputFilename, "w")
+            if not os.path.exists(outputFilename):
+                if self._writeHeader:
+                   self._writeFileHeader(outputFilename)
+                   outputFile = open(outputFilename, "a")
+                else:
+                   outputFile = open(outputFilename, "w")
             else:
-                outputFile = open(outputFilename, "a")
+                 outputFile = open(outputFilename, "a")
         else:
-            if self._writeHeader == True:
+            if self._writeHeader:
                   self._writeFileHeader(outputFilename)
                   outputFile = open(outputFilename, "a")
             else:
                   outputFile = open(outputFilename, "w")
-
 
         assert outputFile
 
@@ -681,9 +638,9 @@ class TimeoutputTimeseries(TimeoutputTimeseries):
         """
 
         if not isinstance(tssFilename, str):
-            raise Exception(
-                "timeseries output filename must be of type string")
-
+            raise ValueError("timeseries output filename must be of type string. Found {} of type {}".format(tssFilename, type(tssFilename)))
+        settings = LisSettings.instance()
+        binding = settings.binding
         self._outputFilename = tssFilename
         self._maxId = 1
         self._ncodesId = 1
@@ -699,19 +656,13 @@ class TimeoutputTimeseries(TimeoutputTimeseries):
         if isinstance(idMap, str) or isinstance(idMap, pcraster._pcraster.Field):
             _idMap = True
 
-        #nrRows = 10000 - self._userModel.firstTimeStep() + 1
-        #nrRows = self._userModel.nrTimeSteps() - self._userModel.firstTimeStep() + 1
-
         # if header reserve rows from 1 to endstep
         # if noheader only from startstep - endstep
-        #if noHeader:
-        #    nrRows = int(binding['StepEnd']) - int(binding['StepStart']) - self._userModel.firstTimeStep() + 2
-        #else: nrRows = int(binding['StepEnd']) - int(binding['StepStart']) - self._userModel.firstTimeStep() + 2
+
         if noHeader:
-            nrRows = datetoInt(binding['StepEnd']) - datetoInt(binding['StepStart']) - self._userModel.firstTimeStep() + 2
-        else: nrRows = datetoInt(binding['StepEnd']) - datetoInt(binding['StepStart']) - self._userModel.firstTimeStep() + 2
-
-
+            nrRows = datetoint(binding['StepEnd'])[0] - datetoint(binding['StepStart'])[0] - self._userModel.firstTimeStep() + 2
+        else:
+            nrRows = datetoint(binding['StepEnd'])[0] - datetoint(binding['StepStart'])[0] - self._userModel.firstTimeStep() + 2
 
         if _idMap:
             self._spatialId = idMap
@@ -738,7 +689,7 @@ class TimeoutputTimeseries(TimeoutputTimeseries):
                 # get number of outlets points
                 self._ncodesId = len(codesId)
                 # prepare array to store outlets codes
-                self._codesId = [-9999 for i in xrange(self._ncodesId)]
+                self._codesId = [-9999 for i in range(self._ncodesId)]
 
             else:
                 self._maxId = 1
@@ -750,13 +701,11 @@ class TimeoutputTimeseries(TimeoutputTimeseries):
             # #self._sampleAddresses = []
             # for cellId in range(1, self._maxId + 1):
             # self._sampleAddresses.append(self._getIndex(cellId))
-
-
             # prepare array to store outlets points raster numbers
-            self._sampleAddresses = [-9999 for i in xrange(self._ncodesId)]
+            self._sampleAddresses = [-9999 for i in range(self._ncodesId)]
             # init with the left/top cell - could also be 0 but then you have to catch it in
             # the sample routine and put an exeption in
-           # number of cells in map
+            # number of cells in map
             nrCells = pcraster.clone().nrRows() * pcraster.clone().nrCols()
             for cell in xrange(1, nrCells + 1):
                 if (pcraster.cellvalue(self._spatialId, cell)[1]):
@@ -792,7 +741,6 @@ class TimeoutputTimeseries(TimeoutputTimeseries):
         return value
 
 
-
 #####################################################################################################################
 # TOOLS TO OPEN/READ INPUT FILES ITERATIVELY, IN CASE OF NETWORK TEMPORARILY DOWN
 #####################################################################################################################
@@ -825,9 +773,10 @@ def remoteInputAccess(function, file_path, error_msg):
     bad_sep = "/" if operating_system() == "Windows" else "\\"
     file_path = file_path.replace(bad_sep, os.path.sep)
     root = os.path.sep.join(file_path.split(os.path.sep)[:4])
+
     while num_trials <= MAX_READ_TRIALS:
         try:
-            obj = function(file_path)
+            obj = function(str(file_path))
             if num_trials > 1:
                 print("File {0} succesfully accessed after {1} attempts".format(file_path, num_trials))
             num_trials = MAX_READ_TRIALS + 1

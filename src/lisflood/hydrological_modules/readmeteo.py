@@ -14,8 +14,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
+from __future__ import print_function, absolute_import
 
-from lisflood.global_modules.add1 import *
+from ..global_modules.add1 import *
 
 
 class readmeteo(object):
@@ -28,15 +29,15 @@ class readmeteo(object):
 
     def __init__(self, readmeteo_variable):
         self.var = readmeteo_variable
-
+        settings = LisSettings.instance()
+        option = settings.options
+        binding = settings.binding
         if option['readNetcdfStack']:
             # checking if time period in netCDF files (forcings) includes simulation period
             checknetcdf(binding['PrecipitationMaps'], binding['StepStart'], binding['StepEnd'] )
             checknetcdf(binding['TavgMaps'], binding['StepStart'], binding['StepEnd'] )
             checknetcdf(binding['ET0Maps'], binding['StepStart'], binding['StepEnd'] )
-         #   checknetcdf(binding['ES0Maps'], binding['StepStart'], binding['StepEnd'] )
             checknetcdf(binding['E0Maps'], binding['StepStart'], binding['StepEnd'] )
-
 
 # --------------------------------------------------------------------------
 # --------------------------------------------------------------------------
@@ -45,7 +46,9 @@ class readmeteo(object):
         """ dynamic part of the readmeteo module
             read meteo input maps
         """
-
+        settings = LisSettings.instance()
+        option = settings.options
+        binding = settings.binding
 
         # ************************************************************
         # ***** READ METEOROLOGICAL DATA *****************************

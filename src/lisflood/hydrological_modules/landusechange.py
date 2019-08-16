@@ -14,8 +14,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
+from __future__ import absolute_import, print_function
 
 from lisflood.global_modules.add1 import *
+
 
 class landusechange(object):
 
@@ -53,14 +55,16 @@ class landusechange(object):
     def dynamic(self):
         """dynamic part of the landusechange module
         """
+        settings = LisSettings.instance()
+        option = settings.options
+        binding = settings.binding
 
-        if option['TransientLandUseChange']:
-            if option['readNetcdfStack']:
-                self.var.ForestFraction = readnetcdf(binding['ForestFractionMaps'], self.var.currentTimeStep(),timestampflag='closest')
-                self.var.DirectRunoffFraction = readnetcdf(binding['DirectRunoffFractionMaps'], self.var.currentTimeStep(),timestampflag='closest')
-                self.var.WaterFraction = readnetcdf(binding['WaterFractionMaps'], self.var.currentTimeStep(),timestampflag='closest')
-                self.var.IrrigationFraction = readnetcdf(binding['IrrigationFractionMaps'], self.var.currentTimeStep(),timestampflag='closest')
-                self.var.RiceFraction = readnetcdf(binding['RiceFractionMaps'], self.var.currentTimeStep(),timestampflag='closest')
-                self.var.OtherFraction = readnetcdf(binding['OtherFractionMaps'], self.var.currentTimeStep(),timestampflag='closest')
+        if option['TransientLandUseChange'] and option['readNetcdfStack']:
+            self.var.ForestFraction = readnetcdf(binding['ForestFractionMaps'], self.var.currentTimeStep(),timestampflag='closest')
+            self.var.DirectRunoffFraction = readnetcdf(binding['DirectRunoffFractionMaps'], self.var.currentTimeStep(),timestampflag='closest')
+            self.var.WaterFraction = readnetcdf(binding['WaterFractionMaps'], self.var.currentTimeStep(),timestampflag='closest')
+            self.var.IrrigationFraction = readnetcdf(binding['IrrigationFractionMaps'], self.var.currentTimeStep(),timestampflag='closest')
+            self.var.RiceFraction = readnetcdf(binding['RiceFractionMaps'], self.var.currentTimeStep(),timestampflag='closest')
+            self.var.OtherFraction = readnetcdf(binding['OtherFractionMaps'], self.var.currentTimeStep(),timestampflag='closest')
 
-                self.var.Test = self.var.RiceFraction*1.0
+            self.var.Test = self.var.RiceFraction*1.0

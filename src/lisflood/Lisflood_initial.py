@@ -16,40 +16,35 @@ See the Licence for the specific language governing permissions and limitations 
 """
 from __future__ import print_function, absolute_import
 
-from lisflood.hydrological_modules.miscInitial import *
+from .hydrological_modules.miscInitial import *
 
-from lisflood.hydrological_modules.readmeteo import *
-from lisflood.hydrological_modules.leafarea import *
-from lisflood.hydrological_modules.inflow import *
-from lisflood.hydrological_modules.landusechange import *
-from lisflood.hydrological_modules.snow import *
-from lisflood.hydrological_modules.frost import *
-from lisflood.hydrological_modules.soil import *
-from lisflood.hydrological_modules.routing import *
-from lisflood.hydrological_modules.groundwater import *
-from lisflood.hydrological_modules.surface_routing import *
-from lisflood.hydrological_modules.reservoir import *
-from lisflood.hydrological_modules.lakes import *
-from lisflood.hydrological_modules.polder import *
-#from lisflood.hydrological_modules.wateruse import *
-from lisflood.hydrological_modules.waterabstraction import *
-from lisflood.hydrological_modules.indicatorcalc import *
-
-from lisflood.hydrological_modules.riceirrigation import *
-
-from lisflood.hydrological_modules.evapowater import *
-from lisflood.hydrological_modules.transmission import *
-
-from lisflood.hydrological_modules.soilloop import *
-from lisflood.hydrological_modules.opensealed import *
-from lisflood.hydrological_modules.waterbalance import *
-from lisflood.hydrological_modules.waterlevel import *
-from lisflood.hydrological_modules.structures import *
+from .hydrological_modules.readmeteo import *
+from .hydrological_modules.leafarea import *
+from .hydrological_modules.landusechange import *
+from .hydrological_modules.snow import *
+from .hydrological_modules.frost import *
+from .hydrological_modules.soil import *
+from .hydrological_modules.routing import *
+from .hydrological_modules.groundwater import *
+from .hydrological_modules.surface_routing import *
+from .hydrological_modules.reservoir import *
+from .hydrological_modules.lakes import *
+from .hydrological_modules.polder import *
+from .hydrological_modules.waterabstraction import *
+from .hydrological_modules.indicatorcalc import *
+from .hydrological_modules.riceirrigation import *
+from .hydrological_modules.evapowater import *
+from .hydrological_modules.transmission import *
+from .hydrological_modules.soilloop import *
+from .hydrological_modules.opensealed import *
+from .hydrological_modules.waterbalance import *
+from .hydrological_modules.waterlevel import *
+from .hydrological_modules.structures import *
 
 from .global_modules.output import *
 from .global_modules.stateVar import *
 
-# --------------------------------------------
+
 class LisfloodModel_ini(DynamicModel):
 
     """ LISFLOOD initial part
@@ -67,6 +62,11 @@ class LisfloodModel_ini(DynamicModel):
 
         # try to make the maskmap more flexible e.g. col, row,x1,y1  or x1,x2,y1,y2
         self.MaskMap = loadsetclone('MaskMap')
+        settings = LisSettings.instance()
+        binding = settings.binding
+        option = settings.options
+        flags = settings.flags
+        report_steps = settings.report_steps
 
         if option['readNetcdfStack']:
             # get the extent of the maps from the precipitation input maps
@@ -123,7 +123,7 @@ class LisfloodModel_ini(DynamicModel):
         MMaskMap = self.MaskMap
         # for checking maps
 
-        self.ReportSteps = ReportSteps['rep']
+        self.ReportSteps = report_steps['rep']
 
         self.landusechange_module.initial()
 
@@ -166,7 +166,7 @@ class LisfloodModel_ini(DynamicModel):
 
 
         # debug start
-        if Flags['debug']:
+        if flags['debug']:
             # Print value of variables after initialization (from state files)
             nomefile = 'Debug_init_'+str(self.currentStep+1)+'.txt'
             ftemp1 = open(nomefile, 'w+')
@@ -179,8 +179,6 @@ class LisfloodModel_ini(DynamicModel):
                     print(i, self.TotalCrossSectionArea[i], self.ChanM3[i], file=ftemp1)
 
             ftemp1.close()
-
-
 
 
 # ====== INITIAL ================================
