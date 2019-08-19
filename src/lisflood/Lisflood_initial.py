@@ -78,7 +78,8 @@ class LisfloodModel_ini(DynamicModel):
         if option['writeNetcdfStack'] or option['writeNetcdf']:
             # if NetCDF is writen, the pr.nc is read to get the metadata
             # like projection
-            metaNetCDF()
+            _ = NetCDFMetadata()  # init meta netcdf
+            # metaNetCDF()
 
         # ----------------------------------------
 

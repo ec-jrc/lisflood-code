@@ -18,6 +18,7 @@ from __future__ import print_function, absolute_import
 
 from bisect import bisect_left
 
+from nine import iteritems
 from pcraster._pcraster import Scalar
 
 from netCDF4 import num2date, date2num
@@ -25,7 +26,8 @@ from netCDF4 import num2date, date2num
 # import time as xtime
 # import os
 from . import globals
-from .settings import calendar_inconsistency_warning, get_calendar_type, calendar, MaskInfo, MaskAttrs, CutMap
+from .settings import calendar_inconsistency_warning, get_calendar_type, calendar, MaskInfo, MaskAttrs, CutMap, \
+    NetCDFMetadata
 from .errors import LisfloodWarning
 from .zusatz import *
 
@@ -86,33 +88,33 @@ def valuecell(mask, coordx, coordstr):
     return map
 
 
-def metaNetCDF():
-    """ Get metadata information from netcdf map.
-    
-    metaNetCDF gets metadata information from netCDF template file. Name and path of template file are stored
-    in settings.xml file using key "netCDFtemplate". If template file is not available, information is read
-    from "E0Maps".
-    
-    :return: metadataNCDF as global dictionary
-    """
-    settings = LisSettings.instance()
-    binding = settings.binding
-    try:
-        # using ncdftemplate
-        filename = os.path.splitext(binding['netCDFtemplate'])[0] + '.nc'
-        nf1 = iterOpenNetcdf(filename, "", 'r')
-        for var in nf1.variables:
-           metadataNCDF[var] = {k: v for k, v in nf1.variables[var].__dict__.iteritems() if k !='_FillValue'}
-        nf1.close()
-        return
-    except:
-        pass
-    # if no template .nc is given the e.nc file is used
-    filename = os.path.splitext(binding['E0Maps'])[0] + '.nc'
-    nf1 = iterOpenNetcdf(filename, "Trying to get metadata from netcdf \n", 'r')
-    for var in nf1.variables:
-       metadataNCDF[var] = {k: v for k, v in nf1.variables[var].__dict__.iteritems() if k !='_FillValue'}
-    nf1.close()
+# def metaNetCDF():
+#     """ Get metadata information from netcdf map.
+#
+#     metaNetCDF gets metadata information from netCDF template file. Name and path of template file are stored
+#     in settings.xml file using key "netCDFtemplate". If template file is not available, information is read
+#     from "E0Maps".
+#
+#     :return: metadataNCDF as global dictionary
+#     """
+#     settings = LisSettings.instance()
+#     binding = settings.binding
+#     try:
+#         # using ncdftemplate
+#         filename = os.path.splitext(binding['netCDFtemplate'])[0] + '.nc'
+#         nf1 = iterOpenNetcdf(filename, "Trying to get metadata from netcdf template \n", 'r')
+#         for var in nf1.variables:
+#            metadataNCDF[var] = {k: v for k, v in iteritems(nf1.variables[var].__dict__) if k != '_FillValue'}
+#         nf1.close()
+#         return
+#     except (KeyError, IOError, IndexError, Exception):
+#         pass
+#     # if no template .nc is given the e.nc file is used
+#     filename = os.path.splitext(binding['E0Maps'])[0] + '.nc'
+#     nf1 = iterOpenNetcdf(filename, "Trying to get metadata from E0 maps \n", 'r')
+#     for var in nf1.variables:
+#        metadataNCDF[var] = {k: v for k, v in iteritems(nf1.variables[var].__dict__) if k != '_FillValue'}
+#     nf1.close()
 
 
 def mapattrNetCDF(name):
@@ -346,28 +348,28 @@ def loadmap(name, pcr=False, lddflag=False, timestampflag='exact', averageyearfl
         nf1 = iterOpenNetcdf(filename, "", 'r')
         value = nf1.variables.items()[-1][0]
         # get the last variable name (it must be the variable to be read by Lisflood)
-        if not timestepInit:
-            # if timestepInit is missing, read netcdf as single static map
+        if not settings.timestep_init:
+            # if timestep_init is missing, read netcdf as single static map
             mapnp = nf1.variables[value][cut2:cut3, cut0:cut1]
         else:
             if 'time' in nf1.variables:
-                #read a netcdf  (stack) - state files
-                #get information from netCDF stack
+                # read a netcdf  (stack) - state files
+                # get information from netCDF stack
                 t_steps = nf1.variables['time'][:]  # get values for timesteps ([  0.,  24.,  48.,  72.,  96.])
                 t_unit = nf1.variables['time'].units  # get unit (u'hours since 2015-01-01 06:00:00')
                 t_cal = get_calendar_type(nf1)
-                #get year from time unit in case average year is used
+                # get year from time unit in case average year is used
                 if averageyearflag:
-                    #get date of the first step in netCDF file containing average year values
+                    # get date of the first step in netCDF file containing average year values
                     first_date = num2date(t_steps[0],t_unit,t_cal)
-                    #get year of the first step in netCDF file containing average year values
+                    # get year of the first step in netCDF file containing average year values
                     t_ref_year = first_date.year
 
-                #select timestep to use for reading from netCDF stack based on timestepInit (state file time step)
-                timestepI = calendar(timestepInit[0], binding['calendar_type'])
+                # select timestep to use for reading from netCDF stack based on timestep_init (state file time step)
+                timestepI = calendar(settings.timestep_init, binding['calendar_type'])
                 if type(timestepI) is datetime.datetime:
                     #reading dates in XML settings file
-                    #get step id number in netCDF stack for timestepInit date
+                    # get step id number in netCDF stack for timestepInit date
                     if averageyearflag:
                         #if using an average year don't care about the year in timestepIDate and change it to the netCDF first time step year
                         try:
@@ -410,7 +412,7 @@ def loadmap(name, pcr=False, lddflag=False, timestampflag='exact', averageyearfl
                         timestepI = timestepInew
 
                 itime = np.where(nf1.variables['time'][:] == timestepI)[0][0]
-                mapnp = nf1.variables[value][itime,cut2:cut3, cut0:cut1]
+                mapnp = nf1.variables[value][itime, cut2:cut3, cut0:cut1]
             else:
                 # read a netcdf (single one)
                 mapnp = nf1.variables[value][cut2:cut3, cut0:cut1]
@@ -821,44 +823,45 @@ def writenet(flag, inputmap, netfile, DtDay,
         nf1.Conventions = 'CF-1.6'
         # Dimension
         not_valid_attrs = ('_FillValue', )
-        if 'x' in metadataNCDF.keys():
+        meta_netcdf = NetCDFMetadata.instance()
+        if 'x' in meta_netcdf.data:
             lon = nf1.createDimension('x', col)  # x 1000
             longitude = nf1.createVariable('x', 'f8', ('x',))
-            valid_attrs = [i for i in metadataNCDF['x'] if i not in not_valid_attrs]
+            valid_attrs = [i for i in meta_netcdf.data['x'] if i not in not_valid_attrs]
             for i in valid_attrs:
-                exec('%s="%s"') % ("longitude." + i, metadataNCDF['x'][i])
+                exec('%s="%s"') % ("longitude." + i, meta_netcdf.data['x'][i])
 
-        if 'lon' in metadataNCDF.keys():
+        if 'lon' in meta_netcdf.data:
             lon = nf1.createDimension('lon', col)
             longitude = nf1.createVariable('lon', 'f8', ('lon',))
-            valid_attrs = [i for i in metadataNCDF['lon'] if i not in not_valid_attrs]
+            valid_attrs = [i for i in meta_netcdf.data['lon'] if i not in not_valid_attrs]
             for i in valid_attrs:
-                exec('%s="%s"') % ("longitude." + i, metadataNCDF['lon'][i])
+                exec('%s="%s"') % ("longitude." + i, meta_netcdf.data['lon'][i])
 
-        if 'y' in metadataNCDF.keys():
+        if 'y' in meta_netcdf.data:
             lat = nf1.createDimension('y', row)  # x 950
             latitude = nf1.createVariable('y', 'f8', ('y',))
-            valid_attrs = [i for i in metadataNCDF['y'] if i not in not_valid_attrs]
+            valid_attrs = [i for i in meta_netcdf.data['y'] if i not in not_valid_attrs]
             for i in valid_attrs:
-                exec('%s="%s"') % ("latitude." + i, metadataNCDF['y'][i])
+                exec('%s="%s"') % ("latitude." + i, meta_netcdf.data['y'][i])
 
-        if 'lat' in metadataNCDF.keys():
+        if 'lat' in meta_netcdf.data:
             lat = nf1.createDimension('lat', row)  # x 950
             latitude = nf1.createVariable('lat', 'f8', ('lat',))
-            valid_attrs = [i for i in metadataNCDF['lat'] if i not in not_valid_attrs]
+            valid_attrs = [i for i in meta_netcdf.data['lat'] if i not in not_valid_attrs]
             for i in valid_attrs:
-                exec('%s="%s"') % ("latitude." + i, metadataNCDF['lat'][i])
+                exec('%s="%s"') % ("latitude." + i, meta_netcdf.data['lat'][i])
 
         # projection
-        if 'laea' in metadataNCDF.keys():
+        if 'laea' in meta_netcdf.data:
             proj = nf1.createVariable('laea', 'i4')
-            for i in metadataNCDF['laea']:
-                exec('%s="%s"') % ("proj." + i, metadataNCDF['laea'][i])
+            for i in meta_netcdf.data['laea']:
+                exec('%s="%s"') % ("proj." + i, meta_netcdf.data['laea'][i])
 
-        if 'lambert_azimuthal_equal_area' in metadataNCDF.keys():
+        if 'lambert_azimuthal_equal_area' in meta_netcdf.data:
             proj = nf1.createVariable('lambert_azimuthal_equal_area', 'i4')
-            for i in metadataNCDF['lambert_azimuthal_equal_area']:
-                exec('%s="%s"') % ("proj." + i, metadataNCDF['lambert_azimuthal_equal_area'][i])
+            for i in meta_netcdf.data['lambert_azimuthal_equal_area']:
+                exec('%s="%s"') % ("proj." + i, meta_netcdf.data['lambert_azimuthal_equal_area'][i])
         """
         EUROPE
         proj.grid_mapping_name='lambert_azimuthal_equal_area'
@@ -921,23 +924,23 @@ def writenet(flag, inputmap, netfile, DtDay,
             time.calendar = binding["calendar_type"]
             nf1.variables["time"][:] = date2num(time_stamps, time.units, time.calendar)
             # for i in metadataNCDF['time']: exec('%s="%s"') % ("time."+i, metadataNCDF['time'][i])
-            if 'x' in metadataNCDF.keys():
+            if 'x' in meta_netcdf.data:
                 value = nf1.createVariable(prefix, data_format, ('time', 'y', 'x'), zlib=True, fill_value=-9999, chunksizes=(1, row, col))
-            if 'lon' in metadataNCDF.keys():
+            if 'lon' in meta_netcdf.data:
                 value = nf1.createVariable(prefix, data_format, ('time', 'lat', 'lon'), zlib=True, fill_value=-9999, chunksizes=(1, row, col))
         else:
-            if 'x' in metadataNCDF.keys():
+            if 'x' in meta_netcdf.data:
                 value = nf1.createVariable(prefix, data_format, ('y', 'x'), zlib=True, fill_value=-9999)
-            if 'lon' in metadataNCDF.keys():
+            if 'lon' in meta_netcdf.data:
                 # for world lat/lon coordinates
                 value = nf1.createVariable(prefix, data_format, ('lat', 'lon'), zlib=True, fill_value=-9999)
 
         value.standard_name = value_standard_name
         value.long_name = value_long_name
         value.units = value_unit
-        for var in metadataNCDF.keys():
-            if "esri_pe_string" in metadataNCDF[var].keys():
-                value.esri_pe_string = metadataNCDF[var]['esri_pe_string']
+        for var in meta_netcdf.data:
+            if "esri_pe_string" in meta_netcdf.data[var]:
+                value.esri_pe_string = meta_netcdf.data[var]['esri_pe_string']
     else:
         nf1 = iterOpenNetcdf(netfile, "", 'a', format='NETCDF4')
     if flags['nancheck']:

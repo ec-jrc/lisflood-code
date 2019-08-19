@@ -139,6 +139,31 @@ class MaskInfo(with_metaclass(Singleton)):
 
 
 @nine
+class NetCDFMetadata(with_metaclass(Singleton)):
+    def __init__(self):
+        from .zusatz import iterOpenNetcdf
+        self.data = {}
+        settings = LisSettings.instance()
+        binding = settings.binding
+        try:
+            # using ncdftemplate
+            filename = os.path.splitext(binding['netCDFtemplate'])[0] + '.nc'
+            nf1 = iterOpenNetcdf(filename, "Trying to get metadata from netcdf template \n", 'r')
+            for var in nf1.variables:
+                self.data[var] = {k: v for k, v in iteritems(nf1.variables[var].__dict__) if k != '_FillValue'}
+            nf1.close()
+            return
+        except (KeyError, IOError, IndexError, Exception):
+            pass
+        # if no template .nc is given the e.nc file is used
+        filename = os.path.splitext(binding['E0Maps'])[0] + '.nc'
+        nf1 = iterOpenNetcdf(filename, "Trying to get metadata from E0 maps \n", 'r')
+        for var in nf1.variables:
+            self.data[var] = {k: v for k, v in iteritems(nf1.variables[var].__dict__) if k != '_FillValue'}
+        nf1.close()
+
+
+@nine
 class LisSettings(with_metaclass(Singleton)):
     printer = pprint.PrettyPrinter(indent=4, width=120)
 
@@ -163,6 +188,7 @@ class LisSettings(with_metaclass(Singleton)):
         dom = xml.dom.minidom.parse(settings_file)
         self.settings_path = os.path.normpath(os.path.dirname((os.path.abspath(settings_file))))
         user_settings, bindings = self._bindings(dom)
+        self.timestep_init = None if not bindings.get('timestepInit') else bindings['timestepInit']
         self.output_dir = self._out_dirs(user_settings)
         self.ncores = self._ncores(user_settings)
         self.binding = bindings

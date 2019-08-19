@@ -18,14 +18,8 @@ from __future__ import absolute_import
 
 # defining global variables
 
-# global cutmap           #defines the MaskMap inside the forcing maps
-# cutmap = [0, 1, 0, 1]
-
-global metadataNCDF     #store map metadata from netcdf default file (or e0.nc)
-metadataNCDF = {}
-
-global timestepInit     #if initial conditions are stored as netCDF with different time steps this variable indicates which time step to use either as date e.g. 1/1/2010 or as number e.g. 5
-timestepInit =[]
+# global metadataNCDF     #store map metadata from netcdf default file (or e0.nc)
+# metadataNCDF = {}
 
 # global timeMes,TimeMesString, timeMesSum
 global timeMes          # time measure - filled in dynamic

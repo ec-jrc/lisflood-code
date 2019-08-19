@@ -138,12 +138,6 @@ class miscInitial(object):
         # date of the first possible model run
         # computation of model steps is referred to CalendarStartDay
         self.var.CalendarDayStart = calendar(binding['CalendarDayStart'], binding['calendar_type'])
-        try:
-            # number of time step or date of the state map to be used to initialize model run
-            timestepInit.append(binding["timestepInit"])
-        except:
-            pass
-
         self.var.PrScaling = loadmap('PrScaling')
         self.var.CalEvaporation = loadmap('CalEvaporation')
 
