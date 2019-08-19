@@ -214,7 +214,8 @@ class waterbalance(object):
             # (-> the calculation odf the structures is done before the routing)
 
             if option['simulateLakes']:
-                DisLake = globals.inZero.copy()
+                maskinfo = MaskInfo.instance()
+                DisLake = maskinfo.in_zero()
                 np.put(DisLake, self.var.LakeIndex, 0.5 * self.var.LakeInflowCC * self.var.DtRouting)
                 DischargeM3Lake = np.take(np.bincount(self.var.Catchments, weights=DisLake),self.var.Catchments)
                 #DischargeM3Lake = areatotal(cover(0.5 * self.var.LakeInflow * self.var.DtRouting, scalar(0.0)), catch)

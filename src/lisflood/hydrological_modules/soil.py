@@ -15,8 +15,9 @@ See the Licence for the specific language governing permissions and limitations 
 
 """
 
+from __future__ import absolute_import, print_function
 
-from lisflood.global_modules.add1 import *
+from ..global_modules.add1 import *
 
 
 class soil(object):
@@ -36,6 +37,7 @@ class soil(object):
     def initial(self):
         """ initial part of the soil module
         """
+        maskinfo = MaskInfo.instance()
         def splitlanduse(array1, array2=None, array3=None):
             """ splits maps into the 3 different land use types - other , forest, irrigation
             """
@@ -221,9 +223,9 @@ class soil(object):
         ThetaInit1bValue = defsoil('ThetaInit2Value','ThetaForestInit2Value','ThetaIrrigationInit2Value')
         ThetaInit2Value = defsoil('ThetaInit3Value','ThetaForestInit3Value','ThetaIrrigationInit3Value')
 
-        WInit1a = splitlanduse(globals.inZero.copy())
-        WInit1b = splitlanduse(globals.inZero.copy())
-        WInit2 =  splitlanduse(globals.inZero.copy())
+        WInit1a = splitlanduse(maskinfo.in_zero())
+        WInit1b = splitlanduse(maskinfo.in_zero())
+        WInit2 =  splitlanduse(maskinfo.in_zero())
         WInit1a[0] = np.where(ThetaInit1aValue[0] == -9999, self.var.WFC1a[0], ThetaInit1aValue[0] * self.var.SoilDepth1a[0])
         WInit1a[1] = np.where(ThetaInit1aValue[1] == -9999, self.var.WFC1a[1], ThetaInit1aValue[1] * self.var.SoilDepth1a[1])
         WInit1a[2] = np.where(ThetaInit1aValue[2] == -9999, self.var.WFC1a[2], ThetaInit1aValue[2] * self.var.SoilDepth1a[2])
@@ -240,15 +242,15 @@ class soil(object):
         # *permeable* fraction of the pixel *only* (since all soil moisture-related
         # calculations are done for permeable fraction only!).
 
-        WInit1a[0] = np.where(self.var.PoreSpaceNotZero1a[0], WInit1a[0], globals.inZero)
-        WInit1a[1] = np.where(self.var.PoreSpaceNotZero1a[1], WInit1a[1], globals.inZero)
-        WInit1a[2] = np.where(self.var.PoreSpaceNotZero1a[2], WInit1a[2], globals.inZero)
-        WInit1b[0] = np.where(self.var.PoreSpaceNotZero1b[0], WInit1b[0], globals.inZero)
-        WInit1b[1] = np.where(self.var.PoreSpaceNotZero1b[1], WInit1b[1], globals.inZero)
-        WInit1b[2] = np.where(self.var.PoreSpaceNotZero1b[2], WInit1b[2], globals.inZero)
-        WInit2[0] = np.where(self.var.PoreSpaceNotZero2[0], WInit2[0], globals.inZero)
-        WInit2[1] = np.where(self.var.PoreSpaceNotZero2[1], WInit2[1], globals.inZero)
-        WInit2[2] = np.where(self.var.PoreSpaceNotZero2[2], WInit2[2], globals.inZero)
+        WInit1a[0] = np.where(self.var.PoreSpaceNotZero1a[0], WInit1a[0], maskinfo.in_zero())
+        WInit1a[1] = np.where(self.var.PoreSpaceNotZero1a[1], WInit1a[1], maskinfo.in_zero())
+        WInit1a[2] = np.where(self.var.PoreSpaceNotZero1a[2], WInit1a[2], maskinfo.in_zero())
+        WInit1b[0] = np.where(self.var.PoreSpaceNotZero1b[0], WInit1b[0], maskinfo.in_zero())
+        WInit1b[1] = np.where(self.var.PoreSpaceNotZero1b[1], WInit1b[1], maskinfo.in_zero())
+        WInit1b[2] = np.where(self.var.PoreSpaceNotZero1b[2], WInit1b[2], maskinfo.in_zero())
+        WInit2[0] = np.where(self.var.PoreSpaceNotZero2[0], WInit2[0], maskinfo.in_zero())
+        WInit2[1] = np.where(self.var.PoreSpaceNotZero2[1], WInit2[1], maskinfo.in_zero())
+        WInit2[2] = np.where(self.var.PoreSpaceNotZero2[2], WInit2[2], maskinfo.in_zero())
         # Set to zero if soil depth is zero
         self.var.W1a = WInit1a
         self.var.W1b = WInit1b
@@ -256,10 +258,10 @@ class soil(object):
         self.var.W2 = WInit2
         # Set soil moisture to initial value
 
-        self.var.Sat1a = splitlanduse(globals.inZero.copy())
-        self.var.Sat1b = splitlanduse(globals.inZero.copy())
-        self.var.Sat1 = splitlanduse(globals.inZero.copy())
-        self.var.Sat2 = splitlanduse(globals.inZero.copy())
+        self.var.Sat1a = splitlanduse(maskinfo.in_zero())
+        self.var.Sat1b = splitlanduse(maskinfo.in_zero())
+        self.var.Sat1 = splitlanduse(maskinfo.in_zero())
+        self.var.Sat2 = splitlanduse(maskinfo.in_zero())
 
 
         # ************************************************************
@@ -301,36 +303,36 @@ class soil(object):
         # Initialising cumulative output variables
         # These are all needed to compute the cumulative mass balance error
 
-        self.var.TotalPrecipitation = globals.inZero.copy()
+        self.var.TotalPrecipitation = maskinfo.in_zero()
         # precipitation [mm]
-        self.var.TaCUM = globals.inZero.copy()
+        self.var.TaCUM = maskinfo.in_zero()
         # Cumulative transpiration [mm]
-        self.var.TaInterceptionCUM = globals.inZero.copy()
+        self.var.TaInterceptionCUM = maskinfo.in_zero()
         # Cumulative evaporation from interception store [mm]
-        self.var.ESActCUM = globals.inZero.copy()
+        self.var.ESActCUM = maskinfo.in_zero()
         # Cumulative evaporation [mm]
 
-        self.var.SoilMoistureStressDays = splitlanduse(globals.inZero.copy())
+        self.var.SoilMoistureStressDays = splitlanduse(maskinfo.in_zero())
         # number of days in simulation with soil moisture stress (days)
 
-        self.var.Theta1a = splitlanduse(globals.inZero.copy())
-        self.var.Theta1b = splitlanduse(globals.inZero.copy())
-        self.var.Theta2 = splitlanduse(globals.inZero.copy())
+        self.var.Theta1a = splitlanduse(maskinfo.in_zero())
+        self.var.Theta1b = splitlanduse(maskinfo.in_zero())
+        self.var.Theta2 = splitlanduse(maskinfo.in_zero())
 
-        self.var.TaInterception = defsoil(globals.inZero.copy())
-        self.var.Interception = defsoil(globals.inZero.copy())
-        self.var.LeafDrainage = defsoil(globals.inZero.copy())
-        self.var.Ta = splitlanduse(globals.inZero.copy())
-        self.var.ESAct = splitlanduse(globals.inZero.copy())
-        self.var.PrefFlow = splitlanduse(globals.inZero.copy())
-        self.var.Infiltration = splitlanduse(globals.inZero.copy())
-        self.var.SeepTopToSubA = splitlanduse(globals.inZero.copy())
-        self.var.SeepTopToSubB = splitlanduse(globals.inZero.copy())
-        self.var.SeepSubToGW = splitlanduse(globals.inZero.copy())
+        self.var.TaInterception = defsoil(maskinfo.in_zero())
+        self.var.Interception = defsoil(maskinfo.in_zero())
+        self.var.LeafDrainage = defsoil(maskinfo.in_zero())
+        self.var.Ta = splitlanduse(maskinfo.in_zero())
+        self.var.ESAct = splitlanduse(maskinfo.in_zero())
+        self.var.PrefFlow = splitlanduse(maskinfo.in_zero())
+        self.var.Infiltration = splitlanduse(maskinfo.in_zero())
+        self.var.SeepTopToSubA = splitlanduse(maskinfo.in_zero())
+        self.var.SeepTopToSubB = splitlanduse(maskinfo.in_zero())
+        self.var.SeepSubToGW = splitlanduse(maskinfo.in_zero())
 
-        self.var.Theta = splitlanduse(globals.inZero.copy())
-        self.var.AvailableWaterForInfiltration = splitlanduse(globals.inZero.copy())
-        self.var.RWS = splitlanduse(globals.inZero.copy())
+        self.var.Theta = splitlanduse(maskinfo.in_zero())
+        self.var.AvailableWaterForInfiltration = splitlanduse(maskinfo.in_zero())
+        self.var.RWS = splitlanduse(maskinfo.in_zero())
 
         # ************************************************************
         # ***** INITIALIZATION OF IMPERVIOUS SOIL     ****************
@@ -355,9 +357,9 @@ class soil(object):
 
         if option['simulatePF']:
             self.var.HeadMax = loadmap('HeadMax')
-            self.var.pF0 = defsoil(globals.inZero.copy())
-            self.var.pF1 = defsoil(globals.inZero.copy())
-            self.var.pF2 = defsoil(globals.inZero.copy())
+            self.var.pF0 = defsoil(maskinfo.in_zero())
+            self.var.pF1 = defsoil(maskinfo.in_zero())
+            self.var.pF2 = defsoil(maskinfo.in_zero())
 
     def dynamic_perpixel(self):
         """ dynamic part of the soil module

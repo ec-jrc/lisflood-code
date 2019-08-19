@@ -16,8 +16,10 @@ See the Licence for the specific language governing permissions and limitations 
 """
 from __future__ import print_function, absolute_import
 
-from ..global_modules.settings import LisSettings
-from ..global_modules.add1 import *
+import numpy as np
+from pcraster.operations import ifthen, boolean, defined, lookupscalar
+from ..global_modules.settings import LisSettings, MaskInfo
+from ..global_modules.add1 import loadmap, compressArray, decompress, makenumpy
 from ..global_modules.errors import LisfloodWarning
 
 
@@ -43,6 +45,7 @@ class reservoir(object):
         # ************************************************************
         settings = LisSettings.instance()
         option = settings.options
+        maskinfo = MaskInfo.instance()
         if option['simulateReservoirs']:
 
             # NoSubStepsRes=max(1,roundup(self.var.DtSec/loadmap('DtSecReservoirs')))
@@ -59,12 +62,12 @@ class reservoir(object):
 
             # mask reserovoirs sites when using sub-catchments mask
             # ReservoirSitesC_masked = ifthen(self.var.MaskMap,self.var.ReservoirSitesC)
-            self.var.ReservoirSitesCC = np.compress(self.var.ReservoirSitesC>0,self.var.ReservoirSitesC)
+            self.var.ReservoirSitesCC = np.compress(self.var.ReservoirSitesC > 0, self.var.ReservoirSitesC)
             self.var.ReservoirIndex = np.nonzero(self.var.ReservoirSitesC)[0]
             
-            if self.var.ReservoirSitesC.size==0:
-                option['simulateReservoirs']=False
-                option['repsimulateReservoirs']=False
+            if self.var.ReservoirSitesC.size == 0:
+                option['simulateReservoirs'] = False
+                option['repsimulateReservoirs'] = False
                 return
             # break if no reservoirs
 
@@ -92,7 +95,7 @@ class reservoir(object):
 
             NormalStorageLimit = lookupscalar(str(binding['TabNormalStorageLimit']), ReservoirSitePcr)
             NormalStorageLimitC = compressArray(NormalStorageLimit)
-            self.var.NormalStorageLimitCC = np.compress(self.var.ReservoirSitesC > 0,NormalStorageLimitC)
+            self.var.NormalStorageLimitCC = np.compress(self.var.ReservoirSitesC > 0, NormalStorageLimitC)
             # Normal storage limit (fraction of total storage, [-])
 
             FloodStorageLimit = lookupscalar(str(binding['TabFloodStorageLimit']), ReservoirSitePcr)
@@ -151,7 +154,7 @@ class reservoir(object):
             # self.var.ReservoirFill = ReservoirInitialFill.copy()
             # Initial fill of reservoirs (fraction of total storage, [-])
 
-            self.var.ReservoirStorageIniM3 = globals.inZero.copy()
+            self.var.ReservoirStorageIniM3 = maskinfo.in_zero()
             np.put(self.var.ReservoirStorageIniM3, self.var.ReservoirIndex, ReservoirStorageIniM3CC)
 
             self.var.ReservoirStorageM3 = self.var.ReservoirStorageIniM3
@@ -166,6 +169,7 @@ class reservoir(object):
         # ************************************************************
         settings = LisSettings.instance()
         option = settings.options
+        maskinfo = MaskInfo.instance()
         if option['simulateReservoirs']:
             InvDtSecDay = 1/86400
             # InvDtSecDay=self.var.InvDtSec
@@ -259,15 +263,14 @@ class reservoir(object):
                     self.var.ReservoirFillCC[np.isnan(self.var.ReservoirFillCC)] = 0
 
             # expanding the size as input for routing routine
-            self.var.QResOutM3Dt = globals.inZero.copy()
+            self.var.QResOutM3Dt = maskinfo.in_zero()
             np.put(self.var.QResOutM3Dt,self.var.ReservoirIndex,QResOutM3DtCC)
             # this is put to the channel again at each sub timestep
 
-
             if option['repsimulateReservoirs']:
                 if NoRoutingExecuted==0:
-                    self.var.ReservoirInflowM3S = globals.inZero.copy()
-                    self.var.ReservoirOutflowM3S = globals.inZero.copy()
+                    self.var.ReservoirInflowM3S = maskinfo.in_zero()
+                    self.var.ReservoirOutflowM3S = maskinfo.in_zero()
                     self.var.sumResInCC = QResInM3Dt
                     self.var.sumResOutCC = QResOutM3DtCC
                     # for timeseries output - in and outflow to the reservoir is sumed up over the sub timesteps and stored in m/s
@@ -280,14 +283,11 @@ class reservoir(object):
             if NoRoutingExecuted == (self.var.NoRoutSteps-1):
 
                 # expanding the size after last sub timestep
-                self.var.ReservoirStorageM3 = globals.inZero.copy()
-                self.var.ReservoirFill = globals.inZero.copy()
+                self.var.ReservoirStorageM3 = maskinfo.in_zero()
+                self.var.ReservoirFill = maskinfo.in_zero()
                 np.put(self.var.ReservoirStorageM3,self.var.ReservoirIndex,self.var.ReservoirStorageM3CC)
                 np.put(self.var.ReservoirFill,self.var.ReservoirIndex,self.var.ReservoirFillCC)
 
                 if option['repsimulateReservoirs']:
                     np.put(self.var.ReservoirInflowM3S ,self.var.ReservoirIndex,self.var.sumResInCC / self.var.DtSec)
                     np.put(self.var.ReservoirOutflowM3S,self.var.ReservoirIndex,self.var.sumResOutCC / self.var.DtSec)
-
-
-

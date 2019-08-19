@@ -40,22 +40,22 @@ class evapowater(object):
         # ************************************************************
         # ***** EVAPORATION
         # ************************************************************
-
-        self.var.EvaCumM3 = globals.inZero.copy()
+        self.var.EvaCumM3 = MaskInfo.instance().in_zero()
         # water use cumulated amount
         # water use substep amount
         settings = LisSettings.instance()
         option = settings.options
         binding = settings.binding
+        maskinfo = MaskInfo.instance()
         if option['openwaterevapo']:
             LakeMask = loadmap('LakeMask', pcr=True)
             lmask = ifthenelse(LakeMask != 0, self.var.LddStructuresKinematic, 5)
             LddEva = pcraster.lddrepair(lmask)
             lddC = compressArray(LddEva)
-            inAr = decompress(np.arange(maskinfo['mapC'][0], dtype="int32"))
+            inAr = decompress(np.arange(maskinfo.info.mapC[0], dtype="int32"))
             self.var.downEva = (compressArray(downstream(LddEva, inAr))).astype("int32")
             # each upstream pixel gets the id of the downstream pixel
-            self.var.downEva[lddC == 5] = maskinfo['mapC'][0]
+            self.var.downEva[lddC == 5] = maskinfo.info.mapC[0]
             self.var.maxNoEva = int(loadmap('maxNoEva'))
             # all pits gets a high number
             # still to test if this works
@@ -126,7 +126,7 @@ class evapowater(object):
             # amount of water in bankful (first line of routing)
             ChanLeft = ChanMIter * 0.1
             # 10% of the discharge must stay in the river
-            self.var.EvaAddM3 = globals.inZero.copy()
+            self.var.EvaAddM3 = MaskInfo.instance().in_zero()
             #   real water consumption is set to 0
 
             for NoEvaExe in xrange(self.var.maxNoEva):

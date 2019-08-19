@@ -42,7 +42,8 @@ class riceirrigation(object):
     def initial(self):
         """ initial part of the rice irrigation module
         """
-        self.var.PaddyRiceWaterAbstractionFromSurfaceWaterM3 = globals.inZero.copy()
+        maskinfo = MaskInfo.instance()
+        self.var.PaddyRiceWaterAbstractionFromSurfaceWaterM3 = maskinfo.in_zero()
         settings = LisSettings.instance()
         option = settings.options
         if option['riceIrrigation']:
@@ -74,6 +75,7 @@ class riceirrigation(object):
         """
         settings = LisSettings.instance()
         option = settings.options
+        maskinfo = MaskInfo.instance()
         if option['riceIrrigation']:
             # water needed for paddy rice is assumed to consist of:
             # phase 1: field preparation: soil saturation (assumed to happen in 10 days, 20 days before planting)
@@ -103,7 +105,7 @@ class riceirrigation(object):
             """ phase 1: field preparation: soil saturation (assumed to happen in 10 days, 20 days before planting)"""
             # RiceSoilSaturationM3=if((CalendarDay ge (RicePlantingDay1-20)) and (CalendarDay le (RicePlantingDay1-10)),0.1*RiceSoilSaturationDemandM3,0)
             RiceSoilSaturationM3 = np.where((self.var.CalendarDay >= pl_20) & (self.var.CalendarDay < pl_10),
-                                            0.1 * RiceSoilSaturationDemandM3, globals.inZero)
+                                            0.1 * RiceSoilSaturationDemandM3, maskinfo.in_zero())
             # RiceFloodingM3=if((CalendarDay ge (RicePlantingDay1-10)) and (CalendarDay le (RicePlantingDay1)),(RiceFlooding+EWRef)*RiceFraction*MMtoM3,0)
 
             RiceEva = self.var.EWRef - (self.var.ESAct[0] + self.var.Ta[0])
@@ -117,10 +119,10 @@ class riceirrigation(object):
 
             """ phase 2: flood fields (assumed to happen in 10 days, 10 days before planting)"""
 
-            # RiceFloodingM3 = np.where((self.var.CalendarDay >= pl_10) & (self.var.CalendarDay < self.var.RicePlantingDay1), (self.var.RiceFlooding+RiceEva)*self.var.RiceFraction*self.var.MMtoM3, globals.inZero) #original
+            # RiceFloodingM3 = np.where((self.var.CalendarDay >= pl_10) & (self.var.CalendarDay < self.var.RicePlantingDay1), (self.var.RiceFlooding+RiceEva)*self.var.RiceFraction*self.var.MMtoM3, maskinfo.in_zero()) #original
             RiceFloodingM3 = np.where(
                 (self.var.CalendarDay >= pl_10) & (self.var.CalendarDay < self.var.RicePlantingDay1),
-                RiceFloodingDemandM3 + RiceEvaporationDemandM3, globals.inZero)  # m3 per time interval
+                RiceFloodingDemandM3 + RiceEvaporationDemandM3, maskinfo.in_zero())  # m3 per time interval
             # part of the evaporation is already taken out in soil module!
             # assumption is that a fixed water layer is kept on the rice fields, totalling RiceFlooding*10 in mmm (typically 50 or 100 mm)
             # application is spread out over 10 days
@@ -128,19 +130,19 @@ class riceirrigation(object):
 
             """ phase 3: planting, while keep constant water level during growing season (open water evaporation) """
             # RiceEvaporationM3=if((CalendarDay ge RicePlantingDay1) and (CalendarDay le (RiceHarvestDay1-20)),EWRef*RiceFraction*MMtoM3,0)
-            # RiceEvaporationM3 = np.where((self.var.CalendarDay >= self.var.RicePlantingDay1) & (self.var.CalendarDay < ha_20), RiceEva * self.var.RiceFraction*self.var.MMtoM3 , globals.inZero) #original
+            # RiceEvaporationM3 = np.where((self.var.CalendarDay >= self.var.RicePlantingDay1) & (self.var.CalendarDay < ha_20), RiceEva * self.var.RiceFraction*self.var.MMtoM3 , maskinfo.in_zero()) #original
             RiceEvaporationM3 = np.where(
                 (self.var.CalendarDay >= self.var.RicePlantingDay1) & (self.var.CalendarDay < ha_20),
-                RiceEvaporationDemandM3, globals.inZero)  # m3 per time interval
+                RiceEvaporationDemandM3, maskinfo.in_zero())  # m3 per time interval
 
             # substracting the soil evaporation which was already taken off in the soil module (also transpitation should be tyaken off )
 
             # RicePercolationM3=if((CalendarDay ge RicePlantingDay1) and (CalendarDay le (RiceHarvestDay1-20)),RicePercolation*RiceFraction*MMtoM3,0)
             RicePercolationDemandM3 = self.var.RicePercolation * self.var.RiceFraction * self.var.MMtoM3 * self.var.DtDay  # m3 per time interval
-            # RicePercolationM3 = np.where((self.var.CalendarDay >= self.var.RicePlantingDay1) & (self.var.CalendarDay < ha_20), self.var.RicePercolation*self.var.RiceFraction*self.var.MMtoM3, globals.inZero) #original
+            # RicePercolationM3 = np.where((self.var.CalendarDay >= self.var.RicePlantingDay1) & (self.var.CalendarDay < ha_20), self.var.RicePercolation*self.var.RiceFraction*self.var.MMtoM3, maskinfo.in_zero()) #original
             RicePercolationM3 = np.where(
                 (self.var.CalendarDay >= self.var.RicePlantingDay1) & (self.var.CalendarDay < ha_20),
-                RicePercolationDemandM3, globals.inZero)  # m3 per time interval
+                RicePercolationDemandM3, maskinfo.in_zero())  # m3 per time interval
             # FAO: percolation for heavy clay soils: PERC = 2 mm/day
             self.var.PaddyRiceWaterAbstractionFromSurfaceWaterM3 = RiceSoilSaturationM3 + RiceFloodingM3 + RiceEvaporationM3 + RicePercolationM3  # m3 per time interval
             # m3 water needed for paddyrice
@@ -155,9 +157,9 @@ class riceirrigation(object):
                 0]) * self.var.RiceFraction * self.var.MMtoM3 * self.var.DtDay  # m3 per time interval
             RiceDrainageM3 = np.where(
                 (self.var.CalendarDay >= ha_10) & (self.var.CalendarDay < self.var.RiceHarvestDay1),
-                0.1 * RiceDrainageDemandM3, globals.inZero)
+                0.1 * RiceDrainageDemandM3, maskinfo.in_zero())
             # RiceDrainageM3 = np.where((self.var.CalendarDay >= ha_10) & (self.var.CalendarDay < self.var.RiceHarvestDay1),
-            #                          0.1 * (self.var.WS1[0]-self.var.WFC1[0] + self.var.WS2[1]-self.var.WFC2[1]) * self.var.RiceFraction*self.var.MMtoM3,globals.inZero) #original
+            #                          0.1 * (self.var.WS1[0]-self.var.WFC1[0] + self.var.WS2[1]-self.var.WFC2[1]) * self.var.RiceFraction*self.var.MMtoM3,maskinfo.in_zero()) #original
 
             # drainage until FC to soil/groundwater at end of season
             # assumption that the last weeks before harvest the 50mm water layer is completely evaporating

@@ -16,16 +16,16 @@ See the Licence for the specific language governing permissions and limitations 
 """
 from __future__ import print_function, absolute_import
 
+from bisect import bisect_left
+
 from pcraster._pcraster import Scalar
 
 from netCDF4 import num2date, date2num
-import numpy as np
-import time as xtime
-import os
+# import numpy as np
+# import time as xtime
+# import os
 from . import globals
-from bisect import bisect_left
-
-from .settings import calendar_inconsistency_warning, get_calendar_type, calendar
+from .settings import calendar_inconsistency_warning, get_calendar_type, calendar, MaskInfo
 from .errors import LisfloodWarning
 from .zusatz import *
 
@@ -229,67 +229,75 @@ def loadsetclone(name):
     #convert numpy map to 8bit
     maskarea = np.bool8(mapnp)
     #compute mask (pixels in maskldd AND maskarea)
-    mask = np.logical_not(np.logical_and(maskldd,maskarea))
+    mask = np.logical_not(np.logical_and(maskldd, maskarea))
+    maskinfo = MaskInfo(mask)
 
-    #return all the non-masked data as a 1-D array
-    mapC = np.ma.compressed(np.ma.masked_array(mask,mask))
-    # Definition of compressed array and info how to blow it up again
-    maskinfo['mask']=mask
-    maskinfo['shape']=mask.shape
-    maskinfo['maskflat']=mask.ravel()    # map to 1D not compresses
-    maskinfo['shapeflat']=maskinfo['maskflat'].shape   #length of the 1D array
-    maskinfo['mapC']=mapC.shape                        # length of the compressed 1D array
-    maskinfo['maskall'] =np.ma.masked_all(maskinfo['shapeflat'])  # empty map 1D but with mask
-    maskinfo['maskall'].mask = maskinfo['maskflat']
-    globals.inZero=np.zeros(maskinfo['mapC'])
+    # #return all the non-masked data as a 1-D array
+    # mapC = np.ma.compressed(np.ma.masked_array(mask,mask))
+    # # Definition of compressed array and info how to blow it up again
+    # maskinfo['mask']=mask
+    # maskinfo['shape']=mask.shape
+    # maskinfo['maskflat']=mask.ravel()    # map to 1D not compresses
+    # maskinfo['shapeflat']=maskinfo['maskflat'].shape   #length of the 1D array
+    # maskinfo['mapC']=mapC.shape                        # length of the compressed 1D array
+    # maskinfo['maskall'] =np.ma.masked_all(maskinfo['shapeflat'])  # empty map 1D but with mask
+    # maskinfo['maskall'].mask = maskinfo['maskflat']
+    # globals.inZero = np.zeros(maskinfo['mapC'])
+
     if flags['nancheck']:
         nanCheckMap(ldd, binding['Ldd'], 'Ldd')
     return map
 
 
 def compressArray(map, pcr=True, name=None):
-        if pcr:
-            mapnp = pcr2numpy(map,np.nan)
-            mapnp1 = np.ma.masked_array(mapnp,maskinfo['mask'])
-        else:
-            mapnp1 = np.ma.masked_array(map, maskinfo['mask'])
-        mapC = np.ma.compressed(mapnp1)
+    maskinfo = MaskInfo.instance()
+    if pcr:
+        mapnp = pcr2numpy(map,np.nan)
+        mapnp1 = np.ma.masked_array(mapnp, maskinfo.info.mask)
+    else:
+        mapnp1 = np.ma.masked_array(map, maskinfo.info.mask)
+    mapC = np.ma.compressed(mapnp1)
 
-        if name is not None:
-            if np.max(np.isnan(mapC)):
-                msg = name + " has less valid pixels than area or ldd \n"
-                raise LisfloodError(msg)
-                # test if map has less valid pixel than area.map (or ldd)
-        return mapC.astype(float)
+    if name is not None:
+        if np.max(np.isnan(mapC)):
+            msg = name + " has less valid pixels than area or ldd \n"
+            raise LisfloodError(msg)
+            # test if map has less valid pixel than area.map (or ldd)
+    return mapC.astype(float)
+
 
 def decompress(map):
-     #dmap=np.ma.masked_all(maskinfo['shapeflat'], dtype=map.dtype)
-     dmap=maskinfo['maskall'].copy()
-     dmap[~maskinfo['maskflat']] = map[:]
-     dmap = dmap.reshape(maskinfo['shape'])
-     # check if integer map (like outlets, lakes etc
-     try:
-        checkint=str(map.dtype)
-     except:
-        checkint="x"
-     if checkint in ["int16", "int32", "int64"]:
-          dmap[dmap.mask]=-9999
-          map = numpy2pcr(Nominal, dmap, -9999)
-     elif checkint=="int8":
-          dmap[dmap<0]=-9999
-          map = numpy2pcr(Nominal, dmap, -9999)
-     else:
-          dmap[dmap.mask]=-9999
-          map = numpy2pcr(Scalar, dmap, -9999)
-     return map
+    maskinfo = MaskInfo.instance()
+    dmap = maskinfo.info.maskall.copy()
+    dmap[~maskinfo.info.maskflat] = map[:]
+    dmap = dmap.reshape(maskinfo.info.shape)
+    # check if integer map (like outlets, lakes etc)
+    try:
+        checkint = str(map.dtype)
+    except:
+        checkint = None
+
+    if checkint in ("int16", "int32", "int64"):
+        dmap[dmap.mask] = -9999
+        map = numpy2pcr(Nominal, dmap, -9999)
+    elif checkint == "int8":
+        dmap[dmap < 0] = -9999
+        map = numpy2pcr(Nominal, dmap, -9999)
+    else:
+        dmap[dmap.mask] = -9999
+        map = numpy2pcr(Scalar, dmap, -9999)
+    return map
 
 
 def makenumpy(map):
-    if not('numpy.ndarray' in str(type(map))):
-        out = np.empty(maskinfo['mapC'])
+    if not isinstance(map, np.ndarray):
+    # if not('numpy.ndarray' in str(type(map))):
+        maskinfo = MaskInfo.instance()
+        out = np.empty(maskinfo.info.mapC)
         out.fill(map)
         return out
-    else: return map
+    else:
+        return map
 
 
 def loadmap(name, pcr=False, lddflag=False, timestampflag='exact', averageyearflag=False):
@@ -322,7 +330,7 @@ def loadmap(name, pcr=False, lddflag=False, timestampflag='exact', averageyearfl
     pcrmap = False
     # try reading in PCRaster map format
     try:
-        # try reading pcraster map
+        # try reading constant value
         mapC = float(value)
         flagmap = False
         load = True
@@ -336,6 +344,7 @@ def loadmap(name, pcr=False, lddflag=False, timestampflag='exact', averageyearfl
             pcrmap = True
         except:
             load = False
+
     if load and pcrmap:
         #map is loaded and it is in pcraster format
         try:
@@ -425,9 +434,9 @@ def loadmap(name, pcr=False, lddflag=False, timestampflag='exact', averageyearfl
 
         # masking
         try:
-            if any(maskinfo):
-                mapnp.mask = maskinfo['mask']
-        except:
+            maskinfo = MaskInfo.instance()
+            mapnp.mask = maskinfo.info.mask
+        except KeyError as e:
             pass
         nf1.close()
 
@@ -454,6 +463,7 @@ def loadmap(name, pcr=False, lddflag=False, timestampflag='exact', averageyearfl
     # pcraster map but it has to be an array
     if pcrmap and not pcr:
         mapC = compressArray(map, name=filename)
+
     if flags['checkfiles']:
         print(name, filename)
         if flagmap == False:
@@ -462,7 +472,7 @@ def loadmap(name, pcr=False, lddflag=False, timestampflag='exact', averageyearfl
             checkmap(name, filename, map, flagmap, 0)
         else:
             print(name, mapC.size)
-            if mapC.size >0:
+            if mapC.size > 0:
                 map= decompress(mapC)
                 checkmap(name, filename, map, flagmap, 0)
     if pcr:
@@ -947,10 +957,11 @@ def writenet(flag, inputmap, netfile, DtDay,
         nf1 = iterOpenNetcdf(netfile, "", 'a', format='NETCDF4')
     if flags['nancheck']:
         nanCheckMap(inputmap, netfile, value_standard_name)
-    mapnp = maskinfo['maskall'].copy()
-    mapnp[~maskinfo['maskflat']] = inputmap[:]
+    maskinfo = MaskInfo.instance()
+    mapnp = maskinfo.info.maskall.copy()
+    mapnp[~maskinfo.info.maskflat] = inputmap[:]
     #mapnp = mapnp.reshape(maskinfo['shape']).data
-    mapnp = mapnp.reshape(maskinfo['shape'])
+    mapnp = mapnp.reshape(maskinfo.info.shape)
     if frequency is not None:
         nf1.variables[prefix][flag, :, :] = mapnp
         #value[flag,:,:]= mapnp

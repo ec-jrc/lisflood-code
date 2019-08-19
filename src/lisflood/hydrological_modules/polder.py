@@ -96,7 +96,7 @@ class polder(object):
         # Initialising cumulative output variables
         # These are all needed to compute the cumulative mass balance error
 
-#        self.var.ChannelToPolderM3Dt = globals.inZero.copy()
+#        self.var.ChannelToPolderM3Dt = maskinfo.in_zero()
 
     @staticmethod
     def dynamic_init():

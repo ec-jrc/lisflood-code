@@ -88,7 +88,7 @@ class inflow(object):
             # Initialising cumulative output variables
             # These are all needed to compute the cumulative mass balance error
 
-#        self.var.QInDt = globals.inZero.copy()
+#        self.var.QInDt = maskinfo.in_zero()
         # inflow substep amount
 
     def dynamic_init(self):

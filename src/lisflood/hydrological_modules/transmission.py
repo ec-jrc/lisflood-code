@@ -55,10 +55,10 @@ class transmission(object):
             self.var.TransPower1 = loadmap('TransPower1')
             self.var.TransPower2 = 1.0 / self.var.TransPower1
             # transmission loss function
-
-            self.var.TransCum = globals.inZero.copy()
+            maskinfo = MaskInfo.instance()
+            self.var.TransCum = maskinfo.in_zero()
         # Cumulative transmission loss
-        # self.var.TransLossM3Dt = globals.inZero.copy()
+        # self.var.TransLossM3Dt = maskinfo.in_zero()
         # substep amount of transmission loss
 
     def dynamic_inloop(self):

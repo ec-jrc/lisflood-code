@@ -18,8 +18,8 @@ from __future__ import absolute_import
 
 # defining global variables
 
-global maskinfo         #Definition of compressed mask array and info how to blow it up again
-maskinfo = {}
+# global maskinfo         #Definition of compressed mask array and info how to blow it up again
+# maskinfo = {}
 
 # global MMaskMap, maskmapAttr, bigmapAttr, cutmap, metadataNCDF
 global MMaskMap         #mask for checking maps

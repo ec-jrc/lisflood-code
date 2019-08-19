@@ -14,9 +14,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
+from __future__ import absolute_import, print_function
 
-from lisflood.global_modules.add1 import *
-from lisflood.global_modules.globals import *
+from ..global_modules.add1 import *
 
 
 class lakes(object):
@@ -43,6 +43,7 @@ class lakes(object):
         settings = LisSettings.instance()
         option = settings.options
         binding = settings.binding
+        maskinfo = MaskInfo.instance()
 
         if option['simulateLakes']:
 
@@ -153,13 +154,13 @@ class lakes(object):
             self.var.LakeStorageM3CC = LakeStorageIniM3CC.copy()
             self.var.LakeStorageM3BalanceCC = LakeStorageIniM3CC.copy()
 
-            self.var.LakeStorageIniM3 = globals.inZero.copy()
-            self.var.LakeLevel = globals.inZero.copy()
+            self.var.LakeStorageIniM3 = maskinfo.in_zero()
+            self.var.LakeLevel = maskinfo.in_zero()
             np.put(self.var.LakeStorageIniM3,self.var.LakeIndex,LakeStorageIniM3CC)
             self.var.LakeStorageM3 = self.var.LakeStorageIniM3.copy()
-            np.put(self.var.LakeLevel,self.var.LakeIndex,self.var.LakeLevelCC)
+            np.put(self.var.LakeLevel, self.var.LakeIndex, self.var.LakeLevelCC)
 
-            self.var.EWLakeCUMM3 = globals.inZero.copy()
+            self.var.EWLakeCUMM3 = maskinfo.in_zero()
             # Initialising cumulative output variables
             # These are all needed to compute the cumulative mass balance error
 
@@ -173,7 +174,7 @@ class lakes(object):
         # ************************************************************
         settings = LisSettings.instance()
         option = settings.options
-
+        maskinfo = MaskInfo.instance()
         if option['InitLisflood'] and option['simulateLakes']:    # only with no InitLisflood
 
             #self.var.LakeInflow = cover(ifthen(defined(self.var.LakeSites), upstream(self.var.LddStructuresKinematic, self.var.ChanQ)), scalar(0.0))
@@ -223,28 +224,28 @@ class lakes(object):
             self.var.LakeLevelCC = self.var.LakeStorageM3CC / self.var.LakeAreaCC
 
             # expanding the size
-            self.var.QLakeOutM3Dt = globals.inZero.copy()
+            self.var.QLakeOutM3Dt = maskinfo.in_zero()
             np.put(self.var.QLakeOutM3Dt,self.var.LakeIndex,QLakeOutM3DtCC)
 
             if option['repsimulateLakes']:
                 if NoRoutingExecuted == 0:
-                   self.var.LakeInflowM3S = globals.inZero.copy()
-                   self.var.LakeOutflowM3S = globals.inZero.copy()
+                   self.var.LakeInflowM3S = maskinfo.in_zero()
+                   self.var.LakeOutflowM3S = maskinfo.in_zero()
                    self.var.sumLakeInCC =  self.var.LakeInflowCC * self.var.DtRouting
                    self.var.sumLakeOutCC = QLakeOutM3DtCC
                    # for timeseries output - in and outflow to the reservoir is sumed up over the sub timesteps and stored in m/s
                    # set to zero at first timestep
                 else:
-                   self.var.sumLakeInCC  += self.var.LakeInflowCC * self.var.DtRouting
+                   self.var.sumLakeInCC += self.var.LakeInflowCC * self.var.DtRouting
                    self.var.sumLakeOutCC += QLakeOutM3DtCC
                    # summing up over all sub timesteps
 
             if NoRoutingExecuted == (self.var.NoRoutSteps-1):
 
                 # expanding the size after last sub timestep
-                self.var.LakeStorageM3Balance = globals.inZero.copy()
-                self.var.LakeStorageM3 = globals.inZero.copy()
-                self.var.LakeLevel = globals.inZero.copy()
+                self.var.LakeStorageM3Balance = maskinfo.in_zero()
+                self.var.LakeStorageM3 = maskinfo.in_zero()
+                self.var.LakeLevel = maskinfo.in_zero()
                 np.put(self.var.LakeStorageM3Balance,self.var.LakeIndex,self.var.LakeStorageM3BalanceCC)
                 np.put(self.var.LakeStorageM3,self.var.LakeIndex,self.var.LakeStorageM3CC)
                 np.put(self.var.LakeLevel,self.var.LakeIndex,self.var.LakeLevelCC)

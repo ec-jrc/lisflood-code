@@ -162,12 +162,13 @@ class LisfloodModel_dyn(DynamicModel):
         # ************************************************************
         # ***** LOOP ROUTING SUB TIME STEP   *************************
         # ************************************************************
-        self.sumDisDay = globals.inZero.copy()
+        maskinfo = MaskInfo.instance()
+        self.sumDisDay = maskinfo.in_zero()
         # sums up discharge of the sub steps
         for NoRoutingExecuted in range(self.NoRoutSteps):
             self.routing_module.dynamic(NoRoutingExecuted)
             #   routing sub steps
-        timemeasure("Routing",loops = NoRoutingExecuted + 1)  # 9 timing after routing
+        timemeasure("Routing", loops=NoRoutingExecuted + 1)  # 9 timing after routing
 
         # ----------------------------------------------------------------------
 

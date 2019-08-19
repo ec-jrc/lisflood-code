@@ -16,17 +16,17 @@ See the Licence for the specific language governing permissions and limitations 
 
 """
 from __future__ import (absolute_import, division, print_function, unicode_literals)
-from nine import iteritems
+
+from collections import namedtuple
+
+from future.backports import OrderedDict
+from future.utils import with_metaclass
+from nine import (iteritems, str, range, map, nine)
 
 import copy
 import getopt
 import sys
-
 import datetime
-# from cftime._cftime import date2num, num2date
-from future.backports import OrderedDict
-from future.utils import with_metaclass
-from nine import (IS_PYTHON2, str, range, map, nine)
 import os
 import pprint
 import inspect
@@ -34,6 +34,7 @@ import inspect
 import xml.dom.minidom
 from netCDF4 import Dataset, date2num, num2date
 from pandas._libs.tslibs.parsing import parse_time_string
+import numpy as np
 
 from .errors import LisfloodError, LisfloodWarning
 from .decorators import cached
@@ -51,13 +52,20 @@ class Singleton(type):
     _current = {}
 
     def __init__(cls, name, bases, dct):
-        cls._init[cls] = dct.get('__init__', None)
+        cls._init[cls] = dct.get('__init__', None)  # set __init__ method for the class
         super(Singleton, cls).__init__(name, bases, dct)
 
     def __call__(cls, *args, **kwargs):
-        init = cls._init[cls]
+        init = cls._init[cls]  # get __init__ method
         if init is not None:
-            key = (cls, frozenset(inspect.getcallargs(init, None, *args, **kwargs).items()))
+            init_args = inspect.getcallargs(init, None, *args, **kwargs).items()
+            new_init_args = []
+            for a in init_args:
+                if isinstance(a[1], np.ndarray):
+                    new_init_args.append((a[0], a[1].tostring()))
+                else:
+                    new_init_args.append(a)
+            key = (cls, frozenset(new_init_args))
         else:
             key = cls
 
@@ -86,6 +94,25 @@ class CDFFlags(with_metaclass(Singleton)):
 
     def __getitem__(self, item):
         return self.flags[item]
+
+
+@nine
+class MaskInfo(with_metaclass(Singleton)):
+    Info = namedtuple('Info', 'mask, shape, maskflat, shapeflat, mapC, maskall')
+
+    def __init__(self, mask):
+        self.flat = mask.ravel()
+        self.mask_compressed = np.ma.compressed(np.ma.masked_array(mask, mask))  # mapC
+        self.mask_all = np.ma.masked_all(self.flat.shape)
+        self.mask_all.mask = self.flat
+        self.info = self.Info(mask, mask.shape, self.flat, self.flat.shape, self.mask_compressed.shape, self.mask_all)
+        self._in_zero = np.zeros(self.mask_compressed.shape)
+
+    def in_zero(self):
+        return self._in_zero.copy()
+
+    def __iter__(self):
+        return iter(self.info)
 
 
 @nine
@@ -371,7 +398,6 @@ class LisSettings(with_metaclass(Singleton)):
                         allow = False  # map must not be written
                         break
         if allow:
-            print('ALLOWED --------> ', obj)
             return obj
         else:
             return None

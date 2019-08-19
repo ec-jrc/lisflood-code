@@ -29,7 +29,8 @@ def coordinatesLand(eastings_forcing, northings_forcing):
     left_col = np.where(np.round(eastings_forcing, 5) == np.round(maskmapAttr['x'] + half_cell, 5))[0][0]
     row_slice = slice(top_row, top_row + maskmapAttr['row'])
     col_slice = slice(left_col, left_col + maskmapAttr['col'])
-    return [co[row_slice,col_slice][~maskinfo["mask"]] for co in np.meshgrid(eastings_forcing, northings_forcing)]
+    maskinfo = MaskInfo.instance()
+    return [co[row_slice,col_slice][~maskinfo.info.mask] for co in np.meshgrid(eastings_forcing, northings_forcing)]
 
 
 class miscInitial(object):
@@ -50,7 +51,7 @@ class miscInitial(object):
         settings = LisSettings.instance()
         option = settings.options
         binding = settings.binding
-
+        maskinfo = MaskInfo.instance()
         if option['gridSizeUserDefined']:
 
             # <lfoption name="gridSizeUserDefined" choice="1" default="0">
@@ -79,10 +80,9 @@ class miscInitial(object):
             #self.var.PixelLength = celllength()
             self.var.PixelLengthPcr = celllength()
             self.var.PixelLength = maskmapAttr['cell']
-
             # Area of pixel [m2]
             self.var.PixelAreaPcr = self.var.PixelLength ** 2
-            self.var.PixelArea=np.empty(maskinfo['mapC'])
+            self.var.PixelArea=np.empty(maskinfo.info.mapC)
             self.var.PixelArea.fill(self.var.PixelLength ** 2)
 
 #            self.var.PixelArea = spatial(self.var.PixelArea)
@@ -150,23 +150,23 @@ class miscInitial(object):
         self.var.EWRef = None
         # setting meteo data to none - is this necessary?
 
-        self.var.DayCounter= 0.0
-        self.var.MonthETpot= globals.inZero
-        self.var.MonthETact= globals.inZero
-        self.var.MonthWDemand= globals.inZero
-        self.var.MonthWUse= globals.inZero
-        self.var.MonthWDemand= globals.inZero
-        self.var.MonthDis= globals.inZero
-        self.var.MonthInternalFlow =  globals.inZero
+        self.var.DayCounter = 0.0
+        self.var.MonthETpot = maskinfo.in_zero()
+        self.var.MonthETact = maskinfo.in_zero()
+        self.var.MonthWDemand = maskinfo.in_zero()
+        self.var.MonthWUse= maskinfo.in_zero()
+        self.var.MonthWDemand= maskinfo.in_zero()
+        self.var.MonthDis= maskinfo.in_zero()
+        self.var.MonthInternalFlow =  maskinfo.in_zero()
 
-        self.var.TotalInternalFlowM3 = globals.inZero
-        self.var.PerMonthInternalFlowM3 = globals.inZero
+        self.var.TotalInternalFlowM3 = maskinfo.in_zero()
+        self.var.PerMonthInternalFlowM3 = maskinfo.in_zero()
         # total freshwater generated in the sub-area (m3), basically local P-ET-Storage
-        self.var.TotalExternalInflowM3 = globals.inZero
-        self.var.PerMonthExternalInflowM3 = globals.inZero
+        self.var.TotalExternalInflowM3 = maskinfo.in_zero()
+        self.var.PerMonthExternalInflowM3 = maskinfo.in_zero()
         # Total channel inflow (m3) from inlet points
-        self.var.PerMonthWaterDemandM3 = globals.inZero
-        self.var.PerMonthWaterUseM3 = globals.inZero
+        self.var.PerMonthWaterDemandM3 = maskinfo.in_zero()
+        self.var.PerMonthWaterUseM3 = maskinfo.in_zero()
 
         self.var.FlagDemandBiggerUse = scalar(0.0)
 
@@ -174,8 +174,8 @@ class miscInitial(object):
         self.var.TotlWEI = scalar(0.0)
         self.var.TotCount = scalar(0.0)
 
-        self.var.SumETpot = globals.inZero
-        self.var.SumETpotact = globals.inZero
+        self.var.SumETpot = maskinfo.in_zero()
+        self.var.SumETpotact = maskinfo.in_zero()
 
         # Read the latitude (radians) from the precipitation forcing NetCDF file
         with xr.open_dataset(binding["PrecipitationMaps"] + ".nc") as nc:

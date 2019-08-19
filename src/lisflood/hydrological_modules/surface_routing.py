@@ -37,11 +37,12 @@ class surface_routing(object):
     def initial(self):
         """ initial part of the surface_routing module
         """
+        maskinfo = MaskInfo.instance()
         # CM mod
         OFM3OtherInit = loadmap('OFOtherInitValue')
         OFM3ForestInit = loadmap('OFForestInitValue')
         OFM3DirectInit = loadmap('OFDirectInitValue')
-        self.var.WaterDepth = globals.inZero.copy()
+        self.var.WaterDepth = maskinfo.in_zero()
 
         # self.var.WaterDepthInit =loadmap('WaterDepthInitValue')
         # self.var.WaterDepthInit = makenumpy(self.var.WaterDepthInit)
@@ -100,7 +101,8 @@ class surface_routing(object):
             PRE-PROCESSING OF FLOW DIRECTION MATRIX FOR PARALLELISED KINEMATIC WAVE ROUTING
         """
         dt_surf_routing = self.var.DtSec / self.var.NoSubStepsOF
-        land_mask = ~maskinfo["mask"]
+        maskinfo = MaskInfo.instance()
+        land_mask = ~maskinfo.info.mask
         settings = LisSettings.instance()
         binding = settings.binding
         num_threads = int(binding["numCPUs_parallelKinematicWave"])

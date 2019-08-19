@@ -42,9 +42,10 @@ class soilloop(object):
         # ************************************************************
         # Domain: whole pixel (permeable + direct runoff areas)
         #
-        np.seterr(invalid='ignore',divide='ignore')
+        maskinfo = MaskInfo.instance()
+        np.seterr(invalid='ignore', divide='ignore')
 
-        SMax = np.where(self.var.LAI[sLoop] > 0.1, 0.935 + 0.498 * self.var.LAI[sLoop] - 0.00575 * np.square(self.var.LAI[sLoop]), globals.inZero)
+        SMax = np.where(self.var.LAI[sLoop] > 0.1, 0.935 + 0.498 * self.var.LAI[sLoop] - 0.00575 * np.square(self.var.LAI[sLoop]), maskinfo.in_zero())
         SMax = np.where(self.var.LAI[sLoop] > 43.3, 11.718, SMax)
         # maximum interception [mm]
         # Van Hoyningen-Huene (1981), p.46
@@ -55,7 +56,7 @@ class soilloop(object):
         self.var.Interception[sLoop] = np.where(SMax > 0.0,
                                                 np.minimum(SMax - self.var.CumInterception[sLoop],
                                                            SMax * (1 - np.exp(-0.046 * self.var.LAI[sLoop] * self.var.Rain / SMax))),
-                                                globals.inZero)
+                                                maskinfo.in_zero())
         self.var.Interception[sLoop] = np.minimum(self.var.Interception[sLoop], self.var.Rain)
         # Interception (in [mm] per timestep)
         # Smax is calculated from LAI as a constant map (above)
@@ -78,18 +79,18 @@ class soilloop(object):
         # by(1-LAITerm)
 
         self.var.TaInterception[sLoop] = np.maximum(np.minimum(self.var.CumInterception[sLoop], TaInterceptionMax),
-                                                    globals.inZero)
+                                                    maskinfo.in_zero())
         # amount of interception water [mm] that can be evaporated
         # assumption: at first all interception water is evaporated rate is equal to TaInterceptionMax
 
 
-        self.var.CumInterception[sLoop] = np.maximum(self.var.CumInterception[sLoop] - self.var.TaInterception[sLoop], globals.inZero)
+        self.var.CumInterception[sLoop] = np.maximum(self.var.CumInterception[sLoop] - self.var.TaInterception[sLoop], maskinfo.in_zero())
         # evaporated water is subtracted from Cumulative Interception
         self.var.LeafDrainage[sLoop] = self.var.LeafDrainageK * self.var.CumInterception[sLoop]
         # leaf drainage in [mm] per timestep, assuming linear reservoir
         # assumption: after 1 day all intercepted water is evaporated or has fallen
         # on the soil surface
-        self.var.CumInterception[sLoop] = np.maximum(self.var.CumInterception[sLoop] - self.var.LeafDrainage[sLoop], globals.inZero)
+        self.var.CumInterception[sLoop] = np.maximum(self.var.CumInterception[sLoop] - self.var.LeafDrainage[sLoop], maskinfo.in_zero())
 
         # ************************************************************
         # ***** AVAILABLE WATER FOR INFILTRATION ****************************
@@ -98,7 +99,7 @@ class soilloop(object):
         # DirectRunoff is total for whole pixel (permeable + direct runoff areas)
 
         self.var.AvailableWaterForInfiltration[sLoop] =\
-            np.maximum(self.var.Rain + self.var.SnowMelt + self.var.LeafDrainage[sLoop] - self.var.Interception[sLoop], globals.inZero)
+            np.maximum(self.var.Rain + self.var.SnowMelt + self.var.LeafDrainage[sLoop] - self.var.Interception[sLoop], maskinfo.in_zero())
         # Water available for infiltration during this timestep [mm]
 
         # ************************************************************
@@ -116,7 +117,7 @@ class soilloop(object):
         p = np.where(self.var.CropGroupNumber[sLoop] <= 2.5, p + (np.minimum(0.1 * self.var.ETRef * self.var.InvDtDay, 1.0) - 0.6) / (
             self.var.CropGroupNumber[sLoop] * (self.var.CropGroupNumber[sLoop] + 3)), p)
         # correction for crop groups 1 and 2 (Van Diepen et al, 1988)
-        p = np.maximum(np.minimum(p, 1.0), globals.inZero)
+        p = np.maximum(np.minimum(p, 1.0), maskinfo.in_zero())
         # p is between 0 and 1
         WCrit1 = ((1 - p) * (self.var.WFC1[sLoop] - self.var.WWP1[sLoop])) + self.var.WWP1[sLoop]
         WCrit1a = ((1 - p) * (self.var.WFC1a[sLoop] - self.var.WWP1a[sLoop])) + self.var.WWP1a[sLoop]
@@ -139,11 +140,11 @@ class soilloop(object):
         # Transpiration reduction factor (in case of water stress)
         # if WCrit1 = WWP1, RWS is zero there is no water stress in that case
         self.var.RWS[sLoop] = np.maximum(
-            np.minimum(self.var.RWS[sLoop], 1.0), globals.inZero)
+            np.minimum(self.var.RWS[sLoop], 1.0), maskinfo.in_zero())
         # Transpiration reduction factor (in case of water stress)
 
         if option['repStressDays']:
-            self.var.SoilMoistureStressDays[sLoop] = np.where(self.var.RWS[sLoop] < 1, self.var.DtDay, globals.inZero)
+            self.var.SoilMoistureStressDays[sLoop] = np.where(self.var.RWS[sLoop] < 1, self.var.DtDay, maskinfo.in_zero())
             # Count number of days with soil water stress, RWS is between 0 and 1
             # no reduction of Transpiration at RWS=1, at RWS=0 there is no Transpiration at all
 
@@ -155,7 +156,7 @@ class soilloop(object):
         # maximum transpiration rate ([mm] per timestep)
         # crop coefficient is mostly 1, except for excessively transpirating crops,
         # such as sugarcane and some forests (coniferous forests)
-        self.var.TranspirMaxCorrected = np.maximum(TranspirMax - self.var.TaInterception[sLoop], globals.inZero)
+        self.var.TranspirMaxCorrected = np.maximum(TranspirMax - self.var.TaInterception[sLoop], maskinfo.in_zero())
         # subtract TaInterception from TranspirMax to ensure energy balance is respected
         # (maximize statement because TranspirMax and TaInterception are calculated from
         # reference surfaces with slightly diferent properties)
@@ -165,7 +166,7 @@ class soilloop(object):
         # Domain: permeable fraction of pixel only
         self.var.Ta[sLoop] = np.maximum(np.minimum(self.var.RWS[sLoop] * self.var.TranspirMaxCorrected, self.var.W1[sLoop] - self.var.WWP1[sLoop]), 0.0)
         # actual transpiration based on both layers 1a and 1b
-        self.var.Ta[sLoop] = np.where(self.var.FrostIndex > self.var.FrostIndexThreshold, globals.inZero, self.var.Ta[sLoop])
+        self.var.Ta[sLoop] = np.where(self.var.FrostIndex > self.var.FrostIndexThreshold, maskinfo.in_zero(), self.var.Ta[sLoop])
         # transpiration is 0 when soil is frozen
         # calculate distribution where to take Ta from:
         # 1st: above wCrit from layer 1a
@@ -214,15 +215,15 @@ class soilloop(object):
 
         self.var.ESAct[sLoop] = np.minimum(self.var.ESAct[sLoop], self.var.W1[sLoop] - self.var.WRes1[sLoop])
         # either ESAct or availabe water from layer 1a and 1b
-        self.var.ESAct[sLoop] = np.where(self.var.FrostIndex > self.var.FrostIndexThreshold, globals.inZero, self.var.ESAct[sLoop])
+        self.var.ESAct[sLoop] = np.where(self.var.FrostIndex > self.var.FrostIndexThreshold, maskinfo.in_zero(), self.var.ESAct[sLoop])
         # soil evaporation is 0 when soil is frozen
-        self.var.ESAct[sLoop] = np.maximum(self.var.ESAct[sLoop], globals.inZero)
+        self.var.ESAct[sLoop] = np.maximum(self.var.ESAct[sLoop], maskinfo.in_zero())
 
 
         # distributing ESAct over layer 1a and 1b, take the water from 1a first
         testSupply1a = self.var.W1a[sLoop] - self.var.WRes1a[sLoop]
         EsAct1a = np.where(self.var.ESAct[sLoop] > testSupply1a, testSupply1a , self.var.ESAct[sLoop])
-        EsAct1b = np.maximum(self.var.ESAct[sLoop] - testSupply1a, globals.inZero)
+        EsAct1b = np.maximum(self.var.ESAct[sLoop] - testSupply1a, maskinfo.in_zero())
 
         self.var.W1a[sLoop] = self.var.W1a[sLoop] - EsAct1a
         self.var.W1b[sLoop] = self.var.W1b[sLoop] - EsAct1b
@@ -236,7 +237,7 @@ class soilloop(object):
         # Domain: permeable fraction of pixel only
         #print np.max(self.var.W1a)
         RelSat1 = np.where(self.var.PoreSpaceNotZero1a[sLoop], np.minimum(
-            self.var.W1[sLoop] / self.var.WS1[sLoop], 1.0), globals.inZero)
+            self.var.W1[sLoop] / self.var.WS1[sLoop], 1.0), maskinfo.in_zero())
         # Relative saturation term of the first two layers. This will allow to have more infiltration
         # than the storage capacity of layer 1
         # Setting this to  a maximum of 1
@@ -251,7 +252,7 @@ class soilloop(object):
         # pervious fraction of each pixel (1-SatFraction) times the depth of the upper soil layer.
         # For derivation see Appendix A in Todini, 1996
 
-        InfiltrationPot = np.where(self.var.FrostIndex > self.var.FrostIndexThreshold, globals.inZero, InfiltrationPot)
+        InfiltrationPot = np.where(self.var.FrostIndex > self.var.FrostIndexThreshold, maskinfo.in_zero(), InfiltrationPot)
         # When the soil is frozen (frostindex larger than threshold), potential
         # infiltration is zero
 
@@ -275,7 +276,7 @@ class soilloop(object):
         # Domain: permeable fraction of pixel only
         # SurfaceRunoff, InfiltrationPixel are valid for whole pixel
 
-        self.var.Infiltration[sLoop] = np.maximum(np.minimum(self.var.AvailableWaterForInfiltration[sLoop], InfiltrationPot), globals.inZero)
+        self.var.Infiltration[sLoop] = np.maximum(np.minimum(self.var.AvailableWaterForInfiltration[sLoop], InfiltrationPot), maskinfo.in_zero())
         # infiltration in [mm] per timestep
         # Maximum infiltration is equal to Rainfall-Interception-Snow+Snowmelt
 
@@ -288,7 +289,7 @@ class soilloop(object):
         #self.var.Infiltration[sLoop] = np.where(testW1a > self.var.WS1a[sLoop], self.var.WS1a[sLoop] - self.var.W1a[sLoop] ,self.var.Infiltration[sLoop])
            # in case we want to put it to runoff
         self.var.W1a[sLoop] = np.minimum(self.var.WS1a[sLoop], testW1a)
-        self.var.W1b[sLoop] = self.var.W1b[sLoop] + np.where(testW1a > self.var.WS1a[sLoop], testW1a - self.var.WS1a[sLoop], globals.inZero)
+        self.var.W1b[sLoop] = self.var.W1b[sLoop] + np.where(testW1a > self.var.WS1a[sLoop], testW1a - self.var.WS1a[sLoop], maskinfo.in_zero())
 
 
         # soil moisture amount is adjusted
@@ -315,9 +316,9 @@ class soilloop(object):
         CapacityLayer2 = self.var.WS2[sLoop] - self.var.W2[sLoop]
         # Available storage capacity in subsoil
 
-        CourantTopToSubA = np.where(AvailableWater1a == 0, globals.inZero, KUnSat1a * self.var.DtDay / AvailableWater1a)
-        CourantTopToSubB = np.where(AvailableWater1b == 0, globals.inZero, KUnSat1b * self.var.DtDay / AvailableWater1b)
-        CourantSubToGW = np.where(AvailableWater2 == 0, globals.inZero, KUnSat2 * self.var.DtDay / AvailableWater2)
+        CourantTopToSubA = np.where(AvailableWater1a == 0, maskinfo.in_zero(), KUnSat1a * self.var.DtDay / AvailableWater1a)
+        CourantTopToSubB = np.where(AvailableWater1b == 0, maskinfo.in_zero(), KUnSat1b * self.var.DtDay / AvailableWater1b)
+        CourantSubToGW = np.where(AvailableWater2 == 0, maskinfo.in_zero(), KUnSat2 * self.var.DtDay / AvailableWater2)
         # Courant condition for computed soil moisture fluxes:
         # if Courant gt CourantCrit: sub-steps needed for required numerical accuracy
         # 'If'-statement prevents division by zero when available water equals zero:
@@ -390,11 +391,11 @@ class soilloop(object):
             self.var.SeepSubToGW[sLoop] += SeepSubToGWSubStep
             # Update total flux out of subsoil for this step
 
-        self.var.SeepTopToSubA[sLoop] = np.where(self.var.FrostIndex > self.var.FrostIndexThreshold, globals.inZero, self.var.SeepTopToSubA[sLoop])
-        self.var.SeepTopToSubB[sLoop] = np.where(self.var.FrostIndex > self.var.FrostIndexThreshold, globals.inZero, self.var.SeepTopToSubB[sLoop])
+        self.var.SeepTopToSubA[sLoop] = np.where(self.var.FrostIndex > self.var.FrostIndexThreshold, maskinfo.in_zero(), self.var.SeepTopToSubA[sLoop])
+        self.var.SeepTopToSubB[sLoop] = np.where(self.var.FrostIndex > self.var.FrostIndexThreshold, maskinfo.in_zero(), self.var.SeepTopToSubB[sLoop])
         # When the soil is frozen (frostindex larger than threshold), seepage
         # is zero
-        self.var.SeepSubToGW[sLoop] = np.where(self.var.FrostIndex > self.var.FrostIndexThreshold, globals.inZero, self.var.SeepSubToGW[sLoop])
+        self.var.SeepSubToGW[sLoop] = np.where(self.var.FrostIndex > self.var.FrostIndexThreshold, maskinfo.in_zero(), self.var.SeepSubToGW[sLoop])
         # When the soil is frozen (frostindex larger than threshold), seepage
         # is zero
         self.var.W1a[sLoop] = self.var.W1a[sLoop] - self.var.SeepTopToSubA[sLoop]
@@ -409,11 +410,11 @@ class soilloop(object):
         # Remove the excess of water in the top layer
 
         self.var.Theta1a[sLoop] = np.where(self.var.PoreSpaceNotZero1a[sLoop], self.var.W1a[
-                                       sLoop] / self.var.SoilDepth1a[sLoop], globals.inZero)
+                                       sLoop] / self.var.SoilDepth1a[sLoop], maskinfo.in_zero())
         self.var.Theta1b[sLoop] = np.where(self.var.PoreSpaceNotZero1b[sLoop], self.var.W1b[
-                                       sLoop] / self.var.SoilDepth1b[sLoop], globals.inZero)
+                                       sLoop] / self.var.SoilDepth1b[sLoop], maskinfo.in_zero())
         self.var.Theta2[sLoop] = np.where(self.var.PoreSpaceNotZero2[sLoop], self.var.W2[
-                                       sLoop] / self.var.SoilDepth2[sLoop], globals.inZero)
+                                       sLoop] / self.var.SoilDepth2[sLoop], maskinfo.in_zero())
         # Calculate volumetric soil moisture contents of top- and sub soil
         # [V/V]
 
@@ -429,14 +430,14 @@ class soilloop(object):
 
         if option['simulatePF']:
             SatTerm1a = np.where(self.var.PoreSpaceNotZero1a[sLoop], (self.var.W1a[
-                             sLoop] - self.var.WRes1[sLoop]) / (self.var.WS1[sLoop] - self.var.WRes1[sLoop]), globals.inZero)
+                             sLoop] - self.var.WRes1[sLoop]) / (self.var.WS1[sLoop] - self.var.WRes1[sLoop]), maskinfo.in_zero())
             SatTerm1b = np.where(self.var.PoreSpaceNotZero1b[sLoop], (self.var.W1b[
-                             sLoop] - self.var.WRes1[sLoop]) / (self.var.WS1[sLoop] - self.var.WRes1[sLoop]), globals.inZero)
+                             sLoop] - self.var.WRes1[sLoop]) / (self.var.WS1[sLoop] - self.var.WRes1[sLoop]), maskinfo.in_zero())
             SatTerm2 = np.where(self.var.PoreSpaceNotZero2[sLoop], (self.var.W2[
-                             sLoop] - self.var.WRes2[sLoop]) / (self.var.WS2[sLoop] - self.var.WRes2[sLoop]), globals.inZero)
-            SatTerm1a = np.maximum(np.minimum(SatTerm1a, 1), globals.inZero)
-            SatTerm1b = np.maximum(np.minimum(SatTerm1b, 1), globals.inZero)
-            SatTerm2  = np.maximum(np.minimum(SatTerm2 , 1), globals.inZero)
+                             sLoop] - self.var.WRes2[sLoop]) / (self.var.WS2[sLoop] - self.var.WRes2[sLoop]), maskinfo.in_zero())
+            SatTerm1a = np.maximum(np.minimum(SatTerm1a, 1), maskinfo.in_zero())
+            SatTerm1b = np.maximum(np.minimum(SatTerm1b, 1), maskinfo.in_zero())
+            SatTerm2  = np.maximum(np.minimum(SatTerm2 , 1), maskinfo.in_zero())
             # Saturation term in Van Genuchten equation
 
             Head1a = np.where(SatTerm1a == 0, self.var.HeadMax, np.minimum(self.var.HeadMax, self.var.GenuInvAlpha1a[
@@ -464,7 +465,7 @@ class soilloop(object):
         self.var.UZOutflow[sLoop] = np.minimum(self.var.UpperZoneK * self.var.UZ[sLoop], self.var.UZ[sLoop])
         # Outflow out of upper zone [mm]
 
-        self.var.UZ[sLoop] = np.maximum(self.var.UZ[sLoop] - self.var.UZOutflow[sLoop], globals.inZero)
+        self.var.UZ[sLoop] = np.maximum(self.var.UZ[sLoop] - self.var.UZOutflow[sLoop], maskinfo.in_zero())
 
         # Update upper-, lower zone storage
 
@@ -496,7 +497,7 @@ class soilloop(object):
         # percolation from upper to lower response box in [mm] per timestep
         # maximum value is controlled by GwPercStep (which is
         # GwPercValue*DtDay)
-        self.var.UZ[sLoop] = np.maximum(self.var.UZ[sLoop] - self.var.GwPercUZLZ[sLoop], globals.inZero)
+        self.var.UZ[sLoop] = np.maximum(self.var.UZ[sLoop] - self.var.GwPercUZLZ[sLoop], maskinfo.in_zero())
         # (ground)water in upper response box [mm]
 
     def unsaturatedConductivity(self, fract, tmpW=None):

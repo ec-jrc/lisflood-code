@@ -46,9 +46,8 @@ class routing(object):
     def initial(self):
         """ initial part of the routing module
         """
-
-        # ------------------------------------------------
-        self.var.avgdis = globals.inZero.copy()
+        maskinfo = MaskInfo.instance()
+        self.var.avgdis = maskinfo.in_zero()
         self.var.Beta = loadmap('beta')
         self.var.InvBeta = 1 / self.var.Beta
         # Inverse of beta for kinematic wave
@@ -92,13 +91,12 @@ class routing(object):
 
         self.var.IsChannelPcr = pcraster.boolean(loadmap('Channels',pcr=True))
         self.var.IsChannel = np.bool8(compressArray(self.var.IsChannelPcr))
-
         # Identify channel pixels
         self.var.IsChannelKinematic = self.var.IsChannel.copy()
         # Identify kinematic wave channel pixels
         # (identical to IsChannel, unless dynamic wave is used, see below)
         #self.var.IsStructureKinematic = pcraster.boolean(0)
-        self.var.IsStructureKinematic = np.bool8(globals.inZero.copy())
+        self.var.IsStructureKinematic = np.bool8(maskinfo.in_zero())
 
         # Map that identifies special inflow/outflow structures (reservoirs, lakes) within the
         # kinematic wave channel routing. Set to (dummy) value of zero modified in reservoir and lake
@@ -158,13 +156,13 @@ class routing(object):
             self.var.AtLastPoint = AtOutflow
             self.var.AtLastPointC = np.bool8(compressArray(self.var.AtLastPoint))
             # assign unique identifier to each of them
-
+        maskinfo = MaskInfo.instance()
         lddC = compressArray(self.var.LddKinematic)
-        inAr = decompress(np.arange(maskinfo['mapC'][0],dtype="int32"))
+        inAr = decompress(np.arange(maskinfo.info.mapC[0],dtype="int32"))
         # giving a number to each non missing pixel as id
         self.var.downstruct = (compressArray(downstream(self.var.LddKinematic,inAr))).astype("int32")
         # each upstream pixel gets the id of the downstream pixel
-        self.var.downstruct[lddC==5] = maskinfo['mapC'][0]
+        self.var.downstruct[lddC==5] = maskinfo.info.mapC[0]
         # all pits gets a high number
         #d3=np.bincount(self.var.down, weights=loadmap('AvgDis'))[:-1]
         # upstream function in numpy
@@ -213,14 +211,15 @@ class routing(object):
         # otherwise TotalCrossSectionAreaInitValue (typically end map from previous simulation)
 
         if option['SplitRouting']:
+            # in_zero = maskinfo.in_zero()
             CrossSection2AreaInitValue = loadmap('CrossSection2AreaInitValue')
-            self.var.CrossSection2Area = np.where(CrossSection2AreaInitValue == -9999, globals.inZero, CrossSection2AreaInitValue)
+            self.var.CrossSection2Area = np.where(CrossSection2AreaInitValue == -9999, maskinfo.in_zero(), CrossSection2AreaInitValue)
             # cross-sectional area [m2] for 2nd line of routing: if initial value in binding equals -9999 the value is set to 0
             # otherwise CrossSection2AreaInitValue (typically end map from previous simulation)
 
             PrevSideflowInitValue = loadmap('PrevSideflowInitValue')
 
-            self.var.Sideflow1Chan = np.where(PrevSideflowInitValue == -9999, globals.inZero, PrevSideflowInitValue)
+            self.var.Sideflow1Chan = np.where(PrevSideflowInitValue == -9999, maskinfo.in_zero(), PrevSideflowInitValue)
             # sideflow from previous run for 1st line of routing: if initial value in binding equals -9999 the value is set to 0
             # otherwise PrevSideflowInitValue (typically end map from previous simulation)
 
@@ -257,7 +256,7 @@ class routing(object):
         # Initialise discharge at kinematic wave pixels (note that InvBeta is
         # simply 1/beta, computational efficiency!)
 
-        self.var.CumQ = globals.inZero.copy()
+        self.var.CumQ = maskinfo.in_zero()
         # ininialise sum of discharge to calculate average
 
 # ************************************************************
@@ -339,13 +338,13 @@ class routing(object):
         # Initialising cumulative output variables
         # These are all needed to compute the cumulative mass balance error
 
-        self.var.DischargeM3Out = globals.inZero.copy()
+        self.var.DischargeM3Out = maskinfo.in_zero()
         # cumulative discharge at outlet [m3]
-        self.var.TotalQInM3 = globals.inZero.copy()
+        self.var.TotalQInM3 = maskinfo.in_zero()
         # cumulative inflow from inflow hydrographs [m3]
-        #self.var.sumDis = globals.inZero.copy()
-        self.var.sumDis = globals.inZero.copy()
-        self.var.sumIn = globals.inZero.copy()
+        #self.var.sumDis = maskinfo.in_zero()
+        self.var.sumDis = maskinfo.in_zero()
+        self.var.sumIn = maskinfo.in_zero()
 
     def initialSecond(self):
         """ initial part of the second channel routing module
@@ -396,7 +395,8 @@ class routing(object):
                 self.var.ChanQKin = (self.var.ChanM3Kin*self.var.InvChanLength*self.var.InvChannelAlpha)**(self.var.InvBeta)
 
         # Initialise parallel kinematic wave router: main channel-only routing if self.var.ChannelAlpha2 is None; else split-routing(main channel + floodplains)
-        self.river_router = kinematicWave(compressArray(self.var.LddKinematic), ~maskinfo["mask"], self.var.ChannelAlpha,\
+        maskinfo = MaskInfo.instance()
+        self.river_router = kinematicWave(compressArray(self.var.LddKinematic), ~maskinfo.info.mask, self.var.ChannelAlpha,\
                                           self.var.Beta, self.var.ChanLength, self.var.DtRouting,\
                                           int(binding["numCPUs_parallelKinematicWave"]), alpha_floodplains=self.var.ChannelAlpha2)
 

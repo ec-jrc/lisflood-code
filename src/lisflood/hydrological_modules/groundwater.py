@@ -49,7 +49,7 @@ class groundwater(object):
         # unlikely, but you never know..)
         settings = LisSettings.instance()
         option = settings.options
-
+        maskinfo = MaskInfo.instance()
         if option['InitLisflood']:
             LZAvInflowGuess = self.var.GwPerc - self.var.GwLoss
         else:
@@ -89,16 +89,16 @@ class groundwater(object):
         # Initialising cumulative output variables
         # These are all needed to compute the cumulative mass balance error
 
-        self.var.GwLossCUM = globals.inZero.copy()
+        self.var.GwLossCUM = maskinfo.in_zero()
         # Cumulative groundwater loss [mm]
-        self.var.LZInflowCUM = globals.inZero.copy()
+        self.var.LZInflowCUM = maskinfo.in_zero()
         # Cumulative lower zone inflow [mm]
         # Needed for calculation of average LZ inflow (initialisation)
 
-        self.var.GwPercUZLZ = defsoil(globals.inZero.copy())
-        self.var.GwLossLZ = globals.inZero.copy()
-        self.var.UZOutflow = defsoil(globals.inZero.copy())
-        self.var.LZOutflow = globals.inZero.copy()
+        self.var.GwPercUZLZ = defsoil(maskinfo.in_zero())
+        self.var.GwLossLZ = maskinfo.in_zero()
+        self.var.UZOutflow = defsoil(maskinfo.in_zero())
+        self.var.LZOutflow = maskinfo.in_zero()
 
     def dynamic(self):
         # outflow from LZ to channel stops when LZ is below its threshold.
