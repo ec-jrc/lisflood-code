@@ -25,7 +25,7 @@ from netCDF4 import num2date, date2num
 # import time as xtime
 # import os
 from . import globals
-from .settings import calendar_inconsistency_warning, get_calendar_type, calendar, MaskInfo, MaskAttrs
+from .settings import calendar_inconsistency_warning, get_calendar_type, calendar, MaskInfo, MaskAttrs, CutMap
 from .errors import LisfloodWarning
 from .zusatz import *
 
@@ -127,9 +127,9 @@ def mapattrNetCDF(name):
     nf1.close()
     maskattrs = MaskAttrs.instance()
     if maskattrs['cell'] != round(np.abs(x2 - x1), 5) or maskattrs['cell'] != round(np.abs(y2 - y1), 5):
-        settings = LisSettings.instance()
-        binding = settings.binding
-        raise LisfloodError("Cell size different in maskmap {} and {}".format(binding['MaskMap'], filename))
+        raise LisfloodError("Cell size different in maskmap {} and {}".format(
+            LisSettings.instance().binding['MaskMap'], filename)
+        )
     half_cell = maskattrs['cell'] / 2
     x = x1 - half_cell  # |
     y = y1 + half_cell  # | coordinates of the upper left corner of the input file upper left pixel
@@ -137,7 +137,7 @@ def mapattrNetCDF(name):
     cut1 = cut0 + maskattrs['col']
     cut2 = int(round(np.abs(maskattrs['y'] - y) / maskattrs['cell'], 5))
     cut3 = cut2 + maskattrs['row']
-    return cut0, cut1, cut2, cut3 # input data will be sliced using [cut0:cut1,cut2:cut3]
+    return cut0, cut1, cut2, cut3  # input data will be sliced using [cut0:cut1,cut2:cut3]
 
 
 def loadsetclone(name):
@@ -640,7 +640,8 @@ def readnetcdf(name, time, timestampflag='exact', averageyearflag=False):
 
     # get index of timestep in netCDF file corresponding to current simulation date
     current_ncdf_index = np.where(t_steps == current_ncdf_step)[0][0]
-    mapnp = nf1.variables[variable_name][current_ncdf_index, cutmap[2]:cutmap[3], cutmap[0]:cutmap[1]]
+    cutmap = CutMap.instance()
+    mapnp = nf1.variables[variable_name][current_ncdf_index, cutmap.cuts[2]:cutmap.cuts[3], cutmap.cuts[0]:cutmap.cuts[1]]
     nf1.close()
 
     mapC = compressArray(mapnp, pcr=False, name=filename)
@@ -804,8 +805,9 @@ def writenet(flag, inputmap, netfile, DtDay,
     flags = settings.flags
     prefix = os.path.basename(netfile)
     netfile += ".nc"
-    row = np.abs(cutmap[3] - cutmap[2])
-    col = np.abs(cutmap[1] - cutmap[0])
+    cutmap = CutMap.instance()
+    row = np.abs(cutmap.cuts[3] - cutmap.cuts[2])
+    col = np.abs(cutmap.cuts[1] - cutmap.cuts[0])
     if flag == 0:
         nf1 = iterOpenNetcdf(netfile, "", 'w', format='NETCDF4')
         # general Attributes

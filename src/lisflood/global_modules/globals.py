@@ -18,8 +18,8 @@ from __future__ import absolute_import
 
 # defining global variables
 
-global cutmap           #defines the MaskMap inside the forcing maps
-cutmap = [0, 1, 0, 1]
+# global cutmap           #defines the MaskMap inside the forcing maps
+# cutmap = [0, 1, 0, 1]
 
 global metadataNCDF     #store map metadata from netcdf default file (or e0.nc)
 metadataNCDF = {}

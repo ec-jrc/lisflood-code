@@ -113,6 +113,12 @@ class MaskAttrs(with_metaclass(Singleton)):
 
 
 @nine
+class CutMap(with_metaclass(Singleton)):
+    def __init__(self, cut1, cut2, cut3, cut4):
+        self.cuts = (cut1, cut2, cut3, cut4)
+
+
+@nine
 class MaskInfo(with_metaclass(Singleton)):
     Info = namedtuple('Info', 'mask, shape, maskflat, shapeflat, mapC, maskall')
 

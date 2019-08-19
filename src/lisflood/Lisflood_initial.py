@@ -16,6 +16,7 @@ See the Licence for the specific language governing permissions and limitations 
 """
 from __future__ import print_function, absolute_import
 
+from lisflood.global_modules.settings import CutMap
 from .hydrological_modules.miscInitial import *
 
 from .hydrological_modules.readmeteo import *
@@ -72,7 +73,8 @@ class LisfloodModel_ini(DynamicModel):
             # get the extent of the maps from the precipitation input maps
             # and the modelling extent from the MaskMap
             # cutmap[] defines the MaskMap inside the precipitation map
-            cutmap[0], cutmap[1], cutmap[2], cutmap[3] = mapattrNetCDF(binding['E0Maps'])
+            _ = CutMap(*mapattrNetCDF(binding['E0Maps']))  # register cutmaps
+            # cutmap[0], cutmap[1], cutmap[2], cutmap[3] = mapattrNetCDF(binding['E0Maps'])
         if option['writeNetcdfStack'] or option['writeNetcdf']:
             # if NetCDF is writen, the pr.nc is read to get the metadata
             # like projection
