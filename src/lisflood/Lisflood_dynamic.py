@@ -20,6 +20,8 @@ from nine import range
 from lisflood.global_modules.add1 import *
 import gc
 
+from lisflood.global_modules.settings import CDFFlags
+
 
 class LisfloodModel_dyn(DynamicModel):
 
@@ -44,7 +46,8 @@ class LisfloodModel_dyn(DynamicModel):
         # model time step
         i = self.currentTimeStep()
         if i == 1:
-            globals.cdfFlag = [0, 0, 0, 0 ,0 ,0,0]
+            cdfFlag = CDFFlags()
+            # globals.cdfFlag = [0, 0, 0, 0 ,0 ,0,0]
           # flag for netcdf output for all, steps and end
           # set back to 0,0,0,0,0,0 if new Monte Carlo run
 

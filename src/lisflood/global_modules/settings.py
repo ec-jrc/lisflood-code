@@ -23,7 +23,7 @@ import getopt
 import sys
 
 import datetime
-from cftime._cftime import date2num, num2date
+# from cftime._cftime import date2num, num2date
 from future.backports import OrderedDict
 from future.utils import with_metaclass
 from nine import (IS_PYTHON2, str, range, map, nine)
@@ -68,6 +68,24 @@ class Singleton(type):
 
     def instance(cls):
         return cls._current[cls]
+
+
+@nine
+class CDFFlags(with_metaclass(Singleton)):
+    """
+    Flags for netcdf output for end, steps, all, monthly (steps), yearly (steps), monthly , yearly
+    """
+    def __init__(self):
+        self.flags = [0, 0, 0, 0, 0, 0, 0]
+
+    def inc(self, idx):
+        self.flags[idx] += 1
+
+    def set(self, data):
+        self.flags = data
+
+    def __getitem__(self, item):
+        return self.flags[item]
 
 
 @nine

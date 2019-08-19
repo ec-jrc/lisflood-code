@@ -30,7 +30,7 @@ from .Lisflood_dynamic import LisfloodModel_dyn
 
 from .Lisflood_initial import LisfloodModel_ini
 from .Lisflood_monteCarlo import LisfloodModel_monteCarlo, MonteCarloFramework
-from .global_modules.settings import LisSettings
+from .global_modules.settings import LisSettings, CDFFlags
 from .global_modules.errors import LisfloodRunInfo, LisfloodWarning, LisfloodError
 from .global_modules.settings import calendar, inttodate
 from . import __authors__, __version__, __date__, __status__
@@ -54,6 +54,7 @@ def Lisfloodexe(settings, optionxml):
 
     # optionBinding(settings, optionxml)
     lissettings = LisSettings(settings)
+    _ = CDFFlags()
     binding = lissettings.binding
     option = lissettings.options
     report_steps = lissettings.report_steps

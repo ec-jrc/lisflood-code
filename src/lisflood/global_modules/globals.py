@@ -16,39 +16,10 @@ See the Licence for the specific language governing permissions and limitations 
 """
 from __future__ import absolute_import
 
-#getopt module is a parser for command line options (consider using argparse module instead)
-import getopt
-from collections import OrderedDict
-
-#defining global variables
+# defining global variables
 
 global maskinfo         #Definition of compressed mask array and info how to blow it up again
 maskinfo = {}
-
-
-# global modelSteps       #list of start and end time step for the model (modelSteps[0] = start; modelSteps[1] = end)
-# modelSteps=[]
-# xmlstring=[]
-
-# global binding          #dictionary of all model's options and settings for running ang managing the model
-# binding = {}
-
-# global option           #dictionary of all model's options and settings for running ang managing the model
-# option = {}
-
-# global Flags            #dictionary of flags defining model's behavior (quiet,veryquiet, loud, checkfiles, noheader,printtime, debug)
-
-# global ReportSteps      #reporting steps for state maps
-# ReportSteps = {}
-
-# global FilterSteps      #used only in Kalmanf filter option
-# FilterSteps = []
-
-# global EnsMembers       #used only in Kalmanf filter option
-# EnsMembers = []
-
-# global outputDir        #path of directory to store model outputs
-# outputDir = []
 
 # global MMaskMap, maskmapAttr, bigmapAttr, cutmap, metadataNCDF
 global MMaskMap         #mask for checking maps
@@ -67,10 +38,6 @@ metadataNCDF = {}
 global timestepInit     #if initial conditions are stored as netCDF with different time steps this variable indicates which time step to use either as date e.g. 1/1/2010 or as number e.g. 5
 timestepInit =[]
 
-
-global cdfFlag
-cdfFlag = [0,0, 0,0,0,0,0]  # flag for netcdf output for end, steps, all, monthly (steps), yearly(steps), monthly , yearly
-
 # global timeMes,TimeMesString, timeMesSum
 global timeMes          # time measure - filled in dynamic
 timeMes=[]
@@ -80,50 +47,3 @@ timeMesString = []
 
 global timeMesSum       # time measure of hydrological modules
 timeMesSum = []
-
-#initializing variables
-# reportTimeSerieAct = {}
-# reportMapsAll = {}
-# reportMapsSteps = {}
-# reportMapsEnd = {}
-# nrCores = []
-
-# ----------------------------------
-#set names of input arguments
-#initializing Flags to false values
-# Flags = OrderedDict([('quiet', False), ('veryquiet', False), ('loud', False),
-#                      ('checkfiles', False), ('noheader', False), ('printtime', False),
-#                      ('debug', False), ('nancheck', False)])
-
-# def globalFlags(arg):
-#     """ Read flags for model launching options
-#
-#     Read flags for model lounching options: according to the flags the output is adjusted
-#     (quiet,veryquiet, loud, checkfiles, noheader, printtime, debug)
-#
-#     :param arg: model argument argument
-#     :return:
-#     """
-#     try:
-#         opts, args = getopt.getopt(arg, 'qvlchtdn', Flags.keys())
-#     except getopt.GetoptError:
-#         from ..main import usage
-#         usage()
-#
-#     for o, a in opts:
-#         if o in ('-q', '--quiet'):
-#             Flags['quiet'] = True
-#         if o in ('-v', '--veryquiet'):
-#             Flags['veryquiet'] = True
-#         if o in ('-l', '--loud'):
-#             Flags['loud'] = True
-#         if o in ('-c', '--checkfiles'):
-#             Flags['checkfiles'] = True
-#         if o in ('-h', '--noheader'):
-#             Flags['noheader'] = True
-#         if o in ('-t', '--printtime'):
-#             Flags['printtime'] = True
-#         if o in ('-d', '--debug'):
-#             Flags['debug'] = True
-#         if o in ('-n', '--nancheck'):
-#             Flags['nancheck'] = True

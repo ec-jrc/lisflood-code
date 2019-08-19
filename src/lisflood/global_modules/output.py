@@ -16,7 +16,7 @@ See the Licence for the specific language governing permissions and limitations 
 """
 from __future__ import print_function, absolute_import
 
-from .settings import inttodate
+from .settings import inttodate, CDFFlags
 from .add1 import *
 
 
@@ -214,7 +214,7 @@ class outputTssMap(object):
                     try:
                         if report_maps_steps[maps]['yearly'][0] == "True":
                             yearly = True
-                            flagcdf = 4 # set to yearly (step) flag
+                            flagcdf = 4  # set to yearly (step) flag
                             frequency = "annual"
                     except:
                         yearly = False
@@ -228,15 +228,16 @@ class outputTssMap(object):
                             # get step number for last reporting step
                             reportStepEnd = self.var.ReportSteps[-1]-self.var.ReportSteps[0]+1
                             try:
-                                writenet(globals.cdfFlag[flagcdf], eval(what), where, self.var.DtDay, maps,
+                                cdfflags = CDFFlags.instance()
+                                writenet(cdfflags[flagcdf], eval(what), where, self.var.DtDay, maps,
                                          report_maps_steps[maps]['outputVar'][0], report_maps_steps[maps]['unit'][0], 'f4',
                                          reportStartDate, reportStepStart, reportStepEnd, frequency)
                             except Exception as e:
                                 print(" +----> ERR: {} - {}".format(type(e), e))
                                 print("REP flag:{} - {} {} {} {} {} {} {} {} {} {}".format(
-                                    globals.cdfFlag[flagcdf], what, where, self.var.DtDay, maps,
-                                    report_maps_steps[maps]['outputVar'][0], report_maps_steps[maps]['unit'][0], 'f4',
-                                    reportStartDate, reportStepStart, reportStepEnd
+                                      cdfflags[flagcdf], what, where, self.var.DtDay, maps,
+                                      report_maps_steps[maps]['outputVar'][0], report_maps_steps[maps]['unit'][0], 'f4',
+                                      reportStartDate, reportStepStart, reportStepEnd
                                 ))
 
                     else:
@@ -266,7 +267,7 @@ class outputTssMap(object):
                 try:
                     if report_maps_all[maps].yearly:
                         yearly = True
-                        flagcdf = 6 # set to yearly flag
+                        flagcdf = 6  # set to yearly flag
                         frequency = "annual"
                 except:
                     yearly = False
@@ -285,27 +286,35 @@ class outputTssMap(object):
                         reportStepEnd = binding['StepEndInt'] - binding['StepStartInt'] + 1
 
                         try:
-                            writenet(globals.cdfFlag[flagcdf], eval(what), where, self.var.DtDay, maps, report_maps_all[maps].output_var,
+                            cdfflags = CDFFlags.instance()
+                            writenet(cdfflags[flagcdf], eval(what), where, self.var.DtDay, maps, report_maps_all[maps].output_var,
                                      report_maps_all[maps].unit, 'f4', reportStartDate, reportStepStart,reportStepEnd, frequency)
                         except Exception as e:
                             print(LisfloodWarning(str(e)))
                             print("ALL", what, where, self.var.DtDay, maps, report_maps_all[maps].output_var,
-                                  report_maps_all[maps].unit, 'f4', reportStartDate,reportStepStart,reportStepEnd)
-                        ##############################
-
-                        # writenet(globals.cdfFlag[flagcdf], eval(what), where, self.var.currentTimeStep(), maps, reportMapsAll[
-                        #     maps]['outputVar'][0], reportMapsAll[maps]['unit'][0], 'f4', self.var.CalendarDayStart)
+                                  report_maps_all[maps].unit, 'f4', reportStartDate,reportStepStart, reportStepEnd)
                     else:
                         self.var.report(decompress(eval(what)), trimPCRasterOutputPath(where))
 
         # set the falg to indicate if a netcdffile has to be created or is only appended
         # if reportstep than increase the counter
         if self.var.currentTimeStep() in self.var.ReportSteps:
-            globals.cdfFlag[1] += 1
-            if self.var.monthend: globals.cdfFlag[3] += 1
-            if self.var.yearend: globals.cdfFlag[4] += 1
+            cdfflags = CDFFlags.instance()
+            cdfflags.inc(1)
+            # globals.cdfFlag[1] += 1
+            if self.var.monthend:
+                # globals.cdfFlag[3] += 1
+                cdfflags.inc(3)
+            if self.var.yearend:
+                # globals.cdfFlag[4] += 1
+                cdfflags.inc(4)
 
         # increase the counter for report all maps
-        globals.cdfFlag[2] += 1
-        if self.var.monthend: globals.cdfFlag[5] += 1
-        if self.var.yearend: globals.cdfFlag[6] += 1
+        cdfflags.inc(2)
+        # globals.cdfFlag[2] += 1
+        if self.var.monthend:
+            # globals.cdfFlag[5] += 1
+            cdfflags.inc(5)
+        if self.var.yearend:
+            # globals.cdfFlag[6] += 1
+            cdfflags.inc(6)

@@ -944,7 +944,7 @@ def writenet(flag, inputmap, netfile, DtDay,
             if "esri_pe_string" in metadataNCDF[var].keys():
                 value.esri_pe_string = metadataNCDF[var]['esri_pe_string']
     else:
-        nf1 = iterOpenNetcdf(netfile, "", 'a',format='NETCDF4')
+        nf1 = iterOpenNetcdf(netfile, "", 'a', format='NETCDF4')
     if flags['nancheck']:
         nanCheckMap(inputmap, netfile, value_standard_name)
     mapnp = maskinfo['maskall'].copy()
