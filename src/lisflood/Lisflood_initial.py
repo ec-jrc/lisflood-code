@@ -120,9 +120,6 @@ class LisfloodModel_ini(DynamicModel):
         # include output of tss and maps
         self.output_module = outputTssMap(self)
 
-        MMaskMap = self.MaskMap
-        # for checking maps
-
         self.ReportSteps = report_steps['rep']
 
         self.landusechange_module.initial()
@@ -164,7 +161,6 @@ class LisfloodModel_ini(DynamicModel):
         self.waterbalance_module.initial()
         # calculate initial amount of water in the catchment
 
-
         # debug start
         if flags['debug']:
             # Print value of variables after initialization (from state files)
@@ -180,8 +176,6 @@ class LisfloodModel_ini(DynamicModel):
 
             ftemp1.close()
 
-
-# ====== INITIAL ================================
     def initial(self):
         """ Initial part of LISFLOOD
             calls the initial part of the hydrological modules
@@ -190,7 +184,7 @@ class LisfloodModel_ini(DynamicModel):
         # Perturbe the states
         #self.groundwater_module.var.UpperZoneK = perturbState(self.groundwater_module.var.UpperZoneK, method = "normal", minVal=0, maxVal=100, mu=self.groundwater_module.var.UpperZoneK, sigma=0.05, spatial=False)
         #self.groundwater_module.var.UZ = perturbState(self.groundwater_module.var.UZ, method = "normal", minVal=0, maxVal=100, mu=10, sigma=3, spatial=False, single=False)
-        #pass
+        pass
 
 # ====== METHODS ================================
     def deffraction(self, para):

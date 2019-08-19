@@ -14,8 +14,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
+from __future__ import absolute_import, print_function
 
-from lisflood.global_modules.add1 import *
+from ..global_modules.add1 import *
+
 import xarray as xr
 from pyproj import Proj
 
@@ -24,11 +26,12 @@ from lisflood.global_modules.settings import calendar
 
 def coordinatesLand(eastings_forcing, northings_forcing):
     """"""
-    half_cell = maskmapAttr['cell'] / 2.
-    top_row = np.where(np.round(northings_forcing, 5) == np.round(maskmapAttr['y'] - half_cell, 5))[0][0]
-    left_col = np.where(np.round(eastings_forcing, 5) == np.round(maskmapAttr['x'] + half_cell, 5))[0][0]
-    row_slice = slice(top_row, top_row + maskmapAttr['row'])
-    col_slice = slice(left_col, left_col + maskmapAttr['col'])
+    maskattrs = MaskAttrs.instance()
+    half_cell = maskattrs['cell'] / 2.
+    top_row = np.where(np.round(northings_forcing, 5) == np.round(maskattrs['y'] - half_cell, 5))[0][0]
+    left_col = np.where(np.round(eastings_forcing, 5) == np.round(maskattrs['x'] + half_cell, 5))[0][0]
+    row_slice = slice(top_row, top_row + maskattrs['row'])
+    col_slice = slice(left_col, left_col + maskattrs['col'])
     maskinfo = MaskInfo.instance()
     return [co[row_slice,col_slice][~maskinfo.info.mask] for co in np.meshgrid(eastings_forcing, northings_forcing)]
 
@@ -52,6 +55,7 @@ class miscInitial(object):
         option = settings.options
         binding = settings.binding
         maskinfo = MaskInfo.instance()
+        maskattrs = MaskAttrs.instance()
         if option['gridSizeUserDefined']:
 
             # <lfoption name="gridSizeUserDefined" choice="1" default="0">
@@ -79,7 +83,7 @@ class miscInitial(object):
             # Length of pixel [m]
             #self.var.PixelLength = celllength()
             self.var.PixelLengthPcr = celllength()
-            self.var.PixelLength = maskmapAttr['cell']
+            self.var.PixelLength = maskattrs['cell']
             # Area of pixel [m2]
             self.var.PixelAreaPcr = self.var.PixelLength ** 2
             self.var.PixelArea=np.empty(maskinfo.info.mapC)

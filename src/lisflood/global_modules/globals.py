@@ -18,17 +18,6 @@ from __future__ import absolute_import
 
 # defining global variables
 
-# global maskinfo         #Definition of compressed mask array and info how to blow it up again
-# maskinfo = {}
-
-# global MMaskMap, maskmapAttr, bigmapAttr, cutmap, metadataNCDF
-global MMaskMap         #mask for checking maps
-MMaskMap = 0
-
-global maskmapAttr      #attributes of masking map (clonemap) - dictionary
-maskmapAttr = {}
-
-
 global cutmap           #defines the MaskMap inside the forcing maps
 cutmap = [0, 1, 0, 1]
 

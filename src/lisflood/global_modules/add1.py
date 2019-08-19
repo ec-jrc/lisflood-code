@@ -25,7 +25,7 @@ from netCDF4 import num2date, date2num
 # import time as xtime
 # import os
 from . import globals
-from .settings import calendar_inconsistency_warning, get_calendar_type, calendar, MaskInfo
+from .settings import calendar_inconsistency_warning, get_calendar_type, calendar, MaskInfo, MaskAttrs
 from .errors import LisfloodWarning
 from .zusatz import *
 
@@ -125,15 +125,18 @@ def mapattrNetCDF(name):
     spatial_dims = ('x', 'y') if 'x' in nf1.variables else ('lon', 'lat')
     x1, x2, y1, y2 = [round(nf1.variables[v][j], 5) for v in spatial_dims for j in (0, 1)]
     nf1.close()
-    if maskmapAttr['cell'] != round(np.abs(x2 - x1), 5) or maskmapAttr['cell'] != round(np.abs(y2 - y1), 5):
+    maskattrs = MaskAttrs.instance()
+    if maskattrs['cell'] != round(np.abs(x2 - x1), 5) or maskattrs['cell'] != round(np.abs(y2 - y1), 5):
+        settings = LisSettings.instance()
+        binding = settings.binding
         raise LisfloodError("Cell size different in maskmap {} and {}".format(binding['MaskMap'], filename))
-    half_cell = maskmapAttr['cell'] / 2
+    half_cell = maskattrs['cell'] / 2
     x = x1 - half_cell  # |
     y = y1 + half_cell  # | coordinates of the upper left corner of the input file upper left pixel
-    cut0 = int(round(np.abs(maskmapAttr['x'] - x) / maskmapAttr['cell'], 5))
-    cut1 = cut0 + maskmapAttr['col']
-    cut2 = int(round(np.abs(maskmapAttr['y'] - y) / maskmapAttr['cell'], 5))
-    cut3 = cut2 + maskmapAttr['row']
+    cut0 = int(round(np.abs(maskattrs['x'] - x) / maskattrs['cell'], 5))
+    cut1 = cut0 + maskattrs['col']
+    cut2 = int(round(np.abs(maskattrs['y'] - y) / maskattrs['cell'], 5))
+    cut3 = cut2 + maskattrs['row']
     return cut0, cut1, cut2, cut3 # input data will be sliced using [cut0:cut1,cut2:cut3]
 
 
@@ -212,37 +215,17 @@ def loadsetclone(name):
             checkmap(name, filename, map, flagmap, 0)
     else:
         raise LisfloodError("Maskmap: {} is not a valid mask map nor valid coordinates".format(name))
-
-    # Definition of cellsize, coordinates of the meteomaps and maskmap
-    # need some love for error handling
-    maskmapAttr['x'] = pcraster.clone().west()          # mask map West bound
-    maskmapAttr['y'] = pcraster.clone().north()         # mask map North bound
-    maskmapAttr['col'] = pcraster.clone().nrCols()      # mask map number of columns
-    maskmapAttr['row'] = pcraster.clone().nrRows()      # mask map number of rows
-    maskmapAttr['cell'] = pcraster.clone().cellSize()   # mask map cell size
-
+    _ = MaskAttrs()  # init maskattrs
     # put in the ldd map
     # if there is no ldd at a cell, this cell should be excluded from modelling
-    ldd = loadmap('Ldd',pcr=True)
-    #convert ldd to numpy
-    maskldd = pcr2numpy(ldd,np.nan)
-    #convert numpy map to 8bit
+    ldd = loadmap('Ldd', pcr=True)
+    # convert ldd to numpy
+    maskldd = pcr2numpy(ldd, np.nan)
+    # convert numpy map to 8bit
     maskarea = np.bool8(mapnp)
-    #compute mask (pixels in maskldd AND maskarea)
+    # compute mask (pixels in maskldd AND maskarea)
     mask = np.logical_not(np.logical_and(maskldd, maskarea))
-    maskinfo = MaskInfo(mask)
-
-    # #return all the non-masked data as a 1-D array
-    # mapC = np.ma.compressed(np.ma.masked_array(mask,mask))
-    # # Definition of compressed array and info how to blow it up again
-    # maskinfo['mask']=mask
-    # maskinfo['shape']=mask.shape
-    # maskinfo['maskflat']=mask.ravel()    # map to 1D not compresses
-    # maskinfo['shapeflat']=maskinfo['maskflat'].shape   #length of the 1D array
-    # maskinfo['mapC']=mapC.shape                        # length of the compressed 1D array
-    # maskinfo['maskall'] =np.ma.masked_all(maskinfo['shapeflat'])  # empty map 1D but with mask
-    # maskinfo['maskall'].mask = maskinfo['maskflat']
-    # globals.inZero = np.zeros(maskinfo['mapC'])
+    _ = MaskInfo(mask, map)  # MaskInfo init here
 
     if flags['nancheck']:
         nanCheckMap(ldd, binding['Ldd'], 'Ldd')
@@ -551,37 +534,37 @@ def loadLAI(value, pcrvalue, i,pcr=False):
         return mapC
 
 
-def readmapsparse(name, time, oldmap):
-    """
-    load stack of maps 1 at each timestamp in Pcraster format
-    """
-    filename = generateName(name, time)
-    try:
-        map = iterReadPCRasterMap(filename)
-        find = 1
-    except:
-        find = 2
-        if oldmap is None:
-            for i in range(time - 1, 0, -1):
-                altfilename = generateName(name, i)
-                if os.path.exists(altfilename):
-                    map = iterReadPCRasterMap(altfilename)
-                    find = 1
-                    # break
-            if find == 2:
-                msg = "no map in stack has a smaller time stamp than: " + filename
-                raise LisfloodError(msg)
-        else:
-            map = oldmap
-            if Flags['loud']:
-                s = " last_%s" % (os.path.basename(name))
-                print(s)
-    if Flags['checkfiles']:
-        checkmap(os.path.basename(name), filename, map, True, find)
-    if Flags['nancheck']: 
-        nanCheckMap(map, filename, name)
-    mapC = compressArray(map,name=filename)
-    return mapC
+# def readmapsparse(name, time, oldmap):
+#     """
+#     load stack of maps 1 at each timestamp in Pcraster format
+#     """
+#     filename = generateName(name, time)
+#     try:
+#         map = iterReadPCRasterMap(filename)
+#         find = 1
+#     except:
+#         find = 2
+#         if oldmap is None:
+#             for i in range(time - 1, 0, -1):
+#                 altfilename = generateName(name, i)
+#                 if os.path.exists(altfilename):
+#                     map = iterReadPCRasterMap(altfilename)
+#                     find = 1
+#                     # break
+#             if find == 2:
+#                 msg = "no map in stack has a smaller time stamp than: " + filename
+#                 raise LisfloodError(msg)
+#         else:
+#             map = oldmap
+#             if Flags['loud']:
+#                 s = " last_%s" % (os.path.basename(name))
+#                 print(s)
+#     if Flags['checkfiles']:
+#         checkmap(os.path.basename(name), filename, map, True, find)
+#     if Flags['nancheck']:
+#         nanCheckMap(map, filename, name)
+#     mapC = compressArray(map,name=filename)
+#     return mapC
 
 
 def readnetcdf(name, time, timestampflag='exact', averageyearflag=False):

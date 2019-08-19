@@ -32,6 +32,7 @@ import pprint
 import inspect
 
 import xml.dom.minidom
+import pcraster
 from netCDF4 import Dataset, date2num, num2date
 from pandas._libs.tslibs.parsing import parse_time_string
 import numpy as np
@@ -97,16 +98,32 @@ class CDFFlags(with_metaclass(Singleton)):
 
 
 @nine
+class MaskAttrs(with_metaclass(Singleton)):
+    def __init__(self):
+        self._attrs = {
+            'x': pcraster.clone().west(),
+            'y': pcraster.clone().north(),
+            'col': pcraster.clone().nrCols(),
+            'row': pcraster.clone().nrRows(),
+            'cell': pcraster.clone().cellSize(),
+        }
+
+    def __getitem__(self, item):
+        return self._attrs.get(item)
+
+
+@nine
 class MaskInfo(with_metaclass(Singleton)):
     Info = namedtuple('Info', 'mask, shape, maskflat, shapeflat, mapC, maskall')
 
-    def __init__(self, mask):
+    def __init__(self, mask, maskmap):
         self.flat = mask.ravel()
         self.mask_compressed = np.ma.compressed(np.ma.masked_array(mask, mask))  # mapC
         self.mask_all = np.ma.masked_all(self.flat.shape)
         self.mask_all.mask = self.flat
         self.info = self.Info(mask, mask.shape, self.flat, self.flat.shape, self.mask_compressed.shape, self.mask_all)
         self._in_zero = np.zeros(self.mask_compressed.shape)
+        self.maskmap = maskmap
 
     def in_zero(self):
         return self._in_zero.copy()

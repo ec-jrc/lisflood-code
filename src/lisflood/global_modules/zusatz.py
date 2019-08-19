@@ -24,7 +24,7 @@ import time as xtime
 from netCDF4 import Dataset
 
 from .decorators import counted
-from .settings import datetoint, LisSettings
+from .settings import datetoint, LisSettings, MaskInfo
 from .errors import LisfloodError, LisfloodFileError
 
 try:
@@ -61,8 +61,10 @@ def checkmap(name, value, map_to_check, flagmap, find):
     :return: 
     """
     s = [name, value]
+    maskinfo = MaskInfo.instance()
+    maskmap = maskinfo.maskmap
     if flagmap:
-        amap = scalar(defined(MMaskMap))
+        amap = scalar(defined(maskmap))
         try:
             smap = scalar(defined(map_to_check))
         except:
@@ -75,7 +77,7 @@ def checkmap(name, value, map_to_check, flagmap, find):
         mv = cellvalue(mvmap, 1, 1)[0]
         s.append(mv)
 
-        less = maptotal(ifthenelse(defined(MMaskMap), amap - smap, scalar(0)))
+        less = maptotal(ifthenelse(defined(maskmap), amap - smap, scalar(0)))
         s.append(cellvalue(less, 1, 1)[0])
         less = mapminimum(scalar(map_to_check))
         s.append(cellvalue(less, 1, 1)[0])
