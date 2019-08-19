@@ -14,7 +14,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
-from __future__ import absolute_import
+# from __future__ import absolute_import
 
 # defining global variables
 
@@ -22,11 +22,11 @@ from __future__ import absolute_import
 # metadataNCDF = {}
 
 # global timeMes,TimeMesString, timeMesSum
-global timeMes          # time measure - filled in dynamic
-timeMes=[]
-
-global TimeMesString    # name of the time measure - filled in dynamic
-timeMesString = []
-
-global timeMesSum       # time measure of hydrological modules
-timeMesSum = []
+# global timeMes          # time measure - filled in dynamic
+# timeMes=[]
+#
+# global TimeMesString    # name of the time measure - filled in dynamic
+# timeMesString = []
+#
+# global timeMesSum       # time measure of hydrological modules
+# timeMesSum = []

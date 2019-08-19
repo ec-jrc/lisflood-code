@@ -15,7 +15,8 @@ See the Licence for the specific language governing permissions and limitations 
 
 """
 
-from global_modules.output import *
+from pcraster.framework import DynamicModel, MonteCarloModel, EnKfModel
+import numpy as np
 
 
 class LisfloodModel_EnKF(DynamicModel, MonteCarloModel, EnKfModel):
@@ -49,19 +50,16 @@ class LisfloodModel_EnKF(DynamicModel, MonteCarloModel, EnKfModel):
 
         # creating the observation matrix (nrObservations x nrSamples)
         # here without added noise
-        observations = numpy.array([values,]*self.nrSamples()).transpose()
+        observations = np.array([values,]*self.nrSamples()).transpose()
 
         # creating the covariance matrix (nrObservations x nrObservations)
         # here just random values
-        covariance = numpy.random.random((5, 5))
+        covariance = np.random.random((5, 5))
 
         ## Return observations to EnKF framework
         self.setObservedMatrices(observations, covariance)
 
     def resume(self):
         sample = str(self.currentSampleNumber())
-
         updateVec = self.getStateVector(sample)
-
-        #print str("update") + str(updateVec)
         self.stateVar_module.resume()

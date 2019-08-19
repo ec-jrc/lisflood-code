@@ -18,26 +18,23 @@ from __future__ import print_function, absolute_import, unicode_literals
 
 from nine import range
 
-import xml.dom.minidom
-import datetime
+from platform import system as operating_system
 import time as xtime
 from netCDF4 import Dataset
-
-from .decorators import counted
-from .settings import datetoint, LisSettings, MaskInfo
-from .errors import LisfloodError, LisfloodFileError
 
 try:
     from netCDF4 import netcdftime
 except ImportError:
     import cftime as netcdftime  # newer versions of netCDF4 don't include netcdftime
 
-from platform import system as operating_system
-
 from pcraster.framework import *
-from .globals import *
-
 import numpy as np
+
+from .decorators import counted
+from .settings import datetoint, LisSettings, MaskInfo
+from .errors import LisfloodError, LisfloodFileError
+
+
 MAX_READ_TRIALS = 100 # max number of trial allowed re-read an input file: to avoid crashes due to temporary network interruptions
 READ_PAUSE = 0.1      # pause (seconds) between each re-read trial over the network
 try:
@@ -108,15 +105,15 @@ def checkmap(name, value, map_to_check, flagmap, find):
     return
 
 
-def timemeasure(name,loops=0, update = False, sample = 1):
-    # returns the current processor time
-    timeMes.append(xtime.clock())
-    if loops == 0:
-        s = name
-    else:
-        s = name+"_%i" %(loops)
-    timeMesString.append(s)
-    return
+# def timemeasure(name,loops=0, update = False, sample = 1):
+#     # returns the current processor time
+#     timeMes.append(xtime.clock())
+#     if loops == 0:
+#         s = name
+#     else:
+#         s = name+"_%i" %(loops)
+#     timeMesString.append(s)
+#     return
 
 
 class DynamicFramework(DynamicFramework):
@@ -371,7 +368,7 @@ class TimeoutputTimeseries(TimeoutputTimeseries):
             # the sample routine and put an exeption in
             # number of cells in map
             nrCells = pcraster.clone().nrRows() * pcraster.clone().nrCols()
-            for cell in xrange(1, nrCells + 1):
+            for cell in range(1, nrCells + 1):
                 if (pcraster.cellvalue(self._spatialId, cell)[1]):
                     # get point code from outlets map for pixel cell
                     outlet_code = pcraster.cellvalue(self._spatialId, cell)[0]

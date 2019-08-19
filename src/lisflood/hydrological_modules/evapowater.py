@@ -17,7 +17,11 @@ See the Licence for the specific language governing permissions and limitations 
 from __future__ import absolute_import, print_function
 from nine import range
 
-from ..global_modules.add1 import *
+from pcraster import ifthenelse, downstream, lddrepair
+import numpy as np
+
+from ..global_modules.add1 import loadmap, compressArray, decompress, generateName, loadLAI
+from ..global_modules.settings import MaskInfo, LisSettings
 
 
 class evapowater(object):
@@ -50,7 +54,7 @@ class evapowater(object):
         if option['openwaterevapo']:
             LakeMask = loadmap('LakeMask', pcr=True)
             lmask = ifthenelse(LakeMask != 0, self.var.LddStructuresKinematic, 5)
-            LddEva = pcraster.lddrepair(lmask)
+            LddEva = lddrepair(lmask)
             lddC = compressArray(LddEva)
             inAr = decompress(np.arange(maskinfo.info.mapC[0], dtype="int32"))
             self.var.downEva = (compressArray(downstream(LddEva, inAr))).astype("int32")
@@ -129,7 +133,7 @@ class evapowater(object):
             self.var.EvaAddM3 = MaskInfo.instance().in_zero()
             #   real water consumption is set to 0
 
-            for NoEvaExe in xrange(self.var.maxNoEva):
+            for NoEvaExe in range(self.var.maxNoEva):
                 ChanHelp = np.maximum(ChanMIter - UpstreamEva, ChanLeft)
                 EvaIter = np.maximum(UpstreamEva - (ChanMIter - ChanHelp), 0)
                 # new amount is amout - evaporation use till a limit

@@ -17,7 +17,13 @@ See the Licence for the specific language governing permissions and limitations 
 
 from __future__ import absolute_import, print_function
 
-from ..global_modules.add1 import *
+import datetime
+
+from pcraster import areatotal, cover, ifthen, upstream
+import numpy as np
+
+from ..global_modules.add1 import loadmap, readnetcdf, decompress, compressArray
+from ..global_modules.settings import LisSettings, MaskInfo
 
 
 class indicatorcalc(object):

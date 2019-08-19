@@ -16,12 +16,15 @@ See the Licence for the specific language governing permissions and limitations 
 """
 from __future__ import absolute_import, print_function
 
-from ..global_modules.add1 import *
+from pcraster import celllength, scalar
 
 import xarray as xr
 from pyproj import Proj
+import numpy as np
 
-from lisflood.global_modules.settings import calendar
+from ..global_modules.add1 import loadmap, compressArray
+from ..global_modules.settings import calendar, MaskAttrs, MaskInfo, LisSettings
+# from ..global_modules.add1 import *
 
 
 def coordinatesLand(eastings_forcing, northings_forcing):
@@ -155,7 +158,7 @@ class miscInitial(object):
         self.var.MonthWUse= maskinfo.in_zero()
         self.var.MonthWDemand= maskinfo.in_zero()
         self.var.MonthDis= maskinfo.in_zero()
-        self.var.MonthInternalFlow =  maskinfo.in_zero()
+        self.var.MonthInternalFlow = maskinfo.in_zero()
 
         self.var.TotalInternalFlowM3 = maskinfo.in_zero()
         self.var.PerMonthInternalFlowM3 = maskinfo.in_zero()

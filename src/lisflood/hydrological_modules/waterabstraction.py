@@ -14,9 +14,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
+from __future__ import absolute_import, print_function
 
-from lisflood.global_modules.add1 import *
-from lisflood.global_modules.settings import get_calendar_type, calendar_inconsistency_warning
+from pcraster import boolean, nominal, ifthen, defined, areamaximum, downstream, cover, lddrepair, ifthenelse, upstream, \
+    scalar, accuflux, celllength, windowtotal, areaaverage
+import numpy as np
+from netCDF4 import Dataset
+
+from ..global_modules.add1 import loadmap, decompress, compressArray, readnetcdf, readmapsparse
+from ..global_modules.settings import get_calendar_type, calendar_inconsistency_warning, LisSettings, MaskInfo
 
 
 class waterabstraction(object):
@@ -127,7 +133,7 @@ class waterabstraction(object):
 
             if option['wateruseRegion']:
                 WUseRegion = nominal(loadmap('WUseRegion', pcr=True))
-                pitWuse1 = ifthen(self.var.AtLastPoint != 0, pcraster.boolean(1))
+                pitWuse1 = ifthen(self.var.AtLastPoint != 0, boolean(1))
                 pitWuse1b = ifthen(defined(pitWuse1), WUseRegion)
                 # use every existing pit in the Ldd and number them by the water regions
                 # coastal water regions can have more than one pit per water region

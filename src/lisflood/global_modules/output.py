@@ -16,8 +16,14 @@ See the Licence for the specific language governing permissions and limitations 
 """
 from __future__ import print_function, absolute_import
 
-from .settings import inttodate, CDFFlags
-from .add1 import *
+import os
+
+from pcraster import report, ifthen, mapmaximum, catchmenttotal
+
+from .zusatz import TimeoutputTimeseries
+from .add1 import decompress, valuecell, loadmap, compressArray, writenet
+from .errors import LisfloodFileError, LisfloodWarning
+from .settings import inttodate, CDFFlags, LisSettings
 
 
 def trimPCRasterOutputPath(output_path):
@@ -227,8 +233,8 @@ class outputTssMap(object):
                             reportStepStart = self.var.ReportSteps[0]-self.var.ReportSteps[0]+1
                             # get step number for last reporting step
                             reportStepEnd = self.var.ReportSteps[-1]-self.var.ReportSteps[0]+1
+                            cdfflags = CDFFlags.instance()
                             try:
-                                cdfflags = CDFFlags.instance()
                                 writenet(cdfflags[flagcdf], eval(what), where, self.var.DtDay, maps,
                                          report_maps_steps[maps]['outputVar'][0], report_maps_steps[maps]['unit'][0], 'f4',
                                          reportStartDate, reportStepStart, reportStepEnd, frequency)

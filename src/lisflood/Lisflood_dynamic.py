@@ -17,10 +17,14 @@ See the Licence for the specific language governing permissions and limitations 
 from __future__ import print_function, absolute_import
 from nine import range
 
-from lisflood.global_modules.add1 import *
+import sys
+import datetime
 import gc
 
-from lisflood.global_modules.settings import CDFFlags
+from pcraster.framework import DynamicModel
+import numpy as np
+
+from .global_modules.settings import CDFFlags, LisSettings, MaskInfo
 
 
 class LisfloodModel_dyn(DynamicModel):
@@ -34,9 +38,9 @@ class LisfloodModel_dyn(DynamicModel):
         settings = LisSettings.instance()
         option = settings.options
         flags = settings.flags
-        del timeMes[:]
+        # del timeMes[:]
         # get time for operation "Start dynamic"
-        timemeasure("Start dynamic")
+        # timemeasure("Start dynamic")
         # date corresponding to the model time step (yyyy-mm-dd hh:mm:ss)
         self.CalendarDate = self.CalendarDayStart + datetime.timedelta(days=(self.currentTimeStep()-1) * self.DtDay)
         # day of the year corresponding to the model time step
@@ -46,9 +50,9 @@ class LisfloodModel_dyn(DynamicModel):
         # model time step
         i = self.currentTimeStep()
         if i == 1:
-            cdfFlag = CDFFlags()
+            # flag for netcdf output for all, steps and end
+            _ = CDFFlags()  # init CDF flags
             # globals.cdfFlag = [0, 0, 0, 0 ,0 ,0,0]
-          # flag for netcdf output for all, steps and end
           # set back to 0,0,0,0,0,0 if new Monte Carlo run
 
         self.TimeSinceStart = self.currentTimeStep() - self.firstTimeStep() + 1
@@ -69,7 +73,7 @@ class LisfloodModel_dyn(DynamicModel):
         """
         # readmeteo.py
         self.readmeteo_module.dynamic()     
-        timemeasure("Read meteo") # 1. timing after read input maps
+        # timemeasure("Read meteo") # 1. timing after read input maps
 
         if flags['checkfiles']:
             return  # if check than finish here
@@ -88,15 +92,15 @@ class LisfloodModel_dyn(DynamicModel):
 
         # ***** READ INFLOW HYDROGRAPHS (OPTIONAL)****************
         self.inflow_module.dynamic()
-        timemeasure("Read LAI") # 2. timing after LAI and inflow
+        # timemeasure("Read LAI") # 2. timing after LAI and inflow
 
         # ***** RAIN AND SNOW *****************************************
         self.snow_module.dynamic()
-        timemeasure("Snow")  # 3. timing after LAI and inflow
+        # timemeasure("Snow")  # 3. timing after LAI and inflow
 
         # ***** FROST INDEX IN SOIL **********************************
         self.frost_module.dynamic()
-        timemeasure("Frost")  # 4. timing after frost index
+        # timemeasure("Frost")  # 4. timing after frost index
 
         # ************************************************************
         # ****Looping soil 2 times - second time for forest fraction *
@@ -107,7 +111,7 @@ class LisfloodModel_dyn(DynamicModel):
             # soil module is repeated 2 times:
             # 1. for remaining areas: no forest, no impervious, no water
             # 2. for forested areas
-            timemeasure("Soil",loops = soilLoop + 1) # 5/6 timing after soil
+            # timemeasure("Soil",loops = soilLoop + 1) # 5/6 timing after soil
 
         # -------------------------------------------------------------------
         # -------------------------------------------------------------------
@@ -118,14 +122,14 @@ class LisfloodModel_dyn(DynamicModel):
         # *********  WATER USE   *************************
         self.riceirrigation_module.dynamic()
         self.waterabstraction_module.dynamic()
-        timemeasure("Water abstraction")
+        # timemeasure("Water abstraction")
 
         # ***** Calculation per Pixel ********************************
         self.soil_module.dynamic_perpixel()
-        timemeasure("Soil done")
+        # timemeasure("Soil done")
 
         self.groundwater_module.dynamic()
-        timemeasure("Groundwater")
+        # timemeasure("Groundwater")
 
         # ************************************************************
         # ***** STOP if no routing is required    ********************
@@ -136,28 +140,28 @@ class LisfloodModel_dyn(DynamicModel):
             # it is only to compute Lzavin.map and skip completely the routing component
             self.output_module.dynamic() # only lzavin
 
-            timemeasure("After fast init")
-            for i in range(len(timeMes)):
-                if self.currentTimeStep() == self.firstTimeStep():
-                   timeMesSum.append(timeMes[i] - timeMes[0])
-                else: timeMesSum[i] += timeMes[i] - timeMes[0]
+            # timemeasure("After fast init")
+            # for i in range(len(timeMes)):
+            #     if self.currentTimeStep() == self.firstTimeStep():
+            #        timeMesSum.append(timeMes[i] - timeMes[0])
+            #     else: timeMesSum[i] += timeMes[i] - timeMes[0]
 
             return
 
         # *********  EVAPORATION FROM OPEN WATER *************
         self.evapowater_module.dynamic()
-        timemeasure("open water eva.")
+        # timemeasure("open water eva.")
 
         # ***** ROUTING SURFACE RUNOFF TO CHANNEL ********************
         self.surface_routing_module.dynamic()
-        timemeasure("Surface routing")  # 7 timing after surface routing
+        # timemeasure("Surface routing")  # 7 timing after surface routing
 
         # ***** POLDER INIT **********************************
         self.polder_module.dynamic_init()
 
         # ***** INLETS INIT **********************************
         self.inflow_module.dynamic_init()
-        timemeasure("Before routing")  # 8 timing before channel routing
+        # timemeasure("Before routing")  # 8 timing before channel routing
 
         # ************************************************************
         # ***** LOOP ROUTING SUB TIME STEP   *************************
@@ -168,7 +172,7 @@ class LisfloodModel_dyn(DynamicModel):
         for NoRoutingExecuted in range(self.NoRoutSteps):
             self.routing_module.dynamic(NoRoutingExecuted)
             #   routing sub steps
-        timemeasure("Routing", loops=NoRoutingExecuted + 1)  # 9 timing after routing
+        # timemeasure("Routing", loops=NoRoutingExecuted + 1)  # 9 timing after routing
 
         # ----------------------------------------------------------------------
 
@@ -184,30 +188,28 @@ class LisfloodModel_dyn(DynamicModel):
         if option['InitLisflood'] or (not(option['SplitRouting'])):
             # kinematic routing
             self.ChanM3 = self.ChanM3Kin.copy()
-                # Total channel storage [cu m], equal to ChanM3Kin
+            # Total channel storage [cu m], equal to ChanM3Kin
         else:
             # split routing
             self.ChanM3 = self.ChanM3Kin + self.Chan2M3Kin - self.Chan2M3Start #originale
             #self.ChanM3 = self.ChanM3Kin + self.Chan2M3Kin
 
-
         # Avoid negative values in ChanM3 and TotalCrossSectionArea
         self.ChanM3 = np.where(self.ChanM3 > 0, self.ChanM3, 0)
 
-
-            # Total channel storage [cu m], equal to ChanM3Kin
-                # sum of both lines
-            #CrossSection2Area = pcraster.max(scalar(0.0), (self.Chan2M3Kin - self.Chan2M3Start) / self.ChanLength)
+        # Total channel storage [cu m], equal to ChanM3Kin
+        # sum of both lines
+        # CrossSection2Area = pcraster.max(scalar(0.0), (self.Chan2M3Kin - self.Chan2M3Start) / self.ChanLength)
 
         self.sumDis += self.sumDisDay
         self.ChanQAvg = self.sumDisDay/self.NoRoutSteps
         self.TotalCrossSectionArea = self.ChanM3 * self.InvChanLength
-            # Total volume of water in channel per inv channel length
-            # New cross section area (kinematic wave)
-            # This is the value after the kinematic wave, so we use ChanM3Kin here
-            # (NOT ChanQKin, which is average discharge over whole step, we need state at the end of all iterations!)
+        # Total volume of water in channel per inv channel length
+        # New cross section area (kinematic wave)
+        # This is the value after the kinematic wave, so we use ChanM3Kin here
+        # (NOT ChanQKin, which is average discharge over whole step, we need state at the end of all iterations!)
 
-        timemeasure("After routing")  # 10 timing after channel routing
+        # timemeasure("After routing")  # 10 timing after channel routing
 
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         if not(option['dynamicWave']):
@@ -241,7 +243,7 @@ class LisfloodModel_dyn(DynamicModel):
         # ***** WRITING RESULTS: TIME SERIES AND MAPS ****************
         # ************************************************************
         self.output_module.dynamic()
-        timemeasure("Water balance")
+        # timemeasure("Water balance")
 
         # debug 
         # Print value of variables after computation (from state files)
@@ -259,14 +261,14 @@ class LisfloodModel_dyn(DynamicModel):
 
         ### Report states if EnKF is used and filter moment
         self.stateVar_module.dynamic()
-        timemeasure("State report")
-
-        timemeasure("All dynamic")
-
-        for i in range(len(timeMes)):
-            if self.currentTimeStep() == self.firstTimeStep():
-                timeMesSum.append(timeMes[i] - timeMes[0])
-            else: timeMesSum[i] += timeMes[i] - timeMes[0]
+        # timemeasure("State report")
+        #
+        # timemeasure("All dynamic")
+        #
+        # for i in range(len(timeMes)):
+        #     if self.currentTimeStep() == self.firstTimeStep():
+        #         timeMesSum.append(timeMes[i] - timeMes[0])
+        #     else: timeMesSum[i] += timeMes[i] - timeMes[0]
 
         self.indicatorcalc_module.dynamic_setzero()
         # setting monthly and yearly dindicator to zero at the end of the month (year)

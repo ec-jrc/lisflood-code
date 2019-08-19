@@ -15,21 +15,28 @@ See the Licence for the specific language governing permissions and limitations 
 
 """
 from __future__ import print_function, absolute_import
+from future.utils import listitems
 
+from nine import range
+
+import re
+import time as xtime
+import sys
+import datetime
+import os
+import pickle
 from bisect import bisect_left
 
-from nine import iteritems
-from pcraster._pcraster import Scalar
-
+import pcraster
+# from pcraster._pcraster import Scalar, numpy2pcr, Nominal, setclone, Boolean, pcr2numpy
+from pcraster import Scalar, numpy2pcr, Nominal, setclone, Boolean, pcr2numpy
 from netCDF4 import num2date, date2num
-# import numpy as np
-# import time as xtime
-# import os
-from . import globals
-from .settings import calendar_inconsistency_warning, get_calendar_type, calendar, MaskInfo, MaskAttrs, CutMap, \
-    NetCDFMetadata
-from .errors import LisfloodWarning
-from .zusatz import *
+import numpy as np
+
+from .zusatz import iterOpenNetcdf, iterReadPCRasterMap, iterSetClonePCR, checkmap
+from .settings import (calendar_inconsistency_warning, get_calendar_type, calendar, MaskAttrs, CutMap, NetCDFMetadata,
+                       LisSettings, MaskInfo)
+from .errors import LisfloodWarning, LisfloodError
 
 
 def defsoil(name1, name2=None, name3=None):
@@ -71,7 +78,7 @@ def valuecell(mask, coordx, coordstr):
     null = np.zeros((pcraster.clone().nrRows(), pcraster.clone().nrCols()))
     null[null == 0] = -9999
 
-    for i in xrange(int(len(coord) / 2)):
+    for i in range(int(len(coord) / 2)):
         col = int(
             (coord[i * 2] - pcraster.clone().west()) / pcraster.clone().cellSize())
         row = int(
@@ -88,35 +95,6 @@ def valuecell(mask, coordx, coordstr):
     return map
 
 
-# def metaNetCDF():
-#     """ Get metadata information from netcdf map.
-#
-#     metaNetCDF gets metadata information from netCDF template file. Name and path of template file are stored
-#     in settings.xml file using key "netCDFtemplate". If template file is not available, information is read
-#     from "E0Maps".
-#
-#     :return: metadataNCDF as global dictionary
-#     """
-#     settings = LisSettings.instance()
-#     binding = settings.binding
-#     try:
-#         # using ncdftemplate
-#         filename = os.path.splitext(binding['netCDFtemplate'])[0] + '.nc'
-#         nf1 = iterOpenNetcdf(filename, "Trying to get metadata from netcdf template \n", 'r')
-#         for var in nf1.variables:
-#            metadataNCDF[var] = {k: v for k, v in iteritems(nf1.variables[var].__dict__) if k != '_FillValue'}
-#         nf1.close()
-#         return
-#     except (KeyError, IOError, IndexError, Exception):
-#         pass
-#     # if no template .nc is given the e.nc file is used
-#     filename = os.path.splitext(binding['E0Maps'])[0] + '.nc'
-#     nf1 = iterOpenNetcdf(filename, "Trying to get metadata from E0 maps \n", 'r')
-#     for var in nf1.variables:
-#        metadataNCDF[var] = {k: v for k, v in iteritems(nf1.variables[var].__dict__) if k != '_FillValue'}
-#     nf1.close()
-
-
 def mapattrNetCDF(name):
     """
     get the map attributes like col, row etc from a ntcdf map
@@ -125,10 +103,10 @@ def mapattrNetCDF(name):
     filename = os.path.splitext(name)[0] + '.nc'
     nf1 = iterOpenNetcdf(filename, "Checking netcdf map \n", 'r')
     spatial_dims = ('x', 'y') if 'x' in nf1.variables else ('lon', 'lat')
-    x1, x2, y1, y2 = [round(nf1.variables[v][j], 5) for v in spatial_dims for j in (0, 1)]
+    x1, x2, y1, y2 = [np.round(nf1.variables[v][j], 5) for v in spatial_dims for j in (0, 1)]
     nf1.close()
     maskattrs = MaskAttrs.instance()
-    if maskattrs['cell'] != round(np.abs(x2 - x1), 5) or maskattrs['cell'] != round(np.abs(y2 - y1), 5):
+    if maskattrs['cell'] != np.round(np.abs(x2 - x1), 5) or maskattrs['cell'] != np.round(np.abs(y2 - y1), 5):
         raise LisfloodError("Cell size different in maskmap {} and {}".format(
             LisSettings.instance().binding['MaskMap'], filename)
         )
@@ -154,7 +132,7 @@ def loadsetclone(name):
     filename = os.path.normpath(binding[name])
     if not os.path.exists(filename):
         raise LisfloodError('File not existing: {}'.format(filename))
-    coord = filename.split()    #returns a list of all the words in the string
+    coord = filename.split()    # returns a list of all the words in the string
     if len(coord) == 5:
         # changed order of x, y i- in setclone y is first in Lisflood
         # settings x is first
@@ -174,7 +152,7 @@ def loadsetclone(name):
         try:
             # try to read a pcraster map
             iterSetClonePCR(filename)
-            map = boolean(iterReadPCRasterMap(filename))
+            map = pcraster.boolean(iterReadPCRasterMap(filename))
             flagmap = True
             mapnp = pcr2numpy(map,np.nan)
 
@@ -336,8 +314,7 @@ def loadmap(name, pcr=False, lddflag=False, timestampflag='exact', averageyearfl
             # test if map is same size as clone map, if not it will make an error
            test = pcraster.scalar(map) + pcraster.scalar(map)
         except:
-           msg = value +" might be of a different size than clone size "
-           raise LisfloodError(msg)
+           raise LisfloodError("{} might be of a different size than clone size".format(value))
     # if failed before try reading from netCDF map format
     if not load:
         # read a netcdf  (single one not a stack)
@@ -346,7 +323,7 @@ def loadmap(name, pcr=False, lddflag=False, timestampflag='exact', averageyearfl
         cut0, cut1, cut2, cut3 = mapattrNetCDF(filename)
         # load netcdf map but only the rectangle needed
         nf1 = iterOpenNetcdf(filename, "", 'r')
-        value = nf1.variables.items()[-1][0]
+        value = listitems(nf1.variables)[-1][0]
         # get the last variable name (it must be the variable to be read by Lisflood)
         if not settings.timestep_init:
             # if timestep_init is missing, read netcdf as single static map
@@ -367,7 +344,7 @@ def loadmap(name, pcr=False, lddflag=False, timestampflag='exact', averageyearfl
 
                 # select timestep to use for reading from netCDF stack based on timestep_init (state file time step)
                 timestepI = calendar(settings.timestep_init, binding['calendar_type'])
-                if type(timestepI) is datetime.datetime:
+                if isinstance(timestepI, datetime.datetime):
                     #reading dates in XML settings file
                     # get step id number in netCDF stack for timestepInit date
                     if averageyearflag:
@@ -440,7 +417,7 @@ def loadmap(name, pcr=False, lddflag=False, timestampflag='exact', averageyearfl
                 map = numpy2pcr(Scalar, mapnp, -9999)
             # if the map is a ldd
             if lddflag:
-                map = ldd(nominal(map))
+                map = pcraster.ldd(pcraster.nominal(map))
         else:
             mapC = compressArray(mapnp, pcr=False, name=filename)
         flagmap = True
@@ -536,37 +513,38 @@ def loadLAI(value, pcrvalue, i,pcr=False):
         return mapC
 
 
-# def readmapsparse(name, time, oldmap):
-#     """
-#     load stack of maps 1 at each timestamp in Pcraster format
-#     """
-#     filename = generateName(name, time)
-#     try:
-#         map = iterReadPCRasterMap(filename)
-#         find = 1
-#     except:
-#         find = 2
-#         if oldmap is None:
-#             for i in range(time - 1, 0, -1):
-#                 altfilename = generateName(name, i)
-#                 if os.path.exists(altfilename):
-#                     map = iterReadPCRasterMap(altfilename)
-#                     find = 1
-#                     # break
-#             if find == 2:
-#                 msg = "no map in stack has a smaller time stamp than: " + filename
-#                 raise LisfloodError(msg)
-#         else:
-#             map = oldmap
-#             if Flags['loud']:
-#                 s = " last_%s" % (os.path.basename(name))
-#                 print(s)
-#     if Flags['checkfiles']:
-#         checkmap(os.path.basename(name), filename, map, True, find)
-#     if Flags['nancheck']:
-#         nanCheckMap(map, filename, name)
-#     mapC = compressArray(map,name=filename)
-#     return mapC
+def readmapsparse(name, time, oldmap):
+    """
+    load stack of maps 1 at each timestamp in Pcraster format
+    """
+    filename = generateName(name, time)
+    flags = LisSettings.instance().flags
+    try:
+        map = iterReadPCRasterMap(filename)
+        find = 1
+    except:
+        find = 2
+        if oldmap is None:
+            for i in range(time - 1, 0, -1):
+                altfilename = generateName(name, i)
+                if os.path.exists(altfilename):
+                    map = iterReadPCRasterMap(altfilename)
+                    find = 1
+                    # break
+            if find == 2:
+                msg = "no map in stack has a smaller time stamp than: " + filename
+                raise LisfloodError(msg)
+        else:
+            map = oldmap
+            if flags['loud']:
+                s = " last_%s" % (os.path.basename(name))
+                print(s)
+    if flags['checkfiles']:
+        checkmap(os.path.basename(name), filename, map, True, find)
+    if flags['nancheck']:
+        nanCheckMap(map, filename, name)
+    mapC = compressArray(map,name=filename)
+    return mapC
 
 
 def readnetcdf(name, time, timestampflag='exact', averageyearflag=False):
@@ -891,7 +869,7 @@ def writenet(flag, inputmap, netfile, DtDay,
             first_date, last_date = [startdate + datetime.timedelta(days=(int(k) - 1)*DtDay) for k in
                                      (repstepstart, repstepend)]
             # CM: Create time stamps for each step stored in netCDF file
-            time_stamps = [first_date + datetime.timedelta(days=d*DtDay) for d in xrange(repstepend - repstepstart +1)]
+            time_stamps = [first_date + datetime.timedelta(days=d*DtDay) for d in range(repstepend - repstepstart +1)]
 
             units_time = 'days since %s' % startdate.strftime("%Y-%m-%d %H:%M:%S.0")
             steps = (int(binding["DtSec"]) / 86400.) * np.arange(binding["StepStartInt"] - 1, binding["StepEndInt"])
@@ -977,7 +955,7 @@ def loadObject(name, num):
 
 def dumpPCRaster(name, var, num):
   path1 = os.path.join(str(num), 'stateVar',name)
-  report(var, path1)
+  pcraster.report(var, path1)
 
 
 def loadPCRaster(name, num):
@@ -1046,6 +1024,7 @@ def read_tss_header(tssfilename):
             # tssdata = pd.read_table(tssfilename, delim_whitespace=True, header=None, names=outlets_id, index_col=0)
     fp.close()
     return outlets_id
+
 
 def nanCheckMap(data, filename, name):
     """Checks for numpy.nan on simulated pixels: if any is found, a warning is raised"""

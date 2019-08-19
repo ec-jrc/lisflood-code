@@ -16,7 +16,10 @@ See the Licence for the specific language governing permissions and limitations 
 """
 from __future__ import absolute_import, print_function
 
-from ..global_modules.add1 import *
+from pcraster import downstream, boolean, cover, lddrepair, ifthenelse
+
+from ..global_modules.add1 import decompress, compressArray
+from ..global_modules.settings import LisSettings
 
 
 class structures(object):
@@ -47,7 +50,7 @@ class structures(object):
             # not done in Init Lisflood
             IsUpsOfStructureKinematic = downstream(
                 self.var.LddKinematic,
-                cover(boolean(decompress(self.var.IsStructureKinematic)), pcraster.boolean(0))
+                cover(boolean(decompress(self.var.IsStructureKinematic)), boolean(0))
             )
             # Get all pixels just upstream of kinematic structure locations
             self.var.IsUpsOfStructureKinematicC = compressArray(IsUpsOfStructureKinematic)
