@@ -14,7 +14,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, division
 
 from pcraster import celllength, scalar
 
@@ -24,7 +24,6 @@ import numpy as np
 
 from ..global_modules.add1 import loadmap, compressArray
 from ..global_modules.settings import calendar, MaskAttrs, MaskInfo, LisSettings
-# from ..global_modules.add1 import *
 
 
 def coordinatesLand(eastings_forcing, northings_forcing):
@@ -84,7 +83,6 @@ class miscInitial(object):
             # - All grid cells have the same size
 
             # Length of pixel [m]
-            #self.var.PixelLength = celllength()
             self.var.PixelLengthPcr = celllength()
             self.var.PixelLength = maskattrs['cell']
             # Area of pixel [m2]

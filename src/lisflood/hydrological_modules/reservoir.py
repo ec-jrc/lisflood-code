@@ -16,8 +16,9 @@ See the Licence for the specific language governing permissions and limitations 
 """
 from __future__ import print_function, absolute_import
 
-import numpy as np
 from pcraster.operations import ifthen, boolean, defined, lookupscalar
+import numpy as np
+
 from ..global_modules.settings import LisSettings, MaskInfo
 from ..global_modules.add1 import loadmap, compressArray, decompress, makenumpy
 from ..global_modules.errors import LisfloodWarning
@@ -276,7 +277,7 @@ class reservoir(object):
                     # for timeseries output - in and outflow to the reservoir is sumed up over the sub timesteps and stored in m/s
                     # set to zero at first timestep
                 else:
-                    self.var.sumResInCC  += QResInM3Dt
+                    self.var.sumResInCC += QResInM3Dt
                     self.var.sumResOutCC += QResOutM3DtCC
                     # summing up over all sub timesteps
 

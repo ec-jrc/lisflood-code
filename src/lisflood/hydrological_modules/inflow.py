@@ -14,10 +14,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
-from __future__ import print_function, absolute_import
+from __future__ import print_function, absolute_import, division
+
+from pcraster import numpy2pcr, Nominal, pcr2numpy, timeinputscalar
+import numpy as np
 
 from ..global_modules.settings import LisSettings
-from ..global_modules.add1 import *
+from ..global_modules.add1 import loadmap, read_tss_header, compressArray
 from ..global_modules.errors import LisfloodWarning
 
 

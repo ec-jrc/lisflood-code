@@ -14,7 +14,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function
 from nine import range
 
 import numpy as np
@@ -72,8 +72,6 @@ class leafarea(object):
             LAIName = generateName(binding['LAIIrrigationMaps'], LAINr[i])
             self.var.LAIX[2][i] = loadLAI(binding['LAIIrrigationMaps'], LAIName, i)
 
-
-# --------------------------------------------------------------------------
 # --------------------------------------------------------------------------
 
     def dynamic(self):

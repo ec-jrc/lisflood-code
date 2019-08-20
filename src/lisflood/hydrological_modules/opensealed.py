@@ -14,9 +14,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
+from __future__ import absolute_import, division
 
-
-from lisflood.global_modules.add1 import *
+import numpy as np
+from ..global_modules.settings import MaskInfo
 
 
 class opensealed(object):
@@ -48,7 +49,7 @@ class opensealed(object):
         self.var.EWaterAct = np.maximum(self.var.EWaterAct * 1.0, maskinfo.in_zero())
         # actual evaporation from water is potential evaporation of water bodies
 
-        self.var.InterSealed =np.maximum(self.var.SMaxSealed - self.var.CumInterSealed, maskinfo.in_zero())
+        self.var.InterSealed = np.maximum(self.var.SMaxSealed - self.var.CumInterSealed, maskinfo.in_zero())
         self.var.InterSealed = np.minimum(self.var.InterSealed, self.var.RainSnowmelt)
         # Interception (in [mm] per time step);
         # to simulate initial loss and depression storage
@@ -60,7 +61,7 @@ class opensealed(object):
         self.var.CumInterSealed = np.maximum(self.var.CumInterSealed - self.var.TASealed, maskinfo.in_zero())
         # evaporated water is subtracted from Cumulative depression storage;
 
-        self.var.DirectRunoff = self.var.DirectRunoffFraction * (self.var.RainSnowmelt - self.var.InterSealed) + self.var.WaterFraction *  (self.var.RainSnowmelt - self.var.EWaterAct)
+        self.var.DirectRunoff = self.var.DirectRunoffFraction * (self.var.RainSnowmelt - self.var.InterSealed) + self.var.WaterFraction * (self.var.RainSnowmelt - self.var.EWaterAct)
         # Direct runoff during this time step [mm] (added to surface runoff later)
         # but overland routing is done separately for forest, water and sealed
         # and remaing areas

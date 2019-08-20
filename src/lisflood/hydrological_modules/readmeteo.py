@@ -14,9 +14,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
-from __future__ import print_function, absolute_import
+from __future__ import print_function, absolute_import, division
 
-from ..global_modules.add1 import *
+from ..global_modules.add1 import readnetcdf, checknetcdf,readmapsparse
+from ..global_modules.settings import LisSettings
 
 
 class readmeteo(object):

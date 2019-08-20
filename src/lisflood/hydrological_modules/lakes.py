@@ -14,9 +14,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, division
 
-from ..global_modules.add1 import *
+import numpy as np
+import pcraster
+
+from ..global_modules.errors import LisfloodWarning
+from ..global_modules.add1 import loadmap, compressArray, decompress
+from ..global_modules.settings import LisSettings, MaskInfo
 
 
 class lakes(object):
@@ -58,9 +63,9 @@ class lakes(object):
             self.var.LakeSitesCC = np.compress(LakeSitesC>0,LakeSitesC)
             self.var.LakeIndex = np.nonzero(LakeSitesC)[0]
 
-            if self.var.LakeSitesCC.size==0:
-                option['simulateLakes']=False
-                option['repsimulateLakes']=False
+            if self.var.LakeSitesCC.size == 0:
+                option['simulateLakes'] = False
+                option['repsimulateLakes'] = False
                 return
             # break if no lakes
 
@@ -71,11 +76,11 @@ class lakes(object):
 
             #PCRaster part
             #-----------------------
-            LakeSitePcr = loadmap('LakeSites',pcr=True)
-            LakeSitePcr = ifthen((defined(LakeSitePcr) & boolean(decompress(self.var.IsChannel))), LakeSitePcr)
+            LakeSitePcr = loadmap('LakeSites', pcr=True)
+            LakeSitePcr = pcraster.ifthen((pcraster.defined(LakeSitePcr) & pcraster.boolean(decompress(self.var.IsChannel))), LakeSitePcr)
             IsStructureLake = pcraster.boolean(LakeSitePcr)
             # additional structure map only for lakes to calculate water balance
-            self.var.IsUpsOfStructureLake = downstream(self.var.LddKinematic, cover(IsStructureLake, 0))
+            self.var.IsUpsOfStructureLake = pcraster.downstream(self.var.LddKinematic, pcraster.cover(IsStructureLake, 0))
             # Get all pixels just upstream of lakes
             #-----------------------
 
@@ -84,12 +89,12 @@ class lakes(object):
             # for Modified Puls Method the Q(inflow)1 has to be used. It is assumed that this is the same as Q(inflow)2 for the first timestep
             # has to be checked if this works in forecasting mode!
 
-            LakeArea = lookupscalar(binding['TabLakeArea'], LakeSitePcr)
+            LakeArea = pcraster.lookupscalar(binding['TabLakeArea'], LakeSitePcr)
             LakeAreaC = compressArray(LakeArea)
             self.var.LakeAreaCC = np.compress(LakeSitesC>0,LakeAreaC)
 
             # Surface area of each lake [m2]
-            LakeA = lookupscalar(binding['TabLakeA'], LakeSitePcr)
+            LakeA = pcraster.lookupscalar(binding['TabLakeA'], LakeSitePcr)
             LakeAC = compressArray(LakeA) * loadmap('LakeMultiplier')
             self.var.LakeACC = np.compress(LakeSitesC>0,LakeAC)
             # Lake parameter A (suggested  value equal to outflow width in [m])
@@ -97,7 +102,7 @@ class lakes(object):
 
             LakeInitialLevelValue  = loadmap('LakeInitialLevelValue')
             if np.max(LakeInitialLevelValue) == -9999:
-                LakeAvNetInflowEstimate = lookupscalar(binding['TabLakeAvNetInflowEstimate'], LakeSitePcr)
+                LakeAvNetInflowEstimate = pcraster.lookupscalar(binding['TabLakeAvNetInflowEstimate'], LakeSitePcr)
                 LakeAvNetC = compressArray(LakeAvNetInflowEstimate)
                 self.var.LakeAvNetCC = np.compress(LakeSitesC>0,LakeAvNetC)
 
@@ -110,7 +115,7 @@ class lakes(object):
                 LakeStorageIniM3CC = self.var.LakeAreaCC * self.var.LakeLevelCC
                 # Initial lake storage [m3]  based on: S = LakeArea * H
 
-                self.var.LakeAvNetCC = np.compress(LakeSitesC > 0,loadmap('PrevDischarge'))
+                self.var.LakeAvNetCC = np.compress(LakeSitesC > 0, loadmap('PrevDischarge'))
 
             # Repeatedly used expressions in lake routine
 

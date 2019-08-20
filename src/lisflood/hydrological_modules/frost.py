@@ -15,17 +15,11 @@ See the Licence for the specific language governing permissions and limitations 
 
 """
 
-from pcraster import*
-from pcraster.framework import *
-import sys
-import os
-import string
-import math
-from time import *
+from __future__ import absolute_import, print_function, division
 
+import numpy as np
 
-from lisflood.global_modules.zusatz import *
-from lisflood.global_modules.add1 import *
+from ..global_modules.add1 import loadmap
 
 
 class frost(object):
@@ -42,7 +36,6 @@ class frost(object):
 
 # --------------------------------------------------------------------------
 # --------------------------------------------------------------------------
-
 
     def initial(self):
         """ initial part of the frost index module
@@ -66,8 +59,7 @@ class frost(object):
         """
         # FrostIndexChangeRate=-(1-Afrost)*FrostIndex - Tavg*exp(-0.04*Kfrost*SnowCover/SnowWaterEquivalent);
 
-        FrostIndexChangeRate = -(1 - self.var.Afrost) * self.var.FrostIndex - self.var.Tavg * \
-            np.exp(-0.04 * self.var.Kfrost * self.var.SnowCover / self.var.SnowWaterEquivalent)
+        FrostIndexChangeRate = -(1 - self.var.Afrost) * self.var.FrostIndex - self.var.Tavg * np.exp(-0.04 * self.var.Kfrost * self.var.SnowCover / self.var.SnowWaterEquivalent)
         # FrostIndexChangeRate=self.var.AfrostIndex - self.var.Tavg*      pcraster.exp(self.var.Kfrost*self.var.SnowCover*self.var.InvSnowWaterEquivalent)
         # Rate of change of frost index (expressed as rate, [degree days/day])
         # CHANGED 9 September 2004:
