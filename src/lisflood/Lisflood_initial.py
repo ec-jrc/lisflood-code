@@ -16,34 +16,37 @@ See the Licence for the specific language governing permissions and limitations 
 """
 from __future__ import print_function, absolute_import
 
-from lisflood.global_modules.settings import CutMap
-from .hydrological_modules.miscInitial import *
+from .global_modules.settings import CutMap, LisSettings, NetCDFMetadata
+from .global_modules.zusatz import DynamicModel
+from .global_modules.add1 import loadsetclone, mapattrNetCDF
+from .hydrological_modules.miscInitial import miscInitial
 
-from .hydrological_modules.readmeteo import *
-from .hydrological_modules.leafarea import *
-from .hydrological_modules.landusechange import *
-from .hydrological_modules.snow import *
-from .hydrological_modules.frost import *
-from .hydrological_modules.soil import *
-from .hydrological_modules.routing import *
-from .hydrological_modules.groundwater import *
-from .hydrological_modules.surface_routing import *
-from .hydrological_modules.reservoir import *
-from .hydrological_modules.lakes import *
-from .hydrological_modules.polder import *
-from .hydrological_modules.waterabstraction import *
-from .hydrological_modules.indicatorcalc import *
-from .hydrological_modules.riceirrigation import *
-from .hydrological_modules.evapowater import *
-from .hydrological_modules.transmission import *
-from .hydrological_modules.soilloop import *
-from .hydrological_modules.opensealed import *
-from .hydrological_modules.waterbalance import *
-from .hydrological_modules.waterlevel import *
-from .hydrological_modules.structures import *
+from .hydrological_modules.readmeteo import readmeteo
+from .hydrological_modules.leafarea import leafarea
+from .hydrological_modules.landusechange import landusechange
+from .hydrological_modules.snow import snow
+from .hydrological_modules.inflow import inflow
+from .hydrological_modules.frost import frost
+from .hydrological_modules.soil import soil
+from .hydrological_modules.routing import routing
+from .hydrological_modules.groundwater import groundwater
+from .hydrological_modules.surface_routing import surface_routing
+from .hydrological_modules.reservoir import reservoir
+from .hydrological_modules.lakes import lakes
+from .hydrological_modules.polder import polder
+from .hydrological_modules.waterabstraction import waterabstraction
+from .hydrological_modules.indicatorcalc import indicatorcalc
+from .hydrological_modules.riceirrigation import riceirrigation
+from .hydrological_modules.evapowater import evapowater
+from .hydrological_modules.transmission import transmission
+from .hydrological_modules.soilloop import soilloop
+from .hydrological_modules.opensealed import opensealed
+from .hydrological_modules.waterbalance import waterbalance
+from .hydrological_modules.waterlevel import waterlevel
+from .hydrological_modules.structures import structures
 
-from .global_modules.output import *
-from .global_modules.stateVar import *
+from .global_modules.output import outputTssMap
+from .global_modules.stateVar import stateVar
 
 
 class LisfloodModel_ini(DynamicModel):

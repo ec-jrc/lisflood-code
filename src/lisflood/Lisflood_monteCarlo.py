@@ -15,7 +15,10 @@ See the Licence for the specific language governing permissions and limitations 
 
 """
 from __future__ import absolute_import, print_function
-from pcraster.framework import DynamicModel, MonteCarloModel
+
+from pcraster.framework import MonteCarloModel
+
+from .global_modules.zusatz import DynamicModel
 
 
 class LisfloodModel_monteCarlo(DynamicModel, MonteCarloModel):

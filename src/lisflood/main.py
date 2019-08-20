@@ -49,7 +49,7 @@ class LisfloodModel(LisfloodModel_ini, LisfloodModel_dyn, LisfloodModel_monteCar
 # ==================================================
 
 
-def Lisfloodexe(settings, optionxml):
+def lisfloodexe(settings):
 
     # read options and bindings and launch Lisflood model computation
     # returns option binding and ReportSteps - global dictionaries
@@ -234,10 +234,6 @@ def main():
     if len(sys.argv) < 2:
         usage()
 
-    # global settings
-    # global optionxml
-    optionxml = get_optionxml_path()
-
     # setting.xml file
     settings = sys.argv[1]
 
@@ -252,15 +248,4 @@ def main():
     flags = lissettings.flags
     if not (flags['veryquiet'] or flags['quiet']):
         headerinfo()
-    Lisfloodexe(settings, optionxml)
-
-
-def get_optionxml_path():
-    # read OptionTserieMaps.xml in the same folder as Lisflood main (lisf1.py)
-    lisflood_path = os.path.dirname(os.path.abspath(sys.argv[0]))
-    # OptionTserieMaps.xml file
-    optionxml = os.path.normpath(os.path.join(lisflood_path, "OptionTserieMaps.xml"))
-    # second attempt: read from source folder
-    if not os.path.exists(optionxml):
-        optionxml = os.path.normpath(os.path.join(src_dir, "OptionTserieMaps.xml"))
-    return optionxml
+    lisfloodexe(settings)

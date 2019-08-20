@@ -30,7 +30,7 @@ if os.path.exists(src_dir):
 
 from lisflood.global_modules.add1 import readnetcdf
 from lisflood.global_modules.settings import LisSettings
-from lisflood.main import Lisfloodexe, get_optionxml_path
+from lisflood.main import lisfloodexe
 
 
 class TestLis(object):
@@ -49,8 +49,7 @@ class TestLis(object):
 
     @classmethod
     def setup_class(cls):
-        optionxml = get_optionxml_path()
-        Lisfloodexe(cls.settings_path, optionxml)
+        lisfloodexe(cls.settings_path)
 
     @classmethod
     def teardown_class(cls):
