@@ -473,7 +473,7 @@ def takeClosest(myList, myNumber):
     return before
 
 
-def loadLAI(value, pcrvalue, i,pcr=False):
+def loadLAI(value, pcrvalue, i, pcr=False):
     """
     load Leaf are map stacks  or water use maps stacks
     """
@@ -491,10 +491,10 @@ def loadLAI(value, pcrvalue, i,pcr=False):
         # and calculate the cutting
         cut0, cut1, cut2, cut3 = mapattrNetCDF(filename)
         nf1 = iterOpenNetcdf(filename, "", 'r')
-        value = nf1.variables.items()[-1][0]  # get the last variable name
+        value = listitems(nf1.variables)[-1][0]  # get the last variable name
         mapnp = nf1.variables[value][i, cut2:cut3, cut0:cut1]
         nf1.close()
-        mapC = compressArray(mapnp,pcr=False,name=filename)
+        mapC = compressArray(mapnp, pcr=False, name=filename)
         # mapnp[np.isnan(mapnp)] = -9999
         # map = numpy2pcr(Scalar, mapnp, -9999)
         # if check use a pcraster map
@@ -807,39 +807,39 @@ def writenet(flag, inputmap, netfile, DtDay,
             longitude = nf1.createVariable('x', 'f8', ('x',))
             valid_attrs = [i for i in meta_netcdf.data['x'] if i not in not_valid_attrs]
             for i in valid_attrs:
-                exec('%s="%s"') % ("longitude." + i, meta_netcdf.data['x'][i])
+                setattr(longitude, i, meta_netcdf.data['x'][i])
 
         if 'lon' in meta_netcdf.data:
             lon = nf1.createDimension('lon', col)
             longitude = nf1.createVariable('lon', 'f8', ('lon',))
             valid_attrs = [i for i in meta_netcdf.data['lon'] if i not in not_valid_attrs]
             for i in valid_attrs:
-                exec('%s="%s"') % ("longitude." + i, meta_netcdf.data['lon'][i])
+                setattr(longitude, i, meta_netcdf.data['lon'][i])
 
         if 'y' in meta_netcdf.data:
             lat = nf1.createDimension('y', row)  # x 950
             latitude = nf1.createVariable('y', 'f8', ('y',))
             valid_attrs = [i for i in meta_netcdf.data['y'] if i not in not_valid_attrs]
             for i in valid_attrs:
-                exec('%s="%s"') % ("latitude." + i, meta_netcdf.data['y'][i])
+                setattr(latitude, i, meta_netcdf.data['y'][i])
 
         if 'lat' in meta_netcdf.data:
             lat = nf1.createDimension('lat', row)  # x 950
             latitude = nf1.createVariable('lat', 'f8', ('lat',))
             valid_attrs = [i for i in meta_netcdf.data['lat'] if i not in not_valid_attrs]
             for i in valid_attrs:
-                exec('%s="%s"') % ("latitude." + i, meta_netcdf.data['lat'][i])
+                setattr(latitude, i, meta_netcdf.data['lat'][i])
 
         # projection
         if 'laea' in meta_netcdf.data:
             proj = nf1.createVariable('laea', 'i4')
             for i in meta_netcdf.data['laea']:
-                exec('%s="%s"') % ("proj." + i, meta_netcdf.data['laea'][i])
+                setattr(proj, i, meta_netcdf.data['laea'][i])
 
         if 'lambert_azimuthal_equal_area' in meta_netcdf.data:
             proj = nf1.createVariable('lambert_azimuthal_equal_area', 'i4')
             for i in meta_netcdf.data['lambert_azimuthal_equal_area']:
-                exec('%s="%s"') % ("proj." + i, meta_netcdf.data['lambert_azimuthal_equal_area'][i])
+                setattr(proj, i, meta_netcdf.data['lambert_azimuthal_equal_area'][i])
         """
         EUROPE
         proj.grid_mapping_name='lambert_azimuthal_equal_area'

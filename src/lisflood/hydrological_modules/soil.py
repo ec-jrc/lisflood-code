@@ -180,23 +180,23 @@ class soil(object):
 
         # Express volume fractions in [mm] water slice
         # self.var.WFC1=self.var.WRes1+(self.var.WS1-self.var.WRes1)/((1+(GenuAlpha1*100)**GenuN1)**self.var.GenuM1)
-        self.var.WFC1a = map(lambda res, s, ga, gn, gm: res + (s - res) / ((1 + (ga * 100) ** gn) ** gm), self.var.WRes1a, self.var.WS1a, GenuAlpha1a, GenuN1a, self.var.GenuM1a)
-        self.var.WFC1b = map(lambda res, s, ga, gn, gm: res + (s - res) / ((1 + (ga * 100) ** gn) ** gm), self.var.WRes1b, self.var.WS1b, GenuAlpha1b, GenuN1b, self.var.GenuM1b)
+        self.var.WFC1a = list(map(lambda res, s, ga, gn, gm: res + (s - res) / ((1 + (ga * 100) ** gn) ** gm), self.var.WRes1a, self.var.WS1a, GenuAlpha1a, GenuN1a, self.var.GenuM1a))
+        self.var.WFC1b = list(map(lambda res, s, ga, gn, gm: res + (s - res) / ((1 + (ga * 100) ** gn) ** gm), self.var.WRes1b, self.var.WS1b, GenuAlpha1b, GenuN1b, self.var.GenuM1b))
         self.var.WFC1 = np.add(self.var.WFC1a, self.var.WFC1b)
-        self.var.WFC2 = map(lambda res, s, ga, gn, gm: res + (s - res) / ((1 + (ga * 100) ** gn) ** gm), self.var.WRes2, self.var.WS2, GenuAlpha2, GenuN2, self.var.GenuM2)
+        self.var.WFC2 = list(map(lambda res, s, ga, gn, gm: res + (s - res) / ((1 + (ga * 100) ** gn) ** gm), self.var.WRes2, self.var.WS2, GenuAlpha2, GenuN2, self.var.GenuM2))
         # Soil moisture at field capacity (pF2, 100 cm) [mm water slice]
         # Mualem equation (van Genuchten, 1980)
 
-        self.var.WPF3a = map(lambda res, s, ga, gn, gm: res + (s - res) / ((1 + (ga * 1000) ** gn) ** gm), self.var.WRes1a, self.var.WS1a, GenuAlpha1a, GenuN1a, self.var.GenuM1a)
-        self.var.WPF3b = map(lambda res, s, ga, gn, gm: res + (s - res) / ((1 + (ga * 1000) ** gn) ** gm), self.var.WRes1b, self.var.WS1b, GenuAlpha1b, GenuN1b, self.var.GenuM1b)
+        self.var.WPF3a = list(map(lambda res, s, ga, gn, gm: res + (s - res) / ((1 + (ga * 1000) ** gn) ** gm), self.var.WRes1a, self.var.WS1a, GenuAlpha1a, GenuN1a, self.var.GenuM1a))
+        self.var.WPF3b = list(map(lambda res, s, ga, gn, gm: res + (s - res) / ((1 + (ga * 1000) ** gn) ** gm), self.var.WRes1b, self.var.WS1b, GenuAlpha1b, GenuN1b, self.var.GenuM1b))
         self.var.WPF3 = np.add(self.var.WPF3a, self.var.WPF3b)
 
         # Soil moisture at field capacity (pF3, 1000 cm) [mm water slice]
         # Mualem equation (van Genuchten, 1980)        # self.var.WWP1=self.var.WRes1+(self.var.WS1-self.var.WRes1)/  ((1+(GenuAlpha1*(10**4.2))**GenuN1)**self.var.GenuM1)
-        self.var.WWP1a = map(lambda res, s, ga, gn, gm: res + (s - res) / ((1 + (ga * 15000) ** gn) ** gm), self.var.WRes1a, self.var.WS1a, GenuAlpha1a, GenuN1a, self.var.GenuM1a)
-        self.var.WWP1b = map(lambda res, s, ga, gn, gm: res + (s - res) / ((1 + (ga * 15000) ** gn) ** gm), self.var.WRes1b, self.var.WS1b, GenuAlpha1b, GenuN1b, self.var.GenuM1b)
+        self.var.WWP1a = list(map(lambda res, s, ga, gn, gm: res + (s - res) / ((1 + (ga * 15000) ** gn) ** gm), self.var.WRes1a, self.var.WS1a, GenuAlpha1a, GenuN1a, self.var.GenuM1a))
+        self.var.WWP1b = list(map(lambda res, s, ga, gn, gm: res + (s - res) / ((1 + (ga * 15000) ** gn) ** gm), self.var.WRes1b, self.var.WS1b, GenuAlpha1b, GenuN1b, self.var.GenuM1b))
         self.var.WWP1 = np.add(self.var.WWP1a, self.var.WWP1b)
-        self.var.WWP2 = map(lambda res, s, ga, gn, gm: res + (s - res) / ((1 + (ga * 15000) ** gn) ** gm), self.var.WRes2, self.var.WS2, GenuAlpha2, GenuN2, self.var.GenuM2)
+        self.var.WWP2 = list(map(lambda res, s, ga, gn, gm: res + (s - res) / ((1 + (ga * 15000) ** gn) ** gm), self.var.WRes2, self.var.WS2, GenuAlpha2, GenuN2, self.var.GenuM2))
         # Soil moisture at wilting point (pF4.2, 10**4.2 cm) in [mm] water slice
         # Mualem equation (van Genuchten, 1980)
 
