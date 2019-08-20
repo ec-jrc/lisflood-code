@@ -1,10 +1,5 @@
 import sys
-
 import os
-
-
-# from .globals import modelSteps
-# from .settings import LisSettings
 
 
 class LisfloodError(Exception):
@@ -17,7 +12,7 @@ class LisfloodError(Exception):
         header = "\n\n ========================== LISFLOOD ERROR =============================\n"
         try:
             self._msg = header + msg + "\n" + sys.exc_info()[1].message
-        except:
+        except (IndexError, AttributeError):
             self._msg = header + msg + "\n"
 
     def __str__(self):

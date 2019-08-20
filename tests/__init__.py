@@ -14,7 +14,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
-from __future__ import print_function, absolute_import
+from __future__ import print_function, absolute_import, division
 from nine import range
 
 import os
@@ -55,14 +55,14 @@ class TestLis(object):
     def teardown_class(cls):
         settings = LisSettings.instance()
         binding = settings.binding
-        for var, obj in cls.reference_files.items():
-            output_nc = binding[cls.reference_files[var]['report_map']]
-            output_nc = output_nc + '.nc'
-            if os.path.exists(output_nc):
-                os.remove(output_nc)
-            output_tss = binding[cls.reference_files[var]['report_tss']]
-            if os.path.exists(output_tss):
-                os.remove(output_tss)
+        # for var, obj in cls.reference_files.items():
+        #     output_nc = binding[cls.reference_files[var]['report_map']]
+        #     output_nc = output_nc + '.nc'
+        #     if os.path.exists(output_nc):
+        #         os.remove(output_nc)
+        #     output_tss = binding[cls.reference_files[var]['report_tss']]
+        #     if os.path.exists(output_tss):
+        #         os.remove(output_tss)
 
     @classmethod
     def check_var_step(cls, var, step):

@@ -19,7 +19,6 @@ from pcraster import*
 from pcraster.framework import *
 
 from lisflood.global_modules.add1 import *
-from lisflood.global_modules.globals import *
 
 
 class waterbalance(object):

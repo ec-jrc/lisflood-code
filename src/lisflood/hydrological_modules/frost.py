@@ -26,7 +26,6 @@ from time import *
 
 from lisflood.global_modules.zusatz import *
 from lisflood.global_modules.add1 import *
-from lisflood.global_modules.globals import *
 
 
 class frost(object):

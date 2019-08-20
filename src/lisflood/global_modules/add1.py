@@ -28,7 +28,6 @@ import pickle
 from bisect import bisect_left
 
 import pcraster
-# from pcraster._pcraster import Scalar, numpy2pcr, Nominal, setclone, Boolean, pcr2numpy
 from pcraster import Scalar, numpy2pcr, Nominal, setclone, Boolean, pcr2numpy
 from netCDF4 import num2date, date2num
 import numpy as np
@@ -61,6 +60,7 @@ def defsoil(name1, name2=None, name3=None):
         except:
             in3 = name3
     return [in1, in2, in3]
+
 
 def valuecell(mask, coordx, coordstr):
     """
