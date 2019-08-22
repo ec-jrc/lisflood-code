@@ -100,7 +100,7 @@ class miscInitial(object):
         self.var.InvPixelLength = 1.0 / self.var.PixelLength
         # Inverse of pixel size [1/m]
         self.var.DtSec = loadmap('DtSec')
-        self.var.DtDay = self.var.DtSec / 86400
+        self.var.DtDay = self.var.DtSec / 86400.
         # Time step, expressed as fraction of day (used to convert
         # rate variables that are expressed as a quantity per day to
         # into an amount per time step)

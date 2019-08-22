@@ -14,16 +14,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, division
 
-from pcraster import *
-from pcraster.framework import *
-import sys
-import os
-import string
-import math
+import numpy as np
 
-from ..global_modules.add1 import *
+from ..global_modules.add1 import loadmap
+from ..global_modules.settings import MaskInfo, LisSettings
 
 
 class riceirrigation(object):
@@ -169,6 +165,4 @@ class riceirrigation(object):
             self.var.UZ[0] += np.where(self.var.OtherFraction > 0.0,
                                        (RiceDrainageM3 + RicePercolationM3) * self.var.M3toMM / self.var.OtherFraction,
                                        0.0)
-
-#           self.var.UZ[0] += (RicePercolationM3)*self.var.M3toMM/self.var.OtherFraction
-# drained water is added to Upper Zone
+            # drained water is added to Upper Zone

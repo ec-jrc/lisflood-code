@@ -14,10 +14,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, division
 from nine import range
 
-from lisflood.global_modules.add1 import *
+import numpy as np
+
+from lisflood.global_modules.settings import LisSettings, MaskInfo
 
 
 class soilloop(object):
@@ -125,12 +127,11 @@ class soilloop(object):
         # critical moisture amount ([mm] water slice) for all layers
         settings = LisSettings.instance()
         option = settings.options
-        if option['wateruse']:
-            if sLoop == 2:
-                self.var.WFilla = np.minimum(WCrit1a,self.var.WPF3a[2])
-                self.var.WFillb = np.minimum(WCrit1b,self.var.WPF3b[2])
-                # if water use is calculated, get the filling of the soil layer for either pF3 or WCrit1
-                # that is the amount of water the soil gets filled by water from irrigation
+        if option['wateruse'] and sLoop == 2:
+            self.var.WFilla = np.minimum(WCrit1a,self.var.WPF3a[2])
+            self.var.WFillb = np.minimum(WCrit1b,self.var.WPF3b[2])
+            # if water use is calculated, get the filling of the soil layer for either pF3 or WCrit1
+            # that is the amount of water the soil gets filled by water from irrigation
 
         #  with np.errstate(invalid='ignore',divide='ignore'):
         #  bc the divisor can have 0 -> this calculation is done first and raise a warning - zero encountered -
@@ -484,11 +485,11 @@ class soilloop(object):
         # Domain: permeable fraction of pixel only
         # GwPercUZLZPixel valid for whole pixel
 
-        if option['drainedIrrigation'] and sLoop==2:
-                self.var.UZOutflow[sLoop] += self.var.DrainedFraction * self.var.SeepSubToGW[sLoop]
-                self.var.UZ[sLoop] +=  (1 - self.var.DrainedFraction) * self.var.SeepSubToGW[sLoop] + self.var.PrefFlow[sLoop]
-                                # use map of drainage systems, to determine return flow (if drained, all percolation to channel within day;
-   	            # if not, all normal soil processes)
+        if option['drainedIrrigation'] and sLoop == 2:
+            self.var.UZOutflow[sLoop] += self.var.DrainedFraction * self.var.SeepSubToGW[sLoop]
+            self.var.UZ[sLoop] += (1 - self.var.DrainedFraction) * self.var.SeepSubToGW[sLoop] + self.var.PrefFlow[sLoop]
+            # use map of drainage systems, to determine return flow (if drained, all percolation to channel within day;
+            # if not, all normal soil processes)
         else:
                 self.var.UZ[sLoop] += self.var.SeepSubToGW[sLoop] + self.var.PrefFlow[sLoop]
                 # water in upper response box [mm]

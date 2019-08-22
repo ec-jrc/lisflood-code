@@ -164,25 +164,6 @@ def lisfloodexe(settings):
         print(LisfloodRunInfo(mode="Deterministic", outputDir=lissettings.output_dir[0]))
         stLisflood.run()
 
-    # if flags['printtime']:
-    #     import numpy as np
-    #     print("\n\nTime profiling")
-    #     print("%2s %-17s %10s %8s" %("No","Name","time[s]","%"))
-    #     div = 1
-    #     timeSum = np.array(timeMesSum)
-    #     if MCset:
-    #         div = div * lissettings.ens_members[0]
-    #     if EnKFset:
-    #         div = div * (len(filter_steps) + 1)
-    #     if EnKFset or MCset:
-    #         timePrint = np.zeros(len(timeSum)/div)
-    #         for i in range(len(timePrint)):
-    #             timePrint[i] = np.sum(timeSum[range(i, len(timeSum), len(timeSum)/div)])
-    #     else:
-    #         timePrint = timeSum
-    #     for i in range(len(timePrint)):
-    #         print("%2i %-17s %10.2f %8.1f" % (i, timeMesString[i], timePrint[i], 100 * timePrint[i] / timePrint[-1]))
-
 # ==================================================
 # ============== USAGE ==============================
 # ==================================================

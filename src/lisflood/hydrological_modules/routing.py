@@ -16,12 +16,20 @@ See the Licence for the specific language governing permissions and limitations 
 """
 from __future__ import print_function, absolute_import
 
-from lisflood.hydrological_modules.lakes import *
-from lisflood.hydrological_modules.reservoir import *
-from lisflood.hydrological_modules.polder import *
-from lisflood.hydrological_modules.inflow import *
-from lisflood.hydrological_modules.transmission import *
-from lisflood.hydrological_modules.kinematic_wave_parallel import kinematicWave, kwpt
+from pcraster import lddmask, accuflux, boolean, downstream, pit, path, lddrepair, ifthenelse, cover, nominal, uniqueid, \
+    catchment, upstream
+
+import numpy as np
+
+from .lakes import lakes
+from .reservoir import reservoir
+from .polder import polder
+from .inflow import inflow
+from .transmission import transmission
+from .kinematic_wave_parallel import kinematicWave, kwpt
+
+from ..global_modules.settings import LisSettings, MaskInfo
+from ..global_modules.add1 import loadmap, compressArray, decompress
 
 
 class routing(object):
@@ -89,7 +97,7 @@ class routing(object):
         self.var.InvUpArea = 1 / self.var.UpArea
         # Calculate inverse, so we can multiply in dynamic (faster than divide)
 
-        self.var.IsChannelPcr = pcraster.boolean(loadmap('Channels',pcr=True))
+        self.var.IsChannelPcr = boolean(loadmap('Channels',pcr=True))
         self.var.IsChannel = np.bool8(compressArray(self.var.IsChannelPcr))
         # Identify channel pixels
         self.var.IsChannelKinematic = self.var.IsChannel.copy()
@@ -103,18 +111,18 @@ class routing(object):
         # routines (if those are used)
         LddChan = lddmask(self.var.Ldd, self.var.IsChannelPcr)
         # ldd for Channel network
-        self.var.MaskMap = pcraster.boolean(self.var.Ldd)
+        self.var.MaskMap = boolean(self.var.Ldd)
         # Use boolean version of Ldd as calculation mask
         # (important for correct mass balance check
         # any water generated outside of Ldd won't reach
         # channel anyway)
         self.var.LddToChan = lddrepair(ifthenelse(self.var.IsChannelPcr, 5, self.var.Ldd))
         # Routing of runoff (incl. ground water)en
-        AtOutflow = pcraster.boolean(pit(self.var.Ldd))
+        AtOutflow = boolean(pit(self.var.Ldd))
         # find outlet points...
 
         if option['dynamicWave']:
-            IsChannelDynamic = pcraster.boolean(loadmap('ChannelsDynamic',pcr=True))
+            IsChannelDynamic = boolean(loadmap('ChannelsDynamic',pcr=True))
             # Identify channel pixels where dynamic wave is used
             self.var.IsChannelKinematic = (self.var.IsChannelPcr == 1) & (IsChannelDynamic == 0)
             # Identify (update) channel pixels where kinematic wave is used
@@ -127,7 +135,7 @@ class routing(object):
             # LddKinematic to the nearest downstream dynamic wave pixel
             LddToDyn = lddrepair(ifthenelse(IsChannelDynamic, 5, self.var.Ldd))
             # Temporary ldd: flow paths end in dynamic pixels
-            PitsKinematic = cover(pcraster.boolean(pit(self.var.LddKinematic)), 0)
+            PitsKinematic = cover(boolean(pit(self.var.LddKinematic)), 0)
             # Define start of each flow path at pit on LddKinematic
             PathKinToDyn = path(LddToDyn, PitsKinematic)
             # Identify paths that connect pits in LddKinematic to dynamic wave
@@ -138,8 +146,7 @@ class routing(object):
             # NEW 12-7-2005 (experimental)
             # Location of boundary condition dynamic wave
 
-            self.var.AtLastPoint = (downstream(self.var.Ldd, AtOutflow) == 1) & (
-            AtOutflow != 1) & self.var.IsChannelPcr
+            self.var.AtLastPoint = (downstream(self.var.Ldd, AtOutflow) == 1) & (AtOutflow != 1) & self.var.IsChannelPcr
 
             # NEW 23-6-2005
             # Dynamic wave routine gives no outflow out of pits, so we calculate this
@@ -162,7 +169,7 @@ class routing(object):
         # giving a number to each non missing pixel as id
         self.var.downstruct = (compressArray(downstream(self.var.LddKinematic,inAr))).astype("int32")
         # each upstream pixel gets the id of the downstream pixel
-        self.var.downstruct[lddC==5] = maskinfo.info.mapC[0]
+        self.var.downstruct[lddC == 5] = maskinfo.info.mapC[0]
         # all pits gets a high number
         #d3=np.bincount(self.var.down, weights=loadmap('AvgDis'))[:-1]
         # upstream function in numpy

@@ -552,7 +552,7 @@ def inttodate(int_in, ref_date):
     # CM: get model time step as float form 'DtSec' in Settings.xml file
     DtSec = float(binding['DtSec'])
     # CM: compute fraction of day corresponding to model time step as float
-    DtDay = float(DtSec / 86400)
+    DtDay = DtSec / 86400.
     # Time step, expressed as fraction of day (same as self.var.DtSec and self.var.DtDay)
 
     # CM: compute date corresponding to intIn steps from reference date refDate

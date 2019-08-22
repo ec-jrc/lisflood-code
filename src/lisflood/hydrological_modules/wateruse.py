@@ -14,6 +14,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
+from __future__ import absolute_import, print_function, division
 
 
 class wateruse(object):
@@ -33,6 +34,7 @@ class wateruse(object):
     def initial(self):
         """ initial part of the water use module
         """
+        pass
 
 # ************************************************************
 # ***** WATER USE
@@ -42,3 +44,4 @@ class wateruse(object):
         """ dynamic part of the water use module
             init water use before sub step routing
         """
+        pass

@@ -38,9 +38,6 @@ class LisfloodModel_dyn(DynamicModel):
         settings = LisSettings.instance()
         option = settings.options
         flags = settings.flags
-        # del timeMes[:]
-        # get time for operation "Start dynamic"
-        # timemeasure("Start dynamic")
         # date corresponding to the model time step (yyyy-mm-dd hh:mm:ss)
         self.CalendarDate = self.CalendarDayStart + datetime.timedelta(days=(self.currentTimeStep()-1) * self.DtDay)
         # day of the year corresponding to the model time step
@@ -138,14 +135,7 @@ class LisfloodModel_dyn(DynamicModel):
             # InitLisfloodwithoutSplit
             # Very fast InitLisflood
             # it is only to compute Lzavin.map and skip completely the routing component
-            self.output_module.dynamic() # only lzavin
-
-            # timemeasure("After fast init")
-            # for i in range(len(timeMes)):
-            #     if self.currentTimeStep() == self.firstTimeStep():
-            #        timeMesSum.append(timeMes[i] - timeMes[0])
-            #     else: timeMesSum[i] += timeMes[i] - timeMes[0]
-
+            self.output_module.dynamic()  # only lzavin
             return
 
         # *********  EVAPORATION FROM OPEN WATER *************
@@ -261,15 +251,6 @@ class LisfloodModel_dyn(DynamicModel):
 
         ### Report states if EnKF is used and filter moment
         self.stateVar_module.dynamic()
-        # timemeasure("State report")
-        #
-        # timemeasure("All dynamic")
-        #
-        # for i in range(len(timeMes)):
-        #     if self.currentTimeStep() == self.firstTimeStep():
-        #         timeMesSum.append(timeMes[i] - timeMes[0])
-        #     else: timeMesSum[i] += timeMes[i] - timeMes[0]
-
         self.indicatorcalc_module.dynamic_setzero()
         # setting monthly and yearly dindicator to zero at the end of the month (year)
 

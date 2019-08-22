@@ -14,7 +14,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, division
 
 from pcraster import boolean, nominal, ifthen, defined, areamaximum, downstream, cover, lddrepair, ifthenelse, upstream, \
     scalar, accuflux, celllength, windowtotal, areaaverage
@@ -624,7 +624,9 @@ class waterabstraction(object):
                 LZTemp1 = ifthen(self.var.GroundwaterBodiesPcr == 1, LZPcr)
                 LZTemp2 = ifthen(self.var.GroundwaterBodiesPcr == 1, windowtotal(LZTemp1, Range))
                 LZTemp3 = windowtotal(LZTemp1 * 0 + 1, Range)
-                LZSmooth = ifthenelse(LZTemp3 == 0, 0.0, LZTemp2 / LZTemp3)
+                LZSmooth = ifthenelse(LZTemp3 == 0, 0.0, LZTemp2 // LZTemp3)
+                # note: using floor division (//) here as PCRASTER Python2 doesn't define __div__ for Field
+                # It avoids TypeError: unsupported operand type(s) for /: 'Field' and 'Field' in Python2 environments
 
                 LZPcr = ifthenelse(self.var.GroundwaterBodiesPcr == 0, LZPcr, 0.9 * LZPcr + 0.1 * LZSmooth)
 

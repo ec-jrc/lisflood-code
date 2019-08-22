@@ -360,7 +360,7 @@ def loadmap(name, pcr=False, lddflag=False, timestampflag='exact', averageyearfl
                     # timestepI = int(timestepI) -1
                     begin = calendar(binding['CalendarDayStart'])
                     DtSec = float(binding['DtSec'])
-                    DtDay = float(DtSec / 86400)
+                    DtDay = DtSec / 86400.
                     # Time step, expressed as fraction of day (same as self.var.DtSec and self.var.DtDay)
                     # get date for step number timestepI (referred to CalendarDayStart)
                     timestepIDate = begin + datetime.timedelta(days=(timestepI - 1) * DtDay)
@@ -700,7 +700,7 @@ def checknetcdf(name, start, end):
     #calendar date start (CalendarDayStart)
     begin = calendar(binding['CalendarDayStart'], binding['calendar_type'])
     DtSec = float(binding['DtSec'])
-    DtDay = float(DtSec / 86400)
+    DtDay = DtSec / 86400.
     # Time step, expressed as fraction of day (same as self.var.DtSec and self.var.DtDay)
 
     date_first_sim_step = calendar(start, binding['calendar_type'])

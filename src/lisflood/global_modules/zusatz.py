@@ -105,17 +105,6 @@ def checkmap(name, value, map_to_check, flagmap, find):
     return
 
 
-# def timemeasure(name,loops=0, update = False, sample = 1):
-#     # returns the current processor time
-#     timeMes.append(xtime.clock())
-#     if loops == 0:
-#         s = name
-#     else:
-#         s = name+"_%i" %(loops)
-#     timeMesString.append(s)
-#     return
-
-
 class DynamicFramework(DynamicFramework):
     """
     Framework class for dynamic models.

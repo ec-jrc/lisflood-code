@@ -14,11 +14,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
+from __future__ import absolute_import, print_function, division
 
-from pcraster import *
-from pcraster.framework import *
+import numpy as np
 
-from ..global_modules.add1 import *
+from ..global_modules.add1 import loadmap
+from ..global_modules.settings import LisSettings
 
 
 class waterlevel(object):

@@ -14,7 +14,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
-from __future__ import print_function, absolute_import
+from __future__ import print_function, absolute_import, division
+from nine import range
 
 from pcraster.operations import ifthen, boolean, defined, lookupscalar
 import numpy as np
@@ -72,11 +73,11 @@ class reservoir(object):
                 return
             # break if no reservoirs
 
-            self.var.IsStructureKinematic = np.where(self.var.ReservoirSitesC > 0 , np.bool8(1),self.var.IsStructureKinematic)
+            self.var.IsStructureKinematic = np.where(self.var.ReservoirSitesC > 0, np.bool8(1), self.var.IsStructureKinematic)
             # Add reservoir locations to structures map (used to modify LddKinematic
             # and to calculate LddStructuresKinematic)
 
-            ReservoirSitePcr = loadmap('ReservoirSites',pcr=True)
+            ReservoirSitePcr = loadmap('ReservoirSites', pcr=True)
             self.var.ReservoirSites = ReservoirSitePcr
             ReservoirSitePcr = ifthen((defined(ReservoirSitePcr) & boolean(decompress(self.var.IsChannel))), ReservoirSitePcr)
             # Get rid of any reservoirs that are not part of the channel network
@@ -85,13 +86,13 @@ class reservoir(object):
 
             TotalReservoirStorageM3 = lookupscalar(str(binding['TabTotStorage']), ReservoirSitePcr)
             self.var.TotalReservoirStorageM3C = compressArray(TotalReservoirStorageM3)
-            self.var.TotalReservoirStorageM3C = np.where(np.isnan(self.var.TotalReservoirStorageM3C),0,self.var.TotalReservoirStorageM3C)
+            self.var.TotalReservoirStorageM3C = np.where(np.isnan(self.var.TotalReservoirStorageM3C), 0, self.var.TotalReservoirStorageM3C)
             self.var.TotalReservoirStorageM3CC = np.compress(self.var.ReservoirSitesC > 0, self.var.TotalReservoirStorageM3C)
             # Total storage of each reservoir [m3]
 
             ConservativeStorageLimit = lookupscalar(str(binding['TabConservativeStorageLimit']), ReservoirSitePcr)
             ConservativeStorageLimitC = compressArray(ConservativeStorageLimit)
-            self.var.ConservativeStorageLimitCC = np.compress(self.var.ReservoirSitesC > 0,ConservativeStorageLimitC)
+            self.var.ConservativeStorageLimitCC = np.compress(self.var.ReservoirSitesC > 0, ConservativeStorageLimitC)
             # Conservative storage limit (fraction of total storage, [-])
 
             NormalStorageLimit = lookupscalar(str(binding['TabNormalStorageLimit']), ReservoirSitePcr)
@@ -101,22 +102,22 @@ class reservoir(object):
 
             FloodStorageLimit = lookupscalar(str(binding['TabFloodStorageLimit']), ReservoirSitePcr)
             FloodStorageLimitC = compressArray(FloodStorageLimit)
-            self.var.FloodStorageLimitCC = np.compress(self.var.ReservoirSitesC > 0,FloodStorageLimitC)
+            self.var.FloodStorageLimitCC = np.compress(self.var.ReservoirSitesC > 0, FloodStorageLimitC)
             # Flood storage limit (fraction of total storage, [-])
 
             NonDamagingReservoirOutflow = lookupscalar(str(binding['TabNonDamagingOutflowQ']), ReservoirSitePcr)
             NonDamagingReservoirOutflowC = compressArray(NonDamagingReservoirOutflow)
-            self.var.NonDamagingReservoirOutflowCC = np.compress(self.var.ReservoirSitesC > 0,NonDamagingReservoirOutflowC)
+            self.var.NonDamagingReservoirOutflowCC = np.compress(self.var.ReservoirSitesC > 0, NonDamagingReservoirOutflowC)
             # Non-damaging reservoir outflow [m3/s]
 
             NormalReservoirOutflow = lookupscalar(str(binding['TabNormalOutflowQ']), ReservoirSitePcr)
             NormalReservoirOutflowC = compressArray(NormalReservoirOutflow)
-            self.var.NormalReservoirOutflowCC = np.compress(self.var.ReservoirSitesC > 0,NormalReservoirOutflowC)
+            self.var.NormalReservoirOutflowCC = np.compress(self.var.ReservoirSitesC > 0, NormalReservoirOutflowC)
             # Normal reservoir outflow [m3/s]
 
             MinReservoirOutflow = lookupscalar(str(binding['TabMinOutflowQ']), ReservoirSitePcr)
             MinReservoirOutflowC = compressArray(MinReservoirOutflow)
-            self.var.MinReservoirOutflowCC = np.compress(self.var.ReservoirSitesC > 0,MinReservoirOutflowC)
+            self.var.MinReservoirOutflowCC = np.compress(self.var.ReservoirSitesC > 0, MinReservoirOutflowC)
             # minimum reservoir outflow [m3/s]
 
             # Calibration
@@ -125,24 +126,25 @@ class reservoir(object):
             adjust_Normal_FloodCC = np.compress(self.var.ReservoirSitesC > 0, adjust_Normal_FloodC)
             # adjusting the balance between normal and flood storage
             # big value (= closer to flood) results in keeping the normal qoutflow longer constant
-            self.var.Normal_FloodStorageLimitCC = self.var.NormalStorageLimitCC + adjust_Normal_FloodCC * ( self.var.FloodStorageLimitCC - self.var.NormalStorageLimitCC)
+            self.var.Normal_FloodStorageLimitCC = self.var.NormalStorageLimitCC + adjust_Normal_FloodCC * (self.var.FloodStorageLimitCC - self.var.NormalStorageLimitCC)
 
             ReservoirRnormqMult = loadmap('ReservoirRnormqMult')
             ReservoirRnormqMultC = makenumpy(ReservoirRnormqMult)
             ReservoirRnormqMultCC = np.compress(self.var.ReservoirSitesC > 0, ReservoirRnormqMultC)
             self.var.NormalReservoirOutflowCC = self.var.NormalReservoirOutflowCC * ReservoirRnormqMultCC
             # calibration: all reservoirs normal outflow are multiplied with a factor
-            self.var.NormalReservoirOutflowCC = np.where(self.var.NormalReservoirOutflowCC > self.var.MinReservoirOutflowCC,self.var.NormalReservoirOutflowCC,self.var.MinReservoirOutflowCC+0.01)
-            self.var.NormalReservoirOutflowCC = np.where(self.var.NormalReservoirOutflowCC < self.var.NonDamagingReservoirOutflowCC,self.var.NormalReservoirOutflowCC,self.var.NonDamagingReservoirOutflowCC-0.01)
+            self.var.NormalReservoirOutflowCC = np.where(self.var.NormalReservoirOutflowCC > self.var.MinReservoirOutflowCC, self.var.NormalReservoirOutflowCC, self.var.MinReservoirOutflowCC+0.01)
+            self.var.NormalReservoirOutflowCC = np.where(self.var.NormalReservoirOutflowCC < self.var.NonDamagingReservoirOutflowCC, self.var.NormalReservoirOutflowCC, self.var.NonDamagingReservoirOutflowCC-0.01)
 
             # Repeatedly used expressions in reservoirs routine
             self.var.DeltaO = self.var.NormalReservoirOutflowCC - self.var.MinReservoirOutflowCC
             self.var.DeltaLN = self.var.NormalStorageLimitCC - 2 * self.var.ConservativeStorageLimitCC
             self.var.DeltaLF = self.var.FloodStorageLimitCC - self.var.NormalStorageLimitCC
             self.var.DeltaNFL = self.var.FloodStorageLimitCC - self.var.Normal_FloodStorageLimitCC
+
             ReservoirInitialFillValue = loadmap('ReservoirInitialFillValue')
             if np.max(ReservoirInitialFillValue) == -9999:
-               ReservoirInitialFill = self.var.NormalStorageLimitCC,
+                ReservoirInitialFill = self.var.NormalStorageLimitCC,
             else:
                 ReservoirInitialFill = np.compress(self.var.ReservoirSitesC > 0, ReservoirInitialFillValue)
 
@@ -172,7 +174,7 @@ class reservoir(object):
         option = settings.options
         maskinfo = MaskInfo.instance()
         if option['simulateReservoirs']:
-            InvDtSecDay = 1/86400
+            InvDtSecDay = 1 / 86400.
             # InvDtSecDay=self.var.InvDtSec
             # ReservoirInflow = cover(ifthen(defined(self.var.ReservoirSites), upstream(
             # self.var.LddStructuresKinematic, self.var.ChanQ)), scalar(0.0))
@@ -193,7 +195,7 @@ class reservoir(object):
             self.var.ReservoirFillCC = self.var.ReservoirStorageM3CC / self.var.TotalReservoirStorageM3CC
             # New reservoir fill (fraction)
 
-            ReservoirOutflow1 = np.minimum( self.var.MinReservoirOutflowCC, self.var.ReservoirStorageM3CC * InvDtSecDay)
+            ReservoirOutflow1 = np.minimum(self.var.MinReservoirOutflowCC, self.var.ReservoirStorageM3CC * InvDtSecDay)
             # Reservoir outflow [m3/s] if ReservoirFill le
             # 2*ConservativeStorageLimit
 
@@ -202,14 +204,13 @@ class reservoir(object):
             # gt 2*ConservativeStorageLimit
 
             ReservoirOutflow3a = self.var.NormalReservoirOutflowCC
-            ReservoirOutflow3b = self.var.NormalReservoirOutflowCC + ((self.var.ReservoirFillCC - self.var.Normal_FloodStorageLimitCC)
-                                / self.var.DeltaNFL) * (self.var.NonDamagingReservoirOutflowCC - self.var.NormalReservoirOutflowCC)
+            ReservoirOutflow3b = self.var.NormalReservoirOutflowCC + ((self.var.ReservoirFillCC - self.var.Normal_FloodStorageLimitCC) / self.var.DeltaNFL) * (self.var.NonDamagingReservoirOutflowCC - self.var.NormalReservoirOutflowCC)
             # Reservoir outflow [m3/s] if FloodStorageLimit le ReservoirFill gt NormalStorageLimit
             # NEW 24-9-2004: linear transition between normal and non-damaging
             # outflow.
             #ReservoirOutflow4 = np.maximum((self.var.ReservoirFillCC - self.var.FloodStorageLimitCC) *
             #    self.var.TotalReservoirStorageM3CC * self.var.InvDtSec, self.var.NonDamagingReservoirOutflowCC)
-            temp = np.minimum(self.var.NonDamagingReservoirOutflowCC,np.maximum(ReservoirInflowCC * 1.2,self.var.NormalReservoirOutflowCC))
+            temp = np.minimum(self.var.NonDamagingReservoirOutflowCC, np.maximum(ReservoirInflowCC * 1.2, self.var.NormalReservoirOutflowCC))
             ReservoirOutflow4 = np.maximum((self.var.ReservoirFillCC - self.var.FloodStorageLimitCC-0.01) *
                                            self.var.TotalReservoirStorageM3CC * InvDtSecDay, temp)
 
@@ -218,8 +219,7 @@ class reservoir(object):
             # ReservoirOutflow3 or ReservoirOutflow4
 
             ReservoirOutflow = ReservoirOutflow1.copy()
-            ReservoirOutflow = np.where(self.var.ReservoirFillCC > 2 * self.var.ConservativeStorageLimitCC,
-                                ReservoirOutflow2, ReservoirOutflow)
+            ReservoirOutflow = np.where(self.var.ReservoirFillCC > 2 * self.var.ConservativeStorageLimitCC, ReservoirOutflow2, ReservoirOutflow)
            # ReservoirOutflow = np.where(self.var.ReservoirFillCC > self.var.NormalStorageLimitCC,
            #                     ReservoirOutflow3, ReservoirOutflow)
 
@@ -228,11 +228,9 @@ class reservoir(object):
             ReservoirOutflow = np.where(self.var.ReservoirFillCC > self.var.Normal_FloodStorageLimitCC,
                                 ReservoirOutflow3b, ReservoirOutflow)
 
-            ReservoirOutflow = np.where(self.var.ReservoirFillCC > self.var.FloodStorageLimitCC,
-                                ReservoirOutflow4, ReservoirOutflow)
+            ReservoirOutflow = np.where(self.var.ReservoirFillCC > self.var.FloodStorageLimitCC, ReservoirOutflow4, ReservoirOutflow)
 
-
-            temp = np.minimum(ReservoirOutflow,np.maximum(ReservoirInflowCC,self.var.NormalReservoirOutflowCC))
+            temp = np.minimum(ReservoirOutflow,np.maximum(ReservoirInflowCC, self.var.NormalReservoirOutflowCC))
 
             ReservoirOutflow = np.where((ReservoirOutflow > 1.2 * ReservoirInflowCC) &
                                         (ReservoirOutflow > self.var.NormalReservoirOutflowCC) &
@@ -251,12 +249,12 @@ class reservoir(object):
             #self.var.ReservoirStorageM3CC += QResInM3Dt - QResOutM3DtCC
             self.var.ReservoirStorageM3CC -= QResOutM3DtCC
             # New reservoir storage [m3]
-            self.var.ReservoirFillCC = self.var.ReservoirStorageM3CC / self.var.TotalReservoirStorageM3CC
+            self.var.ReservoirFillCC = self.var.ReservoirStorageM3CC // self.var.TotalReservoirStorageM3CC
             # New reservoir fill
 
             # CM: Check ReservoirStorageM3CC for negative values and set them to zero
             nel = len(self.var.ReservoirFillCC[:])
-            for i in range(0,nel-1):
+            for i in range(0, nel-1):
                 if np.isnan(self.var.ReservoirFillCC[i]) or self.var.ReservoirFillCC[i] < 0:
                     msg = "Negative or NaN volume for reservoir fill set to 0. Increase computation time step for routing (DtSecChannel) \n"
                     print(LisfloodWarning(msg))
@@ -269,7 +267,7 @@ class reservoir(object):
             # this is put to the channel again at each sub timestep
 
             if option['repsimulateReservoirs']:
-                if NoRoutingExecuted==0:
+                if NoRoutingExecuted == 0:
                     self.var.ReservoirInflowM3S = maskinfo.in_zero()
                     self.var.ReservoirOutflowM3S = maskinfo.in_zero()
                     self.var.sumResInCC = QResInM3Dt
@@ -286,9 +284,9 @@ class reservoir(object):
                 # expanding the size after last sub timestep
                 self.var.ReservoirStorageM3 = maskinfo.in_zero()
                 self.var.ReservoirFill = maskinfo.in_zero()
-                np.put(self.var.ReservoirStorageM3,self.var.ReservoirIndex,self.var.ReservoirStorageM3CC)
-                np.put(self.var.ReservoirFill,self.var.ReservoirIndex,self.var.ReservoirFillCC)
+                np.put(self.var.ReservoirStorageM3, self.var.ReservoirIndex, self.var.ReservoirStorageM3CC)
+                np.put(self.var.ReservoirFill, self.var.ReservoirIndex, self.var.ReservoirFillCC)
 
                 if option['repsimulateReservoirs']:
-                    np.put(self.var.ReservoirInflowM3S ,self.var.ReservoirIndex,self.var.sumResInCC / self.var.DtSec)
-                    np.put(self.var.ReservoirOutflowM3S,self.var.ReservoirIndex,self.var.sumResOutCC / self.var.DtSec)
+                    np.put(self.var.ReservoirInflowM3S, self.var.ReservoirIndex, self.var.sumResInCC // self.var.DtSec)
+                    np.put(self.var.ReservoirOutflowM3S, self.var.ReservoirIndex, self.var.sumResOutCC // self.var.DtSec)

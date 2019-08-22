@@ -15,12 +15,12 @@ See the Licence for the specific language governing permissions and limitations 
 
 """
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, division
 
-from pcraster import*
-from pcraster.framework import *
+import numpy as np
 
-from ..global_modules.add1 import *
+from ..global_modules.settings import LisSettings, MaskInfo
+from ..global_modules.add1 import loadmap
 
 
 class transmission(object):

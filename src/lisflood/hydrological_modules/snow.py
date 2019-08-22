@@ -17,7 +17,10 @@ See the Licence for the specific language governing permissions and limitations 
 from __future__ import absolute_import, print_function
 from nine import range
 
-from ..global_modules.add1 import *
+import numpy as np
+
+from ..global_modules.add1 import loadmap
+from ..global_modules.settings import MaskInfo
 
 
 class snow(object):
@@ -97,9 +100,8 @@ class snow(object):
         SeasSnowMeltCoef = self.var.SnowSeason * np.where(hemisphere_N, snowmelt_coeff, -snowmelt_coeff) + self.var.SnowMeltCoef # N and S hemispheres have opposite-sign cycles
 
         # Icemelt
-	    #####################################################
-        # # Bugfix from Emiliano - uncomment to make it work
-        # # Check if the current day is in the "summer icemelt season" for the Northern (N) and Southern (S) hemispheres
+        #####################################################
+        # Check if the current day is in the "summer icemelt season" for the Northern (N) and Southern (S) hemispheres
         is_summer_icemelt_N = (self.var.CalendarDay > self.icemelt_start_N) & (self.var.CalendarDay < self.icemelt_end_N)
         is_summer_icemelt_S = (self.var.CalendarDay > self.icemelt_start_S) | (self.var.CalendarDay < self.icemelt_end_S)
         # Icemelt coefficient: the sine function is the same for both hemispheres due to the imposed 1/2 periodicity; the mask is shifted 6 months

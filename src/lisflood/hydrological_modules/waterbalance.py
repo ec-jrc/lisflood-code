@@ -14,11 +14,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
+from __future__ import absolute_import, print_function, division
 
-from pcraster import*
-from pcraster.framework import *
-
-from lisflood.global_modules.add1 import *
+import numpy as np
+from ..global_modules.add1 import compressArray
+from ..global_modules.settings import LisSettings, MaskInfo
 
 
 class waterbalance(object):
@@ -80,9 +80,9 @@ class waterbalance(object):
             # MMtoM3 equals MMtoM*PixelArea, which may (or may not) be
             # spatially variable
 
-            self.var.WaterInit = np.take(np.bincount(self.var.Catchments, weights=ChannelInitM3),self.var.Catchments)
+            self.var.WaterInit = np.take(np.bincount(self.var.Catchments, weights=ChannelInitM3), self.var.Catchments)
 
-            self.var.WaterInit += np.take(np.bincount(self.var.Catchments, weights=HillslopeInitM3),self.var.Catchments)
+            self.var.WaterInit += np.take(np.bincount(self.var.Catchments, weights=HillslopeInitM3), self.var.Catchments)
 
             # Initial water stored [m3]
             # Inclusion of DischargeM3Structures: adding this corrects a (relatively small) offset that occurs otherwise
@@ -90,8 +90,7 @@ class waterbalance(object):
             #DisStructure = cover(ifthen(
             #    self.var.IsUpsOfStructureKinematic, self.var.ChanQ * self.var.DtRouting), scalar(0.0))
 
-            DisStructure = np.where(self.var.IsUpsOfStructureKinematicC,
-                        self.var.ChanQ * self.var.DtRouting,0)
+            DisStructure = np.where(self.var.IsUpsOfStructureKinematicC, self.var.ChanQ * self.var.DtRouting, 0)
 #            DisStructure = np.where(self.var.IsUpsOfStructureKinematicC,
 #                        self.var.ChanM3,0)
 
@@ -105,12 +104,12 @@ class waterbalance(object):
             if option['simulateLakes']:
                 DisStructure += np.where(compressArray(self.var.IsUpsOfStructureLake), 0.5 * self.var.ChanQ * self.var.DtRouting, 0)
 
-             #   DisStructure += cover(ifthen(self.var.IsUpsOfStructureLake,
-             #                                0.5 * self.var.ChanQ * self.var.DtRouting), scalar(0.0))
+                # DisStructure += cover(ifthen(self.var.IsUpsOfStructureLake,
+                #  0.5 * self.var.ChanQ * self.var.DtRouting), scalar(0.0))
                 # because Modified Puls Method is use, some additional offset
                 # has to be add
             #self.var.DischargeM3StructuresIni = areatotal(DisStructure, catch)
-            self.var.DischargeM3StructuresIni = np.take(np.bincount(self.var.Catchments, weights=DisStructure),self.var.Catchments)
+            self.var.DischargeM3StructuresIni = np.take(np.bincount(self.var.Catchments, weights=DisStructure), self.var.Catchments)
 
           #  report(decompress(self.var.WaterInit),'E:/lisflood_test/newDiepoldsau2/winitPy.map')
 # --------------------------------------------------------------------------

@@ -130,24 +130,6 @@
 #     # python -m cProfile -o  l1.pstats lisf1.py settingsNew3.xml
 #     # gprof2dot -f pstats l1.pstats | dot -Tpng -o callgraph.png
 #
-#     # if Flags['printtime']:
-#     #     print("\n\nTime profiling")
-#     #     print("%2s %-17s %10s %8s" %("No","Name","time[s]","%"))
-#     #     div = 1
-#     #     timeSum = np.array(timeMesSum)
-#     #     if MCset:
-#     #         div = div * EnsMembers[0]
-#     #     if EnKFset:
-#     #         div = div * (len(FilterSteps)+1)
-#     #     if EnKFset or MCset:
-#     #         timePrint = np.zeros(len(timeSum)/div)
-#     #         for i in range(len(timePrint)):
-#     #             timePrint[i] = np.sum(timeSum[range(i, len(timeSum), len(timeSum)/div)])
-#     #     else:
-#     #         timePrint = timeSum
-#     #     for i in range(len(timePrint)):
-#     #         print("%2i %-17s %10.2f %8.1f"  %(i,timeMesString[i],timePrint[i],100 * timePrint[i] / timePrint[-1]))
-#
 # # ==================================================
 # # ============== USAGE ==============================
 # # ==================================================
@@ -197,12 +179,9 @@
 #
 #     LF_Path = os.path.dirname(sys.argv[0])
 #     LF_Path = os.path.abspath(LF_Path)
-#     optionxml = os.path.normpath(LF_Path + "/OptionTserieMaps.xml")
-#
 #     settings = sys.argv[1]    # setting.xml file
 #
 #     args = sys.argv[2:]
 #     globalFlags(args)
 #     # setting of global flag e.g checking input maps, producing more output information
-#     if not(Flags['veryquiet']) and not(Flags['quiet']) : headerinfo()
-#     Lisfloodexe()
+#     Lisfloodexe(settings)

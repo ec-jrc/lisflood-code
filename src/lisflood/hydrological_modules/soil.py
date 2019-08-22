@@ -15,9 +15,12 @@ See the Licence for the specific language governing permissions and limitations 
 
 """
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, division
 
-from ..global_modules.add1 import *
+import numpy as np
+
+from ..global_modules.settings import MaskInfo, LisSettings
+from ..global_modules.add1 import loadmap, defsoil
 
 
 class soil(object):
@@ -225,7 +228,7 @@ class soil(object):
 
         WInit1a = splitlanduse(maskinfo.in_zero())
         WInit1b = splitlanduse(maskinfo.in_zero())
-        WInit2 =  splitlanduse(maskinfo.in_zero())
+        WInit2 = splitlanduse(maskinfo.in_zero())
         WInit1a[0] = np.where(ThetaInit1aValue[0] == -9999, self.var.WFC1a[0], ThetaInit1aValue[0] * self.var.SoilDepth1a[0])
         WInit1a[1] = np.where(ThetaInit1aValue[1] == -9999, self.var.WFC1a[1], ThetaInit1aValue[1] * self.var.SoilDepth1a[1])
         WInit1a[2] = np.where(ThetaInit1aValue[2] == -9999, self.var.WFC1a[2], ThetaInit1aValue[2] * self.var.SoilDepth1a[2])
@@ -351,6 +354,7 @@ class soil(object):
             self.var.DrainedFraction = loadmap('DrainedFraction')
             # drained fraction: water from irrigated water is directly send to channel
             # depending on the drained fraction
+
 # ************************************************************
 # ***** INITIALIZATION OF PF calculation      ****************
 # ************************************************************
@@ -385,14 +389,10 @@ class soil(object):
         # Pixel-average infiltration in [mm] per timestep
         # (no infiltration in direct runoff fraction)
 
-        self.var.Theta[0] = self.var.OtherFraction * (self.var.W1a[0] + self.var.W1b[0] + self.var.W2[0]) / (
-            self.var.SoilDepth1a[0] + self.var.SoilDepth1b[0] + self.var.SoilDepth2[0])
-        self.var.Theta[1] = self.var.ForestFraction * (self.var.W1a[1] + self.var.W1b[1] + self.var.W2[1]) / (
-            self.var.SoilDepth1a[1] + self.var.SoilDepth1b[1] + self.var.SoilDepth2[1])
-        self.var.Theta[2] = self.var.IrrigationFraction * (self.var.W1a[2] + self.var.W1b[2] + self.var.W2[2]) / (
-            self.var.SoilDepth1a[2] + self.var.SoilDepth1b[2] + self.var.SoilDepth2[2])
-        self.var.ThetaAll = np.where(self.var.SoilFraction > 0, (self.var.Theta[
-            0] + self.var.Theta[1] + self.var.Theta[2]) / self.var.SoilFraction,0.0)
+        self.var.Theta[0] = self.var.OtherFraction * (self.var.W1a[0] + self.var.W1b[0] + self.var.W2[0]) / (self.var.SoilDepth1a[0] + self.var.SoilDepth1b[0] + self.var.SoilDepth2[0])
+        self.var.Theta[1] = self.var.ForestFraction * (self.var.W1a[1] + self.var.W1b[1] + self.var.W2[1]) / (self.var.SoilDepth1a[1] + self.var.SoilDepth1b[1] + self.var.SoilDepth2[1])
+        self.var.Theta[2] = self.var.IrrigationFraction * (self.var.W1a[2] + self.var.W1b[2] + self.var.W2[2]) / (self.var.SoilDepth1a[2] + self.var.SoilDepth1b[2] + self.var.SoilDepth2[2])
+        self.var.ThetaAll = np.where(self.var.SoilFraction > 0, (self.var.Theta[0] + self.var.Theta[1] + self.var.Theta[2]) / self.var.SoilFraction, 0.0)
 
         self.var.SeepTopToSubPixelA = self.var.deffraction(self.var.SeepTopToSubA)
         self.var.SeepTopToSubPixelB = self.var.deffraction(self.var.SeepTopToSubB)
