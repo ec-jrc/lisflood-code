@@ -14,17 +14,28 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
-from __future__ import absolute_import, print_function, division
 
-import os
-
-from tests import TestLis
-
-current_dir = os.path.dirname(os.path.abspath(__file__))
+from functools import wraps
 
 
-class TestDrina(TestLis):
-    settings_path = os.path.join(current_dir, 'data/Drina/settings/lisfloodSettings_cold_day_base.xml')
+def counted(fn):
+    def wrapper(*args, **kwargs):
+        wrapper.called += 1
+        return fn(*args, **kwargs)
 
-    def test_dis(self):
-        return self.listest('dis')
+    wrapper.called = 0
+    wrapper.__name__ = fn.__name__
+    return wrapper
+
+
+def cached(f):
+    _cache = {}
+
+    @wraps(f)
+    def _decorator(args):
+        args = tuple(args)
+        if args not in _cache:
+            _cache[args] = f(args)
+        return _cache[args]
+
+    return _decorator

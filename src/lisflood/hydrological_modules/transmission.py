@@ -15,12 +15,12 @@ See the Licence for the specific language governing permissions and limitations 
 
 """
 
+from __future__ import absolute_import, print_function, division
 
-from pcraster import*
-from pcraster.framework import *
+import numpy as np
 
-from lisflood.global_modules.add1 import *
-from lisflood.global_modules.globals import *
+from ..global_modules.settings import LisSettings, MaskInfo
+from ..global_modules.add1 import loadmap
 
 
 class transmission(object):
@@ -40,7 +40,8 @@ class transmission(object):
     def initial(self):
         """ initial part of the transmission loss module
         """
-
+        settings = LisSettings.instance()
+        option = settings.options
         if option['TransLoss']:
             TransArea = loadmap('TransArea')
             self.var.TransSub = loadmap('TransSub')
@@ -54,12 +55,11 @@ class transmission(object):
             self.var.TransPower1 = loadmap('TransPower1')
             self.var.TransPower2 = 1.0 / self.var.TransPower1
             # transmission loss function
-
-            self.var.TransCum = globals.inZero.copy()
+            maskinfo = MaskInfo.instance()
+            self.var.TransCum = maskinfo.in_zero()
         # Cumulative transmission loss
-        # self.var.TransLossM3Dt = globals.inZero.copy()
+        # self.var.TransLossM3Dt = maskinfo.in_zero()
         # substep amount of transmission loss
-
 
     def dynamic_inloop(self):
         """ dynamic part of the transmission loss routine
@@ -69,8 +69,9 @@ class transmission(object):
         # ************************************************************
         # ***** TRANSMISSION LOSS IN THE CHANNEL      ****************
         # ************************************************************
+        settings = LisSettings.instance()
+        option = settings.options
         if option['TransLoss']:
-
 
             TransOut = np.where(self.var.UpTrans,
                         (self.var.ChanQ ** self.var.TransPower2 - self.var.TransSub)
@@ -79,9 +80,7 @@ class transmission(object):
             # Bulletin Vol 32, No.6)
 
             self.var.TransLossM3Dt = (self.var.ChanQ - TransOut) * self.var.DtRouting
-
             #self.var.TransLossM3Dt = cover((self.var.ChanQ - TransOut) * self.var.DtRouting, scalar(0.0))
             # Loss is Q - transmission outflow
             self.var.TransCum += self.var.TransLossM3Dt
             # for mass balance
-

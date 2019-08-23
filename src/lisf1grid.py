@@ -1,0 +1,187 @@
+# """
+#
+# Copyright 2019 European Union
+#
+# Licensed under the EUPL, Version 1.2 or as soon they will be approved by the European Commission  subsequent versions of the EUPL (the "Licence");
+#
+# You may not use this work except in compliance with the Licence.
+# You may obtain a copy of the Licence at:
+#
+# https://joinup.ec.europa.eu/sites/default/files/inline-files/EUPL%20v1_2%20EN(1).txt
+#
+# Unless required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an "AS IS" basis,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the Licence for the specific language governing permissions and limitations under the Licence.
+#
+#  ######################################################################
+#
+#  ##       ####  ######  ######## ##        #######   #######  ########
+#  ##        ##  ##    ## ##       ##       ##     ## ##     ## ##     ##
+#  ##        ##  ##       ##       ##       ##     ## ##     ## ##     ##
+#  ##        ##   ######  ######   ##       ##     ## ##     ## ##     ##
+#  ##        ##        ## ##       ##       ##     ## ##     ## ##     ##
+#  ##        ##  ##    ## ##       ##       ##     ## ##     ## ##     ##
+#  ######## ####  ######  ##       ########  #######   #######  ########
+#
+# ######################################################################
+# """
+# from __future__ import print_function, absolute_import
+#
+# from .global_modules.errors import LisfloodRunInfo
+# from .global_modules.settings import check_simulation_dates
+#
+# __authors__ = "Ad de Roo, Peter Burek, Johan van der Knijff, Niko Wanders"
+# __version__ = "Version: 2.02"
+# __date__ = "23 Apr 2016"
+# __copyright__ = "Copyright 2016, European Commission - Joint Research Centre"
+# __maintainer__ = "Ad de Roo"
+# __status__ = "Operation"
+#
+#
+# # to work with the new grid engine JRC - workaround with error on pyexpat
+#
+# from lisflood.Lisflood_initial import *
+# from lisflood.Lisflood_dynamic import *
+# from lisflood.Lisflood_monteCarlo import *
+# from lisflood.Lisflood_EnKF import *
+#
+#
+# class LisfloodModel(LisfloodModel_ini, LisfloodModel_dyn, LisfloodModel_monteCarlo, LisfloodModel_EnKF):
+#     """ Joining the initial and the dynamic part
+#         of the Lisflood model
+#     """
+#
+# # ==================================================
+# # ============== LISFLOOD execute ==================
+# # ==================================================
+#
+# def Lisfloodexe():
+#
+#     optionBinding(settings, optionxml)
+#     # read all the possible option for modelling and for generating output
+#     # read the settingsfile with all information about the catchments(s)
+#     # and the choosen option for mdelling and output
+#     bindkey = sorted(binding.keys())
+#
+#     # this prevent from using relative path in settings!
+#
+#     check_simulation_dates('StepStart', 'StepEnd')
+#
+#     if option['InitLisflood']: print("INITIALISATION RUN")
+#     print("Start - End: ",modelSteps[0]," - ", modelSteps[1])
+#     if Flags['loud']:
+#         print("%-6s %10s %11s\n" %("Step","Date","Discharge"))
+#
+#     Lisflood = LisfloodModel()
+#     stLisflood = DynamicFramework(Lisflood, firstTimestep=modelSteps[0], lastTimeStep=modelSteps[1])
+#     stLisflood.rquiet = True
+#     stLisflood.rtrace = False
+#
+#
+#     """
+#     ----------------------------------------------
+#     Monte Carlo and Ensemble Kalman Filter setting
+#     ----------------------------------------------
+#     """
+#
+#     try:
+#         EnKFset = option['EnKF']
+#     except:
+#         EnKFset = 0
+#     try:
+#         MCset = option['MonteCarlo']
+#     except:
+#         MCset = 0
+#     if option['InitLisflood']:
+#         MCset = 0
+#         EnKFset = 0
+#     if EnKFset and not MCset:
+#         msg = "Trying to run EnKF with only 1 ensemble member \n"
+#         raise LisfloodError(msg)
+#     if EnKFset and FilterSteps[0] == 0:
+#         msg = "Trying to run EnKF without filter timestep specified \nRunning LISFLOOD in Monte Carlo mode \n"
+#         print(LisfloodWarning(msg))
+#         EnKFset = 0
+#     if MCset and EnsMembers[0] <= 1:
+#         msg = "Trying to run Monte Carlo simulation with only 1 member \nRunning LISFLOOD in deterministic mode \n"
+#         print(LisfloodWarning(msg))
+#         MCset = 0
+#     if MCset:
+#         mcLisflood = MonteCarloFramework(stLisflood, nrSamples=EnsMembers[0])
+#         if nrCores[0] > 1:
+#             mcLisflood.setForkSamples(True, nrCPUs=nrCores[0])
+#         if EnKFset:
+#             kfLisflood = EnsKalmanFilterFramework(mcLisflood)
+#             kfLisflood.setFilterTimesteps(FilterSteps)
+#             print(LisfloodRunInfo(mode = "Ensemble Kalman Filter", outputDir = outputDir[0], Steps = len(FilterSteps), ensMembers=EnsMembers[0], Cores=nrCores[0]))
+#             kfLisflood.run()
+#         else:
+#             print(LisfloodRunInfo(mode = "Monte Carlo", outputDir = outputDir[0], ensMembers=EnsMembers[0], Cores=nrCores[0]))
+#             mcLisflood.run()
+#     else:
+#         """
+#         ----------------------------------------------
+#         Deterministic run
+#         ----------------------------------------------
+#         """
+#         print(LisfloodRunInfo(mode = "Deterministic", outputDir = outputDir[0]))
+#         stLisflood.run()
+#     # cProfile.run('stLisflood.run()')
+#     # python -m cProfile -o  l1.pstats lisf1.py settingsNew3.xml
+#     # gprof2dot -f pstats l1.pstats | dot -Tpng -o callgraph.png
+#
+# # ==================================================
+# # ============== USAGE ==============================
+# # ==================================================
+#
+#
+# def usage():
+#     """ prints some lines describing how to use this program
+#         which arguments and parameters it accepts, etc
+#     """
+#     print('LisfloodPy - Lisflood using pcraster Python framework')
+#     print('Authors: ', __authors__)
+#     print('Version: ', __version__)
+#     print('Date: ', __date__)
+#     print('Status: ', __status__)
+#     print("""
+#     Arguments list:
+#     settings.xml     settings file
+#
+#     -q --quiet       output progression given as .
+#     -v --veryquiet   no output progression is given
+#     -l --loud        output progression given as time step, date and discharge
+#     -c --check       input maps and stack maps are checked, output for each input map BUT no model run
+#     -h --noheader    .tss file have no header and start immediately with the time series
+#     -t --printtime   the computation time for hydrological modules are printed
+#     """)
+#     sys.exit(1)
+#
+# def headerinfo():
+#
+#    print("LisfloodPy ",__version__," ",__date__)
+#    print("""
+# Water balance and flood simulation model for large catchments\n
+# (C) Institute for Environment and Sustainability
+#     Joint Research Centre of the European Commission
+#     TP122, I-21020 Ispra (Va), Italy\n""")
+#
+#
+# # ==================================================
+# # ============== MAIN ==============================
+# # ==================================================
+#
+# if __name__ == "__main__":
+#
+#     if len(sys.argv) < 2:
+#         usage()
+#
+#
+#     LF_Path = os.path.dirname(sys.argv[0])
+#     LF_Path = os.path.abspath(LF_Path)
+#     settings = sys.argv[1]    # setting.xml file
+#
+#     args = sys.argv[2:]
+#     globalFlags(args)
+#     # setting of global flag e.g checking input maps, producing more output information
+#     Lisfloodexe(settings)

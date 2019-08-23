@@ -14,6 +14,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
+from __future__ import print_function, absolute_import, division
+from nine import range
 
 import os
 import sys
@@ -27,8 +29,8 @@ if os.path.exists(src_dir):
     sys.path.append(src_dir)
 
 from lisflood.global_modules.add1 import readnetcdf
-from lisflood.global_modules.globals import modelSteps, binding
-from lisflood.main import Lisfloodexe, get_optionxml_path
+from lisflood.global_modules.settings import LisSettings
+from lisflood.main import lisfloodexe
 
 
 class TestLis(object):
@@ -47,11 +49,12 @@ class TestLis(object):
 
     @classmethod
     def setup_class(cls):
-        optionxml = get_optionxml_path()
-        Lisfloodexe(cls.settings_path, optionxml)
+        lisfloodexe(cls.settings_path)
 
     @classmethod
     def teardown_class(cls):
+        settings = LisSettings.instance()
+        binding = settings.binding
         for var, obj in cls.reference_files.items():
             output_nc = binding[cls.reference_files[var]['report_map']]
             output_nc = output_nc + '.nc'
@@ -63,6 +66,8 @@ class TestLis(object):
 
     @classmethod
     def check_var_step(cls, var, step):
+        settings = LisSettings.instance()
+        binding = settings.binding
         reference_path = cls.reference_files[var]['outpath']
         output_path = binding[cls.reference_files[var]['report_map']]
         reference = readnetcdf(reference_path, step)
@@ -93,11 +98,15 @@ class TestLis(object):
 
     @classmethod
     def listest(cls, variable):
+        settings = LisSettings.instance()
+        binding = settings.binding
+        model_steps = settings.model_steps
         reference_path = cls.reference_files[variable]['outpath']
         output_path = os.path.normpath(binding[cls.reference_files[variable]['report_map']])
-        print '>>> Reference: {} - Current Output: {}'.format(reference_path, output_path)
+        print('>>> Reference: {} - Current Output: {}'.format(reference_path, output_path))
+
         results = []
-        start_step, end_step = modelSteps[0], modelSteps[1]
-        for step in xrange(start_step, end_step + 1):
+        start_step, end_step = model_steps[0], model_steps[1]
+        for step in range(start_step, end_step + 1):
             results.append(cls.check_var_step(variable, step))
         assert all(results)

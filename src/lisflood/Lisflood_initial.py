@@ -14,42 +14,41 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
+from __future__ import print_function, absolute_import, division
+
+from .global_modules.settings import CutMap, LisSettings, NetCDFMetadata
+from .global_modules.zusatz import DynamicModel
+from .global_modules.add1 import loadsetclone, mapattrNetCDF
+from .hydrological_modules.miscInitial import miscInitial
+
+from .hydrological_modules.readmeteo import readmeteo
+from .hydrological_modules.leafarea import leafarea
+from .hydrological_modules.landusechange import landusechange
+from .hydrological_modules.snow import snow
+from .hydrological_modules.inflow import inflow
+from .hydrological_modules.frost import frost
+from .hydrological_modules.soil import soil
+from .hydrological_modules.routing import routing
+from .hydrological_modules.groundwater import groundwater
+from .hydrological_modules.surface_routing import surface_routing
+from .hydrological_modules.reservoir import reservoir
+from .hydrological_modules.lakes import lakes
+from .hydrological_modules.polder import polder
+from .hydrological_modules.waterabstraction import waterabstraction
+from .hydrological_modules.indicatorcalc import indicatorcalc
+from .hydrological_modules.riceirrigation import riceirrigation
+from .hydrological_modules.evapowater import evapowater
+from .hydrological_modules.transmission import transmission
+from .hydrological_modules.soilloop import soilloop
+from .hydrological_modules.opensealed import opensealed
+from .hydrological_modules.waterbalance import waterbalance
+from .hydrological_modules.waterlevel import waterlevel
+from .hydrological_modules.structures import structures
+
+from .global_modules.output import outputTssMap
+from .global_modules.stateVar import stateVar
 
 
-from lisflood.hydrological_modules.miscInitial import *
-
-from lisflood.hydrological_modules.readmeteo import *
-from lisflood.hydrological_modules.leafarea import *
-from lisflood.hydrological_modules.inflow import *
-from lisflood.hydrological_modules.landusechange import *
-from lisflood.hydrological_modules.snow import *
-from lisflood.hydrological_modules.frost import *
-from lisflood.hydrological_modules.soil import *
-from lisflood.hydrological_modules.routing import *
-from lisflood.hydrological_modules.groundwater import *
-from lisflood.hydrological_modules.surface_routing import *
-from lisflood.hydrological_modules.reservoir import *
-from lisflood.hydrological_modules.lakes import *
-from lisflood.hydrological_modules.polder import *
-#from lisflood.hydrological_modules.wateruse import *
-from lisflood.hydrological_modules.waterabstraction import *
-from lisflood.hydrological_modules.indicatorcalc import *
-
-from lisflood.hydrological_modules.riceirrigation import *
-
-from lisflood.hydrological_modules.evapowater import *
-from lisflood.hydrological_modules.transmission import *
-
-from lisflood.hydrological_modules.soilloop import *
-from lisflood.hydrological_modules.opensealed import *
-from lisflood.hydrological_modules.waterbalance import *
-from lisflood.hydrological_modules.waterlevel import *
-from lisflood.hydrological_modules.structures import *
-
-from global_modules.output import *
-from global_modules.stateVar import *
-
-# --------------------------------------------
 class LisfloodModel_ini(DynamicModel):
 
     """ LISFLOOD initial part
@@ -67,16 +66,23 @@ class LisfloodModel_ini(DynamicModel):
 
         # try to make the maskmap more flexible e.g. col, row,x1,y1  or x1,x2,y1,y2
         self.MaskMap = loadsetclone('MaskMap')
+        settings = LisSettings.instance()
+        binding = settings.binding
+        option = settings.options
+        flags = settings.flags
+        report_steps = settings.report_steps
 
         if option['readNetcdfStack']:
             # get the extent of the maps from the precipitation input maps
             # and the modelling extent from the MaskMap
             # cutmap[] defines the MaskMap inside the precipitation map
-            cutmap[0], cutmap[1], cutmap[2], cutmap[3] = mapattrNetCDF(binding['E0Maps'])
+            _ = CutMap(*mapattrNetCDF(binding['E0Maps']))  # register cutmaps
+            # cutmap[0], cutmap[1], cutmap[2], cutmap[3] = mapattrNetCDF(binding['E0Maps'])
         if option['writeNetcdfStack'] or option['writeNetcdf']:
             # if NetCDF is writen, the pr.nc is read to get the metadata
             # like projection
-            metaNetCDF()
+            _ = NetCDFMetadata()  # init meta netcdf
+            # metaNetCDF()
 
         # ----------------------------------------
 
@@ -120,10 +126,7 @@ class LisfloodModel_ini(DynamicModel):
         # include output of tss and maps
         self.output_module = outputTssMap(self)
 
-        MMaskMap = self.MaskMap
-        # for checking maps
-
-        self.ReportSteps = ReportSteps['rep']
+        self.ReportSteps = report_steps['rep']
 
         self.landusechange_module.initial()
 
@@ -164,26 +167,21 @@ class LisfloodModel_ini(DynamicModel):
         self.waterbalance_module.initial()
         # calculate initial amount of water in the catchment
 
-
         # debug start
-        if Flags['debug']:
+        if flags['debug']:
             # Print value of variables after initialization (from state files)
             nomefile = 'Debug_init_'+str(self.currentStep+1)+'.txt'
             ftemp1 = open(nomefile, 'w+')
             nelements = len(self.ChanM3)
             for i in range(0,nelements-1):
                 if  hasattr(self,'CrossSection2Area'):
-                    print >> ftemp1, i, self.TotalCrossSectionArea[i], self.CrossSection2Area[i], self.ChanM3[i], \
-                    self.Chan2M3Kin[i]
+                    print(i, self.TotalCrossSectionArea[i], self.CrossSection2Area[i], self.ChanM3[i], \
+                    self.Chan2M3Kin[i], file=ftemp1)
                 else:
-                    print >> ftemp1, i, self.TotalCrossSectionArea[i], self.ChanM3[i]
+                    print(i, self.TotalCrossSectionArea[i], self.ChanM3[i], file=ftemp1)
 
             ftemp1.close()
 
-
-
-
-# ====== INITIAL ================================
     def initial(self):
         """ Initial part of LISFLOOD
             calls the initial part of the hydrological modules
@@ -192,7 +190,7 @@ class LisfloodModel_ini(DynamicModel):
         # Perturbe the states
         #self.groundwater_module.var.UpperZoneK = perturbState(self.groundwater_module.var.UpperZoneK, method = "normal", minVal=0, maxVal=100, mu=self.groundwater_module.var.UpperZoneK, sigma=0.05, spatial=False)
         #self.groundwater_module.var.UZ = perturbState(self.groundwater_module.var.UZ, method = "normal", minVal=0, maxVal=100, mu=10, sigma=3, spatial=False, single=False)
-        #pass
+        pass
 
 # ====== METHODS ================================
     def deffraction(self, para):

@@ -21,6 +21,7 @@ Parallelisation is achieved by grouping the pixels in ordered sets. Within each 
 pixelsm in previous sets have already been routed, pixels can be routed independently of each other
 and thus in parallel. For further details, see the method kinematicWave._setRoutingOrders.
 """
+from __future__ import absolute_import, division, print_function
 
 __author__ = "Emiliano Gelati"
 __contact__ = "emiliano.gelati@ec.europa.eu"
@@ -52,7 +53,7 @@ if not os.path.exists(BIN) or (os.path.exists(BIN) and os.path.exists(SRC) and o
     print("""WARNING:\nThe Cython module {} has not been compiled on the current machine (to compile, see instructions in the module's docstring).
 The kinematic wave routing is executed serially (not in parallel).""".format(SRC))
 
-from lisflood.hydrological_modules import kinematic_wave_parallel_tools as kwpt
+from . import kinematic_wave_parallel_tools as kwpt
 
 
 # -------------------------------------------------------------------------------------------------

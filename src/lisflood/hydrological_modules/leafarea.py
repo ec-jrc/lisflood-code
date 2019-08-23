@@ -14,8 +14,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
+from __future__ import absolute_import, division, print_function
+from nine import range
 
-from lisflood.global_modules.add1 import *
+import numpy as np
+
+from ..global_modules.add1 import loadmap, generateName, loadLAI
+from ..global_modules.settings import LisSettings
+
 
 class leafarea(object):
 
@@ -43,19 +49,20 @@ class leafarea(object):
         LAINr = [1, 11, 21, 32, 42, 52, 60, 70, 80, 91, 101, 111, 121, 131, 141, 152, 162, 172, 182,
                  192, 202, 213, 223, 233, 244, 254, 264, 274, 284, 294, 305, 315, 325, 335, 345, 355, 370]
 
-        self.var.LAIX = [[0 for x in xrange(36)] for x in xrange(3)]
+        self.var.LAIX = [[0 for x in range(36)] for x in range(3)]
         self.var.LAI = [0, 0]
         self.var.L1 = []
 
         # self.var.L1.append(36)
         j = 0
-        for i in xrange(367):
+        for i in range(367):
             if i >= LAINr[j + 1]:
                 j += 1
             self.var.L1.append(j)
             # print i,self.L1[i],LAINr1[self.L1[i]]
-
-        for i in xrange(36):
+        settings = LisSettings.instance()
+        binding = settings.binding
+        for i in range(36):
             LAIName = generateName(binding['LAIOtherMaps'], LAINr[i])
             self.var.LAIX[0][i] = loadLAI(binding['LAIOtherMaps'], LAIName, i)
 
@@ -65,8 +72,6 @@ class leafarea(object):
             LAIName = generateName(binding['LAIIrrigationMaps'], LAINr[i])
             self.var.LAIX[2][i] = loadLAI(binding['LAIIrrigationMaps'], LAIName, i)
 
-
-# --------------------------------------------------------------------------
 # --------------------------------------------------------------------------
 
     def dynamic(self):
@@ -74,7 +79,7 @@ class leafarea(object):
         """
 
         i = self.var.L1[self.var.CalendarDay]
-        self.var.LAI = [self.var.LAIX[0][i], self.var.LAIX[1][i],self.var.LAIX[2][i]]
+        self.var.LAI = [self.var.LAIX[0][i], self.var.LAIX[1][i], self.var.LAIX[2][i]]
 
         # Leaf Area Index, average over whole pixel [m2/m2]
-        self.var.LAITerm = [np.exp(-self.var.kgb * self.var.LAI[0]), np.exp(-self.var.kgb * self.var.LAI[1]),np.exp(-self.var.kgb * self.var.LAI[2])]
+        self.var.LAITerm = [np.exp(-self.var.kgb * self.var.LAI[0]), np.exp(-self.var.kgb * self.var.LAI[1]), np.exp(-self.var.kgb * self.var.LAI[2])]

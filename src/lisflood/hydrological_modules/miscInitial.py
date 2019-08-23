@@ -14,21 +14,28 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
+from __future__ import absolute_import, print_function, division
 
-from lisflood.global_modules.add1 import *
-import netCDF4
+from pcraster import celllength, scalar
+
 import xarray as xr
 from pyproj import Proj
+import numpy as np
+
+from ..global_modules.add1 import loadmap, compressArray
+from ..global_modules.settings import calendar, MaskAttrs, MaskInfo, LisSettings
 
 
 def coordinatesLand(eastings_forcing, northings_forcing):
     """"""
-    half_cell = maskmapAttr['cell'] / 2.
-    top_row = np.where(np.round(northings_forcing, 5) == np.round(maskmapAttr['y'] - half_cell, 5))[0][0]
-    left_col = np.where(np.round(eastings_forcing, 5) == np.round(maskmapAttr['x'] + half_cell, 5))[0][0]
-    row_slice = slice(top_row, top_row + maskmapAttr['row'])
-    col_slice = slice(left_col, left_col + maskmapAttr['col'])
-    return [co[row_slice,col_slice][~maskinfo["mask"]] for co in np.meshgrid(eastings_forcing, northings_forcing)]
+    maskattrs = MaskAttrs.instance()
+    half_cell = maskattrs['cell'] / 2.
+    top_row = np.where(np.round(northings_forcing, 5) == np.round(maskattrs['y'] - half_cell, 5))[0][0]
+    left_col = np.where(np.round(eastings_forcing, 5) == np.round(maskattrs['x'] + half_cell, 5))[0][0]
+    row_slice = slice(top_row, top_row + maskattrs['row'])
+    col_slice = slice(left_col, left_col + maskattrs['col'])
+    maskinfo = MaskInfo.instance()
+    return [co[row_slice,col_slice][~maskinfo.info.mask] for co in np.meshgrid(eastings_forcing, northings_forcing)]
 
 
 class miscInitial(object):
@@ -46,7 +53,11 @@ class miscInitial(object):
     def initial(self):
         """ initial part of the misc module
         """
-
+        settings = LisSettings.instance()
+        option = settings.options
+        binding = settings.binding
+        maskinfo = MaskInfo.instance()
+        maskattrs = MaskAttrs.instance()
         if option['gridSizeUserDefined']:
 
             # <lfoption name="gridSizeUserDefined" choice="1" default="0">
@@ -72,13 +83,11 @@ class miscInitial(object):
             # - All grid cells have the same size
 
             # Length of pixel [m]
-            #self.var.PixelLength = celllength()
             self.var.PixelLengthPcr = celllength()
-            self.var.PixelLength = maskmapAttr['cell']
-
+            self.var.PixelLength = maskattrs['cell']
             # Area of pixel [m2]
             self.var.PixelAreaPcr = self.var.PixelLength ** 2
-            self.var.PixelArea=np.empty(maskinfo['mapC'])
+            self.var.PixelArea=np.empty(maskinfo.info.mapC)
             self.var.PixelArea.fill(self.var.PixelLength ** 2)
 
 #            self.var.PixelArea = spatial(self.var.PixelArea)
@@ -91,7 +100,7 @@ class miscInitial(object):
         self.var.InvPixelLength = 1.0 / self.var.PixelLength
         # Inverse of pixel size [1/m]
         self.var.DtSec = loadmap('DtSec')
-        self.var.DtDay = self.var.DtSec / 86400
+        self.var.DtDay = self.var.DtSec / 86400.
         # Time step, expressed as fraction of day (used to convert
         # rate variables that are expressed as a quantity per day to
         # into an amount per time step)
@@ -129,13 +138,7 @@ class miscInitial(object):
         # ************************************************************
         # date of the first possible model run
         # computation of model steps is referred to CalendarStartDay
-        self.var.CalendarDayStart = Calendar(binding['CalendarDayStart'])
-        try:
-            # number of time step or date of the state map to be used to initialize model run
-            timestepInit.append(binding["timestepInit"])
-        except:
-            pass
-
+        self.var.CalendarDayStart = calendar(binding['CalendarDayStart'], binding['calendar_type'])
         self.var.PrScaling = loadmap('PrScaling')
         self.var.CalEvaporation = loadmap('CalEvaporation')
 
@@ -146,23 +149,23 @@ class miscInitial(object):
         self.var.EWRef = None
         # setting meteo data to none - is this necessary?
 
-        self.var.DayCounter= 0.0
-        self.var.MonthETpot= globals.inZero
-        self.var.MonthETact= globals.inZero
-        self.var.MonthWDemand= globals.inZero
-        self.var.MonthWUse= globals.inZero
-        self.var.MonthWDemand= globals.inZero
-        self.var.MonthDis= globals.inZero
-        self.var.MonthInternalFlow =  globals.inZero
+        self.var.DayCounter = 0.0
+        self.var.MonthETpot = maskinfo.in_zero()
+        self.var.MonthETact = maskinfo.in_zero()
+        self.var.MonthWDemand = maskinfo.in_zero()
+        self.var.MonthWUse= maskinfo.in_zero()
+        self.var.MonthWDemand= maskinfo.in_zero()
+        self.var.MonthDis= maskinfo.in_zero()
+        self.var.MonthInternalFlow = maskinfo.in_zero()
 
-        self.var.TotalInternalFlowM3 = globals.inZero
-        self.var.PerMonthInternalFlowM3 = globals.inZero
+        self.var.TotalInternalFlowM3 = maskinfo.in_zero()
+        self.var.PerMonthInternalFlowM3 = maskinfo.in_zero()
         # total freshwater generated in the sub-area (m3), basically local P-ET-Storage
-        self.var.TotalExternalInflowM3 = globals.inZero
-        self.var.PerMonthExternalInflowM3 = globals.inZero
+        self.var.TotalExternalInflowM3 = maskinfo.in_zero()
+        self.var.PerMonthExternalInflowM3 = maskinfo.in_zero()
         # Total channel inflow (m3) from inlet points
-        self.var.PerMonthWaterDemandM3 = globals.inZero
-        self.var.PerMonthWaterUseM3 = globals.inZero
+        self.var.PerMonthWaterDemandM3 = maskinfo.in_zero()
+        self.var.PerMonthWaterUseM3 = maskinfo.in_zero()
 
         self.var.FlagDemandBiggerUse = scalar(0.0)
 
@@ -170,8 +173,8 @@ class miscInitial(object):
         self.var.TotlWEI = scalar(0.0)
         self.var.TotCount = scalar(0.0)
 
-        self.var.SumETpot = globals.inZero
-        self.var.SumETpotact = globals.inZero
+        self.var.SumETpot = maskinfo.in_zero()
+        self.var.SumETpotact = maskinfo.in_zero()
 
         # Read the latitude (radians) from the precipitation forcing NetCDF file
         with xr.open_dataset(binding["PrecipitationMaps"] + ".nc") as nc:

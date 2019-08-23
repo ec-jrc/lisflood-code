@@ -25,6 +25,10 @@ See the Licence for the specific language governing permissions and limitations 
 
 ######################################################################
 """
+from __future__ import print_function, absolute_import
+
+from lisflood.global_modules.utils import LisfloodRunInfo
+from lisflood.global_modules.settings import check_simulation_dates
 
 __authors__ = "Ad de Roo, Peter Burek, Johan van der Knijff, Niko Wanders"
 __version__ = "Version: 2.02"
@@ -35,16 +39,11 @@ __status__ = "Operation"
 
 
 # to work with the new grid engine JRC - workaround with error on pyexpat
-from pyexpat import *
-import xml.dom.minidom
-from netCDF4 import Dataset
-from pcraster import *
-from pcraster.framework import *
 
-from Lisflood_initial import *
-from Lisflood_dynamic import *
-from Lisflood_monteCarlo import *
-from Lisflood_EnKF import *
+from .Lisflood_initial import *
+from .Lisflood_dynamic import *
+from .Lisflood_monteCarlo import *
+from .Lisflood_EnKF import *
 
 
 class LisfloodModel(LisfloodModel_ini, LisfloodModel_dyn, LisfloodModel_monteCarlo, LisfloodModel_EnKF):
@@ -64,16 +63,14 @@ def Lisfloodexe():
     # and the choosen option for mdelling and output
     bindkey = sorted(binding.keys())
 
-    #os.chdir(outputDir[0])
     # this prevent from using relative path in settings!
 
+    check_simulation_dates('StepStart', 'StepEnd')
 
-    checkifDate('StepStart','StepEnd')
-
-    if option['InitLisflood']: print "INITIALISATION RUN"
-    print "Start - End: ",modelSteps[0]," - ", modelSteps[1]
+    if option['InitLisflood']: print("INITIALISATION RUN")
+    print("Start - End: ",modelSteps[0]," - ", modelSteps[1])
     if Flags['loud']:
-        print"%-6s %10s %11s\n" %("Step","Date","Discharge"),
+        print("%-6s %10s %11s\n" %("Step","Date","Discharge"))
 
     Lisflood = LisfloodModel()
     stLisflood = DynamicFramework(Lisflood, firstTimestep=modelSteps[0], lastTimeStep=modelSteps[1])
@@ -103,11 +100,11 @@ def Lisfloodexe():
         raise LisfloodError(msg)
     if EnKFset and FilterSteps[0] == 0:
         msg = "Trying to run EnKF without filter timestep specified \nRunning LISFLOOD in Monte Carlo mode \n"
-        print LisfloodWarning(msg)
+        print(LisfloodWarning(msg))
         EnKFset = 0
     if MCset and EnsMembers[0] <= 1:
         msg = "Trying to run Monte Carlo simulation with only 1 member \nRunning LISFLOOD in deterministic mode \n"
-        print LisfloodWarning(msg)
+        print(LisfloodWarning(msg))
         MCset = 0
     if MCset:
         mcLisflood = MonteCarloFramework(stLisflood, nrSamples=EnsMembers[0])
@@ -116,10 +113,10 @@ def Lisfloodexe():
         if EnKFset:
             kfLisflood = EnsKalmanFilterFramework(mcLisflood)
             kfLisflood.setFilterTimesteps(FilterSteps)
-            print LisfloodRunInfo(mode = "Ensemble Kalman Filter", outputDir = outputDir[0], Steps = len(FilterSteps), ensMembers=EnsMembers[0], Cores=nrCores[0])
+            print(LisfloodRunInfo(mode = "Ensemble Kalman Filter", outputDir = outputDir[0], Steps = len(FilterSteps), ensMembers=EnsMembers[0], Cores=nrCores[0]))
             kfLisflood.run()
         else:
-            print LisfloodRunInfo(mode = "Monte Carlo", outputDir = outputDir[0], ensMembers=EnsMembers[0], Cores=nrCores[0])
+            print(LisfloodRunInfo(mode = "Monte Carlo", outputDir = outputDir[0], ensMembers=EnsMembers[0], Cores=nrCores[0]))
             mcLisflood.run()
     else:
         """
@@ -127,15 +124,15 @@ def Lisfloodexe():
         Deterministic run
         ----------------------------------------------
         """
-        print LisfloodRunInfo(mode = "Deterministic", outputDir = outputDir[0])
+        print(LisfloodRunInfo(mode = "Deterministic", outputDir = outputDir[0]))
         stLisflood.run()
     # cProfile.run('stLisflood.run()')
     # python -m cProfile -o  l1.pstats lisf1.py settingsNew3.xml
     # gprof2dot -f pstats l1.pstats | dot -Tpng -o callgraph.png
 
     if Flags['printtime']:
-        print "\n\nTime profiling"
-        print "%2s %-17s %10s %8s" %("No","Name","time[s]","%")
+        print("\n\nTime profiling")
+        print("%2s %-17s %10s %8s" %("No","Name","time[s]","%"))
         div = 1
         timeSum = np.array(timeMesSum)
         if MCset:
@@ -148,9 +145,9 @@ def Lisfloodexe():
                 timePrint[i] = np.sum(timeSum[range(i, len(timeSum), len(timeSum)/div)])
         else:
             timePrint = timeSum
-        for i in xrange(len(timePrint)):
-            print "%2i %-17s %10.2f %8.1f"  %(i,timeMesString[i],timePrint[i],100 * timePrint[i] / timePrint[-1])
-    i=1
+        for i in range(len(timePrint)):
+            print("%2i %-17s %10.2f %8.1f"  %(i,timeMesString[i],timePrint[i],100 * timePrint[i] / timePrint[-1]))
+    i=1  # ?!?
 
 # ==================================================
 # ============== USAGE ==============================
@@ -161,12 +158,12 @@ def usage():
     """ prints some lines describing how to use this program
         which arguments and parameters it accepts, etc
     """
-    print 'LisfloodPy - Lisflood using pcraster Python framework'
-    print 'Authors: ', __authors__
-    print 'Version: ', __version__
-    print 'Date: ', __date__
-    print 'Status: ', __status__
-    print """
+    print('LisfloodPy - Lisflood using pcraster Python framework')
+    print('Authors: ', __authors__)
+    print('Version: ', __version__)
+    print('Date: ', __date__)
+    print('Status: ', __status__)
+    print("""
     Arguments list:
     settings.xml     settings file
 
@@ -176,17 +173,17 @@ def usage():
     -c --check       input maps and stack maps are checked, output for each input map BUT no model run
     -h --noheader    .tss file have no header and start immediately with the time series
     -t --printtime   the computation time for hydrological modules are printed
-    """
+    """)
     sys.exit(1)
 
 def headerinfo():
 
-   print "LisfloodPy ",__version__," ",__date__,
-   print """
+   print("LisfloodPy ",__version__," ",__date__)
+   print("""
 Water balance and flood simulation model for large catchments\n
 (C) Institute for Environment and Sustainability
     Joint Research Centre of the European Commission
-    TP122, I-21020 Ispra (Va), Italy\n"""
+    TP122, I-21020 Ispra (Va), Italy\n""")
 
 
 # ==================================================

@@ -15,8 +15,12 @@ See the Licence for the specific language governing permissions and limitations 
 
 """
 
+from __future__ import absolute_import, print_function, division
 
-from lisflood.global_modules.add1 import *
+import pcraster
+
+from ..global_modules.add1 import loadmap
+from ..global_modules.settings import LisSettings
 
 
 class polder(object):
@@ -40,69 +44,27 @@ class polder(object):
         # ************************************************************
         # ***** POLDERS
         # ************************************************************
-
+        settings = LisSettings.instance()
+        option = settings.options
+        binding = settings.binding
 
         if option['simulatePolders']:
 
-            g = 9.81
-            # Acceleration due to gravity [m /s^2]
-            expPolder = 3 / 2
-            # Exponent in weir equation [-]
             PolderSites = loadmap('PolderSites')
-            PolderSites = ifthen(
-                (defined(PolderSites) & self.var.IsChannel), PolderSites)
+            PolderSites = pcraster.ifthen((pcraster.defined(PolderSites) & self.var.IsChannel), PolderSites)
             # Get rid of any polders that are not part of the channel network
             # IMPORTANT: current implementation can become unstable with kin.
             # wave!!
-            IsPolder = pcraster.boolean(PolderSites)
-            # Flag that is boolean(1) for polder sites and boolean(0) otherwise
-            PolderTotalCapacity = lookupscalar(
-                binding['TabPolderTotalCapacity'], PolderSites)
-            # total storage capacity of Polder area [m3]
-            PolderArea = lookupscalar(binding['TabPolderArea'], PolderSites)
-            # Area of polder [m2]
-            PolderOFWidth = lookupscalar(
-                binding['TabPolderOFWidth'], PolderSites)
-            # Width of polder in-/outflow weir [m]
-            PolderBottomLevel = lookupscalar(
-                binding['TabPolderBottomLevel'], PolderSites)
-            # Bottom level of polder, measured above bottom level of channel
-            # [m]
-            PolderOpeningTime = lookupscalar(
-                binding['TabPolderOpeningTime'], PolderSites)
-            # Time step at which each polder is opened (regulated mode)
-            PolderReleaseTime = lookupscalar(
-                binding['TabPolderReleaseTime'], PolderSites)
-            # Time step at which water stored in each polder is released back
-            # to the channel (regulated mode)
 
-            PolderOpeningTime = loadmap('PolderOpeningTime')
-            PolderReleaseTime = loadmap('PolderReleaseTime')
-            UnregulatedFlag = ifthen(
-                (PolderOpeningTime == -9999) | (PolderReleaseTime == -9999), pcraster.nominal(1))
-            # Flag to indicate all polders that are unregulated
-            PolderLevel = PolderInitialLevelValue
+            # Flag that is boolean(1) for polder sites and boolean(0) otherwise
+            # total storage capacity of Polder area [m3]
+            PolderArea = pcraster.lookupscalar(binding['TabPolderArea'], PolderSites)
+            PolderLevel = binding['PolderInitialLevelValue']
             # Initial polder level [m]
-            self.var.PolderStorageIniM3 = cover(
-                PolderLevel * PolderArea, scalar(0.0))
+            self.var.PolderStorageIniM3 = pcraster.cover(PolderLevel * PolderArea, pcraster.scalar(0.0))
             # Compute polder storage [m3]
             self.var.PolderStorageM3 = self.var.PolderStorageIniM3
             # Set to initial value
-            PolderCapacity = pcraster.max(
-                PolderTotalCapacity - PolderStorageM3, scalar(0.0))
-            # Remaining storage capacity of polder [m3]
-
-#        else:
-            # Set polder storage to zero if no polders are simulated
-            # (dummy code)
-#            self.var.PolderStorageIniM3 = scalar(0.0)
-            # Initial polder storage [m3]
-#            self.var.PolderStorageM3 = self.var.PolderStorageIniM3
-
-        # Initialising cumulative output variables
-        # These are all needed to compute the cumulative mass balance error
-
-#        self.var.ChannelToPolderM3Dt = globals.inZero.copy()
 
     @staticmethod
     def dynamic_init():
