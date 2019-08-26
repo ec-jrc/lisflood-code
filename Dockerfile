@@ -18,11 +18,13 @@ RUN apt-file update
 RUN apt install -y --no-install-recommends gcc g++ git libboost-all-dev libpython-dev libxerces-c-dev libxml2 libxml2-utils libxslt1-dev qtbase5-dev \
     libqwt-dev gfortran gdal-bin libgdal-dev libqt5opengl5 libqt5opengl5-dev libgdal-dev python3-numpy python3-docopt \
     && pip install -U pip && pip install pytest pandas docopt numpy
-RUN wget https://cmake.org/files//v3.14/cmake-3.14.6-Linux-x86_64.tar.gz && tar -xzvf cmake-3.14.6-Linux-x86_64.tar.gz \
-    && wget http://pcraster.geo.uu.nl/pcraster/4.2.1/pcraster-4.2.1.tar.bz2 && tar xf pcraster-4.2.1.tar.bz2
-RUN apt install -y libboost-python-dev python3-gdal
+
 WORKDIR /opt
+RUN wget https://cmake.org/files//v3.14/cmake-3.14.6-Linux-x86_64.tar.gz && tar -xzvf cmake-3.14.6-Linux-x86_64.tar.gz \
+    && wget http://pcraster.geo.uu.nl/pcraster/4.2.1/pcraster-4.2.1.tar.bz2
+RUN  tar xf pcraster-4.2.1.tar.bz2 && apt install -y libboost-python-dev python3-gdal
 RUN cd /usr/lib/x86_64-linux-gnu/ && ln -s libboost_python-py37.so libboost_python3.so
+
 RUN mkdir /lisflood && mkdir /input && mkdir /output \
     && mkdir /tests && mkdir /usecases \
     && cd pcraster-4.2.1 && mkdir build && cd build \

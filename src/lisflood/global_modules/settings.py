@@ -300,6 +300,8 @@ class LisSettings(with_metaclass(Singleton)):
                         if o in opt:
                             flags[opt[1].lstrip('--')] = True
                             break
+            return flags
+
         args = sys.argv[2:]
         return _flags(args)
 
