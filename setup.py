@@ -43,15 +43,18 @@ from shutil import rmtree
 
 from setuptools import find_packages, Extension, setup, Command, __path__ as setuppath
 
-pip_package = os.path.join(setuppath[0], '../lisflood')
-if os.path.exists(pip_package) and pip_package in sys.path:
-    sys.path.remove(pip_package)
+pip_package = os.path.normpath(os.path.join(setuppath[0], '../lisflood'))
+if os.path.exists(pip_package):
+    print('[-] Removing current package installed {}'.format(pip_package))
+    rmtree(pip_package)
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(current_dir, './src/'))
 
 from lisflood import __version__, __authors__
 
+print(">>>>>>>>>>>>>>>> Building LISFLOOD verison {} <<<<<<<<<<<<<<<<<<".format(__version__))
+input()
 try:
     # noinspection PyUnresolvedReferences
     from Cython.Build import cythonize
