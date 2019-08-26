@@ -188,7 +188,6 @@ def usage():
     -l --loud        output progression given as time step, date and discharge
     -c --check       input maps and stack maps are checked, output for each input map BUT no model run
     -h --noheader    .tss file have no header and start immediately with the time series
-    -t --printtime   the computation time for hydrological modules are printed
     -d --debug       debug outputs
     """)
     sys.exit(1)
@@ -196,8 +195,8 @@ def usage():
 
 def headerinfo():
 
-   print("LisfloodPy ", __version__, " ", __date__)
-   print("""
+    print("LisfloodPy ", __version__, " ", __date__)
+    print("""
 Water balance and flood simulation model for large catchments\n
 (C) Institute for Environment and Sustainability
     Joint Research Centre of the European Commission
@@ -211,22 +210,16 @@ Water balance and flood simulation model for large catchments\n
 
 def main():
     # if arguments are missing display usage info
-
     if len(sys.argv) < 2:
         usage()
 
     # setting.xml file
     settings = sys.argv[1]
-
-    # arguments list
-    args = sys.argv[2:]
-
-    # Flags - set model behavior (quiet,veryquiet, loud, checkfiles, noheader,printtime,debug)
-    # setting of global flag e.g checking input maps, producing more output information
-
     lissettings = LisSettings(settings)
-    _ = CDFFlags()
+    CDFFlags()  # init netcdf files flags
+
     flags = lissettings.flags
     if not (flags['veryquiet'] or flags['quiet']):
         headerinfo()
+
     lisfloodexe(settings)

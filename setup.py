@@ -54,7 +54,6 @@ sys.path.append(os.path.join(current_dir, './src/'))
 from lisflood import __version__, __authors__
 
 print(">>>>>>>>>>>>>>>> Building LISFLOOD verison {} <<<<<<<<<<<<<<<<<<".format(__version__))
-input()
 try:
     # noinspection PyUnresolvedReferences
     from Cython.Build import cythonize
@@ -169,5 +168,6 @@ setup(
     # setup.py publish to pypi.
     cmdclass={
         'upload': UploadCommand,
+        'publish': UploadCommand,
     },
 )
