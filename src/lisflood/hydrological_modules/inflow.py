@@ -16,6 +16,7 @@ See the Licence for the specific language governing permissions and limitations 
 """
 from __future__ import print_function, absolute_import, division
 
+from nine import iteritems
 from pcraster import numpy2pcr, Nominal, pcr2numpy, timeinputscalar
 import numpy as np
 
@@ -78,15 +79,13 @@ class inflow(object):
 
             # substitute indexes to id in map
             self.var.InflowPointsMap = np.copy(inflowmapnp)
-            for k, v in id_dict.iteritems():
+            for k, v in iteritems(id_dict):
                 self.var.InflowPointsMap[inflowmapnp == k] = v
 
             # convert map to pcraster format
             # self.var.InflowPointsMap = decompress(self.var.InflowPointsMap)
             self.var.InflowPointsMap = numpy2pcr(Nominal, self.var.InflowPointsMap, -9999)
-            tempnpinit = pcr2numpy(self.var.InflowPointsMap,-9999)
-            pass
-
+            # tempnpinit = pcr2numpy(self.var.InflowPointsMap, -9999)
             #self.var.QInM3Old = cover(ifthen(defined(self.var.InflowPoints), self.var.ChanQ * self.var.DtSec), scalar(0.0))
             # Initialising cumulative output variables
             # These are all needed to compute the cumulative mass balance error

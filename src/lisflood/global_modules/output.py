@@ -302,10 +302,11 @@ class outputTssMap(object):
                     else:
                         self.var.report(decompress(eval(what)), trimPCRasterOutputPath(where))
 
+        cdfflags = CDFFlags.instance()
         # set the falg to indicate if a netcdffile has to be created or is only appended
         # if reportstep than increase the counter
         if self.var.currentTimeStep() in self.var.ReportSteps:
-            cdfflags = CDFFlags.instance()
+            # FIXME magic numbers. replace indexes with descriptive keys
             cdfflags.inc(1)
             # globals.cdfFlag[1] += 1
             if self.var.monthend:

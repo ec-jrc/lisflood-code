@@ -85,6 +85,7 @@ class CDFFlags(with_metaclass(Singleton)):
     Flags for netcdf output for end, steps, all, monthly (steps), yearly (steps), monthly , yearly
     """
     def __init__(self):
+        # FIXME magic numbers. replace indexes with descriptive keys (end, steps, all, monthly (steps), etc.)
         self.flags = [0, 0, 0, 0, 0, 0, 0]
 
     def inc(self, idx):
@@ -445,7 +446,6 @@ class LisSettings(with_metaclass(Singleton)):
                 # checking that restricted_options are not set
                 for ro in restricted_options:
                     if ro in self.options and not self.options[ro]:
-                        print('restricted option found!!!', ro)
                         allow = False  # map must not be written
                         break
         if allow:
