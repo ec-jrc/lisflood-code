@@ -14,7 +14,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
-from __future__ import print_function, absolute_import, division
+from __future__ import print_function, absolute_import, division, unicode_literals
 
 from nine import iteritems
 from pcraster import numpy2pcr, Nominal, pcr2numpy, timeinputscalar
@@ -83,14 +83,10 @@ class inflow(object):
                 self.var.InflowPointsMap[inflowmapnp == k] = v
 
             # convert map to pcraster format
-            # self.var.InflowPointsMap = decompress(self.var.InflowPointsMap)
             self.var.InflowPointsMap = numpy2pcr(Nominal, self.var.InflowPointsMap, -9999)
-            # tempnpinit = pcr2numpy(self.var.InflowPointsMap, -9999)
-            #self.var.QInM3Old = cover(ifthen(defined(self.var.InflowPoints), self.var.ChanQ * self.var.DtSec), scalar(0.0))
             # Initialising cumulative output variables
             # These are all needed to compute the cumulative mass balance error
 
-#        self.var.QInDt = maskinfo.in_zero()
         # inflow substep amount
 
     def dynamic_init(self):
@@ -115,13 +111,11 @@ class inflow(object):
         option = settings.options
         if option['inflow']:
             settings = LisSettings.instance()
-            QIn = timeinputscalar(settings.binding['QInTS'], self.var.InflowPointsMap)
-
+            QIn = timeinputscalar(str(settings.binding['QInTS']), self.var.InflowPointsMap)
             # Get inflow hydrograph at each inflow point [m3/s]
             QIn = compressArray(QIn)
-            QIn[np.isnan(QIn)]=0
+            QIn[np.isnan(QIn)] = 0
             self.var.QInM3 = QIn * self.var.DtSec
-            #self.var.QInM3 = cover(QIn * self.var.DtSec, 0)
             # Convert to [m3] per time step
             self.var.TotalQInM3 += self.var.QInM3
             # Map of total inflow from inflow hydrographs [m3]
