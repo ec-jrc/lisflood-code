@@ -1,4 +1,4 @@
-FROM python:3.5-stretch
+FROM python:3.7-stretch
 MAINTAINER Domenico Nappo <domenico.nappo@gmail.com>
 
 ENV no_proxy=jrc.it,localhost,ies.jrc.it,127.0.0.1,jrc.ec.europa.eu
@@ -27,12 +27,12 @@ RUN wget -q http://pcraster.geo.uu.nl/pcraster/4.2.1/pcraster-4.2.1.tar.bz2 && \
     mkdir -p /lisflood && mkdir -p /input && mkdir -p /output && mkdir -p /tests && mkdir -p /usecases && mkdir -p /data
 
 COPY requirements.txt /
-
-RUN /usr/local/bin/pip3 install -U pip && /usr/local/bin/pip3 install -r /requirements.txt \
- && cd /usr/lib/x86_64-linux-gnu/ && ln -s libboost_python-py35.so libboost_python3.so
+RUN /usr/local/bin/pip3.7 install -U pip && /usr/local/bin/pip3.7 install -r /requirements.txt \
+ && cd /usr/lib/x86_64-linux-gnu/ && ls -htal && ln -s libboost_python-py35.so libboost_python3.so
 
 WORKDIR /opt/pcraster-4.2.1/build
-RUN cmake -DFERN_BUILD_ALGORITHM:BOOL=TRUE -DCMAKE_INSTALL_PREFIX:PATH=/opt/pcraster -DPYTHON_EXECUTABLE:FILEPATH=/usr/bin/python3.5 ../ \
+
+RUN cmake -DFERN_BUILD_ALGORITHM:BOOL=TRUE -DCMAKE_INSTALL_PREFIX:PATH=/opt/pcraster -DPYTHON_EXECUTABLE:FILEPATH=/usr/local/bin/python3.7 ../ \
  && cmake --build ./ && make install
 
 WORKDIR /
@@ -43,9 +43,9 @@ COPY src/lisf1.py /
 COPY src/settings_tpl.xml /lisflood/
 
 WORKDIR /lisflood/hydrological_modules
-RUN python3.5 compile_kinematic_wave_parallel_tools.py build_ext --inplace
+RUN python3.7 compile_kinematic_wave_parallel_tools.py build_ext --inplace
 
 COPY tests/. /tests/
-RUN /usr/local/bin/pip3 install pytest && pytest /tests -s
+RUN /usr/local/bin/pip3 install pytest && pytest /tests/smoke_tests.py -s
 
 ENTRYPOINT ["/docker-entrypoint.sh"]

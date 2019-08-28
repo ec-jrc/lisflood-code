@@ -49,14 +49,18 @@ class LisfloodModel(LisfloodModel_ini, LisfloodModel_dyn, LisfloodModel_monteCar
 # ==================================================
 
 
-def lisfloodexe(settings):
+def lisfloodexe(lissettings=None):
 
     # read options and bindings and launch Lisflood model computation
     # returns option binding and ReportSteps - global dictionaries
 
     # optionBinding(settings, optionxml)
-    lissettings = LisSettings(settings)
+    # lissettings = LisSettings(settings)
     _ = CDFFlags()
+    if isinstance(lissettings, str):
+        lissettings = LisSettings(lissettings)
+    else:
+        lissettings = LisSettings.instance() if lissettings is None else lissettings
     binding = lissettings.binding
     option = lissettings.options
     report_steps = lissettings.report_steps
@@ -216,10 +220,8 @@ def main():
     # setting.xml file
     settings = sys.argv[1]
     lissettings = LisSettings(settings)
-    CDFFlags()  # init netcdf files flags
-
     flags = lissettings.flags
     if not (flags['veryquiet'] or flags['quiet']):
         headerinfo()
 
-    lisfloodexe(settings)
+    lisfloodexe(lissettings)

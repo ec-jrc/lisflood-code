@@ -43,21 +43,28 @@ def defsoil(name1, name2=None, name3=None):
     """
     try:
         in1 = loadmap(name1)
-    except:
+    except Exception as e:
+        # FIXME manage exception properly (it spits out some TypeError: unhashable type: 'numpy.ndarray')
+        # print(str(type(e)))
+        # print(str(e))
         in1 = name1
+
     if name2 is None:
         in2 = in1
     else:
         try:
             in2 = loadmap(name2)
-        except:
+        except Exception as e:
+            # print(str(type(e)))
+            # print(str(e))
             in2 = name2
+
     if name3 is None:
         in3 = in1
     else:
         try:
             in3 = loadmap(name3)
-        except:
+        except Exception as e:
             in3 = name3
     return [in1, in2, in3]
 
@@ -145,25 +152,23 @@ def loadsetclone(name):
                   " are not valid coordinates (col row cellsize xupleft yupleft)"
             raise LisfloodError(msg)
         mapnp = np.ones((int(coord[1]), int(coord[0])))
-        #mapnp[mapnp == 0] = 1
-        map = numpy2pcr(Boolean, mapnp, -9999)
+        map_out = numpy2pcr(Boolean, mapnp, -9999)
     elif len(coord) == 1:
-        #read information on clone map from map (pcraster or netcdf)
+        # read information on clone map from map (pcraster or netcdf)
         try:
             # try to read a pcraster map
             iterSetClonePCR(filename)
-            map = pcraster.boolean(iterReadPCRasterMap(filename))
+            map_out = pcraster.boolean(iterReadPCRasterMap(filename))
             flagmap = True
-            mapnp = pcr2numpy(map,np.nan)
-
+            mapnp = pcr2numpy(map_out, np.nan)
         except Exception as e:
-            print(str(e))
-            print(type(e))
+            # FIXME manage exceptions and print type of error
+            # print(str(e))
+            # print(type(e))
             # try to read a netcdf file
             filename = os.path.splitext(binding[name])[0] + '.nc'
             nf1 = iterOpenNetcdf(filename, "", "r")
-            value = nf1.variables.items()[-1][0]  # get the last variable name
-
+            value = listitems(nf1.variables)[-1][0]  # get the last variable name
             if 'x' in nf1.variables:
                 x1 = nf1.variables['x'][0]
                 x2 = nf1.variables['x'][1]
@@ -179,20 +184,21 @@ def loadsetclone(name):
                 ylast = nf1.variables['lon'][-1]
 
             cellSize = round(np.abs(x2 - x1), 4)
-            nrRows = int(0.5+np.abs(ylast - y1) / cellSize + 1)
-            nrCols = int(0.5+np.abs(xlast - x1) / cellSize + 1)
+            # nrRows = int(0.5+np.abs(ylast - y1) / cellSize + 1)
+            # nrCols = int(0.5+np.abs(xlast - x1) / cellSize + 1)
+            nrRows, nrCols = nf1.variables[value].shape  # just use shape to know rows and cols...
             x = x1 - cellSize / 2
             y = y1 + cellSize / 2
             mapnp = np.array(nf1.variables[value][0:nrRows, 0:nrCols])
             nf1.close()
             # setclone  row col cellsize xupleft yupleft
-            setclone(nrRows,nrCols, cellSize, x, y)
-            map = numpy2pcr(Boolean, mapnp, 0)
-            #map = boolean(map)
+
+            setclone(nrRows, nrCols, cellSize, x, y)
+            map_out = numpy2pcr(Boolean, mapnp, 0)
             flagmap = True
 
         if flags['checkfiles']:
-            checkmap(name, filename, map, flagmap, 0)
+            checkmap(name, filename, map_out, flagmap, 0)
     else:
         raise LisfloodError("Maskmap: {} is not a valid mask map nor valid coordinates".format(name))
     _ = MaskAttrs()  # init maskattrs
@@ -205,11 +211,11 @@ def loadsetclone(name):
     maskarea = np.bool8(mapnp)
     # compute mask (pixels in maskldd AND maskarea)
     mask = np.logical_not(np.logical_and(maskldd, maskarea))
-    _ = MaskInfo(mask, map)  # MaskInfo init here
+    _ = MaskInfo(mask, map_out)  # MaskInfo init here
 
     if flags['nancheck']:
         nanCheckMap(ldd, binding['Ldd'], 'Ldd')
-    return map
+    return map_out
 
 
 def compressArray(map, pcr=True, name=None):
@@ -503,14 +509,18 @@ def loadLAI(value, pcrvalue, i, pcr=False):
     if pcrmap: mapC = compressArray(map,name=filename)
     if flags['checkfiles']:
         checkmap(os.path.basename(pcrvalue), filename, map, True, 0)
-    if pcr:
-        if flags['nancheck']:
-            nanCheckMap(map, filename, "'LAI*Maps' or 'WFractionMaps'")
-        return map
-    else:
-        if flags['nancheck']:
-            nanCheckMap(mapC, filename, "'LAI*Maps' or 'WFractionMaps'")
-        return mapC
+    map_out = map if pcr else mapC
+    if flags['nancheck']:
+        nanCheckMap(map_out, filename, "'LAI*Maps' or 'WFractionMaps'")
+    return map_out
+    # if pcr:
+    #     if flags['nancheck']:
+    #         nanCheckMap(map, filename, "'LAI*Maps' or 'WFractionMaps'")
+    #     return map
+    # else:
+    #     if flags['nancheck']:
+    #         nanCheckMap(mapC, filename, "'LAI*Maps' or 'WFractionMaps'")
+    #     return mapC
 
 
 def readmapsparse(name, time, oldmap):

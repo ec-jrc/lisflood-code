@@ -121,8 +121,8 @@ class soil(object):
         self.var.KSat1b = defsoil('MapKSat2', 'MapKSat2Forest')
         self.var.KSat2 = defsoil('MapKSat3')
         # Saturated conductivity for other land use and forest
-        Lambda1a = defsoil('MapLambda1','MapLambda1Forest')
-        Lambda1b = defsoil('MapLambda2','MapLambda2Forest')
+        Lambda1a = defsoil('MapLambda1', 'MapLambda1Forest')
+        Lambda1b = defsoil('MapLambda2', 'MapLambda2Forest')
         Lambda2 = defsoil('MapLambda3')
         # Pore-size index (for Van Genuchten parameters)
         GenuAlpha1a = defsoil('MapGenuAlpha1','MapGenuAlpha1Forest')
