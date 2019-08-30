@@ -27,4 +27,11 @@ class TestDrina(TestLis):
     settings_path = os.path.join(current_dir, 'data/Drina/settings/lisfloodSettings_cold_day_base.xml')
 
     def test_dis(self):
-        return self.listest('dis')
+        return self.listest('dis_drina')
+
+
+class TestMadeira(TestLis):
+    settings_path = os.path.join(current_dir, 'data/Madeira/settings/settings_Madeira_prerun.xml')
+
+    def test_dis(self):
+        return self.listest('dis_madeira')

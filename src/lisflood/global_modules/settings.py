@@ -84,7 +84,8 @@ class CDFFlags(with_metaclass(Singleton)):
     """
     Flags for netcdf output for end, steps, all, monthly (steps), yearly (steps), monthly , yearly
     """
-    def __init__(self):
+    def __init__(self, uid):
+        self.uid = uid
         # FIXME magic numbers. replace indexes with descriptive keys (end, steps, all, monthly (steps), etc.)
         self.flags = [0, 0, 0, 0, 0, 0, 0]
 
@@ -100,7 +101,8 @@ class CDFFlags(with_metaclass(Singleton)):
 
 @nine
 class MaskAttrs(with_metaclass(Singleton)):
-    def __init__(self):
+    def __init__(self, maskname):
+        self.name = maskname
         self._attrs = {
             'x': pcraster.clone().west(),
             'y': pcraster.clone().north(),
@@ -141,8 +143,9 @@ class MaskInfo(with_metaclass(Singleton)):
 
 @nine
 class NetCDFMetadata(with_metaclass(Singleton)):
-    def __init__(self):
+    def __init__(self, uid):
         from .zusatz import iterOpenNetcdf
+        self.uid = uid
         self.data = {}
         settings = LisSettings.instance()
         binding = settings.binding

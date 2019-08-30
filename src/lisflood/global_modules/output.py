@@ -294,7 +294,7 @@ class outputTssMap(object):
                         try:
                             cdfflags = CDFFlags.instance()
                             writenet(cdfflags[flagcdf], eval(what), where, self.var.DtDay, maps, report_maps_all[maps].output_var,
-                                     report_maps_all[maps].unit, 'f4', reportStartDate, reportStepStart,reportStepEnd, frequency)
+                                     report_maps_all[maps].unit, 'f4', reportStartDate, reportStepStart, reportStepEnd, frequency)
                         except Exception as e:
                             print(LisfloodWarning(str(e)))
                             print("ALL", what, where, self.var.DtDay, maps, report_maps_all[maps].output_var,

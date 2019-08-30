@@ -69,7 +69,7 @@ class lakes(object):
                 return
             # break if no lakes
 
-            self.var.IsStructureKinematic = np.where(LakeSitesC > 0 , np.bool8(1),self.var.IsStructureKinematic)
+            self.var.IsStructureKinematic = np.where(LakeSitesC > 0, np.bool8(1), self.var.IsStructureKinematic)
             #self.var.IsStructureKinematic = ifthenelse(defined(self.var.LakeSites), pcraster.boolean(1), self.var.IsStructureKinematic)
             # Add lake locations to structures map (used to modify LddKinematic
             # and to calculate LddStructuresKinematic)
@@ -89,22 +89,22 @@ class lakes(object):
             # for Modified Puls Method the Q(inflow)1 has to be used. It is assumed that this is the same as Q(inflow)2 for the first timestep
             # has to be checked if this works in forecasting mode!
 
-            LakeArea = pcraster.lookupscalar(binding['TabLakeArea'], LakeSitePcr)
+            LakeArea = pcraster.lookupscalar(str(binding['TabLakeArea']), LakeSitePcr)
             LakeAreaC = compressArray(LakeArea)
             self.var.LakeAreaCC = np.compress(LakeSitesC>0,LakeAreaC)
 
             # Surface area of each lake [m2]
-            LakeA = pcraster.lookupscalar(binding['TabLakeA'], LakeSitePcr)
+            LakeA = pcraster.lookupscalar(str(binding['TabLakeA']), LakeSitePcr)
             LakeAC = compressArray(LakeA) * loadmap('LakeMultiplier')
-            self.var.LakeACC = np.compress(LakeSitesC>0,LakeAC)
+            self.var.LakeACC = np.compress(LakeSitesC > 0, LakeAC)
             # Lake parameter A (suggested  value equal to outflow width in [m])
             # multiplied with the calibration parameter LakeMultiplier
 
             LakeInitialLevelValue  = loadmap('LakeInitialLevelValue')
             if np.max(LakeInitialLevelValue) == -9999:
-                LakeAvNetInflowEstimate = pcraster.lookupscalar(binding['TabLakeAvNetInflowEstimate'], LakeSitePcr)
+                LakeAvNetInflowEstimate = pcraster.lookupscalar(str(binding['TabLakeAvNetInflowEstimate']), LakeSitePcr)
                 LakeAvNetC = compressArray(LakeAvNetInflowEstimate)
-                self.var.LakeAvNetCC = np.compress(LakeSitesC>0,LakeAvNetC)
+                self.var.LakeAvNetCC = np.compress(LakeSitesC > 0, LakeAvNetC)
 
                 LakeStorageIniM3CC = self.var.LakeAreaCC * np.sqrt(self.var.LakeAvNetCC / self.var.LakeACC)
                 # Initial lake storage [m3]  based on: S = LakeArea * H = LakeArea
