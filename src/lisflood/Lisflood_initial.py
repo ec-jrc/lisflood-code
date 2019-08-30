@@ -16,6 +16,8 @@ See the Licence for the specific language governing permissions and limitations 
 """
 from __future__ import print_function, absolute_import, division
 
+import uuid
+
 from .global_modules.settings import CutMap, LisSettings, NetCDFMetadata
 from .global_modules.zusatz import DynamicModel
 from .global_modules.add1 import loadsetclone, mapattrNetCDF
@@ -81,8 +83,7 @@ class LisfloodModel_ini(DynamicModel):
         if option['writeNetcdfStack'] or option['writeNetcdf']:
             # if NetCDF is writen, the pr.nc is read to get the metadata
             # like projection
-            _ = NetCDFMetadata()  # init meta netcdf
-            # metaNetCDF()
+            _ = NetCDFMetadata(uuid.uuid4())  # init meta netcdf
 
         # ----------------------------------------
 

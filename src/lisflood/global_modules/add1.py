@@ -15,6 +15,9 @@ See the Licence for the specific language governing permissions and limitations 
 
 """
 from __future__ import print_function, absolute_import
+
+import uuid
+
 from future.utils import listitems
 
 from nine import range
@@ -172,28 +175,20 @@ def loadsetclone(name):
             if 'x' in nf1.variables:
                 x1 = nf1.variables['x'][0]
                 x2 = nf1.variables['x'][1]
-                xlast = nf1.variables['x'][-1]
                 y1 = nf1.variables['y'][0]
-                ylast = nf1.variables['y'][-1]
             else:
                 x1 = nf1.variables['lon'][0]
                 x2 = nf1.variables['lon'][1]
                 y1 = nf1.variables['lat'][0]
-                y2 = nf1.variables['lat'][1]
-                xlast = nf1.variables['lat'][-1]
-                ylast = nf1.variables['lon'][-1]
 
-            cellSize = round(np.abs(x2 - x1), 4)
-            # nrRows = int(0.5+np.abs(ylast - y1) / cellSize + 1)
-            # nrCols = int(0.5+np.abs(xlast - x1) / cellSize + 1)
-            nrRows, nrCols = nf1.variables[value].shape  # just use shape to know rows and cols...
-            x = x1 - cellSize / 2
-            y = y1 + cellSize / 2
-            mapnp = np.array(nf1.variables[value][0:nrRows, 0:nrCols])
+            cell_size = round(np.abs(x2 - x1), 4)
+            nr_rows, nr_cols = nf1.variables[value].shape  # just use shape to know rows and cols...
+            x = x1 - cell_size / 2
+            y = y1 + cell_size / 2
+            mapnp = np.array(nf1.variables[value][0:nr_rows, 0:nr_cols])
             nf1.close()
             # setclone  row col cellsize xupleft yupleft
-
-            setclone(nrRows, nrCols, cellSize, x, y)
+            setclone(nr_rows, nr_cols, cell_size, x, y)
             map_out = numpy2pcr(Boolean, mapnp, 0)
             flagmap = True
 
@@ -201,7 +196,7 @@ def loadsetclone(name):
             checkmap(name, filename, map_out, flagmap, 0)
     else:
         raise LisfloodError("Maskmap: {} is not a valid mask map nor valid coordinates".format(name))
-    _ = MaskAttrs()  # init maskattrs
+    _ = MaskAttrs(uuid.uuid4())  # init maskattrs
     # put in the ldd map
     # if there is no ldd at a cell, this cell should be excluded from modelling
     ldd = loadmap('Ldd', pcr=True)

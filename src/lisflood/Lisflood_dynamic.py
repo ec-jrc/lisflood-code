@@ -17,6 +17,7 @@ See the Licence for the specific language governing permissions and limitations 
 from __future__ import print_function, absolute_import, division
 from nine import range
 
+import uuid
 import sys
 import datetime
 import gc
@@ -42,20 +43,19 @@ class LisfloodModel_dyn(DynamicModel):
         self.CalendarDate = self.CalendarDayStart + datetime.timedelta(days=(self.currentTimeStep()-1) * self.DtDay)
         # day of the year corresponding to the model time step
         self.CalendarDay = int(self.CalendarDate.strftime("%j"))
-        #correct method to calculate the day of the year
+        # correct method to calculate the day of the year
 
         # model time step
         i = self.currentTimeStep()
         if i == 1:
             # flag for netcdf output for all, steps and end
-            _ = CDFFlags()  # init CDF flags
+            _ = CDFFlags(uuid.uuid4())  # init CDF flags
             # globals.cdfFlag = [0, 0, 0, 0 ,0 ,0,0]
-          # set back to 0,0,0,0,0,0 if new Monte Carlo run
 
         self.TimeSinceStart = self.currentTimeStep() - self.firstTimeStep() + 1
 
         if flags['loud']:
-            print("%-6i %10s" %(self.currentTimeStep(),self.CalendarDate.strftime("%d/%m/%Y %H:%M")))
+            print("%-6i %10s" % (self.currentTimeStep(), self.CalendarDate.strftime("%d/%m/%Y %H:%M")))
         else:
             if not flags['checkfiles']:
                 if flags['quiet'] and not flags['veryquiet']:

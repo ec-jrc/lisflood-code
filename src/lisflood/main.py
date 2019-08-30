@@ -17,14 +17,16 @@ See the Licence for the specific language governing permissions and limitations 
 
 from __future__ import print_function, absolute_import, division
 
+import uuid
 import os
 import sys
-
-from pcraster.framework import EnsKalmanFilterFramework, MonteCarloFramework
+import datetime
 
 src_dir = os.path.dirname(os.path.abspath(__file__))
 if os.path.exists(src_dir):
     sys.path.append(src_dir)
+
+from pcraster.framework import EnsKalmanFilterFramework, MonteCarloFramework
 
 from .global_modules.zusatz import DynamicFramework
 from .Lisflood_EnKF import LisfloodModel_EnKF
@@ -56,7 +58,7 @@ def lisfloodexe(lissettings=None):
 
     # optionBinding(settings, optionxml)
     # lissettings = LisSettings(settings)
-    _ = CDFFlags()
+    _ = CDFFlags(uuid.uuid4())
     if isinstance(lissettings, str):
         lissettings = LisSettings(lissettings)
     else:
