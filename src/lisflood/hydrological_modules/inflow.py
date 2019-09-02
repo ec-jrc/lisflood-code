@@ -23,9 +23,10 @@ import numpy as np
 from ..global_modules.settings import LisSettings
 from ..global_modules.add1 import loadmap, read_tss_header, compressArray
 from ..global_modules.errors import LisfloodWarning
+from . import HydroModule
 
 
-class inflow(object):
+class inflow(HydroModule):
 
     """
      # ************************************************************

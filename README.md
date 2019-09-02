@@ -26,8 +26,9 @@ Follow this instruction for a basic test (Drina catchment, included in this repo
 git clone --single-branch --branch master https://github.com/ec-jrc/lisflood-code.git
 ```
 
-2. Install requirements into a python 2.7 virtualenv. 
-We recommend to follow the instructions on [virtualenv docs](https://virtualenv.pypa.io/en/latest/). Assuming you activated your virtual environment:
+2. Install requirements into a Python 3 virtualenv. 
+We recommend to follow the instructions on [virtualenv docs](https://virtualenv.pypa.io/en/latest/). 
+Assuming you've activated your virtual environment, you can now install requirements with pip:
 
 ```bash
 cd lisflood-code  # move into lisflood-code project directory
@@ -48,7 +49,7 @@ To compile this Cython module to enable OpenMP multithreading (parallel kinemati
 
 * Delete the files *.so (if any) in directory hydrological-modules  
 
-* Inside the hydrological_modules folder, execute "python2 compile_kinematic_wave_parallel_tools.py build_ext --inplace"  
+* Inside the hydrological_modules folder, execute "python compile_kinematic_wave_parallel_tools.py build_ext --inplace"  
 
 Important: the module has to be compiled on the machine where the model is run - the resulting binary is not portable.  
 
@@ -103,7 +104,7 @@ Once LISFLOOD finished, you can find reported maps in `/absolute_path/to/my/loca
 
 ### Pypi packaged LISFLOOD
 
-LISFLOOD is also distributed as a standard python package. You can install the pip package in your Python 2.7<sup>[1](#footnote1)</sup> virtualenv:
+LISFLOOD is also distributed as a standard python package. You can install the pip package in your Python 3 virtualenv:
 
 ```bash
 pip install lisflood-model
@@ -114,5 +115,3 @@ Command above will also install the executable `lisflood` in the virtualenv, so 
 ```bash
 lisflood /absolute_path/to/my/local/folder/Drina/settings/lisfloodSettings_cold_day_base.xml
 ```
-
-<a id="footnote1" name="footnote1">1</a>: We planned to migrate to Python 3 in a few months.

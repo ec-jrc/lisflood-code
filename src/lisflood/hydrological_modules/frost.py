@@ -20,9 +20,10 @@ from __future__ import absolute_import, print_function, division
 import numpy as np
 
 from ..global_modules.add1 import loadmap
+from . import HydroModule
 
 
-class frost(object):
+class frost(HydroModule):
 
     """
     # ************************************************************
@@ -30,6 +31,8 @@ class frost(object):
     # ************************************************************
     # Domain: whole pixel (permeable + direct runoff areas)
     """
+    input_files_keys = []
+    module_name = 'Frost'
 
     def __init__(self, frost_variable):
         self.var = frost_variable

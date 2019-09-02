@@ -24,15 +24,18 @@ import numpy as np
 
 from ..global_modules.add1 import loadmap, readnetcdf, decompress, compressArray
 from ..global_modules.settings import LisSettings, MaskInfo
+from . import HydroModule
 
 
-class indicatorcalc(object):
+class indicatorcalc(HydroModule):
 
     """
     # ************************************************************
     # ***** Indicator calculation ************************************
     # ************************************************************
     """
+    input_files_keys = []
+    module_name = 'IndicatorCalculation'
 
     def __init__(self, indicatorcalc_variable):
         self.var = indicatorcalc_variable

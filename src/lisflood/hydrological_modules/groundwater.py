@@ -22,14 +22,17 @@ import numpy as np
 from ..global_modules.add1 import loadmap, makenumpy, defsoil
 from ..global_modules.settings import LisSettings, MaskInfo
 from ..global_modules.errors import LisfloodError
+from . import HydroModule
 
 
-class groundwater(object):
+class groundwater(HydroModule):
     """
     # ************************************************************
     # ***** GROUNDWATER   *****************************************
     # ************************************************************
     """
+    input_files_keys = []
+    module_name = 'GroundWater'
 
     def __init__(self, groundwater_variable):
         self.var = groundwater_variable
