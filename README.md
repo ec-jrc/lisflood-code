@@ -26,7 +26,7 @@ Follow this instruction for a basic test (Drina catchment, included in this repo
 git clone --single-branch --branch master https://github.com/ec-jrc/lisflood-code.git
 ```
 
-2. Install requirements into a python 2.7 virtualenv. 
+2. Install requirements into a python virtualenv.
 We recommend to follow the instructions on [virtualenv docs](https://virtualenv.pypa.io/en/latest/). Assuming you activated your virtual environment:
 
 ```bash
@@ -39,7 +39,7 @@ pip install -r requirements.txt
 If you already have GDAL installed in your computer, make sure that the GDAL and the python gdal library have the same version.
 
 
-You need to install PCRaster and include its python interface in PYTHONPATH environment variable.
+You need to install PCRaster (4.2.x is first version which works with Python3) and include its python interface in PYTHONPATH environment variable.
 For details, please follow instruction on [official docs](http://pcraster.geo.uu.nl/getting-started/pcraster-on-linux/).
 
 3. Compile the cython module kinematic_wave_parallel_tool
@@ -103,7 +103,7 @@ Once LISFLOOD finished, you can find reported maps in `/absolute_path/to/my/loca
 
 ### Pypi packaged LISFLOOD
 
-LISFLOOD is also distributed as a standard python package. You can install the pip package in your Python 2.7<sup>[1](#footnote1)</sup> virtualenv:
+LISFLOOD is also distributed as a standard python package. You can install the pip package in your Python 3 virtualenv:
 
 ```bash
 pip install lisflood-model
@@ -115,4 +115,13 @@ Command above will also install the executable `lisflood` in the virtualenv, so 
 lisflood /absolute_path/to/my/local/folder/Drina/settings/lisfloodSettings_cold_day_base.xml
 ```
 
-<a id="footnote1" name="footnote1">1</a>: We planned to migrate to Python 3 in a few months.
+## Collaborate
+
+If you find an issue in our code, plese follow the [GitHub flow](https://guides.github.com/introduction/flow/) to propose your changes (Fork, commit your changes and ask for a Pull Request).
+When you develop, you need to run our "acceptance" tests. We have a couple of tests (domains are Drina and Madeira catchments) that can run with tox on py27, py36, py37 environments.
+Simply execute `tox` on comman line from project folder.
+
+Tox tests can last minutes. You can also just use pytest and run tests in a single environment (e.g. Python 3.7).
+This is often enough and will save you some time if you need to run tests frequently.
+ 
+`pytest tests/ -s`
