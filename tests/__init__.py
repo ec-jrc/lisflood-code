@@ -39,7 +39,7 @@ class TestLis(object):
                       'report_map': 'DischargeMaps',
                       'report_tss': 'DisTS'
                       },
-        'dis_madeira': {'outpath': os.path.join(current_dir, 'data/Madeira/reference/dis'),
+        'dis_madeira': {'outpath': os.path.join(current_dir, 'data/TestCatchment2/reference/dis'),
                       'report_map': 'DischargeMaps',
                       'report_tss': 'DisTS'
                       }

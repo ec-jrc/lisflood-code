@@ -8,8 +8,8 @@ kinematic_wave_parallel_tools.html
 lisflood_model.egg-info
 /dist/
 !settings_tpl.xml
-!/tests/data/Drina/settings/*.xml
-!/tests/data/Madeira/settings/*.xml
+!/tests/data/TestCatchment1/settings/*.xml
+!/tests/data/TestCatchment2/settings/*.xml
 .eggs
 .tox
 /src/dist/
