@@ -35,7 +35,7 @@ from lisflood.main import lisfloodexe
 
 class TestLis(object):
     reference_files = {
-        'dis_drina': {'outpath': os.path.join(current_dir, 'data/Drina/reference/dis'),
+        'dis_drina': {'outpath': os.path.join(current_dir, 'data/TestCatchment1/reference/dis'),
                       'report_map': 'DischargeMaps',
                       'report_tss': 'DisTS'
                       },

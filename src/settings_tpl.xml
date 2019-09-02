@@ -31,7 +31,6 @@ You can use builtin path variables in this template and reference to other paths
         <setoption choice="0" name="gridSizeUserDefined"/>
 
         <setoption choice="0" name="inflow"/>
-
         <setoption choice="1" name="wateruse"/>
         <setoption choice="1" name="groundwaterSmooth"/>
         <setoption choice="1" name="wateruseRegion"/>

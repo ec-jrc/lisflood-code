@@ -19,7 +19,7 @@ from nine import range
 
 import os
 
-from lisflood.global_modules.errors import LisfloodWarning
+from ..global_modules.errors import LisfloodWarning
 from ..global_modules.settings import LisSettings
 
 
@@ -27,15 +27,16 @@ class HydroModule(object):
     input_files_keys = None
     module_name = None
 
-    def check_input_files(self):
+    @classmethod
+    def check_input_files(cls):
         settings = LisSettings.instance()
         binding = settings.binding
         ok = True
-        for key in self.input_files_keys:
+        for key in cls.input_files_keys:
             if not binding.get(key) or not os.path.exists(binding[key]) or not os.path.isfile(binding[key]):
                 ok = False
                 print(LisfloodWarning('Settings {} or File {}: missing settings or file for {} module.'.format(
-                    key, binding.get(key, ''), self.module_name))
+                    key, binding.get(key, ''), cls.module_name))
                 )
         return ok
 

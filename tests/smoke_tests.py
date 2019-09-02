@@ -24,7 +24,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 
 
 class TestDrina(TestLis):
-    settings_path = os.path.join(current_dir, 'data/Drina/settings/lisfloodSettings_cold_day_base.xml')
+    settings_path = os.path.join(current_dir, 'data/TestCatchment1/settings/lisfloodSettings_cold_day_base.xml')
 
     def test_dis(self):
         return self.listest('dis_drina')
