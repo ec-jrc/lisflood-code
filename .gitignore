@@ -9,7 +9,7 @@ lisflood_model.egg-info
 /dist/
 !settings_tpl.xml
 !/tests/data/Drina/settings/*.xml
-!/tests/data/Drina/maps_netcdf/parameters/params_adjust_Normal_Flood.nc.aux.xml
+!/tests/data/Madeira/settings/*.xml
 .eggs
 .tox
 /src/dist/

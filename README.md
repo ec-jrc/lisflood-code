@@ -40,7 +40,7 @@ pip install -r requirements.txt
 If you already have GDAL installed in your computer, make sure that the GDAL and the python gdal library have the same version.
 
 
-You need to install PCRaster and include its python interface in PYTHONPATH environment variable.
+You need to install PCRaster (4.2.x is first version which works with Python3) and include its python interface in PYTHONPATH environment variable.
 For details, please follow instruction on [official docs](http://pcraster.geo.uu.nl/getting-started/pcraster-on-linux/).
 
 3. Compile the cython module kinematic_wave_parallel_tool
@@ -115,3 +115,14 @@ Command above will also install the executable `lisflood` in the virtualenv, so 
 ```bash
 lisflood /absolute_path/to/my/local/folder/Drina/settings/lisfloodSettings_cold_day_base.xml
 ```
+
+## Collaborate
+
+If you find an issue in our code, plese follow the [GitHub flow](https://guides.github.com/introduction/flow/) to propose your changes (Fork, commit your changes and ask for a Pull Request).
+When you develop, you need to run our "acceptance" tests. We have a couple of tests (domains are Drina and Madeira catchments) that can run with tox on py27, py36, py37 environments.
+Simply execute `tox` on comman line from project folder.
+
+Tox tests can last minutes. You can also just use pytest and run tests in a single environment (e.g. Python 3.7).
+This is often enough and will save you some time if you need to run tests frequently.
+ 
+`pytest tests/ -s`
