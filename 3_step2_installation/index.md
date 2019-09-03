@@ -64,8 +64,8 @@ lisflood /absolute_path/to/my/local/folder/Drina/settings/lisfloodSettings_cold_
 
 ### C) Cloning the repository with git
 
-You can download code and datasets for testing the model (or to contribute with bug fixes or new features).
-Follow this instruction for a basic test (Drina catchment, included in this repository under [tests/data/Drina](https://github.com/ec-jrc/lisflood-code/tree/master/tests/data/Drina))
+You can download code and dataset for testing the model (or to contribute with bug fixes or new features).
+Follow this instruction for a basic test (a catchment included in this repository under [tests/data/TestCatchment1](https://github.com/ec-jrc/lisflood-code/tree/master/tests/data/TestCatchment1))
 
 1. **Clone the master branch of this repository (you need to have git installed on your machine).**
 
@@ -73,7 +73,7 @@ Follow this instruction for a basic test (Drina catchment, included in this repo
     git clone --single-branch --branch master https://github.com/ec-jrc/lisflood-code.git
     ```
 
-2. **Install requirements into a python 2.7 virtualenv**
+2. **Install requirements into a python 3 virtualenv**
 
 
 We recommend to follow the instructions on [virtualenv docs](https://virtualenv.pypa.io/en/latest/). Assuming you activated your virtual environment:
@@ -98,7 +98,7 @@ For details, please follow instruction on [official docs](http://pcraster.geo.uu
    To compile this Cython module to enable OpenMP multithreading (parallel kinematic wave):
     
      * Delete the files *.so (if any) in directory hydrological-modules  
-     * Inside the hydrological_modules folder, execute `python2 compile_kinematic_wave_parallel_tools.py build_ext --inplace`  
+     * Inside the hydrological_modules folder, execute `python compile_kinematic_wave_parallel_tools.py build_ext --inplace`  
 
    Important: the module has to be compiled on the machine where the model is run - the resulting binary is not portable.  
   
@@ -118,13 +118,10 @@ For details, please follow instruction on [official docs](http://pcraster.geo.uu
     Now that your environment should be set up to run lisflood, you may try with a prepared settings file for Drina catchment:
     
     ```bash
-    python src/lisf1.py tests/data/Drina/settings/lisfloodSettings_cold_day_base.xml
+    python src/lisf1.py tests/data/TestCatchment1/settings/lisfloodSettings_cold_day_base.xml
     ```
 
 If commands above succeeded without errors, producing dis.nc into tests/data/Drina/outputs folder, your lisflood installation was correct.
 
-
-
-<a id="footnote1" name="footnote1">1</a>: We planned to migrate to Python 3 in a few months.
 
 [🔝](#top)
