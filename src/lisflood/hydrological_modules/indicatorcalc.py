@@ -34,7 +34,8 @@ class indicatorcalc(HydroModule):
     # ***** Indicator calculation ************************************
     # ************************************************************
     """
-    input_files_keys = []
+    input_files_keys = {'indicator': ['Population', 'LandUseMask'],
+                        'TransientLandUseChange': ['PopulationMaps']}
     module_name = 'IndicatorCalculation'
 
     def __init__(self, indicatorcalc_variable):
@@ -100,9 +101,9 @@ class indicatorcalc(HydroModule):
             self.var.monthend = next_date_time.month != self.var.CalendarDate.month
             self.var.yearend = next_date_time.year != self.var.CalendarDate.year
             # sum up every day
-            self.var.DayCounter   = self.var.DayCounter + 1.0
-            self.var.MonthETpotMM   = self.var.MonthETpotMM + self.var.ETRef
-            self.var.MonthETactMM   = self.var.MonthETactMM + self.var.deffraction(self.var.TaInterception) + self.var.TaPixel + self.var.ESActPixel
+            self.var.DayCounter = self.var.DayCounter + 1.0
+            self.var.MonthETpotMM = self.var.MonthETpotMM + self.var.ETRef
+            self.var.MonthETactMM = self.var.MonthETactMM + self.var.deffraction(self.var.TaInterception) + self.var.TaPixel + self.var.ESActPixel
 
             if option['openwaterevapo']:
                 self.var.MonthETactMM += self.var.EvaAddM3 * self.var.M3toMM

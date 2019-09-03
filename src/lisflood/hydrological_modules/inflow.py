@@ -35,6 +35,8 @@ class inflow(HydroModule):
      # If option "inflow" is set to 1 the inflow hydrograph code is used
      # otherwise dummy code is used
     """
+    input_files_keys = {'inflow': ['InflowPoints', 'QInTS']}
+    module_name = 'InFlow'
 
     def __init__(self, inflow_variable):
         self.var = inflow_variable

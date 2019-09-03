@@ -21,9 +21,10 @@ import numpy as np
 
 from ..global_modules.add1 import loadmap
 from ..global_modules.settings import MaskInfo
+from . import HydroModule
 
 
-class snow(object):
+class snow(HydroModule):
 
     """
     # ************************************************************
@@ -39,6 +40,8 @@ class snow(object):
     # Zone B: center third
     # Zone C: upper third
     """
+    input_files_keys = []
+    module_name = 'Snow'
 
     def __init__(self, snow_variable):
         self.var = snow_variable

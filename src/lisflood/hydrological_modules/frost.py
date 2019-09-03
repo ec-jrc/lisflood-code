@@ -31,7 +31,7 @@ class frost(HydroModule):
     # ************************************************************
     # Domain: whole pixel (permeable + direct runoff areas)
     """
-    input_files_keys = []
+    input_files_keys = {'all': ['Kfrost', 'Afrost', 'FrostIndexThreshold', 'SnowWaterEquivalent', 'FrostIndexInitValue']}
     module_name = 'Frost'
 
     def __init__(self, frost_variable):

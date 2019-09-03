@@ -28,6 +28,7 @@ if os.path.exists(src_dir):
 
 from pcraster.framework import EnsKalmanFilterFramework, MonteCarloFramework
 
+from lisfloodutilities.checkers import modulesinput
 from .global_modules.zusatz import DynamicFramework
 from .Lisflood_EnKF import LisfloodModel_EnKF
 from .Lisflood_dynamic import LisfloodModel_dyn
@@ -225,5 +226,5 @@ def main():
     flags = lissettings.flags
     if not (flags['veryquiet'] or flags['quiet']):
         headerinfo()
-
+    modulesinput.check(lissettings)
     lisfloodexe(lissettings)

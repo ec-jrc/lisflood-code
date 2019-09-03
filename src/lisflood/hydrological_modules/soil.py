@@ -21,15 +21,18 @@ import numpy as np
 
 from ..global_modules.settings import MaskInfo, LisSettings
 from ..global_modules.add1 import loadmap, defsoil
+from . import HydroModule
 
 
-class soil(object):
+class soil(HydroModule):
 
     """
     # ************************************************************
     # ***** SOIL         *****************************************
     # ************************************************************
     """
+    input_files_keys = []
+    module_name = 'Soil'
 
     def __init__(self, soil_variable):
         self.var = soil_variable

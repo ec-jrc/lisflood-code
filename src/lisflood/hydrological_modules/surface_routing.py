@@ -21,15 +21,18 @@ import numpy as np
 from ..global_modules.add1 import loadmap, makenumpy, compressArray
 from ..global_modules.settings import MaskInfo, LisSettings
 from .kinematic_wave_parallel import kinematicWave
+from . import HydroModule
 
 
-class surface_routing(object):
+class surface_routing(HydroModule):
 
     """
     # ************************************************************
     # ***** SURFACE ROUTING **************************************
     # ************************************************************
     """
+    input_files_keys = []
+    module_name = 'SurfaceRouting'
 
     def __init__(self, surface_routing_variable):
         self.var = surface_routing_variable

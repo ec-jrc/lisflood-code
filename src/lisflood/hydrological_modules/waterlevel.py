@@ -20,14 +20,17 @@ import numpy as np
 
 from ..global_modules.add1 import loadmap
 from ..global_modules.settings import LisSettings
+from . import HydroModule
 
 
-class waterlevel(object):
+class waterlevel(HydroModule):
     """
     # ************************************************************
     # ***** WATER LEVEL    *****************************************
     # ************************************************************
     """
+    input_files_keys = []
+    module_name = 'WaterLevel'
 
     def __init__(self, waterlevel_variable):
         self.var = waterlevel_variable

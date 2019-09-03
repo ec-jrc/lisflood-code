@@ -18,9 +18,10 @@ from __future__ import absolute_import, print_function, division
 
 from ..global_modules.add1 import loadmap, readnetcdf
 from ..global_modules.settings import LisSettings
+from . import HydroModule
 
 
-class landusechange(object):
+class landusechange(HydroModule):
 
     """
     # ************************************************************
@@ -35,6 +36,8 @@ class landusechange(object):
     # rice irrigation areas
     # other
     """
+    input_files_keys = {'': []}
+    module_name = 'LandUseChange'
 
     def __init__(self, landusechange_variable):
         self.var = landusechange_variable
@@ -46,12 +49,12 @@ class landusechange(object):
         """ initial part of the landusechange module
         """
 
-        self.var.ForestFraction = loadmap('ForestFraction',timestampflag='closest')
-        self.var.DirectRunoffFraction = loadmap('DirectRunoffFraction',timestampflag='closest')
-        self.var.WaterFraction = loadmap('WaterFraction',timestampflag='closest')
-        self.var.IrrigationFraction = loadmap('IrrigationFraction',timestampflag='closest')
-        self.var.RiceFraction = loadmap('RiceFraction',timestampflag='closest')
-        self.var.OtherFraction = loadmap('OtherFraction',timestampflag='closest')
+        self.var.ForestFraction = loadmap('ForestFraction', timestampflag='closest')
+        self.var.DirectRunoffFraction = loadmap('DirectRunoffFraction', timestampflag='closest')
+        self.var.WaterFraction = loadmap('WaterFraction', timestampflag='closest')
+        self.var.IrrigationFraction = loadmap('IrrigationFraction', timestampflag='closest')
+        self.var.RiceFraction = loadmap('RiceFraction', timestampflag='closest')
+        self.var.OtherFraction = loadmap('OtherFraction', timestampflag='closest')
 
     def dynamic(self):
         """dynamic part of the landusechange module

@@ -30,15 +30,18 @@ from .kinematic_wave_parallel import kinematicWave, kwpt
 
 from ..global_modules.settings import LisSettings, MaskInfo
 from ..global_modules.add1 import loadmap, compressArray, decompress
+from . import HydroModule
 
 
-class routing(object):
+class routing(HydroModule):
 
     """
     # ************************************************************
     # ***** ROUTING      *****************************************
     # ************************************************************
     """
+    input_files_keys = []
+    module_name = 'Routing'
 
     def __init__(self, routing_variable):
         self.var = routing_variable

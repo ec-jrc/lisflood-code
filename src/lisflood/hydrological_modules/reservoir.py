@@ -23,15 +23,18 @@ import numpy as np
 from ..global_modules.settings import LisSettings, MaskInfo
 from ..global_modules.add1 import loadmap, compressArray, decompress, makenumpy
 from ..global_modules.errors import LisfloodWarning
+from . import HydroModule
 
 
-class reservoir(object):
+class reservoir(HydroModule):
 
     """
     # ************************************************************
     # ***** RESERVOIR    *****************************************
     # ************************************************************
     """
+    input_files_keys = []
+    module_name = 'Reservoir'
 
     def __init__(self, reservoir_variable):
         self.var = reservoir_variable

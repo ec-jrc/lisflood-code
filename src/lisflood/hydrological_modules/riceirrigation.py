@@ -20,14 +20,17 @@ import numpy as np
 
 from ..global_modules.add1 import loadmap
 from ..global_modules.settings import MaskInfo, LisSettings
+from . import HydroModule
 
 
-class riceirrigation(object):
+class riceirrigation(HydroModule):
     """
     # ************************************************************
     # ***** Rice irrigation   ************************************
     # ************************************************************
     """
+    input_files_keys = []
+    module_name = 'RiceIrrigation'
 
     def __init__(self, riceirrigation_variable):
         self.var = riceirrigation_variable

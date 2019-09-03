@@ -21,6 +21,7 @@ import os
 
 from ..global_modules.errors import LisfloodWarning
 from ..global_modules.settings import LisSettings
+from ..global_modules.checkers import is_path, is_number
 
 
 class HydroModule(object):
@@ -28,15 +29,15 @@ class HydroModule(object):
     module_name = None
 
     @classmethod
-    def check_input_files(cls):
+    def check_input_files(cls, option):
         settings = LisSettings.instance()
         binding = settings.binding
         ok = True
-        for key in cls.input_files_keys:
-            if not binding.get(key) or not os.path.exists(binding[key]) or not os.path.isfile(binding[key]):
+        keys = cls.input_files_keys[option]
+        for k in keys:
+            if not binding.get(k) or (is_path(binding[k]) and not os.path.isfile(binding[k])) or not is_number(binding[k]):
                 ok = False
                 print(LisfloodWarning('Settings {} or File {}: missing settings or file for {} module.'.format(
-                    key, binding.get(key, ''), cls.module_name))
+                    k, binding.get(k, 'MISSING'), cls.module_name))
                 )
         return ok
-

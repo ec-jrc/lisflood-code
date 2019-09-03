@@ -23,14 +23,17 @@ from netCDF4 import Dataset
 
 from ..global_modules.add1 import loadmap, decompress, compressArray, readnetcdf, readmapsparse
 from ..global_modules.settings import get_calendar_type, calendar_inconsistency_warning, LisSettings, MaskInfo
+from . import HydroModule
 
 
-class waterabstraction(object):
+class waterabstraction(HydroModule):
     """
     # ************************************************************
     # ***** Water abstraction ************************************
     # ************************************************************
     """
+    input_files_keys = []
+    module_name = 'WaterAbstraction'
 
     def __init__(self, waterabstraction_variable):
         self.var = waterabstraction_variable

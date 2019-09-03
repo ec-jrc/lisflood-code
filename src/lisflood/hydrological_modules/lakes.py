@@ -22,15 +22,19 @@ import pcraster
 from ..global_modules.errors import LisfloodWarning
 from ..global_modules.add1 import loadmap, compressArray, decompress
 from ..global_modules.settings import LisSettings, MaskInfo
+from . import HydroModule
 
 
-class lakes(object):
+class lakes(HydroModule):
 
     """
     # ************************************************************
     # ***** LAKES        *****************************************
     # ************************************************************
     """
+    input_files_keys = {'simulateLakes', ['LakeSites', 'TabLakeArea', 'TabLakeA', 'LakeMultiplier',
+                                          'LakeInitialLevelValue', 'TabLakeAvNetInflowEstimate', 'PrevDischarge']}
+    module_name = 'Lakes'
 
     def __init__(self, lakes_variable):
         self.var = lakes_variable
@@ -91,7 +95,7 @@ class lakes(object):
 
             LakeArea = pcraster.lookupscalar(str(binding['TabLakeArea']), LakeSitePcr)
             LakeAreaC = compressArray(LakeArea)
-            self.var.LakeAreaCC = np.compress(LakeSitesC>0,LakeAreaC)
+            self.var.LakeAreaCC = np.compress(LakeSitesC > 0, LakeAreaC)
 
             # Surface area of each lake [m2]
             LakeA = pcraster.lookupscalar(str(binding['TabLakeA']), LakeSitePcr)

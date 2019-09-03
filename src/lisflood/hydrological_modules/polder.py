@@ -21,15 +21,18 @@ import pcraster
 
 from ..global_modules.add1 import loadmap
 from ..global_modules.settings import LisSettings
+from . import HydroModule
 
 
-class polder(object):
+class polder(HydroModule):
 
     """
     # ************************************************************
     # ***** POLDER       *****************************************
     # ************************************************************
     """
+    input_files_keys = []
+    module_name = 'Polder'
 
     def __init__(self, polder_variable):
         self.var = polder_variable

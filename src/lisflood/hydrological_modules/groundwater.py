@@ -31,7 +31,8 @@ class groundwater(HydroModule):
     # ***** GROUNDWATER   *****************************************
     # ************************************************************
     """
-    input_files_keys = []
+    input_files_keys = {'all': ['UpperZoneTimeConstant', 'LowerZoneTimeConstant', 'LZInitValue',
+                                'LZThreshold', 'UZInitValue', 'UZForestInitValue', 'UZIrrigationInitValue']}
     module_name = 'GroundWater'
 
     def __init__(self, groundwater_variable):

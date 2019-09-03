@@ -19,16 +19,19 @@ from nine import range
 
 import numpy as np
 
-from lisflood.global_modules.settings import LisSettings, MaskInfo
+from ..global_modules.settings import LisSettings, MaskInfo
+from . import HydroModule
 
 
-class soilloop(object):
+class soilloop(HydroModule):
 
     """
     # ************************************************************
     # ***** SOIL LOOP    *****************************************
     # ************************************************************
     """
+    input_files_keys = []
+    module_name = 'SoilLoop'
 
     def __init__(self, soilloop_variable):
         self.var = soilloop_variable

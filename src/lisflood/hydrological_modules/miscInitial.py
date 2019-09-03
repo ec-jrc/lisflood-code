@@ -24,6 +24,7 @@ import numpy as np
 
 from ..global_modules.add1 import loadmap, compressArray
 from ..global_modules.settings import calendar, MaskAttrs, MaskInfo, LisSettings
+from . import HydroModule
 
 
 def coordinatesLand(eastings_forcing, northings_forcing):
@@ -35,14 +36,16 @@ def coordinatesLand(eastings_forcing, northings_forcing):
     row_slice = slice(top_row, top_row + maskattrs['row'])
     col_slice = slice(left_col, left_col + maskattrs['col'])
     maskinfo = MaskInfo.instance()
-    return [co[row_slice,col_slice][~maskinfo.info.mask] for co in np.meshgrid(eastings_forcing, northings_forcing)]
+    return [co[row_slice, col_slice][~maskinfo.info.mask] for co in np.meshgrid(eastings_forcing, northings_forcing)]
 
 
-class miscInitial(object):
+class miscInitial(HydroModule):
 
     """
     Miscellaneous repeatedly used expressions
     """
+    input_files_keys = []
+    module_name = 'MiscInitial'
 
     def __init__(self, misc_variable):
         self.var = misc_variable
@@ -68,11 +71,11 @@ class miscInitial(object):
             # Limitation: always assumes square grid cells (not rectangles!). Size of grid cells
             # may vary across map though
 
-            self.var.PixelLengthPcr = loadmap('PixelLengthUser',pcr=True)
+            self.var.PixelLengthPcr = loadmap('PixelLengthUser', pcr=True)
             self.var.PixelLength = compressArray(self.var.PixelLengthPcr)
             # Length of pixel [m]
             # Area of pixel [m2]
-            self.var.PixelAreaPcr = loadmap('PixelAreaUser',pcr=True)
+            self.var.PixelAreaPcr = loadmap('PixelAreaUser', pcr=True)
             self.var.PixelArea = compressArray(self.var.PixelAreaPcr)
 
         else:
