@@ -21,7 +21,7 @@ Parallelisation is achieved by grouping the pixels in ordered sets. Within each 
 pixelsm in previous sets have already been routed, pixels can be routed independently of each other
 and thus in parallel. For further details, see the method kinematicWave._setRoutingOrders.
 """
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 __author__ = "Emiliano Gelati"
 __contact__ = "emiliano.gelati@ec.europa.eu"
@@ -29,29 +29,45 @@ __version__ = "1.0"
 __date__ = "2016/06/01"
 
 import os
+import glob
+
 import numpy as np
 import pandas as pd
 import numexpr as nx
 from multiprocessing import cpu_count
 from platform import system
 
-# IMPORT THE PARALLELISE KINEMATIC WAVE RUTING MODULE: IF IT WAS NOT COMPILED ON THE CURRENT MACHINE, ROUTING IS EXECUTED SERIALLY
-# If the binary .so file does not exist or is not newer than the source .pyx, then the Cython module is imported directly from the source.
-# For safety against binary files compiled on other machines and copied here, the binary must be at least 10 seconds younger than the source (see line 13).
-# Importing directly from the source prevents using OpenMP multithreading. In such case, the routing is executed serially.
+from ..global_modules.errors import LisfloodWarning
+
+# IMPORT THE PARALLELISE KINEMATIC WAVE RUTING MODULE: IF IT WAS NOT COMPILED ON THE CURRENT MACHINE,
+# ROUTING IS EXECUTED SERIALLY if the binary .so file does not exist or is not newer than the source .pyx,
+# then the Cython module is imported directly from the source.
+# For safety against binary files compiled on other machines and copied here,
+# the binary must be at least 10 seconds younger than the source (see line 13).
+# Importing directly from the source prevents using OpenMP multithreading.
+# In such case, the routing is executed serially.
 
 WINDOWS_OS = system() == "Windows"
 ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), "kinematic_wave_parallel_tools")
-SRC = ROOT + ".pyx"
-BIN = ROOT + (".pyd" if WINDOWS_OS else ".so")
+SRC = '{}.pyx'.format(ROOT)
+BINS = '{}*.so'.format(ROOT) if not WINDOWS_OS else '{}*.pyd'.format(ROOT)
 
+bins = glob.glob(BINS)
 
-if not os.path.exists(BIN) or (os.path.exists(BIN) and os.path.exists(SRC) and os.stat(BIN).st_mtime < os.stat(SRC).st_mtime):
-    import pyximport                         # Activate the direct import from source of Cython modules.
-    setup_args = {"script_args": ["--compiler=mingw32"]} if WINDOWS_OS else None # Extra compiler argument under Windows
-    pyximport.install(setup_args=setup_args) # If this is executed, the binary .so file will be ignored and the routing is executed serially.
-    print("""WARNING:\nThe Cython module {} has not been compiled on the current machine (to compile, see instructions in the module's docstring).
-The kinematic wave routing is executed serially (not in parallel).""".format(SRC))
+older = False
+for binary in bins:
+    if os.stat(binary).st_mtime < os.stat(SRC).st_mtime:
+        older = True
+        break
+
+if not bins or older:
+    # Activate the direct import from source of Cython modules.
+    import pyximport
+    setup_args = {"script_args": ["--compiler=mingw32"]} if WINDOWS_OS else None
+    # If this is executed, the binary .so file will be ignored and the routing is executed serially.
+    pyximport.install(setup_args=setup_args)
+    print(LisfloodWarning("""The Cython module {} has not been compiled on the current machine (to compile, see instructions in the module's docstring).
+The kinematic wave routing is executed serially (not in parallel).""".format(SRC)))
 
 from . import kinematic_wave_parallel_tools as kwpt
 

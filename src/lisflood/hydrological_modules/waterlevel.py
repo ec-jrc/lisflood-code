@@ -29,7 +29,7 @@ class waterlevel(HydroModule):
     # ***** WATER LEVEL    *****************************************
     # ************************************************************
     """
-    input_files_keys = []
+    input_files_keys = {'simulateWaterLevels': ['FloodPlainWidth']}
     module_name = 'WaterLevel'
 
     def __init__(self, waterlevel_variable):

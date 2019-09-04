@@ -31,7 +31,7 @@ class transmission(HydroModule):
     # ***** Transmission loss ************************************
     # ************************************************************
     """
-    input_files_keys = []
+    input_files_keys = {'TransLoss': ['TransArea', 'TransSub', 'UpAreaTrans', 'TransPower1']}
     module_name = 'Transmission'
 
     def __init__(self, transmission_variable):

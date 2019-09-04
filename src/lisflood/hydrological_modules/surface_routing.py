@@ -31,7 +31,8 @@ class surface_routing(HydroModule):
     # ***** SURFACE ROUTING **************************************
     # ************************************************************
     """
-    input_files_keys = []
+    input_files_keys = {'all': ['OFOtherInitValue', 'OFForestInitValue', 'OFDirectInitValue',
+                                'Grad', 'GradMin', 'OFDepRef']}
     module_name = 'SurfaceRouting'
 
     def __init__(self, surface_routing_variable):

@@ -31,7 +31,7 @@ class leafarea(HydroModule):
    # ***** LEAF AREA INDEX DATA ****************************
    # ************************************************************
     """
-    input_files_keys = []
+    input_files_keys = {'all': ['kdf', 'LAIOtherMaps', 'LAIForestMaps', 'LAIIrrigationMaps']}
     module_name = 'LeafArea'
 
     def __init__(self, leafarea_variable):

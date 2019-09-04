@@ -88,7 +88,7 @@ The option "numberParallelThreadsKinematicWave" may take the following values:
             </comment>
 
 
-            <textvar name="PathRoot" value="/home/jerusa.peixoto/Madeira">
+            <textvar name="PathRoot" value="$(SettingsDir)/..">
                 <comment>
                     Root directory
                 </comment>
@@ -132,7 +132,7 @@ The option "numberParallelThreadsKinematicWave" may take the following values:
                 </comment>
             </textvar>
 
-            <textvar name="netCDFtemplate" value="$(PathMaps)/nc/elvstd.nc">
+            <textvar name="netCDFtemplate" value="$(PathMaps)/elvstd.nc">
                 <comment>
                     netcdf template used to copy metadata information for writing netcdf
                     $(PathEvapo)/$(PrefixE0)
@@ -155,7 +155,7 @@ The option "numberParallelThreadsKinematicWave" may take the following values:
                 </comment>
             </textvar>
 
-            <textvar name="CalendarDayStart" value="01/01/2010">
+            <textvar name="CalendarDayStart" value="02/01/1986 00:00">
                 <comment>
                     Calendar day number of 1st day in model run
                     Day of the year of first map (e.g. xx000.001) even if the model start from map e.g. 500
@@ -172,28 +172,19 @@ The option "numberParallelThreadsKinematicWave" may take the following values:
 
             <textvar name="DtSecChannel" value="21600">
                 <comment>
-                    17280 5 times subrouting
-                    21600 4 times
                     Sub time step used for kinematic wave channel routing [seconds]
                     Within the model,the smallest out of DtSecChannel and DtSec is used
                 </comment>
             </textvar>
 
-            <textvar name="StepStart" value="1097">
+            <textvar name="StepStart" value="1300">
                 <comment>
-                    4018
                     Number of first time step in simulation
                 </comment>
             </textvar>
 
-            <textvar name="StepEnd" value="2556">
+            <textvar name="StepEnd" value="1350">
                 <comment>
-                    Reforecasts_2017 1/1/1996 1
-                    Reforecasts_2017 31/12/2009 5114
-                    Reforecasts_2017 1/1/2010 5115 = 1 in ERA5
-                    Reforecasts_2017 31/12/2015 7305
-                    Reforecasts_2017 31/12/2016 7671 = 2557 in ERA5
-
                     Number of last time step in simulation
                 </comment>
             </textvar>
@@ -381,7 +372,7 @@ The option "numberParallelThreadsKinematicWave" may take the following values:
                 **************************************************************
             </comment>
 
-            <textvar name="PathOut" value="/home/jerusa.peixoto/Madeira/out">
+            <textvar name="PathOut" value="$(PathRoot)/outputs">
                 <comment>
                     Output path (org=$(PathRoot)/out)
                 </comment>
@@ -418,32 +409,32 @@ The option "numberParallelThreadsKinematicWave" may take the following values:
                 </comment>
             </textvar>
 
-            <textvar name="PathMapsTables" value="$(PathMaps)/nc">
+            <textvar name="PathMapsTables" value="$(PathMaps)/table2map">
                 <comment>
                     Maps instead tables path
                 </comment>
             </textvar>
 
-            <textvar name="PathSoilHyd" value="$(PathMaps)/nc">
+            <textvar name="PathSoilHyd" value="$(PathMaps)/soilhyd">
                 <comment>
                     Maps instead tables for soil hydraulics path
                 </comment>
             </textvar>
 
             <!-- <textvar name="PathMapsLandUseChange" value="$(PathMaps)/landusechange"> -->
-            <textvar name="PathMapsLandUseChange" value="$(PathMaps)/nc">
+            <textvar name="PathMapsLandUseChange" value="$(PathMaps)/landusechange">
                 <comment>
                     Maps for transient land use changes every 5 years
                 </comment>
             </textvar>
 
-            <textvar name="PathMapsLanduse" value="$(PathMaps)/nc">
+            <textvar name="PathMapsLanduse" value="$(PathMaps)/landuse2000">
                 <comment>
                     Maps for land use fractions and related land use maps
                 </comment>
             </textvar>
 
-            <textvar name="PathWaterUse" value="$(PathRoot)/wateruse">
+            <textvar name="PathWaterUse" value="$(PathRoot)/wateruse2000">
                 <comment>
                     Water use maps path
                 </comment>
@@ -456,13 +447,13 @@ The option "numberParallelThreadsKinematicWave" may take the following values:
                 </comment>
             </textvar>
 
-            <textvar name="PathLAI" value="$(PathMaps)/nc">
+            <textvar name="PathLAI" value="$(PathRoot)/lai">
                 <comment>
                     Leaf Area Index maps path
                 </comment>
             </textvar>
 
-            <textvar name="PathVarWaterfraction" value="$(PathRoot)/variablewater">
+            <textvar name="PathVarWaterfraction" value="$(PathMeteo)/variablewater">
                 <comment>
                     variable water fraction maps path
                 </comment>
@@ -485,6 +476,23 @@ The option "numberParallelThreadsKinematicWave" may take the following values:
                     if init. condition are stored as netCDF with different time steps
                     this variable indicates which time step to use
                     Either as date e.g. 1/1/2010 or as number e.g. 5
+                </comment>
+            </textvar>
+            <textvar name="OFDirectInitValue" value="0">
+                <comment>
+                    Reported water direct
+                </comment>
+            </textvar>
+
+            <textvar name="OFOtherInitValue" value="0">
+                <comment>
+                    Reported water other
+                </comment>
+            </textvar>
+
+            <textvar name="OFForestInitValue" value="0">
+                <comment>
+                    Reported water forest
                 </comment>
             </textvar>
 
@@ -759,19 +767,19 @@ The option "numberParallelThreadsKinematicWave" may take the following values:
                 </comment>
             </textvar>
 
-            <textvar name="PrefixE0" value="e">
+            <textvar name="PrefixE0" value="e0">
                 <comment>
                     prefix E0 maps
                 </comment>
             </textvar>
 
-            <textvar name="PrefixES0" value="e">
+            <textvar name="PrefixES0" value="e0">
                 <comment>
                     prefix ES0 maps
                 </comment>
             </textvar>
 
-            <textvar name="PrefixET0" value="et">
+            <textvar name="PrefixET0" value="e0">
                 <comment>
                     prefix ET0 maps
                 </comment>
@@ -999,7 +1007,7 @@ The option "numberParallelThreadsKinematicWave" may take the following values:
                 </comment>
             </textvar>
 
-            <textvar name="EnergyConsumptiveUseFraction" value="$(PathMaps)/nc/energyconsumptiveuse">
+            <textvar name="EnergyConsumptiveUseFraction" value="$(PathMaps)/energyconsumptiveuse">
                 <comment>
                     # Consumptive Use (1-Recycling ratio) for energy water use (0-1)
                     # Source: Torcellini et al. (2003) "Consumptive Use for US Power Production"
@@ -1071,7 +1079,7 @@ The option "numberParallelThreadsKinematicWave" may take the following values:
                 - calibrate on GwLossFraction if necessary
             </comment>
 
-            <textvar name="LZThreshold" value="$(PathMaps)/nc/lzthreshold">
+            <textvar name="LZThreshold" value="$(PathMaps)/lzthreshold">
                 <comment>
                     threshold value below which there is no outflow to the channel
                 </comment>
@@ -1083,7 +1091,7 @@ The option "numberParallelThreadsKinematicWave" may take the following values:
                 </comment>
             </textvar>
 
-            <textvar name="GroundwaterBodies" value="$(PathMaps)/nc/gwbodies">
+            <textvar name="GroundwaterBodies" value="$(PathMaps)/gwbodies">
                 <comment>
                     map of aquifers (0/1), used to smoothen LZ near extraction areas
                 </comment>
@@ -1100,13 +1108,13 @@ The option "numberParallelThreadsKinematicWave" may take the following values:
 
             </comment>
 
-            <textvar name="FracMaxWater" value="$(PathMaps)/nc/fracmaxwater">
+            <textvar name="FracMaxWater" value="$(PathMaps)/fracmaxwater">
                 <comment>
                     Fraction of maximum extend of water
                 </comment>
             </textvar>
 
-            <textvar name="LakeMask" value="$(PathMaps)/nc/lakemask">
+            <textvar name="LakeMask" value="$(PathMaps)/lakemask">
                 <comment>
                     Mask with Lakes from GLWD database
                 </comment>
@@ -1434,13 +1442,13 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
             </textvar>
 
-            <textvar name="StepStart" value="1097">
+            <textvar name="StepStart" value="$(StepStart)">
                 <comment>
                     Number of first time step in simulation
                 </comment>
             </textvar>
 
-            <textvar name="StepEnd" value="2556">
+            <textvar name="StepEnd" value="$(StepEnd)">
                 <comment>
                     Number of last time step in simulation
                 </comment>
@@ -1881,6 +1889,32 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
             <textvar name="WaterDepthInitValue" value="$(WaterDepthInitValue)">
                 <comment>
                     initial overland flow water depth [mm]
+                </comment>
+            </textvar>
+            <textvar name="OFDirectInitValue" value="$(OFDirectInitValue)">
+                <comment>
+                    Reported water direct
+                </comment>
+            </textvar>
+
+            <textvar name="OFForestState" value="$(OFForestState)">
+                <comment>
+                </comment>
+            </textvar>
+            <textvar name="OFDirectState" value="$(OFDirectState)">
+                <comment>
+                </comment>
+            </textvar>
+
+            <textvar name="OFOtherInitValue" value="$(OFOtherInitValue)">
+                <comment>
+                    Reported water other
+                </comment>
+            </textvar>
+
+            <textvar name="OFForestInitValue" value="$(OFForestInitValue)">
+                <comment>
+                    Reported water forest
                 </comment>
             </textvar>
 
@@ -2324,7 +2358,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
             </textvar>
 
-            <textvar name="LandUseMask" value="$(PathMaps)/nc/lusemask">
+            <textvar name="LandUseMask" value="$(PathMaps)/lusemask">
                 <comment>
                     Land Use Mask
                 </comment>
@@ -2363,7 +2397,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
             </textvar>
 
-            <textvar name="WUseRegion" value="$(PathMaps)/nc/wregion">
+            <textvar name="WUseRegion" value="$(PathMaps)/wregion">
                 <comment>
                 </comment>
             </textvar>
@@ -3829,7 +3863,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="ElevationStD" value="$(PathMaps)/nc/elvstd">
+                <textvar name="ElevationStD" value="$(PathMaps)/elvstd">
                     <comment>
                         Elevation standard deviation [m], i.e. altitude difference elevation within pixel.
                         Used for sub-pixel modelling of snow accumulation
@@ -4141,7 +4175,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="ChanLength" value="$(PathMaps)/chanleng">
+                <textvar name="ChanLength" value="$(PathMaps)/chanlength">
                     <comment>
                         Channel length [meters]
                     </comment>
@@ -4160,7 +4194,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="FloodPlainWidth" value="$(PathMaps)/nc/chanflpn">
+                <textvar name="FloodPlainWidth" value="$(PathMaps)/chanflpn">
                     <comment>
                         Floodplain Width [meters]
                     </comment>
@@ -4368,7 +4402,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="ReservoirSites" value="$(PathMaps)/nc/res_687">
+                <textvar name="ReservoirSites" value="$(PathMaps)/res_687">
                     <comment>
                         Map with location of reservoirs (number]
                     </comment>
@@ -4487,7 +4521,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     **************************************************************
                 </comment>
 
-                <textvar name="LakeSites" value="$(PathMaps)/nc/lakes_463">
+                <textvar name="LakeSites" value="$(PathMaps)/lakes_463">
                     <comment>
                         Map with location of lakes
                     </comment>

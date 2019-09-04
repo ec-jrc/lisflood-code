@@ -37,7 +37,7 @@ from netCDF4 import Dataset, date2num, num2date
 from pandas._libs.tslibs.parsing import parse_time_string
 import numpy as np
 
-from .errors import LisfloodError, LisfloodWarning
+from .errors import LisfloodError, LisfloodWarning, LisfloodFileError
 from .decorators import cached
 from .default_options import default_options
 
@@ -190,7 +190,8 @@ class LisSettings(with_metaclass(Singleton)):
 
     def __init__(self, settings_file):
         dom = xml.dom.minidom.parse(settings_file)
-        self.settings_path = os.path.normpath(os.path.dirname((os.path.abspath(settings_file))))
+        self.settings_dir = os.path.normpath(os.path.dirname((os.path.abspath(settings_file))))
+        self.settings_path = os.path.normpath(os.path.abspath(settings_file))
         user_settings, bindings = self._bindings(dom)
         self.timestep_init = None if not bindings.get('timestepInit') else bindings['timestepInit']
         self.output_dir = self._out_dirs(user_settings)
@@ -315,7 +316,7 @@ class LisSettings(with_metaclass(Singleton)):
         #  built-in user variables
         user = {
             'ProjectDir': project_dir, 'ProjectPath': project_dir,
-            'SettingsDir': self.settings_path, 'SettingsPath': self.settings_path,
+            'SettingsDir': self.settings_dir, 'SettingsPath': self.settings_dir,
         }
         # get all the bindings in the first part of the settingsfile = lfuser
         # list of elements "lfuser" in settings file
@@ -342,9 +343,11 @@ class LisSettings(with_metaclass(Singleton)):
             binding[i] = expr
 
         # Read the calendar type from the precipitation forcing NetCDF file
-        with Dataset(binding["PrecipitationMaps"] + ".nc") as nc:
+        precipitation_map_path = binding["PrecipitationMaps"] + '.nc'
+        if not os.path.exists(precipitation_map_path):
+            raise LisfloodFileError(precipitation_map_path)
+        with Dataset(precipitation_map_path) as nc:
             binding["calendar_type"] = get_calendar_type(nc)
-
         return user, binding
 
     @staticmethod
@@ -358,8 +361,7 @@ class LisSettings(with_metaclass(Singleton)):
         for i in repsteps:
             if '..' in i:
                 j = list(map(int, i.split('..')))
-                for jj in range(j[0], j[1] + 1):
-                    jjj.append(jj)
+                jjj = list(range(j[0], j[1] + 1))
             else:
                 jjj.append(i)
         res['rep'] = list(map(int, jjj))

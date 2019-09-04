@@ -50,10 +50,8 @@ class LisfloodModel_dyn(DynamicModel):
         if i == 1:
             # flag for netcdf output for all, steps and end
             _ = CDFFlags(uuid.uuid4())  # init CDF flags
-            # globals.cdfFlag = [0, 0, 0, 0 ,0 ,0,0]
 
         self.TimeSinceStart = self.currentTimeStep() - self.firstTimeStep() + 1
-
         if flags['loud']:
             print("%-6i %10s" % (self.currentTimeStep(), self.CalendarDate.strftime("%d/%m/%Y %H:%M")))
         else:
@@ -64,6 +62,10 @@ class LisfloodModel_dyn(DynamicModel):
                     # Print step number and date to console
                     sys.stdout.write("\r%d" % i), sys.stdout.write("%s" % " - "+self.CalendarDate.strftime("%d/%m/%Y %H:%M"))
                     sys.stdout.flush()
+        if i == self.nrTimeSteps():
+            # last timestep. Send a new line to the terminal for polishness
+            sys.stdout.write('\n')
+            sys.stdout.flush()
 
         # ************************************************************
         """ up to here it was fun, now the real stuff starts

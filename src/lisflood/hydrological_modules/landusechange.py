@@ -36,7 +36,10 @@ class landusechange(HydroModule):
     # rice irrigation areas
     # other
     """
-    input_files_keys = {'': []}
+    input_files_keys = {'all': ['ForestFraction', 'DirectRunoffFraction', 'WaterFraction',
+                                'IrrigationFraction', 'RiceFraction', 'OtherFraction'],
+                        'TransientLandUseChange': ['ForestFractionMaps', 'DirectRunoffFractionMaps', 'WaterFractionMaps',
+                                                   'IrrigationFractionMaps', 'RiceFractionMaps', 'OtherFractionMaps']}
     module_name = 'LandUseChange'
 
     def __init__(self, landusechange_variable):

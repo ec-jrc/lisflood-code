@@ -28,7 +28,7 @@ if os.path.exists(src_dir):
 
 from pcraster.framework import EnsKalmanFilterFramework, MonteCarloFramework
 
-from lisfloodutilities.checkers import modulesinput
+from .global_modules.checkers import ModulesInputs
 from .global_modules.zusatz import DynamicFramework
 from .Lisflood_EnKF import LisfloodModel_EnKF
 from .Lisflood_dynamic import LisfloodModel_dyn
@@ -54,16 +54,20 @@ class LisfloodModel(LisfloodModel_ini, LisfloodModel_dyn, LisfloodModel_monteCar
 
 def lisfloodexe(lissettings=None):
 
-    # read options and bindings and launch Lisflood model computation
-    # returns option binding and ReportSteps - global dictionaries
-
-    # optionBinding(settings, optionxml)
-    # lissettings = LisSettings(settings)
     _ = CDFFlags(uuid.uuid4())
     if isinstance(lissettings, str):
+        # we passed file path
         lissettings = LisSettings(lissettings)
     else:
+        # deal with LisSettings instance
         lissettings = LisSettings.instance() if lissettings is None else lissettings
+
+    try:
+        ModulesInputs.check(lissettings)
+    except LisfloodError as e:
+        print(e)
+        sys.exit(1)
+
     binding = lissettings.binding
     option = lissettings.options
     report_steps = lissettings.report_steps
@@ -226,5 +230,4 @@ def main():
     flags = lissettings.flags
     if not (flags['veryquiet'] or flags['quiet']):
         headerinfo()
-    modulesinput.check(lissettings)
     lisfloodexe(lissettings)

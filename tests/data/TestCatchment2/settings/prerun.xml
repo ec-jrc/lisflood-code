@@ -332,7 +332,7 @@ The option "numberParallelThreadsKinematicWave" may take the following values:
                 **************************************************************
             </comment>
 
-            <textvar name="PathOut" value="$(PathRoot)/out">
+            <textvar name="PathOut" value="$(PathRoot)/outputs">
                 <comment>
                     Output path (org=$(PathRoot)/out)
                 </comment>

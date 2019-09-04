@@ -29,7 +29,8 @@ class riceirrigation(HydroModule):
     # ***** Rice irrigation   ************************************
     # ************************************************************
     """
-    input_files_keys = []
+    input_files_keys = {'riceIrrigation': ['RiceFlooding', 'RicePercolation', 'RicePlantingDay1',
+                                           'RiceHarvestDay1', 'RicePlantingDay2', 'RiceHarvestDay2']}
     module_name = 'RiceIrrigation'
 
     def __init__(self, riceirrigation_variable):

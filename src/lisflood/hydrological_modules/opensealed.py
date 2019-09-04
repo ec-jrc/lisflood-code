@@ -29,7 +29,7 @@ class opensealed(HydroModule):
     # ***** SOIL LOOP    *****************************************
     # ************************************************************
     """
-    input_files_keys = []
+    input_files_keys = {'all': []}
     module_name = 'OpenSealed'
 
     def __init__(self, opensealed_variable):

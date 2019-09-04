@@ -40,7 +40,11 @@ class routing(HydroModule):
     # ***** ROUTING      *****************************************
     # ************************************************************
     """
-    input_files_keys = []
+    input_files_keys = {'all': ['beta', 'ChanLength', 'Ldd', 'Channels', 'ChanGrad', 'ChanGradMin',
+                                'CalChanMan', 'ChanMan', 'ChanBottomWidth', 'ChanDepthThreshold',
+                                'ChanSdXdY', 'TotalCrossSectionAreaInitValue', 'PrevDischarge'],
+                        'SplitRouting': ['CrossSection2AreaInitValue', 'PrevSideflowInitValue', 'CalChanMan2'],
+                        'dynamicWave': ['ChannelsDynamic']}
     module_name = 'Routing'
 
     def __init__(self, routing_variable):
@@ -83,7 +87,7 @@ class routing(HydroModule):
 
 # -------------------------- LDD
 
-        self.var.Ldd = lddmask(loadmap('Ldd',pcr=True,lddflag=True), self.var.MaskMap)
+        self.var.Ldd = lddmask(loadmap('Ldd', pcr=True, lddflag=True), self.var.MaskMap)
         # Cut ldd to size of MaskMap (NEW, 29/9/2004)
         # Prevents 'unsound' ldd if MaskMap covers sub-area of ldd
 
@@ -100,13 +104,12 @@ class routing(HydroModule):
         self.var.InvUpArea = 1 / self.var.UpArea
         # Calculate inverse, so we can multiply in dynamic (faster than divide)
 
-        self.var.IsChannelPcr = boolean(loadmap('Channels',pcr=True))
+        self.var.IsChannelPcr = boolean(loadmap('Channels', pcr=True))
         self.var.IsChannel = np.bool8(compressArray(self.var.IsChannelPcr))
         # Identify channel pixels
         self.var.IsChannelKinematic = self.var.IsChannel.copy()
         # Identify kinematic wave channel pixels
         # (identical to IsChannel, unless dynamic wave is used, see below)
-        #self.var.IsStructureKinematic = pcraster.boolean(0)
         self.var.IsStructureKinematic = np.bool8(maskinfo.in_zero())
 
         # Map that identifies special inflow/outflow structures (reservoirs, lakes) within the
@@ -125,29 +128,15 @@ class routing(HydroModule):
         # find outlet points...
 
         if option['dynamicWave']:
-            IsChannelDynamic = boolean(loadmap('ChannelsDynamic',pcr=True))
+            IsChannelDynamic = boolean(loadmap('ChannelsDynamic', pcr=True))
             # Identify channel pixels where dynamic wave is used
             self.var.IsChannelKinematic = (self.var.IsChannelPcr == 1) & (IsChannelDynamic == 0)
             # Identify (update) channel pixels where kinematic wave is used
             self.var.LddKinematic = lddmask(self.var.Ldd, self.var.IsChannelKinematic)
             # Ldd for kinematic wave: ends (pit) just before dynamic stretch
-            LddDynamic = lddmask(self.var.Ldd, IsChannelDynamic)
-            # Ldd for dynamic wave
 
             # Following statements produce an ldd network that connects the pits in
             # LddKinematic to the nearest downstream dynamic wave pixel
-            LddToDyn = lddrepair(ifthenelse(IsChannelDynamic, 5, self.var.Ldd))
-            # Temporary ldd: flow paths end in dynamic pixels
-            PitsKinematic = cover(boolean(pit(self.var.LddKinematic)), 0)
-            # Define start of each flow path at pit on LddKinematic
-            PathKinToDyn = path(LddToDyn, PitsKinematic)
-            # Identify paths that connect pits in LddKinematic to dynamic wave
-            # pixels
-            LddKinToDyn = lddmask(LddToDyn, PathKinToDyn)
-            # Create ldd
-            DynWaveBoundaryCondition = boolean(pit(LddDynamic))
-            # NEW 12-7-2005 (experimental)
-            # Location of boundary condition dynamic wave
 
             self.var.AtLastPoint = (downstream(self.var.Ldd, AtOutflow) == 1) & (AtOutflow != 1) & self.var.IsChannelPcr
 
@@ -168,23 +157,19 @@ class routing(HydroModule):
             # assign unique identifier to each of them
         maskinfo = MaskInfo.instance()
         lddC = compressArray(self.var.LddKinematic)
-        inAr = decompress(np.arange(maskinfo.info.mapC[0],dtype="int32"))
+        inAr = decompress(np.arange(maskinfo.info.mapC[0], dtype="int32"))
         # giving a number to each non missing pixel as id
-        self.var.downstruct = (compressArray(downstream(self.var.LddKinematic,inAr))).astype("int32")
+        self.var.downstruct = (compressArray(downstream(self.var.LddKinematic, inAr))).astype("int32")
         # each upstream pixel gets the id of the downstream pixel
         self.var.downstruct[lddC == 5] = maskinfo.info.mapC[0]
         # all pits gets a high number
-        #d3=np.bincount(self.var.down, weights=loadmap('AvgDis'))[:-1]
         # upstream function in numpy
 
         OutflowPoints = nominal(uniqueid(self.var.AtLastPoint))
-            # and assign unique identifier to each of them
+        # and assign unique identifier to each of them
         self.var.Catchments = (compressArray(catchment(self.var.Ldd, OutflowPoints))).astype(np.int32)
         CatchArea = np.bincount(self.var.Catchments, weights=self.var.PixelArea)[self.var.Catchments]
-        #CatchArea = CatchArea[self.var.Catchments]
         # define catchment for each outflow point
-        #CatchArea = areatotal(self.var.PixelArea, self.var.Catchments)
-
         # Compute area of each catchment [m2]
         # Note: in earlier versions this was calculated using the "areaarea" function,
         # changed to "areatotal" in order to enable handling of grids with spatially
@@ -399,15 +384,15 @@ class routing(HydroModule):
                 self.var.Chan2QStart = self.var.QLimit - compressArray(upstream(self.var.LddKinematic, decompress(self.var.QLimit)))
                 # because kinematic routing with a low amount of discharge leads to long travel time:
                 # Starting Q for second line is set to a higher value
-                self.var.Chan2M3Kin = np.maximum(self.var.CrossSection2Area * self.var.ChanLength + self.var.Chan2M3Start, 0) # TEMPORARY SOLUTION TO VIRTUAL WATER PROBLEM
-                self.var.ChanM3Kin = np.maximum(self.var.ChanM3 - self.var.Chan2M3Kin + self.var.Chan2M3Start, 0) # TEMPORARY SOLUTION TO VIRTUAL WATER PROBLEM
+                self.var.Chan2M3Kin = np.maximum(self.var.CrossSection2Area * self.var.ChanLength + self.var.Chan2M3Start, 0)  # TEMPORARY SOLUTION TO VIRTUAL WATER PROBLEM
+                self.var.ChanM3Kin = np.maximum(self.var.ChanM3 - self.var.Chan2M3Kin + self.var.Chan2M3Start, 0)  # TEMPORARY SOLUTION TO VIRTUAL WATER PROBLEM
                 self.var.Chan2QKin = (self.var.Chan2M3Kin*self.var.InvChanLength*self.var.InvChannelAlpha2)**(self.var.InvBeta)
                 self.var.ChanQKin = (self.var.ChanM3Kin*self.var.InvChanLength*self.var.InvChannelAlpha)**(self.var.InvBeta)
 
         # Initialise parallel kinematic wave router: main channel-only routing if self.var.ChannelAlpha2 is None; else split-routing(main channel + floodplains)
         maskinfo = MaskInfo.instance()
-        self.river_router = kinematicWave(compressArray(self.var.LddKinematic), ~maskinfo.info.mask, self.var.ChannelAlpha,\
-                                          self.var.Beta, self.var.ChanLength, self.var.DtRouting,\
+        self.river_router = kinematicWave(compressArray(self.var.LddKinematic), ~maskinfo.info.mask, self.var.ChannelAlpha,
+                                          self.var.Beta, self.var.ChanLength, self.var.DtRouting,
                                           int(binding["numCPUs_parallelKinematicWave"]), alpha_floodplains=self.var.ChannelAlpha2)
 
 # --------------------------------------------------------------------------

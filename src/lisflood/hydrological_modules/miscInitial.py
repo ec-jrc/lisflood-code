@@ -44,7 +44,8 @@ class miscInitial(HydroModule):
     """
     Miscellaneous repeatedly used expressions
     """
-    input_files_keys = []
+    input_files_keys = {'all': ['DtSecChannel', 'DtSec', 'GwLoss', 'GwPercValue', 'PrScaling', 'CalEvaporation'],
+                        'gridSizeUserDefined': ['PixelLengthUser', 'PixelAreaUser']}
     module_name = 'MiscInitial'
 
     def __init__(self, misc_variable):
