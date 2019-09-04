@@ -23,15 +23,15 @@ from tests import TestLis
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
 
-class TestDrina(TestLis):
+class TestCatch1(TestLis):
     settings_path = os.path.join(current_dir, 'data/TestCatchment1/settings/cold_day_base.xml')
 
     def test_dis(self):
-        return self.listest('dis_drina')
+        return self.listest('dis_1')
 
 
-class TestMadeira(TestLis):
+class TestCatch2(TestLis):
     settings_path = os.path.join(current_dir, 'data/TestCatchment2/settings/prerun.xml')
 
     def test_dis(self):
-        return self.listest('dis_madeira')
+        return self.listest('dis_2')
