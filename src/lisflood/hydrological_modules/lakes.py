@@ -180,7 +180,8 @@ class lakes(HydroModule):
         settings = LisSettings.instance()
         option = settings.options
         maskinfo = MaskInfo.instance()
-        if option['InitLisflood'] and option['simulateLakes']:    # only with no InitLisflood
+        if not(option['InitLisflood']) and option['simulateLakes']:    # only with no InitLisflood
+            #self.var.LakeInflow = cover(ifthen(defined(self.var.LakeSites), upstream(self.var.LddStructuresKinematic, self.var.ChanQ)), scalar(0.0))
             self.var.LakeInflowCC = np.bincount(self.var.downstruct, weights=self.var.ChanQ)[self.var.LakeIndex]
             # Lake inflow in [m3/s]
 
