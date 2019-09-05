@@ -21,9 +21,10 @@ import numpy as np
 
 from ..global_modules.add1 import loadmap
 from ..global_modules.settings import MaskInfo
+from . import HydroModule
 
 
-class snow(object):
+class snow(HydroModule):
 
     """
     # ************************************************************
@@ -39,6 +40,10 @@ class snow(object):
     # Zone B: center third
     # Zone C: upper third
     """
+    input_files_keys = {'all': ['ElevationStD', 'TemperatureLapseRate', 'SnowSeasonAdj',
+                                'TempSnow', 'SnowFactor', 'SnowMeltCoef', 'TempMelt',
+                                'SnowCoverAInitValue', 'SnowCoverBInitValue', 'SnowCoverCInitValue']}
+    module_name = 'Snow'
 
     def __init__(self, snow_variable):
         self.var = snow_variable
@@ -152,7 +157,6 @@ class snow(object):
             RainS = np.where(TavgS >= self.var.TempSnow, self.var.Precipitation, maskinfo.in_zero())
             # if it's snowing then no rain
             SnowMeltS = (TavgS - self.var.TempMelt) * SeasSnowMeltCoef * (1 + 0.01 * RainS) * self.var.DtDay
-
 
             if i < 2:
                 IceMeltS = self.var.Tavg * 7.0 * self.var.DtDay * SummerSeason

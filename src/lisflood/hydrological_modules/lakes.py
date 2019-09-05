@@ -22,15 +22,19 @@ import pcraster
 from ..global_modules.errors import LisfloodWarning
 from ..global_modules.add1 import loadmap, compressArray, decompress
 from ..global_modules.settings import LisSettings, MaskInfo
+from . import HydroModule
 
 
-class lakes(object):
+class lakes(HydroModule):
 
     """
     # ************************************************************
     # ***** LAKES        *****************************************
     # ************************************************************
     """
+    input_files_keys = {'simulateLakes': ['LakeSites', 'TabLakeArea', 'TabLakeA', 'LakeMultiplier',
+                                          'LakeInitialLevelValue', 'TabLakeAvNetInflowEstimate', 'PrevDischarge']}
+    module_name = 'Lakes'
 
     def __init__(self, lakes_variable):
         self.var = lakes_variable
@@ -53,14 +57,12 @@ class lakes(object):
         if option['simulateLakes']:
 
             LakeSitesC = loadmap('LakeSites')
-
             LakeSitesC[LakeSitesC < 1] = 0
             LakeSitesC[self.var.IsChannel == 0] = 0
-            # self.var.LakeSites = ifthen((defined(self.var.LakeSites) & boolean(decompress(self.var.IsChannel))), self.var.LakeSites)
             # Get rid of any lakes that are not part of the channel network
 
             # mask lakes sites when using sub-catchments mask
-            self.var.LakeSitesCC = np.compress(LakeSitesC>0,LakeSitesC)
+            self.var.LakeSitesCC = np.compress(LakeSitesC > 0, LakeSitesC)
             self.var.LakeIndex = np.nonzero(LakeSitesC)[0]
 
             if self.var.LakeSitesCC.size == 0:
@@ -70,7 +72,6 @@ class lakes(object):
             # break if no lakes
 
             self.var.IsStructureKinematic = np.where(LakeSitesC > 0, np.bool8(1), self.var.IsStructureKinematic)
-            #self.var.IsStructureKinematic = ifthenelse(defined(self.var.LakeSites), pcraster.boolean(1), self.var.IsStructureKinematic)
             # Add lake locations to structures map (used to modify LddKinematic
             # and to calculate LddStructuresKinematic)
 
@@ -84,14 +85,13 @@ class lakes(object):
             # Get all pixels just upstream of lakes
             #-----------------------
 
-            #self.var.LakeInflowOld = cover(ifthen(defined(self.var.LakeSites), upstream(self.var.LddKinematic, self.var.ChanQ)), scalar(0.0))
             self.var.LakeInflowOldCC = np.bincount(self.var.downstruct, weights=self.var.ChanQ)[self.var.LakeIndex]
             # for Modified Puls Method the Q(inflow)1 has to be used. It is assumed that this is the same as Q(inflow)2 for the first timestep
             # has to be checked if this works in forecasting mode!
 
             LakeArea = pcraster.lookupscalar(str(binding['TabLakeArea']), LakeSitePcr)
             LakeAreaC = compressArray(LakeArea)
-            self.var.LakeAreaCC = np.compress(LakeSitesC>0,LakeAreaC)
+            self.var.LakeAreaCC = np.compress(LakeSitesC > 0, LakeAreaC)
 
             # Surface area of each lake [m2]
             LakeA = pcraster.lookupscalar(str(binding['TabLakeA']), LakeSitePcr)
@@ -181,7 +181,6 @@ class lakes(object):
         option = settings.options
         maskinfo = MaskInfo.instance()
         if not(option['InitLisflood']) and option['simulateLakes']:    # only with no InitLisflood
-
             #self.var.LakeInflow = cover(ifthen(defined(self.var.LakeSites), upstream(self.var.LddStructuresKinematic, self.var.ChanQ)), scalar(0.0))
             self.var.LakeInflowCC = np.bincount(self.var.downstruct, weights=self.var.ChanQ)[self.var.LakeIndex]
             # Lake inflow in [m3/s]
@@ -205,7 +204,6 @@ class lakes(object):
             # solution of this quadratic equation:
             # Q=sqr(-LakeFactor+sqrt(sqr(LakeFactor)+2*SI));
 
-            #self.var.QLakeOutM3Dt = cover(self.var.LakeOutflow * self.var.DtRouting, scalar(0.0))
             QLakeOutM3DtCC = self.var.LakeOutflow * self.var.DtRouting
             # Outflow in [m3] per timestep
             # Needed at every cell, hence cover statement
@@ -216,14 +214,12 @@ class lakes(object):
             # self.var.LakeStorageM3CC < 0 leads to NaN in state files
             # Check LakeStorageM3CC for negative values and set them to zero
             if any(np.isnan(self.var.LakeStorageM3CC)) or any(self.var.LakeStorageM3CC < 0):
-                msg = "Negative or NaN volume for lake storage set to 0. Increase computation time step for routing (DtSecChannel) \n"
+                msg = "Negative or NaN volume for lake storage set to 0. " \
+                      "Increase computation time step for routing (DtSecChannel) \n"
                 print(LisfloodWarning(msg))
                 self.var.LakeStorageM3CC[self.var.LakeStorageM3CC < 0] = 0
                 self.var.LakeStorageM3CC[np.isnan(self.var.LakeStorageM3CC)] = 0
 
-            #self.var.LakeStorageM3CC = cover(self.var.LakeStorageM3CC - self.var.EWLakeM3Dt, scalar(0.0))
-            # New lake storage [m3] (assuming lake surface area equals bottom area)
-            #self.var.LakeStorageM3Balance += LakeIn * self.var.DtRouting - self.var.QLakeOutM3Dt - self.var.EWLakeM3Dt
             self.var.LakeStorageM3BalanceCC += LakeIn * self.var.DtRouting - QLakeOutM3DtCC
             # for mass balance, the lake storage is calculated every time step
             self.var.LakeLevelCC = self.var.LakeStorageM3CC / self.var.LakeAreaCC
@@ -234,16 +230,17 @@ class lakes(object):
 
             if option['repsimulateLakes']:
                 if NoRoutingExecuted == 0:
-                   self.var.LakeInflowM3S = maskinfo.in_zero()
-                   self.var.LakeOutflowM3S = maskinfo.in_zero()
-                   self.var.sumLakeInCC =  self.var.LakeInflowCC * self.var.DtRouting
-                   self.var.sumLakeOutCC = QLakeOutM3DtCC
-                   # for timeseries output - in and outflow to the reservoir is sumed up over the sub timesteps and stored in m/s
-                   # set to zero at first timestep
+                    self.var.LakeInflowM3S = maskinfo.in_zero()
+                    self.var.LakeOutflowM3S = maskinfo.in_zero()
+                    self.var.sumLakeInCC = self.var.LakeInflowCC * self.var.DtRouting
+                    self.var.sumLakeOutCC = QLakeOutM3DtCC
+                    # for timeseries output - in and outflow to the reservoir
+                    # is sumed up over the sub timesteps and stored in m/s
+                    # set to zero at first timestep
                 else:
-                   self.var.sumLakeInCC += self.var.LakeInflowCC * self.var.DtRouting
-                   self.var.sumLakeOutCC += QLakeOutM3DtCC
-                   # summing up over all sub timesteps
+                    self.var.sumLakeInCC += self.var.LakeInflowCC * self.var.DtRouting
+                    self.var.sumLakeOutCC += QLakeOutM3DtCC
+                    # summing up over all sub timesteps
 
             if NoRoutingExecuted == (self.var.NoRoutSteps-1):
 
@@ -251,10 +248,10 @@ class lakes(object):
                 self.var.LakeStorageM3Balance = maskinfo.in_zero()
                 self.var.LakeStorageM3 = maskinfo.in_zero()
                 self.var.LakeLevel = maskinfo.in_zero()
-                np.put(self.var.LakeStorageM3Balance,self.var.LakeIndex,self.var.LakeStorageM3BalanceCC)
-                np.put(self.var.LakeStorageM3,self.var.LakeIndex,self.var.LakeStorageM3CC)
-                np.put(self.var.LakeLevel,self.var.LakeIndex,self.var.LakeLevelCC)
+                np.put(self.var.LakeStorageM3Balance, self.var.LakeIndex, self.var.LakeStorageM3BalanceCC)
+                np.put(self.var.LakeStorageM3, self.var.LakeIndex, self.var.LakeStorageM3CC)
+                np.put(self.var.LakeLevel, self.var.LakeIndex, self.var.LakeLevelCC)
 
                 if option['repsimulateLakes']:
-                   np.put(self.var.LakeInflowM3S ,self.var.LakeIndex,self.var.sumLakeInCC / self.var.DtSec)
-                   np.put(self.var.LakeOutflowM3S,self.var.LakeIndex,self.var.sumLakeOutCC / self.var.DtSec)
+                    np.put(self.var.LakeInflowM3S, self.var.LakeIndex, self.var.sumLakeInCC / self.var.DtSec)
+                    np.put(self.var.LakeOutflowM3S, self.var.LakeIndex, self.var.sumLakeOutCC / self.var.DtSec)

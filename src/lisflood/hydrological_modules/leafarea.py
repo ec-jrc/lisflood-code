@@ -21,15 +21,18 @@ import numpy as np
 
 from ..global_modules.add1 import loadmap, generateName, loadLAI
 from ..global_modules.settings import LisSettings
+from . import HydroModule
 
 
-class leafarea(object):
+class leafarea(HydroModule):
 
     """
    # ************************************************************
    # ***** LEAF AREA INDEX DATA ****************************
    # ************************************************************
     """
+    input_files_keys = {'all': ['kdf', 'LAIOtherMaps', 'LAIForestMaps', 'LAIIrrigationMaps']}
+    module_name = 'LeafArea'
 
     def __init__(self, leafarea_variable):
         self.var = leafarea_variable

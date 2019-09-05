@@ -26,7 +26,6 @@ See the Licence for the specific language governing permissions and limitations 
 ######################################################################
 """
 
-# to work with the new grid engine JRC - workaround with error on pyexpat
 import sys
 
 from lisflood.main import main

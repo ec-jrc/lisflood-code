@@ -21,15 +21,35 @@ import numpy as np
 
 from ..global_modules.settings import MaskInfo, LisSettings
 from ..global_modules.add1 import loadmap, defsoil
+from . import HydroModule
 
 
-class soil(object):
+class soil(HydroModule):
 
     """
     # ************************************************************
     # ***** SOIL         *****************************************
     # ************************************************************
     """
+    input_files_keys = {'all': ['SoilDepth1', 'SoilDepth1Forest', 'SoilDepth2', 'SoilDepth2Forest',
+                                'SoilDepth3', 'SoilDepth3Forest', 'CourantCrit', 'LeafDrainageTimeConstant',
+                                'AvWaterRateThreshold', 'MapCropCoef', 'MapForestCropCoef', 'MapIrrigationCropCoef',
+                                'MapCropGroupNumber', 'MapForestCropGroupNumber', 'MapIrrigationCropGroupNumber',
+                                'MapN', 'MapForestN', 'MapKSat1', 'MapKSat1Forest', 'MapKSat2', 'MapKSat2Forest', 'MapKSat3',
+                                'MapLambda1', 'MapLambda1Forest', 'MapLambda2', 'MapLambda2Forest', 'MapLambda3',
+                                'MapGenuAlpha1', 'MapGenuAlpha1Forest', 'MapGenuAlpha2', 'MapGenuAlpha2Forest', 'MapGenuAlpha3',
+                                'MapThetaSat1', 'MapThetaSat1Forest', 'MapThetaSat2', 'MapThetaSat2Forest', 'MapThetaSat3',
+                                'MapThetaRes1', 'MapThetaRes1Forest', 'MapThetaRes2', 'MapThetaRes2Forest', 'MapThetaRes3',
+                                'ThetaInit1Value', 'ThetaForestInit1Value', 'ThetaIrrigationInit1Value',
+                                'ThetaInit2Value', 'ThetaForestInit2Value', 'ThetaIrrigationInit2Value',
+                                'ThetaInit3Value', 'ThetaForestInit3Value', 'ThetaIrrigationInit3Value',
+                                'b_Xinanjiang', 'PowerPrefFlow',
+                                'DSLRInitValue', 'DSLRForestInitValue', 'DSLRIrrigationInitValue',
+                                'CumIntInitValue', 'CumIntForestInitValue', 'CumIntIrrigationInitValue',
+                                'CumIntSealedInitValue', 'SMaxSealed'],
+                        'drainedIrrigation': ['DrainedFraction'],
+                        'simulatePF': ['HeadMax']}
+    module_name = 'Soil'
 
     def __init__(self, soil_variable):
         self.var = soil_variable
@@ -65,7 +85,7 @@ class soil(object):
         self.var.ForestFractionBase = self.var.ForestFraction.copy()
         self.var.DirectRunoffFractionBase = self.var.DirectRunoffFraction.copy()
 
-        self.var.SoilFraction = self.var.ForestFraction +  self.var.OtherFraction + self.var.IrrigationFraction
+        self.var.SoilFraction = self.var.ForestFraction + self.var.OtherFraction + self.var.IrrigationFraction
         self.var.PermeableFraction = 1 - self.var.DirectRunoffFraction - self.var.WaterFraction
         # Permeable fraction of pixel
 
@@ -73,9 +93,9 @@ class soil(object):
         # soil depth top layer for every landuse but forest, impervious soil
         # and water
 
-        self.var.SoilDepth1a = defsoil('SoilDepth1','SoilDepth1Forest')
-        self.var.SoilDepth1b = defsoil('SoilDepth2','SoilDepth2Forest')
-        self.var.SoilDepth2 = defsoil('SoilDepth3','SoilDepth3Forest')
+        self.var.SoilDepth1a = defsoil('SoilDepth1', 'SoilDepth1Forest')
+        self.var.SoilDepth1b = defsoil('SoilDepth2', 'SoilDepth2Forest')
+        self.var.SoilDepth2 = defsoil('SoilDepth3', 'SoilDepth3Forest')
 
         # ----------------- miscParameters ---------------------------
 
@@ -98,18 +118,17 @@ class soil(object):
         # using maps instead of table to be more sensitive to landuse change
         # Soil properties for percentage of pixel area without forest, water ,
         # impervious soil
-        self.var.CropCoef = defsoil('MapCropCoef','MapForestCropCoef','MapIrrigationCropCoef')
+        self.var.CropCoef = defsoil('MapCropCoef', 'MapForestCropCoef', 'MapIrrigationCropCoef')
 
         # crop coefficients for each land use class
-        self.var.CropGroupNumber = defsoil('MapCropGroupNumber','MapForestCropGroupNumber','MapIrrigationCropGroupNumber')
+        self.var.CropGroupNumber = defsoil('MapCropGroupNumber', 'MapForestCropGroupNumber', 'MapIrrigationCropGroupNumber')
 
         # crop group numbers for soil water depletion factor
         # self.var.NManning = [loadmap('MapN'), loadmap('MapForestN'), 0.02]
-        self.var.NManning = defsoil('MapN','MapForestN', 0.02)
+        self.var.NManning = defsoil('MapN', 'MapForestN', 0.02)
         # Manning's roughness coefficient for each land use class
         # third manning is from direct runoff
         # self.var.NManningDirect=scalar(0.02)
-
 
         # ************************************************************
         # ***** MAPS DERIVED FROM SOIL TEXTURE AND SOIL DEPTH ********
@@ -125,8 +144,8 @@ class soil(object):
         Lambda1b = defsoil('MapLambda2', 'MapLambda2Forest')
         Lambda2 = defsoil('MapLambda3')
         # Pore-size index (for Van Genuchten parameters)
-        GenuAlpha1a = defsoil('MapGenuAlpha1','MapGenuAlpha1Forest')
-        GenuAlpha1b = defsoil('MapGenuAlpha2','MapGenuAlpha2Forest')
+        GenuAlpha1a = defsoil('MapGenuAlpha1', 'MapGenuAlpha1Forest')
+        GenuAlpha1b = defsoil('MapGenuAlpha2', 'MapGenuAlpha2Forest')
         GenuAlpha2 = defsoil('MapGenuAlpha3')
         # Van Genuchten Alpha coefficient
         ThetaS1a = defsoil('MapThetaSat1','MapThetaSat1Forest')
@@ -222,9 +241,9 @@ class soil(object):
 
         # ***** INITIAL VALUES for soil
 
-        ThetaInit1aValue = defsoil('ThetaInit1Value','ThetaForestInit1Value','ThetaIrrigationInit1Value')
-        ThetaInit1bValue = defsoil('ThetaInit2Value','ThetaForestInit2Value','ThetaIrrigationInit2Value')
-        ThetaInit2Value = defsoil('ThetaInit3Value','ThetaForestInit3Value','ThetaIrrigationInit3Value')
+        ThetaInit1aValue = defsoil('ThetaInit1Value', 'ThetaForestInit1Value', 'ThetaIrrigationInit1Value')
+        ThetaInit1bValue = defsoil('ThetaInit2Value', 'ThetaForestInit2Value', 'ThetaIrrigationInit2Value')
+        ThetaInit2Value = defsoil('ThetaInit3Value', 'ThetaForestInit3Value', 'ThetaIrrigationInit3Value')
 
         WInit1a = splitlanduse(maskinfo.in_zero())
         WInit1b = splitlanduse(maskinfo.in_zero())

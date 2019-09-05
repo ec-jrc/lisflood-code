@@ -23,9 +23,10 @@ import numpy as np
 from ..global_modules.settings import LisSettings
 from ..global_modules.add1 import loadmap, read_tss_header, compressArray
 from ..global_modules.errors import LisfloodWarning
+from . import HydroModule
 
 
-class inflow(object):
+class inflow(HydroModule):
 
     """
      # ************************************************************
@@ -34,6 +35,8 @@ class inflow(object):
      # If option "inflow" is set to 1 the inflow hydrograph code is used
      # otherwise dummy code is used
     """
+    input_files_keys = {'inflow': ['InflowPoints', 'QInTS']}
+    module_name = 'InFlow'
 
     def __init__(self, inflow_variable):
         self.var = inflow_variable

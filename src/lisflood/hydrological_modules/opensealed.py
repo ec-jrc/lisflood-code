@@ -17,16 +17,20 @@ See the Licence for the specific language governing permissions and limitations 
 from __future__ import absolute_import, division
 
 import numpy as np
+
 from ..global_modules.settings import MaskInfo
+from . import HydroModule
 
 
-class opensealed(object):
+class opensealed(HydroModule):
 
     """
     # ************************************************************
     # ***** SOIL LOOP    *****************************************
     # ************************************************************
     """
+    input_files_keys = {'all': []}
+    module_name = 'OpenSealed'
 
     def __init__(self, opensealed_variable):
         self.var = opensealed_variable

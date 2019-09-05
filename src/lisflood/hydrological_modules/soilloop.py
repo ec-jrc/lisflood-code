@@ -19,16 +19,19 @@ from nine import range
 
 import numpy as np
 
-from lisflood.global_modules.settings import LisSettings, MaskInfo
+from ..global_modules.settings import LisSettings, MaskInfo
+from . import HydroModule
 
 
-class soilloop(object):
+class soilloop(HydroModule):
 
     """
     # ************************************************************
     # ***** SOIL LOOP    *****************************************
     # ************************************************************
     """
+    input_files_keys = {'wateruse': []}
+    module_name = 'SoilLoop'
 
     def __init__(self, soilloop_variable):
         self.var = soilloop_variable
@@ -128,8 +131,8 @@ class soilloop(object):
         settings = LisSettings.instance()
         option = settings.options
         if option['wateruse'] and sLoop == 2:
-            self.var.WFilla = np.minimum(WCrit1a,self.var.WPF3a[2])
-            self.var.WFillb = np.minimum(WCrit1b,self.var.WPF3b[2])
+            self.var.WFilla = np.minimum(WCrit1a, self.var.WPF3a[2])
+            self.var.WFillb = np.minimum(WCrit1b, self.var.WPF3b[2])
             # if water use is calculated, get the filling of the soil layer for either pF3 or WCrit1
             # that is the amount of water the soil gets filled by water from irrigation
 
@@ -451,7 +454,7 @@ class soilloop(object):
 
             self.var.pF0[sLoop] = np.where(Head1a > 0, np.log10(Head1a), -1)
             self.var.pF1[sLoop] = np.where(Head1b > 0, np.log10(Head1b), -1)
-            self.var.pF2[sLoop] = np.where(Head2  > 0, np.log10(Head2) , -1)
+            self.var.pF2[sLoop] = np.where(Head2 > 0, np.log10(Head2), -1)
             # Compute pF. Set to -1 should heads become equal to mor less than 0. No idea
             # if this can even actually happen (copied this from old LISFLOOD version) but it
             # shouldn't do any harm.

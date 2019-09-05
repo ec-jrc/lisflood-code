@@ -23,14 +23,27 @@ from netCDF4 import Dataset
 
 from ..global_modules.add1 import loadmap, decompress, compressArray, readnetcdf, readmapsparse
 from ..global_modules.settings import get_calendar_type, calendar_inconsistency_warning, LisSettings, MaskInfo
+from . import HydroModule
 
 
-class waterabstraction(object):
+class waterabstraction(HydroModule):
     """
     # ************************************************************
     # ***** Water abstraction ************************************
     # ************************************************************
     """
+    input_files_keys = {'wateruse': ['WUsePercRemain', 'maxNoWateruse', 'GroundwaterBodies', 'FractionGroundwaterUsed',
+                                     'FractionNonConventionalWaterUsed', 'FractionLakeReservoirWaterUsed',
+                                     'EFlowThreshold', 'WUseRegion', 'IrrigationMult', 'IndustryConsumptiveUseFraction',
+                                     'WaterReUseFraction', 'EnergyConsumptiveUseFraction',
+                                     'LivestockConsumptiveUseFraction', 'ConveyanceEfficiency',
+                                     'LeakageFraction', 'LeakageReductionFraction', 'WaterSavingFraction',
+                                     'DomesticConsumptiveUseFraction', 'LeakageWaterLoss',
+                                     'DomesticDemandMaps', 'IndustrialDemandMaps', 'LivestockDemandMaps',
+                                     'EnergyDemandMaps', 'IrrigationType', 'IrrigationEfficiency'],
+                        'groundwaterSmooth': ['LZSmoothRange'],
+                        'wateruseRegion': ['WUseRegion']}
+    module_name = 'WaterAbstraction'
 
     def __init__(self, waterabstraction_variable):
         self.var = waterabstraction_variable
@@ -188,16 +201,10 @@ class waterabstraction(object):
 
             self.var.IrriLossCUM = maskinfo.in_zero()
             # Cumulative irrigation loss [mm]
-            # abstractionCUM = maskinfo.in_zero() # not used
             # Cumulative abstraction from surface water [mm]
 
-            # IrrigationWaterDemand = maskinfo.in_zero()
-            # if not(option['riceIrrigation']):
-            #     self.var.TotalAbstractionFromSurfaceWaterM3 = maskinfo.in_zero()
             self.var.TotalAbstractionFromSurfaceWaterM3 = maskinfo.in_zero()
             self.var.TotalAbstractionFromGroundwaterM3 = maskinfo.in_zero()
-            # IrrigationAbstractionFromGroundwaterM3 = maskinfo.in_zero()
-            # LiveDomAbstractionFromGroundwaterM3 = maskinfo.in_zero()   # not used
             self.var.TotalIrrigationAbstractionM3 = maskinfo.in_zero()
             self.var.TotalPaddyRiceIrrigationAbstractionM3 = maskinfo.in_zero()
             self.var.TotalLivestockAbstractionM3 = maskinfo.in_zero()
@@ -207,13 +214,18 @@ class waterabstraction(object):
             self.var.ConveyanceEfficiency = loadmap('ConveyanceEfficiency')
 
             self.var.GroundwaterRegionPixels = np.take(
-                np.bincount(self.var.WUseRegionC, weights=self.var.GroundwaterBodies), self.var.WUseRegionC)
+                np.bincount(self.var.WUseRegionC, weights=self.var.GroundwaterBodies),
+                self.var.WUseRegionC
+            )
             self.var.AllRegionPixels = np.take(
-                np.bincount(self.var.WUseRegionC, weights=self.var.GroundwaterBodies * 0.0 + 1.0), self.var.WUseRegionC)
+                np.bincount(self.var.WUseRegionC, weights=self.var.GroundwaterBodies * 0.0 + 1.0),
+                self.var.WUseRegionC
+            )
             self.var.RatioGroundWaterUse = self.var.AllRegionPixels / (self.var.GroundwaterRegionPixels + 0.01)
             self.var.FractionGroundwaterUsed = np.minimum(
                 self.var.FractionGroundwaterUsed * self.var.RatioGroundWaterUse,
-                1 - self.var.FractionNonConventionalWaterUsed)
+                1 - self.var.FractionNonConventionalWaterUsed
+            )
             # FractionGroundwaterUsed is a percentage given at national scale
             # since the water needs to come from the GroundwaterBodies pixels,
             # the fraction needs correction for the non-Groundwaterbodies; this is done here
@@ -257,10 +269,6 @@ class waterabstraction(object):
                                                              averageyearflag=True) * self.var.DtDay
                     else:
                         # Read from stack of maps in NetCDF format. Get time step corresponding to model step.
-                        # self.var.DomesticDemandMM = readnetcdfsparse(binding['DomesticDemandMaps'], self.var.currentTimeStep(), self.var.DomesticDemandMM)
-                        # self.var.IndustrialDemandMM = readnetcdfsparse(binding['IndustrialDemandMaps'], self.var.currentTimeStep(), self.var.IndustrialDemandMM)
-                        # self.var.LivestockDemandMM = readnetcdfsparse(binding['LivestockDemandMaps'], self.var.currentTimeStep(), self.var.LivestockDemandMM)
-                        # self.var.EnergyDemandMM = readnetcdfsparse(binding['EnergyDemandMaps'], self.var.currentTimeStep(), self.var.EnergyDemandMM)
                         # added management for sub-daily model time steps
                         self.var.DomesticDemandMM = readnetcdf(binding['DomesticDemandMaps'],
                                                                self.var.currentTimeStep(),
@@ -309,8 +317,7 @@ class waterabstraction(object):
             self.var.DomesticAbstractionMM = self.var.DomesticDemandMM * self.var.DomesticWaterSavingConstant * self.var.DomesticLeakageConstant
             # Domestic Water Abstraction (mm per day), already taking into account water saving in households and leakage of the supply network
             # Domestic water abstraction is larger if there is leakage, but is smaller if there is water savings
-            self.var.LeakageMM = (
-                                             self.var.DomesticLeakageConstant - 1) * self.var.DomesticDemandMM * self.var.DomesticWaterSavingConstant
+            self.var.LeakageMM = (self.var.DomesticLeakageConstant - 1) * self.var.DomesticDemandMM * self.var.DomesticWaterSavingConstant
             # Leakage in mm per day
             self.var.LeakageLossMM = self.var.LeakageMM * self.var.LeakageWaterLossFraction
             # The leakage amount that is lost (evaporated)
