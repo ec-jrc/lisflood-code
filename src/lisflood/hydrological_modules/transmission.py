@@ -21,15 +21,18 @@ import numpy as np
 
 from ..global_modules.settings import LisSettings, MaskInfo
 from ..global_modules.add1 import loadmap
+from . import HydroModule
 
 
-class transmission(object):
+class transmission(HydroModule):
 
     """
     # ************************************************************
     # ***** Transmission loss ************************************
     # ************************************************************
     """
+    input_files_keys = {'TransLoss': ['TransArea', 'TransSub', 'UpAreaTrans', 'TransPower1']}
+    module_name = 'Transmission'
 
     def __init__(self, transmission_variable):
         self.var = transmission_variable

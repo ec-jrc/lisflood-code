@@ -35,14 +35,14 @@ from lisflood.main import lisfloodexe
 
 class TestLis(object):
     reference_files = {
-        'dis_drina': {'outpath': os.path.join(current_dir, 'data/Drina/reference/dis'),
-                      'report_map': 'DischargeMaps',
-                      'report_tss': 'DisTS'
-                      },
-        'dis_madeira': {'outpath': os.path.join(current_dir, 'data/Madeira/reference/dis'),
-                      'report_map': 'DischargeMaps',
-                      'report_tss': 'DisTS'
-                      }
+        'dis_1': {'outpath': os.path.join(current_dir, 'data/TestCatchment1/reference/dis'),
+                  'report_map': 'DischargeMaps',
+                  'report_tss': 'DisTS'
+                  },
+        'dis_2': {'outpath': os.path.join(current_dir, 'data/TestCatchment2/reference/dis'),
+                  'report_map': 'DischargeMaps',
+                  'report_tss': 'DisTS'
+                  }
     }
 
     domain = None
@@ -92,7 +92,9 @@ class TestLis(object):
             perc_wrong = float(wrong_values_size * 100) / float(diff_values.size)
             if perc_wrong >= cls.max_perc_wrong or perc_wrong >= cls.max_perc_wrong_large_diff and large_diff:
                 print('[ERROR]')
-                print('Var: {} - STEP {}: {:3.9f}% of values are different. max diff: {:3.4f}'.format(var, step, perc_wrong, max_diff))
+                print('Var: {} - STEP {}: {:3.9f}% of values are different. max diff: {:3.4f}'.format(var, step,
+                                                                                                      perc_wrong,
+                                                                                                      max_diff))
                 return False
             else:
                 print('[OK] {} {}'.format(var, step))

@@ -53,7 +53,7 @@ sys.path.append(os.path.join(current_dir, './src/'))
 
 from lisflood import __version__, __authors__
 
-print(">>>>>>>>>>>>>>>> Building LISFLOOD verison {} <<<<<<<<<<<<<<<<<<".format(__version__))
+print(">>>>>>>>>>>>>>>> Building LISFLOOD version {} <<<<<<<<<<<<<<<<<<".format(__version__))
 try:
     # noinspection PyUnresolvedReferences
     from Cython.Build import cythonize
@@ -105,7 +105,7 @@ class UploadCommand(Command):
             pass
 
         self.print_console('Building Source and Wheel (universal) distribution...')
-        os.system('{0} setup.py sdist'.format(sys.executable))
+        os.system('{0} setup.py sdist bdist_wheel'.format(sys.executable))
 
         self.print_console('Uploading the package to PyPI via Twine...')
         os.system('twine upload dist/*')
@@ -132,7 +132,7 @@ setup(
     author_email='domenico.nappo@ext.ec.europa.eu',
     keywords=['lisflood', 'lisvap', 'efas', 'glofas', 'ecmwf'],
     license='EUPL 1.2',
-    url='https://github.com/ec-jrc/lisflood-model',
+    url='https://github.com/ec-jrc/lisflood-code',
     download_url='https://github.com/ec-jrc/lisflood-code/archive/{}.tar.gz'.format(__version__),
     setup_requires=[
             # Setuptools 18.0 properly handles Cython extensions.

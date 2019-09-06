@@ -22,14 +22,20 @@ import numpy as np
 
 from ..global_modules.add1 import loadmap, compressArray, decompress, generateName, loadLAI
 from ..global_modules.settings import MaskInfo, LisSettings
+from . import HydroModule
 
 
-class evapowater(object):
+class evapowater(HydroModule):
     """
     # ************************************************************
     # ***** EVAPORATION FROM OPEN WATER **************************
     # ************************************************************
     """
+    input_files_keys = {
+        'openwaterevapo': ['LakeMask', 'maxNoEva'],
+        'varfractionwater': ['FracMaxWater', 'WFractionMaps']
+    }
+    module_name = 'EvapoWater'
 
     def __init__(self, evapowater_variable):
         self.var = evapowater_variable

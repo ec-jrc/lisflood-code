@@ -21,15 +21,18 @@ import pcraster
 
 from ..global_modules.add1 import loadmap
 from ..global_modules.settings import LisSettings
+from . import HydroModule
 
 
-class polder(object):
+class polder(HydroModule):
 
     """
     # ************************************************************
     # ***** POLDER       *****************************************
     # ************************************************************
     """
+    input_files_keys = {'simulatePolders': ['PolderSites', 'TabPolderArea', 'PolderInitialLevelValue']}
+    module_name = 'Polder'
 
     def __init__(self, polder_variable):
         self.var = polder_variable
@@ -58,7 +61,7 @@ class polder(object):
 
             # Flag that is boolean(1) for polder sites and boolean(0) otherwise
             # total storage capacity of Polder area [m3]
-            PolderArea = pcraster.lookupscalar(binding['TabPolderArea'], PolderSites)
+            PolderArea = pcraster.lookupscalar(str(binding['TabPolderArea']), PolderSites)
             PolderLevel = binding['PolderInitialLevelValue']
             # Initial polder level [m]
             self.var.PolderStorageIniM3 = pcraster.cover(PolderLevel * PolderArea, pcraster.scalar(0.0))
@@ -71,6 +74,7 @@ class polder(object):
         """ dynamic part of the polder module
             initialising polders
         """
+        pass
 
         # ************************************************************
         # ***** POLDER

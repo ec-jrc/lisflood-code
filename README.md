@@ -18,7 +18,7 @@ Other useful resources
 ## Quick start
 
 You can download code and datasets for testing the model.
-Follow this instruction for a basic test (Drina catchment, included in this repository under [tests/data/Drina](https://github.com/ec-jrc/lisflood-code/tree/master/tests/data/Drina))
+Follow this instruction for a basic test (included in this repository under [tests/data/TestCatchment1](https://github.com/ec-jrc/lisflood-code/tree/master/tests/data/TestCatchment1))
 
 1. Clone the master branch of this repository (you need to have git installed on your machine).
 
@@ -26,8 +26,9 @@ Follow this instruction for a basic test (Drina catchment, included in this repo
 git clone --single-branch --branch master https://github.com/ec-jrc/lisflood-code.git
 ```
 
-2. Install requirements into a python 2.7 virtualenv. 
-We recommend to follow the instructions on [virtualenv docs](https://virtualenv.pypa.io/en/latest/). Assuming you activated your virtual environment:
+2. Install requirements into a Python 3 virtualenv. 
+We recommend to follow the instructions on [virtualenv docs](https://virtualenv.pypa.io/en/latest/). 
+Assuming you've activated your virtual environment, you can now install requirements with pip:
 
 ```bash
 cd lisflood-code  # move into lisflood-code project directory
@@ -39,7 +40,7 @@ pip install -r requirements.txt
 If you already have GDAL installed in your computer, make sure that the GDAL and the python gdal library have the same version.
 
 
-You need to install PCRaster and include its python interface in PYTHONPATH environment variable.
+You need to install PCRaster (4.2.x is first version which works with Python3) and include its python interface in PYTHONPATH environment variable.
 For details, please follow instruction on [official docs](http://pcraster.geo.uu.nl/getting-started/pcraster-on-linux/).
 
 3. Compile the cython module kinematic_wave_parallel_tool
@@ -48,7 +49,7 @@ To compile this Cython module to enable OpenMP multithreading (parallel kinemati
 
 * Delete the files *.so (if any) in directory hydrological-modules  
 
-* Inside the hydrological_modules folder, execute "python2 compile_kinematic_wave_parallel_tools.py build_ext --inplace"  
+* Inside the hydrological_modules folder, execute "python compile_kinematic_wave_parallel_tools.py build_ext --inplace"  
 
 Important: the module has to be compiled on the machine where the model is run - the resulting binary is not portable.  
 
@@ -60,15 +61,15 @@ Then in the settings file the option "numberParallelThreadsKinematicWave" may ta
 ```xml
 <textvar name="numCPUs_parallelKinematicWave" value="3"/>
 ```
-4. Run a cold run for the Drina test catchment
+4. Run a cold run for the test catchment
 
-Now your environment should be set up to run lisflood. Try with a prepared settings file for Drina catchment:
+Now your environment should be set up to run lisflood. Try with a prepared settings file for one of the two test catchments:
 
 ```bash
-python src/lisf1.py tests/data/Drina/settings/lisfloodSettings_cold_day_base.xml
+python src/lisf1.py tests/data/TestCatchment1/settings/lisfloodSettings_cold_day_base.xml
 ```
 
-If the command above successed without errors, producing dis.nc into tests/data/Drina/outputs folder, your lisflood installation was correct.
+If the command above successed without errors, producing dis.nc into tests/data/TestCatchment1/outputs folder, your lisflood installation was correct.
 
 ### Docker image
 
@@ -80,30 +81,30 @@ First, you pull image from repository.
 docker pull efas/lisflood:latest
 ```
 
-Copy Drina catchment files from container to your host, using mapped directories.
+Copy catchment files from container to your host, using mapped directories.
 
 ```bash
 docker run -v /absolute_path/to/my/local/folder:/usecases efas/lisflood:latest usecases
 ```
 
-After this command, you can find all files to run a test against Drina catchment under the directory you mapped: `/absolute_path/to/my/local/folder/Drina`
+After this command, you can find all files to run a test against a catchment under the directory you mapped: `/absolute_path/to/my/local/folder/TestCatchment1`
 
 
-Now, you can run LISFLOOD as a docker container to test the Drina catchment. Only thing you need to do is to map the Drina folder to the container folder `input`, by using -v option. 
+Now, you can run LISFLOOD as a docker container to test included catchments. Only thing you need to do is to map the TestCatchment1 folder to the container folder `input`, by using -v option. 
 In the XML settings file, all paths are adjusted to be relative to the very same settings file, so you don't need to edit paths, as long as you keep same folders structure.
 
 
 Execute the following to run the simulation:
 
 ```bash
-docker run -v /absolute_path/to/my/local/folder/Drina:/input efas/lisflood /input/settings/lisfloodSettings_cold_day_base.xml
+docker run -v /absolute_path/to/my/local/folder/TestCatchment1:/input efas/lisflood /input/settings/cold_day_base.xml
 ```
 
-Once LISFLOOD finished, you can find reported maps in `/absolute_path/to/my/local/folder/Drina/outputs/` folder.
+Once LISFLOOD finished, you can find reported maps in `/absolute_path/to/my/local/folder/TestCatchment1/outputs/` folder.
 
 ### Pypi packaged LISFLOOD
 
-LISFLOOD is also distributed as a standard python package. You can install the pip package in your Python 2.7<sup>[1](#footnote1)</sup> virtualenv:
+LISFLOOD is also distributed as a standard python package. You can install the pip package in your Python 3 virtualenv:
 
 ```bash
 pip install lisflood-model
@@ -112,7 +113,16 @@ pip install lisflood-model
 Command above will also install the executable `lisflood` in the virtualenv, so that you can run LISFLOOD with the following:
 
 ```bash
-lisflood /absolute_path/to/my/local/folder/Drina/settings/lisfloodSettings_cold_day_base.xml
+lisflood /absolute_path/to/my/local/folder/TestCatchment1/settings/lisfloodSettings_cold_day_base.xml
 ```
 
-<a id="footnote1" name="footnote1">1</a>: We planned to migrate to Python 3 in a few months.
+## Collaborate
+
+If you find an issue in our code, please follow the [GitHub flow](https://guides.github.com/introduction/flow/) to propose your changes (Fork, commit your changes and ask for a Pull Request).
+When you develop, you need to run our "acceptance" tests. We have two test catchments, that can run with tox on py27, py36, py37 environments.
+Simply execute `tox` on comman line from project folder.
+
+Tox tests can last minutes. You can also just use pytest and run tests in a single environment (e.g. Python 3.7).
+This is often enough and will save you some time if you need to run tests frequently.
+ 
+`pytest tests/ -s`

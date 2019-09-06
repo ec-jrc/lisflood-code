@@ -28,6 +28,7 @@ if os.path.exists(src_dir):
 
 from pcraster.framework import EnsKalmanFilterFramework, MonteCarloFramework
 
+from .global_modules.checkers import ModulesInputs, MeteoForcings
 from .global_modules.zusatz import DynamicFramework
 from .Lisflood_EnKF import LisfloodModel_EnKF
 from .Lisflood_dynamic import LisfloodModel_dyn
@@ -53,16 +54,22 @@ class LisfloodModel(LisfloodModel_ini, LisfloodModel_dyn, LisfloodModel_monteCar
 
 def lisfloodexe(lissettings=None):
 
-    # read options and bindings and launch Lisflood model computation
-    # returns option binding and ReportSteps - global dictionaries
-
-    # optionBinding(settings, optionxml)
-    # lissettings = LisSettings(settings)
     _ = CDFFlags(uuid.uuid4())
     if isinstance(lissettings, str):
+        # we passed file path
         lissettings = LisSettings(lissettings)
     else:
+        # deal with LisSettings instance
         lissettings = LisSettings.instance() if lissettings is None else lissettings
+
+    try:
+        ModulesInputs.check(lissettings)
+        MeteoForcings.check(lissettings)
+    except LisfloodError as e:
+        # FIXME using logging instead of print statements
+        print(e)
+        sys.exit(1)
+
     binding = lissettings.binding
     option = lissettings.options
     report_steps = lissettings.report_steps
@@ -72,13 +79,10 @@ def lisfloodexe(lissettings=None):
     # read all the possible option for modelling and for generating output
     # read the settingsfile with all information about the catchments(s)
     # and the choosen option for mdelling and output
-    # bindkey = sorted(binding.keys())
 
     # remove steps from ReportSteps that are not included in simulation period
     for key in report_steps:
         report_steps[key] = [x for x in report_steps[key] if model_steps[0] <= x <= model_steps[1]]
-        # ReportSteps[key] = [x for x in ReportSteps[key] if x >= modelSteps[0]]
-        # ReportSteps[key] = [x for x in ReportSteps[key] if x <= modelSteps[1]]
 
     if option['InitLisflood']:
         print("INITIALISATION RUN")
@@ -123,18 +127,10 @@ def lisfloodexe(lissettings=None):
     ----------------------------------------------
     """
     # Ensemble Kalman filter
-    try:
-        EnKFset = option['EnKF']
-    except:
-        EnKFset = 0
+    EnKFset = option.get('EnKF', 0) if not option['InitLisflood'] else 0
     # MonteCarlo
-    try:
-        MCset = option['MonteCarlo']
-    except:
-        MCset = 0
-    if option['InitLisflood']:
-        MCset = 0
-        EnKFset = 0
+    MCset = option.get('MonteCarlo', 0) if not option['InitLisflood'] else 0
+
     if EnKFset and not MCset:
         msg = "Trying to run EnKF with only 1 ensemble member \n"
         raise LisfloodError(msg)
@@ -225,5 +221,4 @@ def main():
     flags = lissettings.flags
     if not (flags['veryquiet'] or flags['quiet']):
         headerinfo()
-
     lisfloodexe(lissettings)
