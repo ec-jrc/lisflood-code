@@ -456,13 +456,8 @@ class LisSettings(with_metaclass(Singleton)):
                 # option is set so temporarily allow = True
                 allow = True
                 # checking that at least one restricted_options is set
-                mandatory_opts = [ro for ro in restricted_options if self.options.get(ro)]
-                if not mandatory_opts:
-                    allow = False  # map must not be written
-                # for ro in restricted_options:
-                #     if ro in self.options and not self.options[ro]:
-                #         allow = False  # map must not be written
-                #         break
+                if restricted_options and restricted_options != ['']:
+                    allow = bool([ro for ro in restricted_options if self.options.get(ro)])
         if allow:
             return obj
         else:
