@@ -132,7 +132,7 @@ setup(
     author_email='domenico.nappo@ext.ec.europa.eu',
     keywords=['lisflood', 'lisvap', 'efas', 'glofas', 'ecmwf'],
     license='EUPL 1.2',
-    url='https://github.com/ec-jrc/lisflood-model',
+    url='https://github.com/ec-jrc/lisflood-code',
     download_url='https://github.com/ec-jrc/lisflood-code/archive/{}.tar.gz'.format(__version__),
     setup_requires=[
             # Setuptools 18.0 properly handles Cython extensions.

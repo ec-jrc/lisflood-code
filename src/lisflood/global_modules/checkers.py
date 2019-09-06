@@ -61,3 +61,10 @@ class ModulesInputs:
             # some checks failed
             raise LisfloodError('\n\nMissing files to run LisFlood according activated modules. '
                                 'Please check your settings file {}'.format(settings.settings_path))
+
+
+class MeteoForcings:
+    @classmethod
+    def check(cls, settings):
+        binding = settings.binding
+        pass

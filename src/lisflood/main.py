@@ -64,6 +64,7 @@ def lisfloodexe(lissettings=None):
 
     try:
         ModulesInputs.check(lissettings)
+        MeteoForcings.check(lissettings)
     except LisfloodError as e:
         print(e)
         sys.exit(1)
