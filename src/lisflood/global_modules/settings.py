@@ -83,6 +83,13 @@ class Singleton(type):
 class CDFFlags(with_metaclass(Singleton)):
     """
     Flags for netcdf output for end, steps, all, monthly (steps), yearly (steps), monthly , yearly
+    flagcdf = 0
+    flagcdf = 1  # index flag for writing nedcdf = 1 (=steps) -> indicated if a netcdf is created or maps are appended
+    flagcdf = 2
+    flagcdf = 4  # set to yearly (step) flag
+    flagcdf = 3  # set to monthly (step) flag
+    flagcdf = 5  # set to monthly flag
+    flagcdf = 6  # set to yearly flag
     """
     def __init__(self, uid):
         self.uid = uid
@@ -448,11 +455,14 @@ class LisSettings(with_metaclass(Singleton)):
             if self.options.get(rep):
                 # option is set so temporarily allow = True
                 allow = True
-                # checking that restricted_options are not set
-                for ro in restricted_options:
-                    if ro in self.options and not self.options[ro]:
-                        allow = False  # map must not be written
-                        break
+                # checking that at least one restricted_options is set
+                mandatory_opts = [ro for ro in restricted_options if self.options.get(ro)]
+                if not mandatory_opts:
+                    allow = False  # map must not be written
+                # for ro in restricted_options:
+                #     if ro in self.options and not self.options[ro]:
+                #         allow = False  # map must not be written
+                #         break
         if allow:
             return obj
         else:

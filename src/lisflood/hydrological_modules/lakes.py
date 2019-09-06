@@ -66,6 +66,7 @@ class lakes(HydroModule):
             self.var.LakeIndex = np.nonzero(LakeSitesC)[0]
 
             if self.var.LakeSitesCC.size == 0:
+                print(LisfloodWarning('There are no lakes. Lakes simulation stops here'))
                 option['simulateLakes'] = False
                 option['repsimulateLakes'] = False
                 return
@@ -75,18 +76,19 @@ class lakes(HydroModule):
             # Add lake locations to structures map (used to modify LddKinematic
             # and to calculate LddStructuresKinematic)
 
-            #PCRaster part
-            #-----------------------
+            # PCRaster part
+            # -----------------------
             LakeSitePcr = loadmap('LakeSites', pcr=True)
             LakeSitePcr = pcraster.ifthen((pcraster.defined(LakeSitePcr) & pcraster.boolean(decompress(self.var.IsChannel))), LakeSitePcr)
             IsStructureLake = pcraster.boolean(LakeSitePcr)
             # additional structure map only for lakes to calculate water balance
             self.var.IsUpsOfStructureLake = pcraster.downstream(self.var.LddKinematic, pcraster.cover(IsStructureLake, 0))
             # Get all pixels just upstream of lakes
-            #-----------------------
+            # -----------------------
 
             self.var.LakeInflowOldCC = np.bincount(self.var.downstruct, weights=self.var.ChanQ)[self.var.LakeIndex]
-            # for Modified Puls Method the Q(inflow)1 has to be used. It is assumed that this is the same as Q(inflow)2 for the first timestep
+            # for Modified Puls Method the Q(inflow)1 has to be used.
+            # It is assumed that this is the same as Q(inflow)2 for the first timestep
             # has to be checked if this works in forecasting mode!
 
             LakeArea = pcraster.lookupscalar(str(binding['TabLakeArea']), LakeSitePcr)
