@@ -76,6 +76,7 @@ class reservoir(HydroModule):
             self.var.ReservoirIndex = np.nonzero(self.var.ReservoirSitesC)[0]
             
             if self.var.ReservoirSitesC.size == 0:
+                print(LisfloodWarning('There are no lakes. Reservoirs simulation stops here'))
                 option['simulateReservoirs'] = False
                 option['repsimulateReservoirs'] = False
                 return

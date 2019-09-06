@@ -236,15 +236,15 @@ class outputTssMap(object):
                             cdfflags = CDFFlags.instance()
                             try:
                                 writenet(cdfflags[flagcdf], eval(what), where, self.var.DtDay, maps,
-                                         report_maps_steps[maps]['outputVar'][0], report_maps_steps[maps]['unit'][0], 'f4',
+                                         report_maps_steps[maps].output_var, report_maps_steps[maps].unit, 'f4',
                                          reportStartDate, reportStepStart, reportStepEnd, frequency)
                             except Exception as e:
                                 print(" +----> ERR: {} - {}".format(type(e), e))
                                 print("REP flag:{} - {} {} {} {} {} {} {} {} {} {}".format(
                                       cdfflags[flagcdf], what, where, self.var.DtDay, maps,
-                                      report_maps_steps[maps]['outputVar'][0], report_maps_steps[maps]['unit'][0], 'f4',
+                                      report_maps_steps[maps].output_var, report_maps_steps[maps].unit, 'f4',
                                       reportStartDate, reportStepStart, reportStepEnd
-                                ))
+                                      ))
 
                     else:
                         self.var.report(decompress(eval(what)), where)
@@ -260,13 +260,15 @@ class outputTssMap(object):
             if where not in checkifdouble:
                 checkifdouble.append(where)
                 # checks if saved at same place, if no: add to list
-                flagcdf = 2  # index flag for writing nedcdf = 1 (=all) -> indicated if a netcdf is created ort maps are appended
-                             # cannot check only if netcdf exists, because than an old netcdf will be used accidently
+
+                # index flag for writing nedcdf = 1 (=all) -> indicated if a netcdf is created or maps are appended
+                # cannot check only if netcdf exists, because than an old netcdf will be used accidently
+                flagcdf = 2
                 frequency = "all"
                 try:
                     if report_maps_all[maps].monthly:
                         monthly = True
-                        flagcdf = 5 # set to monthly flag
+                        flagcdf = 5  # set to monthly flag
                         frequency = "monthly"
                 except:
                    monthly = False

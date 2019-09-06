@@ -118,7 +118,7 @@ lisflood /absolute_path/to/my/local/folder/TestCatchment1/settings/lisfloodSetti
 
 ## Collaborate
 
-If you find an issue in our code, plese follow the [GitHub flow](https://guides.github.com/introduction/flow/) to propose your changes (Fork, commit your changes and ask for a Pull Request).
+If you find an issue in our code, please follow the [GitHub flow](https://guides.github.com/introduction/flow/) to propose your changes (Fork, commit your changes and ask for a Pull Request).
 When you develop, you need to run our "acceptance" tests. We have two test catchments, that can run with tox on py27, py36, py37 environments.
 Simply execute `tox` on comman line from project folder.
 

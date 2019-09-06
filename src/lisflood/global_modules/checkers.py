@@ -1,7 +1,7 @@
-import importlib
+import os
 import inspect
 
-from .errors import LisfloodError
+from .errors import LisfloodError, LisfloodWarning
 from ..hydrological_modules import HydroModule
 from ..hydrological_modules import (surface_routing, evapowater, snow, routing, leafarea, inflow, waterlevel,
                                     waterbalance, wateruse, waterabstraction, lakes, riceirrigation, indicatorcalc,
@@ -43,7 +43,14 @@ class ModulesInputs:
             """
         binding = settings.binding
         res = False
-        total_checks = 0
+        total_checks = len(settings.output_dir)  # at least check PathOut
+        # First check PathOut
+        for path_out in settings.output_dir:
+            if not (os.path.exists(path_out) and os.path.isdir(path_out) and os.access(path_out, os.W_OK)):
+                print(LisfloodWarning('\n\nPath defined in PathOut is not writable: {}'.format(path_out)))
+            else:
+                res += True
+
         for option, modules in cls.lisflood_modules.items():
             if not (binding.get(option) or option == 'all'):
                 # module is not activated
@@ -59,5 +66,13 @@ class ModulesInputs:
                     res += clz.check_input_files(option)
         if res < total_checks:
             # some checks failed
-            raise LisfloodError('\n\nMissing files to run LisFlood according activated modules. '
+            raise LisfloodError('\n\nMissing files or misconfigured paths to run LisFlood, according activated '
+                                'modules. '
                                 'Please check your settings file {}'.format(settings.settings_path))
+
+
+class MeteoForcings:
+    @classmethod
+    def check(cls, settings):
+        binding = settings.binding
+        pass
