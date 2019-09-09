@@ -458,8 +458,6 @@ class LisSettings(with_metaclass(Singleton)):
                 # checking that at least one restricted_options is set
                 if restricted_options and restricted_options != ['']:
                     allow = bool([ro for ro in restricted_options if self.options.get(ro)])
-                    if not allow:
-                        input('restrict option not found for ' + obj.name)
         if allow:
             return obj
         else:
