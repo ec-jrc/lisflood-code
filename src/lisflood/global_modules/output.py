@@ -146,20 +146,26 @@ class outputTssMap(object):
         yearly = False
 
         # Report END maps
+
         for maps in report_maps_end.keys():
-            # report end map
+            # report end map filename
+
             try:
                 where = os.path.join(str(self.var.currentSampleNumber()), binding[maps].split("/")[-1])
             except:
-                where = binding[maps]
-
+                where = binding.get(maps)
+            if not where:
+                continue
             # Output path and name of report map
             what = 'self.var.' + report_maps_end[maps].output_var
-            if not(where in checkifdouble):
+            if where not in checkifdouble:
                 checkifdouble.append(where)
                 # checks if saved at same place, if no: add to list
+
                 if self.var.currentTimeStep() == self.var.nrTimeSteps():
+                    # final step: Write end maps
                     # Get start date for reporting start step
+                    # (last step indeed)
                     reportStartDate = inttodate(self.var.currentTimeStep() - 1, self.var.CalendarDayStart)
 
                     # if suffix with '.' is part of the filename report with
@@ -169,6 +175,7 @@ class outputTssMap(object):
                         if option['writeNetcdf']:
                             # CM mod: write end map to netCDF file (single)
                             # CM ##########################
+
                             try:
                                 writenet(0, eval(what), where, self.var.DtDay, maps, report_maps_end[maps].output_var,
                                          report_maps_end[maps].unit, 'f4', reportStartDate,
@@ -180,7 +187,7 @@ class outputTssMap(object):
                             ################################
 
                         else:
-                            report(decompress(eval(what)),where)
+                            report(decompress(eval(what)), where)
                     else:
                         if option['writeNetcdfStack']:
                             
@@ -230,9 +237,9 @@ class outputTssMap(object):
                             # Get start date for reporting start step
                             reportStartDate = inttodate(self.var.ReportSteps[0] - 1, self.var.CalendarDayStart)
                             # get step number for first reporting step
-                            reportStepStart = self.var.ReportSteps[0]-self.var.ReportSteps[0]+1
+                            reportStepStart = 1
                             # get step number for last reporting step
-                            reportStepEnd = self.var.ReportSteps[-1]-self.var.ReportSteps[0]+1
+                            reportStepEnd = self.var.ReportSteps[-1] - self.var.ReportSteps[0] + 1
                             cdfflags = CDFFlags.instance()
                             try:
                                 writenet(cdfflags[flagcdf], eval(what), where, self.var.DtDay, maps,

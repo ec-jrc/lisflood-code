@@ -216,7 +216,6 @@ class LisSettings(with_metaclass(Singleton)):
         self.report_maps_steps = {k: v for k, v in iteritems(self.report_maps_steps) if v}
         self.report_maps_all = {k: v for k, v in iteritems(self.report_maps_all) if v}
         self.report_maps_end = {k: v for k, v in iteritems(self.report_maps_end) if v}
-        # print(self)
 
     def _check_simulation_dates(self):
         """ Check simulation start and end dates or timesteps
@@ -385,6 +384,7 @@ class LisSettings(with_metaclass(Singleton)):
             option_setting[optset.attributes['name'].value] = bool(int(optset.attributes['choice'].value))
         # overwrite defaults
         options.update(option_setting)
+        options['nonInit'] = not options['InitLisflood']
         return options
 
     def _filter_steps(self, user_settings):
@@ -458,6 +458,8 @@ class LisSettings(with_metaclass(Singleton)):
                 # checking that at least one restricted_options is set
                 if restricted_options and restricted_options != ['']:
                     allow = bool([ro for ro in restricted_options if self.options.get(ro)])
+                    if not allow:
+                        input('restrict option not found for ' + obj.name)
         if allow:
             return obj
         else:
