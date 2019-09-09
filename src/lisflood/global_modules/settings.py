@@ -385,6 +385,7 @@ class LisSettings(with_metaclass(Singleton)):
             option_setting[optset.attributes['name'].value] = bool(int(optset.attributes['choice'].value))
         # overwrite defaults
         options.update(option_setting)
+        options['nonInit'] = not options['InitLisflood']
         return options
 
     def _filter_steps(self, user_settings):
