@@ -443,25 +443,19 @@ class LisSettings(with_metaclass(Singleton)):
 
     def _set_active_options(self, obj, report_options, restricted_options):
         """
-        Check report options (when to report/write the map) and restricted_options (when not to report/write map)
+        Check report options (when to report/write the map/tss: at least one true)
+        and restricted_options (all options must be enabled)
         Return ReportMap tuple if is to write, according report and restrict options
-        :param obj: `lisflood.global_modules.default_options.ReportMap` tuple
+        :param obj: `lisflood.global_modules.default_options.ReportedMap/TimeSeries` tuple
         :param report_options: list of option keys enabling report
         :param restricted_options: list of option keys disabling report (has precedence over report_options)
         :return: obj or None
         """
-        allow = False
-        for rep in report_options:
-            if self.options.get(rep):
-                # option is set so temporarily allow = True
-                allow = True
-                # checking that at least one restricted_options is set
-                if restricted_options and restricted_options != ['']:
-                    allow = bool([ro for ro in restricted_options if self.options.get(ro)])
-        if allow:
-            return obj
-        else:
-            return None
+        allow = any(repopt for repopt in report_options if self.options.get(repopt))
+        # checking that at least one restricted_options is set
+        if allow and restricted_options:
+            allow = all(ro for ro in restricted_options if self.options.get(ro))
+        return obj if allow else None
 
 
 def get_calendar_type(nc):
