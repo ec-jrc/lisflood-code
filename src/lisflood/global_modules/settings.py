@@ -451,10 +451,10 @@ class LisSettings(with_metaclass(Singleton)):
         :param restricted_options: list of option keys disabling report (has precedence over report_options)
         :return: obj or None
         """
-        allow = any(repopt for repopt in report_options if self.options.get(repopt))
+        allow = any(self.options.get(repopt) for repopt in report_options)
         # checking that at least one restricted_options is set
         if allow and restricted_options:
-            allow = all(ro for ro in restricted_options if self.options.get(ro))
+            allow = all(self.options.get(ro) for ro in restricted_options)
         return obj if allow else None
 
 
