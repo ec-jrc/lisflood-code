@@ -23,7 +23,7 @@
 
         <setoption choice="1" name="openwaterevapo"/>
 
-        <setoption choice="1" name="simulateLakes"/>
+        <setoption choice="0" name="simulateLakes"/>
 
         <setoption choice="1" name="simulateReservoirs"/>
 
@@ -36,7 +36,7 @@
         <setoption choice="0" name="InitLisflood"/>
 
 
-        <setoption choice="0" name="repEndMaps"/>
+        <setoption choice="1" name="repEndMaps"/>
 
         <setoption choice="0" name="repStateMaps"/>
 

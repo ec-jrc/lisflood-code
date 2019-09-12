@@ -17,6 +17,9 @@ See the Licence for the specific language governing permissions and limitations 
 from __future__ import print_function, absolute_import, division, unicode_literals
 
 from nine import iteritems
+
+import warnings
+
 from pcraster import numpy2pcr, Nominal, pcr2numpy, timeinputscalar
 import numpy as np
 
@@ -78,7 +81,7 @@ class inflow(HydroModule):
             for inf_id in inflow_ids:
                 if inf_id not in tss_ids:
                     id_dict[inf_id] = 0
-                    print(LisfloodWarning("Inflow point was removed ID: %d\n" % inf_id))
+                    warnings.warn(LisfloodWarning("Inflow point was removed ID: %d\n" % inf_id))
 
             # substitute indexes to id in map
             self.var.InflowPointsMap = np.copy(inflowmapnp)

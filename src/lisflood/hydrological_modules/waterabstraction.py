@@ -16,6 +16,8 @@ See the Licence for the specific language governing permissions and limitations 
 """
 from __future__ import absolute_import, print_function, division
 
+import warnings
+
 from pcraster import boolean, nominal, ifthen, defined, areamaximum, downstream, cover, lddrepair, ifthenelse, upstream, \
     scalar, accuflux, celllength, windowtotal, areaaverage
 import numpy as np
@@ -134,7 +136,7 @@ class waterabstraction(HydroModule):
                     with Dataset(binding[k] + '.nc') as nc:
                         cal_type = get_calendar_type(nc)
                         if cal_type != binding['calendar_type']:
-                            print(calendar_inconsistency_warning(binding[k], cal_type, binding['calendar_type']))
+                            warnings.warn(calendar_inconsistency_warning(binding[k], cal_type, binding['calendar_type']))
 
             if option['groundwaterSmooth']:
                 self.var.GroundwaterBodiesPcr = decompress(self.var.GroundwaterBodies)

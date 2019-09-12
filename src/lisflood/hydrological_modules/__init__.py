@@ -17,9 +17,9 @@ See the Licence for the specific language governing permissions and limitations 
 
 """
 from __future__ import absolute_import, print_function, division
-from nine import range
 
 import os
+import warnings
 
 from ..global_modules.errors import LisfloodWarning
 from ..global_modules.settings import LisSettings
@@ -67,5 +67,5 @@ class HydroModule(object):
                 msg = '[{}]: setting {} refers to a non existing path or a not well-formed float value: {}'.format(cls.module_name, k, binding[k])
             if not k_ok:
                 ok = False
-                print(LisfloodWarning(msg))
+                warnings.warn(LisfloodWarning(msg))
         return ok

@@ -15,13 +15,12 @@ See the Licence for the specific language governing permissions and limitations 
 
 """
 from __future__ import print_function, absolute_import
-
-import uuid
-
 from future.utils import listitems
 
 from nine import range
 
+import uuid
+import warnings
 import re
 import time as xtime
 import sys
@@ -355,7 +354,7 @@ def loadmap(name, pcr=False, lddflag=False, timestampflag='exact', averageyearfl
                         except:
                             timestepI = timestepI.replace(day=28)
                             timestepI = timestepI.replace(year=t_ref_year)
-                    timestepI = date2num(timestepI,nf1.variables['time'].units)
+                    timestepI = date2num(timestepI, nf1.variables['time'].units)
                 else:
                     # reading step numbers in XML file
                     # timestepI = int(timestepI) -1
@@ -694,7 +693,7 @@ def checknetcdf(name, start, end):
     t_unit = nf1.variables['time'].units  # get unit (u'hours since 2015-01-01 06:00:00')
     t_cal = get_calendar_type(nf1)
     if t_cal != binding['calendar_type']:
-        print(calendar_inconsistency_warning(filename, t_cal, binding['calendar_type']))
+        warnings.warn(calendar_inconsistency_warning(filename, t_cal, binding['calendar_type']))
 
     # get date of first available timestep in netcdf file
     date_first_step_in_ncdf = num2date(t_steps[0], units=t_unit, calendar=t_cal)
@@ -1035,4 +1034,4 @@ def nanCheckMap(data, filename, name):
     """Checks for numpy.nan on simulated pixels: if any is found, a warning is raised"""
     is_nan = np.isnan(compressArray(data) if isinstance(data, pcraster._pcraster.Field) else data)
     if is_nan.any():
-        print(LisfloodWarning("Warning: {} of {} land values of {} (binding: '{}') are NaN".format(is_nan.sum(), is_nan.size, filename, name)))
+        warnings.warn(LisfloodWarning("Warning: {} of {} land values of {} (binding: '{}') are NaN".format(is_nan.sum(), is_nan.size, filename, name)))

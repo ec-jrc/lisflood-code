@@ -19,6 +19,8 @@ See the Licence for the specific language governing permissions and limitations 
 from __future__ import print_function, absolute_import, division
 from nine import range
 
+import warnings
+
 from pcraster.operations import ifthen, boolean, defined, lookupscalar
 import numpy as np
 
@@ -76,7 +78,7 @@ class reservoir(HydroModule):
             self.var.ReservoirIndex = np.nonzero(self.var.ReservoirSitesC)[0]
             
             if self.var.ReservoirSitesC.size == 0:
-                print(LisfloodWarning('There are no lakes. Reservoirs simulation stops here'))
+                warnings.warn(LisfloodWarning('There are no reservoirs. Reservoirs simulation won\'t run'))
                 option['simulateReservoirs'] = False
                 option['repsimulateReservoirs'] = False
                 return
@@ -266,7 +268,7 @@ class reservoir(HydroModule):
             for i in range(0, nel-1):
                 if np.isnan(self.var.ReservoirFillCC[i]) or self.var.ReservoirFillCC[i] < 0:
                     msg = "Negative or NaN volume for reservoir fill set to 0. Increase computation time step for routing (DtSecChannel) \n"
-                    print(LisfloodWarning(msg))
+                    warnings.warn(LisfloodWarning(msg))
                     self.var.ReservoirFillCC[self.var.ReservoirFillCC < 0] = 0
                     self.var.ReservoirFillCC[np.isnan(self.var.ReservoirFillCC)] = 0
 

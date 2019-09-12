@@ -30,12 +30,13 @@ __date__ = "2016/06/01"
 
 import os
 import glob
+import warnings
+from multiprocessing import cpu_count
+from platform import system
 
 import numpy as np
 import pandas as pd
 import numexpr as nx
-from multiprocessing import cpu_count
-from platform import system
 
 from ..global_modules.errors import LisfloodWarning
 
@@ -66,7 +67,7 @@ if not bins or older:
     setup_args = {"script_args": ["--compiler=mingw32"]} if WINDOWS_OS else None
     # If this is executed, the binary .so file will be ignored and the routing is executed serially.
     pyximport.install(setup_args=setup_args)
-    print(LisfloodWarning("""The Cython module {} has not been compiled on the current machine (to compile, see instructions in the module's docstring).
+    warnings.warn(LisfloodWarning("""The Cython module {} has not been compiled on the current machine (to compile, see instructions in the module's docstring).
 The kinematic wave routing is executed serially (not in parallel).""".format(SRC)))
 
 from . import kinematic_wave_parallel_tools as kwpt

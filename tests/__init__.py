@@ -15,10 +15,16 @@ See the Licence for the specific language governing permissions and limitations 
 
 """
 from __future__ import print_function, absolute_import, division
-from nine import range
+from nine import range, IS_PYTHON2
 
 import os
 import sys
+import glob
+
+if IS_PYTHON2:
+    from pathlib2 import Path
+else:
+    from pathlib import Path
 
 from pyexpat import *
 import numpy as np
@@ -35,11 +41,11 @@ from lisflood.main import lisfloodexe
 
 class TestLis(object):
     reference_files = {
-        'dis_1': {'outpath': os.path.join(current_dir, 'data/TestCatchment1/reference/dis'),
+        'dis_1': {'path': os.path.join(current_dir, 'data/TestCatchment1/reference/dis'),
                   'report_map': 'DischargeMaps',
                   'report_tss': 'DisTS'
                   },
-        'dis_2': {'outpath': os.path.join(current_dir, 'data/TestCatchment2/reference/dis'),
+        'dis_2': {'path': os.path.join(current_dir, 'data/TestCatchment2/reference/dis'),
                   'report_map': 'DischargeMaps',
                   'report_tss': 'DisTS'
                   }
@@ -68,12 +74,18 @@ class TestLis(object):
             output_tss = binding[cls.reference_files[var]['report_tss']]
             if os.path.exists(output_tss):
                 os.remove(output_tss)
+        filelist = Path(settings.output_dir[0]).glob('*.nc')
+        for f in filelist:
+            try:
+                os.remove(str(f))
+            except OSError:
+                pass
 
     @classmethod
     def check_var_step(cls, var, step):
         settings = LisSettings.instance()
         binding = settings.binding
-        reference_path = cls.reference_files[var]['outpath']
+        reference_path = cls.reference_files[var]['path']
         output_path = binding[cls.reference_files[var]['report_map']]
         reference = readnetcdf(reference_path, step)
         current_output = readnetcdf(output_path, step)
@@ -108,7 +120,7 @@ class TestLis(object):
         settings = LisSettings.instance()
         binding = settings.binding
         model_steps = settings.model_steps
-        reference_path = cls.reference_files[variable]['outpath']
+        reference_path = cls.reference_files[variable]['path']
         output_path = os.path.normpath(binding[cls.reference_files[variable]['report_map']])
         print('>>> Reference: {} - Current Output: {}'.format(reference_path, output_path))
 

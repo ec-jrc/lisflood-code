@@ -11,9 +11,9 @@ class LisfloodError(Exception):
     def __init__(self, msg):
         header = "\n\n ========================== LISFLOOD ERROR =============================\n"
         try:
-            self._msg = header + msg + "\n" + sys.exc_info()[1].message
+            self._msg = '{}{}\n{}'.format(header, msg, sys.exc_info()[1].message)
         except (IndexError, AttributeError):
-            self._msg = header + msg + "\n"
+            self._msg = self._msg = '{}{}\n'.format(header, msg)
 
     def __str__(self):
         return self._msg
@@ -29,14 +29,12 @@ class LisfloodFileError(LisfloodError):
         path, name = os.path.split(filename)
         path = os.path.normpath(path)
         if os.path.exists(path):
-            text1 = "path: " + path + " exists\nbut filename: " + name + " does not\n"
-            text1 += "file name extension can be .map or .nc\n"
+            text1 = "path: {} exists\nbut filename: {} does not\nfile name extension can be .map or .nc\n".format(path, name)
         else:
-            text1 = "searching: " + filename
-            text1 += "\npath: " + path + " does not exists\n"
+            text1 = "searching: {}\npath: {} does not exists\n".format(filename, path)
 
-        header = "\n\n ======================== LISFLOOD FILE ERROR ===========================\n"
-        self._msg = header + msg + text1
+        header = "======================== LISFLOOD FILE ERROR ==========================="
+        self._msg = '\n\n {}\n{}{}'.format(header, msg, text1)
 
 
 class LisfloodWarning(Warning):
@@ -46,30 +44,8 @@ class LisfloodWarning(Warning):
     """
 
     def __init__(self, msg):
-        header = "\n\n ========================== LISFLOOD Warning =============================\n"
-        self._msg = header + msg
-
-    def __str__(self):
-        return self._msg
-
-
-class LisfloodRunInfo(Warning):
-    """
-    the error handling class
-    prints out an error
-    """
-
-    def __init__(self, mode, outputDir, Steps=1, ensMembers=1, Cores=1):
-        header = "\n\n ========================== LISFLOOD Simulation Information and Setting =============================\n"
-        msg = "   LISFLOOD is used in the " + str(mode) + "\n"
-        if ensMembers > 1:
-            msg += "   It uses " + str(ensMembers) + " ensemble members for the simulation\n"
-        if Steps > 1:
-            msg += "   The model will be updated at " + str(Steps) + " time step during the simulation\n"
-        if Cores > 1:
-            msg += "   The simulation will try to use " + str(Cores) + " processors simultaneous\n"
-        msg += "   The simulation output as specified in the settings file can be found in " + str(outputDir) + "\n"
-        self._msg = header + msg
+        header = "========================== LISFLOOD Warning ============================="
+        self._msg = '\n\n {}\n{}'.format(header, msg)
 
     def __str__(self):
         return self._msg

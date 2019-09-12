@@ -16,6 +16,8 @@ See the Licence for the specific language governing permissions and limitations 
 """
 from __future__ import absolute_import, print_function, division
 
+import warnings
+
 import numpy as np
 import pcraster
 
@@ -66,7 +68,7 @@ class lakes(HydroModule):
             self.var.LakeIndex = np.nonzero(LakeSitesC)[0]
 
             if self.var.LakeSitesCC.size == 0:
-                print(LisfloodWarning('There are no lakes. Lakes simulation stops here'))
+                warnings.warn(LisfloodWarning('There are no lakes. Lakes simulation won\'t run'))
                 option['simulateLakes'] = False
                 option['repsimulateLakes'] = False
                 return
@@ -218,7 +220,7 @@ class lakes(HydroModule):
             if any(np.isnan(self.var.LakeStorageM3CC)) or any(self.var.LakeStorageM3CC < 0):
                 msg = "Negative or NaN volume for lake storage set to 0. " \
                       "Increase computation time step for routing (DtSecChannel) \n"
-                print(LisfloodWarning(msg))
+                warnings.warn(LisfloodWarning(msg))
                 self.var.LakeStorageM3CC[self.var.LakeStorageM3CC < 0] = 0
                 self.var.LakeStorageM3CC[np.isnan(self.var.LakeStorageM3CC)] = 0
 
