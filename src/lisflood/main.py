@@ -20,7 +20,7 @@ from __future__ import print_function, absolute_import, division
 import uuid
 import os
 import sys
-import datetime
+import warnings
 
 src_dir = os.path.dirname(os.path.abspath(__file__))
 if os.path.exists(src_dir):
@@ -36,7 +36,8 @@ from .Lisflood_dynamic import LisfloodModel_dyn
 from .Lisflood_initial import LisfloodModel_ini
 from .Lisflood_monteCarlo import LisfloodModel_monteCarlo
 from .global_modules.settings import LisSettings, CDFFlags
-from .global_modules.errors import LisfloodRunInfo, LisfloodWarning, LisfloodError
+from .global_modules.errors import LisfloodWarning, LisfloodError
+from lisflood.global_modules.settings import LisfloodRunInfo
 from .global_modules.settings import calendar, inttodate
 from . import __authors__, __version__, __date__, __status__
 
@@ -85,10 +86,7 @@ def lisfloodexe(lissettings=None):
     for key in report_steps:
         report_steps[key] = [x for x in report_steps[key] if model_steps[0] <= x <= model_steps[1]]
 
-    if option['InitLisflood']:
-        print("INITIALISATION RUN")
-
-    print("Start Step - End Step: ", model_steps[0], " - ", model_steps[1])
+    print("\nStart Step - End Step: ", model_steps[0], " - ", model_steps[1])
     print("Start Date - End Date: ",
           inttodate(model_steps[0] - 1, calendar(binding['CalendarDayStart'], binding['calendar_type'])),
           " - ",
@@ -109,7 +107,6 @@ def lisfloodexe(lissettings=None):
               inttodate(calendar(report_steps['rep'][0] - 1, binding['calendar_type']), calendar(binding['CalendarDayStart'], binding['calendar_type'])),
               " - ",
               inttodate(calendar(report_steps['rep'][-1] - 1), calendar(binding['CalendarDayStart'], binding['calendar_type'])))
-
         # messages at model start
         print("%-6s %10s %11s\n" % ("Step", "Date", "Discharge"))
 
@@ -122,50 +119,36 @@ def lisfloodexe(lissettings=None):
     stLisflood.rquiet = True
     stLisflood.rtrace = False
 
-    """
-    ----------------------------------------------
-    Monte Carlo and Ensemble Kalman Filter setting
-    ----------------------------------------------
-    """
-    # Ensemble Kalman filter
-    EnKFset = option.get('EnKF', 0) if not option['InitLisflood'] else 0
-    # MonteCarlo
-    MCset = option.get('MonteCarlo', 0) if not option['InitLisflood'] else 0
-
-    if EnKFset and not MCset:
-        msg = "Trying to run EnKF with only 1 ensemble member \n"
-        raise LisfloodError(msg)
-    if EnKFset and filter_steps[0] == 0:
-        msg = "Trying to run EnKF without filter timestep specified \nRunning LISFLOOD in Monte Carlo mode \n"
-        print(LisfloodWarning(msg))
-        EnKFset = 0
-    if MCset and lissettings.ens_members[0] <= 1:
-        msg = "Trying to run Monte Carlo simulation with only 1 member \nRunning LISFLOOD in deterministic mode \n"
-        print(LisfloodWarning(msg))
-        MCset = 0
-    if MCset:
-        mcLisflood = MonteCarloFramework(stLisflood, nrSamples=lissettings.ens_members[0])
+    if lissettings.mc_set:
+        """
+        ----------------------------------------------
+        MonteCarlo/Ensemble Kalman Filter models
+        ----------------------------------------------
+        """
+        mc_lisflood = MonteCarloFramework(stLisflood, nrSamples=lissettings.ens_members[0])
         if lissettings.nrcores[0] > 1:
-            mcLisflood.setForkSamples(True, nrCPUs=lissettings.nrcores[0])
-        if EnKFset:
-            kfLisflood = EnsKalmanFilterFramework(mcLisflood)
-            kfLisflood.setFilterTimesteps(filter_steps)
-            print(LisfloodRunInfo(mode="Ensemble Kalman Filter", outputDir=lissettings.output_dir[0],
-                                  Steps=len(filter_steps),
-                                  ensMembers=lissettings.ens_members[0], Cores=lissettings.nrcores[0]))
-            kfLisflood.run()
+            mc_lisflood.setForkSamples(True, nrCPUs=lissettings.nrcores[0])
+
+        if lissettings.enkf_set:
+            kf_lisflood = EnsKalmanFilterFramework(mc_lisflood)
+            kf_lisflood.setFilterTimesteps(filter_steps)
+            # Ensemble Kalman filter
+            model_to_run = kf_lisflood
         else:
-            print(LisfloodRunInfo(mode = "Monte Carlo", outputDir=lissettings.output_dir[0],
-                                  ensMembers=lissettings.ens_members[0], Cores=lissettings.nrcores[0]))
-            mcLisflood.run()
+            # MonteCarlo
+            model_to_run = mc_lisflood
     else:
         """
         ----------------------------------------------
         Deterministic run
         ----------------------------------------------
         """
-        print(LisfloodRunInfo(mode="Deterministic", outputDir=lissettings.output_dir[0]))
-        stLisflood.run()
+        model_to_run = stLisflood
+
+    # print info about execution
+    print(LisfloodRunInfo(model_to_run))
+    # actual run of the model
+    model_to_run.run()
 
 # ==================================================
 # ============== USAGE ==============================

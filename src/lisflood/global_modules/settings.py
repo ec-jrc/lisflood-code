@@ -17,12 +17,11 @@ See the Licence for the specific language governing permissions and limitations 
 """
 from __future__ import (absolute_import, division, print_function, unicode_literals)
 
-from collections import namedtuple
-
 from future.backports import OrderedDict
 from future.utils import with_metaclass
 from nine import (iteritems, str, range, map, nine)
 
+import warnings
 import copy
 import getopt
 import sys
@@ -30,11 +29,12 @@ import datetime
 import os
 import pprint
 import inspect
+from collections import namedtuple
 
 import xml.dom.minidom
 import pcraster
 from netCDF4 import Dataset, date2num, num2date
-from pandas._libs.tslibs.parsing import parse_time_string
+from pandas.core.tools.datetimes import parse_time_string
 import numpy as np
 
 from .errors import LisfloodError, LisfloodWarning, LisfloodFileError
@@ -201,6 +201,7 @@ class LisSettings(with_metaclass(Singleton)):
         self.settings_path = os.path.normpath(os.path.abspath(settings_file))
         user_settings, bindings = self._bindings(dom)
         self.timestep_init = None if not bindings.get('timestepInit') else bindings['timestepInit']
+        self._check_timestep_init()
         self.output_dir = self._out_dirs(user_settings)
         self.ncores = self._ncores(user_settings)
         self.binding = bindings
@@ -217,6 +218,39 @@ class LisSettings(with_metaclass(Singleton)):
         self.report_maps_all = {k: v for k, v in iteritems(self.report_maps_all) if v}
         self.report_maps_end = {k: v for k, v in iteritems(self.report_maps_end) if v}
         # print(self)
+
+        self.enkf_set, self.mc_set = self.montecarlo_kalman_settings()
+
+    def montecarlo_kalman_settings(self):
+        # Ensemble Kalman filter
+        enkf_set = self.options.get('EnKF', 0) if not self.options['InitLisflood'] else 0
+        # MonteCarlo
+        mc_set = self.options.get('MonteCarlo', 0) if not self.options['InitLisflood'] else 0
+        if enkf_set and not mc_set:
+            msg = "Trying to run EnKF with only 1 ensemble member \n"
+            raise LisfloodError(msg)
+        if enkf_set and self.filter_steps[0] == 0:
+            msg = "Trying to run EnKF without filter timestep specified \nRunning LISFLOOD in Monte Carlo mode \n"
+            warnings.warn(LisfloodWarning(msg))
+            enkf_set = 0
+        if mc_set and self.ens_members[0] <= 1:
+            msg = "Trying to run Monte Carlo simulation with only 1 member \nRunning LISFLOOD in deterministic mode \n"
+            warnings.warn(LisfloodWarning(msg))
+            mc_set = 0
+        return enkf_set, mc_set
+
+    def _check_timestep_init(self):
+        try:
+            float(self.timestep_init)
+        except ValueError:
+            try:
+                parse_time_string(self.timestep_init, dayfirst=True)
+            except ValueError:
+                raise LisfloodError('Option timestepInit was not parsable. Must be integer or date string: {}'.format(self.timestep_init))
+            else:
+                return True
+        else:
+            return True
 
     def _check_simulation_dates(self):
         """ Check simulation start and end dates or timesteps
@@ -465,7 +499,7 @@ def get_calendar_type(nc):
         calendar_type = nc.variables["time"].calendar
     except AttributeError:
         calendar_type = "proleptic_gregorian"
-        print(LisfloodWarning("""
+        warnings.warn(LisfloodWarning("""
 The 'calendar' attribute of the 'time' variable of {} is not set: the default '{}' is used
 (http://cfconventions.org/Data/cf-conventions/cf-conventions-1.7/cf-conventions.pdf)
 """.format(nc, calendar_type)))
@@ -566,3 +600,45 @@ def inttodate(int_in, ref_date):
     stepDate = ref_date + datetime.timedelta(days=(int_in * DtDay))
 
     return stepDate
+
+
+class LisfloodRunInfo(Warning):
+    """
+    the error handling class
+    prints out an error
+    """
+    modes = {
+        'MonteCarloFramework': 'Monte Carlo',
+        'EnsKalmanFilterFramework': '"Ensemble Kalman Filter',
+        'DynamicFramework': 'Deterministic',
+    }
+
+    def __init__(self, model):
+
+        header = "\n\n ========================== LISFLOOD Simulation Information and Setting =============================\n"
+        msg = ''
+        settings = LisSettings.instance()
+        option = settings.options
+        out_dir = settings.output_dir[0]
+        ens_members = settings.ens_members[0]
+        nr_cores = settings.ncores[0]
+        steps = len(settings.filter_steps)
+        mode = self.modes[model.__class__.__name__]
+
+        msg += "\t[X] LISFLOOD is used in the {}\n".format(mode)
+        if option['InitLisflood']:
+            msg += "\t[X] INITIALISATION RUN\n"
+
+        if mode in (self.modes['EnsKalmanFilterFramework'], self.modes['MonteCarloFramework']) and ens_members > 1:
+            msg += "\t[X] It uses {} ensemble members for the simulation\n".format(str(ens_members))
+
+        if mode in (self.modes['EnsKalmanFilterFramework']) and steps > 1:
+            msg += "\t[X] The model will be updated at {} time step during the simulation\n".format(str(steps))
+
+        if mode in (self.modes['EnsKalmanFilterFramework'], self.modes['MonteCarloFramework']) and nr_cores > 1:
+            msg += "\t[X] The simulation will try to use {} processors simultaneous\n".format(str(nr_cores))
+        msg += "\t[X] The simulation output as specified in the settings file can be found in {}\n".format(out_dir)
+        self._msg = '{}{}'.format(header, msg)
+
+    def __str__(self):
+        return self._msg

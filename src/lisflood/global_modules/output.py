@@ -17,6 +17,7 @@ See the Licence for the specific language governing permissions and limitations 
 from __future__ import print_function, absolute_import
 
 import os
+import warnings
 
 from pcraster import report, ifthen, mapmaximum, catchmenttotal
 
@@ -298,7 +299,7 @@ class outputTssMap(object):
                             writenet(cdfflags[flagcdf], eval(what), where, self.var.DtDay, maps, report_maps_all[maps].output_var,
                                      report_maps_all[maps].unit, 'f4', reportStartDate, reportStepStart, reportStepEnd, frequency)
                         except Exception as e:
-                            print(LisfloodWarning(str(e)))
+                            warnings.warn(LisfloodWarning(str(e)))
                             print("ALL", what, where, self.var.DtDay, maps, report_maps_all[maps].output_var,
                                   report_maps_all[maps].unit, 'f4', reportStartDate,reportStepStart, reportStepEnd)
                     else:
