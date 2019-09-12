@@ -104,7 +104,7 @@ class UploadCommand(Command):
         except OSError:
             pass
 
-        self.print_console('Building Source and Wheel (universal) distribution...')
+        self.print_console('Building Source distribution...')
         os.system('{0} setup.py sdist'.format(sys.executable))
 
         self.print_console('Uploading the package to PyPI via Twine...')

@@ -151,8 +151,10 @@ class outputTssMap(object):
             # report end map
             try:
                 where = os.path.join(str(self.var.currentSampleNumber()), binding[maps].split("/")[-1])
-            except:
-                where = binding[maps]
+            except (AttributeError, IndexError, KeyError):
+                where = binding.get(maps)
+            if not where:
+                continue
 
             # Output path and name of report map
             what = 'self.var.' + report_maps_end[maps].output_var
