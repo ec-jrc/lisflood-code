@@ -378,14 +378,21 @@ class routing(HydroModule):
                 # This must be removed
                 self.var.QLimit = self.var.QLimit / 24.0
                 ###############################################
+                # Over bankful discharge starts at QLimit
+                # lower discharge limit for second line of routing
+                # set to mutiple of average discharge (map from prerun)
+                # QSplitMult =2 is around 90 to 95% of Q
+                # Water volume in bankful when over bankful discharge starts
 
                 self.var.Chan2M3Start = self.var.ChannelAlpha2 * self.var.ChanLength * (self.var.QLimit ** self.var.Beta)
                 # virtual amount of water in the channel through second line
                 self.var.Chan2QStart = self.var.QLimit - compressArray(upstream(self.var.LddKinematic, decompress(self.var.QLimit)))
                 # because kinematic routing with a low amount of discharge leads to long travel time:
                 # Starting Q for second line is set to a higher value
-                self.var.Chan2M3Kin = np.maximum(self.var.CrossSection2Area * self.var.ChanLength + self.var.Chan2M3Start, 0)  # TEMPORARY SOLUTION TO VIRTUAL WATER PROBLEM
-                self.var.ChanM3Kin = np.maximum(self.var.ChanM3 - self.var.Chan2M3Kin + self.var.Chan2M3Start, 0)  # TEMPORARY SOLUTION TO VIRTUAL WATER PROBLEM
+
+                self.var.Chan2M3Kin = self.var.CrossSection2Area * self.var.ChanLength + self.var.Chan2M3Start
+                self.var.ChanM3Kin = self.var.ChanM3 - self.var.Chan2M3Kin + self.var.Chan2M3Start
+
                 self.var.Chan2QKin = (self.var.Chan2M3Kin*self.var.InvChanLength*self.var.InvChannelAlpha2)**(self.var.InvBeta)
                 self.var.ChanQKin = (self.var.ChanM3Kin*self.var.InvChanLength*self.var.InvChannelAlpha)**(self.var.InvBeta)
 
@@ -464,23 +471,32 @@ class routing(HydroModule):
 
             if option['InitLisflood'] or (not(option['SplitRouting'])):
                 # if InitLisflood no split routing is use
+
                 #  ---- Single Routing ---------------
                 # No split routing
                 # side flow consists of runoff (incl. groundwater), inflow from reservoirs (optional) and external inflow hydrographs (optional)
                 SideflowChan[np.isnan(SideflowChan)] = 0 # TEMPORARY FIX - SEE DEBUG ABOVE!
 
-                # ChanQKin in [cu m / s]
                 self.river_router.kinematicWaveRouting(self.var.ChanQKin, SideflowChan, "main_channel")
                 self.var.ChanM3Kin = self.var.ChanLength * self.var.ChannelAlpha * self.var.ChanQKin**self.var.Beta
                 # Volume in channel at end of computation step
-                #self.var.ChanQKin=pcraster.max(self.var.ChanQKin,0)
-                self.var.ChanQ=np.maximum(self.var.ChanQKin,0)
+
+                self.var.ChanM3Kin=np.maximum(self.var.ChanM3Kin,0.0)
+                # Check for negative volumes at the end of computation step
+                self.var.ChanQKin = (self.var.ChanM3Kin*self.var.InvChanLength*self.var.InvChannelAlpha)**(self.var.InvBeta)
+                # Correct negative discharge at the end of computation step
+
+                self.var.ChanQ=self.var.ChanQKin.copy()
+                # at single kin. ChanQ is the same
+
                 # at single kin. ChanQ is the same
                 self.var.sumDisDay+=self.var.ChanQ
+
                 # Total channel storage [cu m], equal to ChanM3Kin
                 #self.var.ChanQ = maxpcr(self.var.ChanQKin, null)
 
             else:
+
                 #  ---- Double Routing ---------------
                 # routing is split in two (virtual) channels)
 
@@ -503,20 +519,34 @@ class routing(HydroModule):
                 # a constant amount of water has to be added
                 # -> add QLimit discharge
 
-                # Main channel routing
+                # --- Main channel routing ---
                 self.river_router.kinematicWaveRouting(self.var.ChanQKin, self.var.Sideflow1Chan, "main_channel")
                 self.var.ChanM3Kin = self.var.ChanLength * self.var.ChannelAlpha * self.var.ChanQKin**self.var.Beta
 
-                # Floodplains routing
+                self.var.ChanM3Kin=np.maximum(self.var.ChanM3Kin, 0.0)
+                # Check for negative volumes at the end of computation step
+                self.var.ChanQKin = (self.var.ChanM3Kin*self.var.InvChanLength*self.var.InvChannelAlpha)**(self.var.InvBeta)
+                # Correct negative discharge at the end of computation step
+
+
+                # --- Floodplains routing ---
                 self.river_router.kinematicWaveRouting(self.var.Chan2QKin, Sideflow2Chan, "floodplains")
                 self.var.Chan2M3Kin = self.var.ChanLength * self.var.ChannelAlpha2 * self.var.Chan2QKin**self.var.Beta
-                self.var.CrossSection2Area = (self.var.Chan2M3Kin - self.var.Chan2M3Start) * self.var.InvChanLength  # wet cross-section area of floodplain
+
+                diffM3 = self.var.Chan2M3Kin - self.var.Chan2M3Start
+                self.var.Chan2M3Kin=np.where(diffM3 < 0.0, self.var.Chan2M3Start, self.var.Chan2M3Kin)
+                # Check for negative volume in second line of routing at the end of routing substep
+
+                self.var.CrossSection2Area = (self.var.Chan2M3Kin - self.var.Chan2M3Start) * self.var.InvChanLength   # wet cross-section area of floodplain
+                # Compute cross-section for second line of routing
+                
+                self.var.Chan2QKin = (self.var.Chan2M3Kin*self.var.InvChanLength*self.var.InvChannelAlpha2)**(self.var.InvBeta)
+                # Correct negative discharge at the end of computation step in second line
+
                 self.var.ChanQ = np.maximum(self.var.ChanQKin + self.var.Chan2QKin - self.var.QLimit, 0)
+                # Superposition Kinematic
                 # Main channel routing and floodplains routing
 
-                # ChanQ=max(ChanQKin+Chan2QKin-QLimit,0.0);
-                # Channel discharge: equal to ChanQKin [cu m / s]
-                # End splitrouting
                 self.var.sumDisDay += self.var.ChanQ
                 # ----------End splitrouting-------------------------------------------------
 
