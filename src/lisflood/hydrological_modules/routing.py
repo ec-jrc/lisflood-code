@@ -363,14 +363,18 @@ class routing(HydroModule):
             if not(option['InitLisflood']):
 
                 self.var.QLimit = loadmap('AvgDis') * loadmap('QSplitMult')
-                self.var.M3Limit = self.var.ChannelAlpha * self.var.ChanLength * (self.var.QLimit ** self.var.Beta)
                 # Over bankful discharge starts at QLimit
                 # lower discharge limit for second line of routing
                 # set to mutiple of average discharge (map from prerun)
                 # QSplitMult =2 is around 90 to 95% of Q
 
+                self.var.M3Limit = self.var.ChannelAlpha * self.var.ChanLength * (self.var.QLimit ** self.var.Beta)
+                # Water volume in bankful when over bankful discharge starts
+
                 ###############################################
                 # CM mod
+                # TEMPORARY WORKAROUND FOR EFAS XDOM!!!!!!!!!!
+                # This must be removed
                 # QLimit should NOT be dependent on the NoRoutSteps (number of routing steps)
                 # self.var.QLimit = self.var.QLimit / self.var.NoRoutSteps #original
 
@@ -378,11 +382,6 @@ class routing(HydroModule):
                 # This must be removed
                 self.var.QLimit = self.var.QLimit / 24.0
                 ###############################################
-                # Over bankful discharge starts at QLimit
-                # lower discharge limit for second line of routing
-                # set to mutiple of average discharge (map from prerun)
-                # QSplitMult =2 is around 90 to 95% of Q
-                # Water volume in bankful when over bankful discharge starts
 
                 self.var.Chan2M3Start = self.var.ChannelAlpha2 * self.var.ChanLength * (self.var.QLimit ** self.var.Beta)
                 # virtual amount of water in the channel through second line
@@ -489,11 +488,8 @@ class routing(HydroModule):
                 self.var.ChanQ=self.var.ChanQKin.copy()
                 # at single kin. ChanQ is the same
 
-                # at single kin. ChanQ is the same
                 self.var.sumDisDay+=self.var.ChanQ
-
                 # Total channel storage [cu m], equal to ChanM3Kin
-                #self.var.ChanQ = maxpcr(self.var.ChanQKin, null)
 
             else:
 
@@ -506,9 +502,10 @@ class routing(HydroModule):
                 # CM ##################################
                 self.var.Sideflow1Chan = np.where(self.var.ChanM3Kin > self.var.M3Limit, SideflowRatio*SideflowChan, SideflowChan)
                 # This is creating instability because ChanM3Kin can be < M3Limit between two routing sub-steps
-                #######################################
+                # TO BY REPLACED WITH THE FOLLOWING
                 # self.var.Sideflow1Chan = np.where((self.var.ChanM3Kin + self.var.Chan2M3Kin-self.var.Chan2M3Start) > self.var.M3Limit,
                 #                                   SideflowRatio*SideflowChan, SideflowChan)
+                #######################################
 
                 self.var.Sideflow1Chan = np.where(np.abs(SideflowChan) < 1e-7, SideflowChan, self.var.Sideflow1Chan)
                 # too small values are avoided
