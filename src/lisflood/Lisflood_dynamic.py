@@ -183,11 +183,10 @@ class LisfloodModel_dyn(DynamicModel):
             # Total channel storage [cu m], equal to ChanM3Kin
         else:
             # split routing
-            self.ChanM3 = self.ChanM3Kin + self.Chan2M3Kin - self.Chan2M3Start #originale
-            #self.ChanM3 = self.ChanM3Kin + self.Chan2M3Kin
+            self.ChanM3 = self.ChanM3Kin + self.Chan2M3Kin - self.Chan2M3Start
 
         # Avoid negative values in ChanM3 and TotalCrossSectionArea
-        self.ChanM3 = np.where(self.ChanM3 > 0, self.ChanM3, 0)
+        # self.ChanM3 = np.where(self.ChanM3 > 0, self.ChanM3, 0)
 
         # Total channel storage [cu m], equal to ChanM3Kin
         # sum of both lines

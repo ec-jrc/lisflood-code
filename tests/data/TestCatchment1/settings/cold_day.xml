@@ -34,7 +34,7 @@
         <setoption choice="0" name="InitLisflood"/>
 
 
-        <setoption choice="0" name="repEndMaps"/>
+        <setoption choice="1" name="repEndMaps"/>
 
         <setoption choice="1" name="repStateMaps"/>
 
