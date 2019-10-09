@@ -403,7 +403,6 @@ class routing(HydroModule):
         """
         settings = LisSettings.instance()
         option = settings.options
-        binding = settings.binding
 
         if not(option['InitLisflood']):    # only with no InitLisflood
             self.lakes_module.dynamic_inloop(NoRoutingExecuted)
@@ -466,19 +465,18 @@ class routing(HydroModule):
                 # if InitLisflood no split routing is use
                 #  ---- Single Routing ---------------
                 # No split routing
-                # side flow consists of runoff (incl. groundwater), inflow from reservoirs (optional) and external inflow hydrographs (optional)
+                # side flow consists of runoff (incl. groundwater),
+                # inflow from reservoirs (optional) and external inflow hydrographs (optional)
                 SideflowChan[np.isnan(SideflowChan)] = 0  # TEMPORARY FIX - SEE DEBUG ABOVE!
 
                 # ChanQKin in [cu m / s]
                 self.river_router.kinematicWaveRouting(self.var.ChanQKin, SideflowChan, "main_channel")
                 self.var.ChanM3Kin = self.var.ChanLength * self.var.ChannelAlpha * self.var.ChanQKin**self.var.Beta
                 # Volume in channel at end of computation step
-                #self.var.ChanQKin=pcraster.max(self.var.ChanQKin,0)
                 self.var.ChanQ = np.maximum(self.var.ChanQKin, 0)
                 # at single kin. ChanQ is the same
                 self.var.sumDisDay += self.var.ChanQ
                 # Total channel storage [cu m], equal to ChanM3Kin
-                #self.var.ChanQ = maxpcr(self.var.ChanQKin, null)
 
             else:
                 #  ---- Double Routing ---------------
@@ -515,6 +513,8 @@ class routing(HydroModule):
                 self.river_router.kinematicWaveRouting(self.var.Chan2QKin, Sideflow2Chan, "floodplains")
                 self.var.Chan2M3Kin = self.var.ChanLength * self.var.ChannelAlpha2 * self.var.Chan2QKin**self.var.Beta
                 self.var.CrossSection2Area = (self.var.Chan2M3Kin - self.var.Chan2M3Start) * self.var.InvChanLength  # wet cross-section area of floodplain
+                # CM remove negative CrossSection2Area values
+                self.var.CrossSection2Area = np.where(self.var.CrossSection2Area < 0, 0.0, self.var.CrossSection2Area)
                 self.var.ChanQ = np.maximum(self.var.ChanQKin + self.var.Chan2QKin - self.var.QLimit, 0)
                 # Main channel routing and floodplains routing
 
@@ -530,9 +530,9 @@ class routing(HydroModule):
             # Channel velocity (m/s); dividing Q (m3/s) by CrossSectionArea (m2)
             # avoid extreme velocities by using the Wollheim 2006 equation
             # assume 0.1 for upstream areas (outside ChanLdd)
-            self.var.FlowVelocity *= np.minimum(np.sqrt(self.var.PixelArea)*self.var.InvChanLength,1);
+            self.var.FlowVelocity *= np.minimum(np.sqrt(self.var.PixelArea)*self.var.InvChanLength, 1)
             # reduction for sinuosity of channels
-            self.var.TravelDistance=self.var.FlowVelocity*self.var.DtSec;
+            self.var.TravelDistance=self.var.FlowVelocity*self.var.DtSec
             # if flow is fast, Traveltime=1, TravelDistance is high: Pixellength*DtSec
             # if flow is slow, Traveltime=DtSec then TravelDistance=PixelLength
             # maximum set to 30km/day for 5km cell, is at DtSec/Traveltime=6, is at Traveltime<DtSec/6
