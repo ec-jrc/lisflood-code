@@ -191,15 +191,12 @@ class soilloop(HydroModule):
         # transpiration left after layers 1a and 1b unstressed water have been abstracted
         restTa = np.maximum(restTa - Ta1b, 0)
 
+        # distribution of abstractions of soil moisture below the critical value proportionally to each root-zone layer (1a and 1b) "stressed" availability
         stressed_availability_1a = np.maximum(self.var.W1a[sLoop] - Ta1a - self.var.WWP1a[sLoop], 0)
         stressed_availability_1b = np.maximum(self.var.W1b[sLoop] - Ta1b - self.var.WWP1b[sLoop], 0)
-        # |> distribution of abstractions of
         stressed_availability_tot = stressed_availability_1a + stressed_availability_1b
-        # |> soil moisture below the critical value
         available = stressed_availability_tot > 0
-        # |> proportionally to each root-zone layer (1a and 1b)
         fraction_rest_1a = np.where(available, stressed_availability_1a / stressed_availability_tot, 0)
-        # |> "stressed" availability
         fraction_rest_1b = np.where(available, stressed_availability_1b / stressed_availability_tot, 0)
 
         Ta1a += fraction_rest_1a * restTa
