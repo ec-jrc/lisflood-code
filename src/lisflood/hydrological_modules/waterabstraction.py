@@ -18,8 +18,10 @@ from __future__ import absolute_import, print_function, division
 
 import warnings
 
-from pcraster import boolean, nominal, ifthen, defined, areamaximum, downstream, cover, lddrepair, ifthenelse, upstream, \
-    scalar, accuflux, celllength, windowtotal, areaaverage
+from pcraster import (boolean, nominal, ifthen, defined, areamaximum,
+                      downstream, cover, lddrepair, ifthenelse, upstream,
+                      scalar, accuflux, celllength, windowtotal, areaaverage, pcr2numpy, numpy2pcr,
+                      Ordinal, Scalar, Directional)
 import numpy as np
 from netCDF4 import Dataset
 
@@ -627,15 +629,15 @@ class waterabstraction(HydroModule):
 
             if option['groundwaterSmooth']:
                 LZPcr = decompress(self.var.LZ)
-
                 Range = self.var.LZSmoothRange * celllength()
-
                 LZTemp1 = ifthen(self.var.GroundwaterBodiesPcr == 1, LZPcr)
                 LZTemp2 = ifthen(self.var.GroundwaterBodiesPcr == 1, windowtotal(LZTemp1, Range))
                 LZTemp3 = windowtotal(LZTemp1 * 0 + 1, Range)
-                LZSmooth = ifthenelse(LZTemp3 == 0, 0.0, LZTemp2 // LZTemp3)
-                # note: using floor division (//) here as PCRASTER Python2 doesn't define __div__ for Field
-                # It avoids TypeError: unsupported operand type(s) for /: 'Field' and 'Field' in Python2 environments
+                LZSmooth = ifthenelse(LZTemp3 == 0, 0.0, numpy2pcr(Scalar, pcr2numpy(LZTemp2, mv=-9999) / pcr2numpy(LZTemp3, mv=-9999), -9999))
+                # Converting to numpy and back was done to avoid
+                # TypeError: unsupported operand type(s) for /: 'Field' and 'Field' in Python2 environments
+                # It was LZTemp2 // LZTemp3: floor division is implemented in pcraster.Field class
+                # but we cannot use it here
 
                 LZPcr = ifthenelse(self.var.GroundwaterBodiesPcr == 0, LZPcr, 0.9 * LZPcr + 0.1 * LZSmooth)
 
