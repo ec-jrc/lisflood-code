@@ -176,20 +176,47 @@ class soilloop(HydroModule):
         # 1st: above wCrit from layer 1a
         # 2nd: above Wcrit from layer 1b
         # 3rd:  distribute take off according to soil moisture availability below wcrit
-        wc1a = np.maximum(self.var.W1a[sLoop] - WCrit1a, 0) # unstressed water availability from layer 1a without stress (above critical soil moisture)
-        wc1b = np.maximum(self.var.W1b[sLoop] - WCrit1b, 0) # (same as above but for layer 1b)
-        Ta1a = np.minimum(self.var.Ta[sLoop], wc1a)         # temporary transpiration from layer 1a (<= unstressed layer 1a availability)
-        restTa = np.maximum(self.var.Ta[sLoop] - Ta1a, 0)   # transpiration left after layer 1a unstressed water has been abstracted
-        Ta1b = np.minimum(restTa, wc1b)                     # temporary transpiration from layer 1b (<= unstressed layer 1b availability)
-        restTa = np.maximum(restTa - Ta1b, 0)               # transpiration left after layers 1a and 1b unstressed water have been abstracted
-        stressed_availability_1a = np.maximum(self.var.W1a[sLoop] - Ta1a - self.var.WWP1a[sLoop], 0)    #|
-        stressed_availability_1b = np.maximum(self.var.W1b[sLoop] - Ta1b - self.var.WWP1b[sLoop], 0)    #|
-        stressed_availability_tot = stressed_availability_1a + stressed_availability_1b                 #|> distribution of abstractions of
-        available = stressed_availability_tot > 0                                                       #|> soil moisture below the critical value
-        fraction_rest_1a = np.where(available, stressed_availability_1a / stressed_availability_tot, 0) #|> proportionally to each root-zone layer (1a and 1b)
-        fraction_rest_1b = np.where(available, stressed_availability_1b / stressed_availability_tot, 0) #|> "stressed" availability
-        Ta1a += fraction_rest_1a * restTa                                                               #|
-        Ta1b += fraction_rest_1b * restTa                                                               #|
+        # unstressed water availability from layer 1a without stress (above critical soil moisture)
+        wc1a = np.maximum(self.var.W1a[sLoop] - WCrit1a, 0)
+        # (same as above but for layer 1b)
+        wc1b = np.maximum(self.var.W1b[sLoop] - WCrit1b, 0)
+
+        # temporary transpiration from layer 1a (<= unstressed layer 1a availability)
+        Ta1a = np.minimum(self.var.Ta[sLoop], wc1a)
+        # transpiration left after layer 1a unstressed water has been abstracted
+        restTa = np.maximum(self.var.Ta[sLoop] - Ta1a, 0)
+        # temporary transpiration from layer 1b (<= unstressed layer 1b availability)
+        Ta1b = np.minimum(restTa, wc1b)
+        # transpiration left after layers 1a and 1b unstressed water have been abstracted
+        restTa = np.maximum(restTa - Ta1b, 0)
+
+        # distribution of abstractions of soil moisture below the critical value proportionally to each root-zone layer (1a and 1b) "stressed" availability
+        stressed_availability_1a = np.maximum(self.var.W1a[sLoop] - Ta1a - self.var.WWP1a[sLoop], 0)
+        stressed_availability_1b = np.maximum(self.var.W1b[sLoop] - Ta1b - self.var.WWP1b[sLoop], 0)
+        stressed_availability_tot = stressed_availability_1a + stressed_availability_1b
+        available = stressed_availability_tot > 0
+        fraction_rest_1a = np.where(available, stressed_availability_1a / stressed_availability_tot, 0)
+        fraction_rest_1b = np.where(available, stressed_availability_1b / stressed_availability_tot, 0)
+
+        Ta1a += fraction_rest_1a * restTa
+        Ta1b += fraction_rest_1b * restTa
+
+        # Original version
+        # wc1a = self.var.W1a[sLoop] - WCrit1a
+        # wc1b = self.var.W1b[sLoop] - WCrit1b
+        #
+        # Ta1a = np.minimum(self.var.Ta[sLoop], wc1a)
+        # # either all of Ta or if Ta is too big for layer 1a than wc1a
+        # restTa = np.maximum(self.var.Ta[sLoop] - Ta1a, 0.)
+        # Ta1b = np.minimum(restTa, wc1b)
+        # # take the rest from 1b if it is above wcrit1b
+        # restTa = np.maximum(restTa - Ta1b, 0.)
+        # # calculate the remaining rest which is not above wcrit from either 1a and 1b
+        #
+        # WCritRation = np.where(WCrit1 - self.var.WWP1[sLoop] > 0, (WCrit1a - self.var.WWP1a[sLoop]) / (WCrit1 - self.var.WWP1[sLoop]), 0.0)
+        # Ta1a = Ta1a + WCritRation * restTa
+        # Ta1b = Ta1b + (1 - WCritRation) * restTa
+
         self.var.W1a[sLoop] -= Ta1a
         self.var.W1b[sLoop] -= Ta1b
         self.var.W1[sLoop] = np.add(self.var.W1a[sLoop], self.var.W1b[sLoop])

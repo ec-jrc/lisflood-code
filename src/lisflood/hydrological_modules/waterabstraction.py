@@ -18,8 +18,10 @@ from __future__ import absolute_import, print_function, division
 
 import warnings
 
-from pcraster import boolean, nominal, ifthen, defined, areamaximum, downstream, cover, lddrepair, ifthenelse, upstream, \
-    scalar, accuflux, celllength, windowtotal, areaaverage
+from pcraster import (boolean, nominal, ifthen, defined, areamaximum,
+                      downstream, cover, lddrepair, ifthenelse, upstream,
+                      scalar, accuflux, celllength, windowtotal, areaaverage, pcr2numpy, numpy2pcr,
+                      Ordinal, Scalar, Directional)
 import numpy as np
 from netCDF4 import Dataset
 
@@ -633,7 +635,7 @@ class waterabstraction(HydroModule):
                 LZTemp1 = ifthen(self.var.GroundwaterBodiesPcr == 1, LZPcr)
                 LZTemp2 = ifthen(self.var.GroundwaterBodiesPcr == 1, windowtotal(LZTemp1, Range))
                 LZTemp3 = windowtotal(LZTemp1 * 0 + 1, Range)
-                LZSmooth = ifthenelse(LZTemp3 == 0, 0.0, LZTemp2 // LZTemp3)
+                LZSmooth = ifthenelse(LZTemp3 == 0, 0.0, numpy2pcr(Scalar, pcr2numpy(LZTemp2, mv=-9999) / pcr2numpy(LZTemp3, mv=-9999), -9999))
                 # note: using floor division (//) here as PCRASTER Python2 doesn't define __div__ for Field
                 # It avoids TypeError: unsupported operand type(s) for /: 'Field' and 'Field' in Python2 environments
 
