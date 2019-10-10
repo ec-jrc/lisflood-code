@@ -94,7 +94,11 @@
 
 
     <lfuser>
+
+
         <group>
+
+
             <comment>
 
                 **************************************************************
@@ -118,10 +122,78 @@
 
 
             <textvar name="MaskMap" value="$(PathRoot)/sbs/Mask.map">
+
+                /perm/ma/ma9/xdom/data/staticData/lisflood/area
+
+                <comment>
+
+                    70 40 0.1 -8.6 43.3 # Douro
+
+                    30 30 0.1 6.0 52.0
+
+                    Clone map
+
+                    col row cellsize xupleft yupleft
+
+                    300 200 0.1 -15 25 -> Niger
+
+                    3600 1500 0.1 -180 90 -> World
+
+                    $(PathRoot)\areamaps\areaEurope.map
+
+                    $(PathRoot)\areamaps\AreaPo.map
+
+                    or pcraster maps or netcdf maps
+
+                    e.g.
+
+                    Rhine areaLobith.map
+
+                    Niger areaLokoja.map
+
+                    Po areaPo.map
+
+                    Danube areaDanube.map
+
+                    Sava areaSava.map
+
+                </comment>
+
             </textvar>
 
 
             <textvar name="Gauges" value="$(PathMaps)/outlets.nc">
+
+                <comment>
+
+                    -7.85 41.15 -7.75 41.15 -7.35 41.15 -7.25 41.15 -7.15 41.15 -7.05 41.15 -5.85 41.75 # Duoro
+
+                    6.15 51.85
+
+                    12.25 44.95 9.95 45.15 # Po
+
+                    Nominal map with gauge locations (i.e cells for which simulated discharge
+
+                    is written to file(1,2,3 etc)
+
+                    lat lon (lat2 lon2 ...)
+
+                    or pcraster maps or netcdf maps
+
+                    ./mapsNetcdf/maps/outlets_World.map
+
+                    $(PathMaps)/outlets.map
+
+                    e.g.
+
+                    Lobith/Rhine 6.15 51.85
+
+                    Bratislava/Danube 17.15 48.15
+
+                    Niger/Lokoja 6.75 7.85 0.45 15.65
+
+                </comment>
+
             </textvar>
 
 

@@ -217,39 +217,7 @@ class LisSettings(with_metaclass(Singleton)):
         self.report_maps_steps = {k: v for k, v in iteritems(self.report_maps_steps) if v}
         self.report_maps_all = {k: v for k, v in iteritems(self.report_maps_all) if v}
         self.report_maps_end = {k: v for k, v in iteritems(self.report_maps_end) if v}
-
-        self.enkf_set, self.mc_set = self.montecarlo_kalman_settings()
-
-    def montecarlo_kalman_settings(self):
-        # Ensemble Kalman filter
-        enkf_set = self.options.get('EnKF', 0) if not self.options['InitLisflood'] else 0
-        # MonteCarlo
-        mc_set = self.options.get('MonteCarlo', 0) if not self.options['InitLisflood'] else 0
-        if enkf_set and not mc_set:
-            msg = "Trying to run EnKF with only 1 ensemble member \n"
-            raise LisfloodError(msg)
-        if enkf_set and self.filter_steps[0] == 0:
-            msg = "Trying to run EnKF without filter timestep specified \nRunning LISFLOOD in Monte Carlo mode \n"
-            warnings.warn(LisfloodWarning(msg))
-            enkf_set = 0
-        if mc_set and self.ens_members[0] <= 1:
-            msg = "Trying to run Monte Carlo simulation with only 1 member \nRunning LISFLOOD in deterministic mode \n"
-            warnings.warn(LisfloodWarning(msg))
-            mc_set = 0
-        return enkf_set, mc_set
-
-    def _check_timestep_init(self):
-        try:
-            float(self.timestep_init)
-        except ValueError:
-            try:
-                parse_time_string(self.timestep_init, dayfirst=True)
-            except ValueError:
-                raise LisfloodError('Option timestepInit was not parsable. Must be integer or date string: {}'.format(self.timestep_init))
-            else:
-                return True
-        else:
-            return True
+        # print(self)
 
         self.enkf_set, self.mc_set = self.montecarlo_kalman_settings()
 

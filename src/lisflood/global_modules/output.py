@@ -147,9 +147,8 @@ class outputTssMap(object):
         yearly = False
 
         # Report END maps
-
         for maps in report_maps_end.keys():
-            # report end map filename
+            # report end map
             try:
                 where = os.path.join(str(self.var.currentSampleNumber()), binding[maps].split("/")[-1])
             except (AttributeError, IndexError, KeyError):
@@ -159,14 +158,11 @@ class outputTssMap(object):
 
             # Output path and name of report map
             what = 'self.var.' + report_maps_end[maps].output_var
-            if where not in checkifdouble:
+            if not(where in checkifdouble):
                 checkifdouble.append(where)
                 # checks if saved at same place, if no: add to list
-
                 if self.var.currentTimeStep() == self.var.nrTimeSteps():
-                    # final step: Write end maps
                     # Get start date for reporting start step
-                    # (last step indeed)
                     reportStartDate = inttodate(self.var.currentTimeStep() - 1, self.var.CalendarDayStart)
 
                     # if suffix with '.' is part of the filename report with
@@ -174,30 +170,32 @@ class outputTssMap(object):
                     head, tail = os.path.split(where)
                     if '.' in tail:
                         if option['writeNetcdf']:
-                            # write end map to netCDF file (single)
+                            # CM mod: write end map to netCDF file (single)
+                            # CM ##########################
                             try:
                                 writenet(0, eval(what), where, self.var.DtDay, maps, report_maps_end[maps].output_var,
-                                         report_maps_end[maps].unit, 'd', reportStartDate,
+                                         report_maps_end[maps].unit, 'f4', reportStartDate,
                                          self.var.currentTimeStep(), self.var.currentTimeStep())
                             except:
                                 print("END", what, where, self.var.DtDay, maps, report_maps_end[maps].output_var,
-                                      report_maps_end[maps].unit, 'd', reportStartDate,
+                                      report_maps_end[maps].unit, 'f4', reportStartDate,
                                       self.var.currentTimeStep(), self.var.currentTimeStep())
+                            ################################
 
                         else:
-                            report(decompress(eval(what)), where)
+                            report(decompress(eval(what)),where)
                     else:
                         if option['writeNetcdfStack']:
-                            # write end map to netCDF file (stack)
+                            
                             try:
                                 writenet(0, eval(what), where, self.var.DtDay, maps, report_maps_end[maps].output_var,
-                                         report_maps_end[maps].unit, 'd', reportStartDate,
+                                         report_maps_end[maps].unit, 'f4', reportStartDate,
                                          self.var.currentTimeStep(), self.var.currentTimeStep())
                             except:
                                 print("END", what, where, self.var.DtDay, maps, report_maps_end[maps].output_var,
-                                      report_maps_end[maps].unit, 'd', reportStartDate,
+                                      report_maps_end[maps].unit, 'f4', reportStartDate,
                                       self.var.currentTimeStep(), self.var.currentTimeStep())
-
+                            ###########################
                         else:
                             self.var.report(decompress(eval(what)), where)
 
@@ -235,19 +233,19 @@ class outputTssMap(object):
                             # Get start date for reporting start step
                             reportStartDate = inttodate(self.var.ReportSteps[0] - 1, self.var.CalendarDayStart)
                             # get step number for first reporting step
-                            reportStepStart = 1
+                            reportStepStart = self.var.ReportSteps[0]-self.var.ReportSteps[0]+1
                             # get step number for last reporting step
-                            reportStepEnd = self.var.ReportSteps[-1] - self.var.ReportSteps[0] + 1
+                            reportStepEnd = self.var.ReportSteps[-1]-self.var.ReportSteps[0]+1
                             cdfflags = CDFFlags.instance()
                             try:
                                 writenet(cdfflags[flagcdf], eval(what), where, self.var.DtDay, maps,
-                                         report_maps_steps[maps].output_var, report_maps_steps[maps].unit, 'd',
+                                         report_maps_steps[maps].output_var, report_maps_steps[maps].unit, 'f4',
                                          reportStartDate, reportStepStart, reportStepEnd, frequency)
                             except Exception as e:
                                 print(" +----> ERR: {} - {}".format(type(e), e))
                                 print("REP flag:{} - {} {} {} {} {} {} {} {} {} {}".format(
                                       cdfflags[flagcdf], what, where, self.var.DtDay, maps,
-                                      report_maps_steps[maps].output_var, report_maps_steps[maps].unit, 'd',
+                                      report_maps_steps[maps].output_var, report_maps_steps[maps].unit, 'f4',
                                       reportStartDate, reportStepStart, reportStepEnd
                                       ))
 
@@ -301,11 +299,11 @@ class outputTssMap(object):
                         try:
                             cdfflags = CDFFlags.instance()
                             writenet(cdfflags[flagcdf], eval(what), where, self.var.DtDay, maps, report_maps_all[maps].output_var,
-                                     report_maps_all[maps].unit, 'd', reportStartDate, reportStepStart, reportStepEnd, frequency)
+                                     report_maps_all[maps].unit, 'f4', reportStartDate, reportStepStart, reportStepEnd, frequency)
                         except Exception as e:
                             warnings.warn(LisfloodWarning(str(e)))
                             print("ALL", what, where, self.var.DtDay, maps, report_maps_all[maps].output_var,
-                                  report_maps_all[maps].unit, 'd', reportStartDate,reportStepStart, reportStepEnd)
+                                  report_maps_all[maps].unit, 'f4', reportStartDate,reportStepStart, reportStepEnd)
                     else:
                         self.var.report(decompress(eval(what)), trimPCRasterOutputPath(where))
 
