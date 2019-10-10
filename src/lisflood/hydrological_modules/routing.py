@@ -378,6 +378,11 @@ class routing(HydroModule):
                 # self.var.QLimit = self.var.QLimit / 24.0
                 # IMPLEMENTED #6 on copernicus branch
                 ###############################################
+                # Over bankful discharge starts at QLimit
+                # lower discharge limit for second line of routing
+                # set to mutiple of average discharge (map from prerun)
+                # QSplitMult =2 is around 90 to 95% of Q
+                # Water volume in bankful when over bankful discharge starts
 
                 self.var.Chan2M3Start = self.var.ChannelAlpha2 * self.var.ChanLength * (self.var.QLimit ** self.var.Beta)
                 # virtual amount of water in the channel through second line
@@ -476,7 +481,10 @@ class routing(HydroModule):
                 #self.var.ChanQKin=pcraster.max(self.var.ChanQKin,0)
                 self.var.ChanQ = np.maximum(self.var.ChanQKin, 0)
                 # at single kin. ChanQ is the same
-                self.var.sumDisDay += self.var.ChanQ
+
+                # at single kin. ChanQ is the same
+                self.var.sumDisDay+=self.var.ChanQ
+
                 # Total channel storage [cu m], equal to ChanM3Kin
                 #self.var.ChanQ = maxpcr(self.var.ChanQKin, null)
 
