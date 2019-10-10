@@ -10,8 +10,7 @@ lisflood_model.egg-info
 .eggs
 .tox
 /src/dist/
-!settings_cold_day.xml
-!settings_warm_day.xml
+!settings_tpl.xml
 !/tests/data/TestCatchment1/settings/cold_hours_base.xml
 !/tests/data/TestCatchment1/settings/cold_hours.xml
 !/tests/data/TestCatchment1/settings/warm_day.xml
