@@ -176,51 +176,20 @@ class soilloop(HydroModule):
         # 1st: above wCrit from layer 1a
         # 2nd: above Wcrit from layer 1b
         # 3rd:  distribute take off according to soil moisture availability below wcrit
-
-        # unstressed water availability from layer 1a without stress (above critical soil moisture)
-        wc1a = np.maximum(self.var.W1a[sLoop] - WCrit1a, 0)
-        # (same as above but for layer 1b)
-        wc1b = np.maximum(self.var.W1b[sLoop] - WCrit1b, 0)
-
-        # temporary transpiration from layer 1a (<= unstressed layer 1a availability)
-        Ta1a = np.minimum(self.var.Ta[sLoop], wc1a)
-        # transpiration left after layer 1a unstressed water has been abstracted
-        restTa = np.maximum(self.var.Ta[sLoop] - Ta1a, 0)
-        # temporary transpiration from layer 1b (<= unstressed layer 1b availability)
-        Ta1b = np.minimum(restTa, wc1b)
-        # transpiration left after layers 1a and 1b unstressed water have been abstracted
-        restTa = np.maximum(restTa - Ta1b, 0)
-
-        stressed_availability_1a = np.maximum(self.var.W1a[sLoop] - Ta1a - self.var.WWP1a[sLoop], 0)
-        stressed_availability_1b = np.maximum(self.var.W1b[sLoop] - Ta1b - self.var.WWP1b[sLoop], 0)
-        # |> distribution of abstractions of
-        stressed_availability_tot = stressed_availability_1a + stressed_availability_1b
-        # |> soil moisture below the critical value
-        available = stressed_availability_tot > 0
-        # |> proportionally to each root-zone layer (1a and 1b)
-        fraction_rest_1a = np.where(available, stressed_availability_1a / stressed_availability_tot, 0)
-        # |> "stressed" availability
-        fraction_rest_1b = np.where(available, stressed_availability_1b / stressed_availability_tot, 0)
-
-        Ta1a += fraction_rest_1a * restTa
-        Ta1b += fraction_rest_1b * restTa
-
-        # Original version
-        # wc1a = self.var.W1a[sLoop] - WCrit1a
-        # wc1b = self.var.W1b[sLoop] - WCrit1b
-        #
-        # Ta1a = np.minimum(self.var.Ta[sLoop], wc1a)
-        # # either all of Ta or if Ta is too big for layer 1a than wc1a
-        # restTa = np.maximum(self.var.Ta[sLoop] - Ta1a, 0.)
-        # Ta1b = np.minimum(restTa, wc1b)
-        # # take the rest from 1b if it is above wcrit1b
-        # restTa = np.maximum(restTa - Ta1b, 0.)
-        # # calculate the remaining rest which is not above wcrit from either 1a and 1b
-        #
-        # WCritRation = np.where(WCrit1 - self.var.WWP1[sLoop] > 0, (WCrit1a - self.var.WWP1a[sLoop]) / (WCrit1 - self.var.WWP1[sLoop]), 0.0)
-        # Ta1a = Ta1a + WCritRation * restTa
-        # Ta1b = Ta1b + (1 - WCritRation) * restTa
-
+        wc1a = np.maximum(self.var.W1a[sLoop] - WCrit1a, 0) # unstressed water availability from layer 1a without stress (above critical soil moisture)
+        wc1b = np.maximum(self.var.W1b[sLoop] - WCrit1b, 0) # (same as above but for layer 1b)
+        Ta1a = np.minimum(self.var.Ta[sLoop], wc1a)         # temporary transpiration from layer 1a (<= unstressed layer 1a availability)
+        restTa = np.maximum(self.var.Ta[sLoop] - Ta1a, 0)   # transpiration left after layer 1a unstressed water has been abstracted
+        Ta1b = np.minimum(restTa, wc1b)                     # temporary transpiration from layer 1b (<= unstressed layer 1b availability)
+        restTa = np.maximum(restTa - Ta1b, 0)               # transpiration left after layers 1a and 1b unstressed water have been abstracted
+        stressed_availability_1a = np.maximum(self.var.W1a[sLoop] - Ta1a - self.var.WWP1a[sLoop], 0)    #|
+        stressed_availability_1b = np.maximum(self.var.W1b[sLoop] - Ta1b - self.var.WWP1b[sLoop], 0)    #|
+        stressed_availability_tot = stressed_availability_1a + stressed_availability_1b                 #|> distribution of abstractions of
+        available = stressed_availability_tot > 0                                                       #|> soil moisture below the critical value
+        fraction_rest_1a = np.where(available, stressed_availability_1a / stressed_availability_tot, 0) #|> proportionally to each root-zone layer (1a and 1b)
+        fraction_rest_1b = np.where(available, stressed_availability_1b / stressed_availability_tot, 0) #|> "stressed" availability
+        Ta1a += fraction_rest_1a * restTa                                                               #|
+        Ta1b += fraction_rest_1b * restTa                                                               #|
         self.var.W1a[sLoop] -= Ta1a
         self.var.W1b[sLoop] -= Ta1b
         self.var.W1[sLoop] = np.add(self.var.W1a[sLoop], self.var.W1b[sLoop])
@@ -231,8 +200,8 @@ class soilloop(HydroModule):
         # Domain: permeable fraction of pixel only
         # ESActPixel valid for whole pixel
 
-        self.var.DSLR[sLoop] = np.where(self.var.AvailableWaterForInfiltration[sLoop] > self.var.AvWaterThreshold,
-                                        1.0, self.var.DSLR[sLoop] + self.var.DtDay)
+        self.var.DSLR[sLoop] = np.where(self.var.AvailableWaterForInfiltration[
+                                     sLoop] > self.var.AvWaterThreshold, 1.0, self.var.DSLR[sLoop] + self.var.DtDay)
         # Days since last rain (minimum value=1)
         # AvWaterThreshold in mm (Stroosnijder, 1987 in Supit, p. 92)
         # Note that this equation was originally designed for DAILY time steps
@@ -254,6 +223,7 @@ class soilloop(HydroModule):
         # soil evaporation is 0 when soil is frozen
         self.var.ESAct[sLoop] = np.maximum(self.var.ESAct[sLoop], maskinfo.in_zero())
 
+
         # distributing ESAct over layer 1a and 1b, take the water from 1a first
         testSupply1a = self.var.W1a[sLoop] - self.var.WRes1a[sLoop]
         EsAct1a = np.where(self.var.ESAct[sLoop] > testSupply1a, testSupply1a , self.var.ESAct[sLoop])
@@ -263,6 +233,7 @@ class soilloop(HydroModule):
         self.var.W1b[sLoop] = self.var.W1b[sLoop] - EsAct1b
         self.var.W1[sLoop] = np.add(self.var.W1a[sLoop], self.var.W1b[sLoop])
         # evaporation is subtracted from W1a (top layer) and W1b
+
 
         # ************************************************************
         # ***** INFILTRATION CAPACITY ********************************
@@ -289,6 +260,7 @@ class soilloop(HydroModule):
         # When the soil is frozen (frostindex larger than threshold), potential
         # infiltration is zero
 
+
         # ************************************************************
         # ***** PREFERENTIAL FLOW (Rapid bypass soil matrix) *********
         # ************************************************************
@@ -312,15 +284,20 @@ class soilloop(HydroModule):
         # infiltration in [mm] per timestep
         # Maximum infiltration is equal to Rainfall-Interception-Snow+Snowmelt
 
+
         # if  +Inflitration is more than the maximum storage capacity of layer 1a, than the rest goes to 1b
         # could happen because InfiltrationPot is calculated based on layer 1a + 1b
         testW1a = self.var.W1a[sLoop] + self.var.Infiltration[sLoop]
-        # sum up W1a and inflitration to test if it is > saturated WS1a
+           # sum up W1a and inflitration to test if it is > saturated WS1a
 
+        #self.var.Infiltration[sLoop] = np.where(testW1a > self.var.WS1a[sLoop], self.var.WS1a[sLoop] - self.var.W1a[sLoop] ,self.var.Infiltration[sLoop])
+           # in case we want to put it to runoff
         self.var.W1a[sLoop] = np.minimum(self.var.WS1a[sLoop], testW1a)
         self.var.W1b[sLoop] = self.var.W1b[sLoop] + np.where(testW1a > self.var.WS1a[sLoop], testW1a - self.var.WS1a[sLoop], maskinfo.in_zero())
 
+
         # soil moisture amount is adjusted
+
 
         # ************************************************************
         # ***** SOIL MOISTURE: FLUXES BETWEEN SOIL LAYERS   **********

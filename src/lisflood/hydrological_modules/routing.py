@@ -410,6 +410,7 @@ class routing(HydroModule):
         """
         settings = LisSettings.instance()
         option = settings.options
+        binding = settings.binding
 
         if not(option['InitLisflood']):    # only with no InitLisflood
             self.lakes_module.dynamic_inloop(NoRoutingExecuted)
@@ -488,7 +489,6 @@ class routing(HydroModule):
                 # Correct negative discharge at the end of computation step
 
                 self.var.ChanQ = self.var.ChanQKin.copy()
-                # self.var.ChanQ = np.maximum(self.var.ChanQKin, 0)
                 # at single kin. ChanQ is the same
 
                 self.var.sumDisDay += self.var.ChanQ
@@ -500,9 +500,7 @@ class routing(HydroModule):
                 # routing is split in two (virtual) channels)
 
                 # Ad
-                SideflowRatio = np.where((self.var.ChanM3Kin + self.var.Chan2M3Kin) > 0,
-                                         self.var.ChanM3Kin/(self.var.ChanM3Kin+self.var.Chan2M3Kin),
-                                         0.0)
+                SideflowRatio=np.where((self.var.ChanM3Kin + self.var.Chan2M3Kin) > 0,self.var.ChanM3Kin/(self.var.ChanM3Kin+self.var.Chan2M3Kin),0.0)
 
                 # CM ##################################
                 # IMPLEMENTING #6 on copernicus branch
@@ -545,9 +543,6 @@ class routing(HydroModule):
                 
                 self.var.Chan2QKin = (self.var.Chan2M3Kin * self.var.InvChanLength * self.var.InvChannelAlpha2) ** self.var.InvBeta
                 # Correct negative discharge at the end of computation step in second line
-
-                # CM remove negative CrossSection2Area values
-                self.var.CrossSection2Area = np.where(self.var.CrossSection2Area < 0, 0.0, self.var.CrossSection2Area)
 
                 self.var.ChanQ = np.maximum(self.var.ChanQKin + self.var.Chan2QKin - self.var.QLimit, 0)
                 # Superposition Kinematic
