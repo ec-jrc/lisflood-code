@@ -70,7 +70,7 @@ class routing(HydroModule):
         self.var.InvChanLength = 1 / self.var.ChanLength
         # Inverse of channel length [1/m]
 
-        self.var.NoRoutSteps = int(np.maximum(1, round(self.var.DtSec / self.var.DtSecChannel,0)))
+        self.var.NoRoutSteps = int(np.maximum(1, round(self.var.DtSec / self.var.DtSecChannel, 0)))
         # Number of sub-steps based on value of DtSecChannel,
         # or 1 if DtSec is smaller than DtSecChannel
         settings = LisSettings.instance()
@@ -389,7 +389,8 @@ class routing(HydroModule):
                 self.var.Chan2QKin = (self.var.Chan2M3Kin*self.var.InvChanLength*self.var.InvChannelAlpha2)**(self.var.InvBeta)
                 self.var.ChanQKin = (self.var.ChanM3Kin*self.var.InvChanLength*self.var.InvChannelAlpha)**(self.var.InvBeta)
 
-        # Initialise parallel kinematic wave router: main channel-only routing if self.var.ChannelAlpha2 is None; else split-routing(main channel + floodplains)
+        # Initialise parallel kinematic wave router: main channel-only routing if self.var.ChannelAlpha2 is None;
+        # else split-routing(main channel + floodplains)
         maskinfo = MaskInfo.instance()
         self.river_router = kinematicWave(compressArray(self.var.LddKinematic), ~maskinfo.info.mask, self.var.ChannelAlpha,
                                           self.var.Beta, self.var.ChanLength, self.var.DtRouting,
@@ -472,15 +473,12 @@ class routing(HydroModule):
                 # ChanQKin in [cu m / s]
                 self.river_router.kinematicWaveRouting(self.var.ChanQKin, SideflowChan, "main_channel")
                 self.var.ChanM3Kin = self.var.ChanLength * self.var.ChannelAlpha * self.var.ChanQKin**self.var.Beta
+                self.var.ChanQKin = (self.var.ChanM3Kin * self.var.InvChanLength * self.var.InvChannelAlpha) ** self.var.InvBeta
                 # Volume in channel at end of computation step
-                #self.var.ChanQKin=pcraster.max(self.var.ChanQKin,0)
                 self.var.ChanQ = np.maximum(self.var.ChanQKin, 0)
                 # at single kin. ChanQ is the same
-
-                # at single kin. ChanQ is the same
-                self.var.sumDisDay+=self.var.ChanQ
+                self.var.sumDisDay += self.var.ChanQ
                 # Total channel storage [cu m], equal to ChanM3Kin
-                #self.var.ChanQ = maxpcr(self.var.ChanQKin, null)
 
             else:
                 #  ---- Double Routing ---------------
@@ -496,15 +494,13 @@ class routing(HydroModule):
                 #######################################
                 self.var.Sideflow1Chan = np.where(
                     (self.var.ChanM3Kin + self.var.Chan2M3Kin-self.var.Chan2M3Start) > self.var.M3Limit,
-                    SideflowRatio*SideflowChan,
+                    SideflowRatio * SideflowChan,
                     SideflowChan
                 )
 
                 self.var.Sideflow1Chan = np.where(np.abs(SideflowChan) < 1e-7, SideflowChan, self.var.Sideflow1Chan)
                 # too small values are avoided
-                Sideflow2Chan = SideflowChan - self.var.Sideflow1Chan
-               
-                Sideflow2Chan = Sideflow2Chan + self.var.Chan2QStart * self.var.InvChanLength   # originale
+                Sideflow2Chan = SideflowChan - self.var.Sideflow1Chan + self.var.Chan2QStart * self.var.InvChanLength   # originale
                 # as kinematic wave gets slower with less water
                 # a constant amount of water has to be added
                 # -> add QLimit discharge
@@ -516,7 +512,12 @@ class routing(HydroModule):
                 # Floodplains routing
                 self.river_router.kinematicWaveRouting(self.var.Chan2QKin, Sideflow2Chan, "floodplains")
                 self.var.Chan2M3Kin = self.var.ChanLength * self.var.ChannelAlpha2 * self.var.Chan2QKin**self.var.Beta
-                self.var.CrossSection2Area = (self.var.Chan2M3Kin - self.var.Chan2M3Start) * self.var.InvChanLength  # wet cross-section area of floodplain
+                # wet cross-section area of floodplain
+                self.var.CrossSection2Area = (self.var.Chan2M3Kin - self.var.Chan2M3Start) * self.var.InvChanLength
+                # CM remove negative CrossSection2Area values
+                self.var.CrossSection2Area = np.where(self.var.CrossSection2Area > 0, self.var.CrossSection2Area, 0.0)
+
+                self.var.Chan2QKin = (self.var.Chan2M3Kin * self.var.InvChanLength * self.var.InvChannelAlpha2) ** self.var.InvBeta
                 self.var.ChanQ = np.maximum(self.var.ChanQKin + self.var.Chan2QKin - self.var.QLimit, 0)
                 # Main channel routing and floodplains routing
 
@@ -526,15 +527,14 @@ class routing(HydroModule):
                 self.var.sumDisDay += self.var.ChanQ
                 # ----------End splitrouting-------------------------------------------------
 
-            TotalCrossSectionArea = np.maximum(self.var.ChanM3Kin*self.var.InvChanLength,0.01)
-
-            self.var.FlowVelocity = np.minimum(self.var.ChanQKin/TotalCrossSectionArea, 0.36*self.var.ChanQKin**0.24)
+            TotalCrossSectionArea = np.maximum(self.var.ChanM3Kin*self.var.InvChanLength, 0.01)
+            self.var.FlowVelocity = np.minimum(self.var.ChanQKin/TotalCrossSectionArea, 0.36 * self.var.ChanQKin**0.24)
             # Channel velocity (m/s); dividing Q (m3/s) by CrossSectionArea (m2)
             # avoid extreme velocities by using the Wollheim 2006 equation
             # assume 0.1 for upstream areas (outside ChanLdd)
-            self.var.FlowVelocity *= np.minimum(np.sqrt(self.var.PixelArea)*self.var.InvChanLength,1);
+            self.var.FlowVelocity *= np.minimum(np.sqrt(self.var.PixelArea) * self.var.InvChanLength, 1)
             # reduction for sinuosity of channels
-            self.var.TravelDistance=self.var.FlowVelocity*self.var.DtSec;
+            self.var.TravelDistance=self.var.FlowVelocity*self.var.DtSec
             # if flow is fast, Traveltime=1, TravelDistance is high: Pixellength*DtSec
             # if flow is slow, Traveltime=DtSec then TravelDistance=PixelLength
             # maximum set to 30km/day for 5km cell, is at DtSec/Traveltime=6, is at Traveltime<DtSec/6
