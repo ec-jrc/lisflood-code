@@ -217,7 +217,6 @@ class LisSettings(with_metaclass(Singleton)):
         self.report_maps_steps = {k: v for k, v in iteritems(self.report_maps_steps) if v}
         self.report_maps_all = {k: v for k, v in iteritems(self.report_maps_all) if v}
         self.report_maps_end = {k: v for k, v in iteritems(self.report_maps_end) if v}
-        # print(self)
 
         self.enkf_set, self.mc_set = self.montecarlo_kalman_settings()
 

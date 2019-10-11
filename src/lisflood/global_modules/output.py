@@ -233,9 +233,9 @@ class outputTssMap(object):
                             # Get start date for reporting start step
                             reportStartDate = inttodate(self.var.ReportSteps[0] - 1, self.var.CalendarDayStart)
                             # get step number for first reporting step
-                            reportStepStart = self.var.ReportSteps[0]-self.var.ReportSteps[0]+1
+                            reportStepStart = self.var.ReportSteps[0] - self.var.ReportSteps[0] + 1
                             # get step number for last reporting step
-                            reportStepEnd = self.var.ReportSteps[-1]-self.var.ReportSteps[0]+1
+                            reportStepEnd = self.var.ReportSteps[-1] - self.var.ReportSteps[0] + 1
                             cdfflags = CDFFlags.instance()
                             try:
                                 writenet(cdfflags[flagcdf], eval(what), where, self.var.DtDay, maps,
