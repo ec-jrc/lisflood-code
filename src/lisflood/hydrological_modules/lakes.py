@@ -163,7 +163,7 @@ class lakes(HydroModule):
             LakePrevOutflowValue = loadmap('LakePrevOutflowValue')
 
             if np.max(LakePrevOutflowValue) == -9999:
-                self.var.LakeOutflow = np.square(-self.var.LakeFactor + np.sqrt(self.var.LakeFactorSqr + 2 * LakeStorageIndicator))
+                self.var.LakeOutflowCC = np.square(-self.var.LakeFactor + np.sqrt(self.var.LakeFactorSqr + 2 * LakeStorageIndicator))
                 # solution of quadratic equation
                 # it is as easy as this because:
                 # 1. storage volume is increase proportional to elevation
