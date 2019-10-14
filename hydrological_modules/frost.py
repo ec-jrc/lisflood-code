@@ -61,7 +61,6 @@ class frost(object):
         """ dynamic part of the frost index module
         """
         # FrostIndexChangeRate=-(1-Afrost)*FrostIndex - Tavg*exp(-0.04*Kfrost*SnowCover/SnowWaterEquivalent);
-
         FrostIndexChangeRate = -(1 - self.var.Afrost) * self.var.FrostIndex - self.var.Tavg * \
             np.exp(-0.04 * self.var.Kfrost * self.var.SnowCover / self.var.SnowWaterEquivalent)
         # FrostIndexChangeRate=self.var.AfrostIndex - self.var.Tavg*      pcraster.exp(self.var.Kfrost*self.var.SnowCover*self.var.InvSnowWaterEquivalent)
@@ -69,7 +68,6 @@ class frost(object):
         # CHANGED 9 September 2004:
         # - first term should be negative
         # - second term should be subtracted, not added!!
-
         self.var.FrostIndex = np.maximum(self.var.FrostIndex + FrostIndexChangeRate * self.var.DtDay, 0)
         # frost index in soil [degree days]
         # based on Molnau and Bissel (1983, A Continuous Frozen Ground Index for Flood
@@ -84,3 +82,4 @@ class frost(object):
         # p. 7.28)
         # Kfrost, (snow depth reduction coefficient) is taken as 0.57 [1/cm],
         # (HH, p. 7.28)
+        self.var.isFrozenSoil = self.var.FrostIndex > self.var.FrostIndexThreshold # computed only once as it is used repeatedly

@@ -60,18 +60,11 @@ class groundwater(object):
         LZInitValue = loadmap('LZInitValue')
 
         self.var.LZ = np.where(LZInitValue == -9999, LZSteady, LZInitValue)
-        # Initialise lower store with steady-state value
-        # if LZInitValue is set to -9999
-        
-        # Water in lower store [mm]
+        # Initialise lower store [mm] with steady-state value if LZInitValue is set to -9999
         self.var.LZThreshold = loadmap('LZThreshold')
           # lz threshold =if lz falls below this there is no outflow to the channel from lz
 
-
-
-        # UZInitValue=scalar(loadmap('UZInitValue'))
-        # UZInit=ifthen(defined(self.var.MaskMap),UZInitValue)
-        self.var.UZ = defsoil('UZInitValue', 'UZForestInitValue', 'UZIrrigationInitValue')
+        self.var.UZ = self.var.initialiseVariableAllVegetation('UZInitValue')
         # Water in upper store [mm]
 
         # TotalGroundWaterInit=ifthenelse(defined(self.var.MaskMap),self.var.UZ+self.var.LZ,scalar(0.0))
@@ -87,23 +80,18 @@ class groundwater(object):
         # Cumulative lower zone inflow [mm]
         # Needed for calculation of average LZ inflow (initialisation)
 
-        self.var.GwPercUZLZ = defsoil(globals.inZero.copy())
+        self.var.GwPercUZLZ = self.var.allocateVariableAllVegetation()
         self.var.GwLossLZ = globals.inZero.copy()
-        self.var.UZOutflow = defsoil(globals.inZero.copy())
+        self.var.UZOutflow = self.var.allocateVariableAllVegetation()
         self.var.LZOutflow = globals.inZero.copy()
 
 
 
     def dynamic(self):
         # outflow from LZ to channel stops when LZ is below its threshold. LZ can be below its threshold because of water abstractions
-        self.var.LZOutflow = np.minimum(self.var.LowerZoneK * self.var.LZ,self.var.LZ - self.var.LZThreshold)
-      	# Outflow out of lower zone [mm]
-
-        self.var.LZOutflow = np.maximum(self.var.LZOutflow, 0)        
-        # No outflow if LZ is below threshold
+        self.var.LZOutflow = np.minimum(self.var.LowerZoneK * self.var.LZ, self.var.LZ - self.var.LZThreshold)
+        self.var.LZOutflow = np.maximum(self.var.LZOutflow, 0)
         self.var.LZOutflowToChannel = self.var.LZOutflow
-      	# And the remaining amount goes to the channel
-
         self.var.LZ -= self.var.LZOutflow
        	# Update upper-, lower zone storage
 
@@ -116,16 +104,16 @@ class groundwater(object):
         self.var.LZ += self.var.GwPercUZLZPixel
       	# (ground)water in lower response box [mm]
 
-        self.var.GwLossLZ = np.maximum(np.minimum(self.var.GwLossStep,self.var.LZ),0.0)
+        self.var.GwLossLZ = np.maximum(np.minimum(self.var.GwLossStep, self.var.LZ), 0)
       	# same method as GWPerc
       	# maximum value is controlled by GwLossStep (which is GWLoss*DtDay)
 		# prevention to go negative, when LZ is negative
-        self.var.LZ = self.var.LZ-self.var.GwLossLZ
+        self.var.LZ = self.var.LZ - self.var.GwLossLZ
       	# (ground)water in lower response box [mm]
 
-        self.var.LZInflowCUM += (self.var.GwPercUZLZPixel-self.var.GwLossLZ)
+        self.var.LZInflowCUM += (self.var.GwPercUZLZPixel - self.var.GwLossLZ)
      	# cumulative inflow into lower zone (can be used to improve
-        self.var.LZInflowCUM = np.maximum(self.var.LZInflowCUM,0.0)
+        self.var.LZInflowCUM = np.maximum(self.var.LZInflowCUM, 0)
 	    # LZInflowCUM would become negativ, if LZInit is set to high
 	    # therefore this line is preventing LZInflowCUM getting negativ
 

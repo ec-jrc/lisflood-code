@@ -58,49 +58,42 @@ class waterabstraction(object):
             # ************************************************************
 
             self.var.IndustryConsumptiveUseFraction = loadmap('IndustryConsumptiveUseFraction')
-            # fraction (0-1)
+             # fraction (0-1)
             self.var.WaterReUseFraction = loadmap('WaterReUseFraction')
-            # fraction of water re-used (0-1)
+             # fraction of water re-used (0-1)
+            self.PotentialIrrigationWaterReUseM3Annual = loadmap('IrrigationWaterReUseM3')
+             # M3 per year treated waste water reuse (TEMPORARY)
+            self.PotentialIrrigationWaterReUseM3Daily = self.PotentialIrrigationWaterReUseM3Annual / loadmap('IrrigationWaterReUseNumDays')
+             # maximum M3 per day treated waste water reuse (TEMPORARY)
+            self.ActualAccumulatedReUsedWaterM3 = globals.inZero.copy()
+             # accumulated treated waste water used so far this year (restarted on January 1st every year) (TEMPORARY)
             self.var.EnergyConsumptiveUseFraction = loadmap('EnergyConsumptiveUseFraction')
-            # fraction (0-1), value depends on cooling technology of power plants
+             # fraction (0-1), value depends on cooling technology of power plants
             self.var.LivestockConsumptiveUseFraction = loadmap('LivestockConsumptiveUseFraction')
-            # fraction (0-1)
+             # fraction (0-1)
             self.var.LeakageFraction = np.minimum(np.maximum(loadmap('LeakageFraction')*(1-loadmap('LeakageReductionFraction')),globals.inZero),1.0)
             self.var.DomesticLeakageConstant =  np.minimum(np.maximum(1/(1-self.var.LeakageFraction),globals.inZero),1.0)
-            # Domestic Water Abstraction becomes larger in case of leakage
-            # LeakageFraction is LeakageFraction (0-1) multiplied by reduction scenario (10% reduction is 0.1 in map)
-            # 0.65 leakage and 0.1 reduction leads to 0.585 effective leakage, resulting in 2.41 times more water abstraction
+             # Domestic Water Abstraction becomes larger in case of leakage
+             # LeakageFraction is LeakageFraction (0-1) multiplied by reduction scenario (10% reduction is 0.1 in map)
+             # 0.65 leakage and 0.1 reduction leads to 0.585 effective leakage, resulting in 2.41 times more water abstraction
             self.var.DomesticWaterSavingConstant = np.minimum(np.maximum(1-loadmap('WaterSavingFraction'),globals.inZero),1.0)
-            # Domestic water saving if in place, changes this value from 1 to a value between 0 and 1, and will reduce demand and abstraction
-            # so value = 0.9 if WaterSavingFraction equals 0.1 (10%)
+             # Domestic water saving if in place, changes this value from 1 to a value between 0 and 1, and will reduce demand and abstraction
+             # so value = 0.9 if WaterSavingFraction equals 0.1 (10%)
             self.var.DomesticConsumptiveUseFraction = loadmap('DomesticConsumptiveUseFraction')
-            # fraction (0-1), typically rather low ~ 0.10
+             # fraction (0-1), typically rather low ~ 0.10
             self.var.LeakageWaterLossFraction = loadmap('LeakageWaterLoss')
-            # fraction (0-1), 0=no leakage
+             # fraction (0-1), 0=no leakage
 
-            # Initialize water demand. Read from a static map either value or pcraster map or netcdf (single or stack).
-            # If reading from NetCDF stack, get time step corresponding to model step.
-            # Added management for sub-daily modelling time steps
-            # Added possibility to use one single average year to be repeated during the simulation
-            if option['useWaterDemandAveYear']:
-                # CM: using one water demand average year throughout the model simulation
-                self.var.DomesticDemandMM = loadmap('DomesticDemandMaps',timestampflag='closest',averageyearflag=True) * self.var.DtDay
-                self.var.IndustrialDemandMM = loadmap('IndustrialDemandMaps',timestampflag='closest',averageyearflag=True) * self.var.DtDay
-                self.var.LivestockDemandMM = loadmap('LivestockDemandMaps',timestampflag='closest',averageyearflag=True) * self.var.DtDay
-                self.var.EnergyDemandMM = loadmap('EnergyDemandMaps',timestampflag='closest',averageyearflag=True) * self.var.DtDay
-            else:
-                # CM: using information on water demand from NetCDF files
-                self.var.DomesticDemandMM = loadmap('DomesticDemandMaps',timestampflag='closest') * self.var.DtDay
-                self.var.IndustrialDemandMM = loadmap('IndustrialDemandMaps',timestampflag='closest') * self.var.DtDay
-                self.var.LivestockDemandMM = loadmap('LivestockDemandMaps',timestampflag='closest') * self.var.DtDay
-                self.var.EnergyDemandMM = loadmap('EnergyDemandMaps',timestampflag='closest') * self.var.DtDay
-
+            self.var.DomesticDemandMM = loadmap('DomesticDemandMaps')
+            self.var.IndustrialDemandMM = loadmap('IndustrialDemandMaps')
+            self.var.LivestockDemandMM = loadmap('LivestockDemandMaps')
+            self.var.EnergyDemandMM = loadmap('EnergyDemandMaps')
 
             if option['groundwaterSmooth']:
                 self.var.GroundwaterBodiesPcr = decompress(self.var.GroundwaterBodies)
                 self.var.groundwaterCatch = boolean(decompress((self.var.GroundwaterBodies *self.var.Catchments).astype(int)))
-                # nominal(scalar(GroundwaterBodies)*scalar(self.var.Catchments));
-                # smoothing for groundwater to correct error by using windowtotal, based on groundwater bodies and catchments
+                 # nominal(scalar(GroundwaterBodies)*scalar(self.var.Catchments));
+                 # smoothing for groundwater to correct error by using windowtotal, based on groundwater bodies and catchments
                 self.var.LZSmoothRange = loadmap('LZSmoothRange')
 
 
@@ -108,31 +101,31 @@ class waterabstraction(object):
                 WUseRegion = nominal(loadmap('WUseRegion',pcr=True))
                 pitWuse1 =  ifthen(self.var.AtLastPoint <> 0,pcraster.boolean(1))
                 pitWuse1b = ifthen(defined(pitWuse1),WUseRegion)
-                # use every existing pit in the Ldd and number them by the water regions
-                # coastal water regions can have more than one pit per water region
+                   # use every existing pit in the Ldd and number them by the water regions
+                   # coastal water regions can have more than one pit per water region
 
                 pitWuseMax = areamaximum(self.var.UpArea,WUseRegion)
                 pitWuse2 = ifthen(pitWuseMax == self.var.UpArea,WUseRegion)
-                # search outlets in the inland water regions by using the maximum  upstream area as criterium
+                   # search outlets in the inland water regions by using the maximum  upstream area as criterium
 
                 pitWuse3 = downstream(self.var.LddStructuresKinematic,WUseRegion)
                 pitWuse3b = ifthen(pitWuse3 != WUseRegion,WUseRegion)
-                # search point where ldd leaves a water region
+                   # search point where ldd leaves a water region
 
                 pitWuse=cover(pitWuse1b,pitWuse2,pitWuse3b,nominal(0))
-                # join all sources of pits
+                   # join all sources of pits
 
                 LddWaterRegion=lddrepair(ifthenelse(pitWuse == 0,self.var.LddStructuresKinematic,5))
-                # create a Ldd with pits at every water region outlet
-                # this results in a interrupted ldd, so water cannot be transfered to the next water region
+                   # create a Ldd with pits at every water region outlet
+                   # this results in a interrupted ldd, so water cannot be transfered to the next water region
 
                 lddC = compressArray(LddWaterRegion)
                 inAr = decompress(np.arange(maskinfo['mapC'][0],dtype="int32"))
-                # giving a number to each non missing pixel as id
+                 # giving a number to each non missing pixel as id
                 self.var.downWRegion = (compressArray(downstream(LddWaterRegion,inAr))).astype(np.int32)
-                # each upstream pixel gets the id of the downstream pixel
+                 # each upstream pixel gets the id of the downstream pixel
                 self.var.downWRegion[lddC==5] = maskinfo['mapC'][0]
-                # all pits gets a high number
+                 # all pits gets a high number
 
 
                 # ************************************************************
@@ -140,16 +133,16 @@ class waterabstraction(object):
                 # ************************************************************
 
                 self.var.WaterRegionOutflowPoints = ifthen(pitWuse != 0,boolean(1))
-	            # outflowpoints to calculate upstream inflow for balances and Water Exploitation Index
-	            # both inland outflowpoints to downstream subbasin, and coastal outlets
+	              # outflowpoints to calculate upstream inflow for balances and Water Exploitation Index
+	              # both inland outflowpoints to downstream subbasin, and coastal outlets
 
                 WaterRegionInflow1=boolean(upstream(self.var.LddStructuresKinematic,cover(scalar(self.var.WaterRegionOutflowPoints),0)))
                 self.var.WaterRegionInflowPoints=ifthen(WaterRegionInflow1,boolean(1))
-	            # inflowpoints to calculate upstream inflow for balances and Water Exploitation Index
+	              # inflowpoints to calculate upstream inflow for balances and Water Exploitation Index
 
             else:
-                self.var.downWRegion = self.var.downstruct.copy()
-                self.var.downWRegion = self.var.downWRegion.astype(np.int32)
+                 self.var.downWRegion = self.var.downstruct.copy()
+                 self.var.downWRegion = self.var.downWRegion.astype(np.int32)
 
 
 # --------------------------------------------------------
@@ -163,47 +156,33 @@ class waterabstraction(object):
             self.var.wateruseCum = globals.inZero.copy()
             # water use cumulated amount
             self.var.WUseAddM3Dt = globals.inZero.copy()
-            self.var.WUseAddM3 = globals.inZero.copy()
 
             self.var.IrriLossCUM = globals.inZero.copy()
             # Cumulative irrigation loss [mm]
-            # abstractionCUM = globals.inZero.copy() # not used
+            abstractionCUM = globals.inZero.copy()
             # Cumulative abstraction from surface water [mm]
 
             IrrigationWaterDemand = globals.inZero.copy()
-            # if not(option['riceIrrigation']):
-            #     self.var.TotalAbstractionFromSurfaceWaterM3 = globals.inZero.copy()
-            self.var.TotalAbstractionFromSurfaceWaterM3 = globals.inZero.copy()
-            
+            if not(option['riceIrrigation']):
+               self.var.TotalAbstractionFromSurfaceWaterM3 = globals.inZero.copy()
+               # rice irrigation introduced and fille this already
 
             self.var.TotalAbstractionFromGroundwaterM3 = globals.inZero.copy()
-            IrrigationAbstractionFromGroundwaterM3 = globals.inZero.copy()
-            # LiveDomAbstractionFromGroundwaterM3 = globals.inZero.copy()   # not used
             self.var.TotalIrrigationAbstractionM3 = globals.inZero.copy()
             self.var.TotalPaddyRiceIrrigationAbstractionM3 = globals.inZero.copy()
             self.var.TotalLivestockAbstractionM3 = globals.inZero.copy()
 
             self.var.IrrigationType = loadmap('IrrigationType')
-            self.var.IrrigationEfficiency = loadmap('IrrigationEfficiency')
-            self.var.ConveyanceEfficiency = loadmap('ConveyanceEfficiency')
+            self.efficiency_irrigation = loadmap('IrrigationEfficiency') * loadmap('ConveyanceEfficiency')
 
-            self.var.GroundwaterRegionPixels= np.take(np.bincount(self.var.WUseRegionC,weights=self.var.GroundwaterBodies),self.var.WUseRegionC)
-            self.var.AllRegionPixels= np.take(np.bincount(self.var.WUseRegionC,weights=self.var.GroundwaterBodies*0.0+1.0),self.var.WUseRegionC)
+            self.var.GroundwaterRegionPixels= sumOverAreas(self.var.GroundwaterBodies, self.var.WUseRegionC)
+            self.var.AllRegionPixels= sumOverAreas(self.var.GroundwaterBodies*0.0+1.0, self.var.WUseRegionC)
             self.var.RatioGroundWaterUse = self.var.AllRegionPixels/(self.var.GroundwaterRegionPixels+0.01)
             self.var.FractionGroundwaterUsed = np.minimum(self.var.FractionGroundwaterUsed*self.var.RatioGroundWaterUse, 1-self.var.FractionNonConventionalWaterUsed)
             # FractionGroundwaterUsed is a percentage given at national scale
             # since the water needs to come from the GroundwaterBodies pixels, the fraction needs correction for the non-Groundwaterbodies; this is done here
-
-
-            self.var.EFlowIndicator = globals.inZero.copy()
-            self.var.ReservoirAbstractionM3 = globals.inZero.copy()
-            self.var.PotentialSurfaceWaterAvailabilityForIrrigationM3 = globals.inZero.copy()
-            self.var.LakeAbstractionM3 = globals.inZero.copy()
-            self.var.FractionAbstractedFromChannels = globals.inZero.copy()
-            self.var.AreatotalIrrigationUseM3 = globals.inZero.copy()
-            self.var.totalAddM3 = globals.inZero.copy()
-            self.var.TotalDemandM3 = globals.inZero.copy()
-
+            # Fraction of irrigation water requirement tentatively supplied by groundwater (if EPIC is active, an irrigation-specific map is loaded):
+            self.GWfed_fraction_irrigation = loadmap("irrigation_groundwater_fraction") if option['cropsEPIC'] else self.var.FractionGroundwaterUsed
 
 
     def dynamic(self):
@@ -218,30 +197,20 @@ class waterabstraction(object):
         # ************************************************************
 
             if option['TransientWaterDemandChange']:
-                if option['readNetcdfStack']:
-                    if option['useWaterDemandAveYear']:
-                        # using average year in NetCDF file format
-                        self.var.DomesticDemandMM = readnetcdf(binding['DomesticDemandMaps'], self.var.currentTimeStep(),timestampflag='closest',averageyearflag=True) * self.var.DtDay
-                        self.var.IndustrialDemandMM = readnetcdf(binding['IndustrialDemandMaps'], self.var.currentTimeStep(),timestampflag='closest',averageyearflag=True) * self.var.DtDay
-                        self.var.LivestockDemandMM = readnetcdf(binding['LivestockDemandMaps'], self.var.currentTimeStep(),timestampflag='closest',averageyearflag=True) * self.var.DtDay
-                        self.var.EnergyDemandMM = readnetcdf(binding['EnergyDemandMaps'], self.var.currentTimeStep(),timestampflag='closest',averageyearflag=True) * self.var.DtDay
-                    else:
-                        # Read from stack of maps in NetCDF format. Get time step corresponding to model step.
-                        #self.var.DomesticDemandMM = readnetcdfsparse(binding['DomesticDemandMaps'], self.var.currentTimeStep(), self.var.DomesticDemandMM)
-                        #self.var.IndustrialDemandMM = readnetcdfsparse(binding['IndustrialDemandMaps'], self.var.currentTimeStep(), self.var.IndustrialDemandMM)
-                        #self.var.LivestockDemandMM = readnetcdfsparse(binding['LivestockDemandMaps'], self.var.currentTimeStep(), self.var.LivestockDemandMM)
-                        #self.var.EnergyDemandMM = readnetcdfsparse(binding['EnergyDemandMaps'], self.var.currentTimeStep(), self.var.EnergyDemandMM)
-                        # added management for sub-daily model time steps
-                        self.var.DomesticDemandMM = readnetcdf(binding['DomesticDemandMaps'], self.var.currentTimeStep(),timestampflag='closest') * self.var.DtDay
-                        self.var.IndustrialDemandMM = readnetcdf(binding['IndustrialDemandMaps'], self.var.currentTimeStep(),timestampflag='closest') * self.var.DtDay
-                        self.var.LivestockDemandMM = readnetcdf(binding['LivestockDemandMaps'], self.var.currentTimeStep(),timestampflag='closest') * self.var.DtDay
-                        self.var.EnergyDemandMM = readnetcdf(binding['EnergyDemandMaps'], self.var.currentTimeStep(),timestampflag='closest') * self.var.DtDay
-                else:
-                    # Read from stack of maps in Pcraster format
-                    self.var.DomesticDemandMM = readmapsparse(binding['DomesticDemandMaps'], self.var.currentTimeStep(), self.var.DomesticDemandMM) * self.var.DtDay
-                    self.var.IndustrialDemandMM = readmapsparse(binding['IndustrialDemandMaps'], self.var.currentTimeStep(), self.var.IndustrialDemandMM) * self.var.DtDay
-                    self.var.LivestockDemandMM = readmapsparse(binding['LivestockDemandMaps'], self.var.currentTimeStep(), self.var.LivestockDemandMM) * self.var.DtDay
-                    self.var.EnergyDemandMM = readmapsparse(binding['EnergyDemandMaps'], self.var.currentTimeStep(), self.var.EnergyDemandMM) * self.var.DtDay
+             if option['readNetcdfStack']:
+              #self.var.DomesticDemandMM = readnetcdfsparse(binding['DomesticDemandMaps'], self.var.currentTimeStep(), self.var.DomesticDemandMM)
+              #self.var.IndustrialDemandMM = readnetcdfsparse(binding['IndustrialDemandMaps'], self.var.currentTimeStep(), self.var.IndustrialDemandMM)
+              #self.var.LivestockDemandMM = readnetcdfsparse(binding['LivestockDemandMaps'], self.var.currentTimeStep(), self.var.LivestockDemandMM)
+              #self.var.EnergyDemandMM = readnetcdfsparse(binding['EnergyDemandMaps'], self.var.currentTimeStep(), self.var.EnergyDemandMM)
+              self.var.DomesticDemandMM = readnetcdf(binding['DomesticDemandMaps'], self.var.currentTimeStep())
+              self.var.IndustrialDemandMM = readnetcdf(binding['IndustrialDemandMaps'], self.var.currentTimeStep())
+              self.var.LivestockDemandMM = readnetcdf(binding['LivestockDemandMaps'], self.var.currentTimeStep())
+              self.var.EnergyDemandMM = readnetcdf(binding['EnergyDemandMaps'], self.var.currentTimeStep())
+             else:
+              self.var.DomesticDemandMM = readmapsparse(binding['DomesticDemandMaps'], self.var.currentTimeStep(), self.var.DomesticDemandMM)
+              self.var.IndustrialDemandMM = readmapsparse(binding['IndustrialDemandMaps'], self.var.currentTimeStep(), self.var.IndustrialDemandMM)
+              self.var.LivestockDemandMM = readmapsparse(binding['LivestockDemandMaps'], self.var.currentTimeStep(), self.var.LivestockDemandMM)
+              self.var.EnergyDemandMM = readmapsparse(binding['EnergyDemandMaps'], self.var.currentTimeStep(), self.var.EnergyDemandMM)
 
 
             # ************************************************************
@@ -308,7 +277,7 @@ class waterabstraction(object):
                # EnergyConsumptiveUseMM is the amount that evaporates etc
 
             EnergyAbstractionFromSurfaceWaterM3 = self.var.EnergyConsumptiveUseMM * self.var.MMtoM3
-            # all taken from surface water
+                # all taken from surface water
 
 
 
@@ -316,32 +285,50 @@ class waterabstraction(object):
             # ***** IRRIGATION *******************************************
             # ************************************************************
 
-            # water demand from loop3 = irrigated zone
-            self.var.Ta[2] = np.maximum(np.minimum(self.var.RWS[2] * self.var.TranspirMaxCorrected, self.var.W1[2] - self.var.WWP1[2]), globals.inZero)
+            if option["cropsEPIC"] and option["allIrrigIsEPIC"]:
+                IrrigationWaterAbstractionMM = globals.inZero.copy()
+            else:
+                # water demand from loop3 = irrigated zone
+                irr_pre = "Irrigated_prescribed" # It applies only to prescribed irrigation fraction (EPIC simulates specific irrigated crops, if any)
+                self.var.Ta.loc[irr_pre] = np.maximum(np.minimum(self.var.RWS.loc[irr_pre] * self.var.potential_transpiration.loc[irr_pre],
+                                                                 self.var.W1.loc[irr_pre] - self.var.WWP1.loc[VEGETATION_LANDUSE[irr_pre]]), 0)
+                IrrigationWaterDemandMM = (self.var.potential_transpiration.loc[irr_pre] - self.var.Ta.loc[irr_pre]) * self.var.IrrigationMult
+                 #  a factor (IrrigationMult) add some water (to prevent salinisation)
+                 # irrigationWaterNeed assumed to be equal to potential transpiration minus actual transpiration
+                 # in mm here, assumed for the entire pixel, thus later to be corrected with SoilFraction.loc[irr_pre]
+                 # IrrigationType (value between 0 and 1) is used here to distinguish between additional adding water until fieldcapacity (value set to 1) or not (value set to 0)
+                IrrigationWaterDemandMM = np.where(self.var.isFrozenSoil, 0,IrrigationWaterDemandMM)
+                 # IrrigationWaterDemand is 0 when soil is frozen
+                IrrigationWaterAbstractionMM = np.where(self.efficiency_irrigation > 0,
+                                                        IrrigationWaterDemandMM * self.var.SoilFraction.loc[irr_pre] / self.efficiency_irrigation, 0)
+            if option["cropsEPIC"]: # Add pixel-averaged EPIC gross irrigation requirement to LISFLOOD (perscribed_irrigation fraction) irrigation demand
+                IrrigationWaterAbstractionMM += self.var.crop_module.GIR_mm.values # [mm]
+            self.var.IrrigationWaterAbstractionM3 = np.maximum(IrrigationWaterAbstractionMM * self.var.MMtoM3, 0)
+             # irrigation efficiency max 1, ~0.90 drip irrigation, ~0.75 sprinkling
+	 	     # conveyance efficiency, around 0.80 for average channel
+		     # multiplied by actual irrigated area (fraction) and cellsize(MMtoM3) in M3 per pixel
 
-            IrrigationWaterDemandMM = (self.var.TranspirMaxCorrected-self.var.Ta[2]) * self.var.IrrigationMult
-            #  a factor (IrrigationMult) add some water (to prevent salinisation)
-            # irrigationWaterNeed assumed to be equal to potential transpiration minus actual transpiration
-            # in mm here, assumed for the entire pixel, thus later to be corrected with IrrigationFraction
-            # IrrigationType (value between 0 and 1) is used here to distinguish between additional adding water until fieldcapacity (value set to 1) or not (value set to 0)
-            IrrigationWaterDemandMM = np.where(self.var.FrostIndex > self.var.FrostIndexThreshold,globals.inZero,IrrigationWaterDemandMM)
-            # IrrigationWaterDemand is 0 when soil is frozen
+            # Reduce the required irrigation water abstraction by the amount of treated wastewater that can be used daily for irrigation
+            if self.var.CalendarDay == 1:
+                self.ActualAccumulatedReUsedWaterM3 = globals.inZero.copy()
+            WaterAvailableForReUseM3 = np.minimum(np.maximum(self.PotentialIrrigationWaterReUseM3Annual - self.ActualAccumulatedReUsedWaterM3, 0),\
+                                                  self.PotentialIrrigationWaterReUseM3Daily) # potential ReUsed water amount (m3) available as irrigation
+            IrrigationFromWaterReUseM3 = np.minimum(WaterAvailableForReUseM3, self.var.IrrigationWaterAbstractionM3) # actual ReUsed water amount (m3) for irrigation
+            self.ActualAccumulatedReUsedWaterM3 += IrrigationFromWaterReUseM3 # added to the accumulated annual reuse
+            self.var.IrrigationWaterAbstractionM3 -= IrrigationFromWaterReUseM3 # water reuse is subtracted from the required irrigation water abstraction
 
-            IrrigationWaterAbstractionMM = np.where((self.var.IrrigationEfficiency * self.var.ConveyanceEfficiency) > 0, IrrigationWaterDemandMM * self.var.IrrigationFraction / (self.var.IrrigationEfficiency * self.var.ConveyanceEfficiency),globals.inZero)
-            self.var.IrrigationWaterAbstractionM3 = np.maximum(IrrigationWaterAbstractionMM * self.var.MMtoM3, globals.inZero)
-            # irrigation efficiency max 1, ~0.90 drip irrigation, ~0.75 sprinkling
-	 	    # conveyance efficiency, around 0.80 for average channel
-		    # multiplied by actual irrigated area (fraction) and cellsize(MMtoM3) in M3 per pixel
+            # Split irrigation demand among ground- and surface-water resources
+            IrrigationAbstractionFromGroundwaterM3 = np.where(self.var.GroundwaterBodies > 0, self.GWfed_fraction_irrigation * self.var.IrrigationWaterAbstractionM3, 0)
+            IrrigationAbstractionFromSurfaceWaterM3 = np.maximum(self.var.IrrigationWaterAbstractionM3 - IrrigationAbstractionFromGroundwaterM3, 0)
 
-            IrrigationAbstractionFromGroundwaterM3 = np.where(self.var.GroundwaterBodies > 0, self.var.FractionGroundwaterUsed * self.var.IrrigationWaterAbstractionM3,globals.inZero)
-            IrrigationAbstractionFromSurfaceWaterM3 = np.maximum(self.var.IrrigationWaterAbstractionM3 - IrrigationAbstractionFromGroundwaterM3,globals.inZero)
-
-            # pdb.set_trace()
+            # Regulation of groundwater abstraction for irrigation (if crop module and option are active)
+            if option["cropsEPIC"] and option['regulate_GW_irrigation_abstraction']:
+                self.var.crop_module.irrigation_module.GW_abstraction_rule.regulateAbstraction(IrrigationAbstractionFromGroundwaterM3) # modified in-place
 
 
-            # ************************************************************
-            # ***** TOTAL ABSTRACTIONS (DEMANDED) ************************
-            # ************************************************************
+             # ************************************************************
+             # ***** TOTAL ABSTRACTIONS (DEMANDED) ************************
+             # ************************************************************
 
             self.var.TotalAbstractionFromGroundwaterM3 = IrrigationAbstractionFromGroundwaterM3 + DomAbstractionFromGroundwaterM3 + LivestockAbstractionFromGroundwaterM3 + IndustrialAbstractionFromGroundwaterM3
             self.var.TotalAbstractionFromSurfaceWaterM3 =  IrrigationAbstractionFromSurfaceWaterM3 + self.var.PaddyRiceWaterAbstractionFromSurfaceWaterM3 + DomAbstractionFromSurfaceWaterM3 + LivestockAbstractionFromSurfaceWaterM3 + IndustrialAbstractionFromSurfaceWaterM3 + EnergyAbstractionFromSurfaceWaterM3
@@ -355,57 +342,39 @@ class waterabstraction(object):
             self.var.TotalPaddyRiceIrrigationAbstractionM3 += self.var.PaddyRiceWaterAbstractionFromSurfaceWaterM3
                 # totals calculated for reporting, for comparing with national reported values and possible calibration
 
-            # ************************************************************
-            # ***** ABSTRACTION FROM GROUNDWATER *************************
-            # ************************************************************
-
+             # ************************************************************
+             # ***** ABSTRACTION FROM GROUNDWATER *************************
+             # ************************************************************
             self.var.LZ = self.var.LZ - self.var.TotalAbstractionFromGroundwaterM3*self.var.M3toMM
             self.var.IrriLossCUM = self.var.IrriLossCUM + self.var.TotalAbstractionFromGroundwaterM3
-            # Abstraction is taken from lower groundwater zone
-            # for mass balance calculation also summed up in IrrilossCUM (in M3)
+               # Abstraction is taken from lower groundwater zone
+               # for mass balance calculation also summed up in IrrilossCUM (in M3)
 
 
-            # ***********************************************************************
-            # ***** ABSTRACTION SUPPLIED BY NONCONVENTIONAL SOURCES (DESALINATION) **
-            # ***********************************************************************
+             # ***********************************************************************
+             # ***** ABSTRACTION SUPPLIED BY NONCONVENTIONAL SOURCES (DESALINATION) **
+             # ***********************************************************************
 
             self.var.NonConventionalWaterM3 = DomAbstractionFromNonConventionalWaterM3 + LivestockAbstractionFromNonConventionalWaterM3 + IndustrialAbstractionFromNonConventionalWaterM3
                # Non conventional water producted is not abstracted from surface water
 
 
-            # ************************************************************
-            # ***** ABSTRACTION FROM LAKES AND RESERVOIRS ****************
-            # ************************************************************
+             # ************************************************************
+             # ***** ABSTRACTION FROM LAKES AND RESERVOIRS ****************
+             # ************************************************************
 
-            if option['simulateReservoirs']:
-                # PotentialAbstractionFromReservoirsM3 = np.minimum(0.02 * self.var.ReservoirStorageM3, 0.01*self.var.TotalReservoirStorageM3C) #original
-                PotentialAbstractionFromReservoirsM3 = np.minimum(0.02 * self.var.ReservoirStorageM3, 0.01*self.var.TotalReservoirStorageM3C) * self.var.DtDay
+            PotentialAbstractionFromReservoirsM3 = np.minimum(0.02 * self.var.ReservoirStorageM3, 0.01*self.var.TotalReservoirStorageM3C)
+            PotentialAbstractionFromReservoirsM3 = np.where(np.isnan(PotentialAbstractionFromReservoirsM3),0,PotentialAbstractionFromReservoirsM3)
+            PotentialAbstractionFromLakesM3 = 0.10 * self.var.LakeStorageM3
+            PotentialAbstractionFromLakesM3 = np.where(np.isnan(PotentialAbstractionFromLakesM3),0,PotentialAbstractionFromLakesM3)
 
-                PotentialAbstractionFromReservoirsM3 = np.where(np.isnan(PotentialAbstractionFromReservoirsM3),0,PotentialAbstractionFromReservoirsM3)
-            else:
-                PotentialAbstractionFromReservoirsM3 = globals.inZero.copy()
+            PotentialAbstractionFromLakesAndReservoirsM3 = PotentialAbstractionFromLakesM3 + PotentialAbstractionFromReservoirsM3
+                # potential total m3 that can be extracted from all lakes and reservoirs in a pixel
+            AreatotalPotentialAbstractionFromLakesAndReservoirsM3= sumOverAreas(PotentialAbstractionFromLakesAndReservoirsM3, self.var.WUseRegionC)
+                # potential total m3 that can be extracted from all lakes and reservoirs in the water region
+            AreatotalWaterAbstractionFromAllSurfaceSourcesM3= sumOverAreas(self.var.TotalAbstractionFromSurfaceWaterM3, self.var.WUseRegionC)
+                # the total amount that needs to be extracted from surface water, lakes and reservoirs in the water region
 
-            if option['simulateLakes']:
-                # CM
-                # PotentialAbstractionFromLakesM3 = 0.10 * self.var.LakeStorageM3  #original
-                PotentialAbstractionFromLakesM3 = 0.10 * self.var.LakeStorageM3 * self.var.DtDay
-
-                PotentialAbstractionFromLakesM3 = np.where(np.isnan(PotentialAbstractionFromLakesM3),0,PotentialAbstractionFromLakesM3)
-            else:
-                PotentialAbstractionFromLakesM3 = globals.inZero.copy()
-
-            if option['simulateReservoirs'] or option['simulateLakes']:
-                PotentialAbstractionFromLakesAndReservoirsM3 = PotentialAbstractionFromLakesM3 + PotentialAbstractionFromReservoirsM3
-                    # potential total m3 that can be extracted from all lakes and reservoirs in a pixel
-            else:
-                PotentialAbstractionFromLakesAndReservoirsM3 = globals.inZero.copy()
-
-
-            AreatotalPotentialAbstractionFromLakesAndReservoirsM3= np.take(np.bincount(self.var.WUseRegionC,weights=PotentialAbstractionFromLakesAndReservoirsM3),self.var.WUseRegionC)
-            # potential total m3 that can be extracted from all lakes and reservoirs in the water region
-
-            AreatotalWaterAbstractionFromAllSurfaceSourcesM3= np.take(np.bincount(self.var.WUseRegionC,weights=self.var.TotalAbstractionFromSurfaceWaterM3),self.var.WUseRegionC)
-            # the total amount that needs to be extracted from surface water, lakes and reservoirs in the water region
             # self.var.FractionAllSurfaceWaterUsed = np.maximum(1 - self.var.FractionGroundwaterUsed - self.var.FractionNonConventionalWaterUsed,globals.inZero)
             # self.var.FractionSurfaceWaterUsed = np.maximum(1 - self.var.FractionGroundwaterUsed - self.var.FractionNonConventionalWaterUsed-self.var.FractionLakeReservoirWaterUsed,globals.inZero)
             # AreatotalWaterToBeAbstractedfromLakesReservoirsM3 = np.where( (self.var.FractionSurfaceWaterUsed+self.var.FractionLakeReservoirWaterUsed)> 0, (self.var.FractionLakeReservoirWaterUsed / (self.var.FractionSurfaceWaterUsed+self.var.FractionLakeReservoirWaterUsed)) * AreatotalWaterAbstractionFromAllSurfaceSourcesM3,globals.inZero)
@@ -420,12 +389,11 @@ class waterabstraction(object):
             FractionLakesReservoirsEmptying = np.where(AreatotalPotentialAbstractionFromLakesAndReservoirsM3 > 0, self.var.AreatotalWaterAbstractedfromLakesReservoirsM3 / AreatotalPotentialAbstractionFromLakesAndReservoirsM3,globals.inZero)
 
             self.var.LakeAbstractionM3 = PotentialAbstractionFromLakesM3 * FractionLakesReservoirsEmptying
-            if option['simulateLakes']:
-                self.var.LakeStorageM3 = self.var.LakeStorageM3 - self.var.LakeAbstractionM3
+            self.var.LakeStorageM3 = self.var.LakeStorageM3 - self.var.LakeAbstractionM3
 
             self.var.ReservoirAbstractionM3 = PotentialAbstractionFromReservoirsM3 * FractionLakesReservoirsEmptying
-            if option['simulateReservoirs']:
-                self.var.ReservoirStorageM3 = self.var.ReservoirStorageM3 - self.var.ReservoirAbstractionM3
+
+            self.var.ReservoirStorageM3 = self.var.ReservoirStorageM3 - self.var.ReservoirAbstractionM3
                 # subtract abstracted water from lakes and reservoir storage
 
 
@@ -435,12 +403,12 @@ class waterabstraction(object):
             # ***** limited by available channel water and e-flow minimum*
             # ************************************************************
 
-            AreaTotalDemandedAbstractionFromSurfaceWaterM3 = np.maximum(np.take(np.bincount(self.var.WUseRegionC, weights=self.var.TotalAbstractionFromSurfaceWaterM3), self.var.WUseRegionC), 0)
+            AreaTotalDemandedAbstractionFromSurfaceWaterM3 = np.maximum(sumOverAreas(self.var.TotalAbstractionFromSurfaceWaterM3, self.var.WUseRegionC), 0)
 
             PixelAvailableWaterFromChannelsM3 = np.maximum(self.var.ChanM3Kin - self.var.EFlowThreshold * self.var.DtSec, 0) * (1 - self.var.WUsePercRemain)
             # respecting e-flow
 
-            AreaTotalAvailableWaterFromChannelsM3 = np.maximum(np.take(np.bincount(self.var.WUseRegionC, weights=PixelAvailableWaterFromChannelsM3), self.var.WUseRegionC), 0)
+            AreaTotalAvailableWaterFromChannelsM3 = np.maximum(sumOverAreas(PixelAvailableWaterFromChannelsM3, self.var.WUseRegionC), 0)
             AreaTotalDemandedWaterFromChannelsM3 =  np.minimum(AreaTotalAvailableWaterFromChannelsM3, AreaTotalDemandedAbstractionFromSurfaceWaterM3)
 
             self.var.FractionAbstractedFromChannels = np.where(AreaTotalAvailableWaterFromChannelsM3 > 0, np.minimum(AreaTotalDemandedWaterFromChannelsM3 / AreaTotalAvailableWaterFromChannelsM3, 1), 0)
@@ -459,7 +427,7 @@ class waterabstraction(object):
                 self.var.WUseSumM3 = accuflux(self.var.Ldd, decompress(self.var.WUseAddM3)*self.var.InvDtSec)
 
             #totalAdd = areatotal(decompress(WUseAddM3),self.var.WUseRegion);
-            self.var.totalAddM3 = np.take(np.bincount(self.var.WUseRegionC,weights=self.var.WUseAddM3),self.var.WUseRegionC)
+            self.var.totalAddM3 = sumOverAreas(self.var.WUseAddM3, self.var.WUseRegionC)
 
             self.var.WaterUseShortageM3 = self.var.TotalAbstractionFromSurfaceWaterM3 - self.var.WUseAddM3
             # amount of M3 that cannot be extracted from any source, including the channels
@@ -475,65 +443,62 @@ class waterabstraction(object):
             # ************************************************************
 
             #totalAbstr = areatotal(decompress(TotalAbstractionFromSurfaceWaterM3),self.var.WUseRegion)
-            self.var.AreaTotalAbstractionFromSurfaceWaterM3 = np.take(np.bincount(self.var.WUseRegionC,weights=self.var.TotalAbstractionFromSurfaceWaterM3 - self.var.WUseAddM3),self.var.WUseRegionC)
-            self.var.AreaTotalAbstractionFromGroundwaterM3 = np.take(np.bincount(self.var.WUseRegionC,weights=self.var.TotalAbstractionFromGroundwaterM3),self.var.WUseRegionC)
+            self.var.AreaTotalAbstractionFromSurfaceWaterM3 = sumOverAreas(self.var.TotalAbstractionFromSurfaceWaterM3 - self.var.WUseAddM3, self.var.WUseRegionC)
+            self.var.AreaTotalAbstractionFromGroundwaterM3 = sumOverAreas(self.var.TotalAbstractionFromGroundwaterM3, self.var.WUseRegionC)
 
             # demand
-            self.var.AreaTotalDemandM3 = np.take(np.bincount(self.var.WUseRegionC,weights=self.var.TotalDemandM3),self.var.WUseRegionC)
+            self.var.AreaTotalDemandM3 = sumOverAreas(self.var.TotalDemandM3, self.var.WUseRegionC)
 
             #totalEne = areatotal(decompress(self.var.EnergyConsumptiveUseMM*self.var.MMtoM3),self.var.WUseRegion)
-            AreatotalIrriM3 = np.take(np.bincount(self.var.WUseRegionC,weights=IrrigationAbstractionFromSurfaceWaterM3 + self.var.PaddyRiceWaterAbstractionFromSurfaceWaterM3),self.var.WUseRegionC)
-            AreatotalDomM3 = np.take(np.bincount(self.var.WUseRegionC,weights=DomAbstractionFromSurfaceWaterM3),self.var.WUseRegionC)
-            AreatotalLiveM3 = np.take(np.bincount(self.var.WUseRegionC,weights=LivestockAbstractionFromSurfaceWaterM3),self.var.WUseRegionC)
-            AreatotalIndM3 = np.take(np.bincount(self.var.WUseRegionC,weights=IndustrialAbstractionFromSurfaceWaterM3),self.var.WUseRegionC)
-            AreatotalEneM3 = np.take(np.bincount(self.var.WUseRegionC,weights=EnergyAbstractionFromSurfaceWaterM3),self.var.WUseRegionC)
+            AreatotalIrriM3 = sumOverAreas(IrrigationAbstractionFromSurfaceWaterM3 + self.var.PaddyRiceWaterAbstractionFromSurfaceWaterM3, self.var.WUseRegionC)
 
             # Allocation rule: Domestic ->  Energy -> Livestock -> Industry -> Irrigation
-            self.var.AreatotalIrrigationShortageM3 = np.take(np.bincount(self.var.WUseRegionC,weights=self.var.WaterUseShortageM3),self.var.WUseRegionC)
+            self.var.AreatotalIrrigationShortageM3 = sumOverAreas(self.var.WaterUseShortageM3, self.var.WUseRegionC)
             self.var.AreatotalIrrigationUseM3 = np.maximum(AreatotalIrriM3-self.var.AreatotalIrrigationShortageM3,0.0)
 
-            with np.errstate(all='ignore'):
-                fractionIrrigationAvailability = np.where(AreatotalIrriM3 > 0, self.var.AreatotalIrrigationUseM3/AreatotalIrriM3,1.0)
-
-                self.var.IrrigationWaterAbstractionM3 = fractionIrrigationAvailability*IrrigationAbstractionFromSurfaceWaterM3 + IrrigationAbstractionFromGroundwaterM3
+            fractionIrrigationAvailability = np.minimum(np.where(AreatotalIrriM3 > 0, self.var.AreatotalIrrigationUseM3 / AreatotalIrriM3, 1), 1)
+            IrrigationAbstractionFromSurfaceWaterM3 *= fractionIrrigationAvailability
+            irrigation_abstraction = IrrigationAbstractionFromSurfaceWaterM3 + IrrigationAbstractionFromGroundwaterM3
+            if option["cropsEPIC"]:  # EPIC irrigation scheme: irrigation application on EPIC-simulated irrigated crops.
+                irrigation_withdrawal_EPIC = self.var.crop_module.dynamic_irrigation_application(irrigation_abstraction, IrrigationFromWaterReUseM3)
+            else:
+                irrigation_withdrawal_EPIC = 0
+            # Record actual irrigation abstractions from surface water and groundwater into IrrigationWaterAbstractionM3, which
+            # until here was used to store demand values (not assigned before, as it is used by EPIC as irrigation demand minus wastewater reuse)
+            self.var.IrrigationWaterAbstractionM3 = irrigation_abstraction.copy()
+            # Apply irrigation on LISFLOOD Irrigated_prescribed fraction
+            if not (option["cropsEPIC"] and option["allIrrigIsEPIC"]):
+                irrigation_for_prescribed = np.maximum(irrigation_abstraction - irrigation_withdrawal_EPIC, 0) 
                 # real irrigation is percentage of avail/demand for waterregion * old surface + old groundwater abstraction
-                IrrigationWaterDemand = self.var.IrrigationWaterAbstractionM3*self.var.M3toMM
-                IrrigationWaterDemand = np.where(self.var.IrrigationFraction > 0,IrrigationWaterDemand/self.var.IrrigationFraction,0.0)
-
-            # for mass balance calculate the loss of irrigation water
-
-            #---------------------------------------------------------
-            # updating soil in loop3=irrigation
-            #---------------------------------------------------------
-
-            Wold=self.var.W1[2]
-                #WWP3No3=WRes1+(WS1-WRes1)/((1+(GenuAlpha1*(10**3.0))**GenuN1)**GenuM1);
-
-            IrrigationDemandW1b = np.maximum(IrrigationWaterDemand - (self.var.WFilla - self.var.W1a[2]),0)
-            self.var.W1a[2] = np.where(self.var.W1a[2] >= self.var.WFilla, self.var.W1a[2], np.minimum(self.var.WFilla,self.var.W1a[2]+IrrigationWaterDemand))
-            self.var.W1b[2] = np.where(self.var.W1b[2] >= self.var.WFillb, self.var.W1b[2], np.minimum(self.var.WFillb,self.var.W1b[2]+IrrigationDemandW1b))
-            self.var.W1[2] = np.add(self.var.W1a[2], self.var.W1b[2])
-	        # if irrigated soil is less than Pf3 then fill up to Pf3 (if there is water demand)
-		    # if more than Pf3 the additional water is transpirated
-		    # there is already no water demand if the soil is frozen
-            Wdiff=self.var.W1[2]-Wold
-            self.var.Ta[2] =  self.var.Ta[2] + IrrigationWaterDemand - Wdiff
-
-            self.var.IrriLossCUM = self.var.IrriLossCUM - self.var.IrrigationWaterAbstractionM3*self.var.IrrigationEfficiency*self.var.ConveyanceEfficiency - Wdiff * self.var.MMtoM3 * self.var.IrrigationFraction
-
-            # Added to TA but also
-            # for mass balance calculate the loss of irrigation water
-            # AdR: irrigation demand added to W1 and Ta; so assumption here that soil moisture stays the same
-		    # we could also abstract more water equivalent to satisfy Ta and bring soil moisture to pF2 or so, for later consideration#
-            # self.var.Ta[2] = np.where(self.var.FrostIndex > self.var.FrostIndexThreshold, globals.inZero, self.var.Ta[2])
-            # transpiration is 0 when soil is frozen
+                IrrigationWaterDemand = irrigation_for_prescribed*self.var.M3toMM
+                IrrigationWaterDemand = np.where(self.var.SoilFraction.loc[irr_pre] > 0, IrrigationWaterDemand / self.var.SoilFraction.loc[irr_pre], 0)
+                # updating soil moisture of LISFLOOD on Irrigated_prescribed fraction
+                Wold = self.var.W1.loc[irr_pre]
+                IrrigationDemandW1b = np.maximum(IrrigationWaterDemand - (self.var.WFilla - self.var.W1a.loc[irr_pre]), 0)
+                self.var.W1a.loc[irr_pre] = np.where(self.var.W1a.loc[irr_pre] >= self.var.WFilla, self.var.W1a.loc[irr_pre],
+                                                     np.minimum(self.var.WFilla, self.var.W1a.loc[irr_pre] + IrrigationWaterDemand))
+                self.var.W1b.loc[irr_pre] = np.where(self.var.W1b.loc[irr_pre] >= self.var.WFillb, self.var.W1b.loc[irr_pre],
+                                                     np.minimum(self.var.WFillb, self.var.W1b.loc[irr_pre] + IrrigationDemandW1b))
+                self.var.W1.loc[irr_pre] = self.var.W1a.loc[irr_pre] + self.var.W1b.loc[irr_pre]
+                # if irrigated soil is less than Pf3 then fill up to Pf3 (if there is water demand)
+                # if more than Pf3 the additional water is transpirated
+                # there is no water demand if the soil is frozen
+                Wdiff = self.var.W1.loc[irr_pre] - Wold
+                self.var.Ta.loc[irr_pre] =  self.var.Ta.loc[irr_pre] + IrrigationWaterDemand - Wdiff
+                self.var.IrriLossCUM += irrigation_for_prescribed * self.efficiency_irrigation - Wdiff * self.var.MMtoM3 * self.var.SoilFraction.loc[irr_pre]
+                     # Added to TA but also
+                     # for mass balance calculate the loss of irrigation water
+                 # AdR: irrigation demand added to W1 and Ta; so assumption here that soil moisture stays the same
+                         # we could also abstract more water equivalent to satisfy Ta and bring soil moisture to pF2 or so, for later consideration#
+                 # self.var.Ta[2] = np.where(self.var.isFrozenSoil, globals.inZero, self.var.Ta[2])
+                 # transpiration is 0 when soil is frozen
 
             #---------------------------------------------------------
             # E-flow
             #---------------------------------------------------------
 
             self.var.EFlowIndicator=np.where(self.var.ChanQ <= self.var.EFlowThreshold,globals.inZero + 1.0,globals.inZero)
-            # if ChanQ is less than EflowThreshold, EFlowIndicator becomes 1
+             # if ChanQ is less than EflowThreshold, EFlowIndicator becomes 1
 
 
             # ************************************************************
@@ -541,6 +506,15 @@ class waterabstraction(object):
             # ************************************************************
 
             if option['groundwaterSmooth']:
+#                # TEST - START
+#                from pylab import *
+#                is_aqui = self.var.GroundwaterBodies.astype(bool)
+#                aquifer_mask = np.zeros(maskinfo['shape'], bool)
+#                aquifer_mask[tuple([ix[is_aqui] for ix in np.where(~maskinfo['mask'])])] = True
+#                neighbours_aquifer, num_neighs = neighbours4GWsmooth(aquifer_mask, int(self.var.LZSmoothRange) / 2)
+#                LZ_smoothed = self.var.LZ.copy()
+#                LZ_smoothed[is_aqui] = smoothLZ(LZ_smoothed[is_aqui], neighbours_aquifer, num_neighs, .1)
+#                # TEST - END
 
                 LZPcr = decompress(self.var.LZ)
 
@@ -559,3 +533,60 @@ class waterabstraction(object):
                 # correction of LZ by the average error from smoothing operation
 
                 self.var.LZ = compressArray(LZPcr)
+#                # TEST - START
+#                print('\n{}\n'.format( np.absolute(LZ_smoothed-self.var.LZ).max()))
+#                if np.absolute(LZ_smoothed-self.var.LZ).max() > 1e-3:
+#                    import ipdb; ipdb.set_trace()
+#                # TEST - END
+
+
+
+            # REGIONAL ACCOUNTING: Water abstractions summed over water regions for each sector and water source
+            # NOTE: for all sectors except irrigation, only consumption is abstracted and reported here; gross abstractions and return flows still need to be defined.
+            self.var.RegionIrrigationAbstractionGroundWaterM3 = sumOverAreas(IrrigationAbstractionFromGroundwaterM3, self.var.WUseRegionC)
+            self.var.RegionDomesticAbstractionGroundWaterM3 = sumOverAreas(DomAbstractionFromGroundwaterM3, self.var.WUseRegionC)
+            self.var.RegionLivestockAbstractionGroundWaterM3 = sumOverAreas(LivestockAbstractionFromGroundwaterM3, self.var.WUseRegionC)
+            self.var.RegionIndustryAbstractionGroundWaterM3 = sumOverAreas(IndustrialAbstractionFromGroundwaterM3, self.var.WUseRegionC)
+            self.var.RegionIrrigationAbstractionSurfaceWaterM3 = sumOverAreas(IrrigationAbstractionFromSurfaceWaterM3 +
+                                                                              self.var.PaddyRiceWaterAbstractionFromSurfaceWaterM3, self.var.WUseRegionC)
+            self.var.RegionDomesticAbstractionSurfaceWaterM3 = sumOverAreas(DomAbstractionFromSurfaceWaterM3, self.var.WUseRegionC)
+            self.var.RegionLivestockAbstractionSurfaceWaterM3 = sumOverAreas(LivestockAbstractionFromSurfaceWaterM3, self.var.WUseRegionC)
+            self.var.RegionIndustryAbstractionSurfaceWaterM3 = sumOverAreas(IndustrialAbstractionFromSurfaceWaterM3, self.var.WUseRegionC)
+            self.var.RegionEnergyAbstractionSurfaceWaterM3 = sumOverAreas(EnergyAbstractionFromSurfaceWaterM3, self.var.WUseRegionC)
+            self.var.RegionDomesticAbstractionNonConventionalM3 = sumOverAreas(DomAbstractionFromNonConventionalWaterM3, self.var.WUseRegionC)
+            self.var.RegionIndustryAbstractionNonConventionalM3 = sumOverAreas(IndustrialAbstractionFromNonConventionalWaterM3, self.var.WUseRegionC)
+
+
+#from numba import njit
+#from __builtin__ import max, min
+#
+#@njit
+#def smoothLZ(in_LZ, neighbours_aquifer, counts, weight):
+#    smoothed_LZ = in_LZ.copy()
+#    for p in np.arange(in_LZ.size):
+#        smoothed_LZ[p] = in_LZ[neighbours_aquifer[p,:counts[p]]].mean()
+#    out_LZ = (1. - weight) * in_LZ + weight * smoothed_LZ
+#    out_LZ -= weight * (smoothed_LZ.mean() - in_LZ.mean()) # correct total water balance
+#    return out_LZ
+#
+#@njit
+#def neighbours4GWsmooth(aquifer_mask, halfwidth):
+#    rows, cols = np.where(aquifer_mask)
+#    pixels = np.full(aquifer_mask.shape, -1)
+#    for p in range(rows.size):
+#        pixels[rows[p],cols[p]] = p
+#    neighbours = np.full((rows.size, (1 + 2*halfwidth)**2), -1)
+#    counts = np.zeros(rows.size, np.int64)
+#    for p in range(rows.size):
+#        win_rows = windowRange(rows[p], aquifer_mask.shape[0], halfwidth)
+#        win_cols = windowRange(cols[p], aquifer_mask.shape[1], halfwidth)
+#        for v in win_rows:
+#            for h in win_cols:
+#                if pixels[v,h] != -1:
+#                    neighbours[p,counts[p]] = pixels[v,h]
+#                    counts[p] += 1
+#    return neighbours[:,:counts.max()], counts
+#    
+#@njit
+#def windowRange(pix, dim_size, halfwidth):
+#    return range(max(0, pix - halfwidth), min(dim_size, pix + halfwidth + 1))

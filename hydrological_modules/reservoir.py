@@ -41,22 +41,16 @@ class reservoir(object):
             # Corresponding sub-timestep (seconds)
 
             self.var.ReservoirSitesC = loadmap('ReservoirSites')
-            self.var.ReservoirSitesC[self.var.ReservoirSitesC < 1] = 0
-            self.var.ReservoirSitesC[self.var.IsChannel == 0] = 0
-            # Get rid of any reservoirs that are not part of the channel network
-
-            
-            # mask reserovoirs sites when using sub-catchments mask
-            # ReservoirSitesC_masked = ifthen(self.var.MaskMap,self.var.ReservoirSitesC)
-            self.var.ReservoirSitesCC = np.compress(self.var.ReservoirSitesC>0,self.var.ReservoirSitesC)
-            self.var.ReservoirIndex = np.nonzero(self.var.ReservoirSitesC)[0]
-            
             if self.var.ReservoirSitesC.size==0:
                 option['simulateReservoirs']=False
-                option['repsimulateReservoirs']=False
                 return
             # break if no reservoirs
 
+            self.var.ReservoirSitesC[self.var.ReservoirSitesC < 1] = 0
+            self.var.ReservoirSitesC[self.var.IsChannel == 0] = 0
+            # Get rid of any reservoirs that are not part of the channel network
+            self.var.ReservoirSitesCC = np.compress(self.var.ReservoirSitesC>0,self.var.ReservoirSitesC)
+            self.var.ReservoirIndex = np.nonzero(self.var.ReservoirSitesC)[0]
 
             self.var.IsStructureKinematic = np.where(self.var.ReservoirSitesC > 0 , np.bool8(1),self.var.IsStructureKinematic)
             #self.var.IsStructureKinematic = ifthenelse(defined(self.var.ReservoirSites), pcraster.boolean(1), self.var.IsStructureKinematic)
@@ -146,7 +140,7 @@ class reservoir(object):
             # Initial reservoir fill (fraction of total storage, [-])
             # -9999: assume reservoirs are filled to normal storage limit
             ReservoirStorageIniM3CC = ReservoirInitialFill * self.var.TotalReservoirStorageM3CC
-            # Initial reservoir storage [m3] from state or initvalue
+            # Initial reservoir storage [m3]
             self.var.ReservoirStorageM3CC = ReservoirStorageIniM3CC.copy()
             #self.var.ReservoirFill = ReservoirInitialFill.copy()
             #  Initial fill of reservoirs (fraction of total storage, [-])
@@ -169,10 +163,6 @@ class reservoir(object):
 
         if option['simulateReservoirs']:
 
-            #
-            #InvDtSecDay = 1/86400
-
-            InvDtSecDay=self.var.InvDtSec
             #ReservoirInflow = cover(ifthen(defined(self.var.ReservoirSites), upstream(
             #    self.var.LddStructuresKinematic, self.var.ChanQ)), scalar(0.0))
 
@@ -185,26 +175,31 @@ class reservoir(object):
             # locations; note that using Ldd here instead would introduce MV!)
 
             QResInM3Dt = ReservoirInflowCC * self.var.DtRouting
-            # Reservoir inflow in [m3] per timestep (routing step)
+            # Reservoir inflow in [m3] per timestep
 
 
             self.var.ReservoirStorageM3CC += QResInM3Dt
             # New reservoir storage [m3] = plus inflow for this sub step
             self.var.ReservoirFillCC = self.var.ReservoirStorageM3CC / self.var.TotalReservoirStorageM3CC
-            # New reservoir fill (fraction)
+            # New reservoir fill
 
 
             ReservoirOutflow1 = np.minimum( self.var.MinReservoirOutflowCC, self.var.ReservoirStorageM3CC * self.var.InvDtSec)
             # Reservoir outflow [m3/s] if ReservoirFill le
             # 2*ConservativeStorageLimit
-
             ReservoirOutflow2 = self.var.MinReservoirOutflowCC + self.var.DeltaO * (self.var.ReservoirFillCC - 2 * self.var.ConservativeStorageLimitCC) / self.var.DeltaLN
             # Reservoir outflow [m3/s] if NormalStorageLimit le ReservoirFill
             # gt 2*ConservativeStorageLimit
 
+
+
+
             ReservoirOutflow3a = self.var.NormalReservoirOutflowCC
             ReservoirOutflow3b = self.var.NormalReservoirOutflowCC + ((self.var.ReservoirFillCC - self.var.Normal_FloodStorageLimitCC)
                                 / self.var.DeltaNFL) * (self.var.NonDamagingReservoirOutflowCC - self.var.NormalReservoirOutflowCC)
+
+
+
             # Reservoir outflow [m3/s] if FloodStorageLimit le ReservoirFill gt NormalStorageLimit
             # NEW 24-9-2004: linear transition between normal and non-damaging
             # outflow.
@@ -246,9 +241,14 @@ class reservoir(object):
 #           ReservoirOutflow = np.minimum(ReservoirOutflow,np.maximum(ReservoirInflowCC,self.var.NormalReservoirOutflowCC))
 
 
+
+
+
+
             QResOutM3DtCC = ReservoirOutflow * self.var.DtRouting
             # Reservoir outflow in [m3] per sub step
             QResOutM3DtCC = np.minimum(QResOutM3DtCC, self.var.ReservoirStorageM3CC)
+
             # Check to prevent outflow from becoming larger than storage +
             # inflow
             QResOutM3DtCC = np.maximum(QResOutM3DtCC, self.var.ReservoirStorageM3CC - self.var.TotalReservoirStorageM3CC)
@@ -261,17 +261,6 @@ class reservoir(object):
             # New reservoir storage [m3]
             self.var.ReservoirFillCC = self.var.ReservoirStorageM3CC / self.var.TotalReservoirStorageM3CC
             # New reservoir fill
-
-
-            # CM: Check ReservoirStorageM3CC for negative values and set them to zero
-            nel = len(self.var.ReservoirFillCC[:])
-            for i in range(0,nel-1):
-                if np.isnan(self.var.ReservoirFillCC[i]) or self.var.ReservoirFillCC[i] < 0:
-                    msg = "Negative or NaN volume for reservoir fill set to 0. Increase computation time step for routing (DtSecChannel) \n"
-                    print LisfloodError(msg)
-                    self.var.ReservoirFillCC[self.var.ReservoirFillCC < 0] = 0
-                    self.var.ReservoirFillCC[np.isnan(self.var.ReservoirFillCC)] = 0
-
 
             # expanding the size as input for routing routine
             self.var.QResOutM3Dt = globals.inZero.copy()

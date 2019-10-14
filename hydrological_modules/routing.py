@@ -204,8 +204,6 @@ class routing(object):
         TotalCrossSectionAreaHalfBankFull = 0.5 * self.var.TotalCrossSectionAreaBankFull
         # Cross-sectional area at half bankfull [m2]
         # This can be used to initialise channel flow (see below)
-
-
         TotalCrossSectionAreaInitValue = loadmap('TotalCrossSectionAreaInitValue')
         self.var.TotalCrossSectionArea = np.where(TotalCrossSectionAreaInitValue == -9999, TotalCrossSectionAreaHalfBankFull, TotalCrossSectionAreaInitValue)
         # Total cross-sectional area [m2]: if initial value in binding equals -9999 the value at half bankfull is used,
@@ -216,10 +214,7 @@ class routing(object):
             self.var.CrossSection2Area = np.where(CrossSection2AreaInitValue == -9999, globals.inZero, CrossSection2AreaInitValue)
             # cross-sectional area [m2] for 2nd line of routing: if initial value in binding equals -9999 the value is set to 0
             # otherwise CrossSection2AreaInitValue (typically end map from previous simulation)
-
             PrevSideflowInitValue = loadmap('PrevSideflowInitValue')
-
-
             self.var.Sideflow1Chan = np.where(PrevSideflowInitValue == -9999, globals.inZero, PrevSideflowInitValue)
             # sideflow from previous run for 1st line of routing: if initial value in binding equals -9999 the value is set to 0
             # otherwise PrevSideflowInitValue (typically end map from previous simulation)
@@ -258,7 +253,6 @@ class routing(object):
 
         # Initialise discharge at kinematic wave pixels (note that InvBeta is
         # simply 1/beta, computational efficiency!)
-
         self.var.CumQ = globals.inZero.copy()
         # ininialise sum of discharge to calculate average
 
@@ -336,6 +330,7 @@ class routing(object):
 
             PrevDischarge = loadmap('PrevDischarge')
             self.var.ChanQ = np.where(PrevDischarge == -9999, self.var.ChanQKin, PrevDischarge)
+            # Channel discharge: equal to ChanQKin [m3/s]
             # initialise channel discharge: cold start: equal to ChanQKin
             # [m3/s]
 
@@ -355,22 +350,16 @@ class routing(object):
 # --------------------------------------------------------------------------
 
     def initialSecond(self):
-        """ initial part of the second channel routing module
-        """
+        """second initial part of the channel routing module"""
         self.var.ChannelAlpha2 = None # default value, if split-routing is not active and only water is routed only in the main channel
-        # ************************************************************
-        # ***** CHANNEL INITIAL SPLIT UP IN SECOND CHANNEL************
-        # ************************************************************
+        # Check if split-routing is active and compute parameters
         if option['SplitRouting']:
-
             ChanMan2 = (self.var.ChanMan / self.var.CalChanMan) * loadmap('CalChanMan2')
             AlpTermChan2 = (ChanMan2 / (np.sqrt(self.var.ChanGrad))) ** self.var.Beta
             self.var.ChannelAlpha2 = (AlpTermChan2 * (self.var.ChanWettedPerimeterAlpha ** self.var.AlpPow)).astype(float)
             self.var.InvChannelAlpha2 = 1 / self.var.ChannelAlpha2
             # calculating second Alpha for second (virtual) channel
-
             if not(option['InitLisflood']):
-
                 self.var.QLimit = loadmap('AvgDis') * loadmap('QSplitMult')
                 self.var.M3Limit = self.var.ChannelAlpha * self.var.ChanLength * (self.var.QLimit ** self.var.Beta)
                 # lower discharge limit for second line of routing
@@ -391,13 +380,9 @@ class routing(object):
                                           self.var.Beta, self.var.ChanLength, self.var.DtRouting,\
                                           int(binding["numCPUs_parallelKinematicWave"]), alpha_floodplains=self.var.ChannelAlpha2)
 
-               
 
 # --------------------------------------------------------------------------
 # --------------------------------------------------------------------------
-
-
-
     def dynamic(self, NoRoutingExecuted):
         """ dynamic part of the routing subtime module
         """
@@ -437,9 +422,11 @@ class routing(object):
                 SideflowChanM3 += self.var.QInDt
             if option['TransLoss']:
                 SideflowChanM3 -= self.var.TransLossM3Dt
+            if option["cropsEPIC"]:
+                SideflowChanM3 += self.var.crop_module.irrigation_module.returnFlow()
             if not(option['InitLisflood']):    # only with no InitLisflood
                 if option['simulateLakes']:
-                    SideflowChanM3 += self.var.QLakeOutM3Dt
+                    SideflowChanM3 += self.var.QLakeOutM3Dt # BUG: TIME STEP 2, PIXEL 219043
                 if option['simulateReservoirs']:
                     SideflowChanM3 += self.var.QResOutM3Dt
                 if option['simulatePolders']:
@@ -459,12 +446,9 @@ class routing(object):
             # SideflowChan=if(IsChannelKinematic, SideflowChanM3*InvChanLength*InvDtRouting);
             # Sideflow expressed in [cu m /s / m channel length]
 
-
-
             # ************************************************************
             # ***** KINEMATIC WAVE                        ****************
             # ************************************************************
-
             if option['InitLisflood'] or (not(option['SplitRouting'])):
                 # if InitLisflood no split routing is use
                 #  ---- Single Routing ---------------
@@ -476,12 +460,9 @@ class routing(object):
                 self.river_router.kinematicWaveRouting(self.var.ChanQKin, SideflowChan, "main_channel")
                 self.var.ChanM3Kin = self.var.ChanLength * self.var.ChannelAlpha * self.var.ChanQKin**self.var.Beta
 
-                #self.var.ChanQKin=pcraster.max(self.var.ChanQKin,0)
                 self.var.ChanQ=np.maximum(self.var.ChanQKin,0)
-                # at single kin. ChanQ is the same
                 self.var.sumDisDay+=self.var.ChanQ
                 # Total channel storage [cu m], equal to ChanM3Kin
-                #self.var.ChanQ = maxpcr(self.var.ChanQKin, null)
 
             else:
                 #  ---- Double Routing ---------------
@@ -498,8 +479,7 @@ class routing(object):
                 self.var.Sideflow1Chan = np.where(np.abs(SideflowChan) < 1e-7, SideflowChan, self.var.Sideflow1Chan)
                 # too small values are avoided
                 Sideflow2Chan = SideflowChan - self.var.Sideflow1Chan
-               
-                Sideflow2Chan = Sideflow2Chan + self.var.Chan2QStart * self.var.InvChanLength   # originale
+                Sideflow2Chan = Sideflow2Chan + self.var.Chan2QStart * self.var.InvChanLength
                 # as kinematic wave gets slower with less water
                 # a constant amount of water has to be added
                 # -> add QLimit discharge
@@ -516,12 +496,8 @@ class routing(object):
                 # Channel discharge: equal to ChanQKin [cu m / s]
                 # End splitrouting
                 self.var.sumDisDay+=self.var.ChanQ
-                # ----------End splitrouting-------------------------------------------------
 
-
-            
             TotalCrossSectionArea = np.maximum(self.var.ChanM3Kin*self.var.InvChanLength,0.01)
-
             self.var.FlowVelocity = np.minimum(self.var.ChanQKin/TotalCrossSectionArea, 0.36*self.var.ChanQKin**0.24)
               # Channel velocity (m/s); dividing Q (m3/s) by CrossSectionArea (m2)
               # avoid extreme velocities by using the Wollheim 2006 equation

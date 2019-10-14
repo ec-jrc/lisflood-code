@@ -10,6 +10,8 @@
 # -------------------------------------------------------------------------
 
 from global_modules.add1 import *
+from collections import OrderedDict
+import xarray as xr
 
 class leafarea(object):
 
@@ -27,48 +29,39 @@ class leafarea(object):
     def initial(self):
         """ initial part of the leaf area index module
         """
-
-        self.var.kgb = 0.75 * loadmap('kdf')
         # extinction coefficient for global solar radiation [-]
-        # kdf= extinction coefficient for diffuse visible light [-], varies between
-        # 0.4 and 1.1
-
-        # LAINr=[1,32,60,91,121,152,182,213,244,274,305,335,370]
+        self.var.kgb = 0.75 * loadmap('kdf') # kdf = extinction coefficient for diffuse visible light [-], varies between 0.4 and 1.1
+        # Days delimiting time intervals over which prescribed LAI is constant
         LAINr = [1, 11, 21, 32, 42, 52, 60, 70, 80, 91, 101, 111, 121, 131, 141, 152, 162, 172, 182,
                  192, 202, 213, 223, 233, 244, 254, 264, 274, 284, 294, 305, 315, 325, 335, 345, 355, 370]
-
-        self.var.LAIX = [[0 for x in xrange(36)] for x in xrange(3)]
-        self.var.LAI = [0, 0]
+        # Prescribed LAI values: for each fraction, the sets of LAI values that are constant over each time interval
+        num_lai_steps = len(LAINr) - 1
+        coord_prescribed = OrderedDict([("interval", range(num_lai_steps))])
+        coord_prescribed.update(self.var.coord_prescribed_vegetation)
+        self.var.LAIX = xr.DataArray(np.zeros(map(len, coord_prescribed.values())), coords=coord_prescribed, dims=coord_prescribed.keys())
+        for i in self.var.LAIX.interval.values:
+            for veg, map_name in PRESCRIBED_LAI.iteritems():
+                LAIName = generateName(binding[map_name], LAINr[i])
+                self.var.LAIX.loc[i,veg] = loadLAI(binding[map_name], LAIName, i)
+        # Calendar day to interval lookup list
         self.var.L1 = []
-
-        # self.var.L1.append(36)
         j = 0
         for i in xrange(367):
             if i >= LAINr[j + 1]:
                 j += 1
             self.var.L1.append(j)
-            # print i,self.L1[i],LAINr1[self.L1[i]]
-
-        for i in xrange(36):
-            LAIName = generateName(binding['LAIOtherMaps'], LAINr[i])
-            self.var.LAIX[0][i] = loadLAI(binding['LAIOtherMaps'], LAIName, i)
-
-            LAIName = generateName(binding['LAIForestMaps'], LAINr[i])
-            self.var.LAIX[1][i] = loadLAI(binding['LAIForestMaps'], LAIName, i)
-
-            LAIName = generateName(binding['LAIIrrigationMaps'], LAINr[i])
-            self.var.LAIX[2][i] = loadLAI(binding['LAIIrrigationMaps'], LAIName, i)
+        # Allocate LAI data structure
+        self.var.LAI = self.var.allocateVariableAllVegetation()
 
 
-# --------------------------------------------------------------------------
-# --------------------------------------------------------------------------
 
     def dynamic(self):
-        """ dynamic part of the leaf area index module
+        """ Dynamic part of the leaf area index module.
+            Only prescribed vegetation fractions.
+            If EPIC is active, "Rainfed_prescribed" and "Irrigated_prescribed" represent the residuals not modelled by EPIC crops.
         """
-
-        i = self.var.L1[self.var.CalendarDay]
-        self.var.LAI = [self.var.LAIX[0][i], self.var.LAIX[1][i],self.var.LAIX[2][i]]
-
-        # Leaf Area Index, average over whole pixel [m2/m2]
-        self.var.LAITerm = [np.exp(-self.var.kgb * self.var.LAI[0]), np.exp(-self.var.kgb * self.var.LAI[1]),np.exp(-self.var.kgb * self.var.LAI[2])]
+        # Set prescribed LAI values ()
+        lai = self.var.LAIX.loc[self.var.L1[self.var.CalendarDay]].copy()
+        self.var.LAI.loc[self.var.prescribed_vegetation] = lai
+        # LAI term used for evapotranspiration calculations
+        self.var.LAITerm = np.exp(-self.var.kgb * lai)

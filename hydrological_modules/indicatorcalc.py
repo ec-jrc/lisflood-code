@@ -34,17 +34,10 @@ class indicatorcalc(object):
 
         self.var.monthend = False
         self.var.yearend = False
-        try:
-            self.var.DefineEndofYear = int(binding['DefineEndofYear'])
-        except:
-            self.var.DefineEndofYear = 365
-
         if option['indicator']:
             self.var.Population = loadmap('Population')
                 # population per pixel
-            #self.var.WUseRegionC is not initialized if wateruse=0
-            if option['wateruse']:
-                self.var.RegionPopulation = np.take(np.bincount(self.var.WUseRegionC,weights=self.var.Population),self.var.WUseRegionC)
+            self.var.RegionPopulation = sumOverAreas(self.var.Population, self.var.WUseRegionC)
                 # population sum in Regions
             self.var.LandUseMask = loadmap('LandUseMask')
                 # map to mask out deserts and high mountains (to cover ETdif map, otherwise Sahara etc would pop out; meant as a drought indicator
@@ -71,7 +64,7 @@ class indicatorcalc(object):
 
         if option['TransientLandUseChange']:
             self.var.Population = readnetcdf(binding['PopulationMaps'], self.var.currentTimeStep())
-            self.var.RegionPopulation = np.take(np.bincount(self.var.WUseRegionC,weights=self.var.Population),self.var.WUseRegionC)
+            self.var.RegionPopulation = sumOverAreas(self.var.Population, self.var.WUseRegionC)
                 # population sum in Regions
 
 
@@ -108,15 +101,15 @@ class indicatorcalc(object):
             if self.var.monthend:
 
                 # INTERNAL FLOW
-                if option['simulateReservoirs'] or option['simulateLakes']:
-                    # available LakeStorageM3 and ReservoirStorageM3 for potential abstraction at end of month in region
-                    self.var.RegionMonthReservoirAndLakeStorageM3 = np.take(np.bincount(self.var.WUseRegionC,weights=(self.var.ReservoirStorageM3+self.var.LakeStorageM3)),self.var.WUseRegionC)
+
+                # available LakeStorageM3 and ReservoirStorageM3 for potential abstraction at end of month in region
+                self.var.RegionMonthReservoirAndLakeStorageM3 = sumOverAreas((self.var.ReservoirStorageM3+self.var.LakeStorageM3), self.var.WUseRegionC)
 
                 # monthly abstraction from lakes and reservoirs
-                self.var.RegionMonthWaterAbstractedfromLakesReservoirsM3 = np.take(np.bincount(self.var.WUseRegionC,weights=self.var.MonthWaterAbstractedfromLakesReservoirsM3),self.var.WUseRegionC)
+                self.var.RegionMonthWaterAbstractedfromLakesReservoirsM3 = sumOverAreas(self.var.MonthWaterAbstractedfromLakesReservoirsM3, self.var.WUseRegionC)
 
                 #PerMonthInternalFlowM3  = areatotal(cover(decompress(self.var.MonthInternalFlow),0.0),wreg)
-                self.var.RegionMonthInternalFlowM3 = np.take(np.bincount(self.var.WUseRegionC,weights=self.var.MonthInternalFlowM3),self.var.WUseRegionC)
+                self.var.RegionMonthInternalFlowM3 = sumOverAreas(self.var.MonthInternalFlowM3, self.var.WUseRegionC)
                 # note Reservoir and Lake storage need to be taken into account seperately
 
                 # EXTERNAL FLOW
@@ -124,9 +117,9 @@ class indicatorcalc(object):
                      # to pcraster map because of the following expression!
                 self.var.RegionMonthExternalInflowM3 = compressArray(areatotal(cover(ifthen(self.var.WaterRegionInflowPoints != 0, upstream(self.var.LddStructuresKinematic,decompress(self.var.MonthDisM3))),0),wreg))
 
-                self.var.RegionMonthWAbstractionM3 = np.take(np.bincount(self.var.WUseRegionC,weights=self.var.MonthWAbstractionM3),self.var.WUseRegionC)
-                self.var.RegionMonthWConsumptionM3 = np.take(np.bincount(self.var.WUseRegionC,weights=self.var.MonthWConsumptionM3),self.var.WUseRegionC)
-                self.var.RegionMonthWDemandM3      = np.take(np.bincount(self.var.WUseRegionC,weights=self.var.MonthWDemandM3),self.var.WUseRegionC)
+                self.var.RegionMonthWAbstractionM3 = sumOverAreas(self.var.MonthWAbstractionM3, self.var.WUseRegionC)
+                self.var.RegionMonthWConsumptionM3 = sumOverAreas(self.var.MonthWConsumptionM3, self.var.WUseRegionC)
+                self.var.RegionMonthWDemandM3      = sumOverAreas(self.var.MonthWDemandM3, self.var.WUseRegionC)
 
                 # Calculation of WEI: everything in m3, totalled over the water region
 

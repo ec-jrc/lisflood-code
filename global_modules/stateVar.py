@@ -8,10 +8,14 @@
 # Copyright:   (c) burekpe 2014
 # Licence:     <your licence>
 # -------------------------------------------------------------------------
+"""
+TO DO:
+    - move loadObject and dumpObject to this module (they are not used elsewhere).
+    - test other save/load methods instead of pickle.dump/load: xarray.to_netcdf/read_dataarray for xarray.DataArray; numpy.save/load for numpy.array
+"""
 
 from global_modules.add1 import *
 
-# CM: new-style class in Python 2.x
 class stateVar(object):
 
     """
@@ -54,17 +58,20 @@ class stateVar(object):
                 dumpObject("LakeStorageM3", self.var.LakeStorageM3CC, sample)
                 dumpObject("LakeOutflow", self.var.LakeOutflow, sample)
             ## Routing
+            dumpObject("ChanQKin", self.var.ChanQKin, sample)
             dumpObject("ChanM3Kin", self.var.ChanM3Kin, sample)
             dumpObject("ChanQ", self.var.ChanQ, sample)
             dumpObject("ToChan", self.var.ToChanM3RunoffDt, sample)
-            try:
+            if option['SplitRouting']:
+                dumpObject("Chan2QKin", self.var.Chan2QKin, sample)
                 dumpObject("Chan2M3Kin", self.var.Chan2M3Kin, sample)
                 dumpObject("Sideflow1Chan", self.var.Sideflow1Chan, sample)
-            except:
-                foo = 0
             ## Overland
+            dumpObject("OFQDirect", self.var.OFQDirect, sample)
             dumpObject("OFM3Direct", self.var.OFM3Direct, sample)
+            dumpObject("OFQOther", self.var.OFQOther, sample)
             dumpObject("OFM3Other", self.var.OFM3Other, sample)
+            dumpObject("OFQForest", self.var.OFQForest, sample)
             dumpObject("OFM3Forest", self.var.OFM3Forest, sample)
             ### Reservoirs
             if option['simulateReservoirs']:
@@ -75,14 +82,14 @@ class stateVar(object):
                 dumpObject("Tss", self.var.Tss, sample)
             except:
                 foo = 0
+            # EPIC state variables
+            # TO DO!
 	    dumpObject("cdfFlag", globals.cdfFlag, sample)
 
+
     def resume(self):
-
         sample = str(self.var.currentSampleNumber())
-
         updateVec = self.var.getStateVector(sample)
-
         self.var.CalendarDayStart = loadObject("StartDate", sample)
         ## Snow
         self.var.SnowCoverS = loadObject("SnowCover", sample)
@@ -103,17 +110,20 @@ class stateVar(object):
             self.var.LakeStorageM3CC = loadObject("LakeStorageM3", sample)
             self.var.LakeOutflow = loadObject("LakeOutflow", sample)
         ## Routing
+        self.var.ChanQKin = loadObject("ChanQKin", sample)
         self.var.ChanM3Kin = loadObject("ChanM3Kin", sample)
         self.var.ChanQ = loadObject("ChanQ", sample)
         self.var.ToChanM3RunoffDt = loadObject("ToChan", sample)
-        try:
+        if option['SplitRouting']:
+            self.var.Chan2QKin = loadObject("Chan2QKin", sample)
             self.var.Chan2M3Kin = loadObject("Chan2M3Kin", sample)
             self.var.Sideflow1Chan = loadObject("Sideflow1Chan", sample)
-        except:
-            foo = 0
         ## Overland
+        self.var.OFQDirect = loadObject("OFQDirect", sample)
         self.var.OFM3Direct = loadObject("OFM3Direct", sample)
+        self.var.OFQOther = loadObject("OFQOther", sample)
         self.var.OFM3Other = loadObject("OFM3Other", sample)
+        self.var.OFQForest = loadObject("OFQForest", sample)
         self.var.OFM3Forest = loadObject("OFM3Forest", sample)
         ### Reservoirs
         if option['simulateReservoirs']:
@@ -124,4 +134,6 @@ class stateVar(object):
             self.output_module.var.Tss = loadObject("Tss", sample)
         except:
             foo = 0
+        # EPIC state variables
+        # TO DO!
         globals.cdfFlag = loadObject("cdfFlag", sample)

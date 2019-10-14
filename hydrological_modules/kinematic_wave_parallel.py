@@ -118,7 +118,7 @@ class kinematicWave:
         self.a_dx_div_dt_channel = alpha_channel * space_delta / time_delta
         self.b_a_dx_div_dt_channel = beta * self.a_dx_div_dt_channel
         # Set number of parallel threads (openMP)
-        self.num_threads = int(num_threads) if 0 < num_threads <= cpu_count() else cpu_count()
+        self.num_threads = int(num_threads) if 0 < num_threads < cpu_count() else cpu_count() - 1
         # If split-routing (floodplains)
         if alpha_floodplains is not None:
             self.a_dx_div_dt_floodplains = alpha_floodplains * space_delta / time_delta

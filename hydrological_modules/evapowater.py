@@ -29,82 +29,63 @@ class evapowater(object):
     def initial(self):
         """ initial part of the evapo water module
         """
-
 # ************************************************************
 # ***** EVAPORATION
 # ************************************************************
-
-
-
         self.var.EvaCumM3 = globals.inZero.copy()
         # water use cumulated amount
  #       self.var.EvaAddM3Dt = globals.inZero.copy()
         # water use substep amount
-
-
         if option['openwaterevapo']:
-           LakeMask = loadmap('LakeMask',pcr=True)
-           lmask = ifthenelse(LakeMask !=0,self.var.LddStructuresKinematic,5)
-           LddEva = pcraster.lddrepair(lmask)
-           lddC = compressArray(LddEva)
-           inAr = decompress(np.arange(maskinfo['mapC'][0],dtype="int32"))
-           self.var.downEva = (compressArray(downstream(LddEva,inAr))).astype("int32")
-           # each upstream pixel gets the id of the downstream pixel
-           self.var.downEva[lddC==5] = maskinfo['mapC'][0]
-           self.var.maxNoEva = int(loadmap('maxNoEva'))
-           # all pits gets a high number
-           # still to test if this works
+            LakeMask = loadmap('LakeMask',pcr=True)
+            lmask = ifthenelse(LakeMask !=0,self.var.LddStructuresKinematic,5)
+            LddEva = pcraster.lddrepair(lmask)
+            lddC = compressArray(LddEva)
+            inAr = decompress(np.arange(maskinfo['mapC'][0],dtype="int32"))
+            self.var.downEva = (compressArray(downstream(LddEva,inAr))).astype("int32")
+            # each upstream pixel gets the id of the downstream pixel
+            self.var.downEva[lddC==5] = maskinfo['mapC'][0]
+            self.var.maxNoEva = int(loadmap('maxNoEva'))
+            # all pits gets a high number
+            # still to test if this works
+            # ldd only inside lakes for calculating evaporation
+            if option['varfractionwater']:
+                self.var.diffmaxwater = loadmap('FracMaxWater') - self.var.WaterFraction
+                #Fraction of maximum extend of water  - fraction of water in lakes and rivers
+                varWNo = [1, 32, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 370]
+                self.var.varW = []   # variable fraction of water
+                self.var.varW1 = []
+                self.var.varW1.append(12)
+                j = 0
+                for i in xrange(1, 367):
+                    if i >= varWNo[j + 1]: j += 1
+                    self.var.varW1.append(j)
+                for i in xrange(12):
+                    varWName = generateName(binding['WFractionMaps'], varWNo[i])
+                    self.var.varW.append(loadLAI(binding['WFractionMaps'], varWName, i))
 
-                # ldd only inside lakes for calculating evaporation
-
-           if option['varfractionwater']:
-
-               self.var.diffmaxwater = loadmap('FracMaxWater') - self.var.WaterFraction
-
-               #Fraction of maximum extend of water  - fraction of water in lakes and rivers
-
-
-               varWNo = [1, 32, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 370]
-               self.var.varW = []   # variable fraction of water
-               self.var.varW1 = []
-
-               self.var.varW1.append(12)
-               j = 0
-               for i in xrange(1, 367):
-                   if i >= varWNo[j + 1]: j += 1
-                   self.var.varW1.append(j)
-
-               for i in xrange(12):
-                   varWName = generateName(binding['WFractionMaps'], varWNo[i])
-                   self.var.varW.append(loadLAI(binding['WFractionMaps'], varWName, i))
 
 
     def dynamic_init(self):
         """ init dynamic part of the evaporation from open water
             defines the fraction of land cover
         """
-        if option['openwaterevapo']:
-            if option['varfractionwater']:
-                relWaterFraction = self.var.varW[self.var.varW1[self.var.CalendarDay]]
-                # fraction [0-1] of between min. and max. water fraction as land cover
-                # min water fraction: river + lakes
-                # max: lakes + rivers + swamps
-                varWater = relWaterFraction * self.var.diffmaxwater
-                self.var.WaterFraction = self.var.WaterFractionBase + varWater
-
-                # all the other land cover fractions have to be recalculated:
-                self.var.OtherFraction = np.maximum(self.var.OtherFractionBase - varWater, 0)
-                rest = np.maximum(varWater - self.var.OtherFractionBase, 0)
-                self.var.ForestFraction = np.maximum(self.var.ForestFractionBase - rest, 0)
-                rest = np.maximum(rest - self.var.ForestFractionBase, 0)
-                self.var.IrrigationFraction = np.maximum(self.var.IrrigationFractionBase - rest, 0)
-                rest = np.maximum(rest - self.var.IrrigationFractionBase, 0)
-                self.var.DirectRunoffFraction = np.maximum(self.var.DirectRunoffFractionBase - rest, 0)
-
-
-                self.var.SoilFraction = self.var.ForestFraction +  self.var.OtherFraction + self.var.IrrigationFraction
-                all = self.var.SoilFraction + self.var.DirectRunoffFraction + self.var.WaterFraction
-                self.var.PermeableFraction = 1 - self.var.DirectRunoffFraction - self.var.WaterFraction
+        if option['openwaterevapo'] and option['varfractionwater']:
+            if option["cropsEPIC"]:
+                raise Exception("Open water evaporation when EPIC is active has not been implemented yet!")
+            relWaterFraction = self.var.varW[self.var.varW1[self.var.CalendarDay]]
+            # fraction [0-1] of between min. and max. water fraction as land cover
+            # min water fraction: river + lakes
+            # max: lakes + rivers + swamps
+            varWater = relWaterFraction * self.var.diffmaxwater
+            self.var.WaterFraction = self.var.WaterFractionBase + varWater
+            # all the other land cover fractions have to be recalculated:
+            rest = varWater.copy()
+            for veg in self.var.vegetation:
+                self.var.SoilFraction.loc[veg] = np.maximum(self.var.SoilFractionBase.loc[veg] - rest, 0)
+                rest = np.maximum(rest - self.var.SoilFractionBase.loc[veg], 0)
+            self.var.DirectRunoffFraction = np.maximum(self.var.DirectRunoffFractionBase - rest, 0)
+            self.var.PermeableFraction = 1 - self.var.DirectRunoffFraction - self.var.WaterFraction
 
 
 

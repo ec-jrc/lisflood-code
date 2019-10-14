@@ -40,7 +40,6 @@ class inflow(object):
         if option['inflow']:
             self.var.InflowPoints = loadmap('InflowPoints')
             self.var.QInM3Old = np.where(self.var.InflowPoints>0,self.var.ChanQ * self.var.DtSec,0)
-            pass
             #self.var.QInM3Old = cover(ifthen(defined(self.var.InflowPoints), self.var.ChanQ * self.var.DtSec), scalar(0.0))
             # Initialising cumulative output variables
             # These are all needed to compute the cumulative mass balance error
@@ -66,10 +65,7 @@ class inflow(object):
         """
 
         if option['inflow']:
-            
-            # QIn = timeinputscalar(binding['QInTS'], loadmap('InflowPoints',pcr=True)) #original
-            QIn = timeinputscalar(binding['QInTS'], nominal(loadmap('InflowPoints',pcr=True)))
-
+            QIn = timeinputscalar(binding['QInTS'], loadmap('InflowPoints',pcr=True))
             # Get inflow hydrograph at each inflow point [m3/s]
             QIn = compressArray(QIn)
             QIn[np.isnan(QIn)]=0

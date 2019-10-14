@@ -13,10 +13,15 @@ import xml.dom.minidom
 import datetime
 import time as xtime
 import os
-from netCDF4 import Dataset, netcdftime, date2num, num2date
-from dateutil import parser
+from netCDF4 import Dataset, date2num, num2date
+
+try:
+    from netCDF4 import netcdftime
+except ImportError:
+    import cftime as netcdftime  # newer versions of netCDF4 don't include netcdftime
+
 from platform import system as operating_system
-from pandas.core.datetools import parse_time_string
+from pandas._libs.tslibs.parsing import parse_time_string
 
 from pcraster import*
 from pcraster.framework import *
@@ -93,29 +98,18 @@ class LisfloodRunInfo(Warning):
         return self._msg
 
 def optionBinding(settingsfile, optionxml):
-    """ Read XML settings and options files 
-    
-    Read Settings.XML and Options.XML input files and return:
-    binding = key and value (filename or value)
-    option  = control of Lisflood to use certain subroutines
-    ReportSteps = maps are reported at these time steps
-    
-    :param settingsfile: path and name of Settings.xml
-    :param optionxml: path and name of Options.xml
-    :return: binding, option, ReportSteps (as global variables)
+    """ read settings file and returns
+    bindings = key and value (filename or value)
+    options  = controll of Lisflood to use certain subroutines
     """
 
-    #model's settings from file settingsxml
     optionSetting = {}
-
-    #user defined path, parameters, calibration parameters, dates, ect from settingsxml
     user = {}
     repTimeserie = {}
     repMaps = {}
 
     # domopt = xml.dom.minidom.parseString(optionxml)
 
-    #read xml optionxml i.e. OptionTserieMaps.xml file
     try:
         f=open(optionxml)
         f.close()
@@ -123,13 +117,11 @@ def optionBinding(settingsfile, optionxml):
         msg = "Cannot find option file: " + optionxml
         raise LisfloodFileError(optionxml,msg)
     try:
-        #DOM object representing content of optionxml file
         domopt = xml.dom.minidom.parse(optionxml)
     except:
         msg = "Error using option file: " + optionxml
         raise LisfloodError(msg)
 
-    #read file settings (settingsfile)
     try:
        f = open(settingsfile,'r')
        xmlstring1 = ""
@@ -143,29 +135,25 @@ def optionBinding(settingsfile, optionxml):
         msg = "Cannot find settings file: " + settingsfile
         raise LisfloodFileError(settingsfile,msg)
     try:
-        #DOM object representing content of settings file
         dom = xml.dom.minidom.parse(settingsfile)
     except:
         msg = "Error using: " + settingsfile
         raise LisfloodError(msg)
 
     # getting all posssible option from the general optionxml
-    # and setting them to their default value
-    # list of elements "lfoptions" in optionxml file
+    # and setting them tpo their default value
     optDef = domopt.getElementsByTagName("lfoptions")[0]
     for optset in optDef.getElementsByTagName("setoption"):
         option[optset.attributes['name'].value] = bool(
             int(optset.attributes['default'].value))
 
-    # getting option set in the specific settings file
-    # and resetting them to their choice value
-    # list of elements "lfoptions" in settings file
+        # getting option set in the specific settings file
+        # and resetting them to their choice value
     optSet = dom.getElementsByTagName("lfoptions")[0]
     for optset in optSet.getElementsByTagName("setoption"):
         optionSetting[optset.attributes['name'].value] = bool(
             int(optset.attributes['choice'].value))
     for key in optionSetting.keys():
-        # set the same value for corresponding keys, settings overwrites optionxml
         option[key] = optionSetting[key]
 
     # reverse the initLisflood option to use it as a restriction for output
@@ -174,18 +162,16 @@ def optionBinding(settingsfile, optionxml):
 # -----------------------------------------
 
     # get all the bindings in the first part of the settingsfile = lfuser
-    # list of elements "lfuser" in settings file
     lfuse = dom.getElementsByTagName("lfuser")[0]
     for userset in lfuse.getElementsByTagName("textvar"):
         user[userset.attributes['name'].value] = str(userset.attributes['value'].value)
 
-    # get all the binding in the last part of the settingsfile  = lfbinding
-    # list of elements "lfbinding" in settings file
+        # get all the binding in the last part of the settingsfile  = lfbinding
     bind = dom.getElementsByTagName("lfbinding")[0]
     for bindset in bind.getElementsByTagName("textvar"):
         binding[bindset.attributes['name'].value] = str(bindset.attributes['value'].value)
 
-    # replace/add the information from lfuser to lfbinding
+        # replace/add the information from lfuser to lfbinding
     for i in binding.keys():
         expr = binding[i]
         while expr.find('$(') > -1:
@@ -194,7 +180,7 @@ def optionBinding(settingsfile, optionxml):
             try:
                 s2 = user[expr[a1 + 2:a2]]
             except KeyError:
-                print 'no ', expr[a1 + 2:a2],'for',binding[i] ,' in lfuser defined'
+                print('no ', expr[a1 + 2:a2],'for',binding[i] ,' in lfuser defined')
             expr = expr.replace(expr[a1:a2 + 1], s2)
         binding[i] = expr
 
@@ -206,10 +192,8 @@ def optionBinding(settingsfile, optionxml):
         try:
             s2 = user[pathout[a1 + 2:a2]]
         except KeyError:
-            print 'no ', expr[a1 + 2:a2],'for',pathout,' in lfuser defined'
+            print('no ', expr[a1 + 2:a2],'for',pathout,' in lfuser defined')
         pathout = pathout.replace(pathout[a1:a2 + 1], s2)
-
-    #CM: output folder
     outputDir.append(pathout)
     #outputDir.append(user["PathOut"])
 
@@ -290,7 +274,6 @@ def optionBinding(settingsfile, optionxml):
 
 # -------------------------
     # running through all times series
-    # list of elements "lftime" in optionxml file
     reportTimeSerie = domopt.getElementsByTagName("lftime")[0]
     for repTime in reportTimeSerie.getElementsByTagName("setserie"):
         d = {}
@@ -318,7 +301,7 @@ def optionBinding(settingsfile, optionxml):
         for i in repOpt:
             for o1key in option.keys():
                 if option[o1key]:  # if option is active = 1
-                    # print o1key, option[o1key],i
+                    # print(o1key, option[o1key],i)
                     if o1key == i:
                         # option is active and time series has this option to select it
                         # now test if there is any restrictions
@@ -326,7 +309,7 @@ def optionBinding(settingsfile, optionxml):
                         for j in restOpt:
                             for o2key in option.keys():
                                 if o2key == j:
-                                    # print o2key, option[o2key],j
+                                    #print(o2key, option[o2key],j)
                                     if not(option[o2key]):
                                         allow = False
                         if allow:
@@ -377,7 +360,7 @@ def optionBinding(settingsfile, optionxml):
             for o1key in option.keys():
                 # run through all the options
                 if option[o1key]:  # if option is active = 1
-                    # print o1key, option[o1key],i
+                    #print(o1key, option[o1key],i)
                     if o1key == i:
                         # option is active and time series has this option to select it
                         # now test if there is any restrictions
@@ -432,14 +415,7 @@ def counted(fn):
 
 @counted
 def checkmap(name, value, map, flagmap, find):
-    """ Check if maps fit to the mask map
-    
-    :param name: key in Settings.xml containing path and name of the map to be checked as string (map name)
-    :param value: name and path of the map to be checked as string
-    :param map: map to be used for checking in pcraster format
-    :param flagmap: flag for maps
-    :param find: 
-    :return: 
+    """ check maps if the fit to the mask map
     """
     s = [name, value]
     if flagmap:
@@ -480,15 +456,13 @@ def checkmap(name, value, map, flagmap, find):
         s.append(float(map))
         s.append(float(map))
 
-    # print check results
     if checkmap.called == 1:
-        print "%-25s%-40s%11s%11s%11s%11s%11s" %("Name","File/Value","nonMV","MV","min","mean","max")
-    print "%-25s%-40s%11i%11i%11.2f%11.2f%11.2f" %(s[0],s[1][-39:],s[2],s[3],s[4],s[5],s[6])
+        print("%-25s%-40s%11s%11s%11s%11s%11s" %("Name","File/Value","nonMV","MV","min","mean","max"))
+    print("%-25s%-40s%11i%11i%11.2f%11.2f%11.2f" %(s[0],s[1][-39:],s[2],s[3],s[4],s[5],s[6]))
     return
 
 
 def timemeasure(name,loops=0, update = False, sample = 1):
-    # returns the current processor time
     timeMes.append(xtime.clock())
     if loops == 0:
         s = name
@@ -499,123 +473,41 @@ def timemeasure(name,loops=0, update = False, sample = 1):
 
 
 def Calendar(input):
-    """ Get date or number of steps from input.
-
-    Get date from input string using one of the available formats or get time step number from input number or string.
-    Used to get the date from CalendarDayStart (input) in the settings xml
-
-    :param input: string containing a date in one of the available formats or time step number as number or string
-    :rtype: datetime object or float number
-    :returns: date as datetime or time step number as float 
-    :raises ValueError: stop if input is not a step number AND it is in wrong date format
     """
-
+    get the date from CalendarDayStart in the settings xml
+    """
     try:
-        # try reading step number from number or string
-        date = float(input)
-        return date
-    except:
-        # try reading a date in one of available formats
-        try:
-            date=parser.parse(input,dayfirst=True)
-        except:    
-            # if cannot read input then stop
-            msg = "Wrong step or date format in XML settings file\n" \
-                  "Input " + str(input)
-            raise LisfloodError(msg)
-            quit(1)
-
-    return date
-
+        return float(input)
+    except ValueError:
+        date = parse_time_string(input)[0]
+        calendar_convention = binding['CalendarConvention']
+        tmp_units = 'days since ' + date.strftime("%Y-%m-%d %H:%M:%S.0")
+        step = date2num(date, tmp_units, calendar_convention)
+        return num2date(step, tmp_units, calendar_convention)
 
 def datetoInt(dateIn,both=False):
-    """ Get number of steps between dateIn and CalendarDayStart.
-    
-    Get the number of steps between dateIn and CalendarDayStart and return it as integer number.
-    It can now compute the number of sub-daily steps.
-    dateIn can be either a date or a number. If dateIn is a number, it must be the number of steps between
-    dateIn and CalendarDayStart.
-    
-    :param dateIn: date as string or number
-    :param both: if true it returns both the number of steps as integer and the input date as string. If false only
-    the number of steps as integer is returned
-    :return: number of steps as integer and input date as string
-    """
-
-    # get reference date to be used with step numbers from 'CalendarDayStart' in Settings.xml file
     date1 = Calendar(dateIn)
     begin = Calendar(binding['CalendarDayStart'])
-    # get model time step as float form 'DtSec' in Settings.xml file
-    DtSec = float(binding['DtSec'])
-    # compute fraction of day corresponding to model time step as float
-    DtDay = float(DtSec / 86400)
-    # Time step, expressed as fraction of day (same as self.var.DtSec and self.var.DtDay)
-
-    if type(date1) is datetime.datetime:
-         str1 = date1.strftime("%d/%m/%Y %H:%M")
-         # get total number of seconds corresponding to the time interval between dateIn and CalendarDayStart
-         timeinterval_in_sec = int((date1 - begin).total_seconds())
-         # get total number of steps between dateIn and CalendarDayStart
-         int1 = int(timeinterval_in_sec/DtSec +1)
-         # int1 = (date1 - begin).days + 1
+    if isinstance(date1, datetime.datetime) or isinstance(date1, NC_DATE_TYPE):
+         str1 = date1.strftime("%d/%m/%Y")
+         int1 = (date1 - begin).days + 1
     else:
         int1 = int(date1)
         str1 = str(date1)
     if both: return int1,str1
     else: return int1
 
-
-def inttoDate(intIn,refDate):
-    """ Get date corresponding to a number of steps from a reference date.
-
-    Get date corresponding to a number of steps from a reference date and return it as datetime.
-    It can now use sub-daily steps.
-    intIn is a number of steps from the reference date refDate.
-
-    :param intIn: number of steps as integer
-    :param refDate: reference date as datetime
-    :return: stepDate: date as datetime corresponding to intIn steps from refDate
-    """
-
-    # CM: get model time step as float form 'DtSec' in Settings.xml file
-    DtSec = float(binding['DtSec'])
-    # CM: compute fraction of day corresponding to model time step as float
-    DtDay = float(DtSec / 86400)
-    # Time step, expressed as fraction of day (same as self.var.DtSec and self.var.DtDay)
-
-    # CM: compute date corresponding to intIn steps from reference date refDate
-    stepDate = refDate + datetime.timedelta(days=(intIn*DtDay))
-
-    return stepDate
-
-
 def checkifDate(start,end):
-    """ Check simulation start and end dates or timesteps
-    
-    Check simulation start and end dates/timesteps to be later than begin date (CalendarStartDay).
-    If dates are used for binding[start] and binding[end], it substitutes dates with time step numbers.
-    
-    :param start: start date for model run (# or date as string)
-    :param end: end date for model run (# or date as string)
-    :returns: modelSteps (modelSteps[0] = intStart 
-    modelSteps.append(intEnd)
-    """
-    # calendar date start (CalendarDayStart)
+
     begin = Calendar(binding['CalendarDayStart'])
 
     intStart,strStart = datetoInt(binding[start],True)
-    # overwrite date with time step
-    binding[start] = intStart
     intEnd,strEnd = datetoInt(binding[end],True)
-    binding[end] = intEnd
 
     # test if start and end > begin
     if (intStart<0) or (intEnd<0) or ((intEnd-intStart)<0):
-        strBegin = begin.strftime("%d/%m/%Y %H:%M")
-        msg="Simulation start date and/or simulation end date are wrong or do not match CalendarStartDate!\n"+ \
-            "CalendarStartDay: "+strBegin +"\n" + \
-            "Simulation start: "+strStart + " - "+str(intStart)+"\n" + \
-            "Simulation end: "+strEnd + " - "+str(intEnd)
+        strBegin = begin.strftime("%d/%m/%Y")
+        msg="Start Date: "+strStart+" and/or end date: "+ strEnd + " are wrong!\n or smaller than the first time step date: "+strBegin
         raise LisfloodError(msg)
     modelSteps.append(intStart)
     modelSteps.append(intEnd)

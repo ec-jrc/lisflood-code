@@ -1,0 +1,35 @@
+
+Installation
+
+Using Python 2.7
+
+```bash
+pip install -r requirements.txt
+pip install -r requirements2.txt
+wget -nv http://downloads.sourceforge.net/project/pcraster/PCRaster/4.1.0/pcraster-4.1.0_x86-64.tar.gz
+tar xzf pcraster-4.1.0_x86-64.tar.gz && rm pcraster-4.1.0_x86-64.tar.gz
+export PYTHONPATH="$PWD/pcraster-4.1.0_x86-64/python:${PYTHONPATH}"
+export PATH="$PWD/pcraster-4.1.0_x86-64/bin:${PATH}"
+```
+
+Pcraster includes `libexpat.so.1` (pcraster-4.1.0_x86-64/lib/libexpat.so.1) which can conflict with the OS version. Please remove it from pcraster to get around error. 
+
+
+## Docker image
+
+A Docker image with Listflood model can be build with
+```bash
+docker build -t ec-jrc/lisflood .
+```
+
+To run a simulation use
+```bash
+docker run -v $PWD/Lisflood01degree:/data/input \
+-v $PWD/output:/data/output \
+-ti ec-jrc/lisflood:latest /data/input/settingsFiles/MySettings.xml
+```
+The command will
+* mount the input directory 
+* mount the output directory 
+* run `lisf1.py` with the config file which resides inside in the input directory.
+In the config file the `PathRoot` and `PathOut` variables should be respectivly set to `/data/input` and `/data/output`.

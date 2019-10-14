@@ -48,24 +48,20 @@ class lakes(object):
 
         if option['simulateLakes']:
 
-            LakeSitesC = loadmap('LakeSites')
 
+            LakeSitesC = loadmap('LakeSites')
+            if LakeSitesC.size==0:
+                option['simulateLakes']=False
+                return
+            # break if no reservoirs
 
             LakeSitesC[LakeSitesC < 1] = 0
             LakeSitesC[self.var.IsChannel == 0] = 0
             #self.var.LakeSites = ifthen((defined(self.var.LakeSites) & boolean(decompress(self.var.IsChannel))), self.var.LakeSites)
             # Get rid of any lakes that are not part of the channel network
-
-            
-            # mask lakes sites when using sub-catchments mask
-            self.var.LakeSitesCC = np.compress(LakeSitesC>0,LakeSitesC)
+            LakeSitesCC = np.compress(LakeSitesC>0,LakeSitesC)
             self.var.LakeIndex = np.nonzero(LakeSitesC)[0]
 
-            if self.var.LakeSitesCC.size==0:
-                option['simulateLakes']=False
-                option['repsimulateLakes']=False
-                return
-            # break if no lakes
 
 
             self.var.IsStructureKinematic = np.where(LakeSitesC > 0 , np.bool8(1),self.var.IsStructureKinematic)
@@ -217,14 +213,6 @@ class lakes(object):
 
                 self.var.LakeStorageM3CC = (LakeStorageIndicator - self.var.LakeOutflow * 0.5) * self.var.DtRouting
                 # Lake storage
-
-                # self.var.LakeStorageM3CC < 0 leads to NaN in state files
-                # Check LakeStorageM3CC for negative values and set them to zero
-                if any(np.isnan(self.var.LakeStorageM3CC)) or any(self.var.LakeStorageM3CC < 0):
-                    msg = "Negative or NaN volume for lake storage set to 0. Increase computation time step for routing (DtSecChannel) \n"
-                    print LisfloodWarning(msg)
-                    self.var.LakeStorageM3CC[self.var.LakeStorageM3CC < 0] = 0
-                    self.var.LakeStorageM3CC[np.isnan(self.var.LakeStorageM3CC)] = 0
 
                 #self.var.LakeStorageM3CC = cover(self.var.LakeStorageM3CC - self.var.EWLakeM3Dt, scalar(0.0))
                 # New lake storage [m3] (assuming lake surface area equals bottom area)

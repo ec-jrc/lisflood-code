@@ -1,0 +1,387 @@
+<!--
+#######################################################
+
+  ##       ####  ######  ##     ##    ###    ########  
+  ##        ##  ##    ## ##     ##   ## ##   ##     ## 
+  ##        ##  ##       ##     ##  ##   ##  ##     ## 
+  ##        ##   ######  ##     ## ##     ## ########  
+  ##        ##        ##  ##   ##  ######### ##        
+  ##        ##  ##    ##   ## ##   ##     ## ##        
+  ######## ####  ######     ###    ##     ## ##  
+  
+#######################################################
+
+TIP:
+You can use $(ProjectDir) or $(ProjectPath) as built-in variable to use in this XML settings, to refer Lisvap project folder (in case you work with source code)
+You can use $(SettingsDir) or $(SettingsPath) to refer directory containing the XML settings.
+-->
+
+<lfsettings>
+
+    <lfuser>
+        <group>
+
+            <comment>
+                **************************************************************
+                TIME-RELATED CONSTANTS
+                **************************************************************
+            </comment>
+
+            <textvar name="CalendarDayStart" value="01/01/1990 00:00">
+                <comment>
+                    Calendar day of 1st day in model run
+                </comment>
+            </textvar>
+
+            <textvar name="DtSec" value="86400">
+                <comment>
+                    time step [seconds] ALWAYS USE 86400!!
+                </comment>
+            </textvar>
+
+            <textvar name="StepStart" value="01/01/2005 00:00">
+                <comment>
+                    Date of first time step in simulation
+                </comment>
+            </textvar>
+
+            <textvar name="StepEnd" value="31/12/2016 00:00">
+                <comment>
+                    Date of last time step
+                </comment>
+            </textvar>
+
+            <textvar name="ReportSteps" value="1..10227">
+                <comment/>
+            </textvar>
+
+
+        </group>
+
+        <group>
+
+            <comment>
+                **************************************************************
+                FILE PATHS
+                **************************************************************
+            </comment>
+
+            <textvar name="PathOut" value="/DATA/gelatem/FAIR_workshop/Lisflood01degree/forcing_data">
+                <comment>
+                    Output path
+                </comment>
+            </textvar>
+
+            <textvar name="PathBaseMapsIn" value="/DATA/gelatem/FAIR_workshop/Lisflood01degree/maps_netcdf">
+                <comment>
+                    Path to input base maps
+                </comment>
+            </textvar>
+
+            <textvar name="PathMeteoIn" value="/DATA/gelatem/FAIR_workshop/Lisflood01degree/forcing_data">
+                <comment>
+                    Path to input raw meteo maps
+                    E:/lisflood_test/Lisvap/meteo/raster
+                </comment>
+            </textvar>
+
+        </group>
+
+
+        <group>
+
+            <comment>
+                **************************************************************
+                PREFIXES OF OUTPUT METEO VARIABLES
+                **************************************************************
+            </comment>
+
+            <textvar name="PrefixE0" value="e0_2005-2016">
+                <comment>
+                    prefix E0 maps
+                </comment>
+            </textvar>
+
+            <textvar name="PrefixES0" value="es_2005-2016">
+                <comment>
+                    prefix ES0 maps
+                </comment>
+            </textvar>
+
+            <textvar name="PrefixET0" value="et_2005-2016">
+                <comment>
+                    prefix ET0 maps
+                </comment>
+            </textvar>
+
+        </group>
+
+
+    </lfuser>
+
+    <lfoptions>
+        <setoption name="TemperatureInKelvinFlag" choice="0" />
+        <setoption name="readNetcdfStack" choice="1" />
+        <setoption name="writeNetcdfStack" choice="1" />
+        <setoption name="repE0Maps" choice="1" />
+        <setoption name="EFAS" choice="1" />
+        <setoption name="CORDEX" choice="0" />
+        <setoption name="useTavg" choice="0" />
+    </lfoptions>
+
+
+    <lfbinding>
+        <!--
+        **************************************************************
+        **************************************************************
+        LFBINDING: MORE LOW-LEVEL CONTROL OVER IN- AND OUTPUT
+        **************************************************************
+        **************************************************************
+        -->
+
+        <group>
+
+            <comment>
+                **************************************************************
+                TIMESTEP RELATED PARAMETERS
+                **************************************************************
+            </comment>
+
+            <textvar name="CalendarDayStart" value="$(CalendarDayStart)">
+                <comment>
+                    calendar day number of 1st day in model run
+                    e.g. 1st of January: 1; 1st of June 151 (or 152 in leap year)
+                </comment>
+            </textvar>
+
+            <textvar name="DtSec" value="$(DtSec)">
+                <comment>
+                    timestep [seconds]
+                </comment>
+            </textvar>
+
+            <textvar name="StepStart" value="$(StepStart)">
+                <comment>
+                    Number of first time step in simulation
+                </comment>
+            </textvar>
+
+            <textvar name="StepEnd" value="$(StepEnd)">
+                <comment>
+                    Number of last time step
+                </comment>
+            </textvar>
+
+        </group>
+
+        <group>
+            <comment>
+                **************************************************************
+                CONSTANTS
+                **************************************************************
+            </comment>
+
+
+            <textvar name="AvSolarConst" value="1370">
+                <comment>
+                    Average solar radiation at top atmosphere [J/m2/s] (I.E.A. 1978)
+                </comment>
+            </textvar>
+
+            <textvar name="StefBolt" value="4.903E-3">
+                <comment>
+                    Stefan-Boltzmann constant [J/m2/K4/day]
+                </comment>
+            </textvar>
+
+            <textvar name="Press0" value="1013">
+                <comment>
+                    Atmosheric pressure at sea level [mbar]
+                </comment>
+            </textvar>
+
+            <textvar name="PD" value="-2.65">
+                <comment>
+                    Correction constant in daylength formula [degrees]
+                </comment>
+            </textvar>
+
+            <textvar name="AlbedoSoil" value="0.15">
+                <comment>
+                    Albedo of bare soil surface (Supit et. al.)
+                </comment>
+            </textvar>
+
+            <textvar name="AlbedoWater" value="0.05">
+                <comment>
+                    Albedo of water surface (Supit et. al.)
+                </comment>
+            </textvar>
+
+            <textvar name="AlbedoCanopy" value="0.23">
+                <comment>
+                    Albedo of vegetation canopy (FAO,1998)
+                </comment>
+            </textvar>
+
+            <textvar name="FactorSoil" value="0.75">
+                <comment>
+                    Estimated value for surface roughness factor of bare soil (Supit et. al.)
+                </comment>
+            </textvar>
+
+            <textvar name="FactorWater" value="0.5">
+                <comment>
+                    Estimated value for surface roughness factor of water surface (Supit et. al.)
+                </comment>
+            </textvar>
+
+            <textvar name="FactorCanopy" value="1">
+                <comment>
+                    Estimated value for surface roughness factor of vegetation canopy (Supit et. al.)
+                </comment>
+            </textvar>
+
+        </group>
+
+        <group>
+            <comment>
+                **************************************************************
+                INPUT METEOROLOGICAL TIMESERIES AS MAPS
+                **************************************************************
+            </comment>
+
+            <textvar name="TMaxMaps" value="$(PathMeteoIn)/max_2m_temperature_final_2005-2016">
+                <comment>
+                    Maximum daily temperature [K]
+                </comment>
+            </textvar>
+
+            <textvar name="TMinMaps" value="$(PathMeteoIn)/min_2m_temperature_final_2005-2016">
+                <comment>
+                    Minimum daily temperature [K]
+                </comment>
+            </textvar>
+
+
+            <textvar name="EActMaps" value="$(PathMeteoIn)/actual_vapour_pressure_final_2005-2016">
+                <comment>
+                    Actual vapour pressure [mbar]
+                </comment>
+            </textvar>
+
+            <textvar name="WindMaps" value="$(PathMeteoIn)/windspeed_final_2005-2016">
+                <comment>
+                    Wind speed at 10 m from surface [m/s]
+                </comment>
+            </textvar>
+
+            <textvar name="RgdMaps" value="$(PathMeteoIn)/surface_solar_radiation_downwards_final_2005-2016">
+                <comment>
+                    rgd - calculated solar radiation [W/m2]
+                </comment>
+            </textvar>
+            <textvar name="TAvgMaps" value="$(PathMeteoIn)/2m_temperature_final_2005-2016">
+                <comment>
+                    average daily temperature [C or K]
+                </comment>
+            </textvar>
+            <textvar name="PSurfMaps" value="0">
+                <comment>
+                    Instantaneous sea level pressure [Pa]
+                </comment>
+            </textvar>
+
+
+        </group>
+
+        <group>
+            <comment>
+                **************************************************************
+                REPORTED OUTPUT MAPS
+                **************************************************************
+            </comment>
+
+            <textvar name="E0Maps" value="$(PathOut)/$(PrefixE0)">
+                <comment>
+                    daily reference evaporation (free water) [mm/day]
+                </comment>
+            </textvar>
+
+            <textvar name="ES0Maps" value="$(PathOut)/$(PrefixES0)">
+                <comment>
+                    daily reference evaporation (soil) [mm/day]
+                </comment>
+            </textvar>
+
+            <textvar name="ET0Maps" value="$(PathOut)/$(PrefixET0)">
+                <comment>
+                    daily reference evapotranspiration (crop) [mm/day]
+                </comment>
+            </textvar>
+
+        </group>
+
+        <group>
+            <comment>
+                **************************************************************
+                REPORTED OUTPUT TIME SERIES
+                **************************************************************
+            </comment>
+
+            <textvar name="TAvgTS" value="$(PathOut)/tAvg.tss">
+                <comment>
+                    Average temperature [deg C]
+                </comment>
+            </textvar>
+
+            <textvar name="ET0TS" value="$(PathOut)/et0.tss">
+                <comment>
+                    Potential reference evapotranspiration rate [mm/day]
+                </comment>
+            </textvar>
+
+            <textvar name="E0TS" value="$(PathOut)/e0.tss">
+                <comment>
+                    Potential evaporation rate of a free water surface [mm/day]
+                </comment>
+            </textvar>
+
+            <textvar name="ES0TS" value="$(PathOut)/es0.tss">
+                <comment>
+                    Potential evaporation rate from a bare soil surface [mm/day]
+                </comment>
+            </textvar>
+
+        </group>
+
+        <group>
+            <comment>
+                **************************************************************
+                BASE INPUT MAPS
+                **************************************************************
+            </comment>
+
+            <textvar name="MaskMap" value="/DATA/gelatem/FAIR_workshop/Lisflood01degree/areamaps/lorentz_bool">
+                <comment>
+                    Clone map
+                </comment>
+            </textvar>
+
+            <textvar name="Dem" value="$(PathBaseMapsIn)/dem.map">
+                <comment>
+                    Digital elevation model [meters a.s.l.]
+                </comment>
+            </textvar>
+
+            <textvar name="Lat" value="$(PathBaseMapsIn)/lat.map">
+                <comment>
+                    Latitude [decimal degrees]
+                </comment>
+            </textvar>
+
+        </group>
+
+    </lfbinding>
+
+</lfsettings>

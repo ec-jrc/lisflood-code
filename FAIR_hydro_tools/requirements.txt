@@ -1,0 +1,4 @@
+cython
+numpy==1.15.4
+scipy
+matplotlib

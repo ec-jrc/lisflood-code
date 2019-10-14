@@ -8,103 +8,69 @@
 # Copyright:   (c) burekpe 2014
 # Licence:     <your licence>
 # -------------------------------------------------------------------------
-
-#getopt module is a parser for command line options (consider using argparse module instead)
+from IPython.core.debugger import set_trace as jupyter_breakpoint
+from IPython import embed as ipython_embed
 import getopt
+from collections import OrderedDict
 
-#defining global variables
-
-global maskinfo         #Definition of compressed mask array and info how to blow it up again
+global maskinfo,zeromap,modelSteps,xmlstring
 maskinfo = {}
-
-
-global modelSteps       #list of start and end time step for the model (modelSteps[0] = start; modelSteps[1] = end)
 modelSteps=[]
 xmlstring=[]
 
-global binding          #dictionary of all model's options and settings for running ang managing the model
-binding = {}
+global binding, option, FlagName, Flags, ReportSteps, FilterSteps, EnsMembers, outputDir
+global MMaskMap, maskmapAttr, bigmapAttr, cutmap, metadataNCDF
+global timestepInit
 
-global option           #dictionary of all model's options and settings for running ang managing the model
+timestepInit =[]
+binding = {}
 option = {}
 
-global FlagName         #dictionary of flags defining model's behavior (quiet,veryquiet, loud, checkfiles, noheader,printtime, debug)
-
-global Flags            #dictionary of flags defining model's behavior (quiet,veryquiet, loud, checkfiles, noheader,printtime, debug)
-
-global ReportSteps      #reporting steps for state maps
-ReportSteps = {}
-
-global FilterSteps      #used only in Kalmanf filter option
-FilterSteps = []
-
-global EnsMembers       #used only in Kalmanf filter option
-EnsMembers = []
-
-global outputDir        #path of directory to store model outputs
-outputDir = []
-
-# global MMaskMap, maskmapAttr, bigmapAttr, cutmap, metadataNCDF
-global MMaskMap         #mask for checking maps
-MMaskMap = 0
-
-global maskmapAttr      #attributes of masking map (clonemap) - dictionary
-maskmapAttr = {}
-
-
-global cutmap           #defines the MaskMap inside the forcing maps
-cutmap = [0, 1, 0, 1]
-
-global metadataNCDF     #store map metadata from netcdf default file (or e0.nc)
-metadataNCDF = {}
-
-global timestepInit     #if initial conditions are stored as netCDF with different time steps this variable indicates which time step to use either as date e.g. 1/1/2010 or as number e.g. 5
-timestepInit =[]
-
-
-global cdfFlag
-cdfFlag = [0,0, 0,0,0,0,0]  # flag for netcdf output for end, steps, all, monthly (steps), yearly(steps), monthly , yearly
-
-# global timeMes,TimeMesString, timeMesSum
-global timeMes          # time measure - filled in dynamic
-timeMes=[]
-
-global TimeMesString    # name of the time measure - filled in dynamic
-timeMesString = []
-
-global timeMesSum       # time measure of hydrological modules
-timeMesSum = []
-
-
-#initializing variables
 reportTimeSerieAct = {}
 reportMapsAll = {}
 reportMapsSteps = {}
 reportMapsEnd = {}
+
+MMaskMap = 0
+ReportSteps = {}
+FilterSteps = []
+EnsMembers = []
 nrCores = []
+outputDir = []
+
+maskmapAttr = {}
+bigmapAttr = {}
+cutmap = 4 * [None]
+cdfFlag = [0, 0, 0,0,0,0,0]  # flag for netcdf output for all, steps and end, monthly (steps), yearly(steps), monthly , yearly
+metadataNCDF = {}
+
+global timeMes,TimeMesString, timeMesSum
+timeMes=[]
+timeMesString = []  # name of the time measure - filled in dynamic
+timeMesSum = []    # time measure of hydrological modules
+
+# Mapping of vegetation types to land use fractions (and the other way around)
+global VEGETATION_LANDUSE, LANDUSE_VEGETATION, PRESCRIBED_VEGETATION, PRESCRIBED_LAI
+SOIL_USES = ["Rainfed", "Forest", "Irrigated"]
+PRESCRIBED_VEGETATION = [fract + "_prescribed" for fract in SOIL_USES]
+PRESCRIBED_LAI = OrderedDict(zip(PRESCRIBED_VEGETATION[:], ['LAIOtherMaps', 'LAIForestMaps', 'LAIIrrigationMaps']))
+VEGETATION_LANDUSE = OrderedDict(zip(PRESCRIBED_VEGETATION[:], SOIL_USES[:]))
+LANDUSE_VEGETATION = OrderedDict([(v, [k]) for k, v in VEGETATION_LANDUSE.items()])
+LANDUSE_INPUTMAP = OrderedDict(zip(LANDUSE_VEGETATION.keys(), ["OtherFraction", "ForestFraction", "IrrigationFraction"]))
 
 # ----------------------------------
-#set names of input arguments
-#initializing Flags to false values
-Flags = {'quiet': False, 'veryquiet': False, 'loud': False,
-         'check': False, 'noheader': False, 'printtime': False,
-         'debug':False}
-
 FlagName = ['quiet', 'veryquiet', 'loud',
-            'checkfiles', 'noheader', 'printtime',
-            'debug']
+            'checkfiles', 'noheader', 'printtime']
+Flags = {'quiet': False, 'veryquiet': False, 'loud': False,
+         'check': False, 'noheader': False, 'printtime': False}
+
 
 def globalFlags(arg):
-    """ Read flags for model launching options
-    
-    Read flags for model lounching options: according to the flags the output is adjusted
-    (quiet,veryquiet, loud, checkfiles, noheader, printtime, debug)
-        
-    :param arg: model argument argument
-    :return: 
+    """ read flags - according to the flags the output is adjusted
+        quiet,veryquiet, loud, checkfiles, noheader,printtime
     """
     try:
-        opts, args = getopt.getopt(arg, 'qvlchtd', FlagName)
+        opts, args = getopt.getopt(arg, 'qvlcht', FlagName)
     except getopt.GetoptError:
         usage()
 
@@ -121,5 +87,3 @@ def globalFlags(arg):
             Flags['noheader'] = True  # NoHeader=True
         if o in ('-t', '--printtime'):
             Flags['printtime'] = True      # Flag[2]=1
-        if o in ('-d', '--debug'):
-            Flags['debug'] = True

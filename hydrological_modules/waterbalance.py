@@ -68,9 +68,7 @@ class waterbalance(object):
                 if option['simulatePolders']:
                     ChannelInitM3 += self.var.PolderStorageIniM3
 
-            Hill1 =  self.var.OtherFraction      * (self.var.CumInterception[0] + self.var.W1[0] + self.var.W2[0] + self.var.UZ[0])
-            Hill1 += self.var.ForestFraction     * (self.var.CumInterception[1] + self.var.W1[1] + self.var.W2[1] + self.var.UZ[1])
-            Hill1 += self.var.IrrigationFraction * (self.var.CumInterception[2] + self.var.W1[2] + self.var.W2[2] + self.var.UZ[2])
+            Hill1 = (self.var.SoilFraction * (self.var.CumInterception + self.var.W1 + self.var.W2 + self.var.UZ)).sum("vegetation").values
             Hill1 += self.var.LZ
 
             HillslopeInitM3 = (self.var.WaterDepthInit + self.var.SnowCoverInit + Hill1 +
@@ -82,11 +80,9 @@ class waterbalance(object):
             # MMtoM3 equals MMtoM*PixelArea, which may (or may not) be
             # spatially variable
 
-            self.var.WaterInit = np.take(np.bincount(self.var.Catchments,
-                weights=ChannelInitM3),self.var.Catchments)
+            self.var.WaterInit = sumOverAreas(ChannelInitM3, self.var.Catchments)
 
-            self.var.WaterInit += np.take(np.bincount(self.var.Catchments,
-                weights=HillslopeInitM3),self.var.Catchments)
+            self.var.WaterInit += sumOverAreas(HillslopeInitM3, self.var.Catchments)
 
             # Initial water stored [m3]
             # Inclusion of DischargeM3Structures: adding this corrects a (relatively small) offset that occurs otherwise
@@ -94,8 +90,7 @@ class waterbalance(object):
             #DisStructure = cover(ifthen(
             #    self.var.IsUpsOfStructureKinematic, self.var.ChanQ * self.var.DtRouting), scalar(0.0))
 
-            DisStructure = np.where(self.var.IsUpsOfStructureKinematicC,
-                        self.var.ChanQ * self.var.DtRouting,0)
+            DisStructure = np.where(self.var.IsUpsOfStructureKinematicC, self.var.ChanQ * self.var.DtRouting,0)
 #            DisStructure = np.where(self.var.IsUpsOfStructureKinematicC,
 #                        self.var.ChanM3,0)
 
@@ -107,16 +102,14 @@ class waterbalance(object):
             # (because it is not routed yet to the structure)
 
             if option['simulateLakes']:
-                DisStructure += np.where(compressArray(self.var.IsUpsOfStructureLake),
-                        0.5 * self.var.ChanQ * self.var.DtRouting,0)
+                DisStructure += np.where(compressArray(self.var.IsUpsOfStructureLake), 0.5 * self.var.ChanQ * self.var.DtRouting,0)
 
              #   DisStructure += cover(ifthen(self.var.IsUpsOfStructureLake,
              #                                0.5 * self.var.ChanQ * self.var.DtRouting), scalar(0.0))
                 # because Modified Puls Method is use, some additional offset
                 # has to be add
             #self.var.DischargeM3StructuresIni = areatotal(DisStructure, catch)
-            self.var.DischargeM3StructuresIni = np.take(np.bincount(self.var.Catchments,
-                weights=DisStructure),self.var.Catchments)
+            self.var.DischargeM3StructuresIni = sumOverAreas(DisStructure, self.var.Catchments)
 
 
 
@@ -143,10 +136,8 @@ class waterbalance(object):
             #    decompress(self.var.TotalPrecipitation) * self.var.MMtoM3, catch)
 
             self.var.sumIn[np.isnan(self.var.sumIn)] = 0
-            WaterIn = np.take(np.bincount(self.var.Catchments,
-                weights=self.var.sumIn),self.var.Catchments)
-            WaterIn += np.take(np.bincount(self.var.Catchments,
-                weights=self.var.TotalPrecipitation*self.var.MMtoM3),self.var.Catchments)
+            WaterIn = sumOverAreas(self.var.sumIn, self.var.Catchments)
+            WaterIn += sumOverAreas(self.var.TotalPrecipitation*self.var.MMtoM3, self.var.Catchments)
 
 
             # WaterIn=areatotal(TotalQInM3,Catchments) + areatotal(TotalPrecipitation*MMtoM3,Catchments);
@@ -169,10 +160,7 @@ class waterbalance(object):
             # Water stored in channel network [m3] (including reservoirs,
             # lakes, polders)
 
-            Hill1 = self.var.OtherFraction * (self.var.CumInterception[0] + self.var.W1[0] + self.var.W2[0] + self.var.UZ[0])
-            Hill1 += self.var.ForestFraction * (self.var.CumInterception[1] + self.var.W1[1] + self.var.W2[1] + self.var.UZ[1])
-            Hill1 += self.var.IrrigationFraction * (self.var.CumInterception[2] + self.var.W1[2] + self.var.W2[2] + self.var.UZ[2]) + self.var.LZ
-
+            Hill1 = self.var.LZ + (self.var.SoilFraction * (self.var.CumInterception + self.var.W1 + self.var.W2 + self.var.UZ)).sum("vegetation").values
             HillslopeStoredM3 = (self.var.WaterDepth + self.var.SnowCover + Hill1 +
                                  self.var.DirectRunoffFraction * self.var.CumInterSealed) * self.var.MMtoM * self.var.PixelArea
             # Water stored at hillslope elements [m3]
@@ -181,8 +169,8 @@ class waterbalance(object):
             # or groundwater is stored at all in the direct runoff fraction!)
 
             #WaterStored = areatotal(decompress(ChannelStoredM3), catch) + areatotal(decompress(HillslopeStoredM3), catch)
-            WaterStored = np.take(np.bincount(self.var.Catchments,weights=ChannelStoredM3),self.var.Catchments)
-            WaterStored += np.take(np.bincount(self.var.Catchments,weights=HillslopeStoredM3),self.var.Catchments)
+            WaterStored = sumOverAreas(ChannelStoredM3, self.var.Catchments)
+            WaterStored += sumOverAreas(HillslopeStoredM3, self.var.Catchments)
 
             # Total water stored [m3]
 
@@ -194,26 +182,21 @@ class waterbalance(object):
 
             sum1 = self.var.sumDis.copy()
             sum1[self.var.AtLastPointC == 0] = 0
-            WaterOut = np.take(np.bincount(self.var.Catchments,weights=sum1 * self.var.DtRouting),self.var.Catchments)
-            WaterOut += np.take(np.bincount(self.var.Catchments,weights=HillslopeOutM3),self.var.Catchments)
+            WaterOut = sumOverAreas(sum1 * self.var.DtRouting, self.var.Catchments)
+            WaterOut += sumOverAreas(HillslopeOutM3, self.var.Catchments)
 
             #WaterOut = areatotal(cover(ifthen(
             #    self.var.AtLastPoint, self.var.sumDis * self.var.DtRouting), scalar(0.0)), catch)
             #WaterOut += areatotal(decompress(HillslopeOutM3), catch)
             if option['simulateLakes']:
-                WaterOut += np.take(np.bincount(self.var.Catchments,
-                    weights=self.var.EWLakeCUMM3),self.var.Catchments)
+                WaterOut += sumOverAreas(self.var.EWLakeCUMM3, self.var.Catchments)
             if option['openwaterevapo']:
-                WaterOut += np.take(np.bincount(self.var.Catchments,
-                    weights=self.var.EvaCumM3),self.var.Catchments)
+                WaterOut += sumOverAreas(self.var.EvaCumM3, self.var.Catchments)
             if option['TransLoss']:
-                WaterOut += np.take(np.bincount(self.var.Catchments,
-                    weights=self.var.TransCum),self.var.Catchments)
+                WaterOut += sumOverAreas(self.var.TransCum, self.var.Catchments)
             if option['wateruse']:
-                WaterOut += np.take(np.bincount(self.var.Catchments,
-                    weights=self.var.IrriLossCUM),self.var.Catchments)
-                WaterOut += np.take(np.bincount(self.var.Catchments,
-                    weights=self.var.wateruseCum),self.var.Catchments)
+                WaterOut += sumOverAreas(self.var.IrriLossCUM, self.var.Catchments)
+                WaterOut += sumOverAreas(self.var.wateruseCum, self.var.Catchments)
             # Accumulated outgoing water [cu m]
             # Inclusion of DischargeM3Structures is because at structure locations the water in the channel is added to the structure
             # (i.e. storage at reservoirs/lakes is accounted for twice). Of course this is not really a 'loss', but merely a correction
@@ -222,8 +205,7 @@ class waterbalance(object):
             # added cumulative transmission loss
             DisStru = np.where(self.var.IsUpsOfStructureKinematicC,
                         self.var.ChanQ * self.var.DtRouting,0)
-            DischargeM3Structures = np.take(np.bincount(self.var.Catchments,
-                weights=DisStru),self.var.Catchments)
+            DischargeM3Structures = sumOverAreas(DisStru, self.var.Catchments)
 
 
             #DischargeM3Structures = areatotal(cover(ifthen(
@@ -235,8 +217,7 @@ class waterbalance(object):
             if option['simulateLakes']:
                 DisLake = globals.inZero.copy()
                 np.put(DisLake,self.var.LakeIndex,0.5 * self.var.LakeInflowCC * self.var.DtRouting)
-                DischargeM3Lake = np.take(np.bincount(self.var.Catchments,
-                    weights=DisLake),self.var.Catchments)
+                DischargeM3Lake = sumOverAreas(DisLake, self.var.Catchments)
                 #DischargeM3Lake = areatotal(cover(0.5 * self.var.LakeInflow * self.var.DtRouting, scalar(0.0)), catch)
                 # because Modified Puls Method is using QIn=(Qin1+Qin2)/2, we need a correction
                 #  DisStr=Disstr+0.5*LakeInflow - 0.5 * LakeInit
@@ -261,8 +242,7 @@ class waterbalance(object):
             # Cumulative mass balance error per catchment [cu m]
 
             #CatchArea = areatotal(decompress(self.var.PixelAreaArray), catch)
-            CatchArea = np.take(np.bincount(self.var.Catchments,
-                    weights=self.var.PixelArea),self.var.Catchments)
+            CatchArea = sumOverAreas(self.var.PixelArea, self.var.Catchments)
 
             self.var.MBErrorMM = self.var.MtoMM * self.var.MBError / CatchArea
 

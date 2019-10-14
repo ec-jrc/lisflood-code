@@ -1,0 +1,16 @@
+python-pip
+netcdf-bin
+libnetcdf-dev
+gdal-bin
+libgdal-dev
+libomp-dev
+python-rtree
+git
+zip
+unrar
+cmake
+libncurses5-dev
+libboost-all-dev
+libxml2-utils
+libxslt1-dev
+python-setuptools

@@ -9,8 +9,18 @@
 # Licence:     <your licence>
 # -------------------------------------------------------------------------
 
+import xarray as xr
+from pyproj import Proj
 from global_modules.add1 import *
 
+def coordinatesLand(eastings_forcing, northings_forcing):
+    """"""
+    half_cell = maskmapAttr['cell'] / 2.
+    top_row = np.where(np.round(northings_forcing, 5) == np.round(maskmapAttr['y'] - half_cell, 5))[0][0]
+    left_col = np.where(np.round(eastings_forcing, 5) == np.round(maskmapAttr['x'] + half_cell, 5))[0][0]
+    row_slice = slice(top_row, top_row + maskmapAttr['row'])
+    col_slice = slice(left_col, left_col + maskmapAttr['col'])
+    return [co[row_slice,col_slice][~maskinfo["mask"]] for co in np.meshgrid(eastings_forcing, northings_forcing)]
 
 class miscInitial(object):
 
@@ -108,11 +118,9 @@ class miscInitial(object):
         # ************************************************************
         # ***** Some additional stuff
         # ************************************************************
-        # date of the first possible model run
-        # computation of model steps is referred to CalendarStartDay
+
         self.var.CalendarDayStart = Calendar(binding['CalendarDayStart'])
         try:
-           # number of time step or date of the state map to be used to initialize model run
            timestepInit.append(binding["timestepInit"])
         except: pass
 
@@ -126,7 +134,29 @@ class miscInitial(object):
         self.var.EWRef = None
         # setting meteo data to none - is this necessary?
 
-       
+
+
+
+        self.var.EndOfMonthTable="D:/LisfloodWorld2/tables/EndOfMonth.txt"
+	       # '1' if last day of the month, '0' if not
+
+        self.var.DayCounterMap ="./outMonth/Days"
+        self.var.ETpotMonthly="./outMonth/ETpot"
+        self.var.ETactMonthly="./outMonth/ETact"
+        self.var.WDMonthly="./outMonth/WD"
+        self.var.WUMonthly="./outMonth/WU"
+        self.var.DisMonthly="./outMonth/FlowE"
+        self.var.FlowIMonthly = "./outMonth/FlowI"
+
+        self.var.WEI_Use = "./outMonth/WEIu"
+        self.var.WEI_Demand = "./outMonth/WEId"
+        self.var.lWEI_Use = "./outMonth/lWEIu"
+        self.var.lWEI_Demand = "./outMonth/lWEId"
+        self.var.WDI = "./outMonth/WDI"
+
+
+        self.var.FlagDemandUse="./outMonth/DaysDemandGTUSE.map"
+        self.var.torun="./torun"
 
 
 
@@ -158,3 +188,16 @@ class miscInitial(object):
 
         self.var.SumETpot =  globals.inZero
         self.var.SumETpotact =   globals.inZero
+
+        # Latitude (radians) from the precipitation forcing NetCDF file coordinates
+        with xr.open_dataset(binding["PrecipitationMaps"] + ".nc") as nc:
+            if all([co in nc.dims for co in ("x", "y")]):
+                try:
+                    proj_var = [v for v in nc.data_vars.keys() if 'proj4_params' in nc[v].attrs.keys()][0] # look for the projection variable
+                except IndexError:
+                    raise Exception("If using projected coordinates (x, y), a variable with the 'proj4_params' attribute must be included in the precipitation file!")
+                projection = Proj(nc[proj_var].attrs['proj4_params']) # projection object obtained from the PROJ4 string
+                _, lat_deg = projection(*coordinatesLand(nc.x.values, nc.y.values), inverse=True) # latitude (degrees)
+            else:
+                _, lat_deg = coordinatesLand(nc.lon.values, nc.lat.values) # latitude (degrees)
+        self.var.lat_rad = np.radians(lat_deg)  # latitude (radians)
