@@ -473,8 +473,6 @@ class routing(HydroModule):
                 # ChanQKin in [cu m / s]
                 self.river_router.kinematicWaveRouting(self.var.ChanQKin, SideflowChan, "main_channel")
                 self.var.ChanM3Kin = self.var.ChanLength * self.var.ChannelAlpha * self.var.ChanQKin**self.var.Beta
-                self.var.ChanQKin = (self.var.ChanM3Kin * self.var.InvChanLength * self.var.InvChannelAlpha) ** self.var.InvBeta
-                # Volume in channel at end of computation step
                 self.var.ChanQ = np.maximum(self.var.ChanQKin, 0)
                 # at single kin. ChanQ is the same
                 self.var.sumDisDay += self.var.ChanQ
