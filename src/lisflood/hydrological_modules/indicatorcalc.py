@@ -1,42 +1,26 @@
-"""
-
-Copyright 2019 European Union
-
-Licensed under the EUPL, Version 1.2 or as soon they will be approved by the European Commission  subsequent versions of the EUPL (the "Licence");
-
-You may not use this work except in compliance with the Licence.
-You may obtain a copy of the Licence at:
-
-https://joinup.ec.europa.eu/sites/default/files/inline-files/EUPL%20v1_2%20EN(1).txt
-
-Unless required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an "AS IS" basis,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the Licence for the specific language governing permissions and limitations under the Licence.
-
-"""
-
-from __future__ import absolute_import, print_function, division
-
-import datetime
-
-from pcraster import areatotal, cover, ifthen, upstream
-import numpy as np
-
-from ..global_modules.add1 import loadmap, readnetcdf, decompress, compressArray
-from ..global_modules.settings import LisSettings, MaskInfo
-from . import HydroModule
+# -------------------------------------------------------------------------
+# Name:        Indicators calculation module
+# Purpose:     Calculation of indicators such as WEI, e-flow etc...
+#
+# Author:      burekpe, rooarie
+#
+# Created:     14.04.2015, last modified 12.05.2015
+# Copyright:   (c) jrc 2015
+# Licence:     <your licence>
+# -------------------------------------------------------------------------
 
 
-class indicatorcalc(HydroModule):
+
+from global_modules.add1 import *
+
+
+class indicatorcalc(object):
 
     """
     # ************************************************************
     # ***** Indicator calculation ************************************
     # ************************************************************
     """
-    input_files_keys = {'indicator': ['Population', 'LandUseMask'],
-                        'TransientLandUseChange': ['PopulationMaps']}
-    module_name = 'IndicatorCalculation'
 
     def __init__(self, indicatorcalc_variable):
         self.var = indicatorcalc_variable
@@ -50,50 +34,46 @@ class indicatorcalc(HydroModule):
 
         self.var.monthend = False
         self.var.yearend = False
-        settings = LisSettings.instance()
-        binding = settings.binding
-        option = settings.options
-        maskinfo = MaskInfo.instance()
         try:
             self.var.DefineEndofYear = int(binding['DefineEndofYear'])
-        except (ValueError, KeyError):
+        except:
             self.var.DefineEndofYear = 365
 
         if option['indicator']:
-            # population per pixel
             self.var.Population = loadmap('Population')
-            # map to mask out deserts and high mountains (to cover ETdif map, otherwise Sahara etc would pop out; meant as a drought indicator
-            self.var.LandUseMask = loadmap('LandUseMask')
-
+                # population per pixel
+            # CM mod: self.var.WUseRegionC is not initialized if wateruse=0
             if option['wateruse']:
-                self.var.RegionPopulation = np.take(np.bincount(self.var.WUseRegionC, weights=self.var.Population), self.var.WUseRegionC)
+                self.var.RegionPopulation = np.take(np.bincount(self.var.WUseRegionC,weights=self.var.Population),self.var.WUseRegionC)
                 # population sum in Regions
-                # set to 0 at start
-                self.var.DayCounter = 0
-                self.var.MonthETpotMM = maskinfo.in_zero()
-                self.var.MonthETactMM = maskinfo.in_zero()
-                self.var.MonthWDemandM3 = maskinfo.in_zero()
-                self.var.MonthWAbstractionM3 = maskinfo.in_zero()
-                self.var.MonthWConsumptionM3 = maskinfo.in_zero()
-                self.var.MonthDisM3 = maskinfo.in_zero()
-                self.var.MonthInternalFlowM3 = maskinfo.in_zero()
-                self.var.MonthExternalInflowM3 = maskinfo.in_zero()
-                self.var.RegionMonthIrrigationShortageM3 = maskinfo.in_zero()
-                self.var.MonthWaterAbstractedfromLakesReservoirsM3 = maskinfo.in_zero()
+            self.var.LandUseMask = loadmap('LandUseMask')
+                # map to mask out deserts and high mountains (to cover ETdif map, otherwise Sahara etc would pop out; meant as a drought indicator
 
-                self.var.LakeStorageM3 = maskinfo.in_zero()
+        if option['wateruse'] and option['indicator']:
+        # set to 0 at start
+            self.var.DayCounter = 0
+            self.var.MonthETpotMM =   globals.inZero.copy()
+            self.var.MonthETactMM =   globals.inZero.copy()
+
+            self.var.MonthWDemandM3 = globals.inZero.copy()
+            self.var.MonthWAbstractionM3 = globals.inZero.copy()
+            self.var.MonthWConsumptionM3 = globals.inZero.copy()
+            self.var.MonthDisM3 =     globals.inZero.copy()
+            self.var.MonthInternalFlowM3 = globals.inZero.copy()
+            self.var.MonthExternalInflowM3 = globals.inZero.copy()
+            self.var.RegionMonthIrrigationShortageM3 = globals.inZero.copy()
+            self.var.MonthWaterAbstractedfromLakesReservoirsM3 = globals.inZero.copy()
+
 
     def dynamic(self):
         """ dynamic part of the indicator calculation module
         """
-        settings = LisSettings.instance()
-        binding = settings.binding
-        option = settings.options
-        maskinfo = MaskInfo.instance()
+
         if option['TransientLandUseChange']:
             self.var.Population = readnetcdf(binding['PopulationMaps'], self.var.currentTimeStep())
-            self.var.RegionPopulation = np.take(np.bincount(self.var.WUseRegionC, weights=self.var.Population), self.var.WUseRegionC)
-            # population sum in Regions
+            self.var.RegionPopulation = np.take(np.bincount(self.var.WUseRegionC,weights=self.var.Population),self.var.WUseRegionC)
+                # population sum in Regions
+
 
         if option['wateruse'] and option['indicator']:
             # check if it is the last monthly or annual time step
@@ -101,20 +81,18 @@ class indicatorcalc(HydroModule):
             self.var.monthend = next_date_time.month != self.var.CalendarDate.month
             self.var.yearend = next_date_time.year != self.var.CalendarDate.year
             # sum up every day
-            self.var.DayCounter = self.var.DayCounter + 1.0
-            self.var.MonthETpotMM = self.var.MonthETpotMM + self.var.ETRef
-            self.var.MonthETactMM = self.var.MonthETactMM + self.var.deffraction(self.var.TaInterception) + self.var.TaPixel + self.var.ESActPixel
-
+            self.var.DayCounter   = self.var.DayCounter + 1.0
+            self.var.MonthETpotMM   = self.var.MonthETpotMM + self.var.ETRef
+            self.var.MonthETactMM   = self.var.MonthETactMM + self.var.deffraction(self.var.TaInterception) + self.var.TaPixel + self.var.ESActPixel
             if option['openwaterevapo']:
                 self.var.MonthETactMM += self.var.EvaAddM3 * self.var.M3toMM
-
-            self.var.MonthETdifMM = np.maximum((self.var.MonthETpotMM - self.var.MonthETactMM)*self.var.LandUseMask, maskinfo.in_zero())
-            # ; land use mask can be used to mask out deserts and high mountains, where no agriculture is possible
+            self.var.MonthETdifMM   = np.maximum((self.var.MonthETpotMM - self.var.MonthETactMM)*self.var.LandUseMask,globals.inZero)
+                # ; land use mask can be used to mask out deserts and high mountains, where no agriculture is possible
 
             self.var.MonthWDemandM3 = self.var.MonthWDemandM3 + self.var.TotalDemandM3
             self.var.MonthWAbstractionM3 = self.var.MonthWAbstractionM3 + self.var.TotalAbstractionFromSurfaceWaterM3 + self.var.ReservoirAbstractionM3 + self.var.LakeAbstractionM3 + self.var.TotalAbstractionFromGroundwaterM3
             self.var.MonthWConsumptionM3 = self.var.MonthWConsumptionM3  + self.var.WUseAddM3 + self.var.ReservoirAbstractionM3 + self.var.LakeAbstractionM3 + self.var.TotalAbstractionFromGroundwaterM3
-            self.var.MonthDisM3 = self.var.MonthDisM3 + self.var.ChanQAvg * self.var.DtSec
+            self.var.MonthDisM3     =	self.var.MonthDisM3 + self.var.ChanQAvg * self.var.DtSec
 
             self.var.MonthWaterAbstractedfromLakesReservoirsM3 = self.var.MonthWaterAbstractedfromLakesReservoirsM3 + self.var.ReservoirAbstractionM3 + self.var.LakeAbstractionM3
 
@@ -123,6 +101,8 @@ class indicatorcalc(HydroModule):
             # INTERNAL FLOW
             self.var.MonthInternalFlowM3 = self.var.MonthInternalFlowM3 + self.var.ToChanM3Runoff
 
+
+
             # --------------------------------------------------------------------------
 
             if self.var.monthend:
@@ -130,7 +110,7 @@ class indicatorcalc(HydroModule):
                 # INTERNAL FLOW
                 if option['simulateReservoirs'] or option['simulateLakes']:
                     # available LakeStorageM3 and ReservoirStorageM3 for potential abstraction at end of month in region
-                    self.var.RegionMonthReservoirAndLakeStorageM3 = np.take(np.bincount(self.var.WUseRegionC, weights=(self.var.ReservoirStorageM3 + self.var.LakeStorageM3)), self.var.WUseRegionC)
+                    self.var.RegionMonthReservoirAndLakeStorageM3 = np.take(np.bincount(self.var.WUseRegionC,weights=(self.var.ReservoirStorageM3+self.var.LakeStorageM3)),self.var.WUseRegionC)
 
                 # monthly abstraction from lakes and reservoirs
                 self.var.RegionMonthWaterAbstractedfromLakesReservoirsM3 = np.take(np.bincount(self.var.WUseRegionC,weights=self.var.MonthWaterAbstractedfromLakesReservoirsM3),self.var.WUseRegionC)
@@ -182,33 +162,43 @@ class indicatorcalc(HydroModule):
                 # if WSI is close to 1, situation is very vulnerable
                 # the '+1' is to prevent division by small values, leading to very large and misleading indicator values
 
-                self.var.FalkenmarkM3Capita1 = np.where(self.var.RegionPopulation > 0.0,self.var.RegionMonthInternalFlowM3*12/self.var.RegionPopulation, maskinfo.in_zero())
-                self.var.FalkenmarkM3Capita2 = np.where(self.var.RegionPopulation > 0.0,LocalFreshwaterM3*12/self.var.RegionPopulation, maskinfo.in_zero())
-                self.var.FalkenmarkM3Capita3 = np.where(self.var.RegionPopulation > 0.0,(UpstreamInflowM3+LocalFreshwaterM3)*12/self.var.RegionPopulation, maskinfo.in_zero())
+                self.var.FalkenmarkM3Capita1 =  np.where(self.var.RegionPopulation > 0.0,self.var.RegionMonthInternalFlowM3*12/self.var.RegionPopulation,globals.inZero.copy())
+                self.var.FalkenmarkM3Capita2 =  np.where(self.var.RegionPopulation > 0.0,LocalFreshwaterM3*12/self.var.RegionPopulation,globals.inZero.copy())
+                self.var.FalkenmarkM3Capita3 =  np.where(self.var.RegionPopulation > 0.0,(UpstreamInflowM3+LocalFreshwaterM3)*12/self.var.RegionPopulation,globals.inZero.copy())
                 # FalkenmarkM3Capita1 = (TotalRegionMonthToChanM3)/TotalTimeSteps*365.25/(PopulationRegion+0.0001);
                 # FalkenmarkM3Capita2 = (TotalRegionMonthToChanM3+TotalRegionMonthReservoirLakeAbstractionM3)/TotalTimeSteps*365.25/(PopulationRegion+0.0001);
                 # FalkenmarkM3Capita3 = (TotalRegionMonthToChanM3+TotalRegionMonthReservoirLakeAbstractionM3+TotalRegionMonthExternalInflowM3)/TotalTimeSteps*365.25/(PopulationRegion+0.0001);
                 # report(decompress(self.var.WEI_Use),'E:/test.map')
+
+            # --------------------------------------------------------------------------
+
+            if self.var.yearend:
+                x=1
+
+
+
 
 # --------------------------------------------------------------------------
     def dynamic_setzero(self):
         """ dynamic part of the indicator calculation module
             which set the monthly (yearly) values back to start
         """
-        settings = LisSettings.instance()
-        option = settings.options
 
-        if option['wateruse'] and option['indicator'] and self.var.monthend:
-            maskinfo = MaskInfo.instance()
+        if option['wateruse'] and option['indicator']:
+
+            if self.var.monthend:
             # set to 0 at the end of a month
-            self.var.DayCounter = 0
-            self.var.MonthETpotMM = maskinfo.in_zero()
-            self.var.MonthETactMM = maskinfo.in_zero()
-            self.var.MonthWDemandM3 = maskinfo.in_zero()
-            self.var.MonthWAbstractionM3 = maskinfo.in_zero()
-            self.var.MonthWConsumptionM3 = maskinfo.in_zero()
-            self.var.MonthDisM3 = maskinfo.in_zero()
-            self.var.MonthInternalFlowM3 = maskinfo.in_zero()
-            self.var.MonthExternalInflowM3 = maskinfo.in_zero()
-            self.var.RegionMonthIrrigationShortageM3 = maskinfo.in_zero()
-            self.var.MonthWaterAbstractedfromLakesReservoirsM3 = maskinfo.in_zero()
+                self.var.DayCounter = 0
+                self.var.MonthETpotMM =   globals.inZero.copy()
+                self.var.MonthETactMM =   globals.inZero.copy()
+                self.var.MonthWDemandM3 = globals.inZero.copy()
+                self.var.MonthWAbstractionM3 = globals.inZero.copy()
+                self.var.MonthWConsumptionM3 = globals.inZero.copy()
+                self.var.MonthDisM3 =     globals.inZero.copy()
+                self.var.MonthInternalFlowM3 = globals.inZero.copy()
+                self.var.MonthExternalInflowM3 = globals.inZero.copy()
+                self.var.RegionMonthIrrigationShortageM3 = globals.inZero.copy()
+                self.var.MonthWaterAbstractedfromLakesReservoirsM3 = globals.inZero.copy()
+
+            if self.var.yearend:
+                x=1

@@ -1,24 +1,27 @@
-"""
+# -------------------------------------------------------------------------
+# Name:        Water Balance module
+# Purpose:
+#
+# Author:      burekpe
+#
+# Created:     21/04/2014
+# Copyright:   (c) burekpe 2014
+# Licence:     <your licence>
+# -------------------------------------------------------------------------
 
-Copyright 2019 European Union
 
-Licensed under the EUPL, Version 1.2 or as soon they will be approved by the European Commission  subsequent versions of the EUPL (the "Licence");
+from pcraster import*
+from pcraster.framework import *
+import sys
+import os
+import string
+import math
+from time import *
 
-You may not use this work except in compliance with the Licence.
-You may obtain a copy of the Licence at:
 
-https://joinup.ec.europa.eu/sites/default/files/inline-files/EUPL%20v1_2%20EN(1).txt
-
-Unless required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an "AS IS" basis,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the Licence for the specific language governing permissions and limitations under the Licence.
-
-"""
-from __future__ import absolute_import, print_function, division
-
-import numpy as np
-from ..global_modules.add1 import compressArray
-from ..global_modules.settings import LisSettings, MaskInfo
+from global_modules.zusatz import *
+from global_modules.add1 import *
+from global_modules.globals import *
 
 
 class waterbalance(object):
@@ -43,17 +46,18 @@ class waterbalance(object):
         """ initial part of the water balance module
         """
 
+
+
         # ************************************************************
         # ***** WATER BALANCE INIT
         # ************************************************************
 
         # Calculate initial amount of water in catchment (needed to keep track of
         # cumulative mass balance error)
-        settings = LisSettings.instance()
-        option = settings.options
 
         if (not(option['InitLisflood'])) and option['repMBTs']:
             # not done in Init Lisflood
+            self.var.MBError = globals.inZero.copy()
 
             ChannelInitM3 = self.var.ChanIniM3
             if not(option['InitLisflood']):    # only with no InitLisflood
@@ -80,9 +84,11 @@ class waterbalance(object):
             # MMtoM3 equals MMtoM*PixelArea, which may (or may not) be
             # spatially variable
 
-            self.var.WaterInit = np.take(np.bincount(self.var.Catchments, weights=ChannelInitM3), self.var.Catchments)
+            self.var.WaterInit = np.take(np.bincount(self.var.Catchments,
+                weights=ChannelInitM3),self.var.Catchments)
 
-            self.var.WaterInit += np.take(np.bincount(self.var.Catchments, weights=HillslopeInitM3), self.var.Catchments)
+            self.var.WaterInit += np.take(np.bincount(self.var.Catchments,
+                weights=HillslopeInitM3),self.var.Catchments)
 
             # Initial water stored [m3]
             # Inclusion of DischargeM3Structures: adding this corrects a (relatively small) offset that occurs otherwise
@@ -90,7 +96,8 @@ class waterbalance(object):
             #DisStructure = cover(ifthen(
             #    self.var.IsUpsOfStructureKinematic, self.var.ChanQ * self.var.DtRouting), scalar(0.0))
 
-            DisStructure = np.where(self.var.IsUpsOfStructureKinematicC, self.var.ChanQ * self.var.DtRouting, 0)
+            DisStructure = np.where(self.var.IsUpsOfStructureKinematicC,
+                        self.var.ChanQ * self.var.DtRouting,0)
 #            DisStructure = np.where(self.var.IsUpsOfStructureKinematicC,
 #                        self.var.ChanM3,0)
 
@@ -102,14 +109,18 @@ class waterbalance(object):
             # (because it is not routed yet to the structure)
 
             if option['simulateLakes']:
-                DisStructure += np.where(compressArray(self.var.IsUpsOfStructureLake), 0.5 * self.var.ChanQ * self.var.DtRouting, 0)
+                DisStructure += np.where(compressArray(self.var.IsUpsOfStructureLake),
+                        0.5 * self.var.ChanQ * self.var.DtRouting,0)
 
-                # DisStructure += cover(ifthen(self.var.IsUpsOfStructureLake,
-                #  0.5 * self.var.ChanQ * self.var.DtRouting), scalar(0.0))
+             #   DisStructure += cover(ifthen(self.var.IsUpsOfStructureLake,
+             #                                0.5 * self.var.ChanQ * self.var.DtRouting), scalar(0.0))
                 # because Modified Puls Method is use, some additional offset
                 # has to be add
             #self.var.DischargeM3StructuresIni = areatotal(DisStructure, catch)
-            self.var.DischargeM3StructuresIni = np.take(np.bincount(self.var.Catchments, weights=DisStructure), self.var.Catchments)
+            self.var.DischargeM3StructuresIni = np.take(np.bincount(self.var.Catchments,
+                weights=DisStructure),self.var.Catchments)
+
+
 
           #  report(decompress(self.var.WaterInit),'E:/lisflood_test/newDiepoldsau2/winitPy.map')
 # --------------------------------------------------------------------------
@@ -118,25 +129,27 @@ class waterbalance(object):
     def dynamic(self):
         """ dynamic part of the water balance module
         """
-        settings = LisSettings.instance()
-        option = settings.options
+
         if (not(option['InitLisflood'])) and option['repMBTs']:
 
             # ************************************************************
             # ***** CUMULATIVE MASS BALANCE ERROR*************************
             # ************************************************************
 
-            # Cumulative mass balance error is calculated at outflow point (pit) of
-            # each catchment (no pixel values)! In- and outgoing terms below are all
-            # cumulative over entire simulation.
+                # Cumulative mass balance error is calculated at outflow point (pit) of
+                # each catchment (no pixel values)! In- and outgoing terms below are all
+                # cumulative over entire simulation.
 
             # This comes in:
             #WaterIn = areatotal(cover(decompress(self.var.sumIn), scalar(0.0)), catch) + areatotal(
             #    decompress(self.var.TotalPrecipitation) * self.var.MMtoM3, catch)
 
             self.var.sumIn[np.isnan(self.var.sumIn)] = 0
-            WaterIn = np.take(np.bincount(self.var.Catchments, weights=self.var.sumIn),self.var.Catchments)
-            WaterIn += np.take(np.bincount(self.var.Catchments, weights=self.var.TotalPrecipitation*self.var.MMtoM3), self.var.Catchments)
+            WaterIn = np.take(np.bincount(self.var.Catchments,
+                weights=self.var.sumIn),self.var.Catchments)
+            WaterIn += np.take(np.bincount(self.var.Catchments,
+                weights=self.var.TotalPrecipitation*self.var.MMtoM3),self.var.Catchments)
+
 
             # WaterIn=areatotal(TotalQInM3,Catchments) + areatotal(TotalPrecipitation*MMtoM3,Catchments);
             # Accumulated incoming water [cu m]
@@ -162,13 +175,14 @@ class waterbalance(object):
             Hill1 += self.var.ForestFraction * (self.var.CumInterception[1] + self.var.W1[1] + self.var.W2[1] + self.var.UZ[1])
             Hill1 += self.var.IrrigationFraction * (self.var.CumInterception[2] + self.var.W1[2] + self.var.W2[2] + self.var.UZ[2]) + self.var.LZ
 
-            HillslopeStoredM3 = (self.var.WaterDepth + self.var.SnowCover + Hill1 + self.var.DirectRunoffFraction * self.var.CumInterSealed) * self.var.MMtoM * self.var.PixelArea
+            OverlandM3 = self.var.OFM3Other + self.var.OFM3Forest + self.var.OFM3Direct
+
+            HillslopeStoredM3 = (self.var.SnowCover + Hill1 +
+                                 self.var.DirectRunoffFraction * self.var.CumInterSealed) * self.var.MMtoM * self.var.PixelArea + OverlandM3
             # Water stored at hillslope elements [m3]
             # Note that W1, W2 and TotalGroundWater are defined for the pixel's permeable fraction
             # only, which is why we need to multiply with PermeableFraction to get the volumes right (no soil moisture
             # or groundwater is stored at all in the direct runoff fraction!)
-
-            # OverlandM3 = self.var.OFM3Other + self.var.OFM3Forest + self.var.OFM3Direct
 
             #WaterStored = areatotal(decompress(ChannelStoredM3), catch) + areatotal(decompress(HillslopeStoredM3), catch)
             WaterStored = np.take(np.bincount(self.var.Catchments,weights=ChannelStoredM3),self.var.Catchments)
@@ -177,7 +191,8 @@ class waterbalance(object):
             # Total water stored [m3]
 
             # This goes out:
-            HillslopeOutM3 = (self.var.TaCUM + self.var.TaInterceptionCUM + self.var.ESActCUM + self.var.GwLossCUM) * self.var.MMtoM3
+            HillslopeOutM3 = (self.var.TaCUM + self.var.TaInterceptionCUM +
+                              self.var.ESActCUM + self.var.GwLossCUM) * self.var.MMtoM3
             # Water that goes out of the system at the hillslope level [m3]
             # (evaporation and groundwater loss)
 
@@ -190,32 +205,42 @@ class waterbalance(object):
             #    self.var.AtLastPoint, self.var.sumDis * self.var.DtRouting), scalar(0.0)), catch)
             #WaterOut += areatotal(decompress(HillslopeOutM3), catch)
             if option['simulateLakes']:
-                WaterOut += np.take(np.bincount(self.var.Catchments, weights=self.var.EWLakeCUMM3),self.var.Catchments)
+                WaterOut += np.take(np.bincount(self.var.Catchments,
+                    weights=self.var.EWLakeCUMM3),self.var.Catchments)
             if option['openwaterevapo']:
-                WaterOut += np.take(np.bincount(self.var.Catchments, weights=self.var.EvaCumM3),self.var.Catchments)
+                WaterOut += np.take(np.bincount(self.var.Catchments,
+                    weights=self.var.EvaCumM3),self.var.Catchments)
             if option['TransLoss']:
-                WaterOut += np.take(np.bincount(self.var.Catchments, weights=self.var.TransCum),self.var.Catchments)
+                WaterOut += np.take(np.bincount(self.var.Catchments,
+                    weights=self.var.TransCum),self.var.Catchments)
             if option['wateruse']:
-                WaterOut += np.take(np.bincount(self.var.Catchments, weights=self.var.IrriLossCUM),self.var.Catchments)
-                WaterOut += np.take(np.bincount(self.var.Catchments, weights=self.var.wateruseCum),self.var.Catchments)
+                WaterOut += np.take(np.bincount(self.var.Catchments,
+                    weights=self.var.IrriLossCUM),self.var.Catchments)
+                WaterOut += np.take(np.bincount(self.var.Catchments,
+                    weights=self.var.wateruseCum),self.var.Catchments)
             # Accumulated outgoing water [cu m]
             # Inclusion of DischargeM3Structures is because at structure locations the water in the channel is added to the structure
             # (i.e. storage at reservoirs/lakes is accounted for twice). Of course this is not really a 'loss', but merely a correction
             # for this double counting)
             # new 12.11.09 PB
             # added cumulative transmission loss
-            DisStru = np.where(self.var.IsUpsOfStructureKinematicC, self.var.ChanQ * self.var.DtRouting, 0)
-            DischargeM3Structures = np.take(np.bincount(self.var.Catchments, weights=DisStru), self.var.Catchments)
+            DisStru = np.where(self.var.IsUpsOfStructureKinematicC,
+                        self.var.ChanQ * self.var.DtRouting,0)
+            DischargeM3Structures = np.take(np.bincount(self.var.Catchments,
+                weights=DisStru),self.var.Catchments)
 
+
+            #DischargeM3Structures = areatotal(cover(ifthen(
+            #    self.var.IsUpsOfStructureKinematic, self.var.ChanQ * self.var.DtRouting), scalar(0.0)), catch)
             # on the last time step lakes and reservoirs calculated with the previous routing results
             # so the last (now routed) discharge has to be added to the mass balance
             # (-> the calculation odf the structures is done before the routing)
 
             if option['simulateLakes']:
-                maskinfo = MaskInfo.instance()
-                DisLake = maskinfo.in_zero()
-                np.put(DisLake, self.var.LakeIndex, 0.5 * self.var.LakeInflowCC * self.var.DtRouting)
-                DischargeM3Lake = np.take(np.bincount(self.var.Catchments, weights=DisLake),self.var.Catchments)
+                DisLake = globals.inZero.copy()
+                np.put(DisLake,self.var.LakeIndex,0.5 * self.var.LakeInflowCC * self.var.DtRouting)
+                DischargeM3Lake = np.take(np.bincount(self.var.Catchments,
+                    weights=DisLake),self.var.Catchments)
                 #DischargeM3Lake = areatotal(cover(0.5 * self.var.LakeInflow * self.var.DtRouting, scalar(0.0)), catch)
                 # because Modified Puls Method is using QIn=(Qin1+Qin2)/2, we need a correction
                 #  DisStr=Disstr+0.5*LakeInflow - 0.5 * LakeInit
@@ -227,6 +252,7 @@ class waterbalance(object):
 
             DischargeM3Structures -= self.var.DischargeM3StructuresIni
             # minus the initial DischargeStructure
+
             # Old: DischargeM3Structures=areatotal(cover(ifthen(self.var.IsUpsOfStructureKinematic,self.var.ChanQ*self.var.DtSec),null),self.var.Catchments)
             # Discharge just upstream of structure locations (coded as pits) in [cu m / time step]
             # Needed for mass balance error calculations, because of double counting of structure
@@ -234,11 +260,13 @@ class waterbalance(object):
 
             # Mass balance:
             #  self.var.MBError = self.var.WaterInit + WaterIn - WaterStored - WaterOut - DischargeM3Structures
-            self.var.MBError = self.var.WaterInit + WaterIn - WaterStored - WaterOut - DischargeM3Structures
+            self.var.MBError = self.var.WaterInit + WaterIn - WaterStored - WaterOut - \
+                               DischargeM3Structures
             # Cumulative mass balance error per catchment [cu m]
 
             #CatchArea = areatotal(decompress(self.var.PixelAreaArray), catch)
-            CatchArea = np.take(np.bincount(self.var.Catchments, weights=self.var.PixelArea),self.var.Catchments)
+            CatchArea = np.take(np.bincount(self.var.Catchments,
+                    weights=self.var.PixelArea),self.var.Catchments)
 
             self.var.MBErrorMM = self.var.MtoMM * self.var.MBError / CatchArea
 

@@ -1,30 +1,19 @@
-"""
-
-Copyright 2019 European Union
-
-Licensed under the EUPL, Version 1.2 or as soon they will be approved by the European Commission  subsequent versions of the EUPL (the "Licence");
-
-You may not use this work except in compliance with the Licence.
-You may obtain a copy of the Licence at:
-
-https://joinup.ec.europa.eu/sites/default/files/inline-files/EUPL%20v1_2%20EN(1).txt
-
-Unless required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an "AS IS" basis,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the Licence for the specific language governing permissions and limitations under the Licence.
-
-"""
-from __future__ import absolute_import, print_function
-from nine import range
-
-import numpy as np
-
-from ..global_modules.add1 import loadmap
-from ..global_modules.settings import MaskInfo
-from . import HydroModule
+# -------------------------------------------------------------------------
+# Name:        Snow module
+# Purpose:
+#
+# Author:      burekpe
+#
+# Created:     03/03/2014
+# Copyright:   (c) burekpe 2014
+# Licence:     <your licence>
+# -------------------------------------------------------------------------
 
 
-class snow(HydroModule):
+from global_modules.add1 import *
+
+
+class snow(object):
 
     """
     # ************************************************************
@@ -40,10 +29,6 @@ class snow(HydroModule):
     # Zone B: center third
     # Zone C: upper third
     """
-    input_files_keys = {'all': ['ElevationStD', 'TemperatureLapseRate', 'SnowSeasonAdj',
-                                'TempSnow', 'SnowFactor', 'SnowMeltCoef', 'TempMelt',
-                                'SnowCoverAInitValue', 'SnowCoverBInitValue', 'SnowCoverCInitValue']}
-    module_name = 'Snow'
 
     def __init__(self, snow_variable):
         self.var = snow_variable
@@ -54,7 +39,9 @@ class snow(HydroModule):
     def initial(self):
         """ initial part of the snow module
         """
-        maskinfo = MaskInfo.instance()
+        self.var.lat_rad = loadmap('Latitude')
+        # latitude map
+        
         self.var.DeltaTSnow = 0.9674 * loadmap('ElevationStD') * loadmap('TemperatureLapseRate')
 
         # Difference between (average) air temperature at average elevation of
@@ -87,26 +74,29 @@ class snow(HydroModule):
         # initial snow depth in elevation zones A, B, and C, respectively  [mm]
         self.var.SnowCoverInit = (SnowCoverAInit + SnowCoverBInit + SnowCoverCInit) / 3
         # Pixel-average initial snow cover: average of values in 3 elevation zones
-        self.var.SnowCover = maskinfo.in_zero()
+        self.var.SnowCover = globals.inZero.copy()
+
+
+# --------------------------------------------------------------------------
+# --------------------------------------------------------------------------
 
     def dynamic(self):
         """ dynamic part of the snow module
         """
-        maskinfo = MaskInfo.instance()
-        self.var.Snow = maskinfo.in_zero()
-        self.var.Rain = maskinfo.in_zero()
-        self.var.SnowMelt = maskinfo.in_zero()
-        self.var.SnowCover = maskinfo.in_zero()
+        self.var.Snow = globals.inZero.copy()
+        self.var.Rain = globals.inZero.copy()
+        self.var.SnowMelt = globals.inZero.copy()
+        self.var.SnowCover = globals.inZero.copy()
 
         # Snowmelt
         hemisphere_N = self.var.lat_rad > 0
         snowmelt_coeff = np.sin(np.radians((self.var.CalendarDay - 81) * self.var.SnowDayDegrees))
-
         SeasSnowMeltCoef = self.var.SnowSeason * np.where(hemisphere_N, snowmelt_coeff, -snowmelt_coeff) + self.var.SnowMeltCoef # N and S hemispheres have opposite-sign cycles
 
         # Icemelt
-        #####################################################
-        # Check if the current day is in the "summer icemelt season" for the Northern (N) and Southern (S) hemispheres
+	    #####################################################
+        # # Bugfix from Emiliano - uncomment to make it work
+        # # Check if the current day is in the "summer icemelt season" for the Northern (N) and Southern (S) hemispheres
         is_summer_icemelt_N = (self.var.CalendarDay > self.icemelt_start_N) & (self.var.CalendarDay < self.icemelt_end_N)
         is_summer_icemelt_S = (self.var.CalendarDay > self.icemelt_start_S) | (self.var.CalendarDay < self.icemelt_end_S)
         # Icemelt coefficient: the sine function is the same for both hemispheres due to the imposed 1/2 periodicity; the mask is shifted 6 months
@@ -145,16 +135,17 @@ class snow(HydroModule):
         #    SummerSeason = 0.0
         ########################################################
 
-        for i in range(3):
+
+        for i in xrange(3):
             TavgS = self.var.Tavg + self.var.DeltaTSnow * (i - 1)
             # Temperature at center of each zone (temperature at zone B equals Tavg)
             # i=0 -> highest zone
             # i=2 -> lower zone
-            SnowS = np.where(TavgS < self.var.TempSnow, self.var.SnowFactor * self.var.Precipitation, maskinfo.in_zero())
+            SnowS = np.where(TavgS < self.var.TempSnow, self.var.SnowFactor * self.var.Precipitation, globals.inZero)
             # Precipitation is assumed to be snow if daily average temperature is below TempSnow
             # Snow is multiplied by correction factor to account for undercatch of
             # snow precipitation (which is common)
-            RainS = np.where(TavgS >= self.var.TempSnow, self.var.Precipitation, maskinfo.in_zero())
+            RainS = np.where(TavgS >= self.var.TempSnow, self.var.Precipitation, globals.inZero)
             # if it's snowing then no rain
             SnowMeltS = (TavgS - self.var.TempMelt) * SeasSnowMeltCoef * (1 + 0.01 * RainS) * self.var.DtDay
 
@@ -164,7 +155,7 @@ class snow(HydroModule):
             else:
                 IceMeltS = TavgS * 7.0 * self.var.DtDay * SummerSeason
 
-            SnowMeltS = np.maximum(np.minimum(SnowMeltS + IceMeltS, self.var.SnowCoverS[i]), maskinfo.in_zero())
+            SnowMeltS = np.maximum(np.minimum(SnowMeltS + IceMeltS, self.var.SnowCoverS[i]), globals.inZero)
             self.var.SnowCoverS[i] = self.var.SnowCoverS[i] + SnowS - SnowMeltS
 
             self.var.Snow += SnowS
@@ -179,3 +170,6 @@ class snow(HydroModule):
 
         self.var.TotalPrecipitation += self.var.Snow + self.var.Rain
         # total precipitation in pixel [mm]
+
+
+

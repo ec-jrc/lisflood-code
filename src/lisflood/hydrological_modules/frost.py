@@ -1,29 +1,30 @@
-"""
-
-Copyright 2019 European Union
-
-Licensed under the EUPL, Version 1.2 or as soon they will be approved by the European Commission  subsequent versions of the EUPL (the "Licence");
-
-You may not use this work except in compliance with the Licence.
-You may obtain a copy of the Licence at:
-
-https://joinup.ec.europa.eu/sites/default/files/inline-files/EUPL%20v1_2%20EN(1).txt
-
-Unless required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an "AS IS" basis,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the Licence for the specific language governing permissions and limitations under the Licence.
-
-"""
-
-from __future__ import absolute_import, print_function, division
-
-import numpy as np
-
-from ..global_modules.add1 import loadmap
-from . import HydroModule
+# -------------------------------------------------------------------------
+# Name:        FROST INDEX IN SOIL module
+# Purpose:
+#
+# Author:      burekpe
+#
+# Created:     04/03/2014
+# Copyright:   (c) burekpe 2014
+# Licence:     <your licence>
+# -------------------------------------------------------------------------
 
 
-class frost(HydroModule):
+from pcraster import*
+from pcraster.framework import *
+import sys
+import os
+import string
+import math
+from time import *
+
+
+from global_modules.zusatz import *
+from global_modules.add1 import *
+from global_modules.globals import *
+
+
+class frost(object):
 
     """
     # ************************************************************
@@ -31,14 +32,13 @@ class frost(HydroModule):
     # ************************************************************
     # Domain: whole pixel (permeable + direct runoff areas)
     """
-    input_files_keys = {'all': ['Kfrost', 'Afrost', 'FrostIndexThreshold', 'SnowWaterEquivalent', 'FrostIndexInitValue']}
-    module_name = 'Frost'
 
     def __init__(self, frost_variable):
         self.var = frost_variable
 
 # --------------------------------------------------------------------------
 # --------------------------------------------------------------------------
+
 
     def initial(self):
         """ initial part of the frost index module
@@ -62,7 +62,8 @@ class frost(HydroModule):
         """
         # FrostIndexChangeRate=-(1-Afrost)*FrostIndex - Tavg*exp(-0.04*Kfrost*SnowCover/SnowWaterEquivalent);
 
-        FrostIndexChangeRate = -(1 - self.var.Afrost) * self.var.FrostIndex - self.var.Tavg * np.exp(-0.04 * self.var.Kfrost * self.var.SnowCover / self.var.SnowWaterEquivalent)
+        FrostIndexChangeRate = -(1 - self.var.Afrost) * self.var.FrostIndex - self.var.Tavg * \
+            np.exp(-0.04 * self.var.Kfrost * self.var.SnowCover / self.var.SnowWaterEquivalent)
         # FrostIndexChangeRate=self.var.AfrostIndex - self.var.Tavg*      pcraster.exp(self.var.Kfrost*self.var.SnowCover*self.var.InvSnowWaterEquivalent)
         # Rate of change of frost index (expressed as rate, [degree days/day])
         # CHANGED 9 September 2004:

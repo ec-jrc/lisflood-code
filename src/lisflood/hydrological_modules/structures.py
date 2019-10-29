@@ -1,26 +1,15 @@
-"""
+# -------------------------------------------------------------------------
+# Name:        STRUCTURES
+# Purpose:
+#
+# Author:      burekpe
+#
+# Created:     08/08/2014
+# Copyright:   (c) burekpe 2014
+# Licence:     <your licence>
+# -------------------------------------------------------------------------
 
-Copyright 2019 European Union
-
-Licensed under the EUPL, Version 1.2 or as soon they will be approved by the European Commission  subsequent versions of the EUPL (the "Licence");
-
-You may not use this work except in compliance with the Licence.
-You may obtain a copy of the Licence at:
-
-https://joinup.ec.europa.eu/sites/default/files/inline-files/EUPL%20v1_2%20EN(1).txt
-
-Unless required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an "AS IS" basis,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the Licence for the specific language governing permissions and limitations under the Licence.
-
-"""
-from __future__ import absolute_import, print_function, division
-
-from pcraster import downstream, boolean, cover, lddrepair, ifthenelse
-
-from ..global_modules.add1 import decompress, compressArray
-from ..global_modules.settings import LisSettings
-
+from global_modules.add1 import *
 
 class structures(object):
     """
@@ -38,24 +27,34 @@ class structures(object):
     def __init__(self, structures_variable):
         self.var = structures_variable
 
+
 # --------------------------------------------------------------------------
 # --------------------------------------------------------------------------
     def initial(self):
         """ initial part of the structures module
         """
         self.var.LddStructuresKinematic = self.var.LddKinematic
-        settings = LisSettings.instance()
-        option = settings.options
-        if not option['InitLisflood']:
+
+        if not(option['InitLisflood']):
             # not done in Init Lisflood
-            IsUpsOfStructureKinematic = downstream(
-                self.var.LddKinematic,
-                cover(boolean(decompress(self.var.IsStructureKinematic)), boolean(0))
-            )
+            IsUpsOfStructureKinematic = downstream(self.var.LddKinematic,
+                cover(boolean(decompress(self.var.IsStructureKinematic)), pcraster.boolean(0)))
             # Get all pixels just upstream of kinematic structure locations
             self.var.IsUpsOfStructureKinematicC = compressArray(IsUpsOfStructureKinematic)
             # Unmodified version of LddKinematic is needed to connect inflow and outflow points
             # of each structure (called LddStructuresKinematic now)
-            self.var.LddKinematic = lddrepair(ifthenelse(IsUpsOfStructureKinematic, 5, self.var.LddKinematic))
+            self.var.LddKinematic = lddrepair(ifthenelse(IsUpsOfStructureKinematic, 5
+                                    , self.var.LddKinematic))
             # Cells just upstream of each structure are treated as pits in the kinematic wave
             # channel routing
+
+
+
+ #           lddC = compressArray(self.var.LddKinematic)
+ #           inAr = decompress(np.arange(maskinfo['mapC'][0],dtype="int32"))
+            # giving a number to each non missing pixel as id
+ #           self.var.downKin = compressArray(downstream(self.var.LddKinematic,inAr))
+            # each upstream pixel gets the id of the downstream pixel
+ #           self.var.downKin[lddC==5] = maskinfo['mapC'][0]
+            # all pits gets a high number
+

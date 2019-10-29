@@ -1,24 +1,15 @@
-"""
+# -------------------------------------------------------------------------
+# Name:        routing module
+# Purpose:
+#
+# Author:      burekpe
+#
+# Created:     29.03.2014
+# Copyright:   (c) burekpe 2014
+# Licence:     <your licence>
+# -------------------------------------------------------------------------
 
-Copyright 2019 European Union
-
-Licensed under the EUPL, Version 1.2 or as soon they will be approved by the European Commission  subsequent versions of the EUPL (the "Licence");
-
-You may not use this work except in compliance with the Licence.
-You may obtain a copy of the Licence at:
-
-https://joinup.ec.europa.eu/sites/default/files/inline-files/EUPL%20v1_2%20EN(1).txt
-
-Unless required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an "AS IS" basis,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the Licence for the specific language governing permissions and limitations under the Licence.
-
-"""
-from __future__ import absolute_import
-
-from lisflood.global_modules.settings import CDFFlags
-from .add1 import *
-
+from global_modules.add1 import *
 
 # CM: new-style class in Python 2.x
 class stateVar(object):
@@ -37,15 +28,11 @@ class stateVar(object):
     def dynamic(self):
         """ reporting of state variables in dynamic part
         """
-        settings = LisSettings.instance()
-        option = settings.options
-        filter_steps = settings.filter_steps
         try:
             EnKFset = option['EnKF']
         except:
             EnKFset = 0
-
-        if EnKFset and self.var.currentTimeStep() in filter_steps:
+        if EnKFset and self.var.currentTimeStep() in FilterSteps:
             sample = str(self.var.currentSampleNumber())
             dumpObject("StartDate", self.var.CalendarDayStart, sample)
             ## Snow
@@ -74,7 +61,7 @@ class stateVar(object):
                 dumpObject("Chan2M3Kin", self.var.Chan2M3Kin, sample)
                 dumpObject("Sideflow1Chan", self.var.Sideflow1Chan, sample)
             except:
-                pass
+                foo = 0
             ## Overland
             dumpObject("OFM3Direct", self.var.OFM3Direct, sample)
             dumpObject("OFM3Other", self.var.OFM3Other, sample)
@@ -87,14 +74,15 @@ class stateVar(object):
             try:
                 dumpObject("Tss", self.var.Tss, sample)
             except:
-                pass
-            cdfflags = CDFFlags.instance()
-            dumpObject("cdfFlag", cdfflags, sample)
+                foo = 0
+	    dumpObject("cdfFlag", globals.cdfFlag, sample)
 
     def resume(self):
 
         sample = str(self.var.currentSampleNumber())
+
         updateVec = self.var.getStateVector(sample)
+
         self.var.CalendarDayStart = loadObject("StartDate", sample)
         ## Snow
         self.var.SnowCoverS = loadObject("SnowCover", sample)
@@ -111,8 +99,6 @@ class stateVar(object):
         self.var.UZ = loadObject("UZ", sample)
         self.var.LZ = loadObject("LZ", sample)
         ## Lakes
-        settings = LisSettings.instance()
-        option = settings.options
         if option['simulateLakes']:
             self.var.LakeStorageM3CC = loadObject("LakeStorageM3", sample)
             self.var.LakeOutflow = loadObject("LakeOutflow", sample)
@@ -124,7 +110,7 @@ class stateVar(object):
             self.var.Chan2M3Kin = loadObject("Chan2M3Kin", sample)
             self.var.Sideflow1Chan = loadObject("Sideflow1Chan", sample)
         except:
-            pass
+            foo = 0
         ## Overland
         self.var.OFM3Direct = loadObject("OFM3Direct", sample)
         self.var.OFM3Other = loadObject("OFM3Other", sample)
@@ -137,7 +123,5 @@ class stateVar(object):
         try:
             self.output_module.var.Tss = loadObject("Tss", sample)
         except:
-            pass
-        cdfflags = CDFFlags.instance()
-        cdfflags.set(loadObject("cdfFlag", sample))
-        # globals.cdfFlag = loadObject("cdfFlag", sample)
+            foo = 0
+        globals.cdfFlag = loadObject("cdfFlag", sample)
