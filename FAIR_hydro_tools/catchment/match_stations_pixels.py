@@ -10,6 +10,8 @@ from sys import argv
 from collections import OrderedDict
 from catchment import decodeFlowMatrix, streamLookups, streamCumulate, pathShapeFiles
 
+#$ python2 match_stations_pixels.py /DATA/gelatem/FAIR_workshop/grdc/dailies/ /DATA/gelatem/FAIR_workshop/recipes_auxiliary_datasets/Lorentz_Basin_Shapefiles/ /DATA/gelatem/FAIR_workshop/Lisflood01degree/ lorentz_6
+
 RIVER_GRDC = {'Merrimack': 'MERRIMACK', 'Meuse': 'MAAS', 'Rhine': 'RHINE', 'Doring': 'DORING', 'Great_Kei': 'GREAT KEI', 'Savannah': 'SAVANNAH'}
 RE_SHP = re.compile('([a-z]+)_hydrosheds[a-z0-9_]*\.shp')
 RE_NUM = '.+:\s+([\d\-\.]+)'

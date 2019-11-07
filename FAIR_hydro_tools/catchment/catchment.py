@@ -13,6 +13,8 @@ import geopandas as gpd
 from numba import njit
 from catchment_tools import upDownLookups, downstreamToUpstreamLookup, streamCumul, setUpstreamRoutedKinematic
 
+#$ python2 catchment.py /DATA/gelatem/FAIR_workshop/Lisflood01degree/maps_netcdf/ldd.nc /DATA/gelatem/FAIR_workshop/recipes_auxiliary_datasets/Lorentz_Basin_Shapefiles/ /DATA/gelatem/FAIR_workshop/Lisflood01degree/areamaps/lorentz_6.nc
+
 IX_ADDS = np.array([(1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1), (0, -1), (1, -1)]) # flow directions (row and column shifts in coordinate mesh)
 SEA_CODE = {'lisflood': 0, 'esri': 255}
 FLOW_CODE = {'lisflood': [2, 3, 6, 9, 8, 7, 4, 1, 5], 'esri': [4, 2, 1, 128, 64, 32, 16, 8, 255]}
