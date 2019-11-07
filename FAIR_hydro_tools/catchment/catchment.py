@@ -1,4 +1,5 @@
 from sys import argv
+from  shapely.vectorized import contains
 import pyximport; pyximport.install(reload_support=True)
 import os
 import numpy as np
@@ -15,6 +16,7 @@ from catchment_tools import upDownLookups, downstreamToUpstreamLookup, streamCum
 IX_ADDS = np.array([(1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1), (0, -1), (1, -1)]) # flow directions (row and column shifts in coordinate mesh)
 SEA_CODE = {'lisflood': 0, 'esri': 255}
 FLOW_CODE = {'lisflood': [2, 3, 6, 9, 8, 7, 4, 1, 5], 'esri': [4, 2, 1, 128, 64, 32, 16, 8, 255]}
+GRDC_CATALOGUE = pd.concat([pd.read_excel(os.path.join(w[0], f)) for w in os.walk('/DATA/gelatem/FAIR_workshop/grdc/stations/') for f in w[-1] if f.endswith('xlsx')])
 
 
 @njit
@@ -105,9 +107,12 @@ def pixLenUniAxis(axis):
     ''''''
     return abs(axis[-1] - axis[0]) / (axis.size - 1)
 
+pathShapeFiles = lambda polygon_dir: [os.path.join(w[0], f) for w in os.walk(polygon_dir) for f in w[-1] if f.endswith('.shp')]
+
 
 if __name__ == '__main__':
     ldd_path, polygon_dir, out_path = argv[1:]
+    paths_shp = pathShapeFiles(polygon_dir)
     # flow direction, land mask and coordinates
     with xr.open_dataset(ldd_path) as nc:
         flow_d8 = decodeFlowMatrix(nc.ldd1.values, 'lisflood')
@@ -118,16 +123,18 @@ if __name__ == '__main__':
     downstream_lookup, upstream_lookup = streamLookups(flow_d8, land_mask)
     num_ups_pixs = streamCumulate(np.ones(land_mask.sum()), downstream_lookup, upstream_lookup)
     # allocate catchment mask stack
-    polygon_files = [d for d in os.listdir(polygon_dir) if d.endswith('.shp')]
-    catchment_masks = np.zeros((len(polygon_files), ) + land_mask.shape, bool)
-    borders = []
+    catchment_masks = np.zeros((len(paths_shp), ) + land_mask.shape, bool)
+    borders = [] # test figure only
+    stations = [] # debug only
     # loop through basin shapefiles
-    for j, p_f in enumerate(polygon_files):
+    for j, p_f in enumerate(paths_shp):
         # basin polygon and pixels in it (optimize using bounding box)
-        raw_geometry = fiona.open(os.path.join(polygon_dir, p_f)).next()['geometry']
+        raw_geometry = fiona.open(p_f).next()['geometry']
         basin_polygon = shape(raw_geometry)
         in_basin = gpd.GeoSeries([Point(x, y) for x, y in zip(lon, lat)]).within(basin_polygon)
-        borders.append(np.array(raw_geometry['coordinates']).squeeze())
+        borders.append([np.array(k) for k in raw_geometry['coordinates']])
+        # find any GRDC stations within the catchment polygon
+        stations.append(np.where(contains(basin_polygon, *GRDC_CATALOGUE[['long','lat']].values.T))[0])
         # derive catchment mask as the area drained by the most downstream pixel in the polygon
         outlet_ix = np.where(in_basin, num_ups_pixs, np.zeros(land_mask.sum())).argmax()
         catchment_masks[j,land_mask] = drainedNodes(upstream_lookup, outlet_ix)
@@ -136,17 +143,20 @@ if __name__ == '__main__':
     union_mask = catchment_masks.any(0)
     b_path = os.path.join(os.path.dirname(out_path), '_bool.'.join(os.path.basename(out_path).split('.')))
     xr.DataArray(union_mask, dims=['lat','lon'], coords=coord).to_netcdf(b_path)
+    print('Boolean mask written to ' + b_path)
     # write nan mask to netcdf
     nan_mask = union_mask.astype(float)
     nan_mask[nan_mask == 0] = np.nan
     nan_mask = xr.DataArray(nan_mask, dims=['lat','lon'], coords=coord)
     n_path = os.path.join(os.path.dirname(out_path), '_nan.'.join(os.path.basename(out_path).split('.')))
     nan_mask.to_netcdf(n_path)
+    print('NaN mask written to ' + n_path)
 
 #    # test figure
 #    fig, ax = subplots()
-#    import ipdb; ipdb.set_trace()
 #    nan_mask.plot(ax=ax)
-#    for xy in borders:
-#        ax.plot(xy[:,0], xy[:,1])
+#    for poly in borders:
+#        for xy in poly:
+#            ax.plot(xy[:,0], xy[:,1])
 #    show(fig)
+#    import ipdb; ipdb.set_trace()

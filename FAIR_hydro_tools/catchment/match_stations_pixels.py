@@ -1,17 +1,19 @@
 #! /usr/bin/python2
 import os
 import re
+import fiona
+from shapely.geometry import shape
 import numpy as np
 import pandas as pd
 import xarray as xr
 from sys import argv
 from collections import OrderedDict
-from catchment import decodeFlowMatrix, streamLookups, streamCumulate
+from catchment import decodeFlowMatrix, streamLookups, streamCumulate, pathShapeFiles
 
-RIVER_GRDC = {'merrimack': 'MERRIMACK', 'meuse': 'MAAS', 'rhine': 'RHINE'}
+RIVER_GRDC = {'Merrimack': 'MERRIMACK', 'Meuse': 'MAAS', 'Rhine': 'RHINE', 'Doring': 'DORING', 'Great_Kei': 'GREAT KEI', 'Savannah': 'SAVANNAH'}
 RE_SHP = re.compile('([a-z]+)_hydrosheds[a-z0-9_]*\.shp')
 RE_NUM = '.+:\s+([\d\-\.]+)'
-RE_STR = ':\s+([A-Z,\s]+)\\r\\n'
+RE_STR = ':\s+([A-Z0-9\.,\s]+)\\r\\n'
 RE_DATA = OrderedDict([(k, re.compile(k + v)) for k, v in zip(['Station', 'Longitude', 'Latitude', 'Catchment area'], [RE_STR] + 3*[RE_NUM])])
 MATCH_COLS = ['Row_model', 'Col_model', 'Lon_model', 'Lat_model', 'Drained_A_model']
 
@@ -27,12 +29,11 @@ def findStationPixel(x_station, y_station, a_drained_station, X_model, Y_model, 
 
 if __name__ == '__main__':
     # Shell arguments: GRDC data folder, catchment polygon folder, flow direction matrix (ldd) path, output path
-    dir_grdc, dir_polygons, dir_setup = argv[1:]
-    path_mask = os.path.join(dir_setup, 'areamaps', 'lorentz_bool.nc')
+    dir_grdc, dir_polygons, dir_setup, name_mask = argv[1:]
+    path_mask = os.path.join(dir_setup, 'areamaps', name_mask + '_bool.nc')
     path_ldd = os.path.join(dir_setup, 'maps_netcdf', 'ldd.nc')
     # GRDC names of river basins
-    search_shapefiles = [re.match(RE_SHP, f) for f in os.listdir(dir_polygons)]
-    names_rivers = [RIVER_GRDC[m.group(1)] for m in search_shapefiles if m is not None]
+    names_rivers = [RIVER_GRDC[s] for s in os.listdir(dir_polygons)]
     # Station meta-data
     meta_data = pd.concat([pd.DataFrame(index=names_rivers, columns=['Observation_file'] + RE_DATA.keys()), pd.DataFrame(columns=MATCH_COLS)], 1)
     for riv in names_rivers:
@@ -58,19 +59,26 @@ if __name__ == '__main__':
     path_out = os.path.join(dir_setup, 'station-pixel_matches.json')
     meta_data.to_json(path_out)
     print('\nThe station-pixel correspondence table to compare simulated and reported streamflow is saved to {}\n'.format(path_out))
-#    # Interactive figure to check matches
-#    from pylab import *
-#    downstream_lookup, upstream_lookup = streamLookups(decodeFlowMatrix(ldd, 'lisflood'), mask)
-#    A_drained_model_map = full(mask.shape, nan)
-#    A_drained_model_map[mask] = streamCumulate(area_gridcell[mask], downstream_lookup, upstream_lookup)
-#    coords_plot = meshgrid(linspace(LON_model.min() - half_pix, LON_model.max() + half_pix, LON_model.shape[1] + 1),
-#                           linspace(LAT_model.max() + half_pix, LAT_model.min() - half_pix, LON_model.shape[0] + 1))
-#    fig, ax = subplots()
-#    ax.pcolormesh(coords_plot[0], coords_plot[1], log10(A_drained_model_map), cmap= 'Blues')
-#    for riv, _data in meta_data.iterrows():
-#        ax.plot(_data.Longitude, _data.Latitude, 'ms', markersize=8)
-#        ax.plot(_data.Lon_model, _data.Lat_model, 'm*', markersize=8)
-#        ax.text(_data.Longitude, _data.Latitude, riv + ' (GRDC)')
-#        ax.text(_data.Lon_model, _data.Lat_model, riv + ' (model)')
-#    show(fig)
-#    import ipdb; ipdb.set_trace()
+
+    # Interactive figure to check matches & drainage area errors
+    print('\nDrainage area errors (%):\n{}'.format(100.*(meta_data['Drained_A_model'] - meta_data['Catchment area']) / meta_data['Catchment area']))
+    from pylab import *
+    downstream_lookup, upstream_lookup = streamLookups(decodeFlowMatrix(ldd, 'lisflood'), mask)
+    A_drained_model_map = full(mask.shape, nan)
+    A_drained_model_map[mask] = streamCumulate(area_gridcell[mask], downstream_lookup, upstream_lookup)
+    coords_plot = meshgrid(linspace(LON_model.min() - half_pix, LON_model.max() + half_pix, LON_model.shape[1] + 1),
+                           linspace(LAT_model.max() + half_pix, LAT_model.min() - half_pix, LON_model.shape[0] + 1))
+    paths_shp = pathShapeFiles(dir_polygons)
+    names_inv_dict = {v: k for k, v in RIVER_GRDC.iteritems()}
+    fig, ax = subplots()
+    ax.pcolormesh(coords_plot[0], coords_plot[1], log10(A_drained_model_map), cmap='viridis_r')
+    for riv, _data in meta_data.iterrows():
+        ax.plot(_data.Longitude, _data.Latitude, 'ms', markersize=8)
+        ax.plot(_data.Lon_model, _data.Lat_model, 'm*', markersize=8)
+        ax.text(_data.Longitude, _data.Latitude, riv + ' (GRDC)')
+        ax.text(_data.Lon_model, _data.Lat_model, riv + ' (model)')
+        raw_geometry = fiona.open([f for f in paths_shp if names_inv_dict[riv] in f][0]).next()['geometry']
+        for xy in [np.array(k) for k in raw_geometry['coordinates']]:
+            ax.plot(xy[:,0], xy[:,1])
+    show(fig)
+    import ipdb; ipdb.set_trace()
