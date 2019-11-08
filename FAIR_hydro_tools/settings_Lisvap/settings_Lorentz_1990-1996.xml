@@ -66,19 +66,19 @@ You can use $(SettingsDir) or $(SettingsPath) to refer directory containing the 
                 **************************************************************
             </comment>
 
-            <textvar name="PathOut" value="/DATA/gelatem/FAIR_workshop/Lisflood01degree/forcing_data">
+            <textvar name="PathOut" value="/DATA/gelatem/FAIR_workshop/Lisflood01degree_masked/forcing_data">
                 <comment>
                     Output path
                 </comment>
             </textvar>
 
-            <textvar name="PathBaseMapsIn" value="/DATA/gelatem/FAIR_workshop/Lisflood01degree/maps_netcdf">
+            <textvar name="PathBaseMapsIn" value="/DATA/gelatem/FAIR_workshop/Lisflood01degree_masked/maps_netcdf">
                 <comment>
                     Path to input base maps
                 </comment>
             </textvar>
 
-            <textvar name="PathMeteoIn" value="/DATA/gelatem/FAIR_workshop/Lisflood01degree/forcing_data">
+            <textvar name="PathMeteoIn" value="/DATA/gelatem/FAIR_workshop/Lisflood01degree_masked/forcing_data">
                 <comment>
                     Path to input raw meteo maps
                     E:/lisflood_test/Lisvap/meteo/raster
@@ -362,7 +362,7 @@ You can use $(SettingsDir) or $(SettingsPath) to refer directory containing the 
                 **************************************************************
             </comment>
 
-            <textvar name="MaskMap" value="/DATA/gelatem/FAIR_workshop/Lisflood01degree/areamaps/lorentz_bool">
+            <textvar name="MaskMap" value="/DATA/gelatem/FAIR_workshop/Lisflood01degree_masked/areamaps/lorentz_bool">
                 <comment>
                     Clone map
                 </comment>

@@ -10,7 +10,7 @@ from sys import argv
 from collections import OrderedDict
 from catchment import decodeFlowMatrix, streamLookups, streamCumulate, pathShapeFiles
 
-#$ python2 match_stations_pixels.py /DATA/gelatem/FAIR_workshop/grdc/dailies/ /DATA/gelatem/FAIR_workshop/recipes_auxiliary_datasets/Lorentz_Basin_Shapefiles/ /DATA/gelatem/FAIR_workshop/Lisflood01degree/ lorentz_6
+#$ python2 match_stations_pixels.py /DATA/gelatem/FAIR_workshop/grdc/dailies/ /DATA/gelatem/FAIR_workshop/recipes_auxiliary_datasets/Lorentz_Basin_Shapefiles/ /DATA/gelatem/FAIR_workshop/Lisflood01degree/ /DATA/gelatem/FAIR_workshop/areamaps/lorentz_6_bool.nc
 
 RIVER_GRDC = {'Merrimack': 'MERRIMACK', 'Meuse': 'MAAS', 'Rhine': 'RHINE', 'Doring': 'DORING', 'Great_Kei': 'GREAT KEI', 'Savannah': 'SAVANNAH'}
 RE_SHP = re.compile('([a-z]+)_hydrosheds[a-z0-9_]*\.shp')
@@ -31,8 +31,7 @@ def findStationPixel(x_station, y_station, a_drained_station, X_model, Y_model, 
 
 if __name__ == '__main__':
     # Shell arguments: GRDC data folder, catchment polygon folder, flow direction matrix (ldd) path, output path
-    dir_grdc, dir_polygons, dir_setup, name_mask = argv[1:]
-    path_mask = os.path.join(dir_setup, 'areamaps', name_mask + '_bool.nc')
+    dir_grdc, dir_polygons, dir_setup, path_mask = argv[1:]
     path_ldd = os.path.join(dir_setup, 'maps_netcdf', 'ldd.nc')
     # GRDC names of river basins
     names_rivers = [RIVER_GRDC[s] for s in os.listdir(dir_polygons)]
