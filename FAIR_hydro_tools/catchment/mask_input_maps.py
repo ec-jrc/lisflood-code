@@ -13,7 +13,7 @@ isInSettings = lambda f, xml_lines: any([f.split('.')[0] in l for l in xml_lines
 
 def maskNetCDF(path_in, path_out, mask_out):
     # file info
-    with xr.open_dataset(path_in) as nc:
+    with xr.open_dataset(path_in, decode_times=False) as nc:
         var_data = [v for v in nc.data_vars.keys() if len(nc[v].dims) > 1][0]
         if not all([x in nc[var_data].shape for x in mask_out.shape]):
             print(path_in + ' not masked (not a global file!)')
@@ -31,7 +31,7 @@ def maskNetCDF(path_in, path_out, mask_out):
         bp()
     # masking
     if len(dims) == 2:
-        ds = xr.open_dataset(path_in).load()
+        ds = xr.open_dataset(path_in, decode_times=False).load()
         ds[var_data].values[mask_out] = fill
         ds.to_netcdf(path_out)
     elif len(dims) == 3:
