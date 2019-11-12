@@ -174,30 +174,33 @@ class outputTssMap(object):
                     head, tail = os.path.split(where)
                     if '.' in tail:
                         if option['writeNetcdf']:
-                            # write end map to netCDF file (single)
+                            # CM mod: write end map to netCDF file (single)
+                            # CM ##########################
+
                             try:
                                 writenet(0, eval(what), where, self.var.DtDay, maps, report_maps_end[maps].output_var,
-                                         report_maps_end[maps].unit, 'd', reportStartDate,
+                                         report_maps_end[maps].unit, 'f4', reportStartDate,
                                          self.var.currentTimeStep(), self.var.currentTimeStep())
                             except:
                                 print("END", what, where, self.var.DtDay, maps, report_maps_end[maps].output_var,
-                                      report_maps_end[maps].unit, 'd', reportStartDate,
+                                      report_maps_end[maps].unit, 'f4', reportStartDate,
                                       self.var.currentTimeStep(), self.var.currentTimeStep())
+                            ################################
 
                         else:
                             report(decompress(eval(what)), where)
                     else:
                         if option['writeNetcdfStack']:
-                            # write end map to netCDF file (stack)
+                            
                             try:
                                 writenet(0, eval(what), where, self.var.DtDay, maps, report_maps_end[maps].output_var,
-                                         report_maps_end[maps].unit, 'd', reportStartDate,
+                                         report_maps_end[maps].unit, 'f4', reportStartDate,
                                          self.var.currentTimeStep(), self.var.currentTimeStep())
                             except:
                                 print("END", what, where, self.var.DtDay, maps, report_maps_end[maps].output_var,
-                                      report_maps_end[maps].unit, 'd', reportStartDate,
+                                      report_maps_end[maps].unit, 'f4', reportStartDate,
                                       self.var.currentTimeStep(), self.var.currentTimeStep())
-
+                            ###########################
                         else:
                             self.var.report(decompress(eval(what)), where)
 
@@ -241,13 +244,13 @@ class outputTssMap(object):
                             cdfflags = CDFFlags.instance()
                             try:
                                 writenet(cdfflags[flagcdf], eval(what), where, self.var.DtDay, maps,
-                                         report_maps_steps[maps].output_var, report_maps_steps[maps].unit, 'd',
+                                         report_maps_steps[maps].output_var, report_maps_steps[maps].unit, 'f4',
                                          reportStartDate, reportStepStart, reportStepEnd, frequency)
                             except Exception as e:
                                 print(" +----> ERR: {} - {}".format(type(e), e))
                                 print("REP flag:{} - {} {} {} {} {} {} {} {} {} {}".format(
                                       cdfflags[flagcdf], what, where, self.var.DtDay, maps,
-                                      report_maps_steps[maps].output_var, report_maps_steps[maps].unit, 'd',
+                                      report_maps_steps[maps].output_var, report_maps_steps[maps].unit, 'f4',
                                       reportStartDate, reportStepStart, reportStepEnd
                                       ))
 
@@ -301,11 +304,11 @@ class outputTssMap(object):
                         try:
                             cdfflags = CDFFlags.instance()
                             writenet(cdfflags[flagcdf], eval(what), where, self.var.DtDay, maps, report_maps_all[maps].output_var,
-                                     report_maps_all[maps].unit, 'd', reportStartDate, reportStepStart, reportStepEnd, frequency)
+                                     report_maps_all[maps].unit, 'f4', reportStartDate, reportStepStart, reportStepEnd, frequency)
                         except Exception as e:
                             warnings.warn(LisfloodWarning(str(e)))
                             print("ALL", what, where, self.var.DtDay, maps, report_maps_all[maps].output_var,
-                                  report_maps_all[maps].unit, 'd', reportStartDate,reportStepStart, reportStepEnd)
+                                  report_maps_all[maps].unit, 'f4', reportStartDate,reportStepStart, reportStepEnd)
                     else:
                         self.var.report(decompress(eval(what)), trimPCRasterOutputPath(where))
 
