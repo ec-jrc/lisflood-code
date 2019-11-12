@@ -260,7 +260,7 @@ class reservoir(HydroModule):
             #self.var.ReservoirStorageM3CC += QResInM3Dt - QResOutM3DtCC
             self.var.ReservoirStorageM3CC -= QResOutM3DtCC
             # New reservoir storage [m3]
-            self.var.ReservoirFillCC = self.var.ReservoirStorageM3CC // self.var.TotalReservoirStorageM3CC
+            self.var.ReservoirFillCC = self.var.ReservoirStorageM3CC / self.var.TotalReservoirStorageM3CC
             # New reservoir fill
 
             # CM: Check ReservoirStorageM3CC for negative values and set them to zero
@@ -299,5 +299,5 @@ class reservoir(HydroModule):
                 np.put(self.var.ReservoirFill, self.var.ReservoirIndex, self.var.ReservoirFillCC)
 
                 if option['repsimulateReservoirs']:
-                    np.put(self.var.ReservoirInflowM3S, self.var.ReservoirIndex, self.var.sumResInCC // self.var.DtSec)
-                    np.put(self.var.ReservoirOutflowM3S, self.var.ReservoirIndex, self.var.sumResOutCC // self.var.DtSec)
+                    np.put(self.var.ReservoirInflowM3S, self.var.ReservoirIndex, self.var.sumResInCC / self.var.DtSec)
+                    np.put(self.var.ReservoirOutflowM3S, self.var.ReservoirIndex, self.var.sumResOutCC / self.var.DtSec)

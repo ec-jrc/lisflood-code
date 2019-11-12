@@ -20,6 +20,7 @@ import warnings
 
 from pcraster import boolean, nominal, ifthen, defined, areamaximum, downstream, cover, lddrepair, ifthenelse, upstream, \
     scalar, accuflux, celllength, windowtotal, areaaverage
+from pcraster.operators import pcrDiv
 import numpy as np
 from netCDF4 import Dataset
 
@@ -633,10 +634,7 @@ class waterabstraction(HydroModule):
                 LZTemp1 = ifthen(self.var.GroundwaterBodiesPcr == 1, LZPcr)
                 LZTemp2 = ifthen(self.var.GroundwaterBodiesPcr == 1, windowtotal(LZTemp1, Range))
                 LZTemp3 = windowtotal(LZTemp1 * 0 + 1, Range)
-                LZSmooth = ifthenelse(LZTemp3 == 0, 0.0, LZTemp2 // LZTemp3)
-                # note: using floor division (//) here as PCRASTER Python2 doesn't define __div__ for Field
-                # It avoids TypeError: unsupported operand type(s) for /: 'Field' and 'Field' in Python2 environments
-
+                LZSmooth = ifthenelse(LZTemp3 == 0, 0.0, pcrDiv(LZTemp2, LZTemp3))
                 LZPcr = ifthenelse(self.var.GroundwaterBodiesPcr == 0, LZPcr, 0.9 * LZPcr + 0.1 * LZSmooth)
 
                 diffCorr = 0.1 * areaaverage(LZSmooth - LZTemp1, self.var.groundwaterCatch)
