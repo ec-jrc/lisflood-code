@@ -33,7 +33,7 @@ def maskNetCDF(path_in, path_out, mask_out):
     if len(dims) == 2:
         ds = xr.open_dataset(path_in, decode_times=False).load()
         ds[var_data].values[mask_out] = fill
-        ds.to_netcdf(path_out)
+        ds.to_netcdf(path_out, encoding={var_data: {'zlib': True, 'complevel': 4}})
     elif len(dims) == 3:
         print('processing 3D file {} ...'.format(path_in))
         copyfile(path_in, path_out)

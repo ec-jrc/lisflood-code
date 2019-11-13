@@ -223,7 +223,7 @@ class LisfloodBmi(Bmi):
 
 if __name__ == '__main__':
     # Shell argument: settings file path
-    path_settings, out_name = argv[1:]
+    path_settings, dir_out = argv[1:]
     # Initialise BMI interface and LISFLOOD model
     model = LisfloodBmi()
     model.initialize(path_settings)
@@ -244,6 +244,6 @@ if __name__ == '__main__':
         for riv, row, col in station_pixel[['Row_model','Col_model']].itertuples():
             discharge_comparison.loc[d,(riv, 'Simulated')] = model.get_value_at_indices('Discharge', (row, col))
     # Write comparison data to file
-    path_out = '~/figures_BMI/discharge_comparison_{}.pickle'.format(out_name)
+    path_out = os.path.join(dir_out, 'discharge_comparison.pickle')
     discharge_comparison.to_pickle(path_out)
     print('Comparison data written to {}\nStations info is in {}'.format(path_out, path_info))

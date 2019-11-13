@@ -219,7 +219,7 @@ AREA AND OUTLETS
 </comment>
 </textvar>
 
-<textvar name="MaskMap" value="$(PathRoot)/areamaps/lorentz_bool.nc">
+<textvar name="MaskMap" value="$(PathRoot)/../areamaps/lorentz_6_bool">
 <comment>
 70 40 0.1 -8.6 43.3  # Douro
 30 30 0.1 6.0 52.0
@@ -503,7 +503,7 @@ FILE PATHS
 **************************************************************
 </comment>
 
-<textvar name="PathOut" value="/DATA/gelatem/TEST-BMI">
+<textvar name="PathOut" value="/DATA/gelatem/FAIR_workshop/output/test_1990-1996">
 <comment>
 Output path (org=$(PathRoot)/out)
 </comment>
@@ -570,7 +570,7 @@ Water use maps path
 </comment>
 </textvar>
 
-<textvar name="PathMeteo" value="$(PathRoot)/forcing_data">
+<textvar name="PathMeteo" value="$(PathRoot)/../forcing_data">
 <comment>
     Meteo input directory on JRC.D2 Linux machines.
     Typical paths on other JRC systems:

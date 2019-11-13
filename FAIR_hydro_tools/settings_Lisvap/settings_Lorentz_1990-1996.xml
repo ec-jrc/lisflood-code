@@ -66,7 +66,7 @@ You can use $(SettingsDir) or $(SettingsPath) to refer directory containing the 
                 **************************************************************
             </comment>
 
-            <textvar name="PathOut" value="/DATA/gelatem/FAIR_workshop/Lisflood01degree_masked/forcing_data">
+            <textvar name="PathOut" value="/DATA/gelatem/FAIR_workshop/forcing_data">
                 <comment>
                     Output path
                 </comment>
@@ -78,7 +78,7 @@ You can use $(SettingsDir) or $(SettingsPath) to refer directory containing the 
                 </comment>
             </textvar>
 
-            <textvar name="PathMeteoIn" value="/DATA/gelatem/FAIR_workshop/Lisflood01degree_masked/forcing_data">
+            <textvar name="PathMeteoIn" value="/DATA/gelatem/FAIR_workshop/forcing_data">
                 <comment>
                     Path to input raw meteo maps
                     E:/lisflood_test/Lisvap/meteo/raster
@@ -124,6 +124,8 @@ You can use $(SettingsDir) or $(SettingsPath) to refer directory containing the 
         <setoption name="readNetcdfStack" choice="1" />
         <setoption name="writeNetcdfStack" choice="1" />
         <setoption name="repE0Maps" choice="1" />
+        <setoption name="repES0Maps" choice="1" />
+        <setoption name="repET0Maps" choice="1" />
         <setoption name="EFAS" choice="1" />
         <setoption name="CORDEX" choice="0" />
         <setoption name="useTavg" choice="0" />
@@ -362,7 +364,7 @@ You can use $(SettingsDir) or $(SettingsPath) to refer directory containing the 
                 **************************************************************
             </comment>
 
-            <textvar name="MaskMap" value="/DATA/gelatem/FAIR_workshop/Lisflood01degree_masked/areamaps/lorentz_bool">
+            <textvar name="MaskMap" value="/DATA/gelatem/FAIR_workshop/areamaps/lorentz_6_bool">
                 <comment>
                     Clone map
                 </comment>
