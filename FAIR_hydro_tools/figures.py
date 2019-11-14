@@ -37,10 +37,10 @@ def dischargePlot(riv, data, info, simulation, dir_out):
 
 
 if __name__ == "__main__":
-    dir_out = argv[1]
+    dir_out, dir_setup = argv[1]
     path_time_series = os.path.join(dir_out, 'discharge_comparison.pickle')
     # ERA5 at 0.1 degree
-    info = pd.read_json('/DATA/gelatem/FAIR_workshop/Lisflood01degree/station-pixel_matches.json')
+    info = pd.read_json(os.path.join(dir_setup, 'station-pixel_matches.json')
     discharge = pd.read_pickle(path_time_series).astype(float)
     for riv in info.index:
         dischargePlot(riv, discharge, info, 'ERA5_0.1deg', dir_out)
