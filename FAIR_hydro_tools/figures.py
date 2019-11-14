@@ -6,6 +6,7 @@ from sys import argv
 from collections import OrderedDict
 from pylab import *
 from catchment.match_stations_pixels import findStationPixel, decodeFlowMatrix, streamLookups, streamCumulate
+from ipdb import set_trace as bp
 
 DIR_BENCH = '/DATA/gelatem/FAIR_workshop/benchmark_discharge_simulations/'
 SIM_DIS = {'WFDEI_0.1deg': os.path.join(DIR_BENCH, 'E2O_Tier1_WFDEI_100_dis.nc'),
@@ -28,7 +29,7 @@ def dischargePlot(riv, data, info, simulation, dir_out):
     ax.set_ylabel('River discharge $\\left({\\rm m}^{3}{\\rm s}^{-1}\\right)$')
     ax.set_title('{} simulation\n{} at {}\n'.format(simulation, riv, info.loc[riv,'Station']) +
                  ', '.join(['{}: {:.2f}'.format(k, v) for k, v in stats.items()]))
-    path_fig = os.path.join(dir_out, '{}_{}.pdf'.format(simulation, riv)
+    path_fig = os.path.join(dir_out, '{}_{}.pdf'.format(simulation, riv))
     fig.savefig(path_fig)
     print('Discharge plot written to ' + path_fig)
     close(fig)
@@ -45,7 +46,7 @@ if __name__ == "__main__":
         dischargePlot(riv, discharge, info, 'ERA5_0.1deg', dir_out)
     # WFDEI and MSWEP at 0.1 degree
     for name in ('WFDEI_0.1deg', 'MSWEP_0.1deg'):
-        sim = xr.open_dataset(SIM_DIS[name]).dis.loc[str(discharge.index[0]):str(discharge.index[-1])].load()
+        sim = xr.open_dataset(SIM_DIS[name]).dis.loc[str(discharge.index[0]):str(discharge.index[-1])]
         dis = discharge.copy()
         dis.loc[:,dis.columns.get_level_values(1) == 'Simulated'] = nan
         for riv in info.index:
@@ -53,7 +54,7 @@ if __name__ == "__main__":
             dischargePlot(riv, dis, info, name, dir_out)
     # Europe at 5 km
     name = 'EMO5_5km'
-    sim = xr.open_dataset(SIM_DIS[name]).dis.loc[str(discharge.index[0]):str(discharge.index[-1])].load()
+    sim = xr.open_dataset(SIM_DIS[name]).dis.loc[str(discharge.index[0]):str(discharge.index[-1])]
     with xr.open_dataset('/H01_FRESH_WATER/Europe/LisfloodEurope/maps_netcdf/area.nc') as nc:
         projection = pyproj.Proj(nc.laea.proj4_params)
         mask = ~isnan(nc.area.values)
