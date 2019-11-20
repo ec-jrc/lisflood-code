@@ -224,6 +224,9 @@ class LisfloodBmi(Bmi):
 if __name__ == '__main__':
     # Shell argument: settings file path
     path_settings, dir_out = argv[1:]
+    if os.path.exists(dir_out):
+        raise Exception(dir_out + ' already exists - specify a new output folder name')
+    os.makedirs(dir_out)
     # Initialise BMI interface and LISFLOOD model
     model = LisfloodBmi()
     model.initialize(path_settings)
