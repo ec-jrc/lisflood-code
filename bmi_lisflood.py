@@ -229,9 +229,6 @@ class LisfloodBmi(Bmi):
     
     def get_output_item_count(self):
         return None
-    
-    def update_until(self):
-        return None
 
 
 if __name__ == '__main__':
