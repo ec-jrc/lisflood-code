@@ -220,6 +220,19 @@ class LisfloodBmi(Bmi):
         matrix[self.mask] = vector
         return matrix
 
+    # Undefined methods
+    def get_grid_face_edges(self):
+        return None
+    
+    def get_input_item_count(self):
+        return None
+    
+    def get_output_item_count(self):
+        return None
+    
+    def update_until(self):
+        return None
+
 
 if __name__ == '__main__':
     # Shell argument: settings file path
