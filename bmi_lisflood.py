@@ -129,9 +129,8 @@ class LisfloodBmi(Bmi):
     def get_value_ref(self, var_name): # OK? getters return values on 2d maps - calculations use 1d arrays (not exposed)
         return self.get_value(var_name)
 
-    def get_value_at_indices(self, var_name, indices):
-        checkIndices(indices)
-        return self.get_value(var_name)[indices]
+    def get_value_at_indices(self, var_name, rows_cols):
+        return self.get_value(var_name)[rows_cols[:,0],rows_cols[:,1]]
 
     def set_value(self, var_name, src):
         vector = self._refDomainVar(var_name)
