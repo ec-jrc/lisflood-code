@@ -41,7 +41,7 @@ class LisfloodBmi(Bmi):
         self.framework._runInitial()
         self.framework._userModel()._setInDynamic(True)
         # Read 1st and last time steps
-        self.calendar_start = model.framework._userModel().CalendarDayStart
+        self.calendar_start = self.framework._userModel().CalendarDayStart
         self.start_step = self.framework._userModel().firstTimeStep()
         self.end_step = self.framework._userModel().nrTimeSteps()
         self.current_step = self.start_step
