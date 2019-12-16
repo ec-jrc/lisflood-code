@@ -11,7 +11,7 @@ from basic_modeling_interface.bmi import Bmi
 from global_modules.zusatz import checkifDate, pcraster
 from global_modules.globals import modelSteps, maskinfo
 from pcraster.framework.dynamicFramework import DynamicFramework
-from ipdb import set_trace as bp
+#from ipdb import set_trace as bp
 
 OUT_VARS = [('Discharge', 'ChanQAvg', 'm^3/s'), ('Topsoil moisture', 'W1a', '1e-3 m')]
 OUT_VARS = pd.DataFrame(OUT_VARS, columns=['external_name','internal_name','units']).set_index('external_name')
@@ -229,34 +229,34 @@ class LisfloodBmi(Bmi):
     
     def get_output_item_count(self):
         return None
-
-
-if __name__ == '__main__':
-    # Shell argument: settings file path
-    path_settings, dir_out = argv[1:]
-    if os.path.exists(dir_out):
-        raise Exception(dir_out + ' already exists - specify a new output folder name')
-    os.makedirs(dir_out)
-    # Initialise BMI interface and LISFLOOD model
-    model = LisfloodBmi()
-    model.initialize(path_settings)
-    # Load station-pixel matching information (to compare simulated and reported river discharge)
-    path_info = os.path.join(model.readSetting('PathRoot'), 'station-pixel_matches.json')
-    station_pixel = pd.read_json(path_info)
-    # Allocate comparison dataframe and load GRDC-reported values
-    days = pd.period_range(model.calendar_start, periods=model.end_step)[model.start_step-1:]
-    discharge_comparison = pd.DataFrame(index=days, columns=pd.MultiIndex.from_product((station_pixel.index, ['Observed', 'Simulated'])))
-    for riv, path_obs in station_pixel['Observation_file'].iteritems():
-        obs = pd.read_table(path_obs, skiprows=35, sep=';\s*', index_col='YYYY-MM-DD', parse_dates=True).Value
-        obs.loc[obs < 0] = np.nan # filter missing observations out
-        obs.index = obs.index.to_period()
-        discharge_comparison.loc[:,(riv, 'Observed')] = obs.loc[days]
-    # Run the model and store simulated discharge at each time step
-    for d in days:
-        model.update() # Run the model for a daily time step
-        for riv, row, col in station_pixel[['Row_model','Col_model']].itertuples():
-            discharge_comparison.loc[d,(riv, 'Simulated')] = model.get_value_at_indices('Discharge', (row, col))
-    # Write comparison data to file
-    path_out = os.path.join(dir_out, 'discharge_comparison.pickle')
-    discharge_comparison.to_pickle(path_out)
-    print('Comparison data written to {}\nStations info is in {}'.format(path_out, path_info))
+#
+#
+#if __name__ == '__main__':
+#    # Shell argument: settings file path
+#    path_settings, dir_out = argv[1:]
+#    if os.path.exists(dir_out):
+#        raise Exception(dir_out + ' already exists - specify a new output folder name')
+#    os.makedirs(dir_out)
+#    # Initialise BMI interface and LISFLOOD model
+#    model = LisfloodBmi()
+#    model.initialize(path_settings)
+#    # Load station-pixel matching information (to compare simulated and reported river discharge)
+#    path_info = os.path.join(model.readSetting('PathRoot'), 'station-pixel_matches.json')
+#    station_pixel = pd.read_json(path_info)
+#    # Allocate comparison dataframe and load GRDC-reported values
+#    days = pd.period_range(model.calendar_start, periods=model.end_step)[model.start_step-1:]
+#    discharge_comparison = pd.DataFrame(index=days, columns=pd.MultiIndex.from_product((station_pixel.index, ['Observed', 'Simulated'])))
+#    for riv, path_obs in station_pixel['Observation_file'].iteritems():
+#        obs = pd.read_table(path_obs, skiprows=35, sep=';\s*', index_col='YYYY-MM-DD', parse_dates=True).Value
+#        obs.loc[obs < 0] = np.nan # filter missing observations out
+#        obs.index = obs.index.to_period()
+#        discharge_comparison.loc[:,(riv, 'Observed')] = obs.loc[days]
+#    # Run the model and store simulated discharge at each time step
+#    for d in days:
+#        model.update() # Run the model for a daily time step
+#        for riv, row, col in station_pixel[['Row_model','Col_model']].itertuples():
+#            discharge_comparison.loc[d,(riv, 'Simulated')] = model.get_value_at_indices('Discharge', (row, col))
+#    # Write comparison data to file
+#    path_out = os.path.join(dir_out, 'discharge_comparison.pickle')
+#    discharge_comparison.to_pickle(path_out)
+#    print('Comparison data written to {}\nStations info is in {}'.format(path_out, path_info))
