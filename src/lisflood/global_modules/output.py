@@ -219,14 +219,14 @@ class outputTssMap(object):
                     flagcdf = 1  # index flag for writing nedcdf = 1 (=steps) -> indicated if a netcdf is created or maps are appended
                     frequency = "all"
                     try:
-                        if report_maps_steps[maps]['monthly'][0] == "True":
+                        if report_maps_steps[maps].monthly:
                             monthly = True
                             flagcdf = 3  # set to monthly (step) flag
                             frequency = "monthly"
                     except:
                         monthly = False
                     try:
-                        if report_maps_steps[maps]['yearly'][0] == "True":
+                        if report_maps_steps[maps].yearly:
                             yearly = True
                             flagcdf = 4  # set to yearly (step) flag
                             frequency = "annual"
