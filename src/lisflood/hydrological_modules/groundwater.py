@@ -15,7 +15,7 @@ on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either expres
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
-from __future__ import absolute_import, print_function, division
+from __future__ import absolute_import, print_function
 
 import numpy as np
 

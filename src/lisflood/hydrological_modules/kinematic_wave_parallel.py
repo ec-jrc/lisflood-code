@@ -21,7 +21,7 @@ Parallelisation is achieved by grouping the pixels in ordered sets. Within each 
 pixelsm in previous sets have already been routed, pixels can be routed independently of each other
 and thus in parallel. For further details, see the method kinematicWave._setRoutingOrders.
 """
-from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 __author__ = "Emiliano Gelati"
 __contact__ = "emiliano.gelati@ec.europa.eu"
