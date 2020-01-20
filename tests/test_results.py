@@ -14,7 +14,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
-from __future__ import absolute_import, print_function, division
+from __future__ import absolute_import, print_function
 
 import os
 import warnings
@@ -66,4 +66,4 @@ class TestWrongTimestepInit:
     def test_raisexc(self):
         with pytest.raises(LisfloodError) as e:
             assert lisfloodexe(self.settings_path)
-        assert 'Option timestepInit was not parsable.' in str(e.value)
+            assert 'Option timestepInit was not parsable.' in str(e.value)

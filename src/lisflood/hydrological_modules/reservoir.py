@@ -65,7 +65,6 @@ class reservoir(HydroModule):
             # or 1 if DtSec is smaller than DtSecReservoirs
             # DtSubRes=self.var.DtSec/loadmap('NoSubStepsRes')
             # Corresponding sub-timestep (seconds)
-            settings = LisSettings.instance()
             binding = settings.binding
             self.var.ReservoirSitesC = loadmap('ReservoirSites')
             self.var.ReservoirSitesC[self.var.ReservoirSitesC < 1] = 0

@@ -19,7 +19,9 @@ from nine import range, IS_PYTHON2
 
 import os
 import sys
-import glob
+import uuid
+
+from bs4 import BeautifulSoup
 
 if IS_PYTHON2:
     from pathlib2 import Path
@@ -34,9 +36,33 @@ src_dir = os.path.join(current_dir, '../src/')
 if os.path.exists(src_dir):
     sys.path.append(src_dir)
 
-from lisflood.global_modules.add1 import readnetcdf
-from lisflood.global_modules.settings import LisSettings
+from lisflood.global_modules.add1 import readnetcdf, loadmap
+from lisflood.global_modules.settings import LisSettings, MaskInfo
 from lisflood.main import lisfloodexe
+
+
+class TestSettings(object):
+    original_loadmap = loadmap
+
+    @classmethod
+    def dummyloadmap(cls, *args, **kwargs):
+        return cls.original_loadmap(*args, **kwargs)
+
+    def setoption(self, settings_file, opt_to_set):
+        with open(settings_file) as tpl:
+            soup = BeautifulSoup(tpl, 'lxml-xml')
+            for tag in soup.find_all("setoption", {'name': opt_to_set}):
+                tag['choice'] = '1'
+                print('set', opt_to_set)
+                break
+        # Generating XML settings_files on fly from template
+        uid = uuid.uuid4()
+        filename = os.path.join(os.path.dirname(settings_file), f'./settings_{uid}.xml')
+        with open(filename, 'w') as dest:
+            dest.write(soup.prettify())
+        settings = LisSettings(filename)
+        os.unlink(filename)
+        return settings
 
 
 class TestLis(object):

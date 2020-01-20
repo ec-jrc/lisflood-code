@@ -10,6 +10,7 @@ lisflood_model.egg-info
 .eggs
 .tox
 /src/dist/
+/src/lisflood/hydrological_modules/kinematic_wave_parallel_tools.c
 !settings_tpl.xml
 !/tests/data/TestCatchment1/settings/cold_hours_base.xml
 !/tests/data/TestCatchment1/settings/cold_hours.xml
@@ -17,5 +18,6 @@ lisflood_model.egg-info
 !/tests/data/TestCatchment1/settings/cold_day.xml
 !/tests/data/TestCatchment1/settings/cold_day_base.xml
 !/tests/data/TestCatchment1/settings/warm_hours.xml
+!/tests/data/TestCatchment1/settings/warm_day_wrong_timestepinit.xml
 !/tests/data/TestCatchment2/settings/run.xml
 !/tests/data/TestCatchment2/settings/prerun.xml
