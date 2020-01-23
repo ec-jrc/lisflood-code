@@ -184,7 +184,7 @@ class reservoir(HydroModule):
         option = settings.options
         maskinfo = MaskInfo.instance()
         if option['simulateReservoirs']:
-            InvDtSecDay = 1 // 86400  # force integer division (it's always 0, btw)
+            InvDtSecDay = 1 / float(86400)
             # InvDtSecDay=self.var.InvDtSec
             # ReservoirInflow = cover(ifthen(defined(self.var.ReservoirSites), upstream(
             # self.var.LddStructuresKinematic, self.var.ChanQ)), scalar(0.0))

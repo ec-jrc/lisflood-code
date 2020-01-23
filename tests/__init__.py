@@ -47,12 +47,15 @@ class TestSettings(object):
     def dummyloadmap(cls, *args, **kwargs):
         return loadmap(*args, **kwargs)
 
-    def setoption(self, settings_file, opt_to_set=None):
+    def setoptions(self, settings_file, opts_to_set=None):
+        if isinstance(opts_to_set, str):
+            opts_to_set = [opts_to_set]
 
+        opts_to_set = [] if opts_to_set is None else opts_to_set
         with open(settings_file) as tpl:
             soup = BeautifulSoup(tpl, 'lxml-xml')
-            if opt_to_set:
-                for tag in soup.find_all("setoption", {'name': opt_to_set}):
+            for opt in opts_to_set:
+                for tag in soup.find_all("setoption", {'name': opt}):
                     tag['choice'] = '1'
                     break
         # Generating XML settings_files on fly from template
