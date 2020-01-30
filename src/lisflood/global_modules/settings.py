@@ -202,7 +202,7 @@ class LisSettings(with_metaclass(Singleton)):
         user_settings, bindings = self._bindings(dom)
         self.timestep_init = None if not bindings.get('timestepInit') else bindings['timestepInit']
         self._check_timestep_init()
-        self.output_dir = self._out_dirs(user_settings)
+        self.output_dir = self._out_dir(user_settings)
         self.ncores = self._ncores(user_settings)
         self.binding = bindings
         self.options = self._options(dom)
@@ -303,9 +303,8 @@ class LisSettings(with_metaclass(Singleton)):
         return res
 
     @staticmethod
-    def _out_dirs(user_settings):
-        # if pathout has some placeholders, they are replace here
-        output_dirs = []
+    def _out_dir(user_settings):
+        # if pathout has some placeholders, they are replaced here
         pathout = user_settings["PathOut"]
         while pathout.find('$(') > -1:
             a1 = pathout.find('$(')
@@ -318,8 +317,7 @@ class LisSettings(with_metaclass(Singleton)):
                 pathout = pathout.replace(pathout[a1:a2 + 1], s2)
 
         # CM: output folder
-        output_dirs.append(pathout)
-        return output_dirs
+        return pathout
 
     @staticmethod
     def _flags():

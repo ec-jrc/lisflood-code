@@ -63,13 +63,12 @@ class ModulesInputs:
             """
         binding = settings.binding
         res = False
-        total_checks = len(settings.output_dir)  # at least check PathOut
+        total_checks = 1  # at least check PathOut
         # First check PathOut
-        for path_out in settings.output_dir:
-            if not (os.path.exists(path_out) and os.path.isdir(path_out) and os.access(path_out, os.W_OK)):
-                warnings.warn(LisfloodWarning('\n\nPath defined in PathOut is not writable: {}'.format(path_out)))
-            else:
-                res += True
+        if not (os.path.exists(settings.output_dir) and os.path.isdir(settings.output_dir) and os.access(settings.output_dir, os.W_OK)):
+            warnings.warn(LisfloodWarning('\n\nPath defined in PathOut is not writable: {}'.format(settings.output_dir)))
+        else:
+            res += True
 
         for option, modules in cls.lisflood_modules.items():
             if not (binding.get(option) or option == 'all'):

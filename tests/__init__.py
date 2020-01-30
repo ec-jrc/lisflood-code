@@ -13,9 +13,12 @@ Unless required by applicable law or agreed to in writing, software distributed 
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
+Run tests with coverage report:
+export PYTHONPATH=/opt/pcraster36/python && pytest tests/
+
 """
 from __future__ import print_function, absolute_import, division
-from nine import range, IS_PYTHON2
+from nine import IS_PYTHON2
 
 import os
 import sys
@@ -29,15 +32,16 @@ else:
     from pathlib import Path
 
 from pyexpat import *
-import numpy as np
+
+from lisfloodutilities.compare import NetCDFComparator
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 src_dir = os.path.join(current_dir, '../src/')
 if os.path.exists(src_dir):
     sys.path.append(src_dir)
 
-from lisflood.global_modules.add1 import readnetcdf, loadmap
-from lisflood.global_modules.settings import LisSettings
+from lisflood.global_modules.add1 import loadmap
+from lisflood.global_modules.settings import LisSettings, MaskInfo
 from lisflood.main import lisfloodexe
 
 
@@ -70,11 +74,11 @@ class TestSettings(object):
 
 class TestLis(object):
     reference_files = {
-        'dis_1': {'path': os.path.join(current_dir, 'data/TestCatchment1/reference/dis'),
+        'dis_1': {'path': os.path.join(current_dir, 'data/TestCatchment1/reference/dis.nc'),
                   'report_map': 'DischargeMaps',
                   'report_tss': 'DisTS'
                   },
-        'dis_2': {'path': os.path.join(current_dir, 'data/TestCatchment2/reference/dis'),
+        'dis_2': {'path': os.path.join(current_dir, 'data/TestCatchment2/reference/dis.nc'),
                   'report_map': 'DischargeMaps',
                   'report_tss': 'DisTS'
                   }
@@ -82,10 +86,6 @@ class TestLis(object):
 
     domain = None
     settings_path = None
-    atol = 0.01
-    max_perc_wrong_large_diff = 0.01
-    max_perc_wrong = 0.05
-    large_diff_th = atol * 10
 
     @classmethod
     def setup_class(cls):
@@ -111,50 +111,13 @@ class TestLis(object):
                 pass
 
     @classmethod
-    def check_var_step(cls, var, step):
-        settings = LisSettings.instance()
-        binding = settings.binding
-        reference_path = cls.reference_files[var]['path']
-        output_path = binding[cls.reference_files[var]['report_map']]
-        reference = readnetcdf(reference_path, step)
-        current_output = readnetcdf(output_path, step)
-
-        same_size = reference.size == current_output.size
-        diff_values = np.abs(reference - current_output)
-        same_values = np.allclose(diff_values, np.zeros(diff_values.shape), atol=cls.atol)
-        all_ok = same_size and same_values
-
-        array_ok = np.isclose(diff_values, np.zeros(diff_values.shape), atol=cls.atol)
-        wrong_values_size = array_ok[~array_ok].size
-
-        if not all_ok and wrong_values_size > 0:
-            max_diff = np.max(diff_values)
-            large_diff = max_diff > cls.large_diff_th
-            perc_wrong = float(wrong_values_size * 100) / float(diff_values.size)
-            if perc_wrong >= cls.max_perc_wrong or perc_wrong >= cls.max_perc_wrong_large_diff and large_diff:
-                print('[ERROR]')
-                print('Var: {} - STEP {}: {:3.9f}% of values are different. max diff: {:3.4f}'.format(var, step,
-                                                                                                      perc_wrong,
-                                                                                                      max_diff))
-                return False
-            else:
-                print('[OK] {} {}'.format(var, step))
-                return True
-        else:
-            print('[OK] {} {}'.format(var, step))
-            return True
-
-    @classmethod
     def listest(cls, variable):
         settings = LisSettings.instance()
+        maskinfo = MaskInfo.instance()
         binding = settings.binding
-        model_steps = settings.model_steps
         reference_path = cls.reference_files[variable]['path']
-        output_path = os.path.normpath(binding[cls.reference_files[variable]['report_map']])
+        output_path = os.path.normpath(binding[cls.reference_files[variable]['report_map']]) + '.nc'
         print('>>> Reference: {} - Current Output: {}'.format(reference_path, output_path))
-
-        results = []
-        start_step, end_step = model_steps[0], model_steps[1]
-        for step in range(start_step, end_step + 1):
-            results.append(cls.check_var_step(variable, step))
-        assert all(results)
+        comparator = NetCDFComparator(maskinfo.info.mask)
+        errors = comparator.compare_files(reference_path, output_path)
+        assert not errors
