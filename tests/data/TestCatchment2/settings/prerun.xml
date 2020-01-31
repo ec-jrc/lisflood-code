@@ -34,7 +34,7 @@
         <setoption choice="0" name="repSurfaceSoilMoistureMaps"/>
         <setoption choice="1" name="repDischargeMaps"/>
         <setoption choice="0" name="repSurfaceRunoffMaps"/>
-        <setoption choice="0" name="repsimulateLakes"/>
+        <setoption choice="1" name="repsimulateLakes"/>
         <setoption choice="0" name="repsimulateReservoirs"/>
         <setoption choice="0" name="repStateUpsGauges"/>
 

@@ -27,7 +27,7 @@ try:
 except ImportError:
     import cftime as netcdftime  # newer versions of netCDF4 don't include netcdftime
 
-from pcraster.framework import *
+from pcraster.framework import *  # TODO fix import star
 import numpy as np
 
 from .decorators import counted
@@ -198,7 +198,6 @@ class TimeoutputTimeseries(TimeoutputTimeseries):
         # header
         #outputFile.write("timeseries " + self._spatialDatatype.lower() + "\n")
         outputFile.write("timeseries " + self._spatialDatatype.lower() + " settingsfile: "+os.path.realpath(sys.argv[1])+" date: " + xtime.ctime(xtime.time())+ "\n")
-        sys.argv[1]
         # write number of outlets points +1
         outputFile.write(str(self._ncodesId + 1) + "\n")
         outputFile.write("timestep\n")
@@ -279,7 +278,6 @@ class TimeoutputTimeseries(TimeoutputTimeseries):
                 row += "\n"
 
             outputFile.write(row)
-
         outputFile.close()
 
     def __init__(self, tssFilename, model, idMap=None, noHeader=False):

@@ -40,7 +40,7 @@ src_dir = os.path.join(current_dir, '../src/')
 if os.path.exists(src_dir):
     sys.path.append(src_dir)
 
-from lisflood.global_modules.add1 import loadmap
+from lisflood.global_modules.add1 import loadmap, writenet
 from lisflood.global_modules.settings import LisSettings, MaskInfo
 from lisflood.main import lisfloodexe
 
@@ -50,6 +50,10 @@ class TestSettings(object):
     @classmethod
     def dummyloadmap(cls, *args, **kwargs):
         return loadmap(*args, **kwargs)
+
+    @classmethod
+    def dummywritenet(cls, *args, **kwargs):
+        return (list(*args), dict(**kwargs))
 
     def setoptions(self, settings_file, opts_to_set=None):
         if isinstance(opts_to_set, str):

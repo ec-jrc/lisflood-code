@@ -3,31 +3,27 @@
 
     <lfoptions>
 
-        # module activation
-        <setoption choice="1" name="wateruse"/>
-        <setoption choice="1" name="groundwaterSmooth"/>
-        <setoption choice="1" name="TransientWaterDemandChange"/>
+        <setoption choice="0" name="wateruse"/>
+        <setoption choice="0" name="groundwaterSmooth"/>
+        <setoption choice="0" name="TransientWaterDemandChange"/>
         <setoption choice="0" name="useWaterDemandAveYear"/>
-        <setoption choice="1" name="wateruseRegion"/>
-        <setoption choice="1" name="indicator"/>
-        <setoption choice="1" name="drainedIrrigation"/>
-        <setoption choice="1" name="riceIrrigation"/>
-        <setoption choice="1" name="openwaterevapo"/>
-        <setoption choice="1" name="simulateLakes"/>
-        <setoption choice="1" name="simulateReservoirs"/>
-        <setoption choice="1" name="simulatePF"/>
-        <setoption choice="1" name="SplitRouting"/>
+        <setoption choice="0" name="wateruseRegion"/>
+        <setoption choice="0" name="indicator"/>
+        <setoption choice="0" name="drainedIrrigation"/>
+        <setoption choice="0" name="riceIrrigation"/>
+        <setoption choice="0" name="openwaterevapo"/>
+        <setoption choice="0" name="simulateLakes"/>
+        <setoption choice="0" name="simulateReservoirs"/>
+        <setoption choice="0" name="simulatePF"/>
+        <setoption choice="0" name="SplitRouting"/>
         <setoption choice="0" name="InitLisflood"/>
-
-        # report end maps and state maps
         <setoption choice="0" name="repEndMaps"/>
         <setoption choice="0" name="repStateMaps"/>
-
-        # report discharge
         <setoption choice="0" name="repDischargeTs"/>
         <setoption choice="0" name="repDischargeMaps"/>
 
         # report gauges and sites
+
         <setoption choice="0" name="repStateSites"/>
         <setoption choice="0" name="repRateSites"/>
         <setoption choice="0" name="repStateUpsGauges"/>
@@ -38,18 +34,29 @@
         <setoption choice="0" name="repsimulateReservoirs"/>
         <setoption choice="0" name="repSnowMaps"/>
         <setoption choice="0" name="repPFMaps"/>
+
         <setoption choice="0" name="repLZMaps"/>
+
         <setoption choice="0" name="repUZMaps"/>
+
         <setoption choice="0" name="repGwPercUZLZMaps"/>
+
         <setoption choice="0" name="repRWS"/>
 
+
         <setoption choice="1" name="readNetcdfStack"/>
+
         <setoption choice="1" name="writeNetcdfStack"/>
+
         <setoption choice="1" name="writeNetcdf"/>
 
+
         <setoption choice="0" name="repTotalAbs"/>
+
         <setoption choice="0" name="repTotalWUse"/>
+
         <setoption choice="0" name="repWIndex"/>
+
 
     </lfoptions>
 
@@ -67,7 +74,7 @@
             </comment>
 
 
-            <textvar name="PathRoot" value="$(SettingsPath)/../TestCatchment1">
+            <textvar name="PathRoot" value="$(SettingsPath)/../TestCatchment2">
 
                 <comment>
 
@@ -98,7 +105,7 @@
             </textvar>
 
 
-            <textvar name="PathMaps" value="$(PathRoot)/maps_netcdf">
+            <textvar name="PathMaps" value="$(PathRoot)/maps">
 
                 <comment>
 
@@ -175,7 +182,7 @@
             </textvar>
 
 
-            <textvar name="PathMapsLanduse" value="$(PathMaps)/landuse2006">
+            <textvar name="PathMapsLanduse" value="$(PathMaps)/landuse2000">
 
                 <comment>
 
@@ -186,7 +193,7 @@
             </textvar>
 
 
-            <textvar name="PathWaterUse" value="$(PathMaps)/waterdemand">
+            <textvar name="PathWaterUse" value="$(PathMaps)/wateruse2000">
 
                 <comment>
 
@@ -199,7 +206,7 @@
             </textvar>
 
 
-            <textvar name="PathMeteo" value="$(PathRoot)/forcings">
+            <textvar name="PathMeteo" value="$(PathRoot)/meteo">
 
                 <comment>
 
@@ -212,7 +219,7 @@
             </textvar>
 
 
-            <textvar name="PathLAI" value="$(PathRoot)/lai_netcdf">
+            <textvar name="PathLAI" value="$(PathRoot)/lai">
 
                 <comment>
 
@@ -234,7 +241,7 @@
             </textvar>
 
 
-            <textvar name="MaskMap" value="$(PathRoot)/maps_netcdf/area.nc">
+            <textvar name="MaskMap" value="$(PathMaps)/area.nc">
             </textvar>
 
 
@@ -266,7 +273,7 @@
             </comment>
 
 
-            <textvar name="CalendarDayStart" value="31/12/1999 06:00">
+            <textvar name="CalendarDayStart" value="24/07/1989 00:00">
 
                 <comment>
 
@@ -311,7 +318,7 @@
             </textvar>
 
 
-            <textvar name="StepStart" value="25/07/2000 06:00">
+            <textvar name="StepStart" value="24/07/1989 00:00">
 
                 <comment>
 
@@ -322,7 +329,7 @@
             </textvar>
 
 
-            <textvar name="StepEnd" value="27/07/2000 06:00">
+            <textvar name="StepEnd" value="26/07/1989 00:00">
 
                 <comment>
 
