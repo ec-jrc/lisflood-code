@@ -616,7 +616,7 @@ class LisfloodRunInfo(Warning):
         msg = ''
         settings = LisSettings.instance()
         option = settings.options
-        out_dir = settings.output_dir[0]
+        out_dir = settings.output_dir
         ens_members = settings.ens_members[0]
         nr_cores = settings.ncores[0]
         steps = len(settings.filter_steps)

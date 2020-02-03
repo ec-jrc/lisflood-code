@@ -15,48 +15,47 @@ from lisflood.main import lisfloodexe
 
 from tests import TestSettings
 
-settings_file_base = os.path.join(os.path.dirname(__file__), 'data/settings/base.xml')
-settings_file_full = os.path.join(os.path.dirname(__file__), 'data/settings/full.xml')
+settings_file = os.path.join(os.path.dirname(__file__), 'data/settings/base.xml')
 
 
 class TestRepMaps(TestSettings):
 
     def setup_method(self):
-        settings = self.setoptions(settings_file_base)
+        settings = self.setoptions(settings_file)
         rm_files = [os.path.join(settings.output_dir, f) for f in os.listdir(settings.output_dir) if f.endswith('.nc') or f.endswith('.tss')]
         for f in rm_files:
             os.unlink(f)
 
     def teardown_method(self):
-        settings = self.setoptions(settings_file_base)
+        settings = self.setoptions(settings_file)
         rm_files = [os.path.join(settings.output_dir, f) for f in os.listdir(settings.output_dir) if f.endswith('.nc') or f.endswith('.tss')]
         for f in rm_files:
             os.unlink(f)
 
-    def test_no_reported(self, mocker):
-        settings = self.setoptions(settings_file_base)
+    def test_no_reported(self):
+        settings = self.setoptions(settings_file)
         lisfloodexe(settings)
         files = [os.path.join(settings.output_dir, f) for f in os.listdir(settings.output_dir) if f.endswith('.nc') or f.endswith('.tss')]
         assert not files
 
-    def test_end_reported(self, mocker):
-        settings = self.setoptions(settings_file_base, ['repEndMaps'])
+    def test_end_reported(self):
+        settings = self.setoptions(settings_file, ['repEndMaps'])
         lisfloodexe(settings)
         files = [os.path.join(settings.output_dir, f) for f in os.listdir(settings.output_dir) if f.endswith('.end.nc')]
         no_files = [os.path.join(settings.output_dir, f) for f in os.listdir(settings.output_dir) if f.endswith('.nc') and '.end.' not in f]
         assert files
         assert not no_files
 
-    def test_state_reported(self, mocker):
-        settings = self.setoptions(settings_file_base, ['repStateMaps'])
+    def test_state_reported(self):
+        settings = self.setoptions(settings_file, ['repStateMaps'])
         lisfloodexe(settings)
         no_files = [os.path.join(settings.output_dir, f) for f in os.listdir(settings.output_dir) if f.endswith('.end.nc')]
         files = [os.path.join(settings.output_dir, f) for f in os.listdir(settings.output_dir) if f.endswith('.nc') and '.end.' not in f]
         assert files
         assert not no_files
 
-    def test_end_state_reported(self, mocker):
-        settings = self.setoptions(settings_file_full, ['repEndMaps', 'repStateMaps', 'repDischargeMaps'])
+    def test_end_state_reported(self):
+        settings = self.setoptions(settings_file, ['repEndMaps', 'repStateMaps', 'repDischargeMaps'])
         lisfloodexe(settings)
         maskinfo = MaskInfo.instance()
         comparator = NetCDFComparator(maskinfo.info.mask)
@@ -77,6 +76,7 @@ class TestRepMaps(TestSettings):
             vara = state_nc.variables[var_name]
             varb = end_nc.variables[f'{var_name}.end']
             assert 'time' not in end_nc.variables
+
             # compare latest timestep in state map with unique timestep in end map
             err = comparator.compare_arrays(vara[-1][:, :], varb[:, :], varname=basename)
             if err:

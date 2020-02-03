@@ -53,18 +53,25 @@ class TestSettings(object):
 
     @classmethod
     def dummywritenet(cls, *args, **kwargs):
-        return (list(*args), dict(**kwargs))
+        return (list(args), dict(**kwargs))
 
-    def setoptions(self, settings_file, opts_to_set=None):
+    def setoptions(self, settings_file, opts_to_set=None, opts_to_unset=None):
         if isinstance(opts_to_set, str):
             opts_to_set = [opts_to_set]
+        if isinstance(opts_to_unset, str):
+            opts_to_unset = [opts_to_unset]
 
         opts_to_set = [] if opts_to_set is None else opts_to_set
+        opts_to_unset = [] if opts_to_unset is None else opts_to_unset
         with open(settings_file) as tpl:
             soup = BeautifulSoup(tpl, 'lxml-xml')
             for opt in opts_to_set:
                 for tag in soup.find_all("setoption", {'name': opt}):
                     tag['choice'] = '1'
+                    break
+            for opt in opts_to_unset:
+                for tag in soup.find_all("setoption", {'name': opt}):
+                    tag['choice'] = '0'
                     break
         # Generating XML settings_files on fly from template
         uid = uuid.uuid4()

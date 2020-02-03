@@ -87,7 +87,7 @@
             </textvar>
 
 
-            <textvar name="PathInit" value="outputs/daylong/">
+            <textvar name="PathInit" value="$(PathOut)/pathinit">
 
                 <comment>
 
@@ -131,7 +131,7 @@
             </textvar>
 
 
-            <textvar name="PathTables" value="$(PathRoot)/tables">
+            <textvar name="PathTables" value="$(PathRoot)/../static_data/tables">
 
                 <comment>
 
@@ -333,7 +333,7 @@
             </textvar>
 
 
-            <textvar name="ReportSteps" value="1..9999">
+            <textvar name="ReportSteps" value="1..999">
 
                 <comment>
 
