@@ -78,7 +78,6 @@ class outputTssMap(object):
                     except:
                         msg = "Setting output points\n"
                         raise LisfloodFileError(outpoints,msg)
-            #self.var.Tss[tss] = TimeoutputTimeseries(binding[tss], self.var, outpoints, noHeader=Flags['noheader'])
 
             if option['MonteCarlo']:
                 if os.path.exists(os.path.split(binding[tss])[0]):

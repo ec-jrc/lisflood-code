@@ -83,6 +83,41 @@ class TestSettings(object):
         os.unlink(filename)
         return settings
 
+    def _reported_tss(self, settings_file, opts_to_set=None, opts_to_unset=None, tss_to_check=None, mocker=None):
+        if isinstance(tss_to_check, str):
+            tss_to_check = [tss_to_check]
+        settings = self.setoptions(settings_file, opts_to_set, opts_to_unset)
+        mock_api = mocker.MagicMock(name='timeseries')
+        mocker.patch('lisflood.global_modules.output.TimeoutputTimeseries', new=mock_api)
+        lisfloodexe(settings)
+        assert len(lisflood.global_modules.output.TimeoutputTimeseries.call_args_list) > 0
+        to_check = tss_to_check.copy()
+        for c in lisflood.global_modules.output.TimeoutputTimeseries.call_args_list:
+            args, kwargs = c
+            for tss in tss_to_check:
+                if tss in args[0]:
+                    to_check.remove(tss)
+                    if not to_check:
+                        break
+        assert not to_check
+
+
+    def _not_reported_tss(self, settings_file, opts_to_set=None, opts_to_unset=None, tss_to_check=None, mocker=None):
+        if isinstance(tss_to_check, str):
+            tss_to_check = [tss_to_check]
+        settings = self.setoptions(settings_file, opts_to_set, opts_to_unset)
+        mock_api = mocker.MagicMock(name='timeseries')
+        mocker.patch('lisflood.global_modules.output.TimeoutputTimeseries', new=mock_api)
+        lisfloodexe(settings)
+        assert len(lisflood.global_modules.output.TimeoutputTimeseries.call_args_list) > 0
+        res = True
+        for c in lisflood.global_modules.output.TimeoutputTimeseries.call_args_list:
+            args, kwargs = c
+            if any(tss == args[0] for tss in tss_to_check):
+                res = False
+                break
+        assert res
+
     def _reported_map(self, settings_file, opts_to_set=None, opts_to_unset=None,
                       map_to_check=None, mocker=None):
         if isinstance(map_to_check, str):
@@ -97,7 +132,6 @@ class TestSettings(object):
         to_check = map_to_check.copy()
         for c in lisflood.global_modules.output.writenet.call_args_list:
             args, kwargs = c
-            print(args[4])
             for m in map_to_check:
                 if m == args[4] and m in to_check:
                     to_check.remove(m)
