@@ -40,6 +40,7 @@ src_dir = os.path.join(current_dir, '../src/')
 if os.path.exists(src_dir):
     sys.path.append(src_dir)
 
+import lisflood
 from lisflood.global_modules.add1 import loadmap, writenet
 from lisflood.global_modules.settings import LisSettings, MaskInfo
 from lisflood.main import lisfloodexe
@@ -81,6 +82,46 @@ class TestSettings(object):
         settings = LisSettings(filename)
         os.unlink(filename)
         return settings
+
+    def _reported_map(self, settings_file, opts_to_set=None, opts_to_unset=None,
+                      map_to_check=None, mocker=None):
+        if isinstance(map_to_check, str):
+            # single map to check in writenet calls args
+            map_to_check = [map_to_check]
+        settings = self.setoptions(settings_file, opts_to_set, opts_to_unset)
+        mock_api = mocker.MagicMock(name='writenet')
+        mock_api.side_effect = self.dummywritenet
+        mocker.patch('lisflood.global_modules.output.writenet', new=mock_api)
+        lisfloodexe(settings)
+        assert len(lisflood.global_modules.output.writenet.call_args_list) > 0
+        to_check = map_to_check.copy()
+        for c in lisflood.global_modules.output.writenet.call_args_list:
+            args, kwargs = c
+            print(args[4])
+            for m in map_to_check:
+                if m == args[4] and m in to_check:
+                    to_check.remove(m)
+                    if not to_check:
+                        break
+        assert not to_check
+
+    def _not_reported_map(self, settings_file, opts_to_set=None, opts_to_unset=None, map_to_check=None, mocker=None):
+        if isinstance(map_to_check, str):
+            # single map to check in writenet calls args
+            map_to_check = [map_to_check]
+        settings = self.setoptions(settings_file, opts_to_set, opts_to_unset)
+        mock_api = mocker.MagicMock(name='writenet')
+        mock_api.side_effect = self.dummywritenet
+        mocker.patch('lisflood.global_modules.output.writenet', new=mock_api)
+        lisfloodexe(settings)
+        res = True
+        assert len(lisflood.global_modules.output.writenet.call_args_list) > 0
+        for c in lisflood.global_modules.output.writenet.call_args_list:
+            args, kwargs = c
+            if any(m == args[4] for m in map_to_check):
+                res = False
+                break
+        assert res
 
 
 class TestLis(object):
