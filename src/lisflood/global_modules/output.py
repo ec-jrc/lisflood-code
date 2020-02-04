@@ -255,8 +255,8 @@ class outputTssMap(object):
                                       reportStartDate, reportStepStart, reportStepEnd
                                       ))
 
-                    else:
-                        self.var.report(decompress(eval(what)), where)
+                        else:
+                            self.var.report(decompress(eval(what)), where)
 
         # Report ALL maps
         for maps in report_maps_all.keys():

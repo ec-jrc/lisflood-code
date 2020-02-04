@@ -41,7 +41,7 @@ if os.path.exists(src_dir):
     sys.path.append(src_dir)
 
 import lisflood
-from lisflood.global_modules.add1 import loadmap, writenet
+from lisflood.global_modules.add1 import loadmap
 from lisflood.global_modules.settings import LisSettings, MaskInfo
 from lisflood.main import lisfloodexe
 
@@ -56,7 +56,8 @@ class TestSettings(object):
     def dummywritenet(cls, *args, **kwargs):
         return (list(args), dict(**kwargs))
 
-    def setoptions(self, settings_file, opts_to_set=None, opts_to_unset=None):
+    @classmethod
+    def setoptions(cls, settings_file, opts_to_set=None, opts_to_unset=None):
         if isinstance(opts_to_set, str):
             opts_to_set = [opts_to_set]
         if isinstance(opts_to_unset, str):
@@ -119,10 +120,26 @@ class TestSettings(object):
         assert res
 
     def _reported_map(self, settings_file, opts_to_set=None, opts_to_unset=None,
-                      map_to_check=None, mocker=None):
+                      map_to_check=None, mocker=None, files_to_check=None):
+        """
+        Check that writenet function was called for the list of maps to check and that files are correctly named
+        :param settings_file:
+        :param opts_to_set:
+        :param opts_to_unset:
+        :param map_to_check:
+        :param mocker:
+        :param files_to_check:
+        :return:
+        """
         if isinstance(map_to_check, str):
             # single map to check in writenet calls args
             map_to_check = [map_to_check]
+        elif not map_to_check:
+            map_to_check = []
+
+        if not files_to_check:
+            files_to_check = []
+
         settings = self.setoptions(settings_file, opts_to_set, opts_to_unset)
         mock_api = mocker.MagicMock(name='writenet')
         mock_api.side_effect = self.dummywritenet
@@ -130,6 +147,7 @@ class TestSettings(object):
         lisfloodexe(settings)
         assert len(lisflood.global_modules.output.writenet.call_args_list) > 0
         to_check = map_to_check.copy()
+        f_to_check = files_to_check.copy()
         for c in lisflood.global_modules.output.writenet.call_args_list:
             args, kwargs = c
             for m in map_to_check:
@@ -137,7 +155,15 @@ class TestSettings(object):
                     to_check.remove(m)
                     if not to_check:
                         break
+            path = Path(args[2]).name
+            for f in files_to_check:
+                if f == path and f in f_to_check:
+                    f_to_check.remove(f)
+                    if not f_to_check:
+                        break
         assert not to_check
+        assert not f_to_check
+
 
     def _not_reported_map(self, settings_file, opts_to_set=None, opts_to_unset=None, map_to_check=None, mocker=None):
         if isinstance(map_to_check, str):
