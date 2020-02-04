@@ -57,7 +57,7 @@ class TestSettings(object):
         return (list(args), dict(**kwargs))
 
     @classmethod
-    def setoptions(cls, settings_file, opts_to_set=None, opts_to_unset=None):
+    def setoptions(cls, settings_file, opts_to_set=None, opts_to_unset=None, vars_to_set=None):
         if isinstance(opts_to_set, str):
             opts_to_set = [opts_to_set]
         if isinstance(opts_to_unset, str):
@@ -65,6 +65,7 @@ class TestSettings(object):
 
         opts_to_set = [] if opts_to_set is None else opts_to_set
         opts_to_unset = [] if opts_to_unset is None else opts_to_unset
+        vars_to_set = {} if vars_to_set is None else vars_to_set
         with open(settings_file) as tpl:
             soup = BeautifulSoup(tpl, 'lxml-xml')
             for opt in opts_to_set:
@@ -75,6 +76,11 @@ class TestSettings(object):
                 for tag in soup.find_all("setoption", {'name': opt}):
                     tag['choice'] = '0'
                     break
+            for textvar, value in vars_to_set.items():
+                for tag in soup.find_all("textvar", {'name': textvar}):
+                    tag['value'] = value
+                    break
+
         # Generating XML settings_files on fly from template
         uid = uuid.uuid4()
         filename = os.path.join(os.path.dirname(settings_file), f'./settings_{uid}.xml')

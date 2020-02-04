@@ -2466,15 +2466,6 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
             </comment>
         </textvar>
 
-        <textvar name="OFForestState" value="0">
-            <comment>
-            </comment>
-        </textvar>
-        <textvar name="OFDirectState" value="0">
-            <comment>
-            </comment>
-        </textvar>
-
         <textvar name="OFOtherInitValue" value="0">
             <comment>
                 Reported water other

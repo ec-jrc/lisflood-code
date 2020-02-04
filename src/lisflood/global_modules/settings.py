@@ -217,8 +217,13 @@ class LisSettings(with_metaclass(Singleton)):
         self.report_maps_steps = {k: v for k, v in iteritems(self.report_maps_steps) if v}
         self.report_maps_all = {k: v for k, v in iteritems(self.report_maps_all) if v}
         self.report_maps_end = {k: v for k, v in iteritems(self.report_maps_end) if v}
-
         self.enkf_set, self.mc_set = self.montecarlo_kalman_settings()
+        self.step_start, self.step_end = self.binding['StepStart'], self.binding['StepEnd']
+        self.step_start_int, self.step_end_int = self.binding['StepStartInt'], self.binding['StepEndInt']
+        ref_date_start = calendar(self.binding['CalendarDayStart'], self.binding['calendar_type'])
+        self.step_start_dt = inttodate(self.step_start_int - 1, ref_date_start, binding=self.binding)
+        self.step_end_dt = inttodate(self.step_end_int - 1, ref_date_start, binding=self.binding)
+
 
     def montecarlo_kalman_settings(self):
         # Ensemble Kalman filter
@@ -573,7 +578,7 @@ def datetoint(date_in, binding=None):
     return int1, str1
 
 
-def inttodate(int_in, ref_date):
+def inttodate(int_in, ref_date, binding=None):
     """ Get date corresponding to a number of steps from a reference date.
 
     Get date corresponding to a number of steps from a reference date and return it as datetime.
@@ -584,8 +589,9 @@ def inttodate(int_in, ref_date):
     :param ref_date: reference date as datetime
     :return: stepDate: date as datetime corresponding to intIn steps from refDate
     """
-    settings = LisSettings.instance()
-    binding = settings.binding
+    if not binding:
+        settings = LisSettings.instance()
+        binding = settings.binding
 
     # CM: get model time step as float form 'DtSec' in Settings.xml file
     DtSec = float(binding['DtSec'])
