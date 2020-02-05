@@ -398,8 +398,10 @@ class LisSettings(with_metaclass(Singleton)):
 
         res = {}
         repsteps = user_settings['ReportSteps'].split(',')
+        if repsteps[0] == 'starttime':
+            repsteps[0] = bindings['StepStartInt']
         if repsteps[-1] == 'endtime':
-            repsteps[-1] = bindings['StepEnd']
+            repsteps[-1] = bindings['StepEndInt']
         jjj = []
         for i in repsteps:
             if '..' in i:
@@ -408,6 +410,8 @@ class LisSettings(with_metaclass(Singleton)):
             else:
                 jjj.append(i)
         res['rep'] = list(map(int, jjj))
+        if res['rep'][0] > bindings['StepEndInt'] or res['rep'][-1] < bindings['StepStartInt']:
+            warnings.warn(LisfloodWarning('No maps are reported as report steps configuration is outside simulation time interval'))
         return res
 
     @staticmethod
