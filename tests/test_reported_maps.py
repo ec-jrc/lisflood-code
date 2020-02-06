@@ -52,7 +52,7 @@ class TestReportedMaps(TestSettings):
                                mocker=mocker)
 
     def test_rep_lzmaps(self, mocker):
-        self._reported_map(settings_file, opts_to_set=['repLZMaps', ],
+        self._reported_map(settings_file, opts_to_set=['repLZMaps', 'repE2O2'],
                            opts_to_unset=['simulateLakes', 'repsimulateLakes'],
                            map_to_check='LZMaps', mocker=mocker)
 
@@ -73,11 +73,11 @@ class TestReportedMaps(TestSettings):
 
     def test_rep_gwpercuzlzmaps(self, mocker):
         self._reported_map(settings_file,
-                           opts_to_set=['repE2O1', 'repGwPercUZLZMaps', ],
-                           opts_to_unset=['simulateLakes', 'repsimulateLakes'], map_to_check='GwPercUZLZMaps', mocker=mocker)
+                           opts_to_set=['repE2O2', 'repGwPercUZLZMaps', 'repEndMaps', 'repStateMaps',],
+                           opts_to_unset=['simulateLakes', 'repsimulateLakes'], map_to_check=['GwPercUZLZForestMaps', 'GwPercUZLZMaps'], mocker=mocker)
 
     def test_rep_gwpercuzlzmaps_not_called(self, mocker):
-        self._not_reported_map(settings_file, opts_to_set=['repEndMaps', ],
+        self._not_reported_map(settings_file, opts_to_set=['repEndMaps', 'repStateMaps',],
                            opts_to_unset=['simulateLakes', 'repsimulateLakes'],
                            map_to_check=['GwPercUZLZForestMaps', 'GwPercUZLZMaps'], mocker=mocker)
 

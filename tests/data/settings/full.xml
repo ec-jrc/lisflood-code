@@ -42,6 +42,8 @@
         <setoption choice="0" name="repUZMaps"/>
         <setoption choice="0" name="repGwPercUZLZMaps"/>
         <setoption choice="0" name="repRWS"/>
+        <setoption choice="0" name="repE2O1"/>
+        <setoption choice="0" name="repE2O2"/>
 
         <setoption choice="1" name="readNetcdfStack"/>
         <setoption choice="1" name="writeNetcdfStack"/>
