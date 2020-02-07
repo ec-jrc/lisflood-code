@@ -17,20 +17,20 @@ Run tests with coverage report:
 export PYTHONPATH=/opt/pcraster36/python && pytest tests/
 
 """
-from __future__ import print_function, absolute_import, division
+from __future__ import absolute_import, division
 from nine import IS_PYTHON2
 
 import os
 import sys
 import uuid
-
-from bs4 import BeautifulSoup
+from copy import copy
 
 if IS_PYTHON2:
     from pathlib2 import Path
 else:
     from pathlib import Path
 
+from bs4 import BeautifulSoup
 from pyexpat import *
 
 from lisfloodutilities.compare import NetCDFComparator
@@ -83,7 +83,7 @@ class TestSettings(object):
 
         # Generating XML settings_files on fly from template
         uid = uuid.uuid4()
-        filename = os.path.join(os.path.dirname(settings_file), f'./settings_{uid}.xml')
+        filename = os.path.join(os.path.dirname(settings_file), './settings_{}.xml'.format(uid))
         with open(filename, 'w') as dest:
             dest.write(soup.prettify())
         settings = LisSettings(filename)
@@ -98,7 +98,7 @@ class TestSettings(object):
         mocker.patch('lisflood.global_modules.output.TimeoutputTimeseries', new=mock_api)
         lisfloodexe(settings)
         assert len(lisflood.global_modules.output.TimeoutputTimeseries.call_args_list) > 0
-        to_check = tss_to_check.copy()
+        to_check = copy(tss_to_check)
         for c in lisflood.global_modules.output.TimeoutputTimeseries.call_args_list:
             args, kwargs = c
             for tss in tss_to_check:
@@ -152,8 +152,8 @@ class TestSettings(object):
         mocker.patch('lisflood.global_modules.output.writenet', new=mock_api)
         lisfloodexe(settings)
         assert len(lisflood.global_modules.output.writenet.call_args_list) > 0
-        to_check = map_to_check.copy()
-        f_to_check = files_to_check.copy()
+        to_check = copy(map_to_check)
+        f_to_check = copy(files_to_check)
         for c in lisflood.global_modules.output.writenet.call_args_list:
             args, kwargs = c
             for m in map_to_check:

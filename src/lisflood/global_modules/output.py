@@ -187,7 +187,7 @@ class outputTssMap(object):
                             ################################
 
                         else:
-                            report(decompress(eval(what)), where)
+                            report(decompress(eval(what)), str(where))
                     else:
                         if option['writeNetcdfStack']:
                             
@@ -201,7 +201,7 @@ class outputTssMap(object):
                                       self.var.currentTimeStep(), self.var.currentTimeStep())
                             ###########################
                         else:
-                            self.var.report(decompress(eval(what)), where)
+                            self.var.report(decompress(eval(what)), str(where))
 
         # Report REPORTSTEPS maps
         for maps in report_maps_steps.keys():
@@ -256,7 +256,7 @@ class outputTssMap(object):
                                       ))
 
                         else:
-                            self.var.report(decompress(eval(what)), where)
+                            self.var.report(decompress(eval(what)), str(where))
 
         # Report ALL maps
         for maps in report_maps_all.keys():

@@ -10,11 +10,11 @@ xarray
 pyproj
 nine
 future
-lisflood-utilities
+lisflood-utilities>=0.11.3
 lxml
 beautifulsoup4
 
+mock
 pytest
 pytest-mock
-pytest-cov
 flake8

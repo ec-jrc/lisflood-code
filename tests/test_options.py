@@ -3,9 +3,15 @@ To run:
 export PYTHONPATH=/opt/pcraster36/python && pytest tests/test_options.py -s --show-capture=no
 """
 
-
+from __future__ import absolute_import
 import os
-from unittest.mock import call
+
+from nine import IS_PYTHON2
+
+if IS_PYTHON2:
+    from mock import call
+else:
+    from unittest.mock import call
 
 import lisflood
 from lisflood.main import lisfloodexe

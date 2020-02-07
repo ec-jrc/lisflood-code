@@ -3,7 +3,7 @@ To run:
 export PYTHONPATH=/opt/pcraster36/python && pytest tests/test_state_end_maps.py -s --show-capture=no
 """
 
-
+from __future__ import absolute_import
 import os
 
 from netCDF4 import Dataset
@@ -67,14 +67,14 @@ class TestRepMaps(TestSettings):
         errors = []
         for end_file in end_files:
             basename = end_file.replace('.end.nc', '')
-            state_file = f'{basename}.nc'
+            state_file = '{}.nc'.format(basename)
             if not os.path.exists(state_file):
                 continue
             state_nc = Dataset(state_file)
             end_nc = Dataset(end_file)
             var_name = [k for k in state_nc.variables if len(state_nc.variables[k].dimensions) == 3][0]
             vara = state_nc.variables[var_name]
-            varb = end_nc.variables[f'{var_name}.end']
+            varb = end_nc.variables['{}.end'.format(var_name)]
             assert 'time' not in end_nc.variables
 
             # compare latest timestep in state map with unique timestep in end map
