@@ -233,7 +233,7 @@ class outputTssMap(object):
                     except:
                         yearly = False
 
-                    if (monthly and self.var.monthend) or (yearly and self.var.yearend) or (not monthly and not yearly):
+                    if (monthly and self.var.monthend) or (yearly and self.var.yearend) or not (monthly or yearly):
                         # checks if a flag monthly or yearly exists
                         if option['writeNetcdfStack']:
                             # Get start date for reporting start step
@@ -248,7 +248,7 @@ class outputTssMap(object):
                                          report_maps_steps[maps].output_var, report_maps_steps[maps].unit, 'f4',
                                          reportStartDate, reportStepStart, reportStepEnd, frequency)
                             except Exception as e:
-                                print(" +----> ERR: {} - {}".format(type(e), e))
+                                print(" +----> ERR: {}".format(str(e)))
                                 print("REP flag:{} - {} {} {} {} {} {} {} {} {} {}".format(
                                       cdfflags[flagcdf], what, where, self.var.DtDay, maps,
                                       report_maps_steps[maps].output_var, report_maps_steps[maps].unit, 'f4',
@@ -289,7 +289,7 @@ class outputTssMap(object):
                 except:
                     yearly = False
 
-                if (monthly and self.var.monthend) or (yearly and self.var.yearend) or not (monthly and yearly):
+                if (monthly and self.var.monthend) or (yearly and self.var.yearend) or not (monthly or yearly):
                     # checks if a flag monthly or yearly exists]
                     if option['writeNetcdfStack']:
                         #Get start date for reporting start step
