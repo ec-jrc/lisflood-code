@@ -10,7 +10,7 @@ xarray
 pyproj
 nine
 future
-lisflood-utilities>=0.11.3
+lisflood-utilities>=0.11.4
 lxml
 beautifulsoup4
 
