@@ -3,36 +3,68 @@
 
     <lfoptions>
 
-        <setoption choice="0" name="wateruse"/>
-        <setoption choice="0" name="groundwaterSmooth"/>
-        <setoption choice="0" name="TransientWaterDemandChange"/>
-        <setoption choice="0" name="useWaterDemandAveYear"/>
-        <setoption choice="0" name="wateruseRegion"/>
-        <setoption choice="0" name="indicator"/>
-        <setoption choice="0" name="drainedIrrigation"/>
-        <setoption choice="0" name="riceIrrigation"/>
-        <setoption choice="0" name="openwaterevapo"/>
+        <setoption choice="1" name="wateruse"/>
+
+        <setoption choice="1" name="groundwaterSmooth"/>
+
+        <setoption choice="1" name="TransientWaterDemandChange"/>
+
+        <setoption choice="1" name="useWaterDemandAveYear"/>
+
+        <setoption choice="1" name="wateruseRegion"/>
+
+
+        <setoption choice="1" name="indicator"/>
+
+
+        <setoption choice="1" name="drainedIrrigation"/>
+
+        <setoption choice="1" name="riceIrrigation"/>
+
+        <setoption choice="1" name="openwaterevapo"/>
+
         <setoption choice="0" name="simulateLakes"/>
-        <setoption choice="0" name="simulateReservoirs"/>
-        <setoption choice="0" name="simulatePF"/>
-        <setoption choice="0" name="SplitRouting"/>
+
+        <setoption choice="1" name="simulateReservoirs"/>
+
+        <setoption choice="1" name="simulatePF"/>
+
+
+        <setoption choice="1" name="SplitRouting"/>
+
+
         <setoption choice="0" name="InitLisflood"/>
-        <setoption choice="0" name="repEndMaps"/>
+
+
+        <setoption choice="1" name="repEndMaps"/>
+
         <setoption choice="0" name="repStateMaps"/>
-        <setoption choice="0" name="repDischargeTs"/>
-        <setoption choice="0" name="repDischargeMaps"/>
+
+        <setoption choice="1" name="repDischargeTs"/>
+
+
+        <setoption choice="1" name="repDischargeMaps"/>
+
 
         # report gauges and sites
 
         <setoption choice="0" name="repStateSites"/>
+
         <setoption choice="0" name="repRateSites"/>
+
         <setoption choice="0" name="repStateUpsGauges"/>
+
         <setoption choice="0" name="repRateUpsGauges"/>
+
         <setoption choice="0" name="repMeteoUpsGauges"/>
 
+
         <setoption choice="0" name="repsimulateLakes"/>
+
         <setoption choice="0" name="repsimulateReservoirs"/>
+
         <setoption choice="0" name="repSnowMaps"/>
+
         <setoption choice="0" name="repPFMaps"/>
 
         <setoption choice="0" name="repLZMaps"/>
@@ -74,7 +106,7 @@
             </comment>
 
 
-            <textvar name="PathRoot" value="$(SettingsPath)/../TestCatchment">
+            <textvar name="PathRoot" value="$(SettingsDir)/..">
 
                 <comment>
 
@@ -83,165 +115,9 @@
                 </comment>
 
             </textvar>
-            <textvar name="PathOut" value="$(PathRoot)/outputs">
 
-                <comment>
 
-                    Output path (org=$(PathRoot)/out)
-
-                </comment>
-
-            </textvar>
-
-
-            <textvar name="PathInit" value="$(PathOut)">
-
-                <comment>
-
-                    Path of the initial value maps e.g. lzavin.map (org=$(PathRoot)/outPo)
-
-                </comment>
-
-            </textvar>
-
-
-            <textvar name="PathMaps" value="$(PathRoot)/maps_netcdf">
-
-                <comment>
-
-                    Maps path
-
-                </comment>
-
-            </textvar>
-
-
-            <textvar name="PathInflow" value="$(PathRoot)/inflow">
-
-                <comment>
-
-                    Inflow path
-
-                </comment>
-
-            </textvar>
-
-
-            <textvar name="PathParams" value="$(PathMaps)/parameters">
-
-                <comment>
-
-                    Calibration parameter path
-
-                </comment>
-
-            </textvar>
-
-
-            <textvar name="PathTables" value="$(PathRoot)/../static_data/tables">
-
-                <comment>
-
-                    Tables path
-
-                </comment>
-
-            </textvar>
-
-
-            <textvar name="PathMapsTables" value="$(PathMaps)/table2map">
-
-                <comment>
-
-                    Maps instead tables path
-
-                </comment>
-
-            </textvar>
-
-
-            <textvar name="PathSoilHyd" value="$(PathMaps)/soilhyd">
-
-                <comment>
-
-                    Maps instead tables for soil hydraulics path
-
-                </comment>
-
-            </textvar>
-
-
-            <textvar name="PathMapsLandUseChange" value="$(PathMaps)/landusechange">
-
-                <comment>
-
-                    Maps for transient land use changes every 5 years
-
-                </comment>
-
-            </textvar>
-
-
-            <textvar name="PathMapsLanduse" value="$(PathMaps)/landuse2006">
-
-                <comment>
-
-                    Maps for land use fractions and related land use maps
-
-                </comment>
-
-            </textvar>
-
-
-            <textvar name="PathWaterUse" value="$(PathMaps)/waterdemand">
-
-                <comment>
-
-                    Water use maps path
-
-                    $(PathMaps)/waterdemand19902014
-
-                </comment>
-
-            </textvar>
-
-
-            <textvar name="PathMeteo" value="$(PathRoot)/forcings">
-
-                <comment>
-
-                    ./meteoWatch
-
-                    Meteo path
-
-                </comment>
-
-            </textvar>
-
-
-            <textvar name="PathLAI" value="$(PathRoot)/lai_netcdf">
-
-                <comment>
-
-                    Leaf Area Index maps path
-
-                </comment>
-
-            </textvar>
-
-
-            <textvar name="PathVarWaterfraction" value="$(PathMaps)/variablewater">
-
-                <comment>
-
-                    variable water fraction maps path
-
-                </comment>
-
-            </textvar>
-
-
-            <textvar name="MaskMap" value="$(PathRoot)/maps_netcdf/area.nc">
+            <textvar name="MaskMap" value="$(PathRoot)/sbs/Mask.map">
             </textvar>
 
 
@@ -272,7 +148,8 @@
 
             </comment>
 
-            <textvar name="CalendarDayStart" value="31/12/1999 06:00">
+
+            <textvar name="CalendarDayStart" value="02/01/1990 06:00">
 
                 <comment>
 
@@ -317,7 +194,7 @@
             </textvar>
 
 
-            <textvar name="StepStart" value="25/07/2000 06:00">
+            <textvar name="StepStart" value="02/01/2000 06:00">
 
                 <comment>
 
@@ -328,7 +205,7 @@
             </textvar>
 
 
-            <textvar name="StepEnd" value="27/07/2000 06:00">
+            <textvar name="StepEnd" value="02/07/2000 06:00">
 
                 <comment>
 
@@ -337,9 +214,7 @@
                 </comment>
 
             </textvar>
-
-
-            <textvar name="ReportSteps" value="1..9999">
+            <textvar name="ReportSteps" value="3650..3840">
 
                 <comment>
 
@@ -596,7 +471,7 @@
             </textvar>
 
 
-            <textvar name="adjust_Normal_Flood" value="0.8">
+            <textvar name="adjust_Normal_Flood" value="$(PathParams)/params_adjust_Normal_Flood">
 
                 <comment>
 
@@ -615,7 +490,7 @@
             </textvar>
 
 
-            <textvar name="ReservoirRnormqMult" value="1.0">
+            <textvar name="ReservoirRnormqMult" value="$(PathParams)/params_ReservoirRnormqMult">
 
                 <comment>
 
@@ -641,6 +516,181 @@
                     Critical amount of available water (expressed in [mm/day]!), above which 'Days Since Last Rain' parameter is
 
                     set to 1
+
+                </comment>
+
+            </textvar>
+
+
+        </group>
+
+
+        <group>
+
+
+            <comment>
+
+                **************************************************************
+
+                FILE PATHS
+
+                **************************************************************
+
+            </comment>
+
+
+            <textvar name="PathOut" value="$(PathRoot)/outputs">
+
+                <comment>
+
+                    Output path (org=$(PathRoot)/out)
+
+                </comment>
+
+            </textvar>
+
+
+            <textvar name="PathInit" value="outputs/daylong/">
+
+                <comment>
+
+                    Path of the initial value maps e.g. lzavin.map (org=$(PathRoot)/outPo)
+
+                </comment>
+
+            </textvar>
+
+
+            <textvar name="PathMaps" value="$(PathRoot)/maps_netcdf">
+
+                <comment>
+
+                    Maps path
+
+                </comment>
+
+            </textvar>
+
+
+            <textvar name="PathInflow" value="$(PathRoot)/inflow">
+
+                <comment>
+
+                    Inflow path
+
+                </comment>
+
+            </textvar>
+
+
+            <textvar name="PathParams" value="$(PathMaps)/parameters">
+
+                <comment>
+
+                    Calibration parameter path
+
+                </comment>
+
+            </textvar>
+
+
+            <textvar name="PathTables" value="$(PathRoot)/tables">
+
+                <comment>
+
+                    Tables path
+
+                </comment>
+
+            </textvar>
+
+
+            <textvar name="PathMapsTables" value="$(PathMaps)/table2map">
+
+                <comment>
+
+                    Maps instead tables path
+
+                </comment>
+
+            </textvar>
+
+
+            <textvar name="PathSoilHyd" value="$(PathMaps)/soilhyd">
+
+                <comment>
+
+                    Maps instead tables for soil hydraulics path
+
+                </comment>
+
+            </textvar>
+
+
+            <textvar name="PathMapsLandUseChange" value="$(PathMaps)/landuse_rcp85_20062125">
+
+                <comment>
+
+                    Maps for transient land use changes every 5 years
+
+                </comment>
+
+            </textvar>
+
+
+            <textvar name="PathMapsLanduse" value="$(PathMaps)/landuse2006">
+
+                <comment>
+
+                    Maps for land use fractions and related land use maps
+
+                </comment>
+
+            </textvar>
+
+
+            <textvar name="PathWaterUse" value="$(PathMaps)/waterdemand">
+
+                <comment>
+
+                    Water use maps path
+
+                    $(PathMaps)/waterdemand19902014
+
+                </comment>
+
+            </textvar>
+
+
+            <textvar name="PathMeteo" value="$(PathRoot)/forcings">
+
+                <comment>
+
+                    ./meteoWatch
+
+                    Meteo path
+
+                </comment>
+
+            </textvar>
+
+
+            <textvar name="PathLAI" value="$(PathRoot)/lai_netcdf">
+
+                <comment>
+
+                    Leaf Area Index maps path
+
+                </comment>
+
+            </textvar>
+
+
+            <textvar name="PathVarWaterfraction" value="$(PathMaps)/variablewater">
+
+                <comment>
+
+                    variable water fraction maps path
 
                 </comment>
 
@@ -2469,6 +2519,15 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
         <textvar name="OFDirectInitValue" value="0">
             <comment>
                 Reported water direct
+            </comment>
+        </textvar>
+
+        <textvar name="OFForestState" value="0">
+            <comment>
+            </comment>
+        </textvar>
+        <textvar name="OFDirectState" value="0">
+            <comment>
             </comment>
         </textvar>
 

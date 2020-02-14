@@ -33,7 +33,7 @@ else:
 from bs4 import BeautifulSoup
 from pyexpat import *
 
-from lisfloodutilities.compare import NetCDFComparator
+from lisfloodutilities.compare import NetCDFComparator, TSSComparator
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 src_dir = os.path.join(current_dir, '../src/')
@@ -192,14 +192,11 @@ class TestSettings(object):
 
 class TestLis(object):
     reference_files = {
-        'dis_1': {'path': os.path.join(current_dir, 'data/TestCatchment1/reference/dis.nc'),
+        'dis': {'path_map': os.path.join(current_dir, 'data/TestCatchment/reference/dis.nc'),
+                'path_tss': os.path.join(current_dir, 'data/TestCatchment/reference/disWin.tss'),
                   'report_map': 'DischargeMaps',
                   'report_tss': 'DisTS'
                   },
-        'dis_2': {'path': os.path.join(current_dir, 'data/TestCatchment2/reference/dis.nc'),
-                  'report_map': 'DischargeMaps',
-                  'report_tss': 'DisTS'
-                  }
     }
 
     domain = None
@@ -233,9 +230,12 @@ class TestLis(object):
         settings = LisSettings.instance()
         maskinfo = MaskInfo.instance()
         binding = settings.binding
-        reference_path = cls.reference_files[variable]['path']
-        output_path = os.path.normpath(binding[cls.reference_files[variable]['report_map']]) + '.nc'
-        print('>>> Reference: {} - Current Output: {}'.format(reference_path, output_path))
+        reference_map = cls.reference_files[variable]['path_map']
+        reference_tss = cls.reference_files[variable]['path_tss']
+        output_map = os.path.normpath(binding[cls.reference_files[variable]['report_map']]) + '.nc'
+        output_tss = binding[cls.reference_files[variable]['report_tss']]
         comparator = NetCDFComparator(maskinfo.info.mask)
-        errors = comparator.compare_files(reference_path, output_path)
-        assert not errors
+        errors_map = comparator.compare_files(reference_map, output_map)
+        comparator = TSSComparator()
+        errors_tss= comparator.compare_files(reference_tss, output_tss)
+        return not errors_tss and not errors_map

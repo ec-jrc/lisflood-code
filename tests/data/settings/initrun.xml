@@ -67,7 +67,7 @@
             </comment>
 
 
-            <textvar name="PathRoot" value="$(SettingsPath)/../TestCatchment1">
+            <textvar name="PathRoot" value="$(SettingsPath)/../TestCatchment">
 
                 <comment>
 

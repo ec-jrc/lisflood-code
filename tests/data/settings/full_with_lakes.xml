@@ -89,7 +89,7 @@ The option "numberParallelThreadsKinematicWave" may take the following values:
             </comment>
 
 
-            <textvar name="PathRoot" value="$(SettingsPath)/../TestCatchment3">
+            <textvar name="PathRoot" value="$(SettingsPath)/../TestCatchmentWithLakes">
                 <comment>
                     Root directory
                 </comment>
