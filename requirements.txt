@@ -11,6 +11,10 @@ pyproj
 nine
 future
 lisflood-utilities
+lxml
+beautifulsoup4
 
 pytest
 pytest-mock
+pytest-cov
+flake8

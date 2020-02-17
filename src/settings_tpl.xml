@@ -75,7 +75,6 @@ You can use builtin path variables in this template and reference to other paths
         <setoption choice="0" name="repPFMaps"/>
         <setoption choice="1" name="repLZMaps"/>
         <setoption choice="1" name="repUZMaps"/>
-        <setoption choice="1" name="repGwPercUZLZMaps"/>
         <setoption choice="1" name="repRWS"/>
 
 

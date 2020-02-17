@@ -256,20 +256,27 @@ class reservoir(HydroModule):
             # NEW 24-9-2004: Check to prevent reservoir storage from exceeding total capacity
             # expression to the right of comma always negative unless capacity is exceeded
 
-            #self.var.ReservoirStorageM3CC += QResInM3Dt - QResOutM3DtCC
             self.var.ReservoirStorageM3CC -= QResOutM3DtCC
             # New reservoir storage [m3]
             self.var.ReservoirFillCC = self.var.ReservoirStorageM3CC / self.var.TotalReservoirStorageM3CC
             # New reservoir fill
 
             # CM: Check ReservoirStorageM3CC for negative values and set them to zero
-            nel = len(self.var.ReservoirFillCC[:])
-            for i in range(0, nel-1):
+            # FIXME
+            nel = len(self.var.ReservoirFillCC[:])  # always 1
+            for i in range(0, nel-1):  # never entering in loop
                 if np.isnan(self.var.ReservoirFillCC[i]) or self.var.ReservoirFillCC[i] < 0:
                     msg = "Negative or NaN volume for reservoir fill set to 0. Increase computation time step for routing (DtSecChannel) \n"
                     warnings.warn(LisfloodWarning(msg))
                     self.var.ReservoirFillCC[self.var.ReservoirFillCC < 0] = 0
                     self.var.ReservoirFillCC[np.isnan(self.var.ReservoirFillCC)] = 0
+
+            # Check ReservoirFillCC for negative values and set them to zero
+            # if np.isnan(self.var.ReservoirFillCC).any() or (self.var.ReservoirFillCC < 0).any():
+            #     msg = "Negative or NaN volume for reservoir fill set to 0. Increase computation time step for routing (DtSecChannel)"
+            #     warnings.warn(LisfloodWarning(msg))
+            #     self.var.ReservoirFillCC[self.var.ReservoirFillCC < 0] = 0
+            #     self.var.ReservoirFillCC[np.isnan(self.var.ReservoirFillCC)] = 0
 
             # expanding the size as input for routing routine
             self.var.QResOutM3Dt = maskinfo.in_zero()

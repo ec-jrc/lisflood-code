@@ -1,0 +1,4 @@
+[run]
+omit =
+    src/lisflood/hydrological_modules/compile_kinematic_wave_parallel_tools.py
+    tests/*

@@ -202,7 +202,7 @@ class LisSettings(with_metaclass(Singleton)):
         user_settings, bindings = self._bindings(dom)
         self.timestep_init = None if not bindings.get('timestepInit') else bindings['timestepInit']
         self._check_timestep_init()
-        self.output_dir = self._out_dirs(user_settings)
+        self.output_dir = self._out_dir(user_settings)
         self.ncores = self._ncores(user_settings)
         self.binding = bindings
         self.options = self._options(dom)
@@ -217,8 +217,13 @@ class LisSettings(with_metaclass(Singleton)):
         self.report_maps_steps = {k: v for k, v in iteritems(self.report_maps_steps) if v}
         self.report_maps_all = {k: v for k, v in iteritems(self.report_maps_all) if v}
         self.report_maps_end = {k: v for k, v in iteritems(self.report_maps_end) if v}
-
         self.enkf_set, self.mc_set = self.montecarlo_kalman_settings()
+        self.step_start, self.step_end = self.binding['StepStart'], self.binding['StepEnd']
+        self.step_start_int, self.step_end_int = self.binding['StepStartInt'], self.binding['StepEndInt']
+        ref_date_start = calendar(self.binding['CalendarDayStart'], self.binding['calendar_type'])
+        self.step_start_dt = inttodate(self.step_start_int - 1, ref_date_start, binding=self.binding)
+        self.step_end_dt = inttodate(self.step_end_int - 1, ref_date_start, binding=self.binding)
+
 
     def montecarlo_kalman_settings(self):
         # Ensemble Kalman filter
@@ -303,9 +308,8 @@ class LisSettings(with_metaclass(Singleton)):
         return res
 
     @staticmethod
-    def _out_dirs(user_settings):
-        # if pathout has some placeholders, they are replace here
-        output_dirs = []
+    def _out_dir(user_settings):
+        # if pathout has some placeholders, they are replaced here
         pathout = user_settings["PathOut"]
         while pathout.find('$(') > -1:
             a1 = pathout.find('$(')
@@ -318,8 +322,7 @@ class LisSettings(with_metaclass(Singleton)):
                 pathout = pathout.replace(pathout[a1:a2 + 1], s2)
 
         # CM: output folder
-        output_dirs.append(pathout)
-        return output_dirs
+        return pathout
 
     @staticmethod
     def _flags():
@@ -395,8 +398,10 @@ class LisSettings(with_metaclass(Singleton)):
 
         res = {}
         repsteps = user_settings['ReportSteps'].split(',')
+        if repsteps[0] == 'starttime':
+            repsteps[0] = bindings['StepStartInt']
         if repsteps[-1] == 'endtime':
-            repsteps[-1] = bindings['StepEnd']
+            repsteps[-1] = bindings['StepEndInt']
         jjj = []
         for i in repsteps:
             if '..' in i:
@@ -405,6 +410,8 @@ class LisSettings(with_metaclass(Singleton)):
             else:
                 jjj.append(i)
         res['rep'] = list(map(int, jjj))
+        if res['rep'][0] > bindings['StepEndInt'] or res['rep'][-1] < bindings['StepStartInt']:
+            warnings.warn(LisfloodWarning('No maps are reported as report steps configuration is outside simulation time interval'))
         return res
 
     @staticmethod
@@ -575,7 +582,7 @@ def datetoint(date_in, binding=None):
     return int1, str1
 
 
-def inttodate(int_in, ref_date):
+def inttodate(int_in, ref_date, binding=None):
     """ Get date corresponding to a number of steps from a reference date.
 
     Get date corresponding to a number of steps from a reference date and return it as datetime.
@@ -586,8 +593,9 @@ def inttodate(int_in, ref_date):
     :param ref_date: reference date as datetime
     :return: stepDate: date as datetime corresponding to intIn steps from refDate
     """
-    settings = LisSettings.instance()
-    binding = settings.binding
+    if not binding:
+        settings = LisSettings.instance()
+        binding = settings.binding
 
     # CM: get model time step as float form 'DtSec' in Settings.xml file
     DtSec = float(binding['DtSec'])
@@ -618,7 +626,7 @@ class LisfloodRunInfo(Warning):
         msg = ''
         settings = LisSettings.instance()
         option = settings.options
-        out_dir = settings.output_dir[0]
+        out_dir = settings.output_dir
         ens_members = settings.ens_members[0]
         nr_cores = settings.ncores[0]
         steps = len(settings.filter_steps)

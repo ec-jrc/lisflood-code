@@ -13,31 +13,36 @@ Unless required by applicable law or agreed to in writing, software distributed 
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
+Run tests with coverage report:
+export PYTHONPATH=/opt/pcraster36/python && pytest tests/
+
 """
-from __future__ import print_function, absolute_import, division
-from nine import range, IS_PYTHON2
+from __future__ import absolute_import, division
+from nine import IS_PYTHON2
 
 import os
 import sys
 import uuid
-
-from bs4 import BeautifulSoup
+from copy import copy
 
 if IS_PYTHON2:
     from pathlib2 import Path
 else:
     from pathlib import Path
 
+from bs4 import BeautifulSoup
 from pyexpat import *
-import numpy as np
+
+from lisfloodutilities.compare import NetCDFComparator, TSSComparator
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 src_dir = os.path.join(current_dir, '../src/')
 if os.path.exists(src_dir):
     sys.path.append(src_dir)
 
-from lisflood.global_modules.add1 import readnetcdf, loadmap
-from lisflood.global_modules.settings import LisSettings
+import lisflood
+from lisflood.global_modules.add1 import loadmap
+from lisflood.global_modules.settings import LisSettings, MaskInfo
 from lisflood.main import lisfloodexe
 
 
@@ -47,45 +52,155 @@ class TestSettings(object):
     def dummyloadmap(cls, *args, **kwargs):
         return loadmap(*args, **kwargs)
 
-    def setoptions(self, settings_file, opts_to_set=None):
+    @classmethod
+    def dummywritenet(cls, *args, **kwargs):
+        return (list(args), dict(**kwargs))
+
+    @classmethod
+    def setoptions(cls, settings_file, opts_to_set=None, opts_to_unset=None, vars_to_set=None):
         if isinstance(opts_to_set, str):
             opts_to_set = [opts_to_set]
+        if isinstance(opts_to_unset, str):
+            opts_to_unset = [opts_to_unset]
 
         opts_to_set = [] if opts_to_set is None else opts_to_set
+        opts_to_unset = [] if opts_to_unset is None else opts_to_unset
+        vars_to_set = {} if vars_to_set is None else vars_to_set
         with open(settings_file) as tpl:
             soup = BeautifulSoup(tpl, 'lxml-xml')
             for opt in opts_to_set:
                 for tag in soup.find_all("setoption", {'name': opt}):
                     tag['choice'] = '1'
                     break
+            for opt in opts_to_unset:
+                for tag in soup.find_all("setoption", {'name': opt}):
+                    tag['choice'] = '0'
+                    break
+            for textvar, value in vars_to_set.items():
+                for tag in soup.find_all("textvar", {'name': textvar}):
+                    tag['value'] = value
+                    break
+
         # Generating XML settings_files on fly from template
         uid = uuid.uuid4()
-        filename = os.path.join(os.path.dirname(settings_file), f'./settings_{uid}.xml')
+        filename = os.path.join(os.path.dirname(settings_file), './settings_{}.xml'.format(uid))
         with open(filename, 'w') as dest:
             dest.write(soup.prettify())
         settings = LisSettings(filename)
         os.unlink(filename)
         return settings
 
+    def _reported_tss(self, settings_file, opts_to_set=None, opts_to_unset=None, tss_to_check=None, mocker=None):
+        if isinstance(tss_to_check, str):
+            tss_to_check = [tss_to_check]
+        settings = self.setoptions(settings_file, opts_to_set, opts_to_unset)
+        mock_api = mocker.MagicMock(name='timeseries')
+        mocker.patch('lisflood.global_modules.output.TimeoutputTimeseries', new=mock_api)
+        lisfloodexe(settings)
+        assert len(lisflood.global_modules.output.TimeoutputTimeseries.call_args_list) > 0
+        to_check = copy(tss_to_check)
+        for c in lisflood.global_modules.output.TimeoutputTimeseries.call_args_list:
+            args, kwargs = c
+            for tss in tss_to_check:
+                if tss in args[0]:
+                    to_check.remove(tss)
+                    if not to_check:
+                        break
+        assert not to_check
+
+
+    def _not_reported_tss(self, settings_file, opts_to_set=None, opts_to_unset=None, tss_to_check=None, mocker=None):
+        if isinstance(tss_to_check, str):
+            tss_to_check = [tss_to_check]
+        settings = self.setoptions(settings_file, opts_to_set, opts_to_unset)
+        mock_api = mocker.MagicMock(name='timeseries')
+        mocker.patch('lisflood.global_modules.output.TimeoutputTimeseries', new=mock_api)
+        lisfloodexe(settings)
+        assert len(lisflood.global_modules.output.TimeoutputTimeseries.call_args_list) > 0
+        res = True
+        for c in lisflood.global_modules.output.TimeoutputTimeseries.call_args_list:
+            args, kwargs = c
+            if any(tss == args[0] for tss in tss_to_check):
+                res = False
+                break
+        assert res
+
+    def _reported_map(self, settings_file, opts_to_set=None, opts_to_unset=None,
+                      map_to_check=None, mocker=None, files_to_check=None):
+        """
+        Check that writenet function was called for the list of maps to check and that files are correctly named
+        :param settings_file:
+        :param opts_to_set:
+        :param opts_to_unset:
+        :param map_to_check:
+        :param mocker:
+        :param files_to_check:
+        :return:
+        """
+        if isinstance(map_to_check, str):
+            # single map to check in writenet calls args
+            map_to_check = [map_to_check]
+        elif not map_to_check:
+            map_to_check = []
+
+        if not files_to_check:
+            files_to_check = []
+
+        settings = self.setoptions(settings_file, opts_to_set, opts_to_unset)
+        mock_api = mocker.MagicMock(name='writenet')
+        mock_api.side_effect = self.dummywritenet
+        mocker.patch('lisflood.global_modules.output.writenet', new=mock_api)
+        lisfloodexe(settings)
+        assert len(lisflood.global_modules.output.writenet.call_args_list) > 0
+        to_check = copy(map_to_check)
+        f_to_check = copy(files_to_check)
+        for c in lisflood.global_modules.output.writenet.call_args_list:
+            args, kwargs = c
+            for m in map_to_check:
+                if m == args[4] and m in to_check:
+                    to_check.remove(m)
+                    if not to_check:
+                        break
+            path = Path(args[2]).name
+            for f in files_to_check:
+                if f == path and f in f_to_check:
+                    f_to_check.remove(f)
+                    if not f_to_check:
+                        break
+        assert not to_check
+        assert not f_to_check
+
+
+    def _not_reported_map(self, settings_file, opts_to_set=None, opts_to_unset=None, map_to_check=None, mocker=None):
+        if isinstance(map_to_check, str):
+            # single map to check in writenet calls args
+            map_to_check = [map_to_check]
+        settings = self.setoptions(settings_file, opts_to_set, opts_to_unset)
+        mock_api = mocker.MagicMock(name='writenet')
+        mock_api.side_effect = self.dummywritenet
+        mocker.patch('lisflood.global_modules.output.writenet', new=mock_api)
+        lisfloodexe(settings)
+        res = True
+        assert len(lisflood.global_modules.output.writenet.call_args_list) > 0
+        for c in lisflood.global_modules.output.writenet.call_args_list:
+            args, kwargs = c
+            if any(m == args[4] for m in map_to_check):
+                res = False
+                break
+        assert res
+
 
 class TestLis(object):
     reference_files = {
-        'dis_1': {'path': os.path.join(current_dir, 'data/TestCatchment1/reference/dis'),
+        'dis': {'path_map': os.path.join(current_dir, 'data/TestCatchment/reference/dis.nc'),
+                'path_tss': os.path.join(current_dir, 'data/TestCatchment/reference/disWin.tss'),
                   'report_map': 'DischargeMaps',
                   'report_tss': 'DisTS'
                   },
-        'dis_2': {'path': os.path.join(current_dir, 'data/TestCatchment2/reference/dis'),
-                  'report_map': 'DischargeMaps',
-                  'report_tss': 'DisTS'
-                  }
     }
 
     domain = None
     settings_path = None
-    atol = 0.01
-    max_perc_wrong_large_diff = 0.01
-    max_perc_wrong = 0.05
-    large_diff_th = atol * 10
 
     @classmethod
     def setup_class(cls):
@@ -111,50 +226,16 @@ class TestLis(object):
                 pass
 
     @classmethod
-    def check_var_step(cls, var, step):
-        settings = LisSettings.instance()
-        binding = settings.binding
-        reference_path = cls.reference_files[var]['path']
-        output_path = binding[cls.reference_files[var]['report_map']]
-        reference = readnetcdf(reference_path, step)
-        current_output = readnetcdf(output_path, step)
-
-        same_size = reference.size == current_output.size
-        diff_values = np.abs(reference - current_output)
-        same_values = np.allclose(diff_values, np.zeros(diff_values.shape), atol=cls.atol)
-        all_ok = same_size and same_values
-
-        array_ok = np.isclose(diff_values, np.zeros(diff_values.shape), atol=cls.atol)
-        wrong_values_size = array_ok[~array_ok].size
-
-        if not all_ok and wrong_values_size > 0:
-            max_diff = np.max(diff_values)
-            large_diff = max_diff > cls.large_diff_th
-            perc_wrong = float(wrong_values_size * 100) / float(diff_values.size)
-            if perc_wrong >= cls.max_perc_wrong or perc_wrong >= cls.max_perc_wrong_large_diff and large_diff:
-                print('[ERROR]')
-                print('Var: {} - STEP {}: {:3.9f}% of values are different. max diff: {:3.4f}'.format(var, step,
-                                                                                                      perc_wrong,
-                                                                                                      max_diff))
-                return False
-            else:
-                print('[OK] {} {}'.format(var, step))
-                return True
-        else:
-            print('[OK] {} {}'.format(var, step))
-            return True
-
-    @classmethod
     def listest(cls, variable):
         settings = LisSettings.instance()
+        maskinfo = MaskInfo.instance()
         binding = settings.binding
-        model_steps = settings.model_steps
-        reference_path = cls.reference_files[variable]['path']
-        output_path = os.path.normpath(binding[cls.reference_files[variable]['report_map']])
-        print('>>> Reference: {} - Current Output: {}'.format(reference_path, output_path))
-
-        results = []
-        start_step, end_step = model_steps[0], model_steps[1]
-        for step in range(start_step, end_step + 1):
-            results.append(cls.check_var_step(variable, step))
-        assert all(results)
+        reference_map = cls.reference_files[variable]['path_map']
+        reference_tss = cls.reference_files[variable]['path_tss']
+        output_map = os.path.normpath(binding[cls.reference_files[variable]['report_map']]) + '.nc'
+        output_tss = binding[cls.reference_files[variable]['report_tss']]
+        comparator = NetCDFComparator(maskinfo.info.mask)
+        errors_map = comparator.compare_files(reference_map, output_map)
+        comparator = TSSComparator()
+        errors_tss= comparator.compare_files(reference_tss, output_tss)
+        return not errors_tss and not errors_map

@@ -37,7 +37,7 @@ class LisfloodFileError(LisfloodError):
         self._msg = '\n\n {}\n{}{}'.format(header, msg, text1)
 
 
-class LisfloodWarning(Warning):
+class LisfloodWarning(UserWarning):
     """
     the error handling class
     prints out an error

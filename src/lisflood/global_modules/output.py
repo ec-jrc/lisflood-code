@@ -78,7 +78,6 @@ class outputTssMap(object):
                     except:
                         msg = "Setting output points\n"
                         raise LisfloodFileError(outpoints,msg)
-            #self.var.Tss[tss] = TimeoutputTimeseries(binding[tss], self.var, outpoints, noHeader=Flags['noheader'])
 
             if option['MonteCarlo']:
                 if os.path.exists(os.path.split(binding[tss])[0]):
@@ -181,14 +180,14 @@ class outputTssMap(object):
                                 writenet(0, eval(what), where, self.var.DtDay, maps, report_maps_end[maps].output_var,
                                          report_maps_end[maps].unit, 'f4', reportStartDate,
                                          self.var.currentTimeStep(), self.var.currentTimeStep())
-                            except:
-                                print("END", what, where, self.var.DtDay, maps, report_maps_end[maps].output_var,
+                            except Exception as e:
+                                print(str(e), 'END', what, where, self.var.DtDay, maps, report_maps_end[maps].output_var,
                                       report_maps_end[maps].unit, 'f4', reportStartDate,
                                       self.var.currentTimeStep(), self.var.currentTimeStep())
                             ################################
 
                         else:
-                            report(decompress(eval(what)), where)
+                            report(decompress(eval(what)), str(where))
                     else:
                         if option['writeNetcdfStack']:
                             
@@ -196,17 +195,18 @@ class outputTssMap(object):
                                 writenet(0, eval(what), where, self.var.DtDay, maps, report_maps_end[maps].output_var,
                                          report_maps_end[maps].unit, 'f4', reportStartDate,
                                          self.var.currentTimeStep(), self.var.currentTimeStep())
-                            except:
-                                print("END", what, where, self.var.DtDay, maps, report_maps_end[maps].output_var,
+                            except Exception as e:
+                                print(str(e), 'END', what, where, self.var.DtDay, maps, report_maps_end[maps].output_var,
                                       report_maps_end[maps].unit, 'f4', reportStartDate,
                                       self.var.currentTimeStep(), self.var.currentTimeStep())
                             ###########################
                         else:
-                            self.var.report(decompress(eval(what)), where)
+                            self.var.report(decompress(eval(what)), str(where))
 
         # Report REPORTSTEPS maps
         for maps in report_maps_steps.keys():
             # report reportsteps maps
+
             try:
                 where = os.path.join(str(self.var.currentSampleNumber()), binding[maps].split("/")[-1])
             except:
@@ -232,7 +232,8 @@ class outputTssMap(object):
                             frequency = "annual"
                     except:
                         yearly = False
-                    if (monthly and self.var.monthend) or (yearly and self.var.yearend) or (monthly is False and yearly is False):
+
+                    if (monthly and self.var.monthend) or (yearly and self.var.yearend) or not (monthly or yearly):
                         # checks if a flag monthly or yearly exists
                         if option['writeNetcdfStack']:
                             # Get start date for reporting start step
@@ -247,15 +248,15 @@ class outputTssMap(object):
                                          report_maps_steps[maps].output_var, report_maps_steps[maps].unit, 'f4',
                                          reportStartDate, reportStepStart, reportStepEnd, frequency)
                             except Exception as e:
-                                print(" +----> ERR: {} - {}".format(type(e), e))
+                                print(" +----> ERR: {}".format(str(e)))
                                 print("REP flag:{} - {} {} {} {} {} {} {} {} {} {}".format(
                                       cdfflags[flagcdf], what, where, self.var.DtDay, maps,
                                       report_maps_steps[maps].output_var, report_maps_steps[maps].unit, 'f4',
                                       reportStartDate, reportStepStart, reportStepEnd
                                       ))
 
-                    else:
-                        self.var.report(decompress(eval(what)), where)
+                        else:
+                            self.var.report(decompress(eval(what)), str(where))
 
         # Report ALL maps
         for maps in report_maps_all.keys():
@@ -288,7 +289,7 @@ class outputTssMap(object):
                 except:
                     yearly = False
 
-                if (monthly and self.var.monthend) or (yearly and self.var.yearend) or not (monthly and yearly):
+                if (monthly and self.var.monthend) or (yearly and self.var.yearend) or not (monthly or yearly):
                     # checks if a flag monthly or yearly exists]
                     if option['writeNetcdfStack']:
                         #Get start date for reporting start step
@@ -307,7 +308,7 @@ class outputTssMap(object):
                                      report_maps_all[maps].unit, 'f4', reportStartDate, reportStepStart, reportStepEnd, frequency)
                         except Exception as e:
                             warnings.warn(LisfloodWarning(str(e)))
-                            print("ALL", what, where, self.var.DtDay, maps, report_maps_all[maps].output_var,
+                            print(str(e), "ALL", what, where, self.var.DtDay, maps, report_maps_all[maps].output_var,
                                   report_maps_all[maps].unit, 'f4', reportStartDate,reportStepStart, reportStepEnd)
                     else:
                         self.var.report(decompress(eval(what)), trimPCRasterOutputPath(where))

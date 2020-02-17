@@ -46,6 +46,6 @@ WORKDIR /lisflood/hydrological_modules
 RUN python3.7 compile_kinematic_wave_parallel_tools.py build_ext --inplace
 
 COPY tests/. /tests/
-RUN /usr/local/bin/pip3 install pytest && pytest /tests/smoke_tests.py -s
+RUN /usr/local/bin/pip3.7 install pytest && pytest /tests -s
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
