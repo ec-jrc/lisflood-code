@@ -1,4 +1,4 @@
 *
 !.gitignore
-!pathinit/.gitignore
-!compare/.gitignore
+!pathinit/
+!compare/

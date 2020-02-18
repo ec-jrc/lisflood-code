@@ -58,40 +58,43 @@ class ModulesInputs:
     @classmethod
     def check(cls, settings):
         """
-
-            :param settings: LisSettings object
-            """
+        :param settings: LisSettings object
+        """
         binding = settings.binding
-        res = False
+        res = 0
+        all_errors = []
         total_checks = 1  # at least check PathOut
         # First check PathOut
         if not (os.path.exists(settings.output_dir) and os.path.isdir(settings.output_dir) and os.access(settings.output_dir, os.W_OK)):
-            warnings.warn(LisfloodWarning('\n\nPath defined in PathOut is not writable: {}'.format(settings.output_dir)))
+            msg = '\n\nPath defined in PathOut is not writable: {}'.format(settings.output_dir)
+            warnings.warn(LisfloodWarning(msg))
+            all_errors.append(msg)
         else:
-            res += True
+            res += 1
 
         for option, modules in cls.lisflood_modules.items():
             if not (binding.get(option) or option == 'all'):
                 # module is not activated
                 continue
             for hydro_module in modules:
-                # hydro_module = importlib.import_module('{}.{}'.format(cls.root_package, m))
-                # hydro_module_str = '{}.{}'.format(cls.root_package, m)
                 clzzs = [obj for n, obj in inspect.getmembers(hydro_module)
                          if inspect.isclass(obj) and issubclass(obj, HydroModule)
                          and obj is not HydroModule and str(obj.__module__) == hydro_module.__name__]
                 total_checks += len(clzzs)
                 for clz in clzzs:
-                    res += clz.check_input_files(option)
+                    module_ok, errors = clz.check_input_files(option)
+                    res += int(module_ok)
+                    all_errors += errors
         if res < total_checks:
             # some checks failed
-            raise LisfloodError('\n\nMissing files or misconfigured paths to run LisFlood, according activated '
-                                'modules. '
-                                'Please check your settings file {}'.format(settings.settings_path))
+
+            raise LisfloodError('\n\nMissing files or misconfigured paths to run LisFlood, according activated modules. '
+                                'Please check your settings file {}.\n{}'.format(settings.settings_path, all_errors))
 
 
 class MeteoForcings:
     @classmethod
     def check(cls, settings):
+        # TODO implement
         binding = settings.binding
         pass

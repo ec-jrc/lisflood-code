@@ -226,16 +226,24 @@ class TestLis(object):
                 pass
 
     @classmethod
-    def listest(cls, variable):
+    def listest(cls, variable='dis', check='map'):
+        """
+
+        :param variable: variable to check. Default 'dis' (Discharge)
+        :param check: either 'map' or 'tss'. Default 'map'
+        :return: boolean. False if no differences were found
+        """
         settings = LisSettings.instance()
         maskinfo = MaskInfo.instance()
         binding = settings.binding
-        reference_map = cls.reference_files[variable]['path_map']
-        reference_tss = cls.reference_files[variable]['path_tss']
-        output_map = os.path.normpath(binding[cls.reference_files[variable]['report_map']]) + '.nc'
-        output_tss = binding[cls.reference_files[variable]['report_tss']]
-        comparator = NetCDFComparator(maskinfo.info.mask)
-        errors_map = comparator.compare_files(reference_map, output_map)
-        comparator = TSSComparator()
-        errors_tss= comparator.compare_files(reference_tss, output_tss)
-        return not errors_tss and not errors_map
+        reference = cls.reference_files[variable]['path_{}'.format(check)]
+        errors = []
+        if check == 'map':
+            output_map = os.path.normpath(binding[cls.reference_files[variable]['report_map']]) + '.nc'
+            comparator = NetCDFComparator(maskinfo.info.mask)
+            errors = comparator.compare_files(reference, output_map)
+        elif check == 'tss':
+            output_tss = binding[cls.reference_files[variable]['report_tss']]
+            comparator = TSSComparator()
+            errors = comparator.compare_files(reference, output_tss)
+        return not errors

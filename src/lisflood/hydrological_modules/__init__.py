@@ -56,6 +56,7 @@ class HydroModule(object):
         binding = settings.binding
         ok = True
         keys = cls.input_files_keys[option]
+        errors = []
         for k in keys:
             msg = None
             k_ok = True
@@ -68,4 +69,5 @@ class HydroModule(object):
             if not k_ok:
                 ok = False
                 warnings.warn(LisfloodWarning(msg))
-        return ok
+                errors.append(msg)
+        return ok, errors

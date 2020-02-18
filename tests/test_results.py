@@ -35,6 +35,7 @@ class TestCatch(TestLis):
 
     def test_dis(self):
         assert self.listest('dis')
+        assert self.listest('dis', 'tss')
 
     def test_initvars(self):
         out_dir = os.path.join(current_dir, 'data/TestCatchment/outputs')
