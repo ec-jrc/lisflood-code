@@ -4,7 +4,6 @@ attrs==19.3.0
 backports.functools-lru-cache==1.6.1
 backports.shutil-get-terminal-size==1.0.0
 beautifulsoup4==4.8.2
-bs4==0.0.1
 cftime==1.0.3.4
 configparser==4.0.2
 contextlib2==0.6.0.post1
@@ -49,9 +48,9 @@ pyparsing==2.4.2
 pyproj==2.2.2
 pytest==4.6.6
 pytest-mock==2.0.0
+pytest-env==0.6.2
 python-dateutil==2.8.0
 pytz==2019.3
-PyYAML==5.1.2
 readline==6.2.4.1
 scandir==1.10.0
 simplegeneric==0.8.1

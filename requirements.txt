@@ -56,13 +56,10 @@ pyproj==2.4.0
 pytest==5.2.1
 pytest-cov==2.8.1
 pytest-mock==2.0.0
+pytest-env==0.6.2
 python-dateutil==2.8.0
 pytz==2019.3
-PyYAML==5.1.2
 readme-renderer==24.0
-requests==2.22.0
-requests-toolbelt==0.9.1
-scikit-learn==0.22
 scipy==1.4.0
 scprep==1.0.3
 six==1.12.0
