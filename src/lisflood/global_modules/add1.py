@@ -400,7 +400,7 @@ def loadmap(name, pcr=False, lddflag=False, timestampflag='exact', averageyearfl
         try:
             maskinfo = MaskInfo.instance()
             mapnp.mask = maskinfo.info.mask
-        except KeyError as e:
+        except (KeyError, AttributeError):
             pass
         nf1.close()
 
