@@ -66,7 +66,7 @@ Then in the settings file the option "numberParallelThreadsKinematicWave" may ta
 Now your environment should be set up to run lisflood. Try with a prepared settings file for one of the two test catchments:
 
 ```bash
-python src/lisf1.py tests/data/TestCatchment1/settings/lisfloodSettings_cold_day_base.xml
+python src/lisf1.py tests/data/TestCatchment/settings/cold_day_base.xml
 ```
 
 If the command above successed without errors, producing dis.nc into tests/data/TestCatchment1/outputs folder, your lisflood installation was correct.
