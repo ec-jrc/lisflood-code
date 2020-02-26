@@ -75,13 +75,20 @@ If the command above successed without errors, producing dis.nc into tests/data/
 
 
 You can use the updated docker image to run lisflood, so without taking care to install dependencies on your system.
-First, you pull image from repository.
+
+#### Pull image from repository:
 
 ```bash
 docker pull efas/lisflood:latest
 ```
 
-Copy catchment files from container to your host, using mapped directories.
+#### Run tests in image:
+
+```bash
+docker run -v /absolute_path/to/my/local/folder:/usecases efas/lisflood:latest usecases
+```
+
+#### Copy catchment files from container to your host, using mapped directories:
 
 ```bash
 docker run -v /absolute_path/to/my/local/folder:/usecases efas/lisflood:latest usecases
@@ -94,13 +101,13 @@ Now, you can run LISFLOOD as a docker container to test included catchments. Onl
 In the XML settings file, all paths are adjusted to be relative to the very same settings file, so you don't need to edit paths, as long as you keep same folders structure.
 
 
-Execute the following to run the simulation:
+#### Execute lisflood with a Docker image:
 
 ```bash
-docker run -v /absolute_path/to/my/local/folder/TestCatchment1:/input efas/lisflood /input/settings/cold_day_base.xml
+docker run -v /absolute_path/to/my/local/folder/TestCatchment:/input efas/lisflood /input/settings/cold_day_base.xml
 ```
 
-Once LISFLOOD finished, you can find reported maps in `/absolute_path/to/my/local/folder/TestCatchment1/outputs/` folder.
+Once LISFLOOD finished, you find reported maps in `/absolute_path/to/my/local/folder/TestCatchment/outputs/` folder.
 
 ### Pypi packaged LISFLOOD
 
@@ -113,16 +120,18 @@ pip install lisflood-model
 Command above will also install the executable `lisflood` in the virtualenv, so that you can run LISFLOOD with the following:
 
 ```bash
-lisflood /absolute_path/to/my/local/folder/TestCatchment1/settings/lisfloodSettings_cold_day_base.xml
+lisflood /absolute_path/to/my/local/folder/TestCatchment/settings/cold_day_base.xml
 ```
 
 ## Collaborate
 
 If you find an issue in our code, please follow the [GitHub flow](https://guides.github.com/introduction/flow/) to propose your changes (Fork, commit your changes and ask for a Pull Request).
-When you develop, you need to run our "acceptance" tests. We have two test catchments, that can run with tox on py27, py36, py37 environments.
-Simply execute `tox` on comman line from project folder.
+When you develop, you need to run our unit tests before to propose a pull request.
+Simply execute `tox` or `pytest` on command line from project folder.
 
 Tox tests can last minutes. You can also just use pytest and run tests in a single environment (e.g. Python 3.7).
 This is often enough and will save you some time if you need to run tests frequently.
  
-`pytest tests/ -s`
+`pytest tests/ -x -l -ra`
+
+See [official website](https://docs.pytest.org/en/latest/) for more info about pytest.

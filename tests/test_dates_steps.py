@@ -9,31 +9,20 @@ from lisflood.main import lisfloodexe
 
 from tests import TestSettings
 
-settings_file = os.path.join(os.path.dirname(__file__), 'data/settings/full.xml')
 settings_file_6hourly = os.path.join(os.path.dirname(__file__), 'data/settings/full_6h.xml')
 
 
 class TestStepsDates(TestSettings):
+    settings_file = os.path.join(os.path.dirname(__file__), 'data/settings/full.xml')
 
-    def setup_method(self):
-        settings = self.setoptions(settings_file)
-        rm_files = [os.path.join(settings.output_dir, f) for f in os.listdir(settings.output_dir) if f.endswith('.nc') or f.endswith('.tss')]
-        for f in rm_files:
-            os.unlink(f)
-
-    def teardown_method(self):
-        settings = self.setoptions(settings_file)
-        rm_files = [os.path.join(settings.output_dir, f) for f in os.listdir(settings.output_dir) if f.endswith('.nc') or f.endswith('.tss')]
-        for f in rm_files:
-            os.unlink(f)
 
     def test_dates_steps_day(self):
-        settings_a = self.setoptions(settings_file,
+        settings_a = self.setoptions(self.settings_file,
                                      opts_to_set=['repStateMaps', 'repEndMaps', 'repDischargeMaps',
                                                   'repSnowMaps', 'repLZMaps', 'repUZMaps'],
                                      opts_to_unset=['simulateLakes'])
         lisfloodexe(settings_a)
-        settings_b = self.setoptions(settings_file,
+        settings_b = self.setoptions(self.settings_file,
                                      opts_to_set=['repStateMaps', 'repEndMaps', 'repDischargeMaps',
                                                   'repSnowMaps', 'repLZMaps', 'repUZMaps'],
                                      opts_to_unset=['simulateLakes'],

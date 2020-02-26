@@ -31,9 +31,7 @@ else:
     from pathlib import Path
 
 from bs4 import BeautifulSoup
-from pyexpat import *
-
-from lisfloodutilities.compare import NetCDFComparator, TSSComparator
+from pyexpat import *  # noqa
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 src_dir = os.path.join(current_dir, '../src/')
@@ -45,8 +43,23 @@ from lisflood.global_modules.add1 import loadmap
 from lisflood.global_modules.settings import LisSettings, MaskInfo
 from lisflood.main import lisfloodexe
 
+from lisfloodutilities.compare import NetCDFComparator, TSSComparator
+
 
 class TestSettings(object):
+    settings_file = None
+
+    def setup_method(self):
+        settings = self.setoptions(self.settings_file)
+        rm_files = [os.path.join(settings.output_dir, f) for f in os.listdir(settings.output_dir) if f.endswith('.nc') or f.endswith('.tss')]
+        for f in rm_files:
+            os.unlink(f)
+
+    def teardown_method(self):
+        settings = self.setoptions(self.settings_file)
+        rm_files = [os.path.join(settings.output_dir, f) for f in os.listdir(settings.output_dir) if f.endswith('.nc') or f.endswith('.tss')]
+        for f in rm_files:
+            os.unlink(f)
 
     @classmethod
     def dummyloadmap(cls, *args, **kwargs):
@@ -209,21 +222,10 @@ class TestLis(object):
     @classmethod
     def teardown_class(cls):
         settings = LisSettings.instance()
-        binding = settings.binding
-        for var, obj in cls.reference_files.items():
-            output_nc = binding[cls.reference_files[var]['report_map']]
-            output_nc = output_nc + '.nc'
-            if os.path.exists(output_nc):
-                os.remove(output_nc)
-            output_tss = binding[cls.reference_files[var]['report_tss']]
-            if os.path.exists(output_tss):
-                os.remove(output_tss)
-        filelist = Path(settings.output_dir[0]).glob('*.nc')
-        for f in filelist:
-            try:
-                os.remove(str(f))
-            except OSError:
-                pass
+        rm_files = [os.path.join(settings.output_dir, f) for f in os.listdir(settings.output_dir) if
+                    f.endswith('.nc') or f.endswith('.tss')]
+        for f in rm_files:
+            os.unlink(f)
 
     @classmethod
     def listest(cls, variable='dis', check='map'):
@@ -233,11 +235,13 @@ class TestLis(object):
         :param check: either 'map' or 'tss'. Default 'map'
         :return: boolean. False if no differences were found
         """
+
         settings = LisSettings.instance()
         maskinfo = MaskInfo.instance()
         binding = settings.binding
         reference = cls.reference_files[variable]['path_{}'.format(check)]
         errors = []
+
         if check == 'map':
             output_map = os.path.normpath(binding[cls.reference_files[variable]['report_map']]) + '.nc'
             comparator = NetCDFComparator(maskinfo.info.mask)
