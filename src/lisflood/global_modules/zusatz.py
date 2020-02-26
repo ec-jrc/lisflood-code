@@ -196,8 +196,11 @@ class TimeoutputTimeseries(TimeoutputTimeseries):
         """
         outputFile = open(outputFilename, "w")
         # header
-        #outputFile.write("timeseries " + self._spatialDatatype.lower() + "\n")
-        outputFile.write("timeseries " + self._spatialDatatype.lower() + " settingsfile: "+os.path.realpath(sys.argv[1])+" date: " + xtime.ctime(xtime.time())+ "\n")
+        from .settings import LisSettings
+        settings = LisSettings.instance()
+        outputFile.write("timeseries {} settingsfile: {} date: {}\n".format(self._spatialDatatype.lower(),
+                                                                            settings.settings_path,
+                                                                            xtime.ctime(xtime.time())))
         # write number of outlets points +1
         outputFile.write(str(self._ncodesId + 1) + "\n")
         outputFile.write("timestep\n")

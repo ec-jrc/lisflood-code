@@ -37,6 +37,7 @@ pip install lisflood-model
 """
 
 import os
+import subprocess
 import sys
 from glob import glob
 from shutil import rmtree
@@ -105,18 +106,33 @@ class UploadCommand(Command):
             pass
 
         self.print_console('Building Source and Wheel (universal) distribution...')
-        os.system('{0} setup.py sdist'.format(sys.executable))
+        os.system('{} setup.py sdist'.format(sys.executable))
 
         self.print_console('Uploading the package to PyPI via Twine...')
         os.system('twine upload dist/*')
 
         self.print_console('Pushing git tags...')
-        os.system('git tag v{0}'.format(__version__))
+        os.system('git tag v{}'.format(__version__))
         os.system('git push --tags')
 
         sys.exit()
 
 
+def _get_gdal_version():
+    try:
+        p = subprocess.Popen(['gdal-config', '--version'], stdout=subprocess.PIPE)
+    except FileNotFoundError:
+        raise SystemError('gdal-config not found.'
+                          'GDAL seems not installed. '
+                          'Please, install GDAL binaries and libraries for your system '
+                          'and then install the relative pip package.')
+    else:
+        return p.communicate()[0].splitlines()[0].decode()
+
+
+gdal_version = _get_gdal_version()
+requirements = [l for l in open('requirements.txt').readlines() if l and not l.startswith('#')]
+requirements += ['GDAL=={}'.format(gdal_version)]
 setup(
     name='lisflood-model',
     version=__version__,
@@ -135,16 +151,11 @@ setup(
     url='https://github.com/ec-jrc/lisflood-code',
     download_url='https://github.com/ec-jrc/lisflood-code/archive/{}.tar.gz'.format(__version__),
     setup_requires=[
-            # Setuptools 18.0 properly handles Cython extensions.
             'setuptools>=41.0',
             'numpy>=1.15,<1.17',
             'cython',
     ],
-    install_requires=[
-        'python-dateutil', 'pytest', 'docopt',
-        'numpy>=1.15,<1.17', 'cython', 'netCDF4>=1.5',
-        'numexpr', 'pandas>=0.24.2', 'xarray', 'pyproj', 'cftime',
-    ],
+    install_requires=requirements,
     scripts=['bin/lisflood'],
     ext_modules=ext_modules,
     zip_safe=True,

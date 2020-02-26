@@ -23,7 +23,7 @@ GDAL==2.2.3
 importlib-metadata==0.23
 ipython==5.8.0
 ipython-genutils==0.2.0
-lisflood_utilities>=0.11.5
+lisflood-utilities>=0.11.8
 lxml==4.5.0
 mccabe==0.6.1
 mock==3.0.5
