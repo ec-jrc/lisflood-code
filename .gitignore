@@ -15,3 +15,4 @@ lisflood_model.egg-info
 !/tests/data/settings/*.xml
 !/tests/data/TestCatchment/settings/*.xml
 .coverage
+*.tox.ini

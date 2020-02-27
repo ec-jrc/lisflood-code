@@ -56,11 +56,13 @@ from lisflood import __version__, __authors__
 
 print(">>>>>>>>>>>>>>>> Building LISFLOOD version {} <<<<<<<<<<<<<<<<<<".format(__version__))
 try:
-    # noinspection PyUnresolvedReferences
+    # noqa
     from Cython.Build import cythonize
     HAS_CYTHON = True
 except ImportError:
     HAS_CYTHON = False
+
+IS_PYTHON2 = sys.version_info.major == 2
 
 src_ext = 'src/lisflood/hydrological_modules/kinematic_wave_parallel_tools.{}'
 extension_ext = 'pyx' if HAS_CYTHON else 'c'
@@ -131,7 +133,8 @@ def _get_gdal_version():
 
 
 gdal_version = _get_gdal_version()
-requirements = [l for l in open('requirements.txt').readlines() if l and not l.startswith('#')]
+req_file = 'requirements.txt' if not IS_PYTHON2 else 'requirements27.txt'
+requirements = [l for l in open(req_file).readlines() if l and not l.startswith('#')]
 requirements += ['GDAL=={}'.format(gdal_version)]
 setup(
     name='lisflood-model',
@@ -146,13 +149,14 @@ setup(
     description='LISFLOOD model python module',
     author=__authors__,
     author_email='domenico.nappo@ext.ec.europa.eu',
-    keywords=['lisflood', 'lisvap', 'efas', 'glofas', 'ecmwf'],
+    keywords=['lisflood', 'lisvap', 'efas', 'glofas', 'copernicus', 'ecmwf'],
     license='EUPL 1.2',
     url='https://github.com/ec-jrc/lisflood-code',
     download_url='https://github.com/ec-jrc/lisflood-code/archive/{}.tar.gz'.format(__version__),
     setup_requires=[
+            'nine',
             'setuptools>=41.0',
-            'numpy>=1.15,<1.17',
+            'numpy>=1.15,<=1.17.2',
             'cython',
     ],
     install_requires=requirements,

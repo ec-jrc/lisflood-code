@@ -11,6 +11,7 @@ lisflood_model.egg-info
 .eggs
 .tox
 tox.ini
+*.tox.ini
 MANIFEST.in
 .gitignore
 .gitattributes
