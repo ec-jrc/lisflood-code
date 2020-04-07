@@ -82,9 +82,8 @@ class stateVar(object):
                 dumpObject("Tss", self.var.Tss, sample)
             except:
                 foo = 0
-            # EPIC state variables
-            # TO DO!
-	    dumpObject("cdfFlag", globals.cdfFlag, sample)
+            dumpObject("cdfFlag", globals.cdfFlag, sample)
+            # TO DO: EPIC state variables
 
 
     def resume(self):

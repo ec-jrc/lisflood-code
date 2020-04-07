@@ -12,7 +12,7 @@
 
 
 from global_modules.add1 import *
-from kinematic_wave_parallel import kinematicWave
+from .kinematic_wave_parallel import kinematicWave
 
 
 class surface_routing(object):
@@ -90,7 +90,7 @@ class surface_routing(object):
         # ***** COMPONENTS OF RUNOFF                               ***
         # ************************************************************
         self.var.SurfaceRunSoil = self.var.allocateDataArray([self.var.dim_landuse, self.var.dim_pixel])
-        for landuse, veg_list in LANDUSE_VEGETATION.iteritems():
+        for landuse, veg_list in LANDUSE_VEGETATION.items():
             self.var.SurfaceRunSoil.loc[landuse] = (self.var.SoilFraction.loc[veg_list] * \
                     np.maximum(self.var.AvailableWaterForInfiltration.loc[veg_list] - self.var.Infiltration.loc[veg_list], 0)).sum("vegetation")
 

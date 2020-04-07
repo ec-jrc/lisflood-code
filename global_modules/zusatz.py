@@ -26,7 +26,7 @@ from pandas._libs.tslibs.parsing import parse_time_string
 from pcraster import*
 from pcraster.framework import *
 
-from globals import *
+from .globals import *
 
 MAX_READ_TRIALS = 100 # max number of trial allowed re-read an input file: to avoid crashes due to temporary network interruptions
 READ_PAUSE = 0.1      # pause (seconds) between each re-read trial over the network
@@ -208,15 +208,12 @@ def optionBinding(settingsfile, optionxml):
         repsteps = 'endtime'
     if repsteps[-1] == 'endtime':
         repsteps[-1] = binding['StepEnd']
-    jjj = []
+    ReportSteps['rep'] = []
     for i in repsteps:
         if '..' in i:
-            j = map(int, i.split('..'))
-            for jj in xrange(j[0], j[1] + 1):
-                jjj.append(jj)
+            ReportSteps['rep'] += list(range(*[int(_n) for _n in i.split('..')]))
         else:
-            jjj.append(i)
-    ReportSteps['rep'] = map(datetoInt, jjj)
+            ReportSteps['rep'].append(i)
     # maps are reported at these time steps
 
 # -----------------------------------------------
@@ -494,8 +491,10 @@ def datetoInt(dateIn,both=False):
     else:
         int1 = int(date1)
         str1 = str(date1)
-    if both: return int1,str1
-    else: return int1
+    if both:
+        return int1,str1
+    else:
+        return int1
 
 def checkifDate(start,end):
 
@@ -755,11 +754,11 @@ class TimeoutputTimeseries(TimeoutputTimeseries):
             # for cellId in range(1, self._maxId + 1):
             # self._sampleAddresses.append(self._getIndex(cellId))
 
-            self._sampleAddresses = [1 for i in xrange(self._maxId)]
+            self._sampleAddresses = [1 for i in range(self._maxId)]
             # init with the left/top cell - could also be 0 but then you have to catch it in
             # the sample routine and put an exeption in
             nrCells = pcraster.clone().nrRows() * pcraster.clone().nrCols()
-            for cell in xrange(1, nrCells + 1):
+            for cell in range(1, nrCells + 1):
                 if (pcraster.cellvalue(self._spatialId, cell)[1]):
                     self._sampleAddresses[
                         pcraster.cellvalue(self._spatialId, cell)[0] - 1] = cell

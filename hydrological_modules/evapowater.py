@@ -57,10 +57,10 @@ class evapowater(object):
                 self.var.varW1 = []
                 self.var.varW1.append(12)
                 j = 0
-                for i in xrange(1, 367):
+                for i in range(1, 367):
                     if i >= varWNo[j + 1]: j += 1
                     self.var.varW1.append(j)
-                for i in xrange(12):
+                for i in range(12):
                     varWName = generateName(binding['WFractionMaps'], varWNo[i])
                     self.var.varW.append(loadLAI(binding['WFractionMaps'], varWName, i))
 
@@ -106,7 +106,7 @@ class evapowater(object):
           self.var.EvaAddM3 = globals.inZero.copy()
              #   real water consumption is set to 0
 
-          for NoEvaExe in xrange(self.var.maxNoEva):
+          for NoEvaExe in range(self.var.maxNoEva):
                 ChanHelp = np.maximum(ChanMIter-UpstreamEva,ChanLeft)
                 EvaIter = np.maximum(UpstreamEva-(ChanMIter-ChanHelp),0)
                    # new amount is amout - evaporation use till a limit

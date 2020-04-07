@@ -38,15 +38,16 @@ class leafarea(object):
         num_lai_steps = len(LAINr) - 1
         coord_prescribed = OrderedDict([("interval", range(num_lai_steps))])
         coord_prescribed.update(self.var.coord_prescribed_vegetation)
-        self.var.LAIX = xr.DataArray(np.zeros(map(len, coord_prescribed.values())), coords=coord_prescribed, dims=coord_prescribed.keys())
+        self.var.LAIX = xr.DataArray(np.zeros([len(v) for v in coord_prescribed.values()]),
+                                     coords=coord_prescribed, dims=coord_prescribed.keys())
         for i in self.var.LAIX.interval.values:
-            for veg, map_name in PRESCRIBED_LAI.iteritems():
+            for veg, map_name in PRESCRIBED_LAI.items():
                 LAIName = generateName(binding[map_name], LAINr[i])
                 self.var.LAIX.loc[i,veg] = loadLAI(binding[map_name], LAIName, i)
         # Calendar day to interval lookup list
         self.var.L1 = []
         j = 0
-        for i in xrange(367):
+        for i in range(367):
             if i >= LAINr[j + 1]:
                 j += 1
             self.var.L1.append(j)

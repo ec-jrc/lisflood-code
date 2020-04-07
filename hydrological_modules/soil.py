@@ -197,7 +197,7 @@ class soil(object):
         # Set to zero if soil depth is zero.
         # IMPORTANT: WInit1 and WInit2 represent the soil moisture in the *permeable* fraction of the pixel *only*
         # (since all soil moisture-related calculations are done for permeable fraction only!).
-        for veg, luse in VEGETATION_LANDUSE.iteritems():
+        for veg, luse in VEGETATION_LANDUSE.items():
             ini_1a = np.where(ThetaInit1aValue.loc[veg] == -9999, self.var.WFC1a.loc[luse], ThetaInit1aValue.loc[veg] * self.var.SoilDepth1a.loc[luse])
             self.var.W1a.loc[veg] = np.where(self.var.PoreSpaceNotZero1a.loc[luse], ini_1a, 0)
             ini_1b = np.where(ThetaInit1bValue.loc[veg] == -9999, self.var.WFC1b.loc[luse], ThetaInit1bValue.loc[veg] * self.var.SoilDepth1b.loc[luse])
@@ -311,7 +311,7 @@ class soil(object):
         # (no infiltration in direct runoff fraction)
 
         tot_sm = self.var.W1a + self.var.W1b + self.var.W2
-        for landuse, veg_list in LANDUSE_VEGETATION.iteritems():
+        for landuse, veg_list in LANDUSE_VEGETATION.items():
             self.var.Theta.loc[veg_list] = self.var.SoilFraction.loc[veg_list] * tot_sm.loc[veg_list] / self.var.SoilDepthTotal.loc[landuse]
         soil_fract_sum = self.var.SoilFraction.sum("vegetation")
         self.var.ThetaAll = np.where(soil_fract_sum > 0, self.var.Theta.sum("vegetation") / soil_fract_sum, 0)

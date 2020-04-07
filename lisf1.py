@@ -1,4 +1,4 @@
-#! /usr/bin/python2
+#! /usr/bin/python3
 
 """
  ######################################################################
@@ -15,11 +15,11 @@
 """
 
 __authors__ = "Ad de Roo, Emiliano Gelati, Peter Burek, Johan van der Knijff, Niko Wanders"
-__version__ = "Version: 3.0.0-rc.1"
-__date__ = "15 May 2019"
-__copyright__ = "Copyright 2018, European Commission - Joint Research Centre"
+__version__ = "Version: 3.0.0-rc.3"
+__date__ = "10 March 2020"
+__copyright__ = "Copyright 2020, European Commission - Joint Research Centre"
 __maintainer__ = "Emiliano Gelati, Ad de Roo"
-__status__ = "Operation"
+__status__ = "Development"
 
 
 #  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -146,7 +146,7 @@ def Lisfloodexe():
                 timePrint[i] = np.sum(timeSum[range(i, len(timeSum), len(timeSum)/div)])
         else:
             timePrint = timeSum
-        for i in xrange(len(timePrint)):
+        for i in range(len(timePrint)):
             print("%2i %-17s %10.2f %8.1f"  %(i,timeMesString[i],timePrint[i],100 * timePrint[i] / timePrint[-1]))
     i=1
 

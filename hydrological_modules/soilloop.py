@@ -13,7 +13,7 @@ from global_modules.add1 import *
 import numpy as np
 import numexpr as nx
 from numba import njit, prange, vectorize
-from __builtin__ import min, max
+from builtins import min, max
 
 @njit(parallel=True, fastmath=True)
 def interception_water_balance(Interception, TaInterception, LeafDrainage, CumInterception, LAI, Rain, TaInterceptionMax, drainageK):
@@ -428,12 +428,12 @@ class soilloop(object):
 
     def reset(self, old_values):
         "TEST ONLY"
-        for k, v in old_values.iteritems():
+        for k, v in old_values.items():
             setattr(self.var, k, v)
 
     def compare(self, new_values):
         "TEST ONLY"
-        for k, v in new_values.iteritems():
+        for k, v in new_values.items():
             if (np.absolute(v.values - getattr(self.var, k).values).max() > 1e-6) or (np.isnan(v.values) | np.isnan(getattr(self.var, k).values)).any():
                 import ipdb; ipdb.set_trace()
 

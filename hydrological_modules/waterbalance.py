@@ -196,7 +196,7 @@ class waterbalance(object):
                 WaterOut += sumOverAreas(self.var.TransCum, self.var.Catchments)
             if option['wateruse']:
                 WaterOut += sumOverAreas(self.var.IrriLossCUM, self.var.Catchments)
-                WaterOut += sumOverAreas(self.var.wateruseCum, self.var.Catchments)
+                WaterOut += sumOverAreas(self.var.cumulated_CH_withdrawal, self.var.Catchments)
             # Accumulated outgoing water [cu m]
             # Inclusion of DischargeM3Structures is because at structure locations the water in the channel is added to the structure
             # (i.e. storage at reservoirs/lakes is accounted for twice). Of course this is not really a 'loss', but merely a correction

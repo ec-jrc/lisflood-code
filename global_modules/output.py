@@ -27,6 +27,10 @@ def trimPCRasterOutputPath(output_path):
         name = name[:6]
     return os.path.join(folder, name)
 
+def getModelAttr4Out(names):
+    '''It accomodates operations on xarray.DataArray data structures (typically weighted average over soil columns)'''
+    what = names['outputVar'][0]
+    return what if what.startswith('(') else 'self.var.' + what
 
 class outputTssMap(object):
 
@@ -104,9 +108,7 @@ class outputTssMap(object):
                 print(" %10.2f"  %self.var.Tss["DisTS"].firstout(decompress(self.var.ChanQAvg)))
 
             for tss in reportTimeSerieAct.keys():
-                what = reportTimeSerieAct[tss]['outputVar'][0]
-                if what[0] != "(": # To accomodate operations on xarray.DataArray data structures (typically weighted average over soil columns)
-                    what = 'self.var.' + what
+                what = getModelAttr4Out(reportTimeSerieAct[tss])
                 how = reportTimeSerieAct[tss]['operation'][0]
                 if how == 'mapmaximum':
                     changed = compressArray(mapmaximum(decompress(eval(what))))
@@ -132,7 +134,7 @@ class outputTssMap(object):
                 where = os.path.join(str(self.var.currentSampleNumber()), binding[maps].split("/")[-1])
             except:
                 where = binding[maps]
-            what = 'self.var.' + reportMapsEnd[maps]['outputVar'][0]
+            what = getModelAttr4Out(reportMapsEnd[maps])
             if not(where in checkifdouble):
                 checkifdouble.append(where)
                 # checks if saved at same place, if no: add to list
@@ -143,14 +145,13 @@ class outputTssMap(object):
                     else:
                         report(decompress(eval(what)), where)
 
-	#print(reportMapsSteps.keys())
         for maps in reportMapsSteps.keys():
             # report reportsteps maps
             try:
                 where = os.path.join(str(self.var.currentSampleNumber()), binding[maps].split("/")[-1])
             except:
                 where = binding[maps]
-            what = 'self.var.' + reportMapsSteps[maps]['outputVar'][0]
+            what = getModelAttr4Out(reportMapsSteps[maps])
             if not(where in checkifdouble):
                 checkifdouble.append(where)
                 # checks if saved at same place, if no: add to list
@@ -185,9 +186,7 @@ class outputTssMap(object):
                 where = os.path.join(str(self.var.currentSampleNumber()), binding[maps].split("/")[-1])
             except:
                 where = binding[maps]
-            what = reportMapsAll[maps]['outputVar'][0]
-            if not what.startswith('('):
-                what = 'self.var.' + what
+            what = getModelAttr4Out(reportMapsAll[maps])
             if not(where in checkifdouble):
                 checkifdouble.append(where)
                 # checks if saved at same place, if no: add to list

@@ -108,7 +108,7 @@ class snow(object):
         self.var.SnowMelt = globals.inZero.copy()
         self.var.SnowCover = globals.inZero.copy()
 
-        for i in xrange(3):
+        for i in range(3):
             TavgS = self.var.Tavg + self.var.DeltaTSnow * (i - 1)
             # Temperature at center of each zone (temperature at zone B equals Tavg)
             # i=0 -> highest zone

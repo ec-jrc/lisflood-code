@@ -85,6 +85,7 @@
 <setoption   default="0"  name="repSnowMaps"/>
 <setoption   default="0"  name="repSnowMeltMaps"/>
 <setoption   default="0"  name="repStateMaps"/>
+<setoption   default="0"  name="repPixMaps"/>
 <setoption   default="0"  name="repSurfaceRunoffMaps"/>
 <setoption   default="0"  name="repTaMaps"/>
 <setoption   default="0"  name="repTavgMaps"/>
@@ -101,8 +102,7 @@
 <setoption   default="0"  name="repStressDays"/>
 <setoption   default="0"  name="repLZWB"/>
 <setoption   default="0"  name="repEvapPix"/>
-<setoption   default="0"  name="repTotalAbs"/>
-<setoption   default="0"  name="repTotalWUse"/>
+<setoption   default="0"  name="repWaterUse"/>
 
 </lfoptions>
 
@@ -243,13 +243,14 @@
 <setserie name="LakeInflowTS"         outputVar="LakeInflowM3S"    where="LakeSites"        repoption="repsimulateLakes"    restrictoption="nonInit,simulateLakes" />
 <setserie name="LakeOutflowTS"        outputVar="LakeOutflowM3S"   where="LakeSites"        repoption="repsimulateLakes"    restrictoption="nonInit,simulateLakes" />
 <setserie name="LakeLevelTS"          outputVar="LakeLevel"        where="LakeSites"        repoption="repsimulateLakes"    restrictoption="nonInit,simulateLakes" />
+<setmap name="LakeStorageM3"    	outputVar="LakeStorageM3"                         unit="m3"   end=""  steps=""  all="repsimulateLakes"    restrictoption="nonInit,simulateLakes" />
+<setmap name="LakeAbstractionM3"         outputVar="LakeAbstractionM3" unit="m3"   end=""  steps=""       all="repsimulateLakes"      restrictoption="nonInit,simulateLakes,wateruse" />
 
-<setmap name="LakeStorageM3"    	outputVar="LakeStorageM3"                         unit="m3"   end=""  steps=""  all="repsimulateLakes"    restrictoption="nonInit" />
-
-#repsimulateReservoirs (only for option simulateReservoirs)
 <setserie name="ReservoirFillTS"      outputVar="ReservoirFill"    where="ReservoirSites"        repoption="repsimulateReservoirs"    restrictoption="nonInit,simulateReservoirs" />
 <setserie name="ReservoirInflowTS"    outputVar="ReservoirInflowM3S"  where="ReservoirSites"     repoption="repsimulateReservoirs"    restrictoption="nonInit,simulateReservoirs" />
 <setserie name="ReservoirOutflowTS"   outputVar="ReservoirOutflowM3S" where="ReservoirSites"     repoption="repsimulateReservoirs"    restrictoption="nonInit,simulateReservoirs" />
+<setmap name="ReservoirAbstractionM3"         outputVar="ReservoirAbstractionM3" unit="m3"   end=""  steps=""       all="repsimulateReservoirs"      restrictoption="nonInit,wateruse,simulateReservoirs" />
+<setmap name="ReservoirStorageM3"         outputVar="ReservoirStorageM3" unit="m3"   end=""  steps=""       all="repsimulateReservoirs"      restrictoption="nonInit,simulateReservoirs" />
 
 
 #repsimulatePolders (only for option simulatePolders)
@@ -324,29 +325,34 @@
 # Typically used as initial conditions for succeeding simulation!
 # no forest [0]  forest [1]
 
-<setmap name="WaterDepthState"        outputVar="WaterDepth"   unit="m"   end=""  steps="repStateMaps"                     all=""           restrictoption="nonInit" />
-<setmap name="ChanCrossSectionState"  outputVar="TotalCrossSectionArea"  unit="m2"  end=""  steps="repStateMaps"           all=""           restrictoption="nonInit" />
+<setmap name="WaterDepthState"        outputVar="WaterDepth"   unit="m"   end=""  steps="repStateMaps,repPixMaps"                     all=""           restrictoption="nonInit" />
+<setmap name="ChanCrossSectionState"  outputVar="TotalCrossSectionArea"  unit="m2"  end=""  steps="repStateMaps,repPixMaps"           all=""           restrictoption="nonInit" />
 <setmap name="DSLRState"              outputVar="DSLR"         unit="-"   end=""  steps="repStateMaps"                     all=""           restrictoption="nonInit" />
-<setmap name="SnowCoverAState"        outputVar="SnowCoverS[0]"   unit="mm"   end=""  steps="repStateMaps"                     all=""           restrictoption="nonInit" />
-<setmap name="SnowCoverBState"        outputVar="SnowCoverS[1]"   unit="mm"   end=""  steps="repStateMaps"                     all=""           restrictoption="nonInit" />
-<setmap name="SnowCoverCState"        outputVar="SnowCoverS[2]"   unit="mm"   end=""  steps="repStateMaps"                     all=""           restrictoption="nonInit" />
-<setmap name="FrostIndexState"        outputVar="FrostIndex"   unit="-"   end=""  steps="repStateMaps"                     all=""           restrictoption="nonInit" />
+<setmap name="DSLRState" outputVar="(self.var.SoilFraction*self.var.DSLR).sum('vegetation')" unit="-" end="" steps="repPixMaps" all="" restrictoption="nonInit" />
+<setmap name="SnowCoverAState"        outputVar="SnowCoverS[0]"   unit="mm"   end=""  steps="repStateMaps,repPixMaps"                     all=""           restrictoption="nonInit" />
+<setmap name="SnowCoverBState"        outputVar="SnowCoverS[1]"   unit="mm"   end=""  steps="repStateMaps,repPixMaps"                     all=""           restrictoption="nonInit" />
+<setmap name="SnowCoverCState"        outputVar="SnowCoverS[2]"   unit="mm"   end=""  steps="repStateMaps,repPixMaps"                     all=""           restrictoption="nonInit" />
+<setmap name="FrostIndexState"        outputVar="FrostIndex"   unit="-"   end=""  steps="repStateMaps,repPixMaps"                     all=""           restrictoption="nonInit" />
 <setmap name="CumInterceptionState"   outputVar="CumInterception" unit="mm"   end=""  steps="repStateMaps"                  all=""           restrictoption="nonInit" />
+<setmap name="CumInterceptionState" outputVar="(self.var.SoilFraction*self.var.CumInterception).sum('vegetation')" unit="-" end="" steps="repPixMaps" all="" restrictoption="nonInit" />
 <setmap name="Theta1aState"            outputVar="Theta1a"       unit="mm"   end=""  steps="repStateMaps"                     all=""           restrictoption="nonInit" />
+<setmap name="Theta1aState" outputVar="(self.var.SoilFraction*self.var.Theta1a).sum('vegetation')" unit="-" end="" steps="repPixMaps" all="" restrictoption="nonInit" />
 <setmap name="Theta1bState"            outputVar="Theta1b"       unit="mm"   end=""  steps="repStateMaps"                     all=""           restrictoption="nonInit" />
+<setmap name="Theta1bState" outputVar="(self.var.SoilFraction*self.var.Theta1b).sum('vegetation')" unit="-" end="" steps="repPixMaps" all="" restrictoption="nonInit" />
 <setmap name="Theta2State"            outputVar="Theta2"       unit="mm"   end=""  steps="repStateMaps"                     all=""           restrictoption="nonInit" />
+<setmap name="Theta2State" outputVar="(self.var.SoilFraction*self.var.Theta2).sum('vegetation')" unit="-" end="" steps="repPixMaps" all="" restrictoption="nonInit" />
 <setmap name="UZState"                outputVar="UZ"           unit="mm"   end=""  steps="repStateMaps"                     all=""           restrictoption="nonInit" />
-<setmap name="LZState"                outputVar="LZ"           unit="mm"   end=""  steps="repStateMaps"                     all=""           restrictoption="nonInit" />
-<setmap name="CumIntSealedState"      outputVar="CumInterSealed"  unit="mm"   end=""  steps="repStateMaps"                     all=""           restrictoption="nonInit" />
+<setmap name="UZState" outputVar="(self.var.SoilFraction*self.var.UZ).sum('vegetation')" unit="-" end="" steps="repPixMaps" all="" restrictoption="nonInit" />
+<setmap name="LZState"                outputVar="LZ"           unit="mm"   end=""  steps="repStateMaps,repPixMaps"                     all=""           restrictoption="nonInit" />
+<setmap name="CumIntSealedState"      outputVar="CumInterSealed"  unit="mm"   end=""  steps="repStateMaps,repPixMaps"                     all=""           restrictoption="nonInit" />
 
-<setmap name="LakeLevelState"         outputVar="LakeLevel"    unit="m"   end=""  steps="repStateMaps"                     all=""           restrictoption="nonInit,simulateLakes" />
-<setmap name="DischargeMaps"          outputVar="ChanQAvg"        unit="m3/s"   end=""  steps="repStateMaps"                  all=""           restrictoption="nonInit,simulateLakes" />
-<setmap name="ReservoirFillState"     outputVar="ReservoirFill" unit="m"   end=""  steps="repStateMaps"                    all=""           restrictoption="nonInit,simulateReservoirs" />
-<setmap name="DischargeMaps"          outputVar="ChanQAvg"        unit="m3/s"   end=""  steps="repStateMaps"                  all=""           restrictoption="nonInit,simulateReservoirs" />
+<setmap name="LakeLevelState"         outputVar="LakeLevel"    unit="m"   end=""  steps="repStateMaps,repPixMaps"                     all=""           restrictoption="nonInit,simulateLakes" />
+<setmap name="DischargeMaps"          outputVar="ChanQAvg"        unit="m3/s"   end=""  steps="repStateMaps,repPixMaps"                  all=""           restrictoption="nonInit,simulateLakes" />
+<setmap name="ReservoirFillState"     outputVar="ReservoirFill" unit="m"   end=""  steps="repStateMaps,repPixMaps"                    all=""           restrictoption="nonInit,simulateReservoirs" />
 
-<setmap name="CrossSection2State"     outputVar="CrossSection2Area" unit="m"   end=""  steps="repStateMaps"                all=""           restrictoption="nonInit,SplitRouting" />
-<setmap name="ChSideState"            outputVar="Sideflow1Chan" unit="m"   end=""  steps="repStateMaps"                    all=""           restrictoption="nonInit,SplitRouting" />
-<setmap name="PolderLevelState"       outputVar="PolderLevel"  unit="m"   end=""    steps="repStateMaps"                   all=""           restrictoption="nonInit,simulatePolders" />
+<setmap name="CrossSection2State"     outputVar="CrossSection2Area" unit="m"   end=""  steps="repStateMaps,repPixMaps"                all=""           restrictoption="nonInit,SplitRouting" />
+<setmap name="ChSideState"            outputVar="Sideflow1Chan" unit="m"   end=""  steps="repStateMaps,repPixMaps"                    all=""           restrictoption="nonInit,SplitRouting" />
+<setmap name="PolderLevelState"       outputVar="PolderLevel"  unit="m"   end=""    steps="repStateMaps,repPixMaps"                   all=""           restrictoption="nonInit,simulatePolders" />
 
 
 # Reporting of "end" maps
@@ -433,9 +439,13 @@
 
 # These options report pF and vegetation stress due to low soil moisture
 <setmap name="PF1Maps"         outputVar="pF1" unit="mm"   end=""  steps=""       all="repPF1Maps"     restrictoption="nonInit,simulatePF" />
+<setmap name="PF1Maps" outputVar="(self.var.SoilFraction*self.var.pF1).sum('vegetation')" unit="-" end="" steps="repPixMaps" all="" restrictoption="nonInit" />
 <setmap name="PF2Maps"         outputVar="pF2" unit="mm"   end=""  steps=""       all="repPF2Maps"     restrictoption="nonInit,simulatePF" />
+<setmap name="PF2Maps" outputVar="(self.var.SoilFraction*self.var.pF2).sum('vegetation')" unit="-" end="" steps="repPixMaps" all="" restrictoption="nonInit" />
 <setmap name="RWSMaps"         outputVar="RWS" unit="mm"   end=""  steps=""       all="repRWS"         restrictoption="nonInit" />
+<setmap name="RWSMaps" outputVar="(self.var.SoilFraction*self.var.RWS).sum('vegetation')" unit="-" end="" steps="repPixMaps" all="" restrictoption="nonInit" />
 <setmap name="SMStressMap"     outputVar="SoilMoistureStressDays"   unit="days"   end=""  steps="repStressDays"       all=""     restrictoption="nonInit" />
+<setmap name="SMStressMap" outputVar="(self.var.SoilFraction*self.var.SoilMoistureStressDays).sum('vegetation')" unit="-" end="" steps="repPixMaps" all="" restrictoption="nonInit" />
 
 
 # Earth2Observe maps
@@ -461,7 +471,7 @@
 <setmap name="GwPercUZLZMaps"   outputVar="GwPercUZLZPixel"                        unit="mm"   end=""  steps=""  all="repE2O2"    restrictoption="nonInit" />
 
 <setmap name="LZMaps"           outputVar="LZ"                                     unit="mm"   end=""  steps=""  all="repE2O2"    restrictoption="nonInit" />
-<setmap name="WaterUseMaps"     outputVar="WUseAddM3*self.var.M3toMM"              unit="mm"   end=""  steps=""  all="repE2O2"    restrictoption="nonInit" />
+<setmap name="WaterUseMaps"     outputVar="withdrawal_CH_actual_M3*self.var.M3toMM"              unit="mm"   end=""  steps=""  all="repE2O2"    restrictoption="nonInit" />
 
 # storage lakes river channel floodplains missing
 # soil moisture missing
@@ -470,81 +480,45 @@
 <setmap name="Theta2Maps"       outputVar="Theta2"        unit="mm"   end=""  steps=""                  all="repE2O2"               restrictoption="nonInit" />
 
 # Water Abstraction
-<setmap name="TotalAbsGroundwater"   outputVar="TotalAbstractionFromGroundwaterM3*self.var.M3toMM"  unit="mm"   end=""  steps=""       all="repTotalAbs"  restrictoption="nonInit,wateruse" />
-<setmap name="TotalAbsSurface"       outputVar="TotalAbstractionFromSurfaceWaterM3*self.var.M3toMM"  unit="mm"   end=""  steps=""       all="repTotalAbs"  restrictoption="nonInit,wateruse" />
-
-<setmap name="TotalIrrigationAbstractionM3" outputVar="TotalIrrigationAbstractionM3"  unit="m3"   end="repEndMaps"  steps=""       all="repTotalAbs"  restrictoption="nonInit,wateruse" />
-<setmap name="TotalPaddyRiceIrrigationAbstractionM3" outputVar="TotalPaddyRiceIrrigationAbstractionM3"  unit="m3"   end="repEndMaps"  steps=""       all="repTotalAbs"  restrictoption="nonInit,wateruse" />
-<setmap name="TotalLivestockAbstractionM3" outputVar="TotalLivestockAbstractionM3"  unit="m3"   end=""  steps="repEndMaps"       all="repTotalAbs"  restrictoption="nonInit,wateruse" />
-
-<setmap name="DomesticConsumptiveUse"    outputVar="DomesticConsumptiveUseMM"       unit="mm"   end=""  steps=""       all="repTotalAbs"  restrictoption="nonInit,wateruse" />
-<setmap name="LivestockConsumptiveUse"  outputVar="LivestockConsumptiveUseMM"     unit="mm"   end=""  steps=""       all="repTotalAbs"  restrictoption="nonInit,wateruse" />
-<setmap name="IndustrialConsumptiveUse" outputVar="IndustrialConsumptiveUseMM"    unit="mm"   end=""  steps=""       all="repTotalAbs"  restrictoption="nonInit,wateruse" />
-<setmap name="EnergyConsumptiveUse"     outputVar="EnergyConsumptiveUseMM"        unit="mm"   end=""  steps=""       all="repTotalAbs"  restrictoption="nonInit,wateruse" />
-<setmap name="IrrigationWaterAbstraction"     outputVar="IrrigationWaterAbstractionM3*self.var.M3toMM + self.var.PaddyRiceWaterAbstractionFromSurfaceWaterM3*self.var.M3toMM"        unit="mm"   end=""  steps=""       all="repTotalAbs"  restrictoption="nonInit,wateruse" />
-<setmap name="RegionIrrigationAbstractionGroundWaterM3" outputVar="RegionIrrigationAbstractionGroundWaterM3" unit="m3" end="" steps="" all="repTotalAbs"  restrictoption="nonInit,wateruse" />
-<setmap name="RegionDomesticAbstractionGroundWaterM3" outputVar="RegionDomesticAbstractionGroundWaterM3" unit="m3" end="" steps="" all="repTotalAbs"  restrictoption="nonInit,wateruse" />
-<setmap name="RegionLivestockAbstractionGroundWaterM3" outputVar="RegionLivestockAbstractionGroundWaterM3" unit="m3" end="" steps="" all="repTotalAbs"  restrictoption="nonInit,wateruse" />
-<setmap name="RegionIndustryAbstractionGroundWaterM3" outputVar="RegionIndustryAbstractionGroundWaterM3" unit="m3" end="" steps="" all="repTotalAbs"  restrictoption="nonInit,wateruse" />
-<setmap name="RegionIrrigationAbstractionSurfaceWaterM3" outputVar="RegionIrrigationAbstractionSurfaceWaterM3" unit="m3" end="" steps="" all="repTotalAbs"  restrictoption="nonInit,wateruse" />
-<setmap name="RegionDomesticAbstractionSurfaceWaterM3" outputVar="RegionDomesticAbstractionSurfaceWaterM3" unit="m3" end="" steps="" all="repTotalAbs"  restrictoption="nonInit,wateruse" />
-<setmap name="RegionLivestockAbstractionSurfaceWaterM3" outputVar="RegionLivestockAbstractionSurfaceWaterM3" unit="m3" end="" steps="" all="repTotalAbs"  restrictoption="nonInit,wateruse" />
-<setmap name="RegionIndustryAbstractionSurfaceWaterM3" outputVar="RegionIndustryAbstractionSurfaceWaterM3" unit="m3" end="" steps="" all="repTotalAbs"  restrictoption="nonInit,wateruse" />
-<setmap name="RegionEnergyAbstractionSurfaceWaterM3" outputVar="RegionEnergyAbstractionSurfaceWaterM3" unit="m3" end="" steps="" all="repTotalAbs"  restrictoption="nonInit,wateruse" />
-<setmap name="RegionDomesticAbstractionNonConventionalM3" outputVar="RegionDomesticAbstractionNonConventionalM3" unit="m3" end="" steps="" all="repTotalAbs"  restrictoption="nonInit,wateruse" />
-<setmap name="RegionIndustryAbstractionNonConventionalM3" outputVar="RegionIndustryAbstractionNonConventionalM3" unit="m3" end="" steps="" all="repTotalAbs"  restrictoption="nonInit,wateruse" />
-
-# Water Use
-<setmap name="TotalWUse"       outputVar="WUseAddM3*self.var.M3toMM" unit="mm"   end=""  steps=""       all="repTotalWUse"  restrictoption="nonInit,wateruse" />
-<setmap name="TotalWUseRegion" outputVar="totalAddM3*self.var.M3toMM"  unit="mm"   end=""  steps=""       all="repTotalWUse"  restrictoption="nonInit,wateruse" />
-
-# Water Consumption Indicators
-<setmap name="WEI_Cns"                      outputVar="WEI_Cns" unit="-" monthly="True"  end=""  steps="repWIndex" all=""  restrictoption="nonInit,wateruse" />
-<setmap name="WEI_Abs"                      outputVar="WEI_Abs" unit="-" monthly="True"  end=""  steps="repWIndex" all=""  restrictoption="nonInit,wateruse" />
-<setmap name="WEI_Dem"                      outputVar="WEI_Dem" unit="-" monthly="True"  end=""  steps="repWIndex" all=""  restrictoption="nonInit,wateruse" />
-<setmap name="RegionMonthReservoirAndLakeStorageM3"  outputVar="RegionMonthReservoirAndLakeStorageM3" unit="M3" monthly="True"  end=""  steps="repWIndex" all=""  restrictoption="nonInit,wateruse" />
-<setmap name="RegionMonthWaterAbstractedfromLakesReservoirsM3"  outputVar="RegionMonthWaterAbstractedfromLakesReservoirsM3" unit="M3" monthly="True"  end=""  steps="repWIndex" all=""  restrictoption="nonInit,wateruse" />
-<setmap name="RegionMonthIrrigationShortageM3" outputVar="RegionMonthIrrigationShortageM3" unit="M3" monthly="True"  end=""  steps="repWIndex" all=""  restrictoption="nonInit,wateruse" />
-<setmap name="RegionMonthInternalFlowM3"    outputVar="RegionMonthInternalFlowM3" unit="M3" monthly="True"  end=""  steps="repWIndex" all=""  restrictoption="nonInit,wateruse" />
-<setmap name="RegionMonthExternalInflowM3"  outputVar="RegionMonthExternalInflowM3" unit="M3" monthly="True"  end=""  steps="repWIndex" all=""  restrictoption="nonInit,wateruse" />
-<setmap name="RegionMonthWConsumptionM3"    outputVar="RegionMonthWConsumptionM3" unit="M3" monthly="True"  end=""  steps="repWIndex" all=""  restrictoption="nonInit,wateruse" />
-<setmap name="RegionMonthWAbstractionM3"    outputVar="RegionMonthWAbstractionM3" unit="M3" monthly="True"  end=""  steps="repWIndex" all=""  restrictoption="nonInit,wateruse" />
-<setmap name="RegionMonthWDemandM3"         outputVar="RegionMonthWDemandM3" unit="M3" monthly="True"  end=""  steps="repWIndex" all=""  restrictoption="nonInit,wateruse" />
-<setmap name="MonthETpotMM"                 outputVar="MonthETpotMM" unit="mm" monthly="True"  end=""  steps="repWIndex" all=""  restrictoption="nonInit,wateruse" />
-<setmap name="MonthETactMM"                 outputVar="MonthETactMM" unit="mm" monthly="True"  end=""  steps="repWIndex" all=""  restrictoption="nonInit,wateruse" />
-<setmap name="MonthETdifMM"                 outputVar="MonthETdifMM" unit="mm" monthly="True"  end=""  steps="repWIndex" all=""  restrictoption="nonInit,wateruse" />
-<setmap name="WaterDependencyIndex"         outputVar="WaterDependencyIndex" unit="-" monthly="True"  end=""  steps="repWIndex" all=""  restrictoption="nonInit,wateruse" />
-<setmap name="WaterSecurityIndex"           outputVar="WaterSecurityIndex" unit="-" monthly="True"  end=""  steps="repWIndex" all=""  restrictoption="nonInit,wateruse" />
-<setmap name="WaterSustainabilityIndex"     outputVar="WaterSustainabilityIndex" unit="-" monthly="True"  end=""  steps="repWIndex" all=""  restrictoption="nonInit,wateruse" />
-<setmap name="FalkenmarkM3Capita1"          outputVar="FalkenmarkM3Capita1" unit="M3Capita" monthly="True"  end=""  steps="repWIndex" all=""  restrictoption="nonInit,wateruse" />
-<setmap name="FalkenmarkM3Capita2"          outputVar="FalkenmarkM3Capita2" unit="M3Capita" monthly="True"  end=""  steps="repWIndex" all=""  restrictoption="nonInit,wateruse" />
-<setmap name="FalkenmarkM3Capita3"          outputVar="FalkenmarkM3Capita3" unit="M3Capita" monthly="True"  end=""  steps="repWIndex" all=""  restrictoption="nonInit,wateruse" />
-
-<setmap name="TotalAbstractionFromGroundwaterM3"  outputVar="TotalAbstractionFromGroundwaterM3" unit="m3"   end=""  steps="repLZMaps"       all=""      restrictoption="nonInit,wateruse" />
-<setmap name="TotalAbstractionFromSurfaceWaterM3"      outputVar="TotalAbstractionFromSurfaceWaterM3" unit="m3"   end=""  steps="repLZMaps"       all=""      restrictoption="nonInit,wateruse" />
-<setmap name="PotentialSurfaceWaterAvailabilityForIrrigationM3" outputVar="PotentialSurfaceWaterAvailabilityForIrrigationM3" unit="m3"  end=""  steps="repLZMaps"       all=""      restrictoption="nonInit,wateruse" />
-
-<setmap name="TotalAbsGroundwater"   outputVar="TotalAbstractionFromGroundwaterM3*self.var.M3toMM"  unit="mm"   end=""  steps=""       all="repTotalAbs"  restrictoption="nonInit,wateruse" />
-<setmap name="AreaTotalAbstractionFromSurfaceWaterM3" outputVar="AreaTotalAbstractionFromSurfaceWaterM3"  unit="m3"   end=""  steps=""       all="repTotalAbs"   restrictoption="nonInit,wateruse" />
-<setmap name="AreaTotalAbstractionFromGroundwaterM3" outputVar="AreaTotalAbstractionFromGroundwaterM3"  unit="m3"   end=""  steps=""       all="repTotalAbs"   restrictoption="nonInit,wateruse" />
-<setmap name="AreatotalWaterAbstractedfromLakesReservoirsM3"         outputVar="AreatotalWaterAbstractedfromLakesReservoirsM3" unit="m3"   end=""  steps=""       all="repTotalAbs"      restrictoption="nonInit,wateruse" />
-
-<setmap name="LakeAbstractionM3"         outputVar="LakeAbstractionM3" unit="m3"   end=""  steps="repLZMaps"       all=""      restrictoption="nonInit,wateruse" />
-<setmap name="ReservoirAbstractionM3"         outputVar="ReservoirAbstractionM3" unit="m3"   end=""  steps="repLZMaps"       all=""      restrictoption="nonInit,wateruse" />
-<setmap name="LakeStorageM3"         outputVar="LakeStorageM3" unit="m3"   end=""  steps="repLZMaps"       all=""      restrictoption="nonInit,wateruse" />
-<setmap name="ReservoirStorageM3"         outputVar="ReservoirStorageM3" unit="m3"   end=""  steps="repLZMaps"       all=""      restrictoption="nonInit,wateruse" />
-<setmap name="TotalDemandM3"         outputVar="TotalDemandM3" unit="m3"   end=""  steps="repLZMaps"       all=""      restrictoption="nonInit,wateruse" />
-<setmap name="WUseAddM3"         outputVar="WUseAddM3" unit="m3"   end=""  steps="repLZMaps"       all=""      restrictoption="nonInit,wateruse" />
-<setmap name="totalAddM3"         outputVar="totalAddM3" unit="m3"   end=""  steps="repLZMaps"       all=""      restrictoption="nonInit,wateruse" />
-<setmap name="AreatotalIrrigationUseM3"         outputVar="AreatotalIrrigationUseM3" unit="m3"   end=""  steps="repLZMaps"       all=""      restrictoption="nonInit,wateruse" />
-<setmap name="FractionAbstractedFromChannels"         outputVar="FractionAbstractedFromChannels" unit="-"   end=""  steps="repLZMaps"       all=""      restrictoption="nonInit,wateruse" />
-<setmap name="EFlowIndicator"         outputVar="EFlowIndicator" unit="-"   end=""  steps="repLZMaps"       all=""      restrictoption="nonInit,wateruse" />
+<setmap name="WEI_Cns"                      outputVar="WEI_Cns" unit="-" monthly="True"  end=""  steps="repWaterUse" all=""  restrictoption="nonInit,wateruse" />
+<setmap name="WEI_Plus"                      outputVar="WEI_Plus" unit="-" monthly="True"  end=""  steps="repWaterUse" all=""  restrictoption="nonInit,wateruse" />
+<setmap name="WEI_Abs"                      outputVar="WEI_Abs" unit="-" monthly="True"  end=""  steps="repWaterUse" all=""  restrictoption="nonInit,wateruse" />
+<setmap name="WEI_Dem"                      outputVar="WEI_Dem" unit="-" monthly="True"  end=""  steps="repWaterUse" all=""  restrictoption="nonInit,wateruse" />
+<setmap name="WaterDependencyIndex"         outputVar="WaterDependencyIndex" unit="-" monthly="True"  end=""  steps="repWaterUse" all=""  restrictoption="nonInit,wateruse" />
+<setmap name="WaterSecurityIndex"           outputVar="WaterSecurityIndex" unit="-" monthly="True"  end=""  steps="repWaterUse" all=""  restrictoption="nonInit,wateruse" />
+<setmap name="WaterSustainabilityIndex"     outputVar="WaterSustainabilityIndex" unit="-" monthly="True"  end=""  steps="repWaterUse" all=""  restrictoption="nonInit,wateruse" />
+<setmap name="FalkenmarkM3Capita1"          outputVar="FalkenmarkM3Capita1" unit="M3Capita" monthly="True"  end=""  steps="repWaterUse" all=""  restrictoption="nonInit,wateruse" />
+<setmap name="FalkenmarkM3Capita2"          outputVar="FalkenmarkM3Capita2" unit="M3Capita" monthly="True"  end=""  steps="repWaterUse" all=""  restrictoption="nonInit,wateruse" />
+<setmap name="FalkenmarkM3Capita3"          outputVar="FalkenmarkM3Capita3" unit="M3Capita" monthly="True"  end=""  steps="repWaterUse" all=""  restrictoption="nonInit,wateruse" />
+<setmap name="EFlowIndicator"         outputVar="EFlowIndicator" unit="-"   end=""  steps="repWaterUse"       all=""      restrictoption="nonInit,wateruse" />
+<setmap name="RegionMonthReservoirAndLakeStorageM3"  outputVar="RegionMonthReservoirAndLakeStorageM3" unit="M3" monthly="True"  end=""  steps="repWaterUse" all=""  restrictoption="nonInit,wateruse" />
+<setmap name="RegionMonthWaterAbstractedfromLakesReservoirsM3"  outputVar="RegionMonthWaterAbstractedfromLakesReservoirsM3" unit="M3" monthly="True"  end=""  steps="repWaterUse" all=""  restrictoption="nonInit,wateruse" />
+<setmap name="RegionMonthInternalFlowM3"    outputVar="RegionMonthInternalFlowM3" unit="M3" monthly="True"  end=""  steps="repWaterUse" all=""  restrictoption="nonInit,wateruse" />
+<setmap name="RegionMonthExternalInflowM3"  outputVar="RegionMonthExternalInflowM3" unit="M3" monthly="True"  end=""  steps="repWaterUse" all=""  restrictoption="nonInit,wateruse" />
+<setmap name="RegionMonthConsumptionActualM3"    outputVar="RegionMonthConsumptionActualM3" unit="M3" monthly="True"  end=""  steps="repWaterUse" all=""  restrictoption="nonInit,wateruse" />
+<setmap name="RegionMonthConsumptionRequiredM3"    outputVar="RegionMonthConsumptionRequiredM3" unit="M3" monthly="True"  end=""  steps="repWaterUse" all=""  restrictoption="nonInit,wateruse" />
+<setmap name="consumption_required_domestic_M3MonthRegion" outputVar="consumption_required_domestic_M3MonthRegion" unit="M3" monthly="True" end="" steps="repWaterUse" all="" restrictoption="nonInit,wateruse"/>
+<setmap name="consumption_required_energy_M3MonthRegion" outputVar="consumption_required_energy_M3MonthRegion" unit="M3" monthly="True" end="" steps="repWaterUse" all="" restrictoption="nonInit,wateruse"/>
+<setmap name="consumption_required_industry_M3MonthRegion" outputVar="consumption_required_industry_M3MonthRegion" unit="M3" monthly="True" end="" steps="repWaterUse" all="" restrictoption="nonInit,wateruse"/>
+<setmap name="consumption_required_livestock_M3MonthRegion" outputVar="consumption_required_livestock_M3MonthRegion" unit="M3" monthly="True" end="" steps="repWaterUse" all="" restrictoption="nonInit,wateruse"/>
+<setmap name="consumption_required_irrigation_M3MonthRegion" outputVar="consumption_required_irrigation_M3MonthRegion" unit="M3" monthly="True" end="" steps="repWaterUse" all="" restrictoption="nonInit,wateruse"/>
+<setmap name="consumption_actual_irrigation_M3MonthRegion" outputVar="consumption_actual_irrigation_M3MonthRegion" unit="M3" monthly="True" end="" steps="repWaterUse" all="" restrictoption="nonInit,wateruse"/>
+<setmap name="abstraction_allSources_required_irrigation_M3MonthRegion" outputVar="abstraction_allSources_required_irrigation_M3MonthRegion" unit="M3" monthly="True" end="" steps="repWaterUse" all="" restrictoption="nonInit,wateruse"/>
+<setmap name="abstraction_allSources_actual_irrigation_M3MonthRegion" outputVar="abstraction_allSources_actual_irrigation_M3MonthRegion" unit="M3" monthly="True" end="" steps="repWaterUse" all="" restrictoption="nonInit,wateruse"/>
+<setmap name="abstraction_SwGw_required_irrigation_M3MonthRegion" outputVar="abstraction_SwGw_required_irrigation_M3MonthRegion" unit="M3" monthly="True" end="" steps="repWaterUse" all="" restrictoption="nonInit,wateruse"/>
+<setmap name="abstraction_SwGw_actual_irrigation_M3MonthRegion" outputVar="abstraction_SwGw_actual_irrigation_M3MonthRegion" unit="M3" monthly="True" end="" steps="repWaterUse" all="" restrictoption="nonInit,wateruse"/>
+<setmap name="UpstreamInflowM3" outputVar="UpstreamInflowM3" unit="M3" monthly="True" end="" steps="repWaterUse" all="" restrictoption="nonInit,wateruse"/>
+<setmap name="LocalFreshwaterM3" outputVar="LocalFreshwaterM3" unit="M3" monthly="True" end="" steps="repWaterUse" all="" restrictoption="nonInit,wateruse"/>
+<setmap name="LocalTotalWaterDemandM3" outputVar="LocalTotalWaterDemandM3" unit="M3" monthly="True" end="" steps="repWaterUse" all="" restrictoption="nonInit,wateruse"/>
+<setmap name="UpstreamInflowUsedM3" outputVar="UpstreamInflowUsedM3" unit="M3" monthly="True" end="" steps="repWaterUse" all="" restrictoption="nonInit,wateruse"/>
+<setmap name="FossilGroundwaterUsedM3" outputVar="FossilGroundwaterUsedM3" unit="M3" monthly="True" end="" steps="repWaterUse" all="" restrictoption="nonInit,wateruse"/>
 
 <!-- Groundwater lower zone (LZ) water balance -->
 <setmap name="LZOutflowMaps" outputVar="LZOutflowToChannelPixel" unit="mm" end="" steps="" all="repLZWB" restrictoption="nonInit" />
 <setmap name="LZMaps" outputVar="LZ" unit="mm" end="" steps="" all="repLZWB" restrictoption="nonInit" />
-<setmap name="TotalAbsGroundwater" outputVar="TotalAbstractionFromGroundwaterM3*self.var.M3toMM" unit="mm" end="" steps="" all="repLZWB" restrictoption="nonInit,wateruse" />
+<setmap name="TotalAbsGroundwater" outputVar="abstraction_GW_actual_M3*self.var.M3toMM" unit="mm" end="" steps="" all="repLZWB" restrictoption="nonInit,wateruse" />
 <setmap name="GwPercUZLZMaps" outputVar="GwPercUZLZPixel" unit="mm" end="" steps="" all="repLZWB" restrictoption="nonInit" />
+
 <!-- Evaporative fluxes and surface soil moisture -->
 <setmap name="TaMaps" outputVar="TaPixel" unit="mm" end="" steps="" all="repEvapPix" restrictoption="nonInit" />
 <setmap name="CanopyIntEvapMaps" outputVar="deffraction(self.var.TaInterception)" unit="mm" end="" steps="" all="repEvapPix" restrictoption="nonInit" />

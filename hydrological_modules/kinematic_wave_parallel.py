@@ -32,7 +32,7 @@ if (not os.path.exists(BIN)) or os.stat(BIN).st_mtime <= os.stat(SRC).st_mtime +
     pyximport.install(setup_args=setup_args) # If this is executed, the binary .so file will be ignored and the routing is executed serially.
     print("""WARNING:\nThe Cython module {} has not been compiled on the current machine (to compile, see instructions in the module's docstring).
 The kinematic wave routing is executed serially (not in parallel).""".format(SRC))
-import kinematic_wave_parallel_tools as kwpt
+from . import kinematic_wave_parallel_tools as kwpt
 
 
 

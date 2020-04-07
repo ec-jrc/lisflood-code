@@ -8,14 +8,14 @@
 # Copyright:   (c) burekpe 2014
 # Licence:     <your licence>
 # -------------------------------------------------------------------------
-from zusatz import *
+from future.utils import listitems
 from netCDF4 import num2date, date2num
-from pandas import date_range
 from xarray import DataArray
 import numpy as np
 import time as xtime
 import os
-import globals
+from .zusatz import *
+from . import globals
 
 # ------------------------------
 
@@ -45,7 +45,7 @@ def valuecell(mask, coordx, coordstr):
     null = np.zeros((pcraster.clone().nrRows(), pcraster.clone().nrCols()))
     null[null == 0] = -9999
 
-    for i in xrange(int(len(coord) / 2)):
+    for i in range(int(len(coord) / 2)):
         col = int(
             (coord[i * 2] - pcraster.clone().west()) / pcraster.clone().cellSize())
         row = int(
@@ -92,16 +92,16 @@ def mapattrNetCDF(name):
     filename = os.path.splitext(name)[0] + '.nc'
     nf1 = iterOpenNetcdf(filename, "Checking netcdf map \n", 'r')
     spatial_dims = ('x', 'y') if 'x' in nf1.variables else ('lon', 'lat')
-    x1, x2, y1, y2 = [round(nf1.variables[v][j], 5) for v in spatial_dims for j in (0, 1)]
+    x1, x2, y1, y2 = [np.round(nf1.variables[v][j], 5) for v in spatial_dims for j in (0, 1)]
     nf1.close()
-    if maskmapAttr['cell'] != round(np.abs(x2 - x1), 5) or maskmapAttr['cell'] != round(np.abs(y2 - y1), 5):
+    if maskmapAttr['cell'] != np.round(np.abs(x2 - x1), 5) or maskmapAttr['cell'] != np.round(np.abs(y2 - y1), 5):
         raise LisfloodError("Cell size different in maskmap {} and {}".format(binding['MaskMap'], filename))
     half_cell = maskmapAttr['cell'] / 2
     x = x1 - half_cell # |
     y = y1 + half_cell # | coordinates of the upper left corner of the input file upper left pixel
-    cut0 = int(round(np.abs(maskmapAttr['x'] - x) / maskmapAttr['cell'], 5))
+    cut0 = int(np.round(np.abs(maskmapAttr['x'] - x) / maskmapAttr['cell'], 5))
     cut1 = cut0 + maskmapAttr['col']
-    cut2 = int(round(np.abs(maskmapAttr['y'] - y) / maskmapAttr['cell'], 5))
+    cut2 = int(np.round(np.abs(maskmapAttr['y'] - y) / maskmapAttr['cell'], 5))
     cut3 = cut2 + maskmapAttr['row']
     return cut0, cut1, cut2, cut3 # input data will be sliced using [cut0:cut1,cut2:cut3]
 
@@ -130,21 +130,20 @@ def loadsetclone(name):
         except:
             filename = os.path.splitext(binding[name])[0] + '.nc'
             nf1 = iterOpenNetcdf(filename, "", "r")
-            value = nf1.variables.items()[-1][0]  # get the last variable name
+            value = listitems(nf1.variables)[-1][0]  # get the last variable name
             x1 = nf1.variables.values()[0][0]
             x2 = nf1.variables.values()[0][1]
             xlast = nf1.variables.values()[0][-1]
             y1 = nf1.variables.values()[1][0]
             ylast = nf1.variables.values()[1][-1]
-            cellSize = round(np.abs(x2 - x1),4)
-            nrRows = int(0.5+np.abs(ylast - y1) / cellSize + 1)
-            nrCols = int(0.5+np.abs(xlast - x1) / cellSize + 1)
-            x = x1 - cellSize / 2
-            y = y1 + cellSize / 2
-            mapnp = np.array(nf1.variables[value][0:nrRows, 0:nrCols])
+            cell_size = np.round(np.abs(x2 - x1),4)
+            nr_rows, nr_cols = nf1.variables[value].shape
+            x = x1 - cell_size / 2
+            y = y1 + cell_size / 2
+            mapnp = np.array(nf1.variables[value])
             nf1.close()
             # setclone  row col cellsize xupleft yupleft
-            setclone(nrRows,nrCols, cellSize, x, y)
+            setclone(nr_rows, nr_cols, cell_size, x, y)
             map = numpy2pcr(Boolean, mapnp, 0)
             #map = boolean(map)
             flagmap = True
@@ -261,7 +260,7 @@ def loadmap(name,pcr=False, lddflag=False):
         cut0, cut1, cut2, cut3 = mapattrNetCDF(filename)
         # load netcdf map but only the rectangle needed
         nf1 = iterOpenNetcdf(filename, "", 'r')
-        value = nf1.variables.items()[-1][0]  # get the last variable name
+        value = listitems(nf1.variables)[-1][0]  # get the last variable name
         if not timestepInit:
             mapnp = nf1.variables[value][cut2:cut3, cut0:cut1]
         else:
@@ -336,7 +335,7 @@ def loadLAI(value, pcrvalue, i,pcr=False):
         # and calculate the cutting
         cut0, cut1, cut2, cut3 = mapattrNetCDF(filename)
         nf1 = iterOpenNetcdf(filename, "", 'r')
-        value = nf1.variables.items()[-1][0]  # get the last variable name
+        value = listitems(nf1.variables)[-1][0]  # get the last variable name
         mapnp = nf1.variables[value][i, cut2:cut3, cut0:cut1]
         nf1.close()
         mapC = compressArray(mapnp,pcr=False,name=filename)
@@ -502,7 +501,7 @@ def writenet(flag, inputmap, netfile, timestep, value_standard_name, value_long_
         for dim, name, size in zip(dimensions, ["Y", "X"], [row, col]):
             nf1.createDimension(dim, size)
             space_coords[name] = nf1.createVariable(dim, 'f8', (dim,))
-            for key, value in metadataNCDF[dim].iteritems():
+            for key, value in metadataNCDF[dim].items():
                 space_coords[name].setncattr(key, value)
         # Other dimensions (if the variable is a xarray.DataArray)
         if isinstance(inputmap, DataArray):
@@ -516,12 +515,11 @@ def writenet(flag, inputmap, netfile, timestep, value_standard_name, value_long_
         if 'laea' in metadataNCDF.keys():
             proj = nf1.createVariable('laea', 'i4')
             for i in metadataNCDF['laea']:
-                exec('%s="%s"') % ("proj." + i, metadataNCDF['laea'][i])
+                exec("{} = '{}'".format("proj." + i, metadataNCDF['laea'][i]))
         if 'lambert_azimuthal_equal_area' in metadataNCDF.keys():
             proj = nf1.createVariable('lambert_azimuthal_equal_area', 'i4')
             for i in metadataNCDF['lambert_azimuthal_equal_area']:
-                exec('%s="%s"') % (
-                    "proj." + i, metadataNCDF['lambert_azimuthal_equal_area'][i])
+                exec("{} = '{}'".format("proj." + i, metadataNCDF['lambert_azimuthal_equal_area'][i]))
         """
         EUROPE
         proj.grid_mapping_name='lambert_azimuthal_equal_area'
@@ -535,11 +533,11 @@ def writenet(flag, inputmap, netfile, timestep, value_standard_name, value_long_
         proj.EPSG_code = "EPSG:3035"
         """
         # Create data variable and assign values to all variables
-        cell = round(pcraster.clone().cellSize(),5)
-        xl = round((pcraster.clone().west() + cell / 2),5)
-        xr = round((xl + col * cell),5)
-        yu = round((pcraster.clone().north() - cell / 2),5)
-        yd = round((yu - row * cell),5)
+        cell = np.round(pcraster.clone().cellSize(),5)
+        xl = np.round((pcraster.clone().west() + cell / 2),5)
+        xr = np.round((xl + col * cell),5)
+        yu = np.round((pcraster.clone().north() - cell / 2),5)
+        yd = np.round((yu - row * cell),5)
         space_coords["Y"][:] = np.linspace(yu, yd, row, endpoint=False)
         space_coords["X"][:] = np.linspace(xl, xr, col, endpoint=False)
         chunksizes = None
@@ -550,10 +548,10 @@ def writenet(flag, inputmap, netfile, timestep, value_standard_name, value_long_
                 dates = num2date(steps, units_time, binding["CalendarConvention"])
                 next_date_times = np.array([j + datetime.timedelta(seconds=int(binding["DtSec"])) for j in dates])
                 if frequency == "monthly":
-                    months_end = np.array([dates[j].month != next_date_times[j].month for j in xrange(steps.size)])
+                    months_end = np.array([dates[j].month != next_date_times[j].month for j in range(steps.size)])
                     steps = steps[months_end]
                 elif frequency == "annual":
-                    years_end = np.array([dates[j].year != next_date_times[j].year for j in xrange(steps.size)])
+                    years_end = np.array([dates[j].year != next_date_times[j].year for j in range(steps.size)])
                     steps = steps[years_end]
             nf1.createDimension('time', steps.size)
             time = nf1.createVariable('time', float, ('time'))
@@ -631,3 +629,9 @@ def sumOverAreas(values, area_ids):
         area_ids: area ID of each model grid cell, i.e. cells with the same ID belong to the same area (np.ndarray of size self.num_pixel)
     Returns: the sum over the area to which the grid cell belongs (np.ndarray of size self.var.num_pixel)"""
     return np.take(np.bincount(area_ids, weights=values), area_ids)
+
+def quickMap(vec, cmap='plasma_r', vmin=None, vmax=None):
+    land_mask = ~maskinfo['mask']
+    mat = np.full(land_mask.shape, np.nan)
+    mat[land_mask] = vec
+    return DataArray(mat, coords={'y': np.arange(mat.shape[0])[::-1], 'x': np.arange(mat.shape[1])}, dims=('y', 'x')).plot(cmap=cmap, vmin=vmin, vmax=vmax)

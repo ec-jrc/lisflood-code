@@ -16,7 +16,7 @@ from hydrological_modules.reservoir import *
 from hydrological_modules.polder import *
 from hydrological_modules.inflow import *
 from hydrological_modules.transmission import *
-from kinematic_wave_parallel import kinematicWave, kwpt
+from .kinematic_wave_parallel import kinematicWave, kwpt
 
 
 
@@ -417,7 +417,7 @@ class routing(object):
             if option['openwaterevapo']:
                 SideflowChanM3 -= self.var.EvaAddM3Dt
             if option['wateruse']:
-                SideflowChanM3 -= self.var.WUseAddM3Dt
+                SideflowChanM3 -= (self.var.withdrawal_CH_actual_M3_routStep - self.var.returnflow_GwAbs2Channel_M3_routStep)
             if option['inflow']:
                 SideflowChanM3 += self.var.QInDt
             if option['TransLoss']:

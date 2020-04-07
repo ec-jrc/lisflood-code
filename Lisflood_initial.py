@@ -254,11 +254,11 @@ class LisfloodModel_ini(DynamicModel):
         """Allocate xarray.DataArray filled by 0 with input dimensions.
            Argument 'dimensions' is a list of tuples of the type ('dimension name', coordinate list/array)."""
         coords = OrderedDict(dimensions)
-        return xr.DataArray(np.zeros(map(len, coords.values()), dtype), coords=coords, dims=coords.keys())
+        return xr.DataArray(np.zeros([len(v) for v in coords.values()], dtype), coords=coords, dims=coords.keys())
 
     def initialiseVariableAllVegetation(self, name, coords=None):
         """Load a DataArray from a model output netCDF file (typycally an end map).
-        This function allows reading netCDF variables with more than 3 dimesnions (time, y, x) into a xarray.DataArray.
+        This function allows reading netCDF variables with more than 3 dimensions (time, y, x) into a xarray.DataArray.
         The coords argument is used if name does not point to a netCDF file: coordinates to allocate the DataArray before assigning a default value."""
         file_path = binding[name]
         if os.path.exists(file_path):
@@ -287,7 +287,7 @@ class LisfloodModel_ini(DynamicModel):
             coords = self.coord_landuse
         data = self.allocateDataArray(coords)
         values_1 = readInputWithBackup(name_1)
-        labels = coords.values()[0]
+        labels = list(coords.values())[0]
         data.loc[labels[0],:] = values_1
         data.loc[labels[1],:] = readInputWithBackup(name_2, values_1)
         data.loc[labels[2],:] = readInputWithBackup(name_3, values_1)

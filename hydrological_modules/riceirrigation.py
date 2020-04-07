@@ -109,7 +109,6 @@ class riceirrigation(object):
                #  FAO: percolation for heavy clay soils: PERC = 2 mm/day
             self.var.PaddyRiceWaterAbstractionFromSurfaceWaterM3 = RiceSoilSaturationM3 + RiceFloodingM3 + RiceEvaporationM3 + RicePercolationM3
                # m3 water needed for paddyrice
-            #self.var.TotalAbstractionFromSurfaceWaterM3 = self.var.PaddyRiceWaterAbstractionFromSurfaceWaterM3
                  # will be done in the waterabstraction module
             """# phase 4: stop keeping constant water level 20 days before harvest date
                  phase 5: start draining 10 days before harvest date"""
