@@ -8,7 +8,7 @@
 # Copyright:   (c) burekpe 2014
 # Licence:     <your licence>
 # -------------------------------------------------------------------------
-from future.utils import listitems
+from future.utils import listitems, listvalues
 from netCDF4 import num2date, date2num
 from xarray import DataArray
 import numpy as np
@@ -131,11 +131,11 @@ def loadsetclone(name):
             filename = os.path.splitext(binding[name])[0] + '.nc'
             nf1 = iterOpenNetcdf(filename, "", "r")
             value = listitems(nf1.variables)[-1][0]  # get the last variable name
-            x1 = nf1.variables.values()[0][0]
-            x2 = nf1.variables.values()[0][1]
-            xlast = nf1.variables.values()[0][-1]
-            y1 = nf1.variables.values()[1][0]
-            ylast = nf1.variables.values()[1][-1]
+            x1 = listvalues(nf1.variables)[0][0]
+            x2 = listvalues(nf1.variables)[0][1]
+            xlast = listvalues(nf1.variables)[0][-1]
+            y1 = listvalues(nf1.variables)[1][0]
+            ylast = listvalues(nf1.variables)[1][-1]
             cell_size = np.round(np.abs(x2 - x1),4)
             nr_rows, nr_cols = nf1.variables[value].shape
             x = x1 - cell_size / 2
