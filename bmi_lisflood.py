@@ -1,4 +1,4 @@
-#! /usr/bin/python2
+#! /usr/bin/python3
 from lisf1 import LisfloodModel
 import os
 import re
@@ -8,11 +8,11 @@ import xarray as xr
 from sys import argv
 from datetime import datetime
 from global_modules.zusatz import optionBinding
-from basic_modeling_interface.bmi import Bmi
+from bmipy import Bmi
 from global_modules.zusatz import checkifDate, pcraster
 from global_modules.globals import modelSteps, maskinfo
 from pcraster.framework.dynamicFramework import DynamicFramework
-from ipdb import set_trace as bp
+#from ipdb import set_trace as bp
 
 OUT_VARS = [('Discharge', 'ChanQAvg', 'm^3/s'), ('Topsoil moisture', 'W1a', '1e-3 m')]
 OUT_VARS = pd.DataFrame(OUT_VARS, columns=['external_name','internal_name','units']).set_index('external_name')
@@ -132,6 +132,12 @@ class LisfloodBmi(Bmi):
 
     def get_value_at_indices(self, var_name, rows_cols):
         return self.get_value(var_name)[rows_cols[:,0],rows_cols[:,1]]
+    
+    def get_value_ptr(self, var_name):
+        raise NotImplementedError("get_value_ptr")
+
+    def get_var_location(self, var_name):
+        raise NotImplementedError("get_var_location")
 
     def set_value(self, var_name, src):
         vector = self._refDomainVar(var_name)
@@ -196,6 +202,24 @@ class LisfloodBmi(Bmi):
     def get_grid_type(self, grid_id):
         checkGridID(grid_id)
         return 'uniform_rectilinear'
+
+    def get_grid_edge_count(self, grid):
+        raise NotImplementedError("get_grid_edge_count")
+
+    def get_grid_edge_nodes(self, grid, edge_nodes):
+        raise NotImplementedError("get_grid_edge_nodes")
+
+    def get_grid_face_count(self, grid):
+        raise NotImplementedError("get_grid_face_count")
+
+    def get_grid_face_nodes(self, grid, face_nodes):
+        raise NotImplementedError("get_grid_face_nodes")
+
+    def get_grid_node_count(self, grid):
+        raise NotImplementedError("get_grid_node_count")
+
+    def get_grid_nodes_per_face(self, grid, nodes_per_face):
+        raise NotImplementedError("get_grid_nodes_per_face")
     
     def readSetting(self, name):
         line = [l for l in open(self._path_settings).readlines() if '\"{}\"'.format(name) in l][0]
@@ -231,33 +255,33 @@ class LisfloodBmi(Bmi):
         return None
 
 
-if __name__ == '__main__':
-    # Shell argument: settings file path
-    path_settings, dir_out = argv[1:]
-    if os.path.exists(dir_out):
-        raise Exception(dir_out + ' already exists - specify a new output folder name')
-    os.makedirs(dir_out)
-    # Initialise BMI interface and LISFLOOD model
-    model = LisfloodBmi()
-    model.initialize(path_settings)
-    # Load station-pixel matching information (to compare simulated and reported river discharge)
-    path_info = os.path.join(model.readSetting('PathRoot'), 'station-pixel_matches.json')
-    station_pixel = pd.read_json(path_info)
-    # Allocate comparison dataframe and load GRDC-reported values
-    first_day = datetime(model.calendar_start.year, model.calendar_start.month, model.calendar_start.day)
-    days = pd.period_range(first_day, periods=model.end_step)[model.start_step-1:]
-    discharge_comparison = pd.DataFrame(index=days, columns=pd.MultiIndex.from_product((station_pixel.index, ['Observed', 'Simulated'])))
-    for riv, path_obs in station_pixel['Observation_file'].iteritems():
-        obs = pd.read_table(path_obs, skiprows=35, sep=';\s*', index_col='YYYY-MM-DD', parse_dates=True, engine='python').Value
-        obs.index = obs.index.to_period()
-        obs.loc[obs < 0] = np.nan # filter missing observations out
-        discharge_comparison.loc[:,(riv, 'Observed')] = obs.loc[days[0]:days[-1]]
-    # Run the model and store simulated discharge at each time step
-    sl_sim = pd.IndexSlice[:,'Simulated']
-    for d in days:
-        model.update() # Run the model for a daily time step
-        discharge_comparison.loc[d,sl_sim] = model.get_value_at_indices('Discharge', station_pixel[['Row_model','Col_model']].values)
-    # Write comparison data to file
-    path_out = os.path.join(dir_out, 'discharge_comparison.pickle')
-    discharge_comparison.to_pickle(path_out)
-    print('Comparison data written to {}\nStations info is in {}'.format(path_out, path_info))
+#if __name__ == '__main__':
+#    # Shell argument: settings file path
+#    path_settings, dir_out = argv[1:]
+#    if os.path.exists(dir_out):
+#        raise Exception(dir_out + ' already exists - specify a new output folder name')
+#    os.makedirs(dir_out)
+#    # Initialise BMI interface and LISFLOOD model
+#    model = LisfloodBmi()
+#    model.initialize(path_settings)
+#    # Load station-pixel matching information (to compare simulated and reported river discharge)
+#    path_info = os.path.join(model.readSetting('PathRoot'), 'station-pixel_matches.json')
+#    station_pixel = pd.read_json(path_info)
+#    # Allocate comparison dataframe and load GRDC-reported values
+#    first_day = datetime(model.calendar_start.year, model.calendar_start.month, model.calendar_start.day)
+#    days = pd.period_range(first_day, periods=model.end_step)[model.start_step-1:]
+#    discharge_comparison = pd.DataFrame(index=days, columns=pd.MultiIndex.from_product((station_pixel.index, ['Observed', 'Simulated'])))
+#    for riv, path_obs in station_pixel['Observation_file'].iteritems():
+#        obs = pd.read_table(path_obs, skiprows=35, sep=';\s*', index_col='YYYY-MM-DD', parse_dates=True, engine='python').Value
+#        obs.index = obs.index.to_period()
+#        obs.loc[obs < 0] = np.nan # filter missing observations out
+#        discharge_comparison.loc[:,(riv, 'Observed')] = obs.loc[days[0]:days[-1]]
+#    # Run the model and store simulated discharge at each time step
+#    sl_sim = pd.IndexSlice[:,'Simulated']
+#    for d in days:
+#        model.update() # Run the model for a daily time step
+#        discharge_comparison.loc[d,sl_sim] = model.get_value_at_indices('Discharge', station_pixel[['Row_model','Col_model']].values)
+#    # Write comparison data to file
+#    path_out = os.path.join(dir_out, 'discharge_comparison.pickle')
+#    discharge_comparison.to_pickle(path_out)
+#    print('Comparison data written to {}\nStations info is in {}'.format(path_out, path_info))
