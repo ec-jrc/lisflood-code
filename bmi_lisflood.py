@@ -8,13 +8,14 @@ import xarray as xr
 from sys import argv
 from datetime import datetime
 from global_modules.zusatz import optionBinding
-from bmipy import Bmi
+from basic_modeling_interface.bmi import Bmi
 from global_modules.zusatz import checkifDate, pcraster
 from global_modules.globals import modelSteps, maskinfo
 from pcraster.framework.dynamicFramework import DynamicFramework
+#from IPython.core.debugger import set_trace as bp
 #from ipdb import set_trace as bp
 
-OUT_VARS = [('Discharge', 'ChanQAvg', 'm^3/s'), ('Topsoil moisture', 'W1a', '1e-3 m')]
+OUT_VARS = [('Discharge', 'ChanQAvg', 'm^3/s')]
 OUT_VARS = pd.DataFrame(OUT_VARS, columns=['external_name','internal_name','units']).set_index('external_name')
 RE_XML_ENTRY = '\"[A-Za-z]+\"[\sA-Za-z=]+\"([A-Za-z0-9_\/]+)\"'
 
@@ -110,57 +111,42 @@ class LisfloodBmi(Bmi):
         return OUT_VARS.index.tolist()
 
     def get_var_type(self, var_name):
-        return str(self._getVar(var_name).dtype)
+        return str(self.get_value_ref(var_name).dtype)
 
     def get_var_units(self, var_name):
         return OUT_VARS.loc[var_name,'units']
 
     def get_var_itemsize(self, var_name):
-        return self._reGrid(self._getVar(var_name).nbytes)
+        return self.get_value_ref(var_name).nbytes
 
-    def get_var_nbytes(self, var_name): # OK
+    def get_var_nbytes(self, var_name):
         return self.get_var_itemsize(var_name)
 
     def get_var_grid(self, var_name):
         return 0
 
     def get_value(self, var_name):
-        return self._reGrid(self._getVar(var_name))
+        return self.get_value_ref(var_name).copy()
 
-    def get_value_ref(self, var_name): # OK? getters return values on 2d maps - calculations use 1d arrays (not exposed)
-        return self.get_value(var_name)
+    def get_value_ref(self, var_name):
+        return getattr(self.model, OUT_VARS.loc[var_name,'internal_name'])
 
-    def get_value_at_indices(self, var_name, rows_cols):
-        return self.get_value(var_name)[rows_cols[:,0],rows_cols[:,1]]
+    def get_value_at_indices(self, var_name, indices):
+        return self.get_value(var_name)[indices]
     
     def get_value_ptr(self, var_name):
-        raise NotImplementedError("get_value_ptr")
+        raise self.get_value_ref(var_name)
 
     def get_var_location(self, var_name):
         raise NotImplementedError("get_var_location")
 
     def set_value(self, var_name, src):
-        vector = self._refDomainVar(var_name)
-        if isinstance(vector, np.ndarray):
-            vector[:] = src[self.mask] # the model attribute is changed as raw is a reference to it
-        elif isValidDataArray(vector):
-            domain_src = src[:,self.mask]
-            if vector.shape == domain_src.shape:
-                vector.values[:] = domain_src
-            else:
-                raise Exception('Shape mismatch between input values and model variable')
-        else:
-            raise NotImplementedError
+        ref = self.get_value_ref(var_name)
+        ref[:] = src
 
     def set_value_at_indices(self, var_name, indices, src):
-        checkIndices(indices)
-        vector = self._refDomainVar(var_name)
-        if isinstance(vector, np.ndarray):
-            vector[indices] = src # the model attribute is changed as vector is a reference
-        elif isValidDataArray(vector):
-            vector.values[indices] = src
-        else:
-            raise NotImplementedError
+        ref = self.get_value_ref(var_name)
+        ref[indices] = src
 
     def get_grid_shape(self, grid_id): # get_var_location? relevant for uniform rectilinear grid?
         return self.mask.shape
@@ -184,9 +170,8 @@ class LisfloodBmi(Bmi):
     def get_grid_origin(self, grid_id):
         return np.array([self.left_x, self.bottom_y])
 
-    def get_grid_connectivity(self, grid_id): # not relevant for uniform rectilinear grid - NotImplementedError?
-        checkGridID(grid_id)
-        super(LisfloodBmi, self).get_grid_connectivity(grid_id)
+    def get_grid_connectivity(self, grid_id):
+        return self.mask
 
     def get_grid_offset(self, grid_id): # not relevant for uniform rectilinear grid - NotImplementedError?
         checkGridID(grid_id)
@@ -227,22 +212,6 @@ class LisfloodBmi(Bmi):
 
     def _refDomainVar(self, var_name):
         return getattr(self.model, OUT_VARS.loc[var_name,'internal_name'])
-    
-    def _getVar(self, var_name):
-        """1d array on simulated land pixels"""
-        vector = self._refDomainVar(var_name)
-        if isinstance(vector, np.ndarray):
-            return vector
-        elif isValidDataArray(vector):
-            return (vector * self.model.SoilFraction).sum('vegetation').values
-        else:
-            raise NotImplementedError
-
-    def _reGrid(self, vector):
-        """2d array on the rectangle containing the simulated land pixels (missing values reported as nan)"""
-        matrix = np.full(self.mask.shape, np.nan)
-        matrix[self.mask] = vector
-        return matrix
 
     # Undefined methods
     def get_grid_face_edges(self):
