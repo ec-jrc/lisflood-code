@@ -51,11 +51,11 @@ class LisfloodBmi(Bmi):
         self.mask = ~maskinfo['mask']
         # Grid information
         self.num_rows, self.num_cols = self.mask.shape
-        self.cell_size = round(pcraster.clone().cellSize(),5)
-        self.left_x = round((pcraster.clone().west() + self.cell_size / 2),5)
-        self.right_x = round((self.left_x + self.num_cols * self.cell_size),5)
-        self.top_y = round((pcraster.clone().north() - self.cell_size / 2),5)
-        self.bottom_y = round((self.top_y - self.num_rows * self.cell_size),5)
+        self.cell_size = round(pcraster.clone().cellSize(), 5)
+        self.left_x = round(pcraster.clone().west(), 5)
+        self.right_x = round((self.left_x + (self.num_cols + 1) * self.cell_size), 5)
+        self.top_y = round(pcraster.clone().north(), 5)
+        self.bottom_y = round((self.top_y - (self.num_rows + 1) * self.cell_size), 5)
 
     def update(self):
         """
@@ -148,20 +148,17 @@ class LisfloodBmi(Bmi):
         ref = self.get_value_ref(var_name)
         ref[indices] = src
 
-    def get_grid_shape(self, grid_id): # get_var_location? relevant for uniform rectilinear grid?
+    def get_grid_shape(self, grid_id):
         return self.mask.shape
 
-    def get_grid_x(self, grid_id): # not relevant for uniform rectilinear grid - NotImplementedError?
-        checkGridID(grid_id)
-        super(LisfloodBmi, self).get_grid_x(grid_id)
+    def get_grid_x(self, grid_id):
+        return np.linspace(self.left_x, self.right_x, self.num_cols + 1)[None].repeat(self.num_rows + 1, 0)
 
-    def get_grid_y(self, grid_id): # not relevant for uniform rectilinear grid - NotImplementedError?
-        checkGridID(grid_id)
-        super(LisfloodBmi, self).get_grid_y(grid_id)
+    def get_grid_y(self, grid_id):
+        return np.linspace(self.top_y, self.bottom_y, self.num_rows + 1)[:,None].repeat(self.num_cols + 1, 1)
 
-    def get_grid_z(self, grid_id): # not relevant for uniform rectilinear grid - NotImplementedError?
-        checkGridID(grid_id)
-        super(LisfloodBmi, self).get_grid_z(grid_id)
+    def get_grid_z(self, grid_id):
+        raise NotImplementedError
 
     def get_grid_spacing(self, grid_id):
         checkGridID(grid_id)
