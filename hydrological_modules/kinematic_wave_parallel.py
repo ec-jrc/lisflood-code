@@ -25,7 +25,7 @@ from platform import system
 WINDOWS_OS = system() == "Windows"
 ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), "kinematic_wave_parallel_tools")
 SRC = ROOT + ".pyx"
-BIN = ROOT + (".pyd" if WINDOWS_OS else ".so")
+BIN = ROOT + (".pyd" if WINDOWS_OS else ".cpython-36m-x86_64-linux-gnu.so")
 if (not os.path.exists(BIN)) or os.stat(BIN).st_mtime <= os.stat(SRC).st_mtime + 10:
     import pyximport                         # Activate the direct import from source of Cython modules.
     setup_args = {"script_args": ["--compiler=mingw32"]} if WINDOWS_OS else None # Extra compiler argument under Windows

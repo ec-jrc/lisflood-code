@@ -13,5 +13,5 @@ ext_modules = [
 
 setup(
     name='kinematic_wave-parallel',
-    ext_modules=cythonize(ext_modules, annotate=True),
+    ext_modules=cythonize(ext_modules, annotate=True, compiler_directives={'language_level' : "3"}),
 )

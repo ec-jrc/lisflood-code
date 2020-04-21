@@ -9,7 +9,7 @@
 # Licence:     <your licence>
 # -------------------------------------------------------------------------
 
-from datetime import datetime
+from pandas import Timestamp, Timedelta
 from global_modules.add1 import *
 
 class LisfloodModel_dyn(DynamicModel):
@@ -22,7 +22,7 @@ class LisfloodModel_dyn(DynamicModel):
         """
         del timeMes[:]
         timemeasure("Start dynamic")
-        self.CalendarDate = self.CalendarDayStart + datetime.timedelta(days=(self.currentTimeStep()-1) * self.DtDay)
+        self.CalendarDate = self.CalendarDayStart + Timedelta(days=(self.currentTimeStep()-1) * self.DtDay)
         aux_days = num2date(np.arange(366), "days since {}-01-01".format(self.CalendarDate.year), binding["CalendarConvention"])
         self.CalendarDay = 1 + np.where(np.array([self.CalendarDate]) == aux_days)[0][0]
 
@@ -30,13 +30,13 @@ class LisfloodModel_dyn(DynamicModel):
         if i==1:
             globals.cdfFlag = [0, 0, 0, 0 ,0 ,0,0]
         if i == int(binding["StepStart"]):
-            self._datetime_sim_start = datetime.now() # date and time when the simulation is started
+            self._datetime_sim_start = Timestamp.now() # date and time when the simulation is started
             self._num_timesteps = int(binding["StepEnd"]) - int(binding["StepStart"]) + 1 # number of time steps to be simulated
             print("Simulation started on " + self._datetime_sim_start.strftime('%Y-%m-%d %H:%M'))
             estimated_end_msg = ""
         else:
             _steps_done = i - int(binding["StepStart"])
-            _datetime_sim_end = self._datetime_sim_start + self._num_timesteps * (datetime.now() - self._datetime_sim_start) / _steps_done # expected simulation end datetime
+            _datetime_sim_end = self._datetime_sim_start + self._num_timesteps * (Timestamp.now() - self._datetime_sim_start) / _steps_done # expected simulation end datetime
             estimated_end_msg = "(estimated simulation end: {})".format(_datetime_sim_end.strftime('%Y-%m-%d %H:%M'))
 
           # flag for netcdf output for all, steps and end
@@ -88,9 +88,9 @@ class LisfloodModel_dyn(DynamicModel):
 
         # ***** EPIC AGRICULTURE MODEL - 1ST PART: CROP STATE AND ENVIRONMENT *******************
         if option["cropsEPIC"]:
-##              t0 = datetime.now() # TIMING
+##              t0 = Timestamp.now() # TIMING
             self.crop_module.dynamic_state()
-##              print('dynamic_state: ', (datetime.now() - t0).total_seconds()) # TIMING
+##              print('dynamic_state: ', (Timestamp.now() - t0).total_seconds()) # TIMING
 
         # *************************************************************************************
         # **** Loop over vegetation fractions: 1. processes depending directly on the canopy
@@ -98,24 +98,24 @@ class LisfloodModel_dyn(DynamicModel):
 #        VARS_CANOPY = ['Interception', 'TaInterception', 'LeafDrainage', 'CumInterception', 'potential_transpiration', 'RWS', 'Ta',
 #                       'SoilMoistureStressDays', 'W1a', 'W1b', 'W1'] # TEST SOILLOOP SPEED-UP
 #        backup = self.soilloop_module.backup(VARS_CANOPY) # TEST SOILLOOP SPEED-UP
-#         t0 = datetime.now() # TIMING
+#         t0 = Timestamp.now() # TIMING
         self.soilloop_module.dynamic_canopy()
-#         print('soilloop_module.dynamic_canopy: ', (datetime.now() - t0).total_seconds()) # TIMING
+#         print('soilloop_module.dynamic_canopy: ', (Timestamp.now() - t0).total_seconds()) # TIMING
 #        new_vals = self.soilloop_module.backup(VARS_CANOPY)                                 # TEST SOILLOOP SPEED-UP
 #        self.soilloop_module.reset(backup)                                                         # TEST SOILLOOP SPEED-UP
-#        t0 = datetime.now()                                                                     # TEST SOILLOOP SPEED-UP
+#        t0 = Timestamp.now()                                                                     # TEST SOILLOOP SPEED-UP
 #        for loop, fraction_name in enumerate(self.vegetation):                                    # TEST SOILLOOP SPEED-UP
 #            self.soilloop_module_OLD.dynamic_canopy(fraction_name)                                 # TEST SOILLOOP SPEED-UP
 #            timemeasure("Soil - part 1 (canopy)", loops=loop + 1) # 5/6 timing after soil          # TEST SOILLOOP SPEED-UP
-#        print('soilloop_module_OLD.dynamic_canopy: ', (datetime.now() - t0).total_seconds())        # TEST SOILLOOP SPEED-UP
+#        print('soilloop_module_OLD.dynamic_canopy: ', (Timestamp.now() - t0).total_seconds())        # TEST SOILLOOP SPEED-UP
 #        self.soilloop_module.compare(new_vals)                                                # TEST SOILLOOP SPEED-UP
         timemeasure("Soil - part 1 (canopy)")
 
         # ***** EPIC AGRICULTURE MODEL - 2ND PART: CROP GROWTH AND LIMITNG FACTORS *************
         if option["cropsEPIC"]:
-#             t0 = datetime.now() # TIMING
+#             t0 = Timestamp.now() # TIMING
             self.crop_module.dynamic_growth()
-#             print('dynamic_growth: ', (datetime.now() - t0).total_seconds()) # TIMING
+#             print('dynamic_growth: ', (Timestamp.now() - t0).total_seconds()) # TIMING
 
         # **************************************************************************************
         # **** Loop over vegetation fractions: 2. internal soil processes
@@ -124,51 +124,51 @@ class LisfloodModel_dyn(DynamicModel):
 #                     'SeepTopToSubA', 'SeepTopToSubB', 'SeepSubToGW', 'UZOutflow', 'UZ', 'GwPercUZLZ', 'Theta1a',
 #                     'Theta1b', 'Theta2', 'Sat1a', 'Sat1b', 'Sat1', 'Sat2'] # TEST SOILLOOP SPEED-UP
 #        backup = self.soilloop_module.backup(VARS_SOIL)                # TEST SOILLOOP SPEED-UP
-#         t0 = datetime.now() # TIMING
+#         t0 = Timestamp.now() # TIMING
         self.soilloop_module.dynamic_soil()
-#         print('soilloop_module.dynamic_soil: ', (datetime.now() - t0).total_seconds()) # TIMING
+#         print('soilloop_module.dynamic_soil: ', (Timestamp.now() - t0).total_seconds()) # TIMING
 #        new_vals = self.soilloop_module.backup(VARS_SOIL)                                 # TEST SOILLOOP SPEED-UP
 #        self.soilloop_module.reset(backup)                                                # TEST SOILLOOP SPEED-UP
-#        t0 = datetime.now()                                                                 # TEST SOILLOOP SPEED-UP
+#        t0 = Timestamp.now()                                                                 # TEST SOILLOOP SPEED-UP
 #        for loop, fraction_name in enumerate(self.vegetation):                                 # TEST SOILLOOP SPEED-UP
 #            self.soilloop_module_OLD.dynamic_soil(fraction_name)                                   # TEST SOILLOOP SPEED-UP
 #            timemeasure("Soil - part 2 (soil)", loops=loop + 1) # 5/6 timing after soil        # TEST SOILLOOP SPEED-UP
-#        print('soilloop_module_OLD.dynamic_soil: ', (datetime.now() - t0).total_seconds())      # TEST SOILLOOP SPEED-UP
+#        print('soilloop_module_OLD.dynamic_soil: ', (Timestamp.now() - t0).total_seconds())      # TEST SOILLOOP SPEED-UP
 #        self.soilloop_module.compare(new_vals)                                            # TEST SOILLOOP SPEED-UP
         timemeasure("Soil - part 2 (soil)")
 
         # ***** EPIC AGRICULTURE MODEL - 3RD PART: CROP IRRIGATION WATER REQUIREMENTS **********
-#         t0 = datetime.now() # TIMING
+#         t0 = Timestamp.now() # TIMING
         if option["cropsEPIC"]:
             self.crop_module.dynamic_irrigation_requirement()
-#         print('dynamic_irrigation_requirement: ', (datetime.now() - t0).total_seconds()) # TIMING
+#         print('dynamic_irrigation_requirement: ', (Timestamp.now() - t0).total_seconds()) # TIMING
 
         # ***** ACTUAL EVAPORATION FROM OPEN WATER AND SEALED SOIL ***
         self.opensealed_module.dynamic()
 
         # *********  WATER USE + EPIC AGRICULTURE MODEL - 4TH PART: CROP IRRIGATION APPLICATION (ONLY IF EPIC IS SWITCHED ON) *************************
-#         t0 = datetime.now() # TIMING
+#         t0 = Timestamp.now() # TIMING
         self.riceirrigation_module.dynamic() 
         self.waterabstraction_module.dynamic()
         timemeasure("Water abstraction")
-#         print('waterabstraction: ', (datetime.now() - t0).total_seconds()) # TIMING
+#         print('waterabstraction: ', (Timestamp.now() - t0).total_seconds()) # TIMING
 
         # ***** EPIC AGRICULTURE MODEL - 5TH PART: WRITE OUTPUT **********
-#         t0 = datetime.now() # TIMING
+#         t0 = Timestamp.now() # TIMING
         if option["cropsEPIC"]:
             self.crop_module.dynamic_write_output()
-#         print('EPIC output: ', (datetime.now() - t0).total_seconds()) # TIMING
+#         print('EPIC output: ', (Timestamp.now() - t0).total_seconds()) # TIMING
 
         # ***** Calculation per Pixel ********************************
-#         t0 = datetime.now() # TIMING
+#         t0 = Timestamp.now() # TIMING
         self.soil_module.dynamic_perpixel()
         timemeasure("Soil done")
-#         print('soil_perpixel: ', (datetime.now() - t0).total_seconds()) # TIMING
+#         print('soil_perpixel: ', (Timestamp.now() - t0).total_seconds()) # TIMING
 
-#         t0 = datetime.now() # TIMING
+#         t0 = Timestamp.now() # TIMING
         self.groundwater_module.dynamic()
         timemeasure("Groundwater")
-#         print('Groundwater', (datetime.now() - t0).total_seconds()) # TIMING
+#         print('Groundwater', (Timestamp.now() - t0).total_seconds()) # TIMING
 
         # ************************************************************
         # ***** STOP if no routing is required    ********************
