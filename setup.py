@@ -52,9 +52,13 @@ if os.path.exists(pip_package):
 current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(current_dir, './src/'))
 
-from lisflood import __version__, __authors__
+from lisflood import __authors__
+version_file = os.path.join(current_dir, 'VERSION')
 
-print(">>>>>>>>>>>>>>>> Building LISFLOOD version {} <<<<<<<<<<<<<<<<<<".format(__version__))
+with open(version_file, 'r') as f:
+    version = f.read().strip()
+
+print(">>>>>>>>>>>>>>>> Building LISFLOOD version {} <<<<<<<<<<<<<<<<<<".format(version))
 try:
     # noqa
     from Cython.Build import cythonize
@@ -114,7 +118,7 @@ class UploadCommand(Command):
         os.system('twine upload dist/*')
 
         self.print_console('Pushing git tags...')
-        os.system('git tag v{}'.format(__version__))
+        os.system('git tag v{}'.format(version))
         os.system('git push --tags')
 
         sys.exit()
@@ -138,7 +142,7 @@ requirements = [l for l in open(req_file).readlines() if l and not l.startswith(
 requirements += ['GDAL=={}'.format(gdal_version)]
 setup(
     name='lisflood-model',
-    version=__version__,
+    version=version,
     package_dir={'': 'src/'},
     py_modules=[os.path.splitext(os.path.basename(path))[0] for path in glob('src/*.py*')],
     include_package_data=True,
@@ -152,11 +156,11 @@ setup(
     keywords=['lisflood', 'lisvap', 'efas', 'glofas', 'copernicus', 'ecmwf'],
     license='EUPL 1.2',
     url='https://github.com/ec-jrc/lisflood-code',
-    download_url='https://github.com/ec-jrc/lisflood-code/archive/{}.tar.gz'.format(__version__),
+    download_url='https://github.com/ec-jrc/lisflood-code/archive/{}.tar.gz'.format(version),
     setup_requires=[
             'nine',
             'setuptools>=41.0',
-            'numpy>=1.15,<=1.17.2',
+            'numpy>=1.15',
             'cython',
     ],
     install_requires=requirements,
