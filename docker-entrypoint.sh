@@ -13,8 +13,8 @@ if [[ "$1" = 'usecases' ]]; then
     chmod a+w /usecases/TestCatchmentWithLakes/*.xml
 elif [[ "$1" = 'tests' ]]; then
     # execute unit tests
-    exec pytest /tests -x -l -ra
+    exec conda run -n lisflood pytest /tests -x -l -ra
 else
     # execute lisflood
-    exec python /lisf1.py "$@"
+    exec conda run -n lisflood python /lisf1.py "$@"
 fi
