@@ -2,9 +2,9 @@
 
 There are several ways to get lisflood model and to run it on your machines: 
 
-1. Pulling the Docker image
-2. Using pip tool
-3. Obtaining the source code, by cloning repository or downloading source distribution.
+1. Using the Docker image `efas/lisflood`
+2. Using pip tool together with conda to easily install dependencies
+3. Obtaining the source code, by cloning repository or downloading source distribution, and install dependencies.
 
 The suggested way is using the official Docker image, since it's not trivial to install PCRaster and GDAL for average users.
 
@@ -18,54 +18,57 @@ You can use the updated docker image to run lisflood, so without taking care to 
 First, you pull image from repository.
 
 ```bash
-docker pull efas/lisflood:latest
+docker pull efas/lisflood
 ```
 
-Copy Drina catchment files from container to your host, using mapped directories.
+Copy Test catchment files from container to your host, using mapped volumes. `usecases` is the folder in docker where test catchments are.
 
 ```bash
 docker run -v /absolute_path/to/my/local/folder:/usecases efas/lisflood:latest usecases
 ```
 
-After this command, you can find all files to run a test against Drina catchment under the directory you mapped: `/absolute_path/to/my/local/folder/Drina`
+After this command, you can find all files to run a test against a catchment under the directory you mapped: `/absolute_path/to/my/local/folder/TestCatchment`
 
 
-Now, you can run LISFLOOD as a docker container to test the Drina catchment. Only thing you need to do is to map the Drina folder to the container folder `input`, by using -v option. 
+Now, you can run LISFLOOD as a docker container to test the catchment. Only thing you need to do is to map the TestCatchment folder 
+to the container folder `input`, by using Docker `-v` option. 
 In the XML settings file, all paths are adjusted to be relative to the very same settings file, so you don't need to edit paths, as long as you keep same folders structure.
 
 
 Execute the following docker command to run the simulation:
 
 ```bash
-docker run -v /absolute_path/to/my/local/folder/Drina:/input efas/lisflood /input/settings/lisfloodSettings_cold_day_base.xml
+docker run -v /absolute_path/to/my/local/folder/TestCatchment:/input efas/lisflood /input/settings/cold_day_base.xml
 ```
 
-Once LISFLOOD finished, you can find reported maps in `/absolute_path/to/my/local/folder/Drina/outputs/` folder.
+Once LISFLOOD finished, you can find reported maps in `/absolute_path/to/my/local/folder/TestCatchment/outputs/` folder.
 
 
-### B) Pypi packaged LISFLOOD
+### B) Pypi packaged LISFLOOD and conda env
 
+Using conda environment is very handy since installing latest PCRaster and its dependencies is pretty straightforward.
 
-LISFLOOD is also distributed as a standard python package. You can install the pip package in your Python 2.7<sup>[1](#footnote1)</sup> virtualenv:
-
-```bash
+1. Install [miniconda](https://docs.conda.io/en/latest/miniconda.html) 
+2. Create a conda env named "lisflood" and install dependencies:
+```
+conda create --name lisflood python=3.7 -c conda-forge
+conda activate lisflood
+conda install -c conda-forge pcraster
 pip install lisflood-model
 ```
 
-* GDAL should be installed as well. To install GDAL C library and gdal python library on debian/ubuntu systems, we found good instructions [here](https://mothergeo-py.readthedocs.io/en/latest/development/how-to/gdal-ubuntu-pkg.html).
- 
-If you already have GDAL installed in your computer, make sure that the GDAL and the python gdal library have the same version.
-
-Command above will also install the executable `lisflood` in the virtualenv, so that you can run LISFLOOD with the following:
-
+Command above will also install the executable `lisflood` in the conda env, so that you can run LISFLOOD with the following:
 ```bash
-lisflood /absolute_path/to/my/local/folder/Drina/settings/lisfloodSettings_cold_day_base.xml
+lisflood /absolute_path/to/my/local/folder/TestCatchment/settings/cold_day_base.xml
 ```
 
-### C) Cloning the repository with git
+*Note:* You can use a straight python virtualenvironment to install lisflood-model package but then you have to setup PCRaster/GDAL/NetCDF libraries.
+
+### C) Using the python souce code
 
 You can download code and dataset for testing the model (or to contribute with bug fixes or new features).
-Follow this instruction for a basic test (a catchment included in this repository under [tests/data/TestCatchment1](https://github.com/ec-jrc/lisflood-code/tree/master/tests/data/TestCatchment1))
+Follow this instruction for a basic test (a catchment included in this repository under
+[tests/data/TestCatchment](https://github.com/ec-jrc/lisflood-code/tree/master/tests/data/TestCatchment))
 
 1. **Clone the master branch of this repository (you need to have git installed on your machine).**
 
@@ -73,23 +76,17 @@ Follow this instruction for a basic test (a catchment included in this repositor
     git clone --single-branch --branch master https://github.com/ec-jrc/lisflood-code.git
     ```
 
-2. **Install requirements into a python 3 virtualenv**
+2. **Install requirements into a python 3 conda env**
 
-
-We recommend to follow the instructions on [virtualenv docs](https://virtualenv.pypa.io/en/latest/). Assuming you activated your virtual environment:
-
-    
 ```bash
+conda create --name lisflood python=3.7 -c conda-forge
+conda activate lisflood
+conda install -c conda-forge pcraster
 cd lisflood-code
 pip install -r requirements.txt
 ```
 
-* Gdal should be installed as well. To install GDAL C library and gdal python library on debian/ubuntu systems, we found good instructions [here](https://mothergeo-py.readthedocs.io/en/latest/development/how-to/gdal-ubuntu-pkg.html).
- 
-If you already have GDAL installed in your computer, make sure that the GDAL and the python gdal library have the same version. 
-
-
-You need to install PCRaster and include its python interface in PYTHONPATH environment variable.
+If you don't use conda but a plain virtualenv, you need to install PCRaster and GDAL by your own and include its python interface in PYTHONPATH environment variable.
 For details, please follow instruction on [official docs](http://pcraster.geo.uu.nl/getting-started/pcraster-on-linux/).
     
 
@@ -113,15 +110,17 @@ For details, please follow instruction on [official docs](http://pcraster.geo.uu
    <textvar name="numCPUs_parallelKinematicWave" value="3"/>
    ```
   
-4. **Run a cold run for the Drina test catchment**
+4. **Run a cold run for the test catchment**
 
-    Now that your environment should be set up to run lisflood, you may try with a prepared settings file for Drina catchment:
+    Now that your environment should be set up to run lisflood, you may try with a prepared settings file for TestCatchment:
     
     ```bash
-    python src/lisf1.py tests/data/TestCatchment1/settings/lisfloodSettings_cold_day_base.xml
+    python src/lisf1.py tests/data/TestCatchment/settings/cold_day_base.xml
     ```
+4. **Run LISFLOOD unit tests**
 
-If commands above succeeded without errors, producing dis.nc into tests/data/Drina/outputs folder, your lisflood installation was correct.
-
-
-[🔝](#top)
+    ```bash
+    pytest tests/
+    ```
+  
+If commands above succeeded without errors, producing dis.nc into tests/data/TestCatchment/outputs folder, your lisflood installation was correct.
