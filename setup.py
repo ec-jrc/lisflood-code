@@ -124,6 +124,24 @@ class UploadCommand(Command):
         sys.exit()
 
 
+class UploadCommandTest(UploadCommand):
+
+    def run(self):
+        try:
+            self.print_console('Removing previous builds...')
+            rmtree(os.path.join(current_dir, 'dist'))
+        except OSError:
+            pass
+
+        self.print_console('Building Source and Wheel (universal) distribution...')
+        os.system('{} setup.py sdist'.format(sys.executable))
+
+        self.print_console('Uploading the package to test PyPI via Twine...')
+        os.system('twine upload --repository testpypi dist/*')
+
+        sys.exit()
+
+
 def _get_gdal_version():
     try:
         p = subprocess.Popen(['gdal-config', '--version'], stdout=subprocess.PIPE)
@@ -146,7 +164,7 @@ setup(
     package_dir={'': 'src/'},
     py_modules=[os.path.splitext(os.path.basename(path))[0] for path in glob('src/*.py*')],
     include_package_data=True,
-    package_data={'lisflood': ['*.xml']},
+    data_files=[('', ['VERSION']), ('settings', ['src/settings_tpl.xml'])],
     packages=find_packages('src'),
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -188,5 +206,6 @@ setup(
     cmdclass={
         'upload': UploadCommand,
         'publish': UploadCommand,
+        'testpypi': UploadCommandTest,
     },
 )
