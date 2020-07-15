@@ -221,33 +221,33 @@ class LisfloodBmi(Bmi):
         return None
 
 
-#if __name__ == '__main__':
-#    # Shell argument: settings file path
-#    path_settings, dir_out = argv[1:]
-#    if os.path.exists(dir_out):
-#        raise Exception(dir_out + ' already exists - specify a new output folder name')
-#    os.makedirs(dir_out)
-#    # Initialise BMI interface and LISFLOOD model
-#    model = LisfloodBmi()
-#    model.initialize(path_settings)
-#    # Load station-pixel matching information (to compare simulated and reported river discharge)
-#    path_info = os.path.join(model.readSetting('PathRoot'), 'station-pixel_matches.json')
-#    station_pixel = pd.read_json(path_info)
-#    # Allocate comparison dataframe and load GRDC-reported values
-#    first_day = datetime(model.calendar_start.year, model.calendar_start.month, model.calendar_start.day)
-#    days = pd.period_range(first_day, periods=model.end_step)[model.start_step-1:]
-#    discharge_comparison = pd.DataFrame(index=days, columns=pd.MultiIndex.from_product((station_pixel.index, ['Observed', 'Simulated'])))
-#    for riv, path_obs in station_pixel['Observation_file'].iteritems():
-#        obs = pd.read_table(path_obs, skiprows=35, sep=';\s*', index_col='YYYY-MM-DD', parse_dates=True, engine='python').Value
-#        obs.index = obs.index.to_period()
-#        obs.loc[obs < 0] = np.nan # filter missing observations out
-#        discharge_comparison.loc[:,(riv, 'Observed')] = obs.loc[days[0]:days[-1]]
-#    # Run the model and store simulated discharge at each time step
-#    sl_sim = pd.IndexSlice[:,'Simulated']
-#    for d in days:
-#        model.update() # Run the model for a daily time step
-#        discharge_comparison.loc[d,sl_sim] = model.get_value_at_indices('Discharge', station_pixel[['Row_model','Col_model']].values)
-#    # Write comparison data to file
-#    path_out = os.path.join(dir_out, 'discharge_comparison.pickle')
-#    discharge_comparison.to_pickle(path_out)
-#    print('Comparison data written to {}\nStations info is in {}'.format(path_out, path_info))
+if __name__ == '__main__':
+    # Shell argument: settings file path
+    path_settings, dir_out = argv[1:]
+    if os.path.exists(dir_out):
+        raise Exception(dir_out + ' already exists - specify a new output folder name')
+    os.makedirs(dir_out)
+    # Initialise BMI interface and LISFLOOD model
+    model = LisfloodBmi()
+    model.initialize(path_settings)
+    # Load station-pixel matching information (to compare simulated and reported river discharge)
+    path_info = os.path.join(model.readSetting('PathRoot'), 'station-pixel_matches.json')
+    station_pixel = pd.read_json(path_info)
+    # Allocate comparison dataframe and load GRDC-reported values
+    first_day = datetime(model.calendar_start.year, model.calendar_start.month, model.calendar_start.day)
+    days = pd.period_range(first_day, periods=model.end_step)[model.start_step-1:]
+    discharge_comparison = pd.DataFrame(index=days, columns=pd.MultiIndex.from_product((station_pixel.index, ['Observed', 'Simulated'])))
+    for riv, path_obs in station_pixel['Observation_file'].iteritems():
+        obs = pd.read_table(path_obs, skiprows=35, sep=';\s*', index_col='YYYY-MM-DD', parse_dates=True, engine='python').Value
+        obs.index = obs.index.to_period()
+        obs.loc[obs < 0] = np.nan # filter missing observations out
+        discharge_comparison.loc[:,(riv, 'Observed')] = obs.loc[days[0]:days[-1]]
+    # Run the model and store simulated discharge at each time step
+    sl_sim = pd.IndexSlice[:,'Simulated']
+    for d in days:
+        model.update() # Run the model for a daily time step
+        discharge_comparison.loc[d,sl_sim] = model.get_value_at_indices('Discharge', station_pixel['Index'].values)
+    # Write comparison data to file
+    path_out = os.path.join(dir_out, 'discharge_comparison.pickle')
+    discharge_comparison.to_pickle(path_out)
+    print('Comparison data written to {}\nStations info is in {}'.format(path_out, path_info))
