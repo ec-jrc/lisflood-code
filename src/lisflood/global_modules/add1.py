@@ -909,15 +909,15 @@ def writenet(flag, inputmap, netfile, DtDay,
             nf1.variables["time"][:] = date2num(time_stamps, time.units, time.calendar)
             # for i in metadataNCDF['time']: exec('%s="%s"') % ("time."+i, metadataNCDF['time'][i])
             if 'x' in meta_netcdf.data:
-                value = nf1.createVariable(prefix, data_format, ('time', 'y', 'x'), zlib=True, fill_value=-9999, chunksizes=(1, row, col))
+                value = nf1.createVariable(prefix, 'd', ('time', 'y', 'x'), zlib=True, fill_value=-9999, chunksizes=(1, row, col))
             if 'lon' in meta_netcdf.data:
-                value = nf1.createVariable(prefix, data_format, ('time', 'lat', 'lon'), zlib=True, fill_value=-9999, chunksizes=(1, row, col))
+                value = nf1.createVariable(prefix, 'd', ('time', 'lat', 'lon'), zlib=True, fill_value=-9999, chunksizes=(1, row, col))
         else:
             if 'x' in meta_netcdf.data:
-                value = nf1.createVariable(prefix, data_format, ('y', 'x'), zlib=True, fill_value=-9999)
+                value = nf1.createVariable(prefix, 'd', ('y', 'x'), zlib=True, fill_value=-9999)
             if 'lon' in meta_netcdf.data:
                 # for world lat/lon coordinates
-                value = nf1.createVariable(prefix, data_format, ('lat', 'lon'), zlib=True, fill_value=-9999)
+                value = nf1.createVariable(prefix, 'd', ('lat', 'lon'), zlib=True, fill_value=-9999)
 
         value.standard_name = value_standard_name
         value.long_name = value_long_name
