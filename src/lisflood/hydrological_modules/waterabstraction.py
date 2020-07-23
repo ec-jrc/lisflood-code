@@ -622,6 +622,15 @@ class waterabstraction(HydroModule):
             self.var.EFlowIndicator = np.where(self.var.ChanQ <= self.var.EFlowThreshold, maskinfo.in_zero() + 1.0, maskinfo.in_zero())
             # if ChanQ is less than EflowThreshold, EFlowIndicator becomes 1
 
+
+            # ************************************************************
+            # ***** update state variables                             ***
+            # ************************************************************
+            # CM Update state variables for changes to W1a[2] and W1b[2]
+            self.var.Theta1a[2] = self.var.W1a[2] / self.var.SoilDepth1a[2]
+            self.var.Theta1b[2] = self.var.W1b[2] / self.var.SoilDepth1b[2]
+
+
             # ************************************************************
             # ***** smooth lower zone with correction                  ***
             # ************************************************************
