@@ -1051,6 +1051,8 @@ default_options = {'EnKF': False,
                    'simulateReservoirs': False,
                    'simulateWaterLevels': False,
                    'timeseries': {
+                       'ChanqTS': TimeSeries(name='ChanqTS', output_var='ChanQ', where='Gauges',
+                                             repoption=['repDischargeTs'], restrictoption=[], operation=['']),
                        'DSLRAvUpsTS': TimeSeries(name='DSLRAvUpsTS', output_var='DSLR[0]', where='Gauges',
                                                  repoption=['repStateUpsGauges'], restrictoption=['nonInit'],
                                                  operation=['total']),
