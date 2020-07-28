@@ -126,7 +126,9 @@ class LisfloodBmi(Bmi):
         return 0
 
     def get_value(self, var_name):
-        return self.get_value_ref(var_name).copy()
+        gridded_values = np.full(self.mask.shape, np.nan)
+        gridded_values[self.mask] = self.get_value_ref(var_name)
+        return gridded_values.ravel()
 
     def get_value_ref(self, var_name):
         return getattr(self.model, OUT_VARS.loc[var_name,'internal_name'])
@@ -152,10 +154,10 @@ class LisfloodBmi(Bmi):
         return self.mask.shape
 
     def get_grid_x(self, grid_id):
-        return np.linspace(self.left_x, self.right_x, self.num_cols + 1)[None].repeat(self.num_rows + 1, 0)
+        return np.linspace(self.left_x, self.right_x, self.num_cols + 1)
 
     def get_grid_y(self, grid_id):
-        return np.linspace(self.top_y, self.bottom_y, self.num_rows + 1)[:,None].repeat(self.num_cols + 1, 1)
+        return np.linspace(self.top_y, self.bottom_y, self.num_rows + 1)
 
     def get_grid_z(self, grid_id):
         raise NotImplementedError
