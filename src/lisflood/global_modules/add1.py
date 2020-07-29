@@ -256,7 +256,6 @@ def decompress(map):
 
 def makenumpy(map):
     if not isinstance(map, np.ndarray):
-    # if not('numpy.ndarray' in str(type(map))):
         maskinfo = MaskInfo.instance()
         out = np.empty(maskinfo.info.mapC)
         out.fill(map)
@@ -325,11 +324,12 @@ def loadmap(name, pcr=False, lddflag=False, timestampflag='exact', averageyearfl
         cut0, cut1, cut2, cut3 = mapattrNetCDF(filename)
         # load netcdf map but only the rectangle needed
         nf1 = iterOpenNetcdf(filename, "", 'r')
-        value = listitems(nf1.variables)[-1][0]
-        # get the last variable name (it must be the variable to be read by Lisflood)
+        # Only one variable must be present in netcdf files
+        num_dims = 3 if 'time' in nf1.variables else 2
+        varname = [v for v in nf1.variables if len(nf1.variables[v].dimensions) == num_dims][0]
         if not settings.timestep_init:
             # if timestep_init is missing, read netcdf as single static map
-            mapnp = nf1.variables[value][cut2:cut3, cut0:cut1]
+            mapnp = nf1.variables[varname][cut2:cut3, cut0:cut1]
         else:
             if 'time' in nf1.variables:
                 # read a netcdf  (stack) - state files
@@ -391,10 +391,10 @@ def loadmap(name, pcr=False, lddflag=False, timestampflag='exact', averageyearfl
                         timestepI = timestepInew
 
                 itime = np.where(nf1.variables['time'][:] == timestepI)[0][0]
-                mapnp = nf1.variables[value][itime, cut2:cut3, cut0:cut1]
+                mapnp = nf1.variables[varname][itime, cut2:cut3, cut0:cut1]
             else:
                 # read a netcdf (single one)
-                mapnp = nf1.variables[value][cut2:cut3, cut0:cut1]
+                mapnp = nf1.variables[varname][cut2:cut3, cut0:cut1]
 
         # masking
         try:
@@ -408,11 +408,11 @@ def loadmap(name, pcr=False, lddflag=False, timestampflag='exact', averageyearfl
         if pcr:
             # check if integer map (like outlets, lakes etc
             checkint = str(mapnp.dtype)
-            if checkint=="int16" or checkint=="int32":
-                mapnp[mapnp.mask]=-9999
+            if checkint == "int16" or checkint == "int32":
+                mapnp[mapnp.mask] = -9999
                 map = numpy2pcr(Nominal, mapnp, -9999)
-            elif checkint=="int8":
-                mapnp[mapnp<0]=-9999
+            elif checkint == "int8":
+                mapnp[mapnp < 0] = -9999
                 map = numpy2pcr(Nominal, mapnp, -9999)
             else:
                 mapnp[np.isnan(mapnp)] = -9999
