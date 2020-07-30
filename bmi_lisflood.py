@@ -49,6 +49,9 @@ class LisfloodBmi(Bmi):
         self.current_step = self.start_step
         # Get the domain mask (True = simulated)
         self.mask = ~maskinfo['mask']
+        # External (input of *et_value_at_indices methods) to interal indices map
+        self.internal_indexes = np.full(self.mask.size, -1) # -1 = not simulated
+        self.internal_indexes[self.mask.ravel()] = np.arange(self.mask.sum())
         # Grid information
         self.num_rows, self.num_cols = self.mask.shape
         self.cell_size = round(pcraster.clone().cellSize(), 5)
@@ -111,13 +114,13 @@ class LisfloodBmi(Bmi):
         return OUT_VARS.index.tolist()
 
     def get_var_type(self, var_name):
-        return str(self.get_value_ref(var_name).dtype)
+        return str(self._get_reference(var_name).dtype)
 
     def get_var_units(self, var_name):
         return OUT_VARS.loc[var_name,'units']
 
     def get_var_itemsize(self, var_name):
-        return self.get_value_ref(var_name).nbytes
+        return self._get_reference(var_name).nbytes
 
     def get_var_nbytes(self, var_name):
         return self.get_var_itemsize(var_name)
@@ -127,28 +130,35 @@ class LisfloodBmi(Bmi):
 
     def get_value(self, var_name):
         gridded_values = np.full(self.mask.shape, np.nan)
-        gridded_values[self.mask] = self.get_value_ref(var_name)
+        gridded_values[self.mask] = self._get_reference(var_name)
         return gridded_values.ravel()
 
-    def get_value_ref(self, var_name):
-        return getattr(self.model, OUT_VARS.loc[var_name,'internal_name'])
-
     def get_value_at_indices(self, var_name, indices):
-        return self.get_value(var_name)[indices]
+        self._check_indices(indices)
+        return self._get_reference(var_name)[self.internal_indexes[indices]]
     
     def get_value_ptr(self, var_name):
-        raise self.get_value_ref(var_name)
+        return self.get_value(var_name)
+
+    def _get_reference(self, var_name):
+        return getattr(self.model, OUT_VARS.loc[var_name,'internal_name'])
 
     def get_var_location(self, var_name):
         raise NotImplementedError("get_var_location")
 
     def set_value(self, var_name, src):
-        ref = self.get_value_ref(var_name)
-        ref[:] = src
+        ref = self._get_reference(var_name)
+        ref[:] = src[self.mask.ravel()]
 
     def set_value_at_indices(self, var_name, indices, src):
-        ref = self.get_value_ref(var_name)
-        ref[indices] = src
+        self._check_indices(indices)
+        ref = self._get_reference(var_name)
+        ref[self.internal_indexes[indices]] = src
+
+    def _check_indices(self, indices):
+        outside_domain = self.internal_indexes[indices] == -1
+        if outside_domain.any():
+            raise Exception(f'{outside_domain.sum()} indices are outside the simulated domain!')
 
     def get_grid_shape(self, grid_id):
         return self.mask.shape
