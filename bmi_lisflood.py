@@ -120,10 +120,10 @@ class LisfloodBmi(Bmi):
         return OUT_VARS.loc[var_name,'units']
 
     def get_var_itemsize(self, var_name):
-        return self._get_reference(var_name).nbytes
+        return self._get_reference(var_name).dtype.itemsize
 
     def get_var_nbytes(self, var_name):
-        return self.get_var_itemsize(var_name)
+        return self.get_var_itemsize(var_name) * self.mask.size
 
     def get_var_grid(self, var_name):
         return 0
@@ -136,7 +136,7 @@ class LisfloodBmi(Bmi):
     def get_value_at_indices(self, var_name, indices):
         self._check_indices(indices)
         return self._get_reference(var_name)[self.internal_indexes[indices]]
-    
+
     def get_value_ptr(self, var_name):
         return self.get_value(var_name)
 
@@ -144,7 +144,7 @@ class LisfloodBmi(Bmi):
         return getattr(self.model, OUT_VARS.loc[var_name,'internal_name'])
 
     def get_var_location(self, var_name):
-        raise NotImplementedError("get_var_location")
+        return 'node'
 
     def set_value(self, var_name, src):
         ref = self._get_reference(var_name)
@@ -214,7 +214,7 @@ class LisfloodBmi(Bmi):
 
     def get_grid_nodes_per_face(self, grid, nodes_per_face):
         raise NotImplementedError("get_grid_nodes_per_face")
-    
+
     def readSetting(self, name):
         line = [l for l in open(self._path_settings).readlines() if '\"{}\"'.format(name) in l][0]
         return re.search(RE_XML_ENTRY, line).group(1)
@@ -225,10 +225,10 @@ class LisfloodBmi(Bmi):
     # Undefined methods
     def get_grid_face_edges(self):
         return None
-    
+
     def get_input_item_count(self):
         return None
-    
+
     def get_output_item_count(self):
         return None
 
