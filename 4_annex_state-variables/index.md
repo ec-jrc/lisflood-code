@@ -18,15 +18,15 @@ xx
 | CumInterceptionState           | cum                | CumInterception[0]    | mm   | cumint  | Reported interception storage                                |
 | CumInterceptionForestState     | cumf               | CumInterception[1]    | mm   | cumf    | Reported interception storage for forest                     |
 | CumInterceptionIrrigationState | cumi               | CumInterception[2]    | mm   | cumi    | Reported interception storage for irrigation                 |
-| Theta1State                    | tha                | Theta1a[0]            | -    | thtop   | Reported volumetric soil moisture content for top soil layer 1 [V/V] |
-| Theta1ForestState              | thfa               | Theta1a[1]            | -    | thfa    | Reported volumetric soil moisture content for top soil layer forest   fraction [V/V] |
-| Theta1IrrigationState          | thia               | Theta1a[2]            | -    | thia    | Reported volumetric soil moisture content for top soil layer irrigation   fraction [V/V] |
-| Theta2State                    | thb                | Theta1b[0]            | -    | thsub   | Reported volumetric soil moisture content for  soil layer 2 [V/V] |
-| Theta2ForestState              | thfb               | Theta1b[1]            | -    | thfb    | Reported volumetric soil moisture content for  soil layer 2 forest fraction [V/V] |
-| Theta2IrrigationState          | thib               | Theta1b[2]            | -    | thib    | Reported volumetric soil moisture content for  soil layer 2 irrigation fraction [V/V] |
-| Theta3State                    | thc                | Theta2[0]             | -    | thc     | Reported volumetric soil moisture content for soil layer 3 [V/V] |
-| Theta3ForestState              | thfc               | Theta2[1]             | -    | thfc    | Reported volumetric soil moisture content for soil layer 3 forest   fraction [V/V] |
-| Theta3IrrigationState          | thic               | Theta2[2]             | -    | thic    | Reported volumetric soil moisture content for soil layer 3   irrigation  fraction [V/V] |
+| Theta1State                    | tha                | Theta1a[0]            | -    | thtop   | Reported volumetric soil moisture content for top soil layer 1a [V/V] |
+| Theta1ForestState              | thfa               | Theta1a[1]            | -    | thfa    | Reported volumetric soil moisture content for top soil layer 1a forest   fraction [V/V] |
+| Theta1IrrigationState          | thia               | Theta1a[2]            | -    | thia    | Reported volumetric soil moisture content for top soil layer 1a irrigation   fraction [V/V] |
+| Theta2State                    | thb                | Theta1b[0]            | -    | thsub   | Reported volumetric soil moisture content for  soil layer 1b [V/V] |
+| Theta2ForestState              | thfb               | Theta1b[1]            | -    | thfb    | Reported volumetric soil moisture content for  soil layer 1b forest fraction [V/V] |
+| Theta2IrrigationState          | thib               | Theta1b[2]            | -    | thib    | Reported volumetric soil moisture content for  soil layer 1b irrigation fraction [V/V] |
+| Theta3State                    | thc                | Theta2[0]             | -    | thc     | Reported volumetric soil moisture content for soil layer 2 [V/V] |
+| Theta3ForestState              | thfc               | Theta2[1]             | -    | thfc    | Reported volumetric soil moisture content for soil layer 2 forest   fraction [V/V] |
+| Theta3IrrigationState          | thic               | Theta2[2]             | -    | thic    | Reported volumetric soil moisture content for soil layer 2   irrigation  fraction [V/V] |
 | UZState                        | uz                 | UZ[0]                 | mm   | uz      | Reported storage in upper groundwater zone response box [mm] |
 | UZForestState                  | uzf                | UZ[1]                 | mm   | uzf     | Reported storage in upper groundwater zone response box for forest [mm] |
 | UZIrrigationState              | uzi                | UZ[2]                 | mm   | uzi     | Reported storage in upper groundwater zone response box for irrigation   [mm] |
