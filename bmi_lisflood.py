@@ -134,7 +134,7 @@ class LisfloodBmi(Bmi):
         return gridded_values.ravel()
 
     def get_value_at_indices(self, var_name, indices):
-        return self._get_reference(var_name)[self.internal_indexes[indices]]
+        return self.get_value(var_name)[indices]
 
     def get_value_ptr(self, var_name):
         return self.get_value(var_name)
