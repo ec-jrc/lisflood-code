@@ -134,7 +134,7 @@ class LisfloodBmi(Bmi):
         return gridded_values.ravel()
 
     def get_value_at_indices(self, var_name, indices):
-        return self._get_reference(var_name)[self.internal_indexes[indices]]
+        return self.get_value(var_name)[indices]
 
     def get_value_ptr(self, var_name):
         return self.get_value(var_name)
@@ -157,17 +157,19 @@ class LisfloodBmi(Bmi):
         return self.mask.shape
 
     def get_grid_x(self, grid_id):
-        return np.linspace(self.left_x, self.right_x, self.num_cols + 1)
+        cell_middle = self.cell_size / 2
+        return np.arange(self.left_x + cell_middle, self.right_x - self.cell_size, self.cell_size)
 
     def get_grid_y(self, grid_id):
-        return np.linspace(self.top_y, self.bottom_y, self.num_rows + 1)
+        cell_middle = self.cell_size / 2
+        return np.arange(self.top_y - cell_middle, self.bottom_y + self.cell_size, -1 * self.cell_size)
 
     def get_grid_z(self, grid_id):
         raise NotImplementedError
 
     def get_grid_spacing(self, grid_id):
         checkGridID(grid_id)
-        return self.cell_size
+        return np.array([self.cell_size, self.cell_size])
 
     def get_grid_origin(self, grid_id):
         return np.array([self.left_x, self.bottom_y])
