@@ -167,7 +167,7 @@ class LisfloodBmi(Bmi):
 
     def get_grid_spacing(self, grid_id):
         checkGridID(grid_id)
-        return self.cell_size
+        return np.array([self.cell_size, self.cell_size])
 
     def get_grid_origin(self, grid_id):
         return np.array([self.left_x, self.bottom_y])
