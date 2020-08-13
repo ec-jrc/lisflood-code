@@ -158,7 +158,7 @@ class LisfloodBmi(Bmi):
 
     def get_grid_x(self, grid_id):
         cell_middle = self.cell_size / 2
-	return np.arange(self.left_x + cell_middle, self.right_x - self.cell_size, self.cell_size)
+        return np.arange(self.left_x + cell_middle, self.right_x - self.cell_size, self.cell_size)
 
     def get_grid_y(self, grid_id):
         cell_middle = self.cell_size / 2
