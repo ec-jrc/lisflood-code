@@ -134,7 +134,6 @@ class LisfloodBmi(Bmi):
         return gridded_values.ravel()
 
     def get_value_at_indices(self, var_name, indices):
-        self._check_indices(indices)
         return self._get_reference(var_name)[self.internal_indexes[indices]]
 
     def get_value_ptr(self, var_name):
@@ -151,14 +150,8 @@ class LisfloodBmi(Bmi):
         ref[:] = src[self.mask.ravel()]
 
     def set_value_at_indices(self, var_name, indices, src):
-        self._check_indices(indices)
         ref = self._get_reference(var_name)
         ref[self.internal_indexes[indices]] = src
-
-    def _check_indices(self, indices):
-        outside_domain = self.internal_indexes[indices] == -1
-        if outside_domain.any():
-            raise Exception(f'{outside_domain.sum()} indices are outside the simulated domain!')
 
     def get_grid_shape(self, grid_id):
         return self.mask.shape
