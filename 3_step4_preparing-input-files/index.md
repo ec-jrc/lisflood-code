@@ -40,7 +40,7 @@ Both maps should be stored in the same directory where all other input maps are.
 <setoption choice="1" name="gridSizeUserDefined" \>
 ```
 
-LISFLOOD settings files and the use of options are explained in detail in a [dedicated chapter](https://ec-jrc.github.io/lisflood-code/3_step3_preparing-setting-file/) and [aanex](https://ec-jrc.github.io/lisflood-code/4_annex_settings_and_options/) of this document.
+LISFLOOD settings files and the use of options are explained in detail in a [dedicated chapter](https://ec-jrc.github.io/lisflood-code/3_step3_preparing-setting-file/) and [annex](https://ec-jrc.github.io/lisflood-code/4_annex_settings_and_options/) of this document.
 
 #### Naming of meteorological variable maps 
 
