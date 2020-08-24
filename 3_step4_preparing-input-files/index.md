@@ -169,7 +169,7 @@ height="4.541666666666667in"}
 
 ***Figure:*** *Suggested file structure for LISFLOOD*
 
-### Generating input base maps **CHECK THIS LAST SENTENCE**
+### Generating input base maps 
 
 At the time of writing this document, complete sets of LISFLOOD base maps covering the whole of Europe have been compiled at 1- and 5-km pixel resolution. A number of automated procedures have been written that allow you to generate sub-sets of these for pre-defined areas (using either existing mask maps or co-ordinates of catchment outlets).
 
