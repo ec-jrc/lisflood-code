@@ -42,7 +42,7 @@ Both maps should be stored in the same directory where all other input maps are.
 
 LISFLOOD settings files and the use of options are explained in detail in a [dedicated chapter](https://ec-jrc.github.io/lisflood-code/3_step3_preparing-setting-file/) and [aanex](https://ec-jrc.github.io/lisflood-code/4_annex_settings_and_options/) of this document.
 
-**#### Naming of meteorological variable maps .... SHOULD WE REFER TO THE NETCDF CHAPTER? IS THE NETCDF CHAPTER A COMPLEMENT OR A REPLACEMENT TO THIS SECTION??**
+#### Naming of meteorological variable maps 
 
 The meteorological forcing variables (and Leaf Area Index) are defined in *map stacks*. A *map stack* is simply a series of maps, where each map represents the value of a variable at an individual time step. The name of each map is made up of a total of 11 characters: 8 characters, a dot and a 3-character suffix. Each map name starts with a *prefix*, and ends with the time step number. All character positions in between are
 filled with zeros ("0"). Take for example a stack of precipitation maps. Table 4.1 shows that the default prefix for precipitation is "pr", which produces the following file names:
