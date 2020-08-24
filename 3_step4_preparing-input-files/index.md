@@ -164,8 +164,7 @@ It is up to the user how the input data are organised. However, it is advised to
 
 The following Figure illustrates this:
 
-![](../lisflood-code/tree/gh-pages/media/image36.png){width="5.802083333333333in"
-height="4.541666666666667in"}
+![](../lisflood-code/tree/gh-pages/media/image36.png)
 
 ***Figure:*** *Suggested file structure for LISFLOOD*
 
