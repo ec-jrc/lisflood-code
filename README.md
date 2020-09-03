@@ -17,31 +17,49 @@ Other useful resources
 
 ## Quick start
 
-You can download code and datasets for testing the model.
+You can use conda environment to easily install dependencies.
+
+* Install [miniconda](https://docs.conda.io/en/latest/miniconda.html)
+* Create a conda env named "lisflood" and install dependencies:
+
+```bash
+conda create --name lisflood python=3.7 -c conda-forge
+conda activate lisflood
+conda install -c conda-forge pcraster
+```
+
+* Install lisflood-model pypi package
+```bash
+pip install lisflood-model
+```
+
+Command above will also install the executable `lisflood` in the conda env, so that you can run LISFLOOD with the following:
+```bash
+lisflood /absolute_path/to/my/local/folder/TestCatchment/settings/cold_day_base.xml
+```
+
+You can also clone the repository which contains datasets to test the model.
 Follow this instruction for a basic test (included in this repository under [tests/data/TestCatchment1](https://github.com/ec-jrc/lisflood-code/tree/master/tests/data/TestCatchment1))
 
-1. Clone the master branch of this repository (you need to have git installed on your machine).
+* Clone the master branch of this repository (you need to have git installed on your machine).
 
 ```bash
 git clone --single-branch --branch master https://github.com/ec-jrc/lisflood-code.git
 ```
 
-2. Install requirements into a Python 3 virtualenv. 
-We recommend to follow the instructions on [virtualenv docs](https://virtualenv.pypa.io/en/latest/). 
-Assuming you've activated your virtual environment, you can now install requirements with pip:
+* **Install requirements into a python 3 conda env**
 
 ```bash
-cd lisflood-code  # move into lisflood-code project directory
+conda create --name lisflood python=3.7 -c conda-forge
+conda activate lisflood
+conda install -c conda-forge pcraster
+cd lisflood-code
 pip install -r requirements.txt
 ```
 
-* GDAL should be installed as well. To install GDAL C library and gdal python library on debian/ubuntu systems, we found good instructions [here](https://mothergeo-py.readthedocs.io/en/latest/development/how-to/gdal-ubuntu-pkg.html).
- 
-If you already have GDAL installed in your computer, make sure that the GDAL and the python gdal library have the same version.
-
-
-You need to install PCRaster (4.2.x is first version which works with Python3) and include its python interface in PYTHONPATH environment variable.
+If you don't use conda but a plain virtualenv, you need to install PCRaster and GDAL by your own and include its python interface in PYTHONPATH environment variable.
 For details, please follow instruction on [official docs](http://pcraster.geo.uu.nl/getting-started/pcraster-on-linux/).
+
 
 3. Compile the cython module kinematic_wave_parallel_tool
 
@@ -73,7 +91,6 @@ If the command above successed without errors, producing dis.nc into tests/data/
 
 ### Docker image
 
-
 You can use the updated docker image to run lisflood, so without taking care to install dependencies on your system.
 
 #### Pull image from repository:
@@ -82,13 +99,7 @@ You can use the updated docker image to run lisflood, so without taking care to 
 docker pull efas/lisflood:latest
 ```
 
-#### Run tests in image:
-
-```bash
-docker run -v /absolute_path/to/my/local/folder:/usecases efas/lisflood:latest usecases
-```
-
-#### Copy catchment files from container to your host, using mapped directories:
+#### Run test catchments in image:
 
 ```bash
 docker run -v /absolute_path/to/my/local/folder:/usecases efas/lisflood:latest usecases

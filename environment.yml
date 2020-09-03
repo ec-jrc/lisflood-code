@@ -5,3 +5,4 @@ dependencies:
   - python=3.7
   - pcraster
   - gdal
+  - cython=0.29.14
