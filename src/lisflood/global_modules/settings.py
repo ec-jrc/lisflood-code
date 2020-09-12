@@ -224,7 +224,6 @@ class LisSettings(with_metaclass(Singleton)):
         self.step_start_dt = inttodate(self.step_start_int - 1, ref_date_start, binding=self.binding)
         self.step_end_dt = inttodate(self.step_end_int - 1, ref_date_start, binding=self.binding)
 
-
     def montecarlo_kalman_settings(self):
         # Ensemble Kalman filter
         enkf_set = self.options.get('EnKF', 0) if not self.options['InitLisflood'] else 0
@@ -569,7 +568,7 @@ def datetoint(date_in, binding=None):
     # DtDay = float(DtSec / 86400.)
     # Time step, expressed as fraction of day (same as self.var.DtSec and self.var.DtDay)
 
-    if type(date1) is datetime.datetime:
+    if isinstance(date1, datetime.datetime):
         str1 = date1.strftime("%d/%m/%Y %H:%M")
         # get total number of seconds corresponding to the time interval between dateIn and CalendarDayStart
         timeinterval_in_sec = int((date1 - begin).total_seconds())

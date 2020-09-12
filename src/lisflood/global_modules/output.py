@@ -149,14 +149,13 @@ class outputTssMap(object):
 
         for maps in report_maps_end.keys():
             # report end map filename
-
-            try:
+            if settings.mc_set:
+                # MonteCarlo model
                 where = os.path.join(str(self.var.currentSampleNumber()), binding[maps].split("/")[-1])
-            except:
+            else:
                 where = binding.get(maps)
             if not where:
                 continue
-            # Output path and name of report map
             what = 'self.var.' + report_maps_end[maps].output_var
             if where not in checkifdouble:
                 checkifdouble.append(where)
@@ -206,11 +205,13 @@ class outputTssMap(object):
         # Report REPORTSTEPS maps
         for maps in report_maps_steps.keys():
             # report reportsteps maps
-
-            try:
+            if settings.mc_set:
+                # MonteCarlo model
                 where = os.path.join(str(self.var.currentSampleNumber()), binding[maps].split("/")[-1])
-            except:
-                where = binding[maps]
+            else:
+                where = binding.get(maps)
+            if not where:
+                continue
             what = 'self.var.' + report_maps_steps[maps].output_var
             if not(where in checkifdouble):
                 checkifdouble.append(where)
@@ -261,10 +262,12 @@ class outputTssMap(object):
         # Report ALL maps
         for maps in report_maps_all.keys():
             # report maps for all timesteps
-            try:
+            if settings.mc_set:
                 where = os.path.join(str(self.var.currentSampleNumber()), binding[maps].split("/")[-1])
-            except:
-                where = binding[maps]
+            else:
+                where = binding.get(maps)
+            if not where:
+                continue
             what = 'self.var.' + report_maps_all[maps].output_var
             if where not in checkifdouble:
                 checkifdouble.append(where)
