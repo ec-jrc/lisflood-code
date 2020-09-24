@@ -45,33 +45,33 @@ TEMPLATE SETTINGS FILE Authors JvdK, PB
 <setoption choice="0" name="InitLisflood"/>
 <setoption choice="0" name="InitLisfloodwithoutSplit"/>
 
-<setoption choice="0" name="repStateMaps"/>
+<setoption choice="1" name="repStateMaps"/>
 <setoption choice="0" name="repPixMaps"/>
-<setoption choice="0" name="repEndMaps"/>
+<setoption choice="1" name="repEndMaps"/>
 <setoption choice="1" name="repDischargeMaps"/>
-<setoption choice="0" name="repsimulateLakes"/>
-<setoption choice="0" name="repsimulateReservoirs"/>
+<setoption choice="1" name="repsimulateLakes"/>
+<setoption choice="1" name="repsimulateReservoirs"/>
 <setoption choice="1" name="repLZWB"/>
-<setoption choice="0" name="repSurfaceRunoffMaps"/>
+<setoption choice="1" name="repSurfaceRunoffMaps"/>
 <setoption choice="1" name="repEvapPix"/>
 
-<setoption choice="0" name="repSnowMaps"/>
-<setoption choice="0" name="repSnowCoverMaps"/>
-<setoption choice="0" name="repRainMaps"/>
-<setoption choice="0" name="repSnowMeltMaps"/>
-<setoption choice="0" name="repPF1Maps"/>
-<setoption choice="0" name="repPF2Maps"/>
-<setoption choice="0" name="repTheta1Maps"/>
-<setoption choice="0" name="repTheta2Maps"/>
-<setoption choice="0" name="repDSLRMaps"/>
-<setoption choice="0" name="repCumInterCeptionMaps"/>
-<setoption choice="0" name="repUZMaps"/>
-<setoption choice="0" name="repRWS"/>
-<setoption choice="0" name="repStressDays"/>
-<setoption choice="0" name="repLZMaps"/>
-<setoption choice="0" name="repGwPercUZLZMaps"/>
-<setoption choice="0" name="repTotalRunoffMaps"/>
-<setoption choice="0" name="repTotaltoChanMaps"/>
+<setoption choice="1" name="repSnowMaps"/>
+<setoption choice="1" name="repSnowCoverMaps"/>
+<setoption choice="1" name="repRainMaps"/>
+<setoption choice="1" name="repSnowMeltMaps"/>
+<setoption choice="1" name="repPF1Maps"/>
+<setoption choice="1" name="repPF2Maps"/>
+<setoption choice="1" name="repTheta1Maps"/>
+<setoption choice="1" name="repTheta2Maps"/>
+<setoption choice="1" name="repDSLRMaps"/>
+<setoption choice="1" name="repCumInterCeptionMaps"/>
+<setoption choice="1" name="repUZMaps"/>
+<setoption choice="1" name="repRWS"/>
+<setoption choice="1" name="repStressDays"/>
+<setoption choice="1" name="repLZMaps"/>
+<setoption choice="1" name="repGwPercUZLZMaps"/>
+<setoption choice="1" name="repTotalRunoffMaps"/>
+<setoption choice="1" name="repTotaltoChanMaps"/>
 
 <setoption choice="1"  name="readNetcdfStack"/>
 <setoption choice="1"  name="writeNetcdfStack"/>
@@ -206,7 +206,7 @@ Number of first time step in simulation
 </comment>
 </textvar>
 
-<textvar name="StepEnd" value="10591">
+<textvar name="StepEnd" value="365">
 <comment>
 12748 SMHI HIST
 3653  1/1/1971
@@ -399,7 +399,7 @@ FILE PATHS
 **************************************************************
 </comment>
 
-<textvar name="PathOut" value="/output">
+<textvar name="PathOut" value="/DATA/gelatem/reference_run_D2dev">
 <comment>
 Output path (org=$(PathRoot)/out)
 </comment>
@@ -2283,6 +2283,24 @@ Reported Topsoil moisture [%]
 <textvar name="SurfaceSoilMoistureMaps" value="$(PathOut)/wta">
 <comment>
 Reported Topsoil moisture [%]
+</comment>
+</textvar>
+
+<textvar name="Theta1aMaps" value="$(PathOut)/theta1a">
+<comment>
+Reported volumetric soil moisture content for soil layer 1a [V/V]
+</comment>
+</textvar>
+
+<textvar name="Theta1bMaps" value="$(PathOut)/theta1b">
+<comment>
+Reported volumetric soil moisture content for soil layer 1b [V/V]
+</comment>
+</textvar>
+
+<textvar name="Theta2Maps" value="$(PathOut)/theta2">
+<comment>
+Reported volumetric soil moisture content for soil layer 2 [V/V]
 </comment>
 </textvar>
 
