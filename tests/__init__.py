@@ -12,11 +12,8 @@ https://joinup.ec.europa.eu/sites/default/files/inline-files/EUPL%20v1_2%20EN(1)
 Unless required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an "AS IS" basis,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
-
-Run tests with coverage report:
-export PYTHONPATH=/opt/pcraster36/python && pytest tests/
-
 """
+
 from __future__ import absolute_import, division
 from nine import IS_PYTHON2
 

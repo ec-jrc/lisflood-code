@@ -25,7 +25,7 @@ It's equivalent to:
 4. git push --tags
 
 Note: To upload new package on PyPi Test:
-twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+python setup.py testpypi
 
 Install
 

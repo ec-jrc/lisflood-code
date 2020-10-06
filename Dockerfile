@@ -6,19 +6,19 @@ MAINTAINER Domenico Nappo <domenico.nappo@gmail.com>
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Create conda "lisflood" environment:
-COPY environment.yml .
-RUN conda update -n base -c defaults conda
-RUN conda env create -f environment.yml
-RUN conda install -n lisflood -c conda-forge GDAL==`conda run -n lisflood gdal-config --version`
-
-## Install requirements
+# Install requirements
 RUN apt-get update && \
     apt-get -y install gcc g++ && \
     rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt /
-RUN conda run -n lisflood pip install -r /requirements.txt --ignore-installed
+# Create conda "lisflood" environment:
+COPY environment.yml .
+RUN conda update -n base -c defaults conda
+RUN conda env create -n lisflood -f environment.yml
+#RUN conda install -n lisflood -c conda-forge GDAL==`conda run -n lisflood gdal-config --version`
+
+#COPY requirements.txt /
+#RUN conda run -n lisflood pip install -r /requirements.txt --ignore-installed
 
 # Copy source code
 COPY src/lisflood/. /lisflood/
