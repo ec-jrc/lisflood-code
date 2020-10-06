@@ -1,6 +1,6 @@
 """
 
-Copyright 2019 European Union
+Copyright 2019-2020 European Union
 
 Licensed under the EUPL, Version 1.2 or as soon they will be approved by the European Commission  subsequent versions of the EUPL (the "Licence");
 
@@ -28,5 +28,15 @@ from lisflood.main import lisfloodexe
 from tests import TestSettings
 
 
-class TestWarmStart(TestSettings):
-    settings_file = os.path.join(os.path.dirname(__file__), 'data/settings/base.xml')
+class TestWarmStartDays(TestSettings):
+    settings_file = os.path.join(os.path.dirname(__file__), 'data/settings/init.xml')
+
+    def test_warmstart(self):
+        settings_init = self.setoptions(self.settings_file,
+                                        vars_to_set={'DtSec': '86400'})
+        lisfloodexe(settings_init)
+        assert False
+
+
+class TestWarmStartHours(TestSettings):
+    settings_file = os.path.join(os.path.dirname(__file__), 'data/settings/init.xml')

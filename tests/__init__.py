@@ -1,6 +1,6 @@
 """
 
-Copyright 2019 European Union
+Copyright 2019-2020 European Union
 
 Licensed under the EUPL, Version 1.2 or as soon they will be approved by the European Commission  subsequent versions of the EUPL (the "Licence");
 
@@ -96,7 +96,9 @@ class TestSettings(object):
         filename = os.path.join(os.path.dirname(settings_file), './settings_{}.xml'.format(uid))
         with open(filename, 'w') as dest:
             dest.write(soup.prettify())
+        print('Reading ', filename)
         settings = LisSettings(filename)
+        print('Read ', filename)
         os.unlink(filename)
         return settings
 
