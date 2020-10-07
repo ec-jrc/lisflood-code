@@ -47,8 +47,9 @@ class TestWarmStartDays(TestSettings):
         step_start = '01/01/2000 06:00'
         step_end = '01/02/2000 06:00'
         dt_sec = 86400
+        path_out = mk_path_out('data/TestCatchment/outputs/init')
         settings_prerun = self.setoptions(self.settings_files['prerun'],
-                                          vars_to_set={'DtSec': dt_sec,
+                                          vars_to_set={'DtSec': dt_sec, 'PathOut': path_out,
                                                        'StepStart': step_start,
                                                        'StepEnd': step_end})
         step_start_dt = settings_prerun.step_start_dt
@@ -66,9 +67,9 @@ class TestWarmStartDays(TestSettings):
                                                         'AvgDis': avgdis_path, 'DtSec': '86400'})
         lisfloodexe(settings_longrun)
 
-        # warm
+        # warm run (1. Cold start)
         run_number = 1
-        cold_start_step_end = (step_start_dt + timedelta(seconds=dt_sec)).strftime('%d/%m/%Y %H:%M')
+        cold_start_step_end = step_start
         path_out = mk_path_out('data/TestCatchment/outputs/run_{}'.format(run_number))
         settings_coldstart = self.setoptions(self.settings_files['cold'],
                                              vars_to_set={'StepStart': step_start,
@@ -78,26 +79,30 @@ class TestWarmStartDays(TestSettings):
                                                           'AvgDis': avgdis_path, 'DtSec': dt_sec})
         lisfloodexe(settings_coldstart)
 
+        # warm run (2. warm starts with initial conditions)
         prev_settings = settings_coldstart
-        warm_step_start = prev_settings.step_end_dt
-
-        while warm_step_start < step_end_dt:
+        warm_step_start = prev_settings.step_end_dt + timedelta(seconds=dt_sec)
+        warm_step_end = warm_step_start
+        timestep_init = prev_settings.step_end_dt.strftime('%d/%m/%Y %H:%M')
+        while warm_step_start <= step_end_dt:
             run_number += 1
             path_init = prev_settings.output_dir
-            warm_step_end = warm_step_start + timedelta(seconds=dt_sec)
             path_out = mk_path_out('data/TestCatchment/outputs/run_{}'.format(run_number))
-            # path_init = mk_path_out('data/TestCatchment/outputs/run_{}'.format(run_number - 1))
+
             settings_warmstart = self.setoptions(self.settings_files['warm'],
                                                  vars_to_set={'StepStart': warm_step_start.strftime('%d/%m/%Y %H:%M'),
                                                               'StepEnd': warm_step_end.strftime('%d/%m/%Y %H:%M'),
                                                               'LZAvInflowMap': lzavin_path,
                                                               'PathOut': path_out,
                                                               'PathInit': path_init,
-                                                              'timestepInit': warm_step_start.strftime('%d/%m/%Y %H:%M'),
-                                                              'AvgDis': avgdis_path, 'DtSec': '86400'})
+                                                              'timestepInit': timestep_init,
+                                                              'AvgDis': avgdis_path, 'DtSec': dt_sec})
             lisfloodexe(settings_warmstart)
             prev_settings = settings_warmstart
-            warm_step_start = prev_settings.step_end_dt
+
+            warm_step_start = prev_settings.step_end_dt + timedelta(seconds=dt_sec)
+            warm_step_end = warm_step_start
+            timestep_init = prev_settings.step_end_dt.strftime('%d/%m/%Y %H:%M')
 
         # TODO
         assert False

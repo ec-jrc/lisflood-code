@@ -54,6 +54,8 @@ class TestSettings(object):
                 settings = self.setoptions(settings_file)
             except LisfloodError:
                 continue
+            if not os.path.exists(settings.output_dir):
+                continue
             rm_files = [os.path.join(settings.output_dir, f) for f in os.listdir(settings.output_dir) if
                         f.endswith('.nc') or f.endswith('.tss')]
             for f in rm_files:
