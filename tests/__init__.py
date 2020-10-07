@@ -52,11 +52,11 @@ class TestSettings(object):
         for f in rm_files:
             os.unlink(f)
 
-    def teardown_method(self):
-        settings = self.setoptions(self.settings_file)
-        rm_files = [os.path.join(settings.output_dir, f) for f in os.listdir(settings.output_dir) if f.endswith('.nc') or f.endswith('.tss')]
-        for f in rm_files:
-            os.unlink(f)
+    # def teardown_method(self):
+    #     settings = self.setoptions(self.settings_file)
+    #     rm_files = [os.path.join(settings.output_dir, f) for f in os.listdir(settings.output_dir) if f.endswith('.nc') or f.endswith('.tss')]
+    #     for f in rm_files:
+    #         os.unlink(f)
 
     @classmethod
     def dummyloadmap(cls, *args, **kwargs):
@@ -96,9 +96,7 @@ class TestSettings(object):
         filename = os.path.join(os.path.dirname(settings_file), './settings_{}.xml'.format(uid))
         with open(filename, 'w') as dest:
             dest.write(soup.prettify())
-        print('Reading ', filename)
         settings = LisSettings(filename)
-        print('Read ', filename)
         os.unlink(filename)
         return settings
 

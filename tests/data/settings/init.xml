@@ -76,7 +76,7 @@
         <setoption choice="0" name="repEndMaps"/>
 
         # report maps
-        <setoption choice="1" name="repDischargeMaps"/>
+        <setoption choice="0" name="repDischargeMaps"/>
         <setoption choice="0" name="repSurfaceRunoffMaps"/>
         <setoption choice="0" name="repSnowMaps"/>
         <setoption choice="0" name="repRainMaps"/>
@@ -112,11 +112,12 @@
             - "2", "3", ... : manual setting of the number of parallel threads.
             (if exceeding the number of CPUs, the option is set to "0") -->
             <textvar name="numCPUs_parallelKinematicWave" value="30"/>
-
+        </group>
+        <group>
 
             <comment>
                 **************************************************************
-                AREA AND OUTLETS
+                PATHS, AREA AND OUTLETS
                 **************************************************************
             </comment>
 
@@ -158,7 +159,7 @@
                 </comment>
             </textvar>
 
-            <t<textvar name="PathMaps" value="$(PathRoot)/maps_netcdf">
+            <textvar name="PathMaps" value="$(PathRoot)/maps_netcdf">
                 <comment>
                     Static maps path
                     /perm/mo/mocm/proj/efas/xdom/data/staticData/lisflood
@@ -172,7 +173,7 @@
                 </comment>
             </textvar>
 
-            <textvar name="PathParams" value="$(PathRoot)/parameters">
+            <textvar name="PathParams" value="$(PathMaps)/parameters">
                 <comment>
                     Calibration parameter path
                 </comment>
@@ -233,6 +234,7 @@
                     variable water fraction maps path
                 </comment>
             </textvar>
+        </group>
 
 <!--            <textvar name="Latitude" value="$(PathMaps)/ec_lat.map">-->
 <!--                <comment>-->
@@ -240,7 +242,7 @@
 <!--                </comment>-->
 <!--            </textvar>-->
 
-
+            <group>
             <comment>
                 **************************************************************
                 TIME-RELATED CONSTANTS
@@ -386,7 +388,9 @@
                 </comment>
             </textvar>
 
-            <textvar name="LZThreshold" value="$(PathParams)/params_LZThreshold">
+
+            <textvar name="LZThreshold" value="$(PathMaps)/lzthreshold">
+<!--            <textvar name="LZThreshold" value="$(PathParams)/params_LZThreshold">-->
                 <comment>
                     threshold value below which there is no outflow to the channel
                     THIS NEEDS TO BE AMENDED BY ADDING THE RIGHT PATH TO $(PathParams)
@@ -1275,7 +1279,7 @@ threshold value below which there is no outflow to the channel
                 </comment>
             </textvar>
 
-            <textvar name="UpAreaTrans" value="$(PathMaps)/ec_upArea.nc">
+            <textvar name="UpAreaTrans" value="$(PathMaps)/upArea.nc">
                 <comment>
                     upstream area
                 </comment>
@@ -4108,7 +4112,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     **************************************************************
                 </comment>
 
-                <textvar name="Ldd" value="$(PathMaps)/ec_ldd.nc">
+                <textvar name="Ldd" value="$(PathMaps)/ldd.nc">
                     <comment>
                         $(PathMaps)/ldd.map
                         local drain direction map (1-9)
@@ -4428,7 +4432,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="ChanMan" value="$(PathMaps)/ec_chanman.nc">
+                <textvar name="ChanMan" value="$(PathMaps)/chanman.nc">
                     <comment>
                         Channel Manning's n
                     </comment>
@@ -4440,7 +4444,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="ChanBottomWidth" value="$(PathMaps)/ec_chanbw.nc">
+                <textvar name="ChanBottomWidth" value="$(PathMaps)/chanbw.nc">
                     <comment>
                         Channel bottom width [meters]
                     </comment>
@@ -4453,13 +4457,13 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="FloodPlainWidth" value="$(PathMaps)/ec_chanflpn.nc">
+                <textvar name="FloodPlainWidth" value="$(PathMaps)/chanflpn.nc">
                     <comment>
                         Floodplain Width [meters]
                     </comment>
                 </textvar>
 
-                <textvar name="ChanDepthThreshold" value="$(PathMaps)/ec_chanbnkf.nc">
+                <textvar name="ChanDepthThreshold" value="$(PathMaps)/chanbnkf.nc">
                     <comment>
                         Bankfull channel depth [meters]
                     </comment>
@@ -4661,7 +4665,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="ReservoirSites" value="$(PathMaps)/ec_res.nc">
+                <textvar name="ReservoirSites" value="$(PathMaps)/res.nc">
                     <comment>
                         Map with location of reservoirs (number]
                     </comment>
@@ -4780,7 +4784,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     **************************************************************
                 </comment>
 
-                <textvar name="LakeSites" value="$(PathMaps)/ec_lakes.nc">
+                <textvar name="LakeSites" value="$(PathMaps)/lakes.nc">
                     <comment>
                         Map with location of lakes
                     </comment>

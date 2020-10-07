@@ -30,13 +30,17 @@ from tests import TestSettings
 
 class TestWarmStartDays(TestSettings):
     settings_file = os.path.join(os.path.dirname(__file__), 'data/settings/init.xml')
+    settings_file_cold = os.path.join(os.path.dirname(__file__), 'data/settings/cold.xml')
+    settings_file_warm = os.path.join(os.path.dirname(__file__), 'data/settings/warm.xml')
 
     def test_warmstart(self):
         settings_init = self.setoptions(self.settings_file,
                                         vars_to_set={'DtSec': '86400'})
+
         lisfloodexe(settings_init)
+        settings_cold = self.setoptions(self.settings_file_cold,
+                                        vars_to_set={'PathInit': settings_init.output_dir, 'DtSec': '86400'})
+        lisfloodexe(settings_cold)
+
+        # TODO
         assert False
-
-
-class TestWarmStartHours(TestSettings):
-    settings_file = os.path.join(os.path.dirname(__file__), 'data/settings/init.xml')
