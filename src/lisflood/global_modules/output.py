@@ -72,13 +72,12 @@ class outputTssMap(object):
                     outpoints = valuecell(self.var.MaskMap, coord, outpoints)
                 else:
                     try:
-                        outpoints = loadmap(where,pcr=True)
-                        outpoints = ifthen(outpoints != 0,outpoints)
+                        outpoints = loadmap(where, pcr=True)
+                        outpoints = ifthen(outpoints != 0, outpoints)
                           # this is necessary if netcdf maps are loaded !! otherwise strange dis.tss
                     except:
                         msg = "Setting output points\n"
-                        raise LisfloodFileError(outpoints,msg)
-
+                        raise LisfloodFileError(outpoints, msg)
             if option['MonteCarlo']:
                 if os.path.exists(os.path.split(binding[tss])[0]):
                     self.var.Tss[tss] = TimeoutputTimeseries(str(binding[tss].split("/")[-1]), self.var, outpoints, noHeader=flags['noheader'])

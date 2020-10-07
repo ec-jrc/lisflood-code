@@ -30,7 +30,7 @@
         <setoption choice="1" name="drainedIrrigation"/>
         <setoption choice="1" name="riceIrrigation"/>
         <setoption choice="1" name="openwaterevapo"/>
-        <setoption choice="1" name="simulateLakes"/>
+        <setoption choice="0" name="simulateLakes"/>
         <setoption choice="1" name="simulateReservoirs"/>
 
         <setoption choice="1" name="SplitRouting"/>
@@ -152,7 +152,7 @@
                     $(PathEvapo)/$(PrefixE0)
                 </comment>
             </textvar>
-            <textvar name="PathOut" value="$(PathRoot)/outputs/init/">
+            <textvar name="PathOut" value="$(PathRoot)/outputs/temp/">
                 <comment>
                     Output path (org=$(PathRoot)/out)
                 </comment>
@@ -261,7 +261,7 @@
                 </comment>
             </textvar>
 
-            <textvar name="CalendarDayStart" value="02/01/1990 06:00">
+            <textvar name="CalendarDayStart" value="31/12/1999 06:00">
                 <comment>
                     Calendar day number of 1st day in model run
                     Day of the year of first map (e.g. xx000.001) even if the model start from map e.g. 500
@@ -270,9 +270,11 @@
                 </comment>
             </textvar>
 
-            <textvar name="DtSec" value="21600">
+            <textvar name="DtSec" value="86400">
                 <comment>
                     timestep [seconds]
+                    21600 for 6hourly timestep
+                    86400 for daily timestep
                 </comment>
             </textvar>
 
@@ -285,19 +287,19 @@
                 </comment>
             </textvar>
 
-            <textvar name="StepStart" value="02/01/1990 06:00">
+            <textvar name="StepStart" value="01/01/2000 06:00">
                 <comment>
                     Number of first time step in simulation
                 </comment>
             </textvar>
 
-            <textvar name="StepEnd" value="01/01/1996 06:00">
+            <textvar name="StepEnd" value="30/12/2000 06:00">
                 <comment>
                     Number of last time step in simulation
                 </comment>
             </textvar>
 
-            <textvar name="ReportSteps" value="1..999999">
+            <textvar name="ReportSteps" value="1..9999">
                 <comment>
                     1..9999
                     Time steps at which to write model state maps (i.e. only
@@ -392,7 +394,7 @@
                 </comment>
             </textvar>
 
-            <textvar name="LZThreshold" value="$(PathParams)/params_LZThreshold.nc">
+            <textvar name="LZThreshold" value="$(PathMaps)/lzthreshold">
                 <comment>
                     threshold value below which there is no outflow to the channel
                     THIS NEEDS TO BE AMENDED BY ADDING THE RIGHT PATH TO $(PathParams)
@@ -477,7 +479,7 @@
                 </comment>
             </textvar>
 
-            <textvar name="QSplitMult" value="$(PathParams)/params_QSplitMult">
+            <textvar name="QSplitMult" value="2.0">
                 <comment>
                     PBchange
                     Multiplier applied to average Q to split into a second line of routing
@@ -1544,11 +1546,11 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
             </comment>
         </textvar>
 
-        <textvar name="Latitude" value="$(Latitude)">
-            <comment>
-                latitude map to be used for snow/ice modelling
-            </comment>
-        </textvar>
+<!--        <textvar name="Latitude" value="$(Latitude)">-->
+<!--            <comment>-->
+<!--                latitude map to be used for snow/ice modelling-->
+<!--            </comment>-->
+<!--        </textvar>-->
 
         <group>
 
@@ -2026,7 +2028,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 **************************************************************
             </comment>
 
-            <textvar name="LZAvInflowMap" value="$(PathMaps)/ec_lzavin.nc">
+            <textvar name="LZAvInflowMap" value="$(PathMaps)/lzavin">
                 <comment>
                     $(PathMaps)/lzavin.map
                     $(PathInit)/lzavin.map
@@ -2035,7 +2037,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
             </textvar>
 
-            <textvar name="AvgDis" value="$(PathMaps)/ec_avgdis.nc">
+            <textvar name="AvgDis" value="$(PathMaps)/avgdis">
                 <comment>
                     $(PathMaps)/avgdis.map
                     $(PathInit)/avgdis.map
@@ -4114,7 +4116,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     **************************************************************
                 </comment>
 
-                <textvar name="Ldd" value="$(PathMaps)/ec_ldd.nc">
+                <textvar name="Ldd" value="$(PathMaps)/ldd.nc">
                     <comment>
                         $(PathMaps)/ldd.map
                         local drain direction map (1-9)
@@ -4434,7 +4436,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="ChanMan" value="$(PathMaps)/ec_chanman.nc">
+                <textvar name="ChanMan" value="$(PathMaps)/chanman.nc">
                     <comment>
                         Channel Manning's n
                     </comment>
@@ -4446,7 +4448,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="ChanBottomWidth" value="$(PathMaps)/ec_chanbw.nc">
+                <textvar name="ChanBottomWidth" value="$(PathMaps)/chanbw.nc">
                     <comment>
                         Channel bottom width [meters]
                     </comment>
@@ -4459,13 +4461,13 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="FloodPlainWidth" value="$(PathMaps)/ec_chanflpn.nc">
+                <textvar name="FloodPlainWidth" value="$(PathMaps)/chanflpn.nc">
                     <comment>
                         Floodplain Width [meters]
                     </comment>
                 </textvar>
 
-                <textvar name="ChanDepthThreshold" value="$(PathMaps)/ec_chanbnkf.nc">
+                <textvar name="ChanDepthThreshold" value="$(PathMaps)/chanbnkf.nc">
                     <comment>
                         Bankfull channel depth [meters]
                     </comment>
@@ -4667,7 +4669,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="ReservoirSites" value="$(PathMaps)/ec_res.nc">
+                <textvar name="ReservoirSites" value="$(PathMaps)/res.nc">
                     <comment>
                         Map with location of reservoirs (number]
                     </comment>
@@ -4786,7 +4788,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     **************************************************************
                 </comment>
 
-                <textvar name="LakeSites" value="$(PathMaps)/ec_lakes.nc">
+                <textvar name="LakeSites" value="$(PathMaps)/lakemask.nc">
                     <comment>
                         Map with location of lakes
                     </comment>

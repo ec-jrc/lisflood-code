@@ -29,16 +29,16 @@ from tests import TestSettings
 
 
 class TestRepMaps(TestSettings):
-    settings_file = os.path.join(os.path.dirname(__file__), 'data/settings/base.xml')
+    settings_files = {'base': os.path.join(os.path.dirname(__file__), 'data/settings/base.xml')}
 
     def test_no_reported(self):
-        settings = self.setoptions(self.settings_file)
+        settings = self.setoptions(self.settings_files['base'])
         lisfloodexe(settings)
         files = [os.path.join(settings.output_dir, f) for f in os.listdir(settings.output_dir) if f.endswith('.nc') or f.endswith('.tss')]
         assert not files
 
     def test_end_reported(self):
-        settings = self.setoptions(self.settings_file, ['repEndMaps'])
+        settings = self.setoptions(self.settings_files['base'], ['repEndMaps'])
         lisfloodexe(settings)
         files = [os.path.join(settings.output_dir, f) for f in os.listdir(settings.output_dir) if f.endswith('.end.nc')]
         no_files = [os.path.join(settings.output_dir, f) for f in os.listdir(settings.output_dir) if f.endswith('.nc') and '.end.' not in f]
@@ -46,7 +46,7 @@ class TestRepMaps(TestSettings):
         assert not no_files
 
     def test_state_reported(self):
-        settings = self.setoptions(self.settings_file, ['repStateMaps'])
+        settings = self.setoptions(self.settings_files['base'], ['repStateMaps'])
         lisfloodexe(settings)
         no_files = [os.path.join(settings.output_dir, f) for f in os.listdir(settings.output_dir) if f.endswith('.end.nc')]
         files = [os.path.join(settings.output_dir, f) for f in os.listdir(settings.output_dir) if f.endswith('.nc') and '.end.' not in f]
@@ -54,7 +54,7 @@ class TestRepMaps(TestSettings):
         assert not no_files
 
     def test_end_state_reported(self):
-        settings = self.setoptions(self.settings_file, ['repEndMaps', 'repStateMaps', 'repDischargeMaps'])
+        settings = self.setoptions(self.settings_files['base'], ['repEndMaps', 'repStateMaps', 'repDischargeMaps'])
         lisfloodexe(settings)
         maskinfo = MaskInfo.instance()
         comparator = NetCDFComparator(maskinfo.info.mask)

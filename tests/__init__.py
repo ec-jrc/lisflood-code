@@ -38,25 +38,32 @@ if os.path.exists(src_dir):
 import lisflood
 from lisflood.global_modules.add1 import loadmap
 from lisflood.global_modules.settings import LisSettings, MaskInfo
+from lisflood.global_modules.errors import LisfloodError
 from lisflood.main import lisfloodexe
 
+# #FIXME lisfloodutilities must be imported after lisflood packages otherwise it goes core dumped...
 from lisfloodutilities.compare import NetCDFComparator, TSSComparator
 
 
 class TestSettings(object):
-    settings_file = None
+    settings_files = None  # type: dict
+
+    def clean_pathouts(self):
+        for settings_file in self.settings_files.values():
+            try:
+                settings = self.setoptions(settings_file)
+            except LisfloodError:
+                continue
+            rm_files = [os.path.join(settings.output_dir, f) for f in os.listdir(settings.output_dir) if
+                        f.endswith('.nc') or f.endswith('.tss')]
+            for f in rm_files:
+                os.unlink(f)
 
     def setup_method(self):
-        settings = self.setoptions(self.settings_file)
-        rm_files = [os.path.join(settings.output_dir, f) for f in os.listdir(settings.output_dir) if f.endswith('.nc') or f.endswith('.tss')]
-        for f in rm_files:
-            os.unlink(f)
+        self.clean_pathouts()
 
-    # def teardown_method(self):
-    #     settings = self.setoptions(self.settings_file)
-    #     rm_files = [os.path.join(settings.output_dir, f) for f in os.listdir(settings.output_dir) if f.endswith('.nc') or f.endswith('.tss')]
-    #     for f in rm_files:
-    #         os.unlink(f)
+    def teardown_method(self):
+        self.clean_pathouts()
 
     @classmethod
     def dummyloadmap(cls, *args, **kwargs):
@@ -64,7 +71,7 @@ class TestSettings(object):
 
     @classmethod
     def dummywritenet(cls, *args, **kwargs):
-        return (list(args), dict(**kwargs))
+        return list(args), dict(**kwargs)
 
     @classmethod
     def setoptions(cls, settings_file, opts_to_set=None, opts_to_unset=None, vars_to_set=None):
@@ -96,8 +103,12 @@ class TestSettings(object):
         filename = os.path.join(os.path.dirname(settings_file), './settings_{}.xml'.format(uid))
         with open(filename, 'w') as dest:
             dest.write(soup.prettify())
-        settings = LisSettings(filename)
-        os.unlink(filename)
+        try:
+            settings = LisSettings(filename)
+        except LisfloodError as e:
+            raise e
+        finally:
+            os.unlink(filename)
         return settings
 
     def _reported_tss(self, settings_file, opts_to_set=None, opts_to_unset=None, tss_to_check=None, mocker=None):
@@ -117,7 +128,6 @@ class TestSettings(object):
                     if not to_check:
                         break
         assert not to_check
-
 
     def _not_reported_tss(self, settings_file, opts_to_set=None, opts_to_unset=None, tss_to_check=None, mocker=None):
         if isinstance(tss_to_check, str):
@@ -180,7 +190,6 @@ class TestSettings(object):
         assert not to_check
         assert not f_to_check
 
-
     def _not_reported_map(self, settings_file, opts_to_set=None, opts_to_unset=None, map_to_check=None, mocker=None):
         if isinstance(map_to_check, str):
             # single map to check in writenet calls args
@@ -204,9 +213,9 @@ class TestLis(object):
     reference_files = {
         'dis': {'path_map': os.path.join(current_dir, 'data/TestCatchment/reference/dis.nc'),
                 'path_tss': os.path.join(current_dir, 'data/TestCatchment/reference/disWin.tss'),
-                  'report_map': 'DischargeMaps',
-                  'report_tss': 'DisTS'
-                  },
+                'report_map': 'DischargeMaps',
+                'report_tss': 'DisTS'
+                },
     }
 
     domain = None

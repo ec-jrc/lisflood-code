@@ -30,7 +30,7 @@
         <setoption choice="1" name="drainedIrrigation"/>
         <setoption choice="1" name="riceIrrigation"/>
         <setoption choice="1" name="openwaterevapo"/>
-        <setoption choice="1" name="simulateLakes"/>
+        <setoption choice="0" name="simulateLakes"/>
         <setoption choice="1" name="simulateReservoirs"/>
 
         <setoption choice="1" name="SplitRouting"/>
@@ -475,7 +475,7 @@
                 </comment>
             </textvar>
 
-            <textvar name="QSplitMult" value="$(PathParams)/params_QSplitMult">
+            <textvar name="QSplitMult" value="2.0">
                 <comment>
                     PBchange
                     Multiplier applied to average Q to split into a second line of routing
@@ -1542,11 +1542,11 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
             </comment>
         </textvar>
 
-        <textvar name="Latitude" value="$(Latitude)">
-            <comment>
-                latitude map to be used for snow/ice modelling
-            </comment>
-        </textvar>
+<!--        <textvar name="Latitude" value="$(Latitude)">-->
+<!--            <comment>-->
+<!--                latitude map to be used for snow/ice modelling-->
+<!--            </comment>-->
+<!--        </textvar>-->
 
         <group>
 
@@ -2024,7 +2024,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 **************************************************************
             </comment>
 
-            <textvar name="LZAvInflowMap" value="$(PathOut)/ec_lzavin.map">
+            <textvar name="LZAvInflowMap" value="$(PathOut)/lzavin">
                 <comment>
                     $(PathMaps)/lzavin.map
                     $(PathInit)/lzavin.map
@@ -2033,7 +2033,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
             </textvar>
 
-            <textvar name="AvgDis" value="$(PathOut)/ec_avgdis.map">
+            <textvar name="AvgDis" value="$(PathOut)/avgdis">
                 <comment>
                     $(PathMaps)/avgdis.map
                     $(PathInit)/avgdis.map

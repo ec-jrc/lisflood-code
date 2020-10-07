@@ -263,13 +263,16 @@ class reservoir(HydroModule):
 
             # CM: Check ReservoirStorageM3CC for negative values and set them to zero
             # FIXME
-            nel = len(self.var.ReservoirFillCC[:])  # always 1
-            for i in range(0, nel-1):  # never entering in loop
-                if np.isnan(self.var.ReservoirFillCC[i]) or self.var.ReservoirFillCC[i] < 0:
-                    msg = "Negative or NaN volume for reservoir fill set to 0. Increase computation time step for routing (DtSecChannel) \n"
-                    warnings.warn(LisfloodWarning(msg))
-                    self.var.ReservoirFillCC[self.var.ReservoirFillCC < 0] = 0
-                    self.var.ReservoirFillCC[np.isnan(self.var.ReservoirFillCC)] = 0
+            self.var.ReservoirFillCC[np.isnan(self.var.ReservoirFillCC)] = 0
+            self.var.ReservoirFillCC[self.var.ReservoirFillCC < 0] = 0
+
+            # nel = len(self.var.ReservoirFillCC[:])  # always 1
+            # for i in range(0, nel-1):  # never entering in loop
+            #     if np.isnan(self.var.ReservoirFillCC[i]) or self.var.ReservoirFillCC[i] < 0:
+            #         msg = "Negative or NaN volume for reservoir fill set to 0. Increase computation time step for routing (DtSecChannel) \n"
+            #         warnings.warn(LisfloodWarning(msg))
+            #         self.var.ReservoirFillCC[self.var.ReservoirFillCC < 0] = 0
+            #         self.var.ReservoirFillCC[np.isnan(self.var.ReservoirFillCC)] = 0
 
             # Check ReservoirFillCC for negative values and set them to zero
             # if np.isnan(self.var.ReservoirFillCC).any() or (self.var.ReservoirFillCC < 0).any():

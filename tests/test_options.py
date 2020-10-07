@@ -30,12 +30,11 @@ from lisflood.main import lisfloodexe
 from tests import TestSettings
 
 
-
 class TestOptions(TestSettings):
-    settings_file = os.path.join(os.path.dirname(__file__), 'data/settings/base.xml')
+    settings_files = {'base': os.path.join(os.path.dirname(__file__), 'data/settings/base.xml')}
 
     def test_basic(self, mocker):
-        settings = self.setoptions(self.settings_file)
+        settings = self.setoptions(self.settings_files['base'])
         mock_api = mocker.MagicMock(name='loadmap_notcalled')
         mock_api2 = mocker.MagicMock(name='loadmap')
         mock_api.side_effect = self.dummyloadmap
@@ -62,9 +61,8 @@ class TestOptions(TestSettings):
         assert not lisflood.hydrological_modules.transmission.loadmap.called
         assert not lisflood.hydrological_modules.waterabstraction.loadmap.called
 
-
     def test_split_routing_only(self, mocker):
-        settings = self.setoptions(self.settings_file, 'SplitRouting')
+        settings = self.setoptions(self.settings_files['base'], 'SplitRouting')
         mock_api = mocker.MagicMock(name='loadmap')
         mock_api2 = mocker.MagicMock(name='loadmap_notcalled')
         mock_api.side_effect = self.dummyloadmap
@@ -79,7 +77,7 @@ class TestOptions(TestSettings):
         mocker.patch('lisflood.hydrological_modules.transmission.loadmap', new=mock_api2)
         mocker.patch('lisflood.hydrological_modules.waterabstraction.loadmap', new=mock_api2)
         lisfloodexe(settings)
-        calls = [call('CrossSection2AreaInitValue'), call('PrevSideflowInitValue'),]
+        calls = [call('CrossSection2AreaInitValue'), call('PrevSideflowInitValue'), ]
         lisflood.hydrological_modules.routing.loadmap.assert_has_calls(calls)
         assert not lisflood.hydrological_modules.reservoir.loadmap.called
         assert not lisflood.hydrological_modules.evapowater.loadmap.called
@@ -91,7 +89,7 @@ class TestOptions(TestSettings):
         assert not lisflood.hydrological_modules.waterabstraction.loadmap.called
 
     def test_reservoirs_only(self, mocker):
-        settings = self.setoptions(self.settings_file, 'simulateReservoirs')
+        settings = self.setoptions(self.settings_files['base'], 'simulateReservoirs')
         mock_api = mocker.MagicMock(name='loadmap')
         mock_api.side_effect = self.dummyloadmap
         mocker.patch('lisflood.hydrological_modules.reservoir.loadmap', new=mock_api)
@@ -101,7 +99,7 @@ class TestOptions(TestSettings):
         lisflood.hydrological_modules.reservoir.loadmap.assert_has_calls(calls)
 
     def test_lakes_only(self, mocker):
-        settings = self.setoptions(self.settings_file, 'simulateLakes')
+        settings = self.setoptions(self.settings_files['base'], 'simulateLakes')
         mock_api = mocker.MagicMock(name='loadmap')
         mock_api.side_effect = self.dummyloadmap
         mocker.patch('lisflood.hydrological_modules.lakes.loadmap', new=mock_api)
@@ -110,7 +108,7 @@ class TestOptions(TestSettings):
         lisflood.hydrological_modules.lakes.loadmap.assert_has_calls(calls)
 
     def test_rice_only(self, mocker):
-        settings = self.setoptions(self.settings_file, 'riceIrrigation')
+        settings = self.setoptions(self.settings_files['base'], 'riceIrrigation')
         mock_api = mocker.MagicMock(name='loadmap')
         mock_api2 = mocker.MagicMock(name='loadmap_notcalled')
         mock_api.side_effect = self.dummyloadmap
@@ -132,7 +130,7 @@ class TestOptions(TestSettings):
         assert not lisflood.hydrological_modules.lakes.loadmap.called
 
     def test_pf_only(self, mocker):
-        settings = self.setoptions(self.settings_file, 'simulatePF')
+        settings = self.setoptions(self.settings_files['base'], 'simulatePF')
         mock_api = mocker.MagicMock(name='loadmap')
         mock_api2 = mocker.MagicMock(name='loadmap_notcalled')
         mock_api.side_effect = self.dummyloadmap
@@ -151,8 +149,8 @@ class TestOptions(TestSettings):
         assert not lisflood.hydrological_modules.reservoir.loadmap.called
 
     def test_waterabstraction_only(self, mocker):
-        settings = self.setoptions(self.settings_file, ['groundwaterSmooth', 'wateruse',
-                                                   'TransientWaterDemandChange', 'wateruseRegion'])
+        settings = self.setoptions(self.settings_files['base'], ['groundwaterSmooth', 'wateruse',
+                                                                 'TransientWaterDemandChange', 'wateruseRegion'])
         mock_api = mocker.MagicMock(name='loadmap')
         mock_api2 = mocker.MagicMock(name='loadmap_notcalled')
         mock_api.side_effect = self.dummyloadmap
@@ -171,6 +169,6 @@ class TestOptions(TestSettings):
         assert not lisflood.hydrological_modules.lakes.loadmap.called
         assert not lisflood.hydrological_modules.evapowater.loadmap.called
         assert not lisflood.hydrological_modules.reservoir.loadmap.called
-        calls = [call('WUsePercRemain'), call('maxNoWateruse'), call('GroundwaterBodies'), call('WUseRegion'),]
+        calls = [call('WUsePercRemain'), call('maxNoWateruse'), call('GroundwaterBodies'), call('WUseRegion'), ]
         for c in calls:
             assert c in lisflood.hydrological_modules.waterabstraction.loadmap.mock_calls

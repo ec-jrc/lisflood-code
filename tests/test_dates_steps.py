@@ -9,20 +9,19 @@ from lisflood.main import lisfloodexe
 
 from tests import TestSettings
 
-settings_file_6hourly = os.path.join(os.path.dirname(__file__), 'data/settings/full_6h.xml')
-
 
 class TestStepsDates(TestSettings):
-    settings_file = os.path.join(os.path.dirname(__file__), 'data/settings/full.xml')
-
+    settings_files = {
+        'full': os.path.join(os.path.dirname(__file__), 'data/settings/full.xml')
+    }
 
     def test_dates_steps_day(self):
-        settings_a = self.setoptions(self.settings_file,
+        settings_a = self.setoptions(self.settings_files['full'],
                                      opts_to_set=['repStateMaps', 'repEndMaps', 'repDischargeMaps',
                                                   'repSnowMaps', 'repLZMaps', 'repUZMaps'],
                                      opts_to_unset=['simulateLakes'])
         lisfloodexe(settings_a)
-        settings_b = self.setoptions(self.settings_file,
+        settings_b = self.setoptions(self.settings_files['full'],
                                      opts_to_set=['repStateMaps', 'repEndMaps', 'repDischargeMaps',
                                                   'repSnowMaps', 'repLZMaps', 'repUZMaps'],
                                      opts_to_unset=['simulateLakes'],
