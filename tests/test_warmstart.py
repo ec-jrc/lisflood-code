@@ -54,20 +54,19 @@ class TestWarmStartDays(TestSettings):
         ]
 
         # init
-        path_out_init = mk_path_out('data/TestCatchment/outputs/init', delete_first=True)
+        path_out_init = mk_path_out('data/TestCatchment/outputs/init')
         settings_prerun = self.setoptions(self.settings_files['prerun'], opts_to_unset=modules_to_unset,
                                           vars_to_set={'DtSec': dt_sec,
                                                        'PathOut': path_out_init,
                                                        'StepStart': step_start,
                                                        'StepEnd': step_end})
-        assert settings_prerun.options['openwaterevapo'] is True
         step_end_dt = settings_prerun.step_end_dt
         lisfloodexe(settings_prerun)
 
         # long run
         lzavin_path = settings_prerun.binding['LZAvInflowMap']
         avgdis_path = settings_prerun.binding['AvgDis']
-        path_out_reference = mk_path_out('data/TestCatchment/outputs/longrun_reference', delete_first=True)
+        path_out_reference = mk_path_out('data/TestCatchment/outputs/longrun_reference')
         settings_longrun = self.setoptions(self.settings_files['cold'], opts_to_unset=modules_to_unset,
                                            vars_to_set={'StepStart': step_start,
                                                         'StepEnd': step_end,
@@ -80,7 +79,7 @@ class TestWarmStartDays(TestSettings):
         # warm run (1. Cold start)
         run_number = 1
         cold_start_step_end = step_start
-        path_out = mk_path_out('data/TestCatchment/outputs/run_{}'.format(run_number), delete_first=True)
+        path_out = mk_path_out('data/TestCatchment/outputs/run_{}'.format(run_number))
         settings_coldstart = self.setoptions(self.settings_files['cold'], opts_to_unset=modules_to_unset,
                                              vars_to_set={'StepStart': step_start,
                                                           'StepEnd': cold_start_step_end,
@@ -112,9 +111,11 @@ class TestWarmStartDays(TestSettings):
                                                               'AvgDis': avgdis_path,
                                                               'DtSec': dt_sec})
             lisfloodexe(settings_warmstart)
+
             # checking values at current timestep (using datetime)
             timestep = settings_warmstart.step_end_dt
-            if not (run_number % 5):
+            if not (run_number % 13):
+                # compare every 13 timesteps to speed up test
                 comparator.compare_dirs(path_out, path_out_reference, skip_missing=True, timestep=timestep)
             # remove previous output dir (we don't need it anymore after this point)
             shutil.rmtree(path_init)
@@ -127,5 +128,3 @@ class TestWarmStartDays(TestSettings):
 
         # cleaning after (move to tear_down method)
         shutil.rmtree(path_out)
-        shutil.rmtree(path_out_reference)
-        shutil.rmtree(path_out_init)
