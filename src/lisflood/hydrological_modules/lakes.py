@@ -35,7 +35,8 @@ class lakes(HydroModule):
     # ************************************************************
     """
     input_files_keys = {'simulateLakes': ['LakeSites', 'TabLakeArea', 'TabLakeA', 'LakeMultiplier',
-                                          'LakeInitialLevelValue', 'TabLakeAvNetInflowEstimate', 'PrevDischarge']}
+                                          'LakeInitialLevelValue', 'TabLakeAvNetInflowEstimate', 'PrevDischarge',
+                                          'LakePrevInflowValue', 'LakePrevOutflowValue']}
     module_name = 'Lakes'
 
     def __init__(self, lakes_variable):
@@ -121,6 +122,12 @@ class lakes(HydroModule):
 
                 self.var.LakeAvNetCC = np.compress(LakeSitesC > 0, loadmap('PrevDischarge'))
 
+            LakePrevInflowValue  = loadmap('LakePrevInflowValue')
+            if np.max(LakeInitialLevelValue) == -9999:
+                self.var.LakeInflowOldCC = np.bincount(self.var.downstruct, weights = self.var.ChanQ)[self.var.LakeIndex]
+            else:
+                self.var.LakeInflowOldCC = np.compress(LakeSitesC > 0, LakePrevInflowValue)
+
             # Repeatedly used expressions in lake routine
 
             # NEW Lake Routine using Modified Puls Method (see Maniak, p.331ff)
@@ -153,21 +160,30 @@ class lakes(HydroModule):
 
             LakeStorageIndicator = LakeStorageIniM3CC / self.var.DtRouting + self.var.LakeAvNetCC / 2
             # SI = S/dt + Q/2
-            self.var.LakeOutflow = np.square(-self.var.LakeFactor + np.sqrt(self.var.LakeFactorSqr + 2 * LakeStorageIndicator))
-            # solution of quadratic equation
-            # it is as easy as this because:
-            # 1. storage volume is increase proportional to elevation
-            # 2. Q= a *H **2.0  (if you choose Q= a *H **1.5 you have to solve
-            # the formula of Cardano)
+
+            LakePrevOutflowValue  = loadmap('LakePrevOutflowValue')
+            if np.max(LakePrevOutflowValue) == -9999:
+                self.var.LakeOutflowCC = np.square(-self.var.LakeFactor + np.sqrt(self.var.LakeFactorSqr + 2 * LakeStorageIndicator))
+                # solution of quadratic equation
+                # it is as easy as this because:
+                # 1. storage volume is increase proportional to elevation
+                # 2. Q= a *H **2.0  (if you choose Q= a *H **1.5 you have to solve
+                # the formula of Cardano)
+            else:
+                self.var.LakeOutflowCC = np.compress(LakeSitesC > 0, LakePrevOutflowValue)
 
             self.var.LakeStorageM3CC = LakeStorageIniM3CC.copy()
             self.var.LakeStorageM3BalanceCC = LakeStorageIniM3CC.copy()
 
             self.var.LakeStorageIniM3 = maskinfo.in_zero()
             self.var.LakeLevel = maskinfo.in_zero()
+            self.var.LakeInflowOld = maskinfo.in_zero()
+            self.var.LakeOutflow = maskinfo.in_zero()
             np.put(self.var.LakeStorageIniM3,self.var.LakeIndex,LakeStorageIniM3CC)
             self.var.LakeStorageM3 = self.var.LakeStorageIniM3.copy()
             np.put(self.var.LakeLevel, self.var.LakeIndex, self.var.LakeLevelCC)
+            np.put(self.var.LakeInflowOld, self.var.LakeIndex, self.var.LakeInflowOldCC)
+            np.put(self.var.LakeOutflow, self.var.LakeIndex, self.var.LakeOutflowCC)
 
             self.var.EWLakeCUMM3 = maskinfo.in_zero()
             # Initialising cumulative output variables
@@ -195,11 +211,11 @@ class lakes(HydroModule):
             self.var.LakeInflowOldCC = self.var.LakeInflowCC.copy()
             # Qin2 becomes Qin1 for the next time step
 
-            LakeStorageIndicator = self.var.LakeStorageM3CC /self.var.DtRouting - 0.5 * self.var.LakeOutflow + LakeIn
+            LakeStorageIndicator = self.var.LakeStorageM3CC /self.var.DtRouting - 0.5 * self.var.LakeOutflowCC + LakeIn
             # here S1/dtime - Qout1/2 + LakeIn , so that is the right part
             # of the equation above
 
-            self.var.LakeOutflow = np.square( -self.var.LakeFactor + np.sqrt(self.var.LakeFactorSqr + 2 * LakeStorageIndicator))
+            self.var.LakeOutflowCC = np.square( -self.var.LakeFactor + np.sqrt(self.var.LakeFactorSqr + 2 * LakeStorageIndicator))
             # Flow out of lake:
             #  solving the equation  (S2/dtime + Qout2/2) = (S1/dtime + Qout1/2) - Qout1 + (Qin1 + Qin2)/2
             #  SI = (S2/dtime + Qout2/2) =  (A*H)/DtRouting + Q/2 = A/(DtRouting*sqrt(a)  * sqrt(Q) + Q/2
@@ -208,11 +224,15 @@ class lakes(HydroModule):
             # solution of this quadratic equation:
             # Q=sqr(-LakeFactor+sqrt(sqr(LakeFactor)+2*SI));
 
-            QLakeOutM3DtCC = self.var.LakeOutflow * self.var.DtRouting
+            # expanding the size to save as state variable
+            self.var.LakeOutflow = maskinfo.in_zero()
+            np.put(self.var.LakeOutflow, self.var.LakeIndex, self.var.LakeOutflowCC)
+
+            QLakeOutM3DtCC = self.var.LakeOutflowCC * self.var.DtRouting
             # Outflow in [m3] per timestep
             # Needed at every cell, hence cover statement
 
-            self.var.LakeStorageM3CC = (LakeStorageIndicator - self.var.LakeOutflow * 0.5) * self.var.DtRouting
+            self.var.LakeStorageM3CC = (LakeStorageIndicator - self.var.LakeOutflowCC* 0.5) * self.var.DtRouting
             # Lake storage
 
             # self.var.LakeStorageM3CC < 0 leads to NaN in state files
@@ -252,9 +272,13 @@ class lakes(HydroModule):
                 self.var.LakeStorageM3Balance = maskinfo.in_zero()
                 self.var.LakeStorageM3 = maskinfo.in_zero()
                 self.var.LakeLevel = maskinfo.in_zero()
+                self.var.LakeInflowOld = maskinfo.in_zero()
+                self.var.LakeOutflow = maskinfo.in_zero()
                 np.put(self.var.LakeStorageM3Balance, self.var.LakeIndex, self.var.LakeStorageM3BalanceCC)
                 np.put(self.var.LakeStorageM3, self.var.LakeIndex, self.var.LakeStorageM3CC)
                 np.put(self.var.LakeLevel, self.var.LakeIndex, self.var.LakeLevelCC)
+                np.put(self.var.LakeInflowOld, self.var.LakeIndex, self.var.LakeInflowOldCC)
+                np.put(self.var.LakeOutflow, self.var.LakeIndex, self.var.LakeOutflowCC)
 
                 if option['repsimulateLakes']:
                     np.put(self.var.LakeInflowM3S, self.var.LakeIndex, self.var.sumLakeInCC / self.var.DtSec)
