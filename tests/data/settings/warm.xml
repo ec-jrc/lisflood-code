@@ -174,7 +174,7 @@
                 </comment>
             </textvar>
 
-            <textvar name="PathTables" value="$(PathRoot)/../static_data/tables">
+            <textvar name="PathTables" value="$(PathRoot)/tables">
                 <comment>
                     Tables path
                 </comment>
