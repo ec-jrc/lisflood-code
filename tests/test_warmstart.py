@@ -90,8 +90,8 @@ class TestWarmStartDays(TestSettings):
                                                               'timestepInit': timestep_init,
                                                               'AvgDis': avgdis_path, 'DtSec': dt_sec})
             lisfloodexe(settings_warmstart)
-            # checking values at current timestep
-            timestep = settings_warmstart.step_end_int
+            # checking values at current timestep (using datetime)
+            timestep = settings_warmstart.step_end_dt
             errors = comparator.compare_dirs(path_out, path_out_reference, skip_missing=True, timestep=timestep)
             assert not errors
             # if timestep == settings_longrun.step_end_int:
