@@ -378,7 +378,7 @@ class routing(HydroModule):
                 # CM mod
                 # TEMPORARY WORKAROUND FOR EFAS XDOM!!!!!!!!!!
                 # This must be removed
-                self.var.QLimit = self.var.QLimit / 24.0
+                # self.var.QLimit = self.var.QLimit / 24.0
                 ###############################################
 
                 self.var.Chan2M3Start = self.var.ChannelAlpha2 * self.var.ChanLength * (self.var.QLimit ** self.var.Beta)
@@ -499,11 +499,11 @@ class routing(HydroModule):
                 SideflowRatio = np.where((self.var.ChanM3Kin + self.var.Chan2M3Kin) > 0, self.var.ChanM3Kin/(self.var.ChanM3Kin+self.var.Chan2M3Kin), 0.0)
 
                 # CM ##################################
-                self.var.Sideflow1Chan = np.where(self.var.ChanM3Kin > self.var.M3Limit, SideflowRatio*SideflowChan, SideflowChan)
+                # self.var.Sideflow1Chan = np.where(self.var.ChanM3Kin > self.var.M3Limit, SideflowRatio*SideflowChan, SideflowChan)
                 # This is creating instability because ChanM3Kin can be < M3Limit between two routing sub-steps
                 # TO BY REPLACED WITH THE FOLLOWING
-                # self.var.Sideflow1Chan = np.where((self.var.ChanM3Kin + self.var.Chan2M3Kin - self.var.Chan2M3Start) > self.var.M3Limit,
-                #                                   SideflowRatio*SideflowChan, SideflowChan)
+                self.var.Sideflow1Chan = np.where((self.var.ChanM3Kin + self.var.Chan2M3Kin - self.var.Chan2M3Start) > self.var.M3Limit,
+                                                   SideflowRatio*SideflowChan, SideflowChan)
                 #######################################
 
                 self.var.Sideflow1Chan = np.where(np.abs(SideflowChan) < 1e-7, SideflowChan, self.var.Sideflow1Chan)
