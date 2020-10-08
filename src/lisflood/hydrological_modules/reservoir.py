@@ -265,7 +265,7 @@ class reservoir(HydroModule):
             self.var.ReservoirFillCC[np.isnan(self.var.ReservoirFillCC)] = 0
             self.var.ReservoirFillCC[self.var.ReservoirFillCC < 0] = 0
 
-            # nel = len(self.var.ReservoirFillCC[:])  # always 1
+            # nel = len(self.var.ReservoirFillCC[:])  # always 1 # FIXME
             # for i in range(0, nel-1):  # never entering in loop
             #     if np.isnan(self.var.ReservoirFillCC[i]) or self.var.ReservoirFillCC[i] < 0:
             #         msg = "Negative or NaN volume for reservoir fill set to 0. Increase computation time step for routing (DtSecChannel) \n"

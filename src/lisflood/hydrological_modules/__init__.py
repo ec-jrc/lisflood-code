@@ -61,7 +61,7 @@ class HydroModule(object):
             msg = None
             k_ok = True
             if not binding.get(k):
-                msg = '[{}]: setting "{}" is missing in settings file {}'.format(cls.module_name, k, settings.settings_path)
+                msg = '[{}]: setting "{}" is missing in settings file {}'.format(cls.module_name, k, settings.settings)
                 k_ok = False
             elif not (is_path(binding[k]) or is_number(binding[k])):
                 k_ok = False

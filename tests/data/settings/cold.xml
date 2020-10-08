@@ -1017,7 +1017,7 @@
 
             </comment>
 
-            <textvar name="IrrigationEfficiency" value="$(PathMaps)/ad_irrigation_efficiency_baseline.nc">
+            <textvar name="IrrigationEfficiency" value="0.75">
                 <comment>
                     0.75
                     Field application irrigation efficiency max 1, ~0.90 drip irrigation, ~0.75 sprinkling
@@ -1074,7 +1074,7 @@
                 </comment>
             </textvar>
 
-            <textvar name="LeakageFraction" value="$(PathMaps)/ad_leakage.nc">
+            <textvar name="LeakageFraction" value="0.2">
                 <comment>
                     0.2
                     $(PathMaps)/leakage.map
@@ -1217,7 +1217,7 @@ threshold value below which there is no outflow to the channel
                 </comment>
             </textvar>
 
-            <textvar name="GroundwaterBodies" value="$(PathMaps)/ad_gwbodies.nc">
+            <textvar name="GroundwaterBodies" value="$(PathMaps)/gwbodies.nc">
                 <comment>
                     $(PathMaps)/gwbodiesNew.map
                     map of aquifers (0/1), used to smoothen LZ near extraction areas
@@ -1282,7 +1282,7 @@ threshold value below which there is no outflow to the channel
                 </comment>
             </textvar>
 
-            <textvar name="UpAreaTrans" value="$(PathMaps)/ec_upArea.nc">
+            <textvar name="UpAreaTrans" value="$(PathMaps)/upArea.nc">
                 <comment>
                     upstream area
                 </comment>
@@ -2761,7 +2761,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="DSLRForestState" value="$(PathOut)/dslrf">
+                <textvar name="DSLRForestState" value="$(PathOut)/dslf">
                     <comment>
                         Reported days since last rain
                     </comment>
@@ -2805,7 +2805,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="DSLRIrrigationState" value="$(PathOut)/dslri">
+                <textvar name="DSLRIrrigationState" value="$(PathOut)/dsli">
                     <comment>
                         Reported days since last rain
                     </comment>
@@ -3010,7 +3010,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="DSLRForestEnd" value="$(PathOut)/dslrf.end">
+                <textvar name="DSLRForestEnd" value="$(PathOut)/dslf.end">
                     <comment>
                         Reported days since last rain
                     </comment>
@@ -3052,7 +3052,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="DSLRIrrigationEnd" value="$(PathOut)/dslri.end">
+                <textvar name="DSLRIrrigationEnd" value="$(PathOut)/dsli.end">
                     <comment>
                         Reported days since last rain
                     </comment>
@@ -4332,7 +4332,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="EFlowThreshold" value="$(PathMaps)/ad_dis_nat_10.nc">
+                <textvar name="EFlowThreshold" value="$(PathMaps)/eflow">
                     <comment>
                         1.0
                         $(PathMaps)/eflow.map

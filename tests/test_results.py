@@ -23,7 +23,7 @@ import pytest
 
 from lisflood.global_modules.errors import LisfloodWarning, LisfloodError
 from lisflood.main import lisfloodexe
-from tests import TestLis
+from tests import TestLis, setoptions, LisSettings
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -31,16 +31,50 @@ warnings.simplefilter('ignore', LisfloodWarning)
 
 
 class TestCatch(TestLis):
-    settings_path = os.path.join(current_dir, 'data/TestCatchment/settings/cold_day_base.xml')
+
+    output_dir = os.path.join(current_dir, 'data/TestCatchment/outputs')
 
     def test_dis(self):
-        assert self.listest('dis')
-        assert self.listest('dis', 'tss')
+        opts_to_unset = (
+            "repStateSites", "repRateSites", "repStateUpsGauges", "repRateUpsGauges", "repMeteoUpsGauges",
+            "repsimulateLakes", "repStateMaps",
+            "repsimulateReservoirs", "repSnowMaps", "repPFMaps", "repLZMaps", "repUZMaps",
+            "repGwPercUZLZMaps", "repRWS", "repTotalWUse", "repWIndex",
+            "repSurfaceRunoffMaps", "repRainMaps", "repSnowMaps", "repSnowCoverMaps", "repSnowMeltMaps", "repThetaMaps",
+            "repThetaForestMaps", "repLZMaps", "repUZMaps",
+            "repGwPercUZLZMaps", "repRWS", "repPFMaps", "repPFForestMaps"
+        )
+        settings = setoptions(os.path.join(current_dir, 'data/settings/cold.xml'),
+                              opts_to_set=('repDischargeTs', 'repDischargeMaps', 'wateruse', 'indicator'),
+                              opts_to_unset=opts_to_unset,
+                              vars_to_set={'StepStart': '02/01/2000 06:00',
+                                           'StepEnd': '02/07/2000 06:00',
+                                           'PathOut': self.output_dir})
+        lisfloodexe(settings)
+        assert self.listest('dis', check='map')
+        assert self.listest('dis', check='tss')
 
     def test_initvars(self):
-        out_dir = os.path.join(current_dir, 'data/TestCatchment/outputs')
+        opts_to_unset = (
+            "repStateSites", "repRateSites", "repStateUpsGauges", "repRateUpsGauges", "repMeteoUpsGauges",
+            "repsimulateLakes", "repStateMaps",
+            "repsimulateReservoirs", "repSnowMaps", "repPFMaps", "repLZMaps", "repUZMaps",
+            "repGwPercUZLZMaps", "repRWS", "repTotalWUse", "repWIndex",
+            "repSurfaceRunoffMaps", "repRainMaps", "repSnowMaps", "repSnowCoverMaps", "repSnowMeltMaps", "repThetaMaps",
+            "repThetaForestMaps", "repLZMaps", "repUZMaps", "repDischargeTs", "repDischargeMaps",
+            "repGwPercUZLZMaps", "repRWS", "repPFMaps", "repPFForestMaps"
+        )
+        settings = setoptions(os.path.join(current_dir, 'data/settings/cold.xml'),
+                              opts_to_set=('wateruse', 'indicator', 'repEndMaps'),
+                              opts_to_unset=opts_to_unset,
+                              vars_to_set={'StepStart': '02/02/2000 06:00',
+                                           'StepEnd': '02/03/2000 06:00',
+                                           'PathOut': self.output_dir})
+        lisfloodexe(settings)
+        out_dir = self.output_dir
         initcond_files = ('ch2cr.end.nc', 'chcro.end.nc', 'chside.end.nc', 'cseal.end.nc', 'cum.end.nc', 'cumf.end.nc',
-                          'cumi.end.nc', 'dis.end.nc', 'dslf.end.nc', 'dsli.end.nc', 'dslr.end.nc', 'frost.end.nc', 'lz.end.nc',
+                          'cumi.end.nc', 'dis.end.nc', 'dslf.end.nc', 'dsli.end.nc', 'dslr.end.nc', 'frost.end.nc',
+                          'lz.end.nc',
                           'rsfil.end.nc', 'scova.end.nc', 'scovb.end.nc', 'scovc.end.nc', 'tha.end.nc', 'thb.end.nc',
                           'thc.end.nc', 'thfa.end.nc', 'thfb.end.nc', 'thfc.end.nc', 'thia.end.nc', 'thib.end.nc',
                           'thic.end.nc', 'uz.end.nc', 'uzf.end.nc', 'uzi.end.nc', 'wdept.end.nc')

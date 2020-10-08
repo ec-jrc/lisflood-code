@@ -634,6 +634,20 @@ The option "numberParallelThreadsKinematicWave" may take the following values:
                 </comment>
             </textvar>
 
+            <textvar name="LakePrevInflowValue" value="-9999">
+                <comment>
+                    Lake inflow at previous routing sub-step (ChanQ(t-1)) [m3/s]
+                    -9999 sets initial value equal to PrevDischarge (ChanQ(t))
+                </comment>
+            </textvar>
+
+            <textvar name="LakePrevOutflowValue" value="-9999">
+                <comment>
+                    Lake outflow at previous routing sub-step (ChanQ(t-1)) [m3/s]
+                    -9999 sets initial value
+                </comment>
+            </textvar>
+
             <textvar name="PrevDischarge" value="-9999">
                 <comment>
                     initial discharge from previous run for lakes, reservoirs and transmission loss
@@ -4633,6 +4647,20 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                         -9999 sets initial value to steady-state level
                     </comment>
                 </textvar>
+
+                <textvar name="LakePrevInflowValue" value="$(LakePrevInflowValue)">
+                <comment>
+                    Lake inflow at previous routing sub-step (ChanQ(t-1)) [m3/s]
+                    -9999 sets initial value equal to PrevDischarge (ChanQ(t))
+                </comment>
+            </textvar>
+
+            <textvar name="LakePrevOutflowValue" value="$(LakePrevOutflowValue)">
+                <comment>
+                    Lake outflow at previous routing sub-step (ChanQ(t-1)) [m3/s]
+                    -9999 sets initial value
+                </comment>
+            </textvar>
 
                 <textvar name="TabLakeAvNetInflowEstimate" value="$(TabLakeAvNetInflowEstimate)">
                     <comment>

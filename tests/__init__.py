@@ -39,12 +39,57 @@ if os.path.exists(src_dir):
 
 import lisflood
 from lisflood.global_modules.add1 import loadmap
-from lisflood.global_modules.settings import LisSettings, MaskInfo
+from lisflood.global_modules.settings import LisSettings, MaskInfo, Singleton
 from lisflood.global_modules.errors import LisfloodError
 from lisflood.main import lisfloodexe
 
 # #FIXME lisfloodutilities must be imported after lisflood packages otherwise it goes core dumped...
 from lisfloodutilities.compare import NetCDFComparator, TSSComparator
+
+
+def setoptions(settings_file, opts_to_set=None, opts_to_unset=None, vars_to_set=None):
+    if isinstance(opts_to_set, str):
+        opts_to_set = [opts_to_set]
+    if isinstance(opts_to_unset, str):
+        opts_to_unset = [opts_to_unset]
+
+    opts_to_set = [] if opts_to_set is None else opts_to_set
+    opts_to_unset = [] if opts_to_unset is None else opts_to_unset
+    vars_to_set = {} if vars_to_set is None else vars_to_set
+    with open(settings_file) as tpl:
+        soup = BeautifulSoup(tpl, 'lxml-xml')
+        for opt in opts_to_set:
+            for tag in soup.find_all("setoption", {'name': opt}):
+                tag['choice'] = '1'
+                break
+        for opt in opts_to_unset:
+            for tag in soup.find_all("setoption", {'name': opt}):
+                tag['choice'] = '0'
+                break
+        for textvar, value in vars_to_set.items():
+            for tag in soup.find_all("textvar", {'name': textvar}):
+                tag['value'] = value
+                break
+
+    # Generating XML settings_files on fly from template
+    uid = uuid.uuid4()
+    filename = os.path.join(os.path.dirname(settings_file), './settings_{}.xml'.format(uid))
+    with open(filename, 'w') as dest:
+        dest.write(soup.prettify())
+    try:
+        Singleton._instances = {}
+        Singleton._current = {}
+        settings = LisSettings(filename)
+        options = settings.options
+        for opt in opts_to_set:
+            options[opt] = True
+        for opt in opts_to_unset:
+            options[opt] = False
+    except LisfloodError as e:
+        raise e
+    finally:
+        os.unlink(filename)
+    return settings
 
 
 class TestSettings(object):
@@ -79,46 +124,7 @@ class TestSettings(object):
 
     @classmethod
     def setoptions(cls, settings_file, opts_to_set=None, opts_to_unset=None, vars_to_set=None):
-        if isinstance(opts_to_set, str):
-            opts_to_set = [opts_to_set]
-        if isinstance(opts_to_unset, str):
-            opts_to_unset = [opts_to_unset]
-
-        opts_to_set = [] if opts_to_set is None else opts_to_set
-        opts_to_unset = [] if opts_to_unset is None else opts_to_unset
-        vars_to_set = {} if vars_to_set is None else vars_to_set
-        with open(settings_file) as tpl:
-            soup = BeautifulSoup(tpl, 'lxml-xml')
-            for opt in opts_to_set:
-                for tag in soup.find_all("setoption", {'name': opt}):
-                    tag['choice'] = '1'
-                    break
-            for opt in opts_to_unset:
-                for tag in soup.find_all("setoption", {'name': opt}):
-                    tag['choice'] = '0'
-                    break
-            for textvar, value in vars_to_set.items():
-                for tag in soup.find_all("textvar", {'name': textvar}):
-                    tag['value'] = value
-                    break
-
-        # Generating XML settings_files on fly from template
-        uid = uuid.uuid4()
-        filename = os.path.join(os.path.dirname(settings_file), './settings_{}.xml'.format(uid))
-        with open(filename, 'w') as dest:
-            dest.write(soup.prettify())
-        try:
-            settings = LisSettings(filename)
-            options = settings.options
-            for opt in opts_to_set:
-                options[opt] = True
-            for opt in opts_to_unset:
-                options[opt] = False
-        except LisfloodError as e:
-            raise e
-        finally:
-            os.unlink(filename)
-        return settings
+        return setoptions(settings_file, opts_to_set, opts_to_unset, vars_to_set)
 
     def _reported_tss(self, settings_file, opts_to_set=None, opts_to_unset=None, tss_to_check=None, mocker=None):
         if isinstance(tss_to_check, str):
@@ -226,13 +232,6 @@ class TestLis(object):
                 'report_tss': 'DisTS'
                 },
     }
-
-    domain = None
-    settings_path = None
-
-    @classmethod
-    def setup_class(cls):
-        lisfloodexe(cls.settings_path)
 
     @classmethod
     def teardown_class(cls):

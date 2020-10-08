@@ -678,7 +678,7 @@
                 </comment>
             </textvar>
 
-            <textvar name="DSLRForestInitValue" value="$(PathInit)/dslrf">
+            <textvar name="DSLRForestInitValue" value="$(PathInit)/dslf">
                 <comment>
                     days since last rainfall
                 </comment>
@@ -728,7 +728,7 @@
                 </comment>
             </textvar>
 
-            <textvar name="DSLRIrrigationInitValue" value="$(PathInit)/dslri">
+            <textvar name="DSLRIrrigationInitValue" value="$(PathInit)/dsli">
                 <comment>
                     days since last rainfall
                 </comment>
@@ -2750,7 +2750,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="DSLRForestState" value="$(PathOut)/dslrf">
+                <textvar name="DSLRForestState" value="$(PathOut)/dslf">
                     <comment>
                         Reported days since last rain
                     </comment>
@@ -2794,7 +2794,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="DSLRIrrigationState" value="$(PathOut)/dslri">
+                <textvar name="DSLRIrrigationState" value="$(PathOut)/dsli">
                     <comment>
                         Reported days since last rain
                     </comment>
@@ -3041,7 +3041,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="DSLRIrrigationEnd" value="$(PathOut)/dslri.end">
+                <textvar name="DSLRIrrigationEnd" value="$(PathOut)/dsli.end">
                     <comment>
                         Reported days since last rain
                     </comment>

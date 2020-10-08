@@ -20,6 +20,8 @@ import os
 import shutil
 from datetime import timedelta
 
+import pytest
+
 from lisfloodutilities.compare import NetCDFComparator
 
 from lisflood.global_modules.settings import MaskInfo
@@ -28,6 +30,7 @@ from lisflood.main import lisfloodexe
 from . import TestSettings, mk_path_out
 
 
+@pytest.mark.slow
 class TestWarmStartDays(TestSettings):
     settings_files = {
         'prerun': os.path.join(os.path.dirname(__file__), 'data/settings/prerun.xml'),
@@ -128,3 +131,10 @@ class TestWarmStartDays(TestSettings):
 
         # cleaning after (move to tear_down method)
         shutil.rmtree(path_out)
+
+    def teardown_method(self):
+        super().teardown_method()
+        if os.path.exists('data/TestCatchment/outputs/longrun_reference'):
+            shutil.rmtree('data/TestCatchment/outputs/longrun_reference')
+        if os.path.exists('data/TestCatchment/outputs/init'):
+            shutil.rmtree('data/TestCatchment/outputs/init')

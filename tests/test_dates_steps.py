@@ -1,13 +1,14 @@
 from __future__ import absolute_import
 import os
 import datetime
+import shutil
 
 from lisfloodutilities.compare import NetCDFComparator
 
 from lisflood.global_modules.settings import MaskInfo
 from lisflood.main import lisfloodexe
 
-from tests import TestSettings
+from tests import TestSettings, mk_path_out
 
 
 class TestStepsDates(TestSettings):
@@ -19,14 +20,18 @@ class TestStepsDates(TestSettings):
         settings_a = self.setoptions(self.settings_files['full'],
                                      opts_to_set=['repStateMaps', 'repEndMaps', 'repDischargeMaps',
                                                   'repSnowMaps', 'repLZMaps', 'repUZMaps'],
-                                     opts_to_unset=['simulateLakes'])
+                                     opts_to_unset=['simulateLakes'],
+                                     vars_to_set={'PathOut': '$(PathRoot)/outputs/1'}
+                                     )
+        path_out_a = mk_path_out('data/TestCatchment/outputs/1')
         lisfloodexe(settings_a)
         settings_b = self.setoptions(self.settings_files['full'],
                                      opts_to_set=['repStateMaps', 'repEndMaps', 'repDischargeMaps',
                                                   'repSnowMaps', 'repLZMaps', 'repUZMaps'],
                                      opts_to_unset=['simulateLakes'],
                                      vars_to_set={'StepStart': 213, 'StepEnd': 215,
-                                                  'PathOut': '$(PathRoot)/outputs/compare'})
+                                                  'PathOut': '$(PathRoot)/outputs/2'})
+        path_out_b = mk_path_out('data/TestCatchment/outputs/2')
 
         lisfloodexe(settings_b)
 
@@ -41,10 +46,7 @@ class TestStepsDates(TestSettings):
         comparator = NetCDFComparator(maskinfo.info.mask)
         out_a = settings_a.output_dir
         out_b = settings_b.output_dir
-        errors = comparator.compare_dirs(out_a, out_b)
-        assert not errors
+        comparator.compare_dirs(out_a, out_b)
 
-        rm_files = [os.path.join(out_a, f) for f in os.listdir(out_a) if f.endswith('.nc') or f.endswith('.tss')]
-        rm_files += [os.path.join(out_b, f) for f in os.listdir(out_b) if f.endswith('.nc') or f.endswith('.tss')]
-        for f in rm_files:
-            os.unlink(f)
+        shutil.rmtree(path_out_a)
+        shutil.rmtree(path_out_b)
