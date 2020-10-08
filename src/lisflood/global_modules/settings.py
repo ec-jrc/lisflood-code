@@ -213,7 +213,7 @@ class LisSettings(with_metaclass(Singleton)):
         self.ens_members = self._ens_members(user_settings)
         self.report_timeseries = self._report_tss()
         self.report_maps_steps, self.report_maps_all, self.report_maps_end = self._reported_maps()
-        self.report_timeseries = {k: v for k, v in iteritems(self.report_timeseries) if v}
+        # self.report_timeseries = {k: v for k, v in iteritems(self.report_timeseries) if v}
         self.report_maps_steps = {k: v for k, v in iteritems(self.report_maps_steps) if v}
         self.report_maps_all = {k: v for k, v in iteritems(self.report_maps_all) if v}
         self.report_maps_end = {k: v for k, v in iteritems(self.report_maps_end) if v}
@@ -461,6 +461,9 @@ class LisSettings(with_metaclass(Singleton)):
         # running through all times series
         timeseries = self.options['timeseries']
         for ts in timeseries.values():
+            ts_obj = self._set_active_options(ts, ts.repoption, ts.restrictoption)
+            if not ts_obj:
+                continue
             key = ts.name
             report_time_series_act[key] = self._set_active_options(ts, ts.repoption, ts.restrictoption)
 
@@ -630,7 +633,8 @@ class LisfloodRunInfo(Warning):
         nr_cores = settings.ncores[0]
         steps = len(settings.filter_steps)
         mode = self.modes[model.__class__.__name__]
-
+        activated_options = ','.join(k for k, v in option.items() if v and not k.startswith('rep') and 'netcdf' not in k.lower() and k not in ('timeseries',))
+        activated_rep = ','.join(k for k, v in option.items() if v and k.startswith('rep') and k not in 'timeseries')
         msg += "\t[X] LISFLOOD is used in the {}\n".format(mode)
         if option['InitLisflood']:
             msg += "\t[X] INITIALISATION RUN\n"
@@ -644,6 +648,8 @@ class LisfloodRunInfo(Warning):
         if mode in (self.modes['EnsKalmanFilterFramework'], self.modes['MonteCarloFramework']) and nr_cores > 1:
             msg += "\t[X] The simulation will try to use {} processors simultaneous\n".format(str(nr_cores))
         msg += "\t[X] The simulation output as specified in the settings file can be found in {}\n".format(out_dir)
+        msg += "\t[X] Activated modules: {}\n".format(activated_options)
+        msg += "\t[X] Report options: {}\n".format(activated_rep)
         self._msg = '{}{}'.format(header, msg)
 
     def __str__(self):

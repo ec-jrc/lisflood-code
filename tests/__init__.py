@@ -15,12 +15,14 @@ See the Licence for the specific language governing permissions and limitations 
 """
 
 from __future__ import absolute_import, division
-from nine import IS_PYTHON2
 
 import os
 import sys
 import uuid
 from copy import copy
+import shutil
+
+from nine import IS_PYTHON2
 
 if IS_PYTHON2:
     from pathlib2 import Path
@@ -109,6 +111,11 @@ class TestSettings(object):
             dest.write(soup.prettify())
         try:
             settings = LisSettings(filename)
+            options = settings.options
+            for opt in opts_to_set:
+                options[opt] = True
+            for opt in opts_to_unset:
+                options[opt] = False
         except LisfloodError as e:
             raise e
         finally:
@@ -263,8 +270,12 @@ class TestLis(object):
         return not errors
 
 
-def mk_path_out(p):
+def mk_path_out(p, delete_first=False):
     path_out = os.path.join(os.path.dirname(__file__), p)
-    if not os.path.exists(path_out):
+
+    if os.path.exists(path_out) and delete_first:
+        shutil.rmtree(path_out)
+        os.mkdir(path_out)
+    elif not os.path.exists(path_out):
         os.mkdir(path_out)
     return path_out

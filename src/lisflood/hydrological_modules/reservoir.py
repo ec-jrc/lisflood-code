@@ -262,7 +262,6 @@ class reservoir(HydroModule):
             # New reservoir fill
 
             # CM: Check ReservoirStorageM3CC for negative values and set them to zero
-            # FIXME
             self.var.ReservoirFillCC[np.isnan(self.var.ReservoirFillCC)] = 0
             self.var.ReservoirFillCC[self.var.ReservoirFillCC < 0] = 0
 

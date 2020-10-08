@@ -212,9 +212,8 @@ class routing(HydroModule):
             # cross-sectional area [m2] for 2nd line of routing: if initial value in binding equals -9999 the value is set to 0
             # otherwise CrossSection2AreaInitValue (typically end map from previous simulation)
 
-            # # temporary comment out
-            # PrevSideflowInitValue = loadmap('PrevSideflowInitValue')
-            # self.var.Sideflow1Chan = np.where(PrevSideflowInitValue == -9999, maskinfo.in_zero(), PrevSideflowInitValue)
+            PrevSideflowInitValue = loadmap('PrevSideflowInitValue')
+            self.var.Sideflow1Chan = np.where(PrevSideflowInitValue == -9999, maskinfo.in_zero(), PrevSideflowInitValue)
             # sideflow from previous run for 1st line of routing: if initial value in binding equals -9999 the value is set to 0
             # otherwise PrevSideflowInitValue (typically end map from previous simulation)
 

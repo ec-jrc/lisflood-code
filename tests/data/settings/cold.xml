@@ -851,25 +851,25 @@
                 </comment>
             </textvar>
 
-            <textvar name="PrefixWaterUseDomestic" value="dom_1990-2019">
+            <textvar name="PrefixWaterUseDomestic" value="dom_2014">
                 <comment>
                     prefix domestic water use maps
                 </comment>
             </textvar>
 
-            <textvar name="PrefixWaterUseLivestock" value="liv_1990-2019">
+            <textvar name="PrefixWaterUseLivestock" value="liv_2014">
                 <comment>
                     prefix livestock water use maps
                 </comment>
             </textvar>
 
-            <textvar name="PrefixWaterUseEnergy" value="ene_1990-2019">
+            <textvar name="PrefixWaterUseEnergy" value="ene_2014">
                 <comment>
                     prefix energy water use maps
                 </comment>
             </textvar>
 
-            <textvar name="PrefixWaterUseIndustry" value="ind_1990-2019">
+            <textvar name="PrefixWaterUseIndustry" value="ind_2014">
                 <comment>
                     prefix industry water use maps
                 </comment>
