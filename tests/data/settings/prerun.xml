@@ -135,7 +135,7 @@
                 </comment>
             </textvar>
 
-            <textvar name="MaskMap" value="$(PathRoot)/maps_netcdf/area.nc">
+            <textvar name="MaskMap" value="$(PathRoot)/sbs/Mask.map">
             </textvar>
 
             <textvar name="Gauges" value="$(PathMaps)/outlets.nc">
@@ -255,7 +255,7 @@
                 </comment>
             </textvar>
 
-            <textvar name="CalendarDayStart" value="31/12/1999 06:00">
+            <textvar name="CalendarDayStart" value="02/01/1990 06:00">
                 <comment>
                     Calendar day number of 1st day in model run
                     Day of the year of first map (e.g. xx000.001) even if the model start from map e.g. 500

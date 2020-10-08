@@ -17,23 +17,14 @@ See the Licence for the specific language governing permissions and limitations 
 
 from __future__ import absolute_import
 import os
-from datetime import datetime, timedelta
-
-from netCDF4 import Dataset
+from datetime import timedelta
 
 from lisfloodutilities.compare import NetCDFComparator
 
 from lisflood.global_modules.settings import MaskInfo
 from lisflood.main import lisfloodexe
 
-from tests import TestSettings
-
-
-def mk_path_out(p):
-    path_out = os.path.join(os.path.dirname(__file__), p)
-    if not os.path.exists(path_out):
-        os.mkdir(path_out)
-    return path_out
+from . import TestSettings, mk_path_out
 
 
 class TestWarmStartDays(TestSettings):
@@ -47,23 +38,22 @@ class TestWarmStartDays(TestSettings):
         step_start = '01/01/2000 06:00'
         step_end = '01/02/2000 06:00'
         dt_sec = 86400
-        path_out = mk_path_out('data/TestCatchment/outputs/init')
+        path_out_init = mk_path_out('data/TestCatchment/outputs/init')
         settings_prerun = self.setoptions(self.settings_files['prerun'],
-                                          vars_to_set={'DtSec': dt_sec, 'PathOut': path_out,
+                                          vars_to_set={'DtSec': dt_sec, 'PathOut': path_out_init,
                                                        'StepStart': step_start,
                                                        'StepEnd': step_end})
-        step_start_dt = settings_prerun.step_start_dt
         step_end_dt = settings_prerun.step_end_dt
         lisfloodexe(settings_prerun)
 
         lzavin_path = settings_prerun.binding['LZAvInflowMap']
         avgdis_path = settings_prerun.binding['AvgDis']
-        path_out = mk_path_out('data/TestCatchment/outputs/longrun_reference')
+        path_out_reference = mk_path_out('data/TestCatchment/outputs/longrun_reference')
         settings_longrun = self.setoptions(self.settings_files['cold'],
                                            vars_to_set={'StepStart': step_start,
                                                         'StepEnd': step_end,
                                                         'LZAvInflowMap': lzavin_path,
-                                                        'PathOut': path_out,
+                                                        'PathOut': path_out_reference,
                                                         'AvgDis': avgdis_path, 'DtSec': '86400'})
         lisfloodexe(settings_longrun)
 
@@ -79,11 +69,13 @@ class TestWarmStartDays(TestSettings):
                                                           'AvgDis': avgdis_path, 'DtSec': dt_sec})
         lisfloodexe(settings_coldstart)
 
-        # warm run (2. warm starts with initial conditions)
+        # warm run (2. single step warm start/stop with initial conditions)
         prev_settings = settings_coldstart
         warm_step_start = prev_settings.step_end_dt + timedelta(seconds=dt_sec)
         warm_step_end = warm_step_start
         timestep_init = prev_settings.step_end_dt.strftime('%d/%m/%Y %H:%M')
+        maskinfo = MaskInfo.instance()
+        comparator = NetCDFComparator(maskinfo.info.mask)
         while warm_step_start <= step_end_dt:
             run_number += 1
             path_init = prev_settings.output_dir
@@ -98,11 +90,19 @@ class TestWarmStartDays(TestSettings):
                                                               'timestepInit': timestep_init,
                                                               'AvgDis': avgdis_path, 'DtSec': dt_sec})
             lisfloodexe(settings_warmstart)
-            prev_settings = settings_warmstart
+            # checking values at current timestep
+            timestep = settings_warmstart.step_end_int
+            errors = comparator.compare_dirs(path_out, path_out_reference, skip_missing=True, timestep=timestep)
+            assert not errors
+            # if timestep == settings_longrun.step_end_int:
+            #     errors = comparator.compare_dirs(path_out, path_out_reference, skip_missing=True, timestep=timestep)
+            #     # assert not errors
+            #     if errors:
+            #         import pprint
+            #         print(pprint.pformat(errors))
 
+            # setup for next warm start/stop
+            prev_settings = settings_warmstart
             warm_step_start = prev_settings.step_end_dt + timedelta(seconds=dt_sec)
             warm_step_end = warm_step_start
             timestep_init = prev_settings.step_end_dt.strftime('%d/%m/%Y %H:%M')
-
-        # TODO
-        assert False

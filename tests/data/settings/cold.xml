@@ -91,7 +91,6 @@
         <setoption choice="1" name="repPFMaps"/>
         <setoption choice="1" name="repPFForestMaps"/>
 
-
         <setoption choice="0" name="repTotalAbs"/>
         <setoption choice="0" name="repTotalWUse"/>
         <setoption choice="0" name="repWIndex"/>
@@ -140,7 +139,7 @@
                 </comment>
             </textvar>
 
-            <textvar name="MaskMap" value="$(PathRoot)/maps_netcdf/area.nc">
+            <textvar name="MaskMap" value="$(PathRoot)/sbs/Mask.map">
             </textvar>
 
             <textvar name="Gauges" value="$(PathMaps)/outlets.nc">
@@ -261,7 +260,7 @@
                 </comment>
             </textvar>
 
-            <textvar name="CalendarDayStart" value="31/12/1999 06:00">
+            <textvar name="CalendarDayStart" value="02/01/1990 06:00">
                 <comment>
                     Calendar day number of 1st day in model run
                     Day of the year of first map (e.g. xx000.001) even if the model start from map e.g. 500
@@ -1330,16 +1329,6 @@ threshold value below which there is no outflow to the channel
                     Minimum channel gradient (for kin. wave: slope cannot be 0)
                 </comment>
             </textvar>
-
-            <!-- moved to calibration parameters section
-<textvar name="QSplitMult" value="2.0">
-<comment>
-PBchange
-Multiplier applied to average Q to split into a second line of routing
-</comment>
-</textvar>
--->
-
         </group>
 
         <group>

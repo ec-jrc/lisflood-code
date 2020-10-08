@@ -62,9 +62,11 @@ class TestSettings(object):
                 os.unlink(f)
 
     def setup_method(self):
+        # pass
         self.clean_pathouts()
 
     def teardown_method(self):
+        # return
         self.clean_pathouts()
 
     @classmethod
@@ -259,3 +261,10 @@ class TestLis(object):
             comparator = TSSComparator()
             errors = comparator.compare_files(reference, output_tss)
         return not errors
+
+
+def mk_path_out(p):
+    path_out = os.path.join(os.path.dirname(__file__), p)
+    if not os.path.exists(path_out):
+        os.mkdir(path_out)
+    return path_out
