@@ -285,7 +285,7 @@
                 </comment>
             </textvar>
 
-            <textvar name="StepStart" value="01/01/1996 12:00">
+            <textvar name="StepStart" value="01/01/2000 12:00">
                 <comment>
                     Number of first time step in simulation
                 </comment>

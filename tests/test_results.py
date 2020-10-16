@@ -102,4 +102,4 @@ class TestWrongTimestepInit:
         settings_path = os.path.join(current_dir, 'data/LF_ETRS89_UseCase/settings/warm.xml')
         with pytest.raises(LisfloodError) as e:
             setoptions(settings_path, vars_to_set={'timestepInit': 'PDAY'})
-            assert 'Option timestepInit was not parsable.' in str(e.value)
+        assert 'Option timestepInit was not parsable.' in str(e.value)

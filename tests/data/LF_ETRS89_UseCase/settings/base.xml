@@ -180,13 +180,13 @@ The option "numberParallelThreadsKinematicWave" may take the following values:
                 </comment>
             </textvar>
 
-            <textvar name="StepStart" value="25/07/2007 06:00">
+            <textvar name="StepStart" value="25/07/2000 06:00">
                 <comment>
                     Number of first time step in simulation
                 </comment>
             </textvar>
 
-            <textvar name="StepEnd" value="27/07/2007 06:00">
+            <textvar name="StepEnd" value="27/07/2000 06:00">
                 <comment>
                     Reforecasts_2017 1/1/1996 1
                     Reforecasts_2017 31/12/2009 5114
