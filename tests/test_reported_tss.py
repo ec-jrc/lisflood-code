@@ -5,7 +5,7 @@ from tests import TestSettings
 
 
 class TestReportedTSS(TestSettings):
-    settings_files = {'full': os.path.join(os.path.dirname(__file__), 'data/settings/full.xml')}
+    settings_files = {'full': os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/full.xml')}
 
     def test_rep_dischargetss(self, mocker):
         self._reported_tss(self.settings_files['full'], ['repStateUpsGauges', 'repDischargeTs'], None, 'disWin.tss', mocker)

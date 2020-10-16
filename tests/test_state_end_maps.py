@@ -29,7 +29,7 @@ from tests import TestSettings
 
 
 class TestRepMaps(TestSettings):
-    settings_files = {'base': os.path.join(os.path.dirname(__file__), 'data/settings/base.xml')}
+    settings_files = {'base': os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/base.xml')}
 
     def test_no_reported(self):
         settings = self.setoptions(self.settings_files['base'])

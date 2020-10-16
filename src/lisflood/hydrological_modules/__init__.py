@@ -47,6 +47,11 @@ def is_path(v):
 
 
 class HydroModule(object):
+    # bindings to check for each options used by the HydroModule
+    # e.g. in lakes.py for Lakes module
+    # input_files_keys = {'simulateLakes': ['LakeSites', 'TabLakeArea', 'TabLakeA', 'LakeMultiplier',
+    #                                       'LakeInitialLevelValue', 'TabLakeAvNetInflowEstimate', 'PrevDischarge',
+    #                                       'LakePrevInflowValue', 'LakePrevOutflowValue']}
     input_files_keys = None
     module_name = None
 
@@ -54,20 +59,18 @@ class HydroModule(object):
     def check_input_files(cls, option):
         settings = LisSettings.instance()
         binding = settings.binding
-        ok = True
-        keys = cls.input_files_keys[option]
+        keys = cls.input_files_keys.get(option, [])
         errors = []
         for k in keys:
             msg = None
             k_ok = True
             if not binding.get(k):
-                msg = '[{}]: setting "{}" is missing in settings file {}'.format(cls.module_name, k, settings.settings)
+                msg = '[{}]: setting "{}" is missing in settings file {}'.format(cls.module_name, k, settings.settings_path)
                 k_ok = False
             elif not (is_path(binding[k]) or is_number(binding[k])):
                 k_ok = False
                 msg = '[{}]: setting {} refers to a non existing path or a not well-formed float value: {}'.format(cls.module_name, k, binding[k])
             if not k_ok:
-                ok = False
                 warnings.warn(LisfloodWarning(msg))
                 errors.append(msg)
-        return ok, errors
+        return errors

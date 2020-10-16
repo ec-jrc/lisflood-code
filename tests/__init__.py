@@ -43,7 +43,10 @@ from lisflood.global_modules.settings import LisSettings, MaskInfo, Singleton
 from lisflood.global_modules.errors import LisfloodError
 from lisflood.main import lisfloodexe
 
-# #FIXME lisfloodutilities must be imported after lisflood packages otherwise it goes core dumped...
+from lisflood.global_modules.checkers import ModulesInputs
+ModulesInputs.check = lambda x: 1  # mock checker
+
+# FIXME lisfloodutilities must be imported after lisflood packages otherwise it goes core dumped...
 from lisfloodutilities.compare import NetCDFComparator, TSSComparator
 
 
@@ -73,7 +76,7 @@ def setoptions(settings_file, opts_to_set=None, opts_to_unset=None, vars_to_set=
 
     # Generating XML settings_files on fly from template
     uid = uuid.uuid4()
-    filename = os.path.join(os.path.dirname(settings_file), './settings_{}.xml'.format(uid))
+    filename = os.path.join(os.path.dirname(settings_file), './{}_{}.xml'.format(os.path.basename(settings_file), uid))
     with open(filename, 'w') as dest:
         dest.write(soup.prettify())
     try:
@@ -188,7 +191,8 @@ class TestSettings(object):
         lisfloodexe(settings)
         assert len(lisflood.global_modules.output.writenet.call_args_list) > 0
         to_check = copy(map_to_check)
-        f_to_check = copy(files_to_check)
+        # remove extensions (in Lisflood settings you can have names like lzavin.map but you check for lzavin.nc)
+        f_to_check = [os.path.splitext(f)[0] for f in copy(files_to_check)]
         for c in lisflood.global_modules.output.writenet.call_args_list:
             args, kwargs = c
             for m in map_to_check:
@@ -196,8 +200,10 @@ class TestSettings(object):
                     to_check.remove(m)
                     if not to_check:
                         break
-            path = Path(args[2]).name
+            path = os.path.splitext(Path(args[2]).name)[0]
+
             for f in files_to_check:
+                f = os.path.splitext(f)[0]
                 if f == path and f in f_to_check:
                     f_to_check.remove(f)
                     if not f_to_check:
@@ -226,20 +232,28 @@ class TestSettings(object):
 
 class TestLis(object):
     reference_files = {
-        'dis': {'path_map': os.path.join(current_dir, 'data/TestCatchment/reference/dis.nc'),
-                'path_tss': os.path.join(current_dir, 'data/TestCatchment/reference/disWin.tss'),
+        'dis': {'path_map': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/dis.nc'),
+                'path_tss': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/dis.tss'),
                 'report_map': 'DischargeMaps',
-                'report_tss': 'DisTS'
+                'report_tss': 'DisTS',
                 },
+        'chanq': {'path_map': None,
+                  'path_tss': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/chanqWin.tss'),
+                  'report_map': None,
+                  'report_tss': 'ChanqTS',
+                  },
     }
+    output_dir = None
 
-    @classmethod
-    def teardown_class(cls):
-        settings = LisSettings.instance()
-        rm_files = [os.path.join(settings.output_dir, f) for f in os.listdir(settings.output_dir) if
-                    f.endswith('.nc') or f.endswith('.tss')]
-        for f in rm_files:
-            os.unlink(f)
+    def teardown_method(self):
+        pass
+        # output_dir = self.output_dir
+        # # settings = LisSettings.instance()
+        #
+        # rm_files = [os.path.join(output_dir, f) for f in os.listdir(output_dir) if
+        #             f.endswith('.nc') or f.endswith('.tss')]
+        # for f in rm_files:
+        #     os.unlink(f)
 
     @classmethod
     def listest(cls, variable='dis', check='map'):

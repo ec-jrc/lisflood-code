@@ -31,7 +31,7 @@ from tests import TestSettings
 
 
 class TestOptions(TestSettings):
-    settings_files = {'base': os.path.join(os.path.dirname(__file__), 'data/settings/base.xml')}
+    settings_files = {'base': os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/base.xml')}
 
     def test_basic(self, mocker):
         settings = self.setoptions(self.settings_files['base'])
@@ -89,7 +89,9 @@ class TestOptions(TestSettings):
         assert not lisflood.hydrological_modules.waterabstraction.loadmap.called
 
     def test_reservoirs_only(self, mocker):
-        settings = self.setoptions(self.settings_files['base'], 'simulateReservoirs')
+        settings = self.setoptions(self.settings_files['base'],
+                                   'simulateReservoirs',
+                                   )
         mock_api = mocker.MagicMock(name='loadmap')
         mock_api.side_effect = self.dummyloadmap
         mocker.patch('lisflood.hydrological_modules.reservoir.loadmap', new=mock_api)

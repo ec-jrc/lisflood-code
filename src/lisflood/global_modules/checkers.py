@@ -61,7 +61,7 @@ class ModulesInputs:
         :param settings: LisSettings object
         """
         binding = settings.binding
-        res = 0
+        successful_checks = 0
         all_errors = []
         total_checks = 1  # at least check PathOut
         # First check PathOut
@@ -70,10 +70,10 @@ class ModulesInputs:
             warnings.warn(LisfloodWarning(msg))
             all_errors.append(msg)
         else:
-            res += 1
+            successful_checks += 1
 
         for option, modules in cls.lisflood_modules.items():
-            if not (binding.get(option) or option == 'all'):
+            if not (settings.options.get(option) or option == 'all'):
                 # module is not activated
                 continue
             for hydro_module in modules:
@@ -82,14 +82,15 @@ class ModulesInputs:
                          and obj is not HydroModule and str(obj.__module__) == hydro_module.__name__]
                 total_checks += len(clzzs)
                 for clz in clzzs:
-                    module_ok, errors = clz.check_input_files(option)
-                    res += int(module_ok)
+                    errors = clz.check_input_files(option)
+                    successful_checks += int(bool(not errors))
                     all_errors += errors
-        if res < total_checks:
+        if successful_checks < total_checks:
             # some checks failed
-
-            raise LisfloodError('\n\nMissing files or misconfigured paths to run LisFlood, according activated modules. '
-                                'Please check your settings file {}.\n{}'.format(settings.settings_path, all_errors))
+            raise LisfloodError(
+                '\n\nMissing files or misconfigured paths to run LisFlood, according activated modules. '
+                'Please check your settings file {}.\n{}'.format(settings.settings_path, all_errors)
+            )
 
 
 class MeteoForcings:

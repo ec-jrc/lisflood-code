@@ -13,7 +13,7 @@ from tests import TestSettings, mk_path_out
 
 class TestStepsDates(TestSettings):
     settings_files = {
-        'full': os.path.join(os.path.dirname(__file__), 'data/settings/full.xml')
+        'full': os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/full.xml')
     }
 
     def test_dates_steps_day(self):
@@ -21,17 +21,17 @@ class TestStepsDates(TestSettings):
                                      opts_to_set=['repStateMaps', 'repEndMaps', 'repDischargeMaps',
                                                   'repSnowMaps', 'repLZMaps', 'repUZMaps'],
                                      opts_to_unset=['simulateLakes'],
-                                     vars_to_set={'PathOut': '$(PathRoot)/outputs/1'}
+                                     vars_to_set={'PathOut': '$(PathRoot)/out/1'}
                                      )
-        path_out_a = mk_path_out('data/TestCatchment/outputs/1')
+        path_out_a = mk_path_out('data/LF_ETRS89_UseCase/out/1')
         lisfloodexe(settings_a)
         settings_b = self.setoptions(self.settings_files['full'],
                                      opts_to_set=['repStateMaps', 'repEndMaps', 'repDischargeMaps',
                                                   'repSnowMaps', 'repLZMaps', 'repUZMaps'],
                                      opts_to_unset=['simulateLakes'],
                                      vars_to_set={'StepStart': 213, 'StepEnd': 215,
-                                                  'PathOut': '$(PathRoot)/outputs/2'})
-        path_out_b = mk_path_out('data/TestCatchment/outputs/2')
+                                                  'PathOut': '$(PathRoot)/out/2'})
+        path_out_b = mk_path_out('data/LF_ETRS89_UseCase/out/2')
 
         lisfloodexe(settings_b)
 

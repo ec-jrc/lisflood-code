@@ -12,7 +12,7 @@ lisflood_model.egg-info
 /src/dist/
 /src/lisflood/hydrological_modules/kinematic_wave_parallel_tools.c
 !settings_tpl.xml
-!/tests/data/settings/*.xml
-!/tests/data/TestCatchment/settings/*.xml
+!/tests/data/TestCatchmentWithLakes/settings/*.xml
+!/tests/data/LF_ETRS89_UseCase/settings/*.xml
 .coverage
 *.tox.ini

@@ -23,7 +23,7 @@ import pytest
 
 from lisflood.global_modules.errors import LisfloodWarning, LisfloodError
 from lisflood.main import lisfloodexe
-from tests import TestLis, setoptions, LisSettings
+from tests import TestLis, setoptions
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -31,8 +31,19 @@ warnings.simplefilter('ignore', LisfloodWarning)
 
 
 class TestCatch(TestLis):
-
-    output_dir = os.path.join(current_dir, 'data/TestCatchment/outputs')
+    output_dir = os.path.join(current_dir, 'data/LF_ETRS89_UseCase/out')
+    modules_to_set = (
+        'SplitRouting',
+        'simulateReservoirs',
+        'simulateLakes',
+        'groundwaterSmooth',
+        'TransientWaterDemandChange',
+        'drainedIrrigation',
+        'openwaterevapo'
+        'useWaterDemandAveYear',
+        'riceIrrigation',
+        'indicator',
+    )
 
     def test_dis(self):
         opts_to_unset = (
@@ -44,8 +55,8 @@ class TestCatch(TestLis):
             "repThetaForestMaps", "repLZMaps", "repUZMaps",
             "repGwPercUZLZMaps", "repRWS", "repPFMaps", "repPFForestMaps"
         )
-        settings = setoptions(os.path.join(current_dir, 'data/settings/cold.xml'),
-                              opts_to_set=('repDischargeTs', 'repDischargeMaps', 'wateruse', 'indicator'),
+        settings = setoptions(os.path.join(current_dir, 'data/LF_ETRS89_UseCase/settings/base.xml'),
+                              opts_to_set=('repDischargeTs', 'repDischargeMaps', ) + self.modules_to_set,
                               opts_to_unset=opts_to_unset,
                               vars_to_set={'StepStart': '02/01/2000 06:00',
                                            'StepEnd': '02/07/2000 06:00',
@@ -53,6 +64,9 @@ class TestCatch(TestLis):
         lisfloodexe(settings)
         assert self.listest('dis', check='map')
         assert self.listest('dis', check='tss')
+        assert self.listest('chanq', check='tss')
+
+        # TODO add a 6hourly test
 
     def test_initvars(self):
         opts_to_unset = (
@@ -64,11 +78,11 @@ class TestCatch(TestLis):
             "repThetaForestMaps", "repLZMaps", "repUZMaps", "repDischargeTs", "repDischargeMaps",
             "repGwPercUZLZMaps", "repRWS", "repPFMaps", "repPFForestMaps"
         )
-        settings = setoptions(os.path.join(current_dir, 'data/settings/cold.xml'),
-                              opts_to_set=('wateruse', 'indicator', 'repEndMaps'),
+        settings = setoptions(os.path.join(current_dir, 'data/LF_ETRS89_UseCase/settings/base.xml'),
+                              opts_to_set=('repEndMaps',) + self.modules_to_set,
                               opts_to_unset=opts_to_unset,
                               vars_to_set={'StepStart': '02/02/2000 06:00',
-                                           'StepEnd': '02/03/2000 06:00',
+                                           'StepEnd': '05/02/2000 06:00',
                                            'PathOut': self.output_dir})
         lisfloodexe(settings)
         out_dir = self.output_dir
@@ -83,9 +97,9 @@ class TestCatch(TestLis):
 
 
 class TestWrongTimestepInit:
-    settings_path = os.path.join(current_dir, 'data/TestCatchment/settings/warm_day_wrong_timestepinit.xml')
 
     def test_raisexc(self):
+        settings_path = os.path.join(current_dir, 'data/LF_ETRS89_UseCase/settings/warm.xml')
         with pytest.raises(LisfloodError) as e:
-            assert lisfloodexe(self.settings_path)
+            setoptions(settings_path, vars_to_set={'timestepInit': 'PDAY'})
             assert 'Option timestepInit was not parsable.' in str(e.value)

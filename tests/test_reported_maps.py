@@ -7,8 +7,8 @@ from tests import TestSettings
 class TestReportedMaps(TestSettings):
 
     settings_files = {
-        'full': os.path.join(os.path.dirname(__file__), 'data/settings/full.xml'),
-        'lakes': os.path.join(os.path.dirname(__file__), 'data/settings/full_with_lakes.xml')
+        'full': os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/full.xml'),
+        'lakes': os.path.join(os.path.dirname(__file__), 'data/TestCatchmentWithLakes/settings/full.xml')
     }
 
     def test_rep_dischargemaps(self, mocker):
@@ -101,12 +101,12 @@ class TestReportedMaps(TestSettings):
         self._reported_map(self.settings_files['full'],
                            opts_to_set=['repTotalWUse', 'repStateMaps'],
                            opts_to_unset=['simulateLakes', 'repsimulateLakes'],
-                           map_to_check=['TotalWUse', 'TotalWUseRegion',], mocker=mocker)
+                           map_to_check=['TotalWUse', 'TotalWUseRegion'], mocker=mocker)
 
     def test_rep_totalwuse_not_called(self, mocker):
         self._not_reported_map(self.settings_files['full'], opts_to_set=['repStateMaps'],
                            opts_to_unset=['simulateLakes', 'repsimulateLakes'],
-                           map_to_check=['TotalWUse', 'TotalWUseRegion',], mocker=mocker)
+                           map_to_check=['TotalWUse', 'TotalWUseRegion'], mocker=mocker)
 
     def test_rep_windex(self, mocker):
         self._reported_map(self.settings_files['full'],

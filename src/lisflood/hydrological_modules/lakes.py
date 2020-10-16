@@ -72,6 +72,8 @@ class lakes(HydroModule):
                 warnings.warn(LisfloodWarning('There are no lakes. Lakes simulation won\'t run'))
                 option['simulateLakes'] = False
                 option['repsimulateLakes'] = False
+                # rebuild lists of reported files with repsimulateLakes and simulateLakes = False
+                settings.build_reportedmaps_dicts()
                 return
             # break if no lakes
 

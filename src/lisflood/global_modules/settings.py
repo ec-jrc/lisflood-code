@@ -211,18 +211,21 @@ class LisSettings(with_metaclass(Singleton)):
         self.report_steps = self._report_steps(user_settings, bindings)
         self.filter_steps = self._filter_steps(user_settings)
         self.ens_members = self._ens_members(user_settings)
-        self.report_timeseries = self._report_tss()
-        self.report_maps_steps, self.report_maps_all, self.report_maps_end = self._reported_maps()
-        # self.report_timeseries = {k: v for k, v in iteritems(self.report_timeseries) if v}
-        self.report_maps_steps = {k: v for k, v in iteritems(self.report_maps_steps) if v}
-        self.report_maps_all = {k: v for k, v in iteritems(self.report_maps_all) if v}
-        self.report_maps_end = {k: v for k, v in iteritems(self.report_maps_end) if v}
+        self.report_timeseries, self.report_maps_steps, self.report_maps_all, self.report_maps_end = self.build_reportedmaps_dicts()
         self.enkf_set, self.mc_set = self.montecarlo_kalman_settings()
         self.step_start, self.step_end = self.binding['StepStart'], self.binding['StepEnd']
         self.step_start_int, self.step_end_int = self.binding['StepStartInt'], self.binding['StepEndInt']
         ref_date_start = calendar(self.binding['CalendarDayStart'], self.binding['calendar_type'])
         self.step_start_dt = inttodate(self.step_start_int - 1, ref_date_start, binding=self.binding)
         self.step_end_dt = inttodate(self.step_end_int - 1, ref_date_start, binding=self.binding)
+
+    def build_reportedmaps_dicts(self):
+        self.report_timeseries = self._report_tss()
+        self.report_maps_steps, self.report_maps_all, self.report_maps_end = self._reported_maps()
+        self.report_maps_steps = {k: v for k, v in iteritems(self.report_maps_steps) if v}
+        self.report_maps_all = {k: v for k, v in iteritems(self.report_maps_all) if v}
+        self.report_maps_end = {k: v for k, v in iteritems(self.report_maps_end) if v}
+        return self.report_timeseries, self.report_maps_steps, self.report_maps_all, self.report_maps_end
 
     def montecarlo_kalman_settings(self):
         # Ensemble Kalman filter
