@@ -149,6 +149,6 @@ class TestWarmStartDays(MixinTestSettings):
     def teardown_method(self):
         folders_list = glob.glob(os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/run_*')) + \
             glob.glob(os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/longrun_reference_*')) + \
-            glob.glob(os.path.join(os.path.dirname(__file__),'data/LF_ETRS89_UseCase/out/init_*'))
+            glob.glob(os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/init_*'))
         for folder in folders_list:
             shutil.rmtree(folder)

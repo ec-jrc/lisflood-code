@@ -171,6 +171,9 @@ class MixinTestSettings(object):
         mock_api2 = mocker.MagicMock(name='timeseries')
         mocker.patch('lisflood.global_modules.output.TimeoutputTimeseries', new=mock_api2)
 
+        mock_api3 = mocker.MagicMock(name='reportpcr')
+        mocker.patch('lisflood.global_modules.output.report', new=mock_api3)
+
         # ** execute lisflood
         lisfloodexe(settings)
         assert len(lisflood.global_modules.output.writenet.call_args_list) > 0
@@ -206,6 +209,9 @@ class MixinTestSettings(object):
         mocker.patch('lisflood.global_modules.output.writenet', new=mock_api)
         mock_api2 = mocker.MagicMock(name='timeseries')
         mocker.patch('lisflood.global_modules.output.TimeoutputTimeseries', new=mock_api2)
+        mock_api3 = mocker.MagicMock(name='reportpcr')
+        mocker.patch('lisflood.global_modules.output.report', new=mock_api3)
+
         lisfloodexe(settings)
         res = True
         assert len(lisflood.global_modules.output.writenet.call_args_list) > 0
