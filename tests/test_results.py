@@ -23,7 +23,7 @@ import pytest
 
 from lisflood.global_modules.errors import LisfloodWarning, LisfloodError
 from lisflood.main import lisfloodexe
-from tests import TestLis, setoptions
+from tests import TestLis, setoptions, mk_path_out
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -44,6 +44,13 @@ class TestCatch(TestLis):
         'riceIrrigation',
         'indicator',
     )
+    settings_files = {
+        'base': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/settings/base.xml'),
+        'prerun': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/settings/prerun.xml')
+    }
+
+    # TODO 1. add a 6hourly test
+    # TODO 2. check streamflow_simulated_best.csv as reference
 
     def test_dis(self):
         opts_to_unset = (
@@ -55,7 +62,7 @@ class TestCatch(TestLis):
             "repThetaForestMaps", "repLZMaps", "repUZMaps",
             "repGwPercUZLZMaps", "repRWS", "repPFMaps", "repPFForestMaps"
         )
-        settings = setoptions(os.path.join(current_dir, 'data/LF_ETRS89_UseCase/settings/base.xml'),
+        settings = setoptions(self.settings_files['base'],
                               opts_to_set=('repDischargeTs', 'repDischargeMaps', ) + self.modules_to_set,
                               opts_to_unset=opts_to_unset,
                               vars_to_set={'StepStart': '02/01/2000 06:00',
@@ -65,8 +72,6 @@ class TestCatch(TestLis):
         assert self.listest('dis', check='map')
         assert self.listest('dis', check='tss')
         assert self.listest('chanq', check='tss')
-
-        # TODO add a 6hourly test
 
     def test_initvars(self):
         opts_to_unset = (
@@ -78,7 +83,7 @@ class TestCatch(TestLis):
             "repThetaForestMaps", "repLZMaps", "repUZMaps", "repDischargeTs", "repDischargeMaps",
             "repGwPercUZLZMaps", "repRWS", "repPFMaps", "repPFForestMaps"
         )
-        settings = setoptions(os.path.join(current_dir, 'data/LF_ETRS89_UseCase/settings/base.xml'),
+        settings = setoptions(self.settings_files['base'],
                               opts_to_set=('repEndMaps',) + self.modules_to_set,
                               opts_to_unset=opts_to_unset,
                               vars_to_set={'StepStart': '02/02/2000 06:00',
@@ -94,6 +99,24 @@ class TestCatch(TestLis):
                           'thic.end.nc', 'uz.end.nc', 'uzf.end.nc', 'uzi.end.nc', 'wdept.end.nc')
         for f in initcond_files:
             assert os.path.exists(os.path.join(out_dir, f))
+
+    def test_init_daily(self):
+        modules_to_unset = [
+            'simulateLakes',
+            'repsimulateLakes',
+            'wateruse',
+            'useWaterDemandAveYear',
+        ]
+        path_out_init = mk_path_out('data/LF_ETRS89_UseCase/out/test_init_daily')
+        settings = setoptions(self.settings_files['prerun'], opts_to_unset=modules_to_unset,
+                              vars_to_set={'DtSec': '86400',
+                                           'PathOut': path_out_init,
+                                           'StepStart': '31/12/1999 06:00',
+                                           'ReportSteps': '3650..4100',
+                                           'StepEnd': '06/01/2001 06:00'})
+        lisfloodexe(settings)
+        assert self.listest('avgdis', check='map')
+        assert self.listest('lzavin', check='map')
 
 
 class TestWrongTimestepInit:

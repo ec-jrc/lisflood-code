@@ -1,3 +1,1 @@
-*.map
-*.tss
-*.nc
+**/*.map**/*.tss**/*.nc!.gitignore

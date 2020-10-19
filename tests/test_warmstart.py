@@ -68,6 +68,7 @@ class TestWarmStartDays(TestSettings):
                                           vars_to_set={'DtSec': dt_sec,
                                                        'PathOut': path_out_init,
                                                        'StepStart': step_start,
+                                                       'ReportSteps': report_steps,
                                                        'StepEnd': step_end})
         step_end_dt = settings_prerun.step_end_dt
         # ** execute

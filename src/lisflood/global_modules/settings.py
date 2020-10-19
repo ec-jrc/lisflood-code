@@ -401,9 +401,9 @@ class LisSettings(with_metaclass(Singleton)):
         res = {}
         repsteps = user_settings['ReportSteps'].split(',')
         if repsteps[0] == 'starttime':
-            repsteps[0] = bindings['StepStartInt']
+            repsteps[0] = str(bindings['StepStartInt'])
         if repsteps[-1] == 'endtime':
-            repsteps[-1] = bindings['StepEndInt']
+            repsteps[-1] = str(bindings['StepEndInt'])
         jjj = []
         for i in repsteps:
             if '..' in i:

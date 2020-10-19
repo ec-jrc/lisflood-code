@@ -242,6 +242,16 @@ class TestLis(object):
                   'report_map': None,
                   'report_tss': 'ChanqTS',
                   },
+        'avgdis': {'path_map': None,
+                   'path_tss': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/chanqWin.tss'),
+                   'report_map': None,
+                   'report_tss': 'ChanqTS',
+                  },
+        'lzavin': {'path_map': None,
+                   'path_tss': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/chanqWin.tss'),
+                   'report_map': None,
+                   'report_tss': 'ChanqTS',
+                   },
     }
     output_dir = None
 
