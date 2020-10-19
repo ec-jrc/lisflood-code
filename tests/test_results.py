@@ -17,21 +17,107 @@ See the Licence for the specific language governing permissions and limitations 
 from __future__ import absolute_import, print_function
 
 import os
-import warnings
+import shutil
 
 import pytest
+from lisfloodutilities.compare import NetCDFComparator, TSSComparator
 
-from lisflood.global_modules.errors import LisfloodWarning, LisfloodError
+from lisflood.global_modules.errors import LisfloodError
+from lisflood.global_modules.settings import LisSettings, MaskInfo
 from lisflood.main import lisfloodexe
-from tests import TestLis, setoptions, mk_path_out
+
+from tests import setoptions, mk_path_out
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
-warnings.simplefilter('ignore', LisfloodWarning)
+
+class TestLis(object):
+    reference_files = {
+        'dis': {
+            'report_map': 'DischargeMaps',
+            'report_tss': 'DisTS',
+            '86400': {
+                'path_map': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/dis_daily/dis.nc'),
+                'path_tss': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/dis_daily/dis.tss'),
+            },
+            '21600': {
+                'path_map': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/dis_6h/dis.nc'),
+                'path_tss': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/dis_6h/dis.tss'),
+            },
+
+        },
+        'chanq': {
+            'report_map': None,
+            'report_tss': 'ChanqTS',
+            '86400': {
+                'path_map': None,
+                'path_tss': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/dis_daily/chanqWin.tss'),
+            },
+            '21600': {
+                'path_map': None,
+                'path_tss': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/dis_6h/chanqWin.tss'),
+            },
+
+        },
+        'avgdis': {
+            'report_map': 'AvgDis',
+            'report_tss': None,
+            '86400': {
+                'path_map': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/init_daily/avgdis.nc'),
+                'path_tss': None,
+            },
+            '21600': {
+                'path_map': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/init_6h/avgdis.nc'),
+                'path_tss': None,
+            },
+
+        },
+        'lzavin': {
+            'report_map': 'LZAvInflowMap',
+            'report_tss': None,
+            '86400': {
+                'path_map': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/init_daily/lzavin.nc'),
+                'path_tss': None,
+            },
+            '21600': {
+                'path_map': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/init_6h/lzavin.nc'),
+                'path_tss': None,
+            },
+
+        },
+    }
+
+    def teardown_method(self):
+        settings = LisSettings.instance()
+        output_dir = settings.output_dir
+        shutil.rmtree(output_dir)
+
+    @classmethod
+    def compare_reference(cls, variable='dis', check='map', step_length='86400'):
+        """
+        :param variable: variable to check. Default 'dis' (Discharge)
+        :param check: either 'map' or 'tss'. Default 'map'
+        :param step_length: DtSec (86400 for daily and 21600 for 6h run)
+        """
+
+        settings = LisSettings.instance()
+        maskinfo = MaskInfo.instance()
+        binding = settings.binding
+        reference = cls.reference_files[variable][step_length]['path_{}'.format(check)]
+
+        if check == 'map':
+            output_map = os.path.normpath(binding[cls.reference_files[variable]['report_map']]) + '.nc'
+            comparator = NetCDFComparator(maskinfo.info.mask)
+            comparator.compare_files(reference, output_map)
+        elif check == 'tss':
+            output_tss = binding[cls.reference_files[variable]['report_tss']]
+            comparator = TSSComparator()
+            comparator.compare_files(reference, output_tss)
+        # If there are differences, test fails before to reach this line (AssertionError in comparator methods)
+        assert True
 
 
 class TestCatch(TestLis):
-    output_dir = os.path.join(current_dir, 'data/LF_ETRS89_UseCase/out')
     modules_to_set = (
         'SplitRouting',
         'simulateReservoirs',
@@ -49,10 +135,10 @@ class TestCatch(TestLis):
         'prerun': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/settings/prerun.xml')
     }
 
-    # TODO 1. add a 6hourly test
-    # TODO 2. check streamflow_simulated_best.csv as reference
+    # TODO check streamflow_simulated_best.csv as reference
 
-    def test_dis(self):
+    def run(self, dt_sec, step_start, step_end, report_steps):
+        output_dir = mk_path_out(os.path.join(current_dir, 'data/LF_ETRS89_UseCase/out/test_results{}'.format(dt_sec)))
         opts_to_unset = (
             "repStateSites", "repRateSites", "repStateUpsGauges", "repRateUpsGauges", "repMeteoUpsGauges",
             "repsimulateLakes", "repStateMaps",
@@ -63,17 +149,29 @@ class TestCatch(TestLis):
             "repGwPercUZLZMaps", "repRWS", "repPFMaps", "repPFForestMaps"
         )
         settings = setoptions(self.settings_files['base'],
-                              opts_to_set=('repDischargeTs', 'repDischargeMaps', ) + self.modules_to_set,
+                              opts_to_set=('repDischargeTs', 'repDischargeMaps',) + self.modules_to_set,
                               opts_to_unset=opts_to_unset,
-                              vars_to_set={'StepStart': '02/01/2000 06:00',
-                                           'StepEnd': '02/07/2000 06:00',
-                                           'PathOut': self.output_dir})
+                              vars_to_set={'StepStart': step_start,
+                                           'StepEnd': step_end,
+                                           'DtSec': dt_sec,
+                                           'ReportSteps': report_steps,
+                                           'PathOut': output_dir})
         lisfloodexe(settings)
-        assert self.listest('dis', check='map')
-        assert self.listest('dis', check='tss')
-        assert self.listest('chanq', check='tss')
+
+    def test_dis_daily(self):
+        self.run('86400', '02/01/2000 06:00', '02/07/2000 06:00', '1..9999')
+        self.compare_reference('dis', check='map', step_length='86400')
+        self.compare_reference('dis', check='tss', step_length='86400')
+        self.compare_reference('chanq', check='tss', step_length='86400')
+
+    def test_dis_6h(self):
+        self.run('21600', '02/01/2000 06:00', '02/07/2000 06:00', '1..9999')
+        self.compare_reference('dis', check='map', step_length='21600')
+        self.compare_reference('dis', check='tss', step_length='21600')
+        self.compare_reference('chanq', check='tss', step_length='21600')
 
     def test_initvars(self):
+        output_dir = mk_path_out(os.path.join(current_dir, 'data/LF_ETRS89_UseCase/out/test_results_initvars'))
         opts_to_unset = (
             "repStateSites", "repRateSites", "repStateUpsGauges", "repRateUpsGauges", "repMeteoUpsGauges",
             "repsimulateLakes", "repStateMaps",
@@ -88,9 +186,8 @@ class TestCatch(TestLis):
                               opts_to_unset=opts_to_unset,
                               vars_to_set={'StepStart': '02/02/2000 06:00',
                                            'StepEnd': '05/02/2000 06:00',
-                                           'PathOut': self.output_dir})
+                                           'PathOut': output_dir})
         lisfloodexe(settings)
-        out_dir = self.output_dir
         initcond_files = ('ch2cr.end.nc', 'chcro.end.nc', 'chside.end.nc', 'cseal.end.nc', 'cum.end.nc', 'cumf.end.nc',
                           'cumi.end.nc', 'dis.end.nc', 'dslf.end.nc', 'dsli.end.nc', 'dslr.end.nc', 'frost.end.nc',
                           'lz.end.nc',
@@ -98,25 +195,34 @@ class TestCatch(TestLis):
                           'thc.end.nc', 'thfa.end.nc', 'thfb.end.nc', 'thfc.end.nc', 'thia.end.nc', 'thib.end.nc',
                           'thic.end.nc', 'uz.end.nc', 'uzf.end.nc', 'uzi.end.nc', 'wdept.end.nc')
         for f in initcond_files:
-            assert os.path.exists(os.path.join(out_dir, f))
+            assert os.path.exists(os.path.join(output_dir, f))
 
-    def test_init_daily(self):
+    def run_init(self, dt_sec, step_start, step_end, report_steps):
         modules_to_unset = [
             'simulateLakes',
             'repsimulateLakes',
             'wateruse',
             'useWaterDemandAveYear',
         ]
-        path_out_init = mk_path_out('data/LF_ETRS89_UseCase/out/test_init_daily')
+        path_out_init = mk_path_out('data/LF_ETRS89_UseCase/out/test_init_{}'.format(dt_sec))
         settings = setoptions(self.settings_files['prerun'], opts_to_unset=modules_to_unset,
-                              vars_to_set={'DtSec': '86400',
+                              vars_to_set={'DtSec': dt_sec,
                                            'PathOut': path_out_init,
-                                           'StepStart': '31/12/1999 06:00',
-                                           'ReportSteps': '3650..4100',
-                                           'StepEnd': '06/01/2001 06:00'})
+                                           'StepStart': step_start,
+                                           'StepEnd': step_end,
+                                           'ReportSteps': report_steps,
+                                           })
         lisfloodexe(settings)
-        assert self.listest('avgdis', check='map')
-        assert self.listest('lzavin', check='map')
+
+    def test_init_daily(self):
+        self.run_init('86400', '31/12/1999 06:00', '06/01/2001 06:00', '3650..4100')
+        self.compare_reference('avgdis', check='map', step_length='86400')
+        self.compare_reference('lzavin', check='map', step_length='86400')
+
+    def test_init_6h(self):
+        self.run_init('21600', '31/12/1999 06:00', '06/01/2001 06:00', '14000..16000')
+        self.compare_reference('avgdis', check='map', step_length='21600')
+        self.compare_reference('lzavin', check='map', step_length='21600')
 
 
 class TestWrongTimestepInit:

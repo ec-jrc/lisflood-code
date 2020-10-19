@@ -39,7 +39,7 @@ if os.path.exists(src_dir):
 
 import lisflood
 from lisflood.global_modules.add1 import loadmap
-from lisflood.global_modules.settings import LisSettings, MaskInfo, Singleton
+from lisflood.global_modules.settings import LisSettings, Singleton
 from lisflood.global_modules.errors import LisfloodError
 from lisflood.main import lisfloodexe
 
@@ -47,7 +47,6 @@ from lisflood.global_modules.checkers import ModulesInputs
 ModulesInputs.check = lambda x: 1  # mock checker
 
 # FIXME lisfloodutilities must be imported after lisflood packages otherwise it goes core dumped...
-from lisfloodutilities.compare import NetCDFComparator, TSSComparator
 
 
 def setoptions(settings_file, opts_to_set=None, opts_to_unset=None, vars_to_set=None):
@@ -228,67 +227,6 @@ class TestSettings(object):
                 res = False
                 break
         assert res
-
-
-class TestLis(object):
-    reference_files = {
-        'dis': {'path_map': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/dis.nc'),
-                'path_tss': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/dis.tss'),
-                'report_map': 'DischargeMaps',
-                'report_tss': 'DisTS',
-                },
-        'chanq': {'path_map': None,
-                  'path_tss': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/chanqWin.tss'),
-                  'report_map': None,
-                  'report_tss': 'ChanqTS',
-                  },
-        'avgdis': {'path_map': None,
-                   'path_tss': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/chanqWin.tss'),
-                   'report_map': None,
-                   'report_tss': 'ChanqTS',
-                  },
-        'lzavin': {'path_map': None,
-                   'path_tss': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/chanqWin.tss'),
-                   'report_map': None,
-                   'report_tss': 'ChanqTS',
-                   },
-    }
-    output_dir = None
-
-    def teardown_method(self):
-        pass
-        # output_dir = self.output_dir
-        # # settings = LisSettings.instance()
-        #
-        # rm_files = [os.path.join(output_dir, f) for f in os.listdir(output_dir) if
-        #             f.endswith('.nc') or f.endswith('.tss')]
-        # for f in rm_files:
-        #     os.unlink(f)
-
-    @classmethod
-    def listest(cls, variable='dis', check='map'):
-        """
-
-        :param variable: variable to check. Default 'dis' (Discharge)
-        :param check: either 'map' or 'tss'. Default 'map'
-        :return: boolean. False if no differences were found
-        """
-
-        settings = LisSettings.instance()
-        maskinfo = MaskInfo.instance()
-        binding = settings.binding
-        reference = cls.reference_files[variable]['path_{}'.format(check)]
-        errors = []
-
-        if check == 'map':
-            output_map = os.path.normpath(binding[cls.reference_files[variable]['report_map']]) + '.nc'
-            comparator = NetCDFComparator(maskinfo.info.mask)
-            errors = comparator.compare_files(reference, output_map)
-        elif check == 'tss':
-            output_tss = binding[cls.reference_files[variable]['report_tss']]
-            comparator = TSSComparator()
-            errors = comparator.compare_files(reference, output_tss)
-        return not errors
 
 
 def mk_path_out(p):
