@@ -31,7 +31,7 @@ from tests import setoptions, mk_path_out
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
 
-class TestLis(object):
+class MixinTestLis(object):
     reference_files = {
         'dis': {
             'report_map': 'DischargeMaps',
@@ -113,11 +113,11 @@ class TestLis(object):
             output_tss = binding[cls.reference_files[variable]['report_tss']]
             comparator = TSSComparator()
             comparator.compare_files(reference, output_tss)
-        # If there are differences, test fails before to reach this line (AssertionError in comparator methods)
+        # If there are differences, test fails before reaching this line (AssertionError(s) in comparator methods)
         assert True
 
 
-class TestCatch(TestLis):
+class TestCatch(MixinTestLis):
     modules_to_set = (
         'SplitRouting',
         'simulateReservoirs',
@@ -137,8 +137,8 @@ class TestCatch(TestLis):
 
     # TODO check streamflow_simulated_best.csv as reference
 
-    def run(self, dt_sec, step_start, step_end, report_steps):
-        output_dir = mk_path_out(os.path.join(current_dir, 'data/LF_ETRS89_UseCase/out/test_results{}'.format(dt_sec)))
+    def run(self, dt_sec, step_start, step_end):
+        output_dir = mk_path_out('data/LF_ETRS89_UseCase/out/test_results{}'.format(dt_sec))
         opts_to_unset = (
             "repStateSites", "repRateSites", "repStateUpsGauges", "repRateUpsGauges", "repMeteoUpsGauges",
             "repsimulateLakes", "repStateMaps",
@@ -154,24 +154,23 @@ class TestCatch(TestLis):
                               vars_to_set={'StepStart': step_start,
                                            'StepEnd': step_end,
                                            'DtSec': dt_sec,
-                                           'ReportSteps': report_steps,
                                            'PathOut': output_dir})
         lisfloodexe(settings)
 
     def test_dis_daily(self):
-        self.run('86400', '02/01/2000 06:00', '02/07/2000 06:00', '1..9999')
+        self.run('86400', '02/01/2000 06:00', '02/07/2000 06:00')
         self.compare_reference('dis', check='map', step_length='86400')
         self.compare_reference('dis', check='tss', step_length='86400')
         self.compare_reference('chanq', check='tss', step_length='86400')
 
     def test_dis_6h(self):
-        self.run('21600', '02/01/2000 06:00', '02/07/2000 06:00', '1..9999')
+        self.run('21600', '02/01/2000 06:00', '02/07/2000 06:00')
         self.compare_reference('dis', check='map', step_length='21600')
         self.compare_reference('dis', check='tss', step_length='21600')
         self.compare_reference('chanq', check='tss', step_length='21600')
 
     def test_initvars(self):
-        output_dir = mk_path_out(os.path.join(current_dir, 'data/LF_ETRS89_UseCase/out/test_results_initvars'))
+        output_dir = mk_path_out('data/LF_ETRS89_UseCase/out/test_results_initvars')
         opts_to_unset = (
             "repStateSites", "repRateSites", "repStateUpsGauges", "repRateUpsGauges", "repMeteoUpsGauges",
             "repsimulateLakes", "repStateMaps",
@@ -197,7 +196,7 @@ class TestCatch(TestLis):
         for f in initcond_files:
             assert os.path.exists(os.path.join(output_dir, f))
 
-    def run_init(self, dt_sec, step_start, step_end, report_steps):
+    def run_init(self, dt_sec, step_start, step_end):
         modules_to_unset = [
             'simulateLakes',
             'repsimulateLakes',
@@ -210,17 +209,16 @@ class TestCatch(TestLis):
                                            'PathOut': path_out_init,
                                            'StepStart': step_start,
                                            'StepEnd': step_end,
-                                           'ReportSteps': report_steps,
                                            })
         lisfloodexe(settings)
 
     def test_init_daily(self):
-        self.run_init('86400', '31/12/1999 06:00', '06/01/2001 06:00', '3650..4100')
+        self.run_init('86400', '31/12/1999 06:00', '06/01/2001 06:00')
         self.compare_reference('avgdis', check='map', step_length='86400')
         self.compare_reference('lzavin', check='map', step_length='86400')
 
     def test_init_6h(self):
-        self.run_init('21600', '31/12/1999 06:00', '06/01/2001 06:00', '14000..16000')
+        self.run_init('21600', '31/12/1999 06:00', '06/01/2001 06:00')
         self.compare_reference('avgdis', check='map', step_length='21600')
         self.compare_reference('lzavin', check='map', step_length='21600')
 

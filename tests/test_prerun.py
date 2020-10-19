@@ -1,10 +1,10 @@
 from __future__ import absolute_import
 import os
 
-from tests import TestSettings
+from tests import MixinTestSettings
 
 
-class TestPreRun(TestSettings):
+class TestPreRun(MixinTestSettings):
     settings_files = {
         'initrun': os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/prerun.xml')
     }

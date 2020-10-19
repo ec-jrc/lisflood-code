@@ -8,10 +8,10 @@ from lisfloodutilities.compare import NetCDFComparator
 from lisflood.global_modules.settings import MaskInfo
 from lisflood.main import lisfloodexe
 
-from tests import TestSettings, mk_path_out
+from tests import MixinTestSettings, mk_path_out
 
 
-class TestStepsDates(TestSettings):
+class TestStepsDates(MixinTestSettings):
     settings_files = {
         'full': os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/full.xml')
     }
@@ -48,5 +48,8 @@ class TestStepsDates(TestSettings):
         out_b = settings_b.output_dir
         comparator.compare_dirs(out_a, out_b)
 
+    def teardown_method(self):
+        path_out_a = os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/1')
+        path_out_b = os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/2')
         shutil.rmtree(path_out_a)
         shutil.rmtree(path_out_b)

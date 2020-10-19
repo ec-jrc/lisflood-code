@@ -94,27 +94,8 @@ def setoptions(settings_file, opts_to_set=None, opts_to_unset=None, vars_to_set=
     return settings
 
 
-class TestSettings(object):
+class MixinTestSettings(object):
     settings_files = None  # type: dict
-
-    def clean_pathouts(self):
-        for settings_file in self.settings_files.values():
-            try:
-                settings = self.setoptions(settings_file)
-            except LisfloodError:
-                continue
-            if not os.path.exists(settings.output_dir):
-                continue
-            rm_files = [os.path.join(settings.output_dir, f) for f in os.listdir(settings.output_dir) if
-                        f.endswith('.nc') or f.endswith('.tss')]
-            for f in rm_files:
-                os.unlink(f)
-
-    def setup_method(self):
-        self.clean_pathouts()
-
-    def teardown_method(self):
-        self.clean_pathouts()
 
     @classmethod
     def dummyloadmap(cls, *args, **kwargs):
@@ -187,8 +168,13 @@ class TestSettings(object):
         mock_api = mocker.MagicMock(name='writenet')
         mock_api.side_effect = self.dummywritenet
         mocker.patch('lisflood.global_modules.output.writenet', new=mock_api)
+        mock_api2 = mocker.MagicMock(name='timeseries')
+        mocker.patch('lisflood.global_modules.output.TimeoutputTimeseries', new=mock_api2)
+
+        # ** execute lisflood
         lisfloodexe(settings)
         assert len(lisflood.global_modules.output.writenet.call_args_list) > 0
+
         to_check = copy(map_to_check)
         # remove extensions (in Lisflood settings you can have names like lzavin.map but you check for lzavin.nc)
         f_to_check = [os.path.splitext(f)[0] for f in copy(files_to_check)]
@@ -218,6 +204,8 @@ class TestSettings(object):
         mock_api = mocker.MagicMock(name='writenet')
         mock_api.side_effect = self.dummywritenet
         mocker.patch('lisflood.global_modules.output.writenet', new=mock_api)
+        mock_api2 = mocker.MagicMock(name='timeseries')
+        mocker.patch('lisflood.global_modules.output.TimeoutputTimeseries', new=mock_api2)
         lisfloodexe(settings)
         res = True
         assert len(lisflood.global_modules.output.writenet.call_args_list) > 0

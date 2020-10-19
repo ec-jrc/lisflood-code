@@ -27,10 +27,10 @@ else:
 import lisflood
 from lisflood.main import lisfloodexe
 
-from tests import TestSettings
+from tests import MixinTestSettings
 
 
-class TestOptions(TestSettings):
+class TestOptions(MixinTestSettings):
     settings_files = {'base': os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/base.xml')}
 
     def test_basic(self, mocker):

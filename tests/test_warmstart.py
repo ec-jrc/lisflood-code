@@ -19,6 +19,7 @@ from __future__ import absolute_import
 import os
 import shutil
 from datetime import timedelta
+import glob
 
 import pytest
 
@@ -27,11 +28,11 @@ from lisfloodutilities.compare import NetCDFComparator, TSSComparator
 from lisflood.global_modules.settings import MaskInfo
 from lisflood.main import lisfloodexe
 
-from . import TestSettings, mk_path_out
+from . import mk_path_out, MixinTestSettings
 
 
 @pytest.mark.slow
-class TestWarmStartDays(TestSettings):
+class TestWarmStartDays(MixinTestSettings):
     settings_files = {
         'prerun': os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/prerun.xml'),
         'cold': os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/cold.xml'),
@@ -144,16 +145,10 @@ class TestWarmStartDays(TestSettings):
             warm_step_start = prev_settings.step_end_dt + timedelta(seconds=dt_sec)
             warm_step_end = warm_step_start
             timestep_init = prev_settings.step_end_dt.strftime('%d/%m/%Y %H:%M')
-            # remove previous output/current init dirs (we don't need it anymore after this point)
-            shutil.rmtree(path_init)
-
-        # cleaning after (FIXME move to teardown method)
-        shutil.rmtree(path_out)
 
     def teardown_method(self):
-        super().teardown_method()
-        for suffix in ('_daily', '_6h'):
-            if os.path.exists('data/LF_ETRS89_UseCase/out/longrun_reference{}'.format(suffix)):
-                shutil.rmtree('data/LF_ETRS89_UseCase/out/longrun_reference{}'.format(suffix))
-            if os.path.exists('data/LF_ETRS89_UseCase/out/init{}'.format(suffix)):
-                shutil.rmtree('data/LF_ETRS89_UseCase/out/init{}'.format(suffix))
+        folders_list = glob.glob(os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/run_*')) + \
+            glob.glob(os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/longrun_reference_*')) + \
+            glob.glob(os.path.join(os.path.dirname(__file__),'data/LF_ETRS89_UseCase/out/init_*'))
+        for folder in folders_list:
+            shutil.rmtree(folder)
