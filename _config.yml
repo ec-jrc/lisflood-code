@@ -150,12 +150,10 @@ timezone: # https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
 # Plugins (previously gems:)
 plugins:
   - jekyll-sitemap
-  - jemoji
 
 # mimic GitHub Pages with --safe
 whitelist:
   - jekyll-sitemap
-  - jemoji
 
 category_archive:
   type: liquid
@@ -189,7 +187,7 @@ defaults:
       share: false
       related: false
       sidebar:
-      
+
       - section_title: "Introduction"
         items:
         - title: "About LISFLOOD"
@@ -230,6 +228,8 @@ defaults:
           url: 4_annex_settings_and_options
         - title: "LISFLOOD state variables"
           url: 4_annex_state-variables
+        - title: "LISFLOOD Tests documentation"
+          url: 4_annex_tests
 
       - section_title: "Not to forget"
         items:
