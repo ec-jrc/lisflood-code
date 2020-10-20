@@ -161,8 +161,8 @@ def test_prerun(self):
 ```
 
 ### Test StepStart and StepEnd variables
-To define start and end simulation timesteps in LF you may use date time notation (21/12/2000 06:00) or integer timesteps (e.g. 215, calculated from CalendarDayStart).
-We need to ensure that using dates and integers
+To define start and end simulation timesteps in LF you may use date time notation (21/12/2000 06:00) or integer timesteps (e.g. 215, calculated from CalendarDayStart using DtSec steps).
+We need to ensure that using dates and integers for StepStart and StepEnd gives equivalent setups.
 
 Tests are done with daily and 6hourly timesteps (i.e. DtSec=86400 and DtSec=21600).
 
@@ -274,12 +274,12 @@ RUN daily and RUN 6h tests are run with activated modules:
 
 ### Test Warm start
 Test ensures that a long cold run is equivalent to a cold start + repeated warm starts
-* run continuously for a long period (at least 6 months)
+* run continuously for a long period (at least 6 months) and save output in a folder
 * run on the same period but restarting LISFLOOD at every step (start and stop)
-* Compare ALL state maps at the end of the run and one day for each month. They must be identical.
-* Test must be performed with daily steps and with 6-hourly steps.
+* Compare all state maps from continuous run with state maps from each warm start execution. Maps must be identical at the timestep of the warm run. 
+* Test must be performed with daily and 6-hourly steps.
 
-Test must be repeated using steps instead of dates.
+**Note:** test doesn't use a reference dataset so it's not a black-box test. It's "self contained" and ensures that cold run and warm run are equivalent. 
 
 #### Implementation (TODO)
 [test_warmstart.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_warmstart.py)
