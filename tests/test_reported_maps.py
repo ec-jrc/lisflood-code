@@ -11,8 +11,13 @@ class TestReportedMaps(MixinTestSettings):
         # because the catchment doesn't have lakes
         'full': os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/full.xml'),
         # need a separate test catchment to test Lakes related options
-        'lakes': os.path.join(os.path.dirname(__file__), 'data/TestCatchmentWithLakes/settings/full.xml')
+        'lakes': os.path.join(os.path.dirname(__file__), 'data/TestCatchmentWithLakes/settings/full.xml'),
+        'initrun': os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/prerun.xml')
     }
+
+    def test_prerun(self, mocker):
+        self._reported_map(self.settings_files['initrun'], map_to_check=['AvgDis', 'LZAvInflowMap'], mocker=mocker,
+                           files_to_check=['avgdis.nc', 'lzavin.nc'])
 
     def test_rep_dischargemaps(self, mocker):
         """

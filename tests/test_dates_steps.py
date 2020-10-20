@@ -8,7 +8,7 @@ from lisfloodutilities.compare import NetCDFComparator
 from lisflood.global_modules.settings import MaskInfo
 from lisflood.main import lisfloodexe
 
-from tests import MixinTestSettings, mk_path_out
+from . import MixinTestSettings, mk_path_out
 
 
 class TestStepsDates(MixinTestSettings):
@@ -20,7 +20,7 @@ class TestStepsDates(MixinTestSettings):
         settings_a = self.setoptions(self.settings_files['full'],
                                      opts_to_set=['repStateMaps', 'repEndMaps', 'repDischargeMaps',
                                                   'repSnowMaps', 'repLZMaps', 'repUZMaps'],
-                                     opts_to_unset=['simulateLakes'],
+                                     # opts_to_unset=['simulateLakes'],
                                      vars_to_set={'StepStart': '30/07/2000 06:00', 'StepEnd': '01/08/2000 06:00',
                                                   'PathOut': '$(PathRoot)/out/1'}
                                      )
@@ -29,7 +29,7 @@ class TestStepsDates(MixinTestSettings):
         settings_b = self.setoptions(self.settings_files['full'],
                                      opts_to_set=['repStateMaps', 'repEndMaps', 'repDischargeMaps',
                                                   'repSnowMaps', 'repLZMaps', 'repUZMaps'],
-                                     opts_to_unset=['simulateLakes'],
+                                     # opts_to_unset=['simulateLakes'],
                                      vars_to_set={'StepStart': 213, 'StepEnd': 215,
                                                   'PathOut': '$(PathRoot)/out/2'})
         mk_path_out('data/LF_ETRS89_UseCase/out/2')
@@ -53,7 +53,6 @@ class TestStepsDates(MixinTestSettings):
         settings_a = self.setoptions(self.settings_files['full'],
                                      opts_to_set=['repStateMaps', 'repEndMaps', 'repDischargeMaps',
                                                   'repSnowMaps', 'repLZMaps', 'repUZMaps'],
-                                     opts_to_unset=['simulateLakes'],
                                      vars_to_set={'StepStart': '30/07/2000 06:00', 'StepEnd': '31/07/2000 18:00',
                                                   'DtSec': '21600',
                                                   'PathOut': '$(PathRoot)/out/1'}
@@ -63,7 +62,6 @@ class TestStepsDates(MixinTestSettings):
         settings_b = self.setoptions(self.settings_files['full'],
                                      opts_to_set=['repStateMaps', 'repEndMaps', 'repDischargeMaps',
                                                   'repSnowMaps', 'repLZMaps', 'repUZMaps'],
-                                     opts_to_unset=['simulateLakes'],
                                      vars_to_set={'StepStart': 849, 'StepEnd': 855,
                                                   'DtSec': '21600',
                                                   'PathOut': '$(PathRoot)/out/2'})
