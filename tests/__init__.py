@@ -134,7 +134,6 @@ class MixinTestSettings(object):
         mock_api = mocker.MagicMock(name='timeseries')
         mocker.patch('lisflood.global_modules.output.TimeoutputTimeseries', new=mock_api)
         lisfloodexe(settings)
-        assert len(lisflood.global_modules.output.TimeoutputTimeseries.call_args_list) > 0
         res = True
         for c in lisflood.global_modules.output.TimeoutputTimeseries.call_args_list:
             args, kwargs = c
@@ -214,7 +213,6 @@ class MixinTestSettings(object):
 
         lisfloodexe(settings)
         res = True
-        assert len(lisflood.global_modules.output.writenet.call_args_list) > 0
         for c in lisflood.global_modules.output.writenet.call_args_list:
             args, kwargs = c
             if any(m == args[4] for m in map_to_check):
