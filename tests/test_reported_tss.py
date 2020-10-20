@@ -9,7 +9,7 @@ class TestReportedTSS(MixinTestSettings):
 
     def test_rep_dischargetss(self, mocker):
         self._reported_tss(self.settings_files['full'],
-                           opts_to_set=['repStateUpsGauges', 'repDischargeTs'],
+                           opts_to_set=['repDischargeTs'],
                            tss_to_check='disWin.tss', mocker=mocker)
 
     def test_rep_dischargetss_not_called(self, mocker):
@@ -27,7 +27,7 @@ class TestReportedTSS(MixinTestSettings):
                                              'scovUps.tss', 'wDepthUps.tss'], mocker=mocker)
 
     def test_rep_rateupgaugestss(self, mocker):
-        self._reported_tss(self.settings_files['full'], opts_to_set=['repRateUpsGauges', ],
+        self._reported_tss(self.settings_files['full'], opts_to_set=['repRateUpsGauges'],
                            tss_to_check=['percUZLZUps.tss', 'infUps.tss', 'qLzUps.tss', 'qUzUps.tss',
                                          'dTopToSubUps.tss', 'prefFlowUps.tss', 'rainUps.tss',
                                          'snowUps.tss', 'snowMeltUps.tss', 'surfaceRunoffUps.tss'],
@@ -41,7 +41,7 @@ class TestReportedTSS(MixinTestSettings):
                                mocker=mocker)
 
     def test_rep_meteoupgaugestss(self, mocker):
-        self._reported_tss(self.settings_files['full'], opts_to_set=['repMeteoUpsGauges', ],
+        self._reported_tss(self.settings_files['full'], opts_to_set=['repMeteoUpsGauges'],
                            tss_to_check=['etUps.tss', 'ewUps.tss', 'tAvgUps.tss'],
                            mocker=mocker)
 

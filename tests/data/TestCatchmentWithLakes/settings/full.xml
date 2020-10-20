@@ -194,7 +194,7 @@ The option "numberParallelThreadsKinematicWave" may take the following values:
                 </comment>
             </textvar>
 
-            <textvar name="StepEnd" value="05/03/1986 00:00">
+            <textvar name="StepEnd" value="03/03/1986 00:00">
                 <comment>
                     Reforecasts_2017 1/1/1996 1
                     Reforecasts_2017 31/12/2009 5114

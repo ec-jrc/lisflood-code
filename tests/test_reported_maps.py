@@ -32,7 +32,6 @@ class TestReportedMaps(MixinTestSettings):
         :param mocker: mocker injected by pytest-mock plugin
         """
         self._not_reported_map(self.settings_files['full'],
-                               # opts_to_set=['repEndMaps'],
                                opts_to_unset=['repDischargeMaps'],
                                map_to_check='DischargeMaps',
                                mocker=mocker)
@@ -54,7 +53,6 @@ class TestReportedMaps(MixinTestSettings):
 
     def test_rep_reservoirs_not_called(self, mocker):
         self._not_reported_map(self.settings_files['full'],
-                               # opts_to_set=['repStateMaps'],
                                opts_to_unset=['simulateReservoirs', 'repsimulateReservoirs'],
                                map_to_check='ReservoirFillState', mocker=mocker)
 
@@ -64,7 +62,6 @@ class TestReportedMaps(MixinTestSettings):
 
     def test_rep_snowmaps_not_called(self, mocker):
         self._not_reported_map(self.settings_files['full'],
-                               # opts_to_set=['repStateMaps'],
                                opts_to_unset=['simulateLakes', 'repsimulateLakes'], map_to_check='SnowMaps',
                                mocker=mocker)
 
@@ -74,7 +71,6 @@ class TestReportedMaps(MixinTestSettings):
 
     def test_rep_pfmaps_not_called(self, mocker):
         self._not_reported_map(self.settings_files['full'],
-                               # opts_to_set=['repStateMaps'],
                                map_to_check='PF1Maps',
                                mocker=mocker)
 
@@ -84,7 +80,6 @@ class TestReportedMaps(MixinTestSettings):
 
     def test_rep_lzmaps_not_called(self, mocker):
         self._not_reported_map(self.settings_files['full'],
-                               # opts_to_set=['repEndMaps', ],
                                opts_to_unset=['simulateLakes', 'repsimulateLakes'], map_to_check=['LZState', 'LZMaps'],
                                mocker=mocker)
 
@@ -94,7 +89,6 @@ class TestReportedMaps(MixinTestSettings):
 
     def test_rep_uzmaps_not_called(self, mocker):
         self._not_reported_map(self.settings_files['full'],
-                               # opts_to_set=['repEndMaps', ],
                                opts_to_unset=['simulateLakes', 'repsimulateLakes'],
                                map_to_check=['UZState', 'UZMaps'], mocker=mocker)
 
@@ -104,7 +98,7 @@ class TestReportedMaps(MixinTestSettings):
                            map_to_check=['GwPercUZLZForestMaps', 'GwPercUZLZMaps'], mocker=mocker)
 
     def test_rep_gwpercuzlzmaps_not_called(self, mocker):
-        self._not_reported_map(self.settings_files['full'],  # opts_to_set=['repEndMaps', 'repStateMaps'],
+        self._not_reported_map(self.settings_files['full'],
                                map_to_check=['GwPercUZLZForestMaps', 'GwPercUZLZMaps'], mocker=mocker)
 
     def test_rep_totalabs(self, mocker):
@@ -115,7 +109,7 @@ class TestReportedMaps(MixinTestSettings):
                                          'DomesticConsumptiveUse', 'EFlowIndicator'], mocker=mocker)
 
     def test_rep_totalabs_not_called(self, mocker):
-        self._not_reported_map(self.settings_files['full'],  # opts_to_set=['repStateMaps'],
+        self._not_reported_map(self.settings_files['full'],
                                map_to_check=['AreaTotalAbstractionFromGroundwaterM3',
                                              'AreaTotalAbstractionFromSurfaceWaterM3',
                                              'DomesticConsumptiveUse', 'EFlowIndicator'], mocker=mocker)
@@ -126,7 +120,7 @@ class TestReportedMaps(MixinTestSettings):
                            map_to_check=['TotalWUse', 'TotalWUseRegion'], mocker=mocker)
 
     def test_rep_totalwuse_not_called(self, mocker):
-        self._not_reported_map(self.settings_files['full'],  # opts_to_set=['repStateMaps'],
+        self._not_reported_map(self.settings_files['full'],
                                map_to_check=['TotalWUse', 'TotalWUseRegion'], mocker=mocker)
 
     def test_rep_windex(self, mocker):
