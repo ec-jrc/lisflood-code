@@ -64,7 +64,7 @@ lisflood /absolute_path/to/my/local/folder/TestCatchment/settings/cold_day_base.
 
 *Note:* You can use a straight python virtualenvironment to install lisflood-model package but then you have to setup PCRaster/GDAL/NetCDF libraries.
 
-### C) Using the python souce code
+### C) Using the python source code
 
 You can download code and dataset for testing the model (or to contribute with bug fixes or new features).
 Follow this instruction for a basic test (a catchment included in this repository under

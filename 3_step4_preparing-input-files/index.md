@@ -1,10 +1,10 @@
 ## Step 3: Input files (maps and tables)
 
-In the current version of LISFLOOD, all model input is provided as either maps (grid files in PCRaster format) or tables. This chapter describes all the data that are required to run the model. Files that are specific to *optional* LISFLOOD features (e.g. inflow hydrographs, reservoirs) are not listed here; they are described in the documentation for each option.
+In the current version of LISFLOOD, all model input is provided as either maps (grid files in PCRaster format or NetCDF format) or tables. This chapter describes all the data that are required to run the model. Files that are specific to *optional* LISFLOOD features (e.g. inflow hydrographs, reservoirs) are not listed here; they are described in the documentation for each option.
 
 ### Input maps
 
-PCRaster requires that all maps must have *identical* location attributes (number of rows, columns, cellsize, upper x and y coordinate!
+LISFLOOD requires that all maps must have *identical* location attributes (number of rows, columns, cellsize, upper x and y coordinate.
 
 All input maps roughly fall into any of the following six categories:
 
@@ -21,20 +21,18 @@ All maps that are needed to run the model are listed in the table of Annex 12.
 
 #### Role of "mask" and "channels" maps 
 
-The mask map (i.e. "area.map") defines the model domain. In order to avoid unexpected results, **it is vital that all maps that are related to topography, land use and soil are defined** (i.e. don't contain a missing value) for each pixel that is "true" (has a Boolean 1 value) on the mask map. The same applies for all meteorological input and the Leaf Area Index maps. Similarly, all pixels that are "true" on the
-channels map must have some valid (non-missing) value on each of the channel parameter maps. Undefined pixels can lead to unexpected behaviour of the model, output that is full of missing values, loss of mass balance and possibly even model crashes. Some maps needs to have values in a defined range e.g. gradient.map has to be greater than 0.
+The mask map (i.e. "area.map") defines the model domain. In order to avoid unexpected results, **it is vital that all maps that are related to topography, land use and soil are defined** (i.e. don't contain a missing value) for each pixel that is "true" (has a Boolean 1 value) on the mask map. The same applies for all meteorological input and the Leaf Area Index maps. Similarly, all pixels that are "true" on the channels map must have some valid (non-missing) value on each of the channel parameter maps. Undefined pixels can lead to unexpected behaviour of the model, output that is full of missing values, loss of mass balance and possibly even model crashes. Some maps needs to have values in a defined range e.g. the gradient map has to be greater than 0.
 
 #### Map location attributes and distance units
 
-LISFLOOD needs to know the size properties of each grid cell (length, area) in order to calculate water *volumes* from meteorological forcing variables that are all defined as water *depths*. By default, LISFLOOD
-obtains this information from the location attributes of the input maps. This will only work if all maps are in an "equal area" (equiareal) projection, and the map co-ordinates (and cell size) are defined in meters. For datasets that use, for example, a latitude-longitude system, neither of these conditions is met. In such cases you can still run LISFLOOD if you provide two additional maps that contain the length and area of each grid cell
+LISFLOOD needs to know the size properties of each grid cell (length, area) in order to calculate water *volumes* from meteorological forcing variables that are all defined as water *depths*. By default, LISFLOOD obtains this information from the location attributes of the input maps. This will only work if all maps are in an "equal area" (equiareal) projection, and the map co-ordinates (and cell size) are defined in meters. For datasets that use, for example, a latitude-longitude system, neither of these conditions is met. In such cases you can still run LISFLOOD if you provide two additional maps that contain the length and area of each grid cell
 
-##### Table x.x Optional maps that define grid size
+##### Table: Optional maps that define grid size
 
-| **Map**         | **Default name** | **Description**                                              |
-| --------------- | ---------------- | ------------------------------------------------------------ |
-| PixelLengthUser | pixleng.map      | Map with pixel length<br><br> Unit: $[m]$,<br> *Range *of values: map \> 0* |
-| PixelAreaUser   | pixarea.map      | Map with pixel area<br><br>*Unit:* $[m^2]$,<br> *Range of values: map \> 0* |
+| **Map**         |  **Default name**  | **Description**                                              |
+| --------------- | ------------------ | ------------------------------------------------------------ |
+| PixelLengthUser | pixleng.map/nc     | Map with pixel length<br><br> Unit: $[m]$,<br> *Range *of values: map \> 0* |
+| PixelAreaUser   | pixarea.map/nc     | Map with pixel area<br><br>*Unit:* $[m^2]$,<br> *Range of values: map \> 0* |
 
 Both maps should be stored in the same directory where all other input maps are. The values on both maps may vary in space. A limitation is that a pixel is always represented as a square, so length and width are considered equal (no rectangles). In order to tell LISFLOOD to ignore the default location attributes and use the maps instead, you need to activate the special option "*gridSizeUserDefined*", which involves adding the following line to the LISFLOOD settings file:
 
@@ -42,9 +40,9 @@ Both maps should be stored in the same directory where all other input maps are.
 <setoption choice="1" name="gridSizeUserDefined" \>
 ```
 
-LISFLOOD settings files and the use of options are explained in detail in **Chapter XXXX** of this document.
+LISFLOOD settings files and the use of options are explained in detail in a [dedicated chapter](https://ec-jrc.github.io/lisflood-code/3_step3_preparing-setting-file/) and [annex](https://ec-jrc.github.io/lisflood-code/4_annex_settings_and_options/) of this document.
 
-#### Naming of meteorological variable maps
+#### Naming of meteorological variable maps 
 
 The meteorological forcing variables (and Leaf Area Index) are defined in *map stacks*. A *map stack* is simply a series of maps, where each map represents the value of a variable at an individual time step. The name of each map is made up of a total of 11 characters: 8 characters, a dot and a 3-character suffix. Each map name starts with a *prefix*, and ends with the time step number. All character positions in between are
 filled with zeros ("0"). Take for example a stack of precipitation maps. Table 4.1 shows that the default prefix for precipitation is "pr", which produces the following file names:
@@ -133,7 +131,7 @@ In the previous version of LISFLOOD a number of model parameters are read throug
 
 The following table gives an overview:
 
-##### Table x.x LISFLOOD input tables
+##### Table: LISFLOOD input tables
 
 | **Table**             | **Default name**      | **Description**       |
 |----------------------------|-----------------------|--------------------------|
@@ -166,12 +164,11 @@ It is up to the user how the input data are organised. However, it is advised to
 
 The following Figure illustrates this:
 
-![](https://ec-jrc.github.io/lisflood_manual/media/image36.png){width="5.802083333333333in"
-height="4.541666666666667in"}
+![](../media/image36.png) 
 
 ***Figure:*** *Suggested file structure for LISFLOOD*
 
-### Generating input base maps
+### Generating input base maps 
 
 At the time of writing this document, complete sets of LISFLOOD base maps covering the whole of Europe have been compiled at 1- and 5-km pixel resolution. A number of automated procedures have been written that allow you to generate sub-sets of these for pre-defined areas (using either existing mask maps or co-ordinates of catchment outlets).
 
