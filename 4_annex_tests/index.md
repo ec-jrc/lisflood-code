@@ -143,7 +143,7 @@ def test_rep_dischargetss(self):
                            tss_to_check='disWin.tss')
 ```
 
-### Test Init run
+### Testing Init run
 Make sure LISFLOOD can run an initial run to generate AVGDIS and LZAVIN maps with proper extension (.nc or .map)
 
 #### Implementation
@@ -160,7 +160,7 @@ def test_prerun(self):
 
 ```
 
-### Test StepStart and StepEnd variables
+### Testing StepStart and StepEnd variables
 To define start and end simulation timesteps in LF you may use date time notation (21/12/2000 06:00) or integer timesteps (e.g. 215, calculated from CalendarDayStart using DtSec steps).
 We need to ensure that either using dates or integers for StepStart and StepEnd gives equivalent setups.
 
@@ -221,9 +221,10 @@ def test_dates_steps_day(self):
 
 ## Other LF tests included in repository
 
-Other than unit tests, there are other tests included in [tests/](https://github.com/ec-jrc/lisflood-code/tree/master/tests) 
-folder of repository that can be defined as black-box tests. 
-These tests execute the development version of lisflood with some predefined XML settings, and compare that results are equal to a reference dataset (test oracle data in black-box terminology). 
+There are other tests included in [tests/](https://github.com/ec-jrc/lisflood-code/tree/master/tests) 
+folder of repository that can't be defined as unit tests. 
+These tests execute the development version of lisflood with some predefined XML settings, 
+and asserts that results are equal to a reference dataset (test oracle data in black-box terminology). 
 
 Comparison between values `a` from current results A and values `b` from reference dataset B is made by comparing numpy arrays `a` and `b`
  with `atol=0.0001` and `rtol=0.001`, giving *relative tolerance = `rtol * b`* and *absolute tolerance = `atol`.*
@@ -233,8 +234,8 @@ inputs that are cut in domain and time (only year 2000 is included).
 
 **Note:** this kind of tests fail when the hydrological model is changed between reference version and current version under test.
 
-### Test Results
-These tests do short execution (6months) of lisflood on the test catchment clipped from the full setup.	
+### Testing LF Results
+These tests do short execution (6months) of lisflood on the test catchment clipped from the full setup (EFAS).	
 Assert that results of version under test are equal to test oracle.
 
 |Test case      | DtSec | Simulation period                  | Files to compare              |
@@ -271,8 +272,8 @@ All test cases are executed with following modules activated:
 |------------------------------------------------|
 |ch2cr.end.nc, chcro.end.nc, chside.end.nc, cseal.end.nc, cum.end.nc, cumf.end.nc, cumi.end.nc, dis.end.nc, dslf.end.nc, dsli.end.nc, dslr.end.nc, frost.end.nc, lz.end.nc, rsfil.end.nc, scova.end.nc, scovb.end.nc, scovc.end.nc, tha.end.nc, thb.end.nc, thc.end.nc, thfa.end.nc, thfb.end.nc, thfc.end.nc, thia.end.nc, thib.end.nc,thic.end.nc, uz.end.nc, uzf.end.nc, uzi.end.nc, wdept.end.nc|
 
-### Test Warm start
-Test ensures that a long cold run is equivalent to a cold start + repeated warm starts.
+### Testing Warm start
+Test ensures that a long cold run is equivalent to an initial cold start + repeated warm starts.
 It's a regression test as it was introduced along with warmstart fixes and checks that the inconsistency between cold and warm runs won't be reintroduced.
 
 * run continuously for a long period (at least 6 months) and save output in a folder
@@ -280,12 +281,117 @@ It's a regression test as it was introduced along with warmstart fixes and check
 * Compare all state maps from continuous run with state maps from each warm start execution. Maps must be identical at the timestep of the warm run. 
 * Test must be performed with daily and 6-hourly steps.
 
-**Note:** This test doesn't use a reference dataset so it's not a black-box test and it ensures that cold and warm run are equivalent.
+|Test case       | DtSec | Simulation period                  | Files to compare              |
+|----------------|-------|------------------------------------|-------------------------------|
+|warmstart daily | 86400 |02/01/2000 06:00 - 30/12/2000 06:00 | all produced files (.nc,.tss) |
+|warmstart 6h    | 21600 |01/03/2000 06:00 - 31/07/2000 06:00 | all produced files (.nc,.tss) |
 
+All test cases are executed with following modules activated:
 
-#### Implementation (TODO)
+| Activated modules         |
+|---------------------------|
+|SplitRouting               |
+|groundwaterSmooth          |
+|TransientWaterDemandChange |
+|drainedIrrigation          |
+|openwaterevapo             |
+|riceIrrigation             |
+|indicator                  |
+
+**Note:** Due the current implementation of the reservoir module (and its calibration methods), this test fails on certain domains having reservoirs with particular attributes.   
+**Note:** This test doesn't use a reference dataset so it's not a black-box test. It ensures that cold and warm runs are equivalent.
+
+#### Implementation
 [test_warmstart.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_warmstart.py)
 
+To illustrate implementation of this test we take test_warmstart_daily as example. test_warmstart_6h is similar but with a shorter simulation period and DtSec=21600.
+1. Execute an initialization run for year 2000 and save avgdis.nc and lzavin.nc outputs in a folder.
+```python
+settings_prerun = self.setoptions(self.settings_files['prerun'], opts_to_unset=modules_to_unset,
+                                  vars_to_set={'DtSec': dt_sec,
+                                               'PathOut': path_out_init,
+                                               'StepStart': step_start,
+                                               'StepEnd': step_end})
+# ** execute
+lisfloodexe(settings_prerun)
+```
+
+2. Execute a long run for year 2000 (with cold.xml), using avgdis.nc and lzavin.nc from step 1, and save output in a folder as reference data.
+```python
+lzavin_path = settings_prerun.binding['LZAvInflowMap']
+avgdis_path = settings_prerun.binding['AvgDis']
+settings_longrun = self.setoptions(self.settings_files['cold'], 
+                                   opts_to_unset=modules_to_unset,
+                                   vars_to_set={'StepStart': step_start,
+                                                'StepEnd': step_end,
+                                                'LZAvInflowMap': lzavin_path,
+                                                'PathOut': path_out_reference,
+                                                'AvgDis': avgdis_path,
+                                                'DtSec': dt_sec})
+# ** execute
+lisfloodexe(settings_longrun)
+```
+
+3. Execute a cold run for the first day of simulation, using avgdis.nc and lzavin.nc from step 1.
+```python
+settings_coldstart = self.setoptions(self.settings_files['cold'], 
+                                     opts_to_unset=modules_to_unset,
+                                     vars_to_set={'StepStart': step_start,
+                                                  'StepEnd': step_start,
+                                                  'LZAvInflowMap': lzavin_path,
+                                                  'PathOut': path_out,
+                                                  'AvgDis': avgdis_path,
+                                                  'DtSec': dt_sec})
+# ** execute
+lisfloodexe(settings_coldstart)
+```
+
+4. Execute a warm start for each subsequent day of the simulation period, using output of the previous run (the first cold run or the previous warm run) as init state variables.
+```python
+# warm run (2. single step warm start/stop with initial conditions from previous run)
+prev_settings = settings_coldstart
+warm_step_start = prev_settings.step_end_dt + timedelta(seconds=dt_sec)
+warm_step_end = warm_step_start
+timestep_init = prev_settings.step_end_dt.strftime('%d/%m/%Y %H:%M')
+maskinfo = MaskInfo.instance()
+nc_comparator = NetCDFComparator(maskinfo.info.mask)
+tss_comparator = TSSComparator(array_equal=True)
+while warm_step_start <= step_end_dt:
+    path_init = prev_settings.output_dir
+
+    settings_warmstart = self.setoptions(
+                            self.settings_files['warm'], 
+                            opts_to_unset=modules_to_unset,
+                            vars_to_set={
+                                'StepStart': warm_step_start.strftime('%d/%m/%Y %H:%M'),
+                                'StepEnd': warm_step_end.strftime('%d/%m/%Y %H:%M'),
+                                'LZAvInflowMap': lzavin_path,
+                                'PathOut': path_out,
+                                'PathInit': path_init,
+                                'timestepInit': timestep_init,
+                                'AvgDis': avgdis_path,
+                                'ReportSteps': report_steps,
+                                'DtSec': dt_sec}
+                        )
+    # ** execute
+    lisfloodexe(settings_warmstart)
+```
+
+5. At the end of each warm run, compare current warm run output with values from long run, at the specific timestep. Values must be equal.
+```python
+# ****** compare *******
+timestep_dt = settings_warmstart.step_end_dt  # NetCDFComparator takes datetime.datetime as timestep
+timestep = settings_warmstart.step_end_int
+nc_comparator.compare_dirs(path_out, path_out_reference, timestep=timestep_dt)
+tss_comparator.compare_dirs(path_out, path_out_reference, timestep=timestep)
+```
+
+**Note**: test doesn't check results at each warm run output but only every <num> of steps in order to speed up a bit.
+
+## Release test for EFAS and GloFAS
+
+At each release, in addition to pass all tests described above, LISFLOOD is tested also with full domains of EFAS and GLOFAS.
+This test is executed internally and  
 
 
 [🔝](#top)
