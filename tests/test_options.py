@@ -17,7 +17,11 @@ See the Licence for the specific language governing permissions and limitations 
 from __future__ import absolute_import
 import os
 
+import pytest
 from nine import IS_PYTHON2
+
+from lisflood.global_modules.errors import LisfloodError
+from tests.test_results import current_dir
 
 if IS_PYTHON2:
     from mock import call
@@ -27,7 +31,7 @@ else:
 import lisflood
 from lisflood.main import lisfloodexe
 
-from tests import MixinTestSettings
+from tests import MixinTestSettings, setoptions
 
 
 class TestOptions(MixinTestSettings):
@@ -174,3 +178,12 @@ class TestOptions(MixinTestSettings):
         calls = [call('WUsePercRemain'), call('maxNoWateruse'), call('GroundwaterBodies'), call('WUseRegion'), ]
         for c in calls:
             assert c in lisflood.hydrological_modules.waterabstraction.loadmap.mock_calls
+
+
+class TestWrongTimestepInit:
+
+    def test_raisexc(self):
+        settings_path = os.path.join(current_dir, 'data/LF_ETRS89_UseCase/settings/warm.xml')
+        with pytest.raises(LisfloodError) as e:
+            setoptions(settings_path, vars_to_set={'timestepInit': 'PDAY'})
+        assert 'Option timestepInit was not parsable.' in str(e.value)

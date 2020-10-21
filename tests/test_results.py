@@ -19,10 +19,8 @@ from __future__ import absolute_import, print_function
 import os
 import shutil
 
-import pytest
 from lisfloodutilities.compare import NetCDFComparator, TSSComparator
 
-from lisflood.global_modules.errors import LisfloodError
 from lisflood.global_modules.settings import LisSettings, MaskInfo
 from lisflood.main import lisfloodexe
 
@@ -37,12 +35,12 @@ class MixinTestLis(object):
             'report_map': 'DischargeMaps',
             'report_tss': 'DisTS',
             '86400': {
-                'path_map': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/dis_daily/dis.nc'),
-                'path_tss': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/dis_daily/dis.tss'),
+                'map': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/dis_daily/dis.nc'),
+                'tss': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/dis_daily/dis.tss'),
             },
             '21600': {
-                'path_map': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/dis_6h/dis.nc'),
-                'path_tss': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/dis_6h/dis.tss'),
+                'map': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/dis_6h/dis.nc'),
+                'tss': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/dis_6h/dis.tss'),
             },
 
         },
@@ -50,12 +48,12 @@ class MixinTestLis(object):
             'report_map': None,
             'report_tss': 'ChanqTS',
             '86400': {
-                'path_map': None,
-                'path_tss': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/dis_daily/chanqWin.tss'),
+                'map': None,
+                'tss': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/dis_daily/chanqWin.tss'),
             },
             '21600': {
-                'path_map': None,
-                'path_tss': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/dis_6h/chanqWin.tss'),
+                'map': None,
+                'tss': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/dis_6h/chanqWin.tss'),
             },
 
         },
@@ -63,12 +61,12 @@ class MixinTestLis(object):
             'report_map': 'AvgDis',
             'report_tss': None,
             '86400': {
-                'path_map': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/init_daily/avgdis.nc'),
-                'path_tss': None,
+                'map': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/init_daily/avgdis.nc'),
+                'tss': None,
             },
             '21600': {
-                'path_map': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/init_6h/avgdis.nc'),
-                'path_tss': None,
+                'map': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/init_6h/avgdis.nc'),
+                'tss': None,
             },
 
         },
@@ -76,12 +74,12 @@ class MixinTestLis(object):
             'report_map': 'LZAvInflowMap',
             'report_tss': None,
             '86400': {
-                'path_map': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/init_daily/lzavin.nc'),
-                'path_tss': None,
+                'map': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/init_daily/lzavin.nc'),
+                'tss': None,
             },
             '21600': {
-                'path_map': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/init_6h/lzavin.nc'),
-                'path_tss': None,
+                'map': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/init_6h/lzavin.nc'),
+                'tss': None,
             },
 
         },
@@ -103,7 +101,7 @@ class MixinTestLis(object):
         settings = LisSettings.instance()
         maskinfo = MaskInfo.instance()
         binding = settings.binding
-        reference = cls.reference_files[variable][step_length]['path_{}'.format(check)]
+        reference = cls.reference_files[variable][step_length][check]
 
         if check == 'map':
             output_map = os.path.normpath(binding[cls.reference_files[variable]['report_map']]) + '.nc'
@@ -121,7 +119,6 @@ class TestCatch(MixinTestLis):
     modules_to_set = (
         'SplitRouting',
         'simulateReservoirs',
-        'simulateLakes',
         'groundwaterSmooth',
         'TransientWaterDemandChange',
         'drainedIrrigation',
@@ -197,14 +194,9 @@ class TestCatch(MixinTestLis):
             assert os.path.exists(os.path.join(output_dir, f))
 
     def run_init(self, dt_sec, step_start, step_end):
-        modules_to_unset = [
-            'simulateLakes',
-            'repsimulateLakes',
-            'wateruse',
-            'useWaterDemandAveYear',
-        ]
         path_out_init = mk_path_out('data/LF_ETRS89_UseCase/out/test_init_{}'.format(dt_sec))
-        settings = setoptions(self.settings_files['prerun'], opts_to_unset=modules_to_unset,
+        settings = setoptions(self.settings_files['prerun'],
+                              opts_to_set=self.modules_to_set,
                               vars_to_set={'DtSec': dt_sec,
                                            'PathOut': path_out_init,
                                            'StepStart': step_start,
@@ -221,12 +213,3 @@ class TestCatch(MixinTestLis):
         self.run_init('21600', '31/12/1999 06:00', '06/01/2001 06:00')
         self.compare_reference('avgdis', check='map', step_length='21600')
         self.compare_reference('lzavin', check='map', step_length='21600')
-
-
-class TestWrongTimestepInit:
-
-    def test_raisexc(self):
-        settings_path = os.path.join(current_dir, 'data/LF_ETRS89_UseCase/settings/warm.xml')
-        with pytest.raises(LisfloodError) as e:
-            setoptions(settings_path, vars_to_set={'timestepInit': 'PDAY'})
-        assert 'Option timestepInit was not parsable.' in str(e.value)
