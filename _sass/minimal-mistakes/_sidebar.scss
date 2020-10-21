@@ -66,6 +66,7 @@
 
 .sidebar__right {
   margin-bottom: 1em;
+  //margin-top: 3em;
 
   @include breakpoint($large) {
     position: sticky !important;
@@ -75,7 +76,7 @@
     width: $right-sidebar-width-narrow;
     margin-right: -1 * $right-sidebar-width-narrow;
     padding-left: 1em;
-    padding-top: 1em !important;
+    padding-top: 3em !important;
     z-index: 10;
   }
 
