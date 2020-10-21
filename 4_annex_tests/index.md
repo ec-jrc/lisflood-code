@@ -162,7 +162,7 @@ def test_prerun(self):
 
 ### Test StepStart and StepEnd variables
 To define start and end simulation timesteps in LF you may use date time notation (21/12/2000 06:00) or integer timesteps (e.g. 215, calculated from CalendarDayStart using DtSec steps).
-We need to ensure that using dates and integers for StepStart and StepEnd gives equivalent setups.
+We need to ensure that either using dates or integers for StepStart and StepEnd gives equivalent setups.
 
 Tests are done with daily and 6hourly timesteps (i.e. DtSec=86400 and DtSec=21600).
 
@@ -244,13 +244,12 @@ Assert that results of version under test are equal to test oracle.
 |RUN daily      | 86400 |02/01/2000 06:00 - 02/07/2000 06:00 | dis.nc, dis.tss, chanQWin.tss |
 |RUN 6h         | 21600 |02/01/2000 06:00 - 02/07/2000 06:00 | dis.nc, dis.tss, chanQWin.tss |
 
-RUN daily and RUN 6h tests are run with activated modules:
+All test cases are executed with following modules activated:
 
 | Activated modules         |
 |---------------------------|
 |SplitRouting               |
 |simulateReservoirs         |
-|simulateLakes              |
 |groundwaterSmooth          |
 |TransientWaterDemandChange |
 |drainedIrrigation          |
@@ -273,16 +272,20 @@ RUN daily and RUN 6h tests are run with activated modules:
 |ch2cr.end.nc, chcro.end.nc, chside.end.nc, cseal.end.nc, cum.end.nc, cumf.end.nc, cumi.end.nc, dis.end.nc, dslf.end.nc, dsli.end.nc, dslr.end.nc, frost.end.nc, lz.end.nc, rsfil.end.nc, scova.end.nc, scovb.end.nc, scovc.end.nc, tha.end.nc, thb.end.nc, thc.end.nc, thfa.end.nc, thfb.end.nc, thfc.end.nc, thia.end.nc, thib.end.nc,thic.end.nc, uz.end.nc, uzf.end.nc, uzi.end.nc, wdept.end.nc|
 
 ### Test Warm start
-Test ensures that a long cold run is equivalent to a cold start + repeated warm starts
+Test ensures that a long cold run is equivalent to a cold start + repeated warm starts.
+It's a regression test as it was introduced along with warmstart fixes and checks that the inconsistency between cold and warm runs won't be reintroduced.
+
 * run continuously for a long period (at least 6 months) and save output in a folder
 * run on the same period but restarting LISFLOOD at every step (start and stop)
 * Compare all state maps from continuous run with state maps from each warm start execution. Maps must be identical at the timestep of the warm run. 
 * Test must be performed with daily and 6-hourly steps.
 
-**Note:** test doesn't use a reference dataset so it's not a black-box test. It's "self contained" and ensures that cold run and warm run are equivalent. 
+**Note:** This test doesn't use a reference dataset so it's not a black-box test and it ensures that cold and warm run are equivalent.
+
 
 #### Implementation (TODO)
 [test_warmstart.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_warmstart.py)
+
 
 
 [🔝](#top)
