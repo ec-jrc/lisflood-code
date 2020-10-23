@@ -391,7 +391,7 @@ tss_comparator.compare_dirs(path_out, path_out_reference, timestep=timestep)
 ## Release test for EFAS and GloFAS
 
 At each release, in addition to pass all tests described above, LISFLOOD is tested also with full domains of EFAS and GLOFAS.
-These tests are executed by internal LF developers before a new release is officially published.
+These tests are executed by internal LF developers when hidrological model is not changed.
 
 
 [🔝](#top)
