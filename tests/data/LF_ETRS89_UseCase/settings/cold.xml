@@ -30,7 +30,7 @@
         <setoption choice="1" name="drainedIrrigation"/>
         <setoption choice="1" name="riceIrrigation"/>
         <setoption choice="1" name="openwaterevapo"/>
-        <setoption choice="1" name="simulateLakes"/>
+        <setoption choice="0" name="simulateLakes"/>
         <setoption choice="1" name="simulateReservoirs"/>
 
         <setoption choice="1" name="SplitRouting"/>

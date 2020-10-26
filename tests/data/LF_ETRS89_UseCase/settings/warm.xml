@@ -19,7 +19,7 @@
         <setoption choice="1" name="drainedIrrigation"/>
         <setoption choice="1" name="riceIrrigation"/>
         <setoption choice="1" name="openwaterevapo"/>
-        <setoption choice="1" name="simulateLakes"/>
+        <setoption choice="0" name="simulateLakes"/>
         <setoption choice="1" name="simulateReservoirs"/>
 
         <setoption choice="1" name="SplitRouting"/>
@@ -28,7 +28,7 @@
         <setoption choice="0" name="inflow"/>
 
         # option to compute indicators
-        <setoption choice="0" name="indicator"/>
+        <setoption choice="1" name="indicator"/>
 
         # option to initialize Lisflood
         <setoption choice="0" name="InitLisflood"/>

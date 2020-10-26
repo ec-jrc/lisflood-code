@@ -39,7 +39,7 @@
         <setoption choice="0" name="inflow"/>
 
         # option to compute indicators
-        <setoption choice="0" name="indicator"/>
+        <setoption choice="1" name="indicator"/>
 
         # option to initialize Lisflood
         <setoption choice="1" name="InitLisflood"/>

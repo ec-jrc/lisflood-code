@@ -55,12 +55,11 @@ class TestWarmStartDays(MixinTestSettings):
 
     def run_warmstart_by_dtsec(self, dt_sec, step_end, step_start, suffix='_daily', report_steps='1..9999'):
         modules_to_unset = [
-            # 'SplitRouting',
-            # 'simulateReservoirs',
             'simulateLakes',
             'repsimulateLakes',
             'wateruse',
             'useWaterDemandAveYear',
+            'wateruseRegion',
         ]
         check_every = 13  # steps
         # init
