@@ -57,6 +57,8 @@ class TestWarmStartDays(MixinTestSettings):
         modules_to_unset = [
             'simulateLakes',
             'repsimulateLakes',
+            'simulateReservoirs',
+            'repsimulateReservoirs',
             'wateruse',
             'useWaterDemandAveYear',
             'wateruseRegion',

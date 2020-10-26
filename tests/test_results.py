@@ -42,7 +42,6 @@ class MixinTestLis(object):
                 'map': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/dis_6h/dis.nc'),
                 'tss': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/dis_6h/dis.tss'),
             },
-
         },
         'chanq': {
             'report_map': None,
@@ -55,7 +54,6 @@ class MixinTestLis(object):
                 'map': None,
                 'tss': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/dis_6h/chanqWin.tss'),
             },
-
         },
         'avgdis': {
             'report_map': 'AvgDis',
@@ -68,7 +66,6 @@ class MixinTestLis(object):
                 'map': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/init_6h/avgdis.nc'),
                 'tss': None,
             },
-
         },
         'lzavin': {
             'report_map': 'LZAvInflowMap',
@@ -81,7 +78,6 @@ class MixinTestLis(object):
                 'map': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/init_6h/lzavin.nc'),
                 'tss': None,
             },
-
         },
     }
 
@@ -120,10 +116,8 @@ class TestCatch(MixinTestLis):
         'SplitRouting',
         'simulateReservoirs',
         'groundwaterSmooth',
-        'TransientWaterDemandChange',
         'drainedIrrigation',
-        'openwaterevapo'
-        'useWaterDemandAveYear',
+        'openwaterevapo',
         'riceIrrigation',
         'indicator',
     )
