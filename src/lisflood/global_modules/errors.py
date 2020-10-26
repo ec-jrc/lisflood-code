@@ -28,7 +28,9 @@ class LisfloodFileError(LisfloodError):
     def __init__(self, filename, msg=""):
         path, name = os.path.split(filename)
         path = os.path.normpath(path)
-        if os.path.exists(path):
+        if os.path.exists(filename):
+            text1 = ''
+        elif os.path.exists(path):
             text1 = "path: {} exists\nbut filename: {} does not\nfile name extension can be .map or .nc\n".format(path, name)
         else:
             text1 = "searching: {}\npath: {} does not exists\n".format(filename, path)

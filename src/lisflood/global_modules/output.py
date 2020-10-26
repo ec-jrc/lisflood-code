@@ -75,9 +75,9 @@ class outputTssMap(object):
                         outpoints = loadmap(where,pcr=True)
                         outpoints = ifthen(outpoints != 0,outpoints)
                           # this is necessary if netcdf maps are loaded !! otherwise strange dis.tss
-                    except:
-                        msg = "Setting output points\n"
-                        raise LisfloodFileError(outpoints,msg)
+                    except Exception as e:
+                        msg = "Setting output points\n {}".format(str(e))
+                        raise LisfloodFileError(outpoints, msg)
 
             if option['MonteCarlo']:
                 if os.path.exists(os.path.split(binding[tss])[0]):
