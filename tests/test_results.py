@@ -19,6 +19,8 @@ from __future__ import absolute_import, print_function
 import os
 import shutil
 
+import pytest
+
 from lisfloodutilities.compare import NetCDFComparator, TSSComparator
 
 from lisflood.global_modules.settings import LisSettings, MaskInfo
@@ -111,6 +113,7 @@ class MixinTestLis(object):
         assert True
 
 
+@pytest.mark.slow
 class TestCatch(MixinTestLis):
     modules_to_set = (
         'SplitRouting',
@@ -125,8 +128,6 @@ class TestCatch(MixinTestLis):
         'base': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/settings/base.xml'),
         'prerun': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/settings/prerun.xml')
     }
-
-    # TODO check streamflow_simulated_best.csv as reference
 
     def run(self, dt_sec, step_start, step_end):
         output_dir = mk_path_out('data/LF_ETRS89_UseCase/out/test_results{}'.format(dt_sec))
@@ -149,13 +150,13 @@ class TestCatch(MixinTestLis):
         lisfloodexe(settings)
 
     def test_dis_daily(self):
-        self.run('86400', '02/01/2000 06:00', '02/07/2000 06:00')
+        self.run('86400', '02/01/2016 06:00', '02/07/2016 06:00')
         self.compare_reference('dis', check='map', step_length='86400')
         self.compare_reference('dis', check='tss', step_length='86400')
         self.compare_reference('chanq', check='tss', step_length='86400')
 
     def test_dis_6h(self):
-        self.run('21600', '02/01/2000 06:00', '02/07/2000 06:00')
+        self.run('21600', '02/01/2016 06:00', '02/07/2016 06:00')
         self.compare_reference('dis', check='map', step_length='21600')
         self.compare_reference('dis', check='tss', step_length='21600')
         self.compare_reference('chanq', check='tss', step_length='21600')
@@ -174,8 +175,8 @@ class TestCatch(MixinTestLis):
         settings = setoptions(self.settings_files['base'],
                               opts_to_set=('repEndMaps',) + self.modules_to_set,
                               opts_to_unset=opts_to_unset,
-                              vars_to_set={'StepStart': '02/02/2000 06:00',
-                                           'StepEnd': '05/02/2000 06:00',
+                              vars_to_set={'StepStart': '02/02/2016 06:00',
+                                           'StepEnd': '05/02/2016 06:00',
                                            'PathOut': output_dir})
         lisfloodexe(settings)
         initcond_files = ('ch2cr.end.nc', 'chcro.end.nc', 'chside.end.nc', 'cseal.end.nc', 'cum.end.nc', 'cumf.end.nc',
@@ -199,11 +200,11 @@ class TestCatch(MixinTestLis):
         lisfloodexe(settings)
 
     def test_init_daily(self):
-        self.run_init('86400', '31/12/1999 06:00', '06/01/2001 06:00')
+        self.run_init('86400', '31/12/2015 06:00', '06/01/2017 06:00')
         self.compare_reference('avgdis', check='map', step_length='86400')
         self.compare_reference('lzavin', check='map', step_length='86400')
 
     def test_init_6h(self):
-        self.run_init('21600', '31/12/1999 06:00', '06/01/2001 06:00')
+        self.run_init('21600', '31/12/2015 06:00', '06/01/2017 06:00')
         self.compare_reference('avgdis', check='map', step_length='21600')
         self.compare_reference('lzavin', check='map', step_length='21600')

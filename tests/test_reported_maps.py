@@ -11,7 +11,7 @@ class TestReportedMaps(MixinTestSettings):
         # because the catchment doesn't have lakes
         'full': os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/full.xml'),
         # need a separate test catchment to test Lakes related options
-        'lakes': os.path.join(os.path.dirname(__file__), 'data/TestCatchmentWithLakes/settings/full.xml'),
+        # 'lakes': os.path.join(os.path.dirname(__file__), 'data/TestCatchmentWithLakes/settings/full.xml'),
         'initrun': os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/prerun.xml')
     }
 
@@ -42,14 +42,12 @@ class TestReportedMaps(MixinTestSettings):
                                mocker=mocker)
 
     def test_rep_lakes(self, mocker):
-        self._reported_map(self.settings_files['lakes'],
+        self._reported_map(self.settings_files['full'],
                            opts_to_set=['simulateLakes', 'repsimulateLakes', 'repStateMaps'],
                            map_to_check='LakeLevelState', mocker=mocker)
 
     def test_rep_lakes_not_called(self, mocker):
-        self._not_reported_map(self.settings_files['lakes'],
-                               # opts_to_set=['repStateMaps'],
-                               map_to_check='LakeLevelState', mocker=mocker)
+        self._not_reported_map(self.settings_files['full'], map_to_check='LakeLevelState', mocker=mocker)
 
     def test_rep_reservoirs(self, mocker):
         self._reported_map(self.settings_files['full'],

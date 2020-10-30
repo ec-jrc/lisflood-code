@@ -122,7 +122,7 @@
             </textvar>
 
 
-            <textvar name="PathParams" value="$(PathMaps)">
+            <textvar name="PathParams" value="$(PathMaps)/parameters">
 
                 <comment>
 
@@ -133,7 +133,7 @@
             </textvar>
 
 
-            <textvar name="PathTables" value="$(PathRoot)/tables">
+            <textvar name="PathTables" value="$(PathRoot)/maps/tables">
 
                 <comment>
 
@@ -144,7 +144,7 @@
             </textvar>
 
 
-            <textvar name="PathMapsTables" value="$(PathMaps)">
+            <textvar name="PathMapsTables" value="$(PathMaps)/table2map">
 
                 <comment>
 
@@ -155,7 +155,7 @@
             </textvar>
 
 
-            <textvar name="PathSoilHyd" value="$(PathMaps)">
+            <textvar name="PathSoilHyd" value="$(PathMaps)/soilhyd">
 
                 <comment>
 
@@ -177,7 +177,7 @@
             </textvar>
 
 
-            <textvar name="PathMapsLanduse" value="$(PathRoot)/landuse">
+            <textvar name="PathMapsLanduse" value="$(PathRoot)/maps/landuse2006">
 
                 <comment>
 
@@ -188,7 +188,7 @@
             </textvar>
 
 
-            <textvar name="PathWaterUse" value="$(PathMaps)">
+            <textvar name="PathWaterUse" value="$(PathRoot)/maps/waterdemand">
 
                 <comment>
 
@@ -214,7 +214,7 @@
             </textvar>
 
 
-            <textvar name="PathLAI" value="$(PathMaps)">
+            <textvar name="PathLAI" value="$(PathMaps)/lai">
 
                 <comment>
 
@@ -236,13 +236,11 @@
             </textvar>
 
 
-            <textvar name="MaskMap" value="$(PathRoot)/maps/masksmall.map">
+            <textvar name="MaskMap" value="$(PathRoot)/maps/mask.map">
             </textvar>
 
-
-            <textvar name="Gauges" value="4227500.0 2437500.0">
+            <textvar name="Gauges" value="$(PathRoot)/maps/ec_outlets.nc">
             </textvar>
-
 
             <textvar name="netCDFtemplate" value="$(PathMaps)/elvstd">
                 <comment>
@@ -311,7 +309,7 @@
             </textvar>
 
 
-            <textvar name="StepStart" value="30/07/2000 06:00">
+            <textvar name="StepStart" value="30/07/2016 06:00">
 
                 <comment>
 
@@ -322,7 +320,7 @@
             </textvar>
 
 
-            <textvar name="StepEnd" value="31/07/2000 06:00">
+            <textvar name="StepEnd" value="31/07/2016 06:00">
 
                 <comment>
 
@@ -333,7 +331,7 @@
             </textvar>
 
 
-            <textvar name="ReportSteps" value="1..999">
+            <textvar name="ReportSteps" value="6000..7000">
 
                 <comment>
 
@@ -408,242 +406,160 @@
 
         </group>
 
-
-        <group>
-
-
+<group>
             <comment>
-
                 **************************************************************
-
                 CALIBRATION PARAMETERS
-
                 with .nc format: than working with smaller sub-areas is possible
-
                 **************************************************************
-
             </comment>
-
-            <textvar name="UpperZoneTimeConstant" value="15.308971756217927">
-
+            <textvar name="UpperZoneTimeConstant" value="$(PathParams)/params_UpperZoneTimeConstant.nc">
                 <comment>
-
                     default: 10
-
                     $(PathParams)/params_UpperZoneTimeConstant.nc
-
                     Time constant for water in upper zone [days*mm^GwAlpha]
-
                     Note that units are days if GwAlpha=0 (linear reservoir]
-
                 </comment>
-
             </textvar>
 
-
-            <textvar name="LowerZoneTimeConstant" value="484.3363129236808">
-
+            <textvar name="LowerZoneTimeConstant" value="$(PathParams)/params_LowerZoneTimeConstant.nc">
                 <comment>
-
                     default: 100
-
                     $(PathParams)/params_LowerZoneTimeConstant.nc
-
                     Time constant for water in lower zone [days]
-
                     This is the average time a water 'particle' remains in the reservoir
-
                     if we had a stationary system (average inflow=average outflow)
-
                 </comment>
-
             </textvar>
 
-
-            <textvar name="GwPercValue" value="0.3462572908212519">
-
+            <textvar name="GwPercValue" value="$(PathParams)/params_GwPercValue.nc">
                 <comment>
-
                     default: 0.5
-
                     $(PathParams)/params_GwPercValue.nc
-
                     Maximum rate of percolation going from the Upper to the Lower
-
                     response box [mm/day]
-
                 </comment>
-
             </textvar>
 
-
-            <textvar name="GwLoss" value="0.0">
-
+            <textvar name="GwLoss" value="$(PathParams)/params_GwLoss.nc">
                 <comment>
-
                     default: 0.0
-
                     $(PathParams)/params_GwLoss.nc
-
                     Maximum loss rate out of Lower response box, expressed as a fraction of
-
                     lower zone outflow. Fraction [-], range 0-1
-
                     A value of 0 (closed lower boundary) is recommended as a starting value
-
                 </comment>
-
             </textvar>
-            <textvar name="LZThreshold" value="19.489564815161646">
+
+            <textvar name="LZThreshold" value="$(PathParams)/params_LZThreshold.nc">
                 <comment>
                     threshold value below which there is no outflow to the channel
                 </comment>
             </textvar>
 
-            <textvar name="b_Xinanjiang" value="0.7524690162618392">
-
+            <textvar name="b_Xinanjiang" value="$(PathParams)/params_b_Xinanjiang.nc">
                 <comment>
-
                     default: 0.7
-
                     $(PathParams)/params_b_Xinanjiang.nc
-
                     Power in Xinanjiang distribution function
-
                 </comment>
-
             </textvar>
 
-
-            <textvar name="PowerPrefFlow" value="8.0">
-
+            <textvar name="PowerPrefFlow" value="$(PathParams)/params_PowerPrefFlow.nc">
                 <comment>
-
                     default: 3.5
-
                     $(PathParams)/params_PowerPrefFlow.nc
-
                     Power that controls increase of proportion of preferential
-
                     flow with increased soil moisture storage
-
                 </comment>
-
             </textvar>
 
-
-            <textvar name="CalChanMan" value="1.8395348327826568">
-
+            <textvar name="CalChanMan" value="$(PathParams)/params_CalChanMan1.nc">
                 <comment>
-
                     default: 2.0
-
                     $(PathParams)/params_CalChanMan1.nc
-
                     Multiplier applied to Channel Manning's n
-
                 </comment>
-
             </textvar>
 
-
-            <textvar name="SnowMeltCoef" value="6.112191170926953">
-
+            <textvar name="SnowMeltCoef" value="$(PathParams)/params_SnowMeltCoef.nc">
                 <comment>
-
                     default: 4.0
-
                     $(PathParams)/params_SnowMeltCoef.nc
-
                     SRM: 0.45 cm/C/day ( = 4.50 mm/C/day), Kwadijk: 18 mm/C/month (= 0.59 mm/C/day)
-
                     See also Martinec et al., 1998.
-
                 </comment>
-
             </textvar>
 
-
-            <textvar name="CalChanMan2" value="11.565971979438446">
-
+            <textvar name="CalChanMan2" value="$(PathParams)/params_CalChanMan2.nc">
                 <comment>
-
                     default: 3.0
-
                     $(PathParams)/params_CalChanMan2.nc
-
                     Multiplier applied to Channel Manning's n for second line of routing
-
                 </comment>
-
             </textvar>
 
-
-            <textvar name="LakeMultiplier" value="0.624250098703996">
-
+            <textvar name="LakeMultiplier" value="$(PathParams)/params_LakeMultiplier.nc">
                 <comment>
-
                     default: 1.0
-
                     $(PathParams)/params_LakeMultiplier.nc
-
                     Multiplier applied to the lake parameter A
-
                 </comment>
-
             </textvar>
 
-
-            <textvar name="adjust_Normal_Flood" value="0.01">
-
+            <textvar name="adjust_Normal_Flood" value="$(PathParams)/params_adjust_Normal_Flood.nc">
                 <comment>
-
                     default: 0.8
-
                     $(PathParams)/params_adjust_Normal_Flood.nc
-
                     adjusting the balance between normal and flood storage
-
                     big values (= closer to 1.0 = close to flood) results in keeping the outflow longer at rnormq
-
                     Range 0.01 - 0.99
-
                 </comment>
-
             </textvar>
 
-
-            <textvar name="ReservoirRnormqMult" value="1.2448532831169847">
-
+            <textvar name="ReservoirRnormqMult" value="$(PathParams)/params_ReservoirRnormqMult.nc">
                 <comment>
-
                     default: 1.0
-
                     $(PathParams)/params_ReservoirRnormqMult.nc
-
                     Reservoir rnormq (normal outflow)
-
                     fraction of the value in table rnormq.txt range: 0.5 - 2
-
                 </comment>
-
             </textvar>
-
 
             <textvar name="AvWaterRateThreshold" value="5.0">
-
                 <comment>
-
                     default: 5.0 (not included in calibration)
-
-                    Critical amount of available water (expressed in [mm/day]!), above which 'Days Since Last Rain' parameter is
-
+                    Critical amount of available water (expressed in [mm/day]!), above which 'Days Since Last Rain'
+                    parameter is
                     set to 1
-
                 </comment>
-
+            </textvar>
+            <textvar name="QSplitMult" value="2.0">
+                <comment>
+                PBchange
+                Multiplier applied to average Q to split into a second line of routing
+                </comment>
+            </textvar>
+            <textvar name="ChanBottomWMult" value="1.0">
+                <comment>
+                    PBchange
+                    Multiplier applied to ChanBottomWidth
+                </comment>
             </textvar>
 
+            <textvar name="ChanDepthTMult" value="1.0">
+                <comment>
+                    PBchange
+                    Multiplier applied to ChanDepthThreshold
+                </comment>
+            </textvar>
+
+            <textvar name="ChanSMult" value="1.0">
+                <comment>
+                    PBchange
+                    Multiplier applied to ChanSdXdY
+                </comment>
+            </textvar>
 
         </group>
 
@@ -886,43 +802,43 @@
                     -9999: use 0
 
                 </comment>
-
             </textvar>
-
 
             <textvar name="LakeInitialLevelValue" value="-9999">
-
                 <comment>
-
                     Initial lake level [m]
-
                     -9999 sets initial value to steady-state level
-
                 </comment>
-
             </textvar>
 
+            <textvar name="LakePrevInflowValue" value="-9999">
+                <comment>
+                    Lake inflow at previous routing sub-step (ChanQ(t-1)) [m3/s]
+                    -9999 sets initial value equal to PrevDischarge (ChanQ(t))
+                </comment>
+            </textvar>
+
+            <textvar name="LakePrevOutflowValue" value="-9999">
+                <comment>
+                    Lake outflow at previous routing sub-step (ChanQ(t-1)) [m3/s]
+                    -9999 sets initial value
+                </comment>
+            </textvar>
 
             <textvar name="PrevDischarge" value="-9999">
-
                 <comment>
-
                     initial discharge from previous run for lakes, reservoirs and transmission loss
 
                     only needed for lakes reservoirs and transmission loss
 
                     -9999: use 0
-
                 </comment>
-
             </textvar>
-
 
         </group>
 
 
         <group>
-
 
             <comment>
 
@@ -1235,7 +1151,7 @@
             </textvar>
 
 
-            <textvar name="PrefixWaterUseDomestic" value="dom_1990-2019">
+            <textvar name="PrefixWaterUseDomestic" value="dom_2014">
 
                 <comment>
 
@@ -1246,7 +1162,7 @@
             </textvar>
 
 
-            <textvar name="PrefixWaterUseLivestock" value="liv_1990-2019">
+            <textvar name="PrefixWaterUseLivestock" value="liv_2014">
 
                 <comment>
 
@@ -1257,7 +1173,7 @@
             </textvar>
 
 
-            <textvar name="PrefixWaterUseEnergy" value="ene_1990-2019">
+            <textvar name="PrefixWaterUseEnergy" value="ene_2014">
 
                 <comment>
 
@@ -1268,7 +1184,7 @@
             </textvar>
 
 
-            <textvar name="PrefixWaterUseIndustry" value="ind_1990-2019">
+            <textvar name="PrefixWaterUseIndustry" value="ind_2014">
 
                 <comment>
 
@@ -1859,17 +1775,6 @@
             </comment>
 
 
-            <textvar name="LZThreshold" value="$(PathMaps)/lzthreshold.map">
-
-                <comment>
-
-                    threshold value below which there is no outflow to the channel
-
-                </comment>
-
-            </textvar>
-
-
             <textvar name="LZSmoothRange" value="5">
 
                 <comment>
@@ -2085,20 +1990,6 @@
                 </comment>
 
             </textvar>
-
-
-            <textvar name="QSplitMult" value="2.0">
-
-                <comment>
-
-                    PBchange
-
-                    Multiplier applied to average Q to split into a second line of routing
-
-                </comment>
-
-            </textvar>
-
 
         </group>
 
@@ -3147,44 +3038,47 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
                 channel routing, leave all other parameters at default values
 
-
             </comment>
 
-
             <textvar name="CalChanMan" value="$(CalChanMan)">
-
                 <comment>
-
                     Multiplier applied to Channel Manning's n
-
                 </comment>
-
             </textvar>
 
-
             <textvar name="CalChanMan2" value="$(CalChanMan2)">
-
                 <comment>
-
                     PBchange
 
                     Multiplier applied to Channel Manning's n for second routing line
-
                 </comment>
-
             </textvar>
 
-
-            <textvar name="QSplitMult" value="$(QSplitMult)">
-
+             <textvar name="QSplitMult" value="$(QSplitMult)">
                 <comment>
-
                     PBchange
-
                     Multiplier applied to average Q to split into a second line of routing
-
                 </comment>
+            </textvar>
+            <textvar name="ChanBottomWMult" value="$(ChanBottomWMult)">
+                <comment>
+                    PBchange
+                    Multiplier applied to ChanBottomWidth
+                </comment>
+            </textvar>
 
+            <textvar name="ChanDepthTMult" value="$(ChanDepthTMult)">
+                <comment>
+                    PBchange
+                    Multiplier applied to ChanDepthThreshold
+                </comment>
+            </textvar>
+
+            <textvar name="ChanSMult" value="$(ChanSMult)">
+                <comment>
+                    PBchange
+                    Multiplier applied to ChanSdXdY
+                </comment>
             </textvar>
 
 
@@ -3293,7 +3187,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
             </comment>
 
 
-            <textvar name="LZAvInflowMap" value="$(PathMaps)/lzavin.map">
+            <textvar name="LZAvInflowMap" value="$(PathMaps)/safe_init/ec_lzavin.nc">
 
                 <comment>
 
@@ -3310,7 +3204,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
             </textvar>
 
 
-            <textvar name="AvgDis" value="$(PathMaps)/avgdis.map">
+            <textvar name="AvgDis" value="$(PathMaps)/safe_init/ec_avgdis.nc">
 
                 <comment>
 
@@ -8147,17 +8041,26 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
 
                 <textvar name="LakeInitialLevelValue" value="$(LakeInitialLevelValue)">
-
                     <comment>
-
                         Initial lake level [m]
 
                         -9999 sets initial value to steady-state level
-
                     </comment>
-
                 </textvar>
 
+                <textvar name="LakePrevInflowValue" value="$(LakePrevInflowValue)">
+                    <comment>
+                        Lake inflow at previous routing sub-step (ChanQ(t-1)) [m3/s]
+                        -9999 sets initial value equal to PrevDischarge (ChanQ(t))
+                    </comment>
+                </textvar>
+
+                <textvar name="LakePrevOutflowValue" value="$(LakePrevOutflowValue)">
+                    <comment>
+                        Lake outflow at previous routing sub-step (ChanQ(t-1)) [m3/s]
+                        -9999 sets initial value
+                    </comment>
+                </textvar>
 
                 <textvar name="TabLakeAvNetInflowEstimate" value="$(TabLakeAvNetInflowEstimate)">
 

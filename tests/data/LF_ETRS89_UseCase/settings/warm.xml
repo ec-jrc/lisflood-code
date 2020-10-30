@@ -19,7 +19,7 @@
         <setoption choice="1" name="drainedIrrigation"/>
         <setoption choice="1" name="riceIrrigation"/>
         <setoption choice="1" name="openwaterevapo"/>
-        <setoption choice="0" name="simulateLakes"/>
+        <setoption choice="1" name="simulateLakes"/>
         <setoption choice="1" name="simulateReservoirs"/>
 
         <setoption choice="1" name="SplitRouting"/>
@@ -122,7 +122,7 @@
                 </comment>
             </textvar>
 
-            <textvar name="MaskMap" value="$(PathRoot)/maps/masksmall.map">
+            <textvar name="MaskMap" value="$(PathRoot)/maps/mask.map">
                 <comment>
                     70 40 0.1 -8.6 43.3 # Douro
                     30 30 0.1 6.0 52.0
@@ -140,7 +140,7 @@
                 </comment>
             </textvar>
 
-            <textvar name="Gauges" value="4227500.0 2437500.0">
+            <textvar name="Gauges" value="$(PathRoot)/maps/ec_outlets.nc">
                 <comment>
                     -7.85 41.15 -7.75 41.15 -7.35 41.15 -7.25 41.15 -7.15 41.15 -7.05 41.15 -5.85 41.75 # Duoro
                     6.15 51.85
@@ -164,11 +164,6 @@
                 </comment>
             </textvar>
 
-            <textvar name="Latitude" value="$(PathRoot)/maps/ec_lat">
-                <comment>
-                    latitude map to be used for snow/ice modelling
-                </comment>
-            </textvar>
              <textvar name="proj4_params" value="+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs">
             </textvar>
             <textvar name="PathOut" value="$(PathRoot)/out">
@@ -189,25 +184,25 @@
                 </comment>
             </textvar>
 
-            <textvar name="PathParams" value="$(PathRoot)/params">
+            <textvar name="PathParams" value="$(PathRoot)/maps/parameters">
                 <comment>
                     Calibration parameter path
                 </comment>
             </textvar>
 
-            <textvar name="PathTables" value="$(PathRoot)/tables">
+            <textvar name="PathTables" value="$(PathRoot)/maps/tables">
                 <comment>
                     Tables path
                 </comment>
             </textvar>
 
-            <textvar name="PathMapsTables" value="$(PathRoot)/maps">
+            <textvar name="PathMapsTables" value="$(PathRoot)/maps/table2map">
                 <comment>
                     Maps instead tables path
                 </comment>
             </textvar>
 
-            <textvar name="PathSoilHyd" value="$(PathRoot)/maps">
+            <textvar name="PathSoilHyd" value="$(PathRoot)/maps/soilhyd">
                 <comment>
                     Maps instead tables for soil hydraulics path
                 </comment>
@@ -220,13 +215,13 @@
                 </comment>
             </textvar>
 
-            <textvar name="PathMapsLanduse" value="$(PathRoot)/landuse">
+            <textvar name="PathMapsLanduse" value="$(PathRoot)/maps/landuse2006">
                 <comment>
                     Maps for land use fractions and related land use maps
                 </comment>
             </textvar>
 
-            <textvar name="PathWaterUse" value="$(PathRoot)/maps">
+            <textvar name="PathWaterUse" value="$(PathRoot)/maps/waterdemand">
                 <comment>
                     Water use maps path
                 </comment>
@@ -239,7 +234,7 @@
                 </comment>
             </textvar>
 
-            <textvar name="PathLAI" value="$(PathRoot)/maps">
+            <textvar name="PathLAI" value="$(PathRoot)/maps/lai">
                 <comment>
                     Leaf Area Index maps path
                 </comment>
@@ -285,13 +280,13 @@
                 </comment>
             </textvar>
 
-            <textvar name="StepStart" value="01/01/2000 12:00">
+            <textvar name="StepStart" value="01/01/2016 12:00">
                 <comment>
                     Number of first time step in simulation
                 </comment>
             </textvar>
 
-            <textvar name="StepEnd" value="01/01/2001 06:00">
+            <textvar name="StepEnd" value="01/01/2017 06:00">
                 <comment>
                     Number of last time step in simulation
                 </comment>
@@ -343,17 +338,14 @@
 
         </group>
 
-
-        <group>
-
-
+<group>
             <comment>
                 **************************************************************
                 CALIBRATION PARAMETERS
                 with .nc format: than working with smaller sub-areas is possible
                 **************************************************************
             </comment>
-            <textvar name="UpperZoneTimeConstant" value="15.308971756217927">
+            <textvar name="UpperZoneTimeConstant" value="$(PathParams)/params_UpperZoneTimeConstant.nc">
                 <comment>
                     default: 10
                     $(PathParams)/params_UpperZoneTimeConstant.nc
@@ -362,7 +354,7 @@
                 </comment>
             </textvar>
 
-            <textvar name="LowerZoneTimeConstant" value="484.3363129236808">
+            <textvar name="LowerZoneTimeConstant" value="$(PathParams)/params_LowerZoneTimeConstant.nc">
                 <comment>
                     default: 100
                     $(PathParams)/params_LowerZoneTimeConstant.nc
@@ -372,7 +364,7 @@
                 </comment>
             </textvar>
 
-            <textvar name="GwPercValue" value="0.3462572908212519">
+            <textvar name="GwPercValue" value="$(PathParams)/params_GwPercValue.nc">
                 <comment>
                     default: 0.5
                     $(PathParams)/params_GwPercValue.nc
@@ -381,7 +373,7 @@
                 </comment>
             </textvar>
 
-            <textvar name="GwLoss" value="0.0">
+            <textvar name="GwLoss" value="$(PathParams)/params_GwLoss.nc">
                 <comment>
                     default: 0.0
                     $(PathParams)/params_GwLoss.nc
@@ -391,13 +383,13 @@
                 </comment>
             </textvar>
 
-            <textvar name="LZThreshold" value="19.489564815161646">
+            <textvar name="LZThreshold" value="$(PathParams)/params_LZThreshold.nc">
                 <comment>
                     threshold value below which there is no outflow to the channel
                 </comment>
             </textvar>
 
-            <textvar name="b_Xinanjiang" value="0.7524690162618392">
+            <textvar name="b_Xinanjiang" value="$(PathParams)/params_b_Xinanjiang.nc">
                 <comment>
                     default: 0.7
                     $(PathParams)/params_b_Xinanjiang.nc
@@ -405,7 +397,7 @@
                 </comment>
             </textvar>
 
-            <textvar name="PowerPrefFlow" value="8.0">
+            <textvar name="PowerPrefFlow" value="$(PathParams)/params_PowerPrefFlow.nc">
                 <comment>
                     default: 3.5
                     $(PathParams)/params_PowerPrefFlow.nc
@@ -414,7 +406,7 @@
                 </comment>
             </textvar>
 
-            <textvar name="CalChanMan" value="1.8395348327826568">
+            <textvar name="CalChanMan" value="$(PathParams)/params_CalChanMan1.nc">
                 <comment>
                     default: 2.0
                     $(PathParams)/params_CalChanMan1.nc
@@ -422,7 +414,7 @@
                 </comment>
             </textvar>
 
-            <textvar name="SnowMeltCoef" value="6.112191170926953">
+            <textvar name="SnowMeltCoef" value="$(PathParams)/params_SnowMeltCoef.nc">
                 <comment>
                     default: 4.0
                     $(PathParams)/params_SnowMeltCoef.nc
@@ -431,7 +423,7 @@
                 </comment>
             </textvar>
 
-            <textvar name="CalChanMan2" value="11.565971979438446">
+            <textvar name="CalChanMan2" value="$(PathParams)/params_CalChanMan2.nc">
                 <comment>
                     default: 3.0
                     $(PathParams)/params_CalChanMan2.nc
@@ -439,7 +431,7 @@
                 </comment>
             </textvar>
 
-            <textvar name="LakeMultiplier" value="0.624250098703996">
+            <textvar name="LakeMultiplier" value="$(PathParams)/params_LakeMultiplier.nc">
                 <comment>
                     default: 1.0
                     $(PathParams)/params_LakeMultiplier.nc
@@ -447,7 +439,7 @@
                 </comment>
             </textvar>
 
-            <textvar name="adjust_Normal_Flood" value="0.01">
+            <textvar name="adjust_Normal_Flood" value="$(PathParams)/params_adjust_Normal_Flood.nc">
                 <comment>
                     default: 0.8
                     $(PathParams)/params_adjust_Normal_Flood.nc
@@ -457,7 +449,7 @@
                 </comment>
             </textvar>
 
-            <textvar name="ReservoirRnormqMult" value="1.2448532831169847">
+            <textvar name="ReservoirRnormqMult" value="$(PathParams)/params_ReservoirRnormqMult.nc">
                 <comment>
                     default: 1.0
                     $(PathParams)/params_ReservoirRnormqMult.nc
@@ -474,15 +466,12 @@
                     set to 1
                 </comment>
             </textvar>
-
             <textvar name="QSplitMult" value="2.0">
                 <comment>
-                    PBchange
-                    Multiplier applied to average Q to split into a second line of routing
-                    THIS NEEDS TO BE AMENDED BY ADDING THE RIGHT PATH TO $(PathParams)
+                PBchange
+                Multiplier applied to average Q to split into a second line of routing
                 </comment>
             </textvar>
-
             <textvar name="ChanBottomWMult" value="1.0">
                 <comment>
                     PBchange
@@ -503,9 +492,8 @@
                     Multiplier applied to ChanSdXdY
                 </comment>
             </textvar>
+
         </group>
-
-
 
         <group>
 
@@ -1328,15 +1316,6 @@ threshold value below which there is no outflow to the channel
                 </comment>
             </textvar>
 
-            <!-- moved to calibration parameters section
-<textvar name="QSplitMult" value="2.0">
-<comment>
-PBchange
-Multiplier applied to average Q to split into a second line of routing
-</comment>
-</textvar>
--->
-
         </group>
 
         <group>
@@ -1945,7 +1924,6 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     Multiplier applied to average Q to split into a second line of routing
                 </comment>
             </textvar>
-
             <textvar name="ChanBottomWMult" value="$(ChanBottomWMult)">
                 <comment>
                     PBchange
@@ -2025,7 +2003,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 **************************************************************
             </comment>
 
-            <textvar name="LZAvInflowMap" value="$(PathRoot)/maps/lzavin.nc">
+            <textvar name="LZAvInflowMap" value="$(PathRoot)/maps/safe_init/lzavin.nc">
                 <comment>
                     $(PathRoot)/maps/lzavin.map
                     $(PathInit)/lzavin.map
@@ -2034,7 +2012,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
             </textvar>
 
-            <textvar name="AvgDis" value="$(PathRoot)/maps/avgdis.nc">
+            <textvar name="AvgDis" value="$(PathRoot)/maps/safe_init/avgdis.nc">
                 <comment>
                     $(PathRoot)/maps/avgdis.map
                     $(PathInit)/avgdis.map
@@ -4785,7 +4763,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     **************************************************************
                 </comment>
 
-                <textvar name="LakeSites" value="$(PathRoot)/maps/lakes">
+                <textvar name="LakeSites" value="$(PathRoot)/maps/ec_lakes.nc">
                     <comment>
                         Map with location of lakes
                     </comment>

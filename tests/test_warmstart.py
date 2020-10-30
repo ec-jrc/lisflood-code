@@ -32,7 +32,7 @@ from . import mk_path_out, MixinTestSettings
 
 
 @pytest.mark.slow
-class TestWarmStartDays(MixinTestSettings):
+class TestWarmStart(MixinTestSettings):
     settings_files = {
         'prerun': os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/prerun.xml'),
         'cold': os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/cold.xml'),
@@ -40,23 +40,21 @@ class TestWarmStartDays(MixinTestSettings):
     }
 
     def test_warmstart_daily(self):
-        step_start = '02/01/2000 06:00'
-        step_end = '30/12/2000 06:00'  # '30/12/2000 06:00'
+        step_start = '02/01/2016 06:00'
+        step_end = '31/12/2016 06:00'
         dt_sec = 86400
-        report_steps = '3650..4100'
+        report_steps = '9496..9861'
         self.run_warmstart_by_dtsec(dt_sec, step_end, step_start, report_steps=report_steps)
 
     def test_warmstart_6hourly(self):
-        step_start = '01/03/2000 06:00'
-        step_end = '31/07/2000 06:00'
+        step_start = '01/03/2016 06:00'
+        step_end = '31/07/2016 06:00'
         dt_sec = 21600
-        report_steps = '14800..16000'
+        report_steps = '38220..38830'
         self.run_warmstart_by_dtsec(dt_sec, step_end, step_start, suffix='_6h', report_steps=report_steps)
 
     def run_warmstart_by_dtsec(self, dt_sec, step_end, step_start, suffix='_daily', report_steps='1..9999'):
         modules_to_unset = [
-            'simulateLakes',
-            'repsimulateLakes',
             'simulateReservoirs',
             'repsimulateReservoirs',
             'wateruse',
