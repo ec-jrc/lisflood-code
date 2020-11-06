@@ -3,9 +3,8 @@ import os
 import datetime
 import shutil
 
-from lisfloodutilities.compare import NetCDFComparator
+from lisfloodutilities.compare.nc import NetCDFComparator
 
-from lisflood.global_modules.settings import MaskInfo
 from lisflood.main import lisfloodexe
 
 from . import MixinTestSettings, mk_path_out
@@ -41,8 +40,7 @@ class TestStepsDates(MixinTestSettings):
         assert settings_b.step_start_dt == datetime.datetime(2016, 7, 30, 6, 0)
         assert settings_b.step_end_dt == datetime.datetime(2016, 8, 1, 6, 0)
 
-        maskinfo = MaskInfo.instance()
-        comparator = NetCDFComparator(maskinfo.info.mask)
+        comparator = NetCDFComparator(settings_a.maskpath)
         out_a = settings_a.output_dir
         out_b = settings_b.output_dir
         comparator.compare_dirs(out_a, out_b)
@@ -74,8 +72,7 @@ class TestStepsDates(MixinTestSettings):
         assert settings_b.step_start_dt == datetime.datetime(2016, 7, 30, 6, 0)
         assert settings_b.step_end_dt == datetime.datetime(2016, 7, 31, 18, 0)
 
-        maskinfo = MaskInfo.instance()
-        comparator = NetCDFComparator(maskinfo.info.mask)
+        comparator = NetCDFComparator(settings_a.maskpath)
         out_a = settings_a.output_dir
         out_b = settings_b.output_dir
         comparator.compare_dirs(out_a, out_b)

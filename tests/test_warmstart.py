@@ -23,7 +23,8 @@ import glob
 
 import pytest
 
-from lisfloodutilities.compare import NetCDFComparator, TSSComparator
+from lisfloodutilities.compare.nc import NetCDFComparator
+from lisfloodutilities.compare.pcr import TSSComparator
 
 from lisflood.global_modules.settings import MaskInfo
 from lisflood.main import lisfloodexe
@@ -51,9 +52,9 @@ class TestWarmStart(MixinTestSettings):
         step_end = '31/07/2016 06:00'
         dt_sec = 21600
         report_steps = '38220..38830'
-        self.run_warmstart_by_dtsec(dt_sec, step_end, step_start, suffix='_6h', report_steps=report_steps)
+        self.run_warmstart_by_dtsec(dt_sec, step_end, step_start, report_steps=report_steps)
 
-    def run_warmstart_by_dtsec(self, dt_sec, step_end, step_start, suffix='_daily', report_steps='1..9999'):
+    def run_warmstart_by_dtsec(self, dt_sec, step_end, step_start, report_steps='1..9999'):
         modules_to_unset = [
             'simulateReservoirs',
             'repsimulateReservoirs',
@@ -63,7 +64,7 @@ class TestWarmStart(MixinTestSettings):
         ]
         check_every = 13  # steps
         # init
-        path_out_init = mk_path_out('data/LF_ETRS89_UseCase/out/init{}'.format(suffix))
+        path_out_init = mk_path_out('data/LF_ETRS89_UseCase/out/init{}'.format(dt_sec))
         settings_prerun = self.setoptions(self.settings_files['prerun'], opts_to_unset=modules_to_unset,
                                           vars_to_set={'DtSec': dt_sec,
                                                        'PathOut': path_out_init,
@@ -77,7 +78,7 @@ class TestWarmStart(MixinTestSettings):
         # long run
         lzavin_path = settings_prerun.binding['LZAvInflowMap']
         avgdis_path = settings_prerun.binding['AvgDis']
-        path_out_reference = mk_path_out('data/LF_ETRS89_UseCase/out/longrun_reference{}'.format(suffix))
+        path_out_reference = mk_path_out('data/LF_ETRS89_UseCase/out/longrun_reference{}'.format(dt_sec))
         settings_longrun = self.setoptions(self.settings_files['cold'], opts_to_unset=modules_to_unset,
                                            vars_to_set={'StepStart': step_start,
                                                         'StepEnd': step_end,
@@ -92,7 +93,7 @@ class TestWarmStart(MixinTestSettings):
         # warm run (1. Cold start)
         run_number = 1
         cold_start_step_end = step_start
-        path_out = mk_path_out('data/LF_ETRS89_UseCase/out/run{}_{}'.format(suffix, run_number))
+        path_out = mk_path_out('data/LF_ETRS89_UseCase/out/run{}_{}'.format(dt_sec, run_number))
         settings_coldstart = self.setoptions(self.settings_files['cold'], opts_to_unset=modules_to_unset,
                                              vars_to_set={'StepStart': step_start,
                                                           'StepEnd': cold_start_step_end,
@@ -115,7 +116,7 @@ class TestWarmStart(MixinTestSettings):
         while warm_step_start <= step_end_dt:
             run_number += 1
             path_init = prev_settings.output_dir
-            path_out = mk_path_out('data/LF_ETRS89_UseCase/out/run{}_{}'.format(suffix, run_number))
+            path_out = mk_path_out('data/LF_ETRS89_UseCase/out/run{}_{}'.format(dt_sec, run_number))
 
             settings_warmstart = self.setoptions(self.settings_files['warm'], opts_to_unset=modules_to_unset,
                                                  vars_to_set={'StepStart': warm_step_start.strftime('%d/%m/%Y %H:%M'),

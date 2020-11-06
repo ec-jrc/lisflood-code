@@ -1226,7 +1226,7 @@ threshold value below which there is no outflow to the channel
                 </comment>
             </textvar>
 
-            <textvar name="GroundwaterBodies" value="$(PathRoot)/maps/gwbodies.nc">
+            <textvar name="GroundwaterBodies" value="$(PathRoot)/maps/ad_gwbodies.nc">
                 <comment>
                     $(PathRoot)/maps/gwbodiesNew.map
                     map of aquifers (0/1), used to smoothen LZ near extraction areas
@@ -4340,7 +4340,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="EFlowThreshold" value="$(PathRoot)/maps/eflow">
+                <textvar name="EFlowThreshold" value="$(PathRoot)/maps/ad_dis_nat_10.nc">
                     <comment>
                         1.0
                         $(PathRoot)/maps/eflow.map

@@ -218,6 +218,7 @@ class LisSettings(with_metaclass(Singleton)):
         ref_date_start = calendar(self.binding['CalendarDayStart'], self.binding['calendar_type'])
         self.step_start_dt = inttodate(self.step_start_int - 1, ref_date_start, binding=self.binding)
         self.step_end_dt = inttodate(self.step_end_int - 1, ref_date_start, binding=self.binding)
+        self.maskpath = self.binding['MaskMap']
 
     def build_reportedmaps_dicts(self):
         self.report_timeseries = self._report_tss()

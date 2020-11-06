@@ -21,9 +21,10 @@ import shutil
 
 import pytest
 
-from lisfloodutilities.compare import NetCDFComparator, TSSComparator
+from lisfloodutilities.compare.nc import NetCDFComparator
+from lisfloodutilities.compare.pcr import TSSComparator
 
-from lisflood.global_modules.settings import LisSettings, MaskInfo
+from lisflood.global_modules.settings import LisSettings
 from lisflood.main import lisfloodexe
 
 from tests import setoptions, mk_path_out
@@ -97,13 +98,12 @@ class MixinTestLis(object):
         """
 
         settings = LisSettings.instance()
-        maskinfo = MaskInfo.instance()
         binding = settings.binding
         reference = cls.reference_files[variable][step_length][check]
 
         if check == 'map':
             output_map = os.path.normpath(binding[cls.reference_files[variable]['report_map']]) + '.nc'
-            comparator = NetCDFComparator(maskinfo.info.mask)
+            comparator = NetCDFComparator(settings.maskpath)
             comparator.compare_files(reference, output_map)
         elif check == 'tss':
             output_tss = binding[cls.reference_files[variable]['report_tss']]

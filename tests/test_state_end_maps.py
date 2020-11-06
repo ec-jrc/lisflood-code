@@ -21,9 +21,8 @@ import shutil
 
 from netCDF4 import Dataset
 
-from lisfloodutilities.compare import NetCDFComparator
+from lisfloodutilities.compare.nc import NetCDFComparator
 
-from lisflood.global_modules.settings import MaskInfo
 from lisflood.main import lisfloodexe
 
 from tests import MixinTestSettings, mk_path_out
@@ -64,14 +63,12 @@ class TestRepMaps(MixinTestSettings):
         path_out = mk_path_out('data/LF_ETRS89_UseCase/out/testrep')
         settings = self.setoptions(self.settings_files['base'], ['repEndMaps', 'repStateMaps', 'repDischargeMaps'], vars_to_set={'PathOut': path_out})
         lisfloodexe(settings)
-        maskinfo = MaskInfo.instance()
-        comparator = NetCDFComparator(maskinfo.info.mask)
+        comparator = NetCDFComparator(settings.maskpath)
         end_files = [os.path.join(settings.output_dir, f) for f in os.listdir(settings.output_dir) if f.endswith('.end.nc')]
         state_files = [os.path.join(settings.output_dir, f) for f in os.listdir(settings.output_dir) if f.endswith('.nc') and '.end.' not in f]
         assert end_files
         assert state_files
         # assert that unique timestep in end maps is equal to last timestep in state maps
-        errors = []
         for end_file in end_files:
             basename = end_file.replace('.end.nc', '')
             state_file = '{}.nc'.format(basename)
@@ -85,7 +82,5 @@ class TestRepMaps(MixinTestSettings):
             assert 'time' not in end_nc.variables
 
             # compare latest timestep in state map with unique timestep in end map
-            err = comparator.compare_arrays(vara[-1][:, :], varb[:, :], varname=basename)
-            if err:
-                errors.append(err)
-        assert not errors
+            comparator.compare_arrays(vara[-1][:, :], varb[:, :], varname=basename)
+        assert not comparator.errors
