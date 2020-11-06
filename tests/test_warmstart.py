@@ -26,7 +26,6 @@ import pytest
 from lisfloodutilities.compare.nc import NetCDFComparator
 from lisfloodutilities.compare.pcr import TSSComparator
 
-from lisflood.global_modules.settings import MaskInfo
 from lisflood.main import lisfloodexe
 
 from . import mk_path_out, MixinTestSettings
@@ -110,8 +109,7 @@ class TestWarmStart(MixinTestSettings):
         warm_step_start = prev_settings.step_end_dt + timedelta(seconds=dt_sec)
         warm_step_end = warm_step_start
         timestep_init = prev_settings.step_end_dt.strftime('%d/%m/%Y %H:%M')
-        maskinfo = MaskInfo.instance()
-        nc_comparator = NetCDFComparator(maskinfo.info.mask)
+        nc_comparator = NetCDFComparator(settings_prerun.maskpath)
         tss_comparator = TSSComparator(array_equal=True)
         while warm_step_start <= step_end_dt:
             run_number += 1
