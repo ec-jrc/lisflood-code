@@ -63,7 +63,7 @@ class TestRepMaps(MixinTestSettings):
         path_out = mk_path_out('data/LF_ETRS89_UseCase/out/testrep')
         settings = self.setoptions(self.settings_files['base'], ['repEndMaps', 'repStateMaps', 'repDischargeMaps'], vars_to_set={'PathOut': path_out})
         lisfloodexe(settings)
-        comparator = NetCDFComparator(settings.maskpath)
+        comparator = NetCDFComparator(settings.maskpath, array_equal=True)
         end_files = [os.path.join(settings.output_dir, f) for f in os.listdir(settings.output_dir) if f.endswith('.end.nc')]
         state_files = [os.path.join(settings.output_dir, f) for f in os.listdir(settings.output_dir) if f.endswith('.nc') and '.end.' not in f]
         assert end_files

@@ -40,7 +40,7 @@ class TestStepsDates(MixinTestSettings):
         assert settings_b.step_start_dt == datetime.datetime(2016, 7, 30, 6, 0)
         assert settings_b.step_end_dt == datetime.datetime(2016, 8, 1, 6, 0)
 
-        comparator = NetCDFComparator(settings_a.maskpath)
+        comparator = NetCDFComparator(settings_a.maskpath, array_equal=True)
         out_a = settings_a.output_dir
         out_b = settings_b.output_dir
         comparator.compare_dirs(out_a, out_b)
@@ -72,7 +72,7 @@ class TestStepsDates(MixinTestSettings):
         assert settings_b.step_start_dt == datetime.datetime(2016, 7, 30, 6, 0)
         assert settings_b.step_end_dt == datetime.datetime(2016, 7, 31, 18, 0)
 
-        comparator = NetCDFComparator(settings_a.maskpath)
+        comparator = NetCDFComparator(settings_a.maskpath, array_equal=True)
         out_a = settings_a.output_dir
         out_b = settings_b.output_dir
         comparator.compare_dirs(out_a, out_b)

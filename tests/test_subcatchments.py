@@ -23,7 +23,6 @@ import glob
 import pytest
 
 from lisfloodutilities.compare.nc import NetCDFComparator
-from lisfloodutilities.compare.pcr import TSSComparator
 
 from lisflood.global_modules.settings import LisSettings
 from lisflood.main import lisfloodexe
@@ -59,7 +58,7 @@ class TestSubcatchments(MixinTestSettings):
             self.run_subcathmenttest_by_dtsec(dt_sec, step_end, step_start, report_steps=report_steps, wateruse_on=True)
         assert 'dis.nc/dis@0 is different' in str(excinfo.value)
 
-    def test_subcacthment_6hourly(self):
+    def test_subcacthment_6h(self):
         step_start = '01/03/2016 06:00'
         step_end = '30/03/2016 06:00'
         dt_sec = 21600
@@ -99,8 +98,6 @@ class TestSubcatchments(MixinTestSettings):
         settings = LisSettings.instance()
         nc_comparator = NetCDFComparator(settings.maskpath, array_equal=True)
         nc_comparator.compare_dirs(path_out_subdomain, path_out_domain)
-        # tss_comparator = TSSComparator(array_equal=True)
-        # tss_comparator.compare_dirs(path_out, path_out_subdomain, timestep=timestep)
 
     def teardown_method(self):
         folders_list = glob.glob(os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/longrun_domain*')) + \

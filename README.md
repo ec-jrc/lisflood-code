@@ -137,12 +137,16 @@ lisflood /absolute_path/to/my/local/folder/TestCatchment/settings/cold_day_base.
 ## Collaborate
 
 If you find an issue in our code, please follow the [GitHub flow](https://guides.github.com/introduction/flow/) to propose your changes (Fork, commit your changes and ask for a Pull Request).
-When you develop, you need to run our unit tests before to propose a pull request.
-Simply execute `tox` or `pytest` on command line from project folder.
+You are required to run unit tests during your development and before to propose a pull request.
 
-Tox tests can last minutes. You can also just use pytest and run tests in a single environment (e.g. Python 3.7).
-This is often enough and will save you some time if you need to run tests frequently.
- 
-`pytest tests/ -x -l -ra`
+To execute unit tests:
+`pytest tests/`
 
-See [official website](https://docs.pytest.org/en/latest/) for more info about pytest.
+Furthermore, before to propose a pull request, there are additional tests we ask you to execute: 
+`pytest tests/ -m "slow`
+
+These tests could take 30 minutes or several hours, depending on your machine.
+You can find full description and implementation details at [Test documentation](https://ec-jrc.github.io/lisflood-code/4_annex_tests/) page.
+
+If yuor pull request is about a new feature you may want to integrate in LISFLOOD, ensure to include some tests for it. 
+For more info about pytest, see [official website](https://docs.pytest.org/en/latest/).
