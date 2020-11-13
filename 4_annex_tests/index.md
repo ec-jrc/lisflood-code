@@ -83,7 +83,7 @@ cachedir: .pytest_cache
 rootdir: /home/user/projects/lisflood-code, inifile: pytest.ini
 plugins: env-0.6.2, cov-2.8.1, mock-2.0.0
 
-tests/test_dates_steps.py::TestStepsDates::test_dates_steps_day PASSED                   [  2%]
+tests/test_dates_steps.py::TestStepsDates::test_dates_steps_daily PASSED                 [  2%]
 tests/test_dates_steps.py::TestStepsDates::test_dates_steps_6h PASSED                    [  4%]
 tests/test_options.py::TestOptions::test_basic PASSED                                    [  6%]
 tests/test_options.py::TestOptions::test_split_routing_only PASSED                       [  8%]
@@ -337,7 +337,7 @@ def test_prerun(self):
 To define start and end simulation timesteps in LF you may use date time notation (21/12/2000 06:00) or integer timesteps (e.g. 215, calculated from CalendarDayStart using DtSec steps).
 We need to ensure that either using dates or integers for StepStart and StepEnd gives equivalent setups.
 
-Tests are done with daily and 6hourly timesteps (i.e. DtSec=86400 and DtSec=21600).
+Tests are done with daily and 6-hourly timesteps (i.e. DtSec=86400 and DtSec=21600).
 
 #### Implementation
 [test_dates_steps.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_dates_steps.py){:target="_blank"}
@@ -346,12 +346,12 @@ Execute lisflood with report options activated, using dates formats for StepStar
 Then execute lisflood with same setup, this time using integers for StepStart and StepEnd.
 **Assert that results are identical.**
 
-Test is repeated for 6hourly timesteps.
+Test is repeated for 6-hourly timesteps.
 
-**Example: test_dates_steps_day**
+**Example: test_dates_steps_daily**
 
 ```python
-def test_dates_steps_day(self):
+def test_dates_steps_daily(self):
     settings_a = self.setoptions(self.settings_files['full'],
                                  opts_to_set=['repStateMaps', 'repEndMaps', 'repDischargeMaps',
                                               'repSnowMaps', 'repLZMaps', 'repUZMaps'],
@@ -438,10 +438,10 @@ It's a regression test as it was introduced along with warmstart fixes and check
 * run on the same period but restarting OSLisflood at every step (start and stop)
 * Compare all state maps from `reference` with state maps of each warm start execution. Maps must be identical at the timestep of the warm run. 
 
-|Test case               | DtSec | Simulation period                  | Expected                                       |
-|------------------------|-------|------------------------------------|------------------------------------------------|
-| test_warmstart_daily   | 86400 |02/01/2016 06:00 - 30/12/2016 06:00 | nc diffs are within tolerances, TSSs identical |
-| test_warmstart_6hourly | 21600 |01/03/2016 06:00 - 31/07/2016 06:00 | nc diffs are within tolerances, TSSs identical |
+|Test case             | DtSec | Simulation period                  | Expected                                       |
+|----------------------|-------|------------------------------------|------------------------------------------------|
+| test_warmstart_daily | 86400 |02/01/2016 06:00 - 30/12/2016 06:00 | nc diffs are within tolerances, TSSs identical |
+| test_warmstart_6h    | 21600 |01/03/2016 06:00 - 31/07/2016 06:00 | nc diffs are within tolerances, TSSs identical |
 
 All test cases are executed with following modules activated:
 
