@@ -438,10 +438,10 @@ It's a regression test as it was introduced along with warmstart fixes and check
 * run on the same period but restarting OSLisflood at every step (start and stop)
 * Compare all state maps from `reference` with state maps of each warm start execution. Maps must be identical at the timestep of the warm run. 
 
-|Test case       | DtSec | Simulation period                  | Expected                                       |
-|----------------|-------|------------------------------------|------------------------------------------------|
-|warmstart daily | 86400 |02/01/2016 06:00 - 30/12/2016 06:00 | nc diffs are within tolerances, TSSs identical |
-|warmstart 6h    | 21600 |01/03/2016 06:00 - 31/07/2016 06:00 | nc diffs are within tolerances, TSSs identical |
+|Test case               | DtSec | Simulation period                  | Expected                                       |
+|------------------------|-------|------------------------------------|------------------------------------------------|
+| test_warmstart_daily   | 86400 |02/01/2016 06:00 - 30/12/2016 06:00 | nc diffs are within tolerances, TSSs identical |
+| test_warmstart_6hourly | 21600 |01/03/2016 06:00 - 31/07/2016 06:00 | nc diffs are within tolerances, TSSs identical |
 
 All test cases are executed with following modules activated:
 
@@ -557,11 +557,11 @@ water demand modules are activated (e.g. `wateruse=1`).
 This test demonstrates that wateruse module introduces incongruities between running the model on subcatchments and on the entire domain.
 
 
-|Test case                        | DtSec | Simulation period                  | Expected                       |
-|---------------------------------|-------|------------------------------------|--------------------------------|
-|subcatch  daily                  | 86400 |02/01/2016 06:00 - 30/03/2016 06:00 | all netcdf are array equal     |
-|subcatch  6h                     | 21600 |01/03/2016 06:00 - 30/03/2016 06:00 | all netcdf are array equal     |
-|subcatch  daily (wateruse on)    | 21600 |02/01/2016 06:00 - 30/01/2016 06:00 | different values at first step |
+|Test case                         | DtSec | Simulation period                  | Expected                       |
+|----------------------------------|-------|------------------------------------|--------------------------------|
+| test_subcacthment_daily          | 86400 |02/01/2016 06:00 - 30/03/2016 06:00 | all netcdf are array equal     |
+| test_subcacthment_6h             | 21600 |01/03/2016 06:00 - 30/03/2016 06:00 | all netcdf are array equal     |
+| test_subcacthment_daily_wateruse | 21600 |02/01/2016 06:00 - 30/01/2016 06:00 | different values at first step |
 
 **Note:** This test doesn't use a reference dataset so it's not a black-box test. It ensures that simulations on domain and its subdomains are equivalent.
  
