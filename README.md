@@ -140,13 +140,22 @@ If you find an issue in our code, please follow the [GitHub flow](https://guides
 You are required to run unit tests during your development and before to propose a pull request.
 
 To execute unit tests:
-`pytest tests/`
+
+```bash
+pytest tests/
+```
 
 Furthermore, before to propose a pull request, there are additional tests we ask you to execute: 
-`pytest tests/ -m "slow`
+
+```bash
+pytest tests/ -m "slow
+```
 
 These tests could take 30 minutes or several hours, depending on your machine.
+
 You can find full description and implementation details at [Test documentation](https://ec-jrc.github.io/lisflood-code/4_annex_tests/) page.
 
-If yuor pull request is about a new feature you may want to integrate in LISFLOOD, ensure to include some tests for it. 
+**Note**: If yuor pull request is about a new feature you may want to integrate in LISFLOOD,
+ensure to include tests with good coverage for it.
+
 For more info about pytest, see [official website](https://docs.pytest.org/en/latest/).

@@ -15,7 +15,7 @@ class TestStepsDates(MixinTestSettings):
         'full': os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/full.xml')
     }
 
-    def test_dates_steps_day(self):
+    def test_dates_steps_daily(self):
         settings_a = self.setoptions(self.settings_files['full'],
                                      opts_to_set=['repStateMaps', 'repEndMaps', 'repDischargeMaps',
                                                   'repSnowMaps', 'repLZMaps', 'repUZMaps'],

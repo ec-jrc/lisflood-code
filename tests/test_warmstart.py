@@ -46,7 +46,7 @@ class TestWarmStart(MixinTestSettings):
         report_steps = '9496..9861'
         self.run_warmstart_by_dtsec(dt_sec, step_end, step_start, report_steps=report_steps)
 
-    def test_warmstart_6hourly(self):
+    def test_warmstart_6h(self):
         step_start = '01/03/2016 06:00'
         step_end = '31/07/2016 06:00'
         dt_sec = 21600
