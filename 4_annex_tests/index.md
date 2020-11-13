@@ -8,7 +8,7 @@ In [tests/](https://github.com/ec-jrc/lisflood-code/tree/master/tests){:target="
 tests ensuring that all *helper components* of Lisflood work as expected. 
 These components are not strictly related to the hydrological model but are essential for the execution.
 
-Unit tests are executed mocking I/O, to keep them reasonably fast.
+Most of unit tests are executed mocking I/O, to keep them reasonably fast.
 
 Please note that in same folder there are other tests that actually test the model in a black-box fashion. 
 These tests are much slower as they execute lisflood for longer periods and write results on disk (TSS and netCDF maps) which are then compared 
@@ -44,6 +44,149 @@ Tests that are using Comparator classes are:
 | test_warmstart_6h       | test_warmstart.py      | NetCDFComparator(atol=0.0001, rtol=0.001), TSSComparator(array_equal=True)        |
 | test_subcacthment_daily | test_subcatchments.py  | NetCDFComparator(array_equal=True)                                                |
 | test_subcacthment_6h    | test_subcatchments.py  | NetCDFComparator(array_equal=True)                                                |
+
+## How to execute tests
+
+In order to execute tests decribed in this page, you need to download source code and create a conda environment for OSLisflood.
+
+Then, from project folder, run
+
+```bash
+pytest tests/
+```
+
+As defined in pytest.ini, this is equivalent to
+
+```bash
+pytest tests/ -ra -x -l --cov=lisflood --cov-config=.coveragerc -m "not slow" -vv
+```
+
+This will skip all tests marked as slow (which can run for 30 mins/1 hour).
+To execute slow tests simply run:
+
+```bash
+pytest tests/ -m "slow"
+```
+
+### Output sample of pytest execution
+
+<details><summary>Toggle</summary>
+
+<div markdown="1">
+
+```text
+
+(lisflood) [master]user@Enki:~/projects/lisflood-code $ pytest tests/
+================================ test session starts ================================
+platform linux -- Python 3.7.8, pytest-5.2.1, py-1.8.0, pluggy-0.13.0
+cachedir: .pytest_cache
+rootdir: /home/user/projects/lisflood-code, inifile: pytest.ini
+plugins: env-0.6.2, cov-2.8.1, mock-2.0.0
+
+tests/test_dates_steps.py::TestStepsDates::test_dates_steps_day PASSED                   [  2%]
+tests/test_dates_steps.py::TestStepsDates::test_dates_steps_6h PASSED                    [  4%]
+tests/test_options.py::TestOptions::test_basic PASSED                                    [  6%]
+tests/test_options.py::TestOptions::test_split_routing_only PASSED                       [  8%]
+tests/test_options.py::TestOptions::test_reservoirs_only PASSED                          [ 11%]
+tests/test_options.py::TestOptions::test_lakes_only PASSED                               [ 13%]
+tests/test_options.py::TestOptions::test_rice_only PASSED                                [ 15%]
+tests/test_options.py::TestOptions::test_pf_only PASSED                                  [ 17%]
+tests/test_options.py::TestOptions::test_waterabstraction_only PASSED                    [ 20%]
+tests/test_options.py::TestWrongTimestepInit::test_raisexc PASSED                        [ 22%]
+tests/test_reported_maps.py::TestReportedMaps::test_prerun PASSED                        [ 24%]
+tests/test_reported_maps.py::TestReportedMaps::test_rep_dischargemaps PASSED             [ 26%]
+tests/test_reported_maps.py::TestReportedMaps::test_rep_dischargemaps_not_called PASSED  [ 28%]
+tests/test_reported_maps.py::TestReportedMaps::test_rep_lakes PASSED                     [ 31%]
+tests/test_reported_maps.py::TestReportedMaps::test_rep_lakes_not_called PASSED          [ 33%]
+tests/test_reported_maps.py::TestReportedMaps::test_rep_reservoirs PASSED                [ 35%]
+tests/test_reported_maps.py::TestReportedMaps::test_rep_reservoirs_not_called PASSED     [ 37%]
+tests/test_reported_maps.py::TestReportedMaps::test_rep_snowmaps PASSED                  [ 40%]
+tests/test_reported_maps.py::TestReportedMaps::test_rep_snowmaps_not_called PASSED       [ 42%]
+tests/test_reported_maps.py::TestReportedMaps::test_rep_pfmaps PASSED                    [ 44%]
+tests/test_reported_maps.py::TestReportedMaps::test_rep_pfmaps_not_called PASSED         [ 46%]
+tests/test_reported_maps.py::TestReportedMaps::test_rep_lzmaps PASSED                    [ 48%]
+tests/test_reported_maps.py::TestReportedMaps::test_rep_lzmaps_not_called PASSED         [ 51%]
+tests/test_reported_maps.py::TestReportedMaps::test_rep_uzmaps PASSED                    [ 53%]
+tests/test_reported_maps.py::TestReportedMaps::test_rep_uzmaps_not_called PASSED         [ 55%]
+tests/test_reported_maps.py::TestReportedMaps::test_rep_gwpercuzlzmaps PASSED            [ 57%]
+tests/test_reported_maps.py::TestReportedMaps::test_rep_gwpercuzlzmaps_not_called PASSED [ 60%]
+tests/test_reported_maps.py::TestReportedMaps::test_rep_totalabs PASSED                  [ 62%]
+tests/test_reported_maps.py::TestReportedMaps::test_rep_totalabs_not_called PASSED       [ 64%]
+tests/test_reported_maps.py::TestReportedMaps::test_rep_totalwuse PASSED                 [ 66%]
+tests/test_reported_maps.py::TestReportedMaps::test_rep_totalwuse_not_called PASSED      [ 68%]
+tests/test_reported_maps.py::TestReportedMaps::test_rep_windex PASSED                    [ 71%]
+tests/test_reported_maps.py::TestReportedMaps::test_rep_windex_not_called PASSED         [ 73%]
+tests/test_reported_tss.py::TestReportedTSS::test_rep_dischargetss PASSED                [ 75%]
+tests/test_reported_tss.py::TestReportedTSS::test_rep_dischargetss_not_called PASSED     [ 77%]
+tests/test_reported_tss.py::TestReportedTSS::test_rep_stateupgaugestss PASSED            [ 80%]
+tests/test_reported_tss.py::TestReportedTSS::test_rep_stateupgaugestss_not_called PASSED [ 82%]
+tests/test_reported_tss.py::TestReportedTSS::test_rep_rateupgaugestss PASSED             [ 84%]
+tests/test_reported_tss.py::TestReportedTSS::test_rep_rateupgaugestss_not_called PASSED  [ 86%]
+tests/test_reported_tss.py::TestReportedTSS::test_rep_meteoupgaugestss PASSED            [ 88%]
+tests/test_reported_tss.py::TestReportedTSS::test_rep_meteoupgaugestss_not_called PASSED [ 91%]
+tests/test_state_end_maps.py::TestRepMaps::test_no_reported PASSED                       [ 93%]
+tests/test_state_end_maps.py::TestRepMaps::test_end_reported PASSED                      [ 95%]
+tests/test_state_end_maps.py::TestRepMaps::test_state_reported PASSED                    [ 97%]
+tests/test_state_end_maps.py::TestRepMaps::test_end_state_reported PASSED                [100%]
+
+----------- coverage: platform linux, python 3.7.8-final-0 -----------
+Name                                                           Stmts   Miss  Cover
+----------------------------------------------------------------------------------
+src/lisflood/Lisflood_EnKF.py                                     21     12    43%
+src/lisflood/Lisflood_dynamic.py                                  89     16    82%
+src/lisflood/Lisflood_initial.py                                 108      8    93%
+src/lisflood/Lisflood_monteCarlo.py                               11      4    64%
+src/lisflood/__init__.py                                          13      1    92%
+src/lisflood/global_modules/__init__.py                            0      0   100%
+src/lisflood/global_modules/add1.py                              634    261    59%
+src/lisflood/global_modules/checkers.py                           36     21    42%
+src/lisflood/global_modules/decorators.py                         16      9    44%
+src/lisflood/global_modules/default_options.py                     4      0   100%
+src/lisflood/global_modules/errors.py                             26      7    73%
+src/lisflood/global_modules/output.py                            190     59    69%
+src/lisflood/global_modules/settings.py                          395     64    84%
+src/lisflood/global_modules/stateVar.py                           93     79    15%
+src/lisflood/global_modules/zusatz.py                            237    172    27%
+src/lisflood/hydrological_modules/__init__.py                     42     31    26%
+src/lisflood/hydrological_modules/evapowater.py                   72     24    67%
+src/lisflood/hydrological_modules/frost.py                        18      0   100%
+src/lisflood/hydrological_modules/groundwater.py                  54      3    94%
+src/lisflood/hydrological_modules/indicatorcalc.py               106      4    96%
+src/lisflood/hydrological_modules/inflow.py                       58     28    52%
+src/lisflood/hydrological_modules/kinematic_wave_parallel.py     105      9    91%
+src/lisflood/hydrological_modules/lakes.py                       120     14    88%
+src/lisflood/hydrological_modules/landusechange.py                28      7    75%
+src/lisflood/hydrological_modules/leafarea.py                     35      0   100%
+src/lisflood/hydrological_modules/miscInitial.py                  94     10    89%
+src/lisflood/hydrological_modules/opensealed.py                   20      0   100%
+src/lisflood/hydrological_modules/polder.py                       25      6    76%
+src/lisflood/hydrological_modules/readmeteo.py                    30      5    83%
+src/lisflood/hydrological_modules/reservoir.py                   128      5    96%
+src/lisflood/hydrological_modules/riceirrigation.py               49      0   100%
+src/lisflood/hydrological_modules/routing.py                     178      8    96%
+src/lisflood/hydrological_modules/snow.py                         63      0   100%
+src/lisflood/hydrological_modules/soil.py                        177      0   100%
+src/lisflood/hydrological_modules/soilloop.py                    172      3    98%
+src/lisflood/hydrological_modules/structures.py                   15      0   100%
+src/lisflood/hydrological_modules/surface_routing.py              64      0   100%
+src/lisflood/hydrological_modules/transmission.py                 29     11    62%
+src/lisflood/hydrological_modules/waterabstraction.py            230     16    93%
+src/lisflood/hydrological_modules/waterbalance.py                 77     62    19%
+src/lisflood/hydrological_modules/waterlevel.py                   27      9    67%
+src/lisflood/hydrological_modules/wateruse.py                      8      3    62%
+src/lisflood/main.py                                              88     37    58%
+----------------------------------------------------------------------------------
+TOTAL                                                           3985   1008    75%
+
+
+============ 45 passed, 10 deselected in 90.49s (0:01:30) ============
+
+```
+
+</div>
+</details>
+
+## Unit Tests
 
 ### Testing Options
 In LF, you activate/deactivate a hydrological module by setting 1/0 in *lfoptions* section of the input XML settings file.
@@ -173,11 +316,11 @@ def test_rep_dischargetss(self):
                            tss_to_check='disWin.tss')
 ```
 
-### Testing Init run
+### Testing Init run output maps
 Make sure OSLisflood can run an initial run to generate AVGDIS and LZAVIN maps with proper extension (.nc or .map)
 
 #### Implementation
-*Note*: the test was moved to [test_reported_maps.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_reported_maps.py){:target="_blank"}
+[test_reported_maps.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_reported_maps.py){:target="_blank"}
 
 Test asserts that writenet was called with 'AvgDis' and 'LZAvInflowMap' arguments (LF variables for avgdis.nc and lzavin.nc files) and with the correct filename.
  
