@@ -492,9 +492,12 @@ def loadLAI(value, pcrvalue, i, pcr=False):
         # get mapextend of netcdf map
         # and calculate the cutting
         cut0, cut1, cut2, cut3 = mapattrNetCDF(filename)
+
         nf1 = iterOpenNetcdf(filename, "", 'r')
-        value = listitems(nf1.variables)[-1][0]  # get the last variable name
-        mapnp = nf1.variables[value][i, cut2:cut3, cut0:cut1]
+        # Only one variable must be present in netcdf files
+        num_dims = 3 if 'time' in nf1.variables else 2
+        varname = [v for v in nf1.variables if len(nf1.variables[v].dimensions) == num_dims][0]
+        mapnp = nf1.variables[varname][i, cut2:cut3, cut0:cut1]
         nf1.close()
         mapC = compressArray(mapnp, pcr=False, name=filename)
         # mapnp[np.isnan(mapnp)] = -9999
