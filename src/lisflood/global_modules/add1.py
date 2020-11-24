@@ -1040,3 +1040,19 @@ def nanCheckMap(data, filename, name):
     is_nan = np.isnan(compressArray(data) if isinstance(data, pcraster._pcraster.Field) else data)
     if is_nan.any():
         warnings.warn(LisfloodWarning("Warning: {} of {} land values of {} (binding: '{}') are NaN".format(is_nan.sum(), is_nan.size, filename, name)))
+
+
+def xarray_reader(path):
+    ds = xr.open_mfdataset(path, engine='netcdf4', chunks={'time': 'auto'})
+    dataname = 'pr6' #replace by Damien fancy loop
+    da = ds['pr6']
+    print(da)
+    return ds
+
+
+def extract_step_xr(da, timestep):
+
+    data = da.sel(time=timestep)
+    print(da.name)
+    print(data)
+    return masked_data = compressArray(data, pcr=False, name=da.name)
