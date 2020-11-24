@@ -15,6 +15,7 @@ See the Licence for the specific language governing permissions and limitations 
 
 """
 from __future__ import print_function, absolute_import
+import xarray as xr
 
 from ..global_modules.add1 import readnetcdf, checknetcdf,readmapsparse, xarray_reader, extract_step_xr
 from ..global_modules.settings import LisSettings

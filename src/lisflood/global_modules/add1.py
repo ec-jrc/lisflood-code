@@ -33,6 +33,7 @@ import pcraster
 from pcraster import Scalar, numpy2pcr, Nominal, setclone, Boolean, pcr2numpy
 from netCDF4 import num2date, date2num
 import numpy as np
+import xarray as xr
 
 from .zusatz import iterOpenNetcdf, iterReadPCRasterMap, iterSetClonePCR, checkmap
 from .settings import (calendar_inconsistency_warning, get_calendar_type, calendar, MaskAttrs, CutMap, NetCDFMetadata,
@@ -1043,16 +1044,30 @@ def nanCheckMap(data, filename, name):
 
 
 def xarray_reader(path):
-    ds = xr.open_mfdataset(path, engine='netcdf4', chunks={'time': 'auto'})
-    dataname = 'pr6' #replace by Damien fancy loop
-    da = ds['pr6']
-    print(da)
-    return ds
+    ds = xr.open_mfdataset(path+'.nc', engine='netcdf4', chunks={'time': 'auto'}, combine='by_coords')
+    variable_names = [k for k in ds.variables if len(ds.variables[k].dims) == 3]
+    if len(variable_names) > 1:
+        raise LisfloodWarning('More than one variable in dataset {}'.format(path))
+    elif len(variable_names) == 0:
+        raise LisfloodWarning('Could not find a valid variable in dataset {}'.format(path))
+    else:
+        var_name = variable_names[0]
+    da = ds[var_name]
+    return da
 
 
 def extract_step_xr(da, timestep):
 
-    data = da.sel(time=timestep)
-    print(da.name)
-    print(data)
-    return masked_data = compressArray(data, pcr=False, name=da.name)
+    settings = LisSettings.instance()
+    binding = settings.binding
+    begin = calendar(binding['CalendarDayStart'], binding['calendar_type'])
+    dt_sec = float(binding['DtSec'])
+    dt_day = float(dt_sec / 86400)
+
+    # get date of current simulation step
+    currentDate = calendar(timestep, binding['calendar_type'])
+    if type(currentDate) is not datetime.datetime:
+        currentDate = begin + datetime.timedelta(days=(currentDate - 1) * dt_day)
+
+    data = da.sel(time=currentDate)
+    return compressArray(data, pcr=False, name=da.name)
