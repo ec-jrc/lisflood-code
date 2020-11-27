@@ -1070,6 +1070,7 @@ def date_range():
     binding = settings.binding
     begin = calendar(binding['StepStart'])
     end = calendar(binding['StepEnd'])
+    end = end + datetime.timedelta(seconds=int(binding['DtSec']))
     return begin, end
 
 
@@ -1086,6 +1087,7 @@ def xarray_reader(path):
 
     begin, end = date_range()
     da = da.sel(time=slice(begin, end))
+    print(da)
 
     da_masked = compress_xarray(da)
 
