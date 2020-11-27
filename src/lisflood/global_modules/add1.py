@@ -1070,7 +1070,6 @@ def date_range():
     binding = settings.binding
     begin = calendar(binding['StepStart'])
     end = calendar(binding['StepEnd'])
-    end = end + datetime.timedelta(seconds=int(binding['DtSec']))
     return begin, end
 
 
@@ -1098,5 +1097,5 @@ def extract_step_xr(da, timestep):
     # cur_date = date_from_step(timestep)
     # data = da.sel(time=cur_date)
     # return compress_xarray(data)
-    data = da[timestep]
+    data = da[timestep-1]
     return data
