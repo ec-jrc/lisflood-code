@@ -1046,24 +1046,31 @@ def nanCheckMap(data, filename, name):
 def compress_xarray(data):
     maskinfo = MaskInfo.instance()
     mask = maskinfo.info.mask.flatten()
-    data_masked = np.compress(np.logical_not(mask), data.values)
+    data = data.values
+    data = data.reshape(data.shape[0], data.shape[1]*data.shape[2])
+    data_masked = np.compress(np.logical_not(mask), data, axis=1)
     return data_masked
 
 
 def date_from_step(timestep):
-
     settings = LisSettings.instance()
     binding = settings.binding
     begin = calendar(binding['CalendarDayStart'], binding['calendar_type'])
     dt_sec = float(binding['DtSec'])
     dt_day = float(dt_sec / 86400)
-
     # get date of current simulation step
     currentDate = calendar(timestep, binding['calendar_type'])
     if type(currentDate) is not datetime.datetime:
         currentDate = begin + datetime.timedelta(days=(currentDate - 1) * dt_day)
-
     return currentDate
+
+
+def date_range():
+    settings = LisSettings.instance()
+    binding = settings.binding
+    begin = calendar(binding['StepStart'])
+    end = calendar(binding['StepEnd'])
+    return begin, end
 
 
 def xarray_reader(path):
@@ -1076,10 +1083,18 @@ def xarray_reader(path):
     else:
         var_name = variable_names[0]
     da = ds[var_name]
-    return da
+
+    begin, end = date_range()
+    da = da.sel(time=slice(begin, end))
+
+    da_masked = compress_xarray(da)
+
+    return da_masked
 
 
 def extract_step_xr(da, timestep):
-    cur_date = date_from_step(timestep)
-    data = da.sel(time=cur_date)
-    return compress_xarray(data)
+    # cur_date = date_from_step(timestep)
+    # data = da.sel(time=cur_date)
+    # return compress_xarray(data)
+    data = da[timestep]
+    return data
