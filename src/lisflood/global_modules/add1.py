@@ -1043,6 +1043,29 @@ def nanCheckMap(data, filename, name):
         warnings.warn(LisfloodWarning("Warning: {} of {} land values of {} (binding: '{}') are NaN".format(is_nan.sum(), is_nan.size, filename, name)))
 
 
+def compress_xarray(data):
+    maskinfo = MaskInfo.instance()
+    mask = maskinfo.info.mask.flatten()
+    data_masked = np.compress(np.logical_not(mask), data.values)
+    return data_masked
+
+
+def date_from_step(timestep):
+
+    settings = LisSettings.instance()
+    binding = settings.binding
+    begin = calendar(binding['CalendarDayStart'], binding['calendar_type'])
+    dt_sec = float(binding['DtSec'])
+    dt_day = float(dt_sec / 86400)
+
+    # get date of current simulation step
+    currentDate = calendar(timestep, binding['calendar_type'])
+    if type(currentDate) is not datetime.datetime:
+        currentDate = begin + datetime.timedelta(days=(currentDate - 1) * dt_day)
+
+    return currentDate
+
+
 def xarray_reader(path):
     ds = xr.open_mfdataset(path+'.nc', engine='netcdf4', chunks={'time': 'auto'}, combine='by_coords')
     variable_names = [k for k in ds.variables if len(ds.variables[k].dims) == 3]
@@ -1057,17 +1080,6 @@ def xarray_reader(path):
 
 
 def extract_step_xr(da, timestep):
-
-    settings = LisSettings.instance()
-    binding = settings.binding
-    begin = calendar(binding['CalendarDayStart'], binding['calendar_type'])
-    dt_sec = float(binding['DtSec'])
-    dt_day = float(dt_sec / 86400)
-
-    # get date of current simulation step
-    currentDate = calendar(timestep, binding['calendar_type'])
-    if type(currentDate) is not datetime.datetime:
-        currentDate = begin + datetime.timedelta(days=(currentDate - 1) * dt_day)
-
-    data = da.sel(time=currentDate)
-    return compressArray(data, pcr=False, name=da.name)
+    cur_date = date_from_step(timestep)
+    data = da.sel(time=cur_date)
+    return compress_xarray(data)
