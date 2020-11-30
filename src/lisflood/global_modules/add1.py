@@ -1066,7 +1066,7 @@ def compress_xarray(data):
 
     # data = data.values
     # data_masked = data[:, mask]
-    data_masked = mask_array(data, mask).values
+    data_masked = mask_array(data, mask)
     return data_masked
 
 
@@ -1088,7 +1088,6 @@ def date_range():
     binding = settings.binding
     begin = calendar(binding['StepStart'])
     end = calendar(binding['StepEnd'])
-    end = end + datetime.timedelta(seconds=int(binding['DtSec']))
     return begin, end
 
 
@@ -1113,9 +1112,19 @@ def xarray_reader(path):
     return array_masked
 
 
-def extract_step_xr(data_array, timestep):
-    # cur_date = date_from_step(timestep)
-    # data = da.sel(time=cur_date)
-    # return compress_xarray(data)
-    data = data_array[timestep]
-    return data
+def extract_step_xr(dataset, array_chunk, timestep):
+    step = timestep-1
+    chunksize = dataset.chunks[0][0]
+    local_step = step%chunksize
+
+    if array_chunk is None or local_step==0:
+        print('Updating dataset')  
+        print(chunksize)
+        index_0 = int(step/chunksize)*chunksize
+        index_1 = index_0+chunksize
+        array_chunk = dataset.isel(time=range(index_0, index_1))
+        print(array_chunk)
+        array_chunk = array_chunk.values
+
+    data = array_chunk[local_step]
+    return array_chunk, data

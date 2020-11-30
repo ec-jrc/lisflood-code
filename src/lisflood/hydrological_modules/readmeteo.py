@@ -36,10 +36,12 @@ class readmeteo(object):
         binding = settings.binding
         if option['readNetcdfStack']:
             # checking if time period in netCDF files (forcings) includes simulation period
-            self.pr = xarray_reader(binding['PrecipitationMaps'])#, decode_time=False)
-            self.ta = xarray_reader(binding['TavgMaps'])#, decode_time=False)
-            self.et = xarray_reader(binding['ET0Maps'])#, decode_time=False)
-            self.e0 = xarray_reader(binding['E0Maps'])#, decode_time=False)
+            self.datasets = {}
+            self.arrays_chunked = {}
+            for data in ['PrecipitationMaps', 'TavgMaps', 'ET0Maps', 'E0Maps']:
+                self.datasets[data] = xarray_reader(binding[data])
+                self.arrays_chunked[data] = None
+
             # checknetcdf(binding['PrecipitationMaps'], binding['StepStart'], binding['StepEnd'])
             # checknetcdf(binding['TavgMaps'], binding['StepStart'], binding['StepEnd'])
             # checknetcdf(binding['ET0Maps'], binding['StepStart'], binding['StepEnd'])
@@ -59,11 +61,16 @@ class readmeteo(object):
         # ***** READ METEOROLOGICAL DATA *****************************
         # ************************************************************
         if option['readNetcdfStack']:
+
+            forcings = {}
+            for data in ['PrecipitationMaps', 'TavgMaps', 'ET0Maps', 'E0Maps']:
+                forcings[data] = extract_step_xr(self.datasets[data], self.arrays_chunked[data], self.var.currentTimeStep())
+
             # Read from NetCDF stack files
-            self.var.Precipitation = extract_step_xr(self.pr, self.var.currentTimeStep()) * self.var.DtDay * self.var.PrScaling
-            self.var.Tavg = extract_step_xr(self.ta, self.var.currentTimeStep())
-            self.var.ETRef = extract_step_xr(self.et, self.var.currentTimeStep()) * self.var.DtDay * self.var.CalEvaporation
-            self.var.EWRef = extract_step_xr(self.e0, self.var.currentTimeStep()) * self.var.DtDay * self.var.CalEvaporation
+            self.var.Precipitation = forcings['PrecipitationMaps'] * self.var.DtDay * self.var.PrScaling
+            self.var.Tavg = forcings['TavgMaps']
+            self.var.ETRef = forcings['ET0Maps'] * self.var.DtDay * self.var.CalEvaporation
+            self.var.EWRef =forcings['E0Maps'] * self.var.DtDay * self.var.CalEvaporation
             # self.var.Precipitation = readnetcdf(binding['PrecipitationMaps'], self.var.currentTimeStep()) * self.var.DtDay * self.var.PrScaling
             # self.var.Tavg = readnetcdf(binding['TavgMaps'], self.var.currentTimeStep())
             # self.var.ETRef = readnetcdf(binding['ET0Maps'], self.var.currentTimeStep()) * self.var.DtDay * self.var.CalEvaporation
