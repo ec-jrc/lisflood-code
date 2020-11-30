@@ -62,9 +62,11 @@ class readmeteo(object):
         # ************************************************************
         if option['readNetcdfStack']:
 
+            timestep = self.var.currentTimeStep() - self.var.firstTimeStep()
+
             forcings = {}
             for data in ['PrecipitationMaps', 'TavgMaps', 'ET0Maps', 'E0Maps']:
-                forcings[data] = extract_step_xr(self.datasets[data], self.arrays_chunked[data], self.var.currentTimeStep())
+                self.arrays_chunked[data], forcings[data] = extract_step_xr(self.datasets[data], self.arrays_chunked[data], timestep)
 
             # Read from NetCDF stack files
             self.var.Precipitation = forcings['PrecipitationMaps'] * self.var.DtDay * self.var.PrScaling

@@ -1063,24 +1063,8 @@ def mask_array(data, mask):
 def compress_xarray(data):
     maskinfo = MaskInfo.instance()
     mask = np.logical_not(maskinfo.info.mask)
-
-    # data = data.values
-    # data_masked = data[:, mask]
-    data_masked = mask_array(data, mask)
-    return data_masked
-
-
-def date_from_step(timestep):
-    settings = LisSettings.instance()
-    binding = settings.binding
-    begin = calendar(binding['CalendarDayStart'], binding['calendar_type'])
-    dt_sec = float(binding['DtSec'])
-    dt_day = float(dt_sec / 86400)
-    # get date of current simulation step
-    currentDate = calendar(timestep, binding['calendar_type'])
-    if type(currentDate) is not datetime.datetime:
-        currentDate = begin + datetime.timedelta(days=(currentDate - 1) * dt_day)
-    return currentDate
+    masked_data = mask_array(data, mask)
+    return masked_data
 
 
 def date_range():
@@ -1102,29 +1086,27 @@ def xarray_reader(path):
         var_name = variable_names[0]
     da = ds[var_name]
 
+    # extract time range
     begin, end = date_range()
     da = da.sel(time=slice(begin, end))
-    print(da)
 
-    array_masked = compress_xarray(da)
-    print(array_masked)
+    # compress dataset (remove missing values)
+    masked_da = compress_xarray(da)
 
-    return array_masked
+    return masked_da
 
 
-def extract_step_xr(dataset, array_chunk, timestep):
-    step = timestep-1
+def extract_step_xr(dataset, chunked_array, timestep):
+
     chunksize = dataset.chunks[0][0]
-    local_step = step%chunksize
+    local_step = timestep%chunksize
 
-    if array_chunk is None or local_step==0:
-        print('Updating dataset')  
-        print(chunksize)
-        index_0 = int(step/chunksize)*chunksize
+    # load the values in chunk
+    if chunked_array is None or local_step==0:
+        index_0 = int(timestep/chunksize)*chunksize
         index_1 = index_0+chunksize
-        array_chunk = dataset.isel(time=range(index_0, index_1))
-        print(array_chunk)
-        array_chunk = array_chunk.values
+        chunked_array = dataset.isel(time=range(index_0, index_1))
+        chunked_array = chunked_array.values  # triggers xarray computation
 
-    data = array_chunk[local_step]
-    return array_chunk, data
+    data = chunked_array[local_step]
+    return chunked_array, data
