@@ -1104,7 +1104,7 @@ def extract_step_xr(dataset, chunked_array, timestep):
     # load the values in chunk
     if chunked_array is None or local_step==0:
         index_0 = int(timestep/chunksize)*chunksize
-        index_1 = index_0+chunksize
+        index_1 = min(index_0+chunksize, dataset.sizes['time'])
         chunked_array = dataset.isel(time=range(index_0, index_1))
         chunked_array = chunked_array.values  # triggers xarray computation
 
