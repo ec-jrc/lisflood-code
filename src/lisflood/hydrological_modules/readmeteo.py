@@ -61,9 +61,9 @@ class readmeteo(object):
         if option['readNetcdfStack']:
             # Read from NetCDF stack files
             self.var.Precipitation = extract_step_xr(self.pr, self.var.currentTimeStep()) * self.var.DtDay * self.var.PrScaling
-            self.var.Tavg = extract_step_xr(self.ta, self.var.currentTimeStep()) * self.var.DtDay * self.var.PrScaling
-            self.var.ETRef = extract_step_xr(self.et, self.var.currentTimeStep()) * self.var.DtDay * self.var.PrScaling
-            self.var.EWRef = extract_step_xr(self.e0, self.var.currentTimeStep()) * self.var.DtDay * self.var.PrScaling
+            self.var.Tavg = extract_step_xr(self.ta, self.var.currentTimeStep())
+            self.var.ETRef = extract_step_xr(self.et, self.var.currentTimeStep()) * self.var.DtDay * self.var.CalEvaporation
+            self.var.EWRef = extract_step_xr(self.e0, self.var.currentTimeStep()) * self.var.DtDay * self.var.CalEvaporation
             # self.var.Precipitation = readnetcdf(binding['PrecipitationMaps'], self.var.currentTimeStep()) * self.var.DtDay * self.var.PrScaling
             # self.var.Tavg = readnetcdf(binding['TavgMaps'], self.var.currentTimeStep())
             # self.var.ETRef = readnetcdf(binding['ET0Maps'], self.var.currentTimeStep()) * self.var.DtDay * self.var.CalEvaporation

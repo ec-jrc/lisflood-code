@@ -1043,12 +1043,30 @@ def nanCheckMap(data, filename, name):
         warnings.warn(LisfloodWarning("Warning: {} of {} land values of {} (binding: '{}') are NaN".format(is_nan.sum(), is_nan.size, filename, name)))
 
 
+def mask_array_np(data, mask):
+    return data[:, mask]
+
+
+def mask_array(data, mask):
+    n_data = int(mask.sum())
+    masked_data = xr.apply_ufunc(mask_array_np, data,
+                                 dask='parallelized',
+                                 input_core_dims=[['y', 'x']],
+                                 exclude_dims=set(['y', 'x']),
+                                 output_dtypes=[data.dtype],
+                                 output_core_dims=[['z']],
+                                 output_sizes={'z': n_data},
+                                 kwargs={'mask': mask})
+    return masked_data
+
+
 def compress_xarray(data):
     maskinfo = MaskInfo.instance()
-    mask = maskinfo.info.mask.flatten()
-    data = data.values
-    data = data.reshape(data.shape[0], data.shape[1]*data.shape[2])
-    data_masked = np.compress(np.logical_not(mask), data, axis=1)
+    mask = np.logical_not(maskinfo.info.mask)
+
+    # data = data.values
+    # data_masked = data[:, mask]
+    data_masked = mask_array(data, mask).values
     return data_masked
 
 
@@ -1070,6 +1088,7 @@ def date_range():
     binding = settings.binding
     begin = calendar(binding['StepStart'])
     end = calendar(binding['StepEnd'])
+    end = end + datetime.timedelta(seconds=int(binding['DtSec']))
     return begin, end
 
 
@@ -1088,14 +1107,15 @@ def xarray_reader(path):
     da = da.sel(time=slice(begin, end))
     print(da)
 
-    da_masked = compress_xarray(da)
+    array_masked = compress_xarray(da)
+    print(array_masked)
 
-    return da_masked
+    return array_masked
 
 
-def extract_step_xr(da, timestep):
+def extract_step_xr(data_array, timestep):
     # cur_date = date_from_step(timestep)
     # data = da.sel(time=cur_date)
     # return compress_xarray(data)
-    data = da[timestep-1]
+    data = data_array[timestep]
     return data
