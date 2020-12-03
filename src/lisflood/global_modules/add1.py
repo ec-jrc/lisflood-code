@@ -1047,12 +1047,12 @@ def mask_array_np(data, mask):
     return data[:, mask]
 
 
-def mask_array(data, mask):
+def mask_array(data, mask, core_dim=['y', 'x']):
     n_data = int(mask.sum())
     masked_data = xr.apply_ufunc(mask_array_np, data,
                                  dask='parallelized',
-                                 input_core_dims=[['y', 'x']],
-                                 exclude_dims=set(['y', 'x']),
+                                 input_core_dims=[core_dim],
+                                 exclude_dims=set(core_dim),
                                  output_dtypes=[data.dtype],
                                  output_core_dims=[['z']],
                                  output_sizes={'z': n_data},
@@ -1075,8 +1075,7 @@ def date_range():
     return begin, end
 
 
-def xarray_reader(path):
-    ds = xr.open_mfdataset(path+'.nc', engine='netcdf4', chunks={'time': 'auto'}, combine='by_coords')
+def find_main_var(ds, path):
     variable_names = [k for k in ds.variables if len(ds.variables[k].dims) == 3]
     if len(variable_names) > 1:
         raise LisfloodWarning('More than one variable in dataset {}'.format(path))
@@ -1084,6 +1083,12 @@ def xarray_reader(path):
         raise LisfloodWarning('Could not find a valid variable in dataset {}'.format(path))
     else:
         var_name = variable_names[0]
+    return var_name
+
+
+def xarray_reader(path):
+    ds = xr.open_mfdataset(path+'.nc', engine='netcdf4', chunks={'time': 'auto'}, combine='by_coords')
+    var_name = find_main_var(ds, path)
     da = ds[var_name]
 
     # extract time range
@@ -1099,10 +1104,10 @@ def xarray_reader(path):
 def extract_step_xr(dataset, chunked_array, timestep):
 
     chunksize = dataset.chunks[0][0]
-    local_step = timestep%chunksize
+    local_step = timestep % chunksize
 
     # load the values in chunk
-    if chunked_array is None or local_step==0:
+    if chunked_array is None or local_step == 0:
         index_0 = int(timestep/chunksize)*chunksize
         index_1 = min(index_0+chunksize, dataset.sizes['time'])
         chunked_array = dataset.isel(time=range(index_0, index_1))
