@@ -1067,11 +1067,29 @@ def compress_xarray(data):
     return masked_data
 
 
+def date_from_step(timestep):
+
+    settings = LisSettings.instance()
+    binding = settings.binding
+    begin = calendar(binding['CalendarDayStart'], binding['calendar_type'])
+    dt_sec = float(binding['DtSec'])
+    dt_day = float(dt_sec / 86400)
+
+    # get date of current simulation step
+    currentDate = calendar(timestep, binding['calendar_type'])
+    if type(currentDate) is not datetime.datetime:
+        currentDate = begin + datetime.timedelta(days=(currentDate - 1) * dt_day)
+
+
 def date_range():
     settings = LisSettings.instance()
     binding = settings.binding
     begin = calendar(binding['StepStart'])
     end = calendar(binding['StepEnd'])
+    if type(begin) is float: 
+        begin = date_from_step(begin)
+    if type(end) is float: 
+        end = date_from_step(end)
     return begin, end
 
 
