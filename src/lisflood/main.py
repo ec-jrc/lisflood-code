@@ -147,7 +147,10 @@ def lisfloodexe(lissettings=None):
     # print info about execution
     print(LisfloodRunInfo(model_to_run))
     # actual run of the model
-    model_to_run.run()
+    if flags['initonly']:
+        print('initonly flag activated... Stopping now before entering time loop.')
+    else:
+        model_to_run.run()
 
 # ==================================================
 # ============== USAGE ==============================
@@ -174,6 +177,7 @@ def usage():
     -c --check       input maps and stack maps are checked, output for each input map BUT no model run
     -h --noheader    .tss file have no header and start immediately with the time series
     -d --debug       debug outputs
+    -i --initonly    only run initialisation, not the dynamic loop
     """)
     sys.exit(1)
 
@@ -193,7 +197,13 @@ Water balance and flood simulation model for large catchments\n
 # ==================================================
 
 
-def main():
+def main(*args):
+
+    # if arguments are provided, overwrite sys.argv
+    # used when calling lisflood from another python script
+    if len(args) > 0:
+        sys.argv = args
+
     # if arguments are missing display usage info
     if len(sys.argv) < 2:
         usage()

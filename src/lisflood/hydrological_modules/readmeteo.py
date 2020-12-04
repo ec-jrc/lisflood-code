@@ -17,7 +17,7 @@ See the Licence for the specific language governing permissions and limitations 
 from __future__ import print_function, absolute_import
 import xarray as xr
 
-from ..global_modules.add1 import readnetcdf, checknetcdf,readmapsparse, xarray_reader, extract_step_xr
+from ..global_modules.add1 import loadmap, readnetcdf, checknetcdf,readmapsparse, xarray_reader, extract_step_xr
 from ..global_modules.settings import LisSettings
 
 
@@ -39,13 +39,7 @@ class readmeteo(object):
             self.datasets = {}
             self.arrays_chunked = {}
             for data in ['PrecipitationMaps', 'TavgMaps', 'ET0Maps', 'E0Maps']:
-                self.datasets[data] = xarray_reader(binding[data])
-                self.arrays_chunked[data] = None
-
-            # checknetcdf(binding['PrecipitationMaps'], binding['StepStart'], binding['StepEnd'])
-            # checknetcdf(binding['TavgMaps'], binding['StepStart'], binding['StepEnd'])
-            # checknetcdf(binding['ET0Maps'], binding['StepStart'], binding['StepEnd'])
-            # checknetcdf(binding['E0Maps'], binding['StepStart'], binding['StepEnd'])
+                self.datasets[data], self.arrays_chunked[data] = xarray_reader(binding[data])
 
 # --------------------------------------------------------------------------
 # --------------------------------------------------------------------------
@@ -73,10 +67,7 @@ class readmeteo(object):
             self.var.Tavg = forcings['TavgMaps']
             self.var.ETRef = forcings['ET0Maps'] * self.var.DtDay * self.var.CalEvaporation
             self.var.EWRef =forcings['E0Maps'] * self.var.DtDay * self.var.CalEvaporation
-            # self.var.Precipitation = readnetcdf(binding['PrecipitationMaps'], self.var.currentTimeStep()) * self.var.DtDay * self.var.PrScaling
-            # self.var.Tavg = readnetcdf(binding['TavgMaps'], self.var.currentTimeStep())
-            # self.var.ETRef = readnetcdf(binding['ET0Maps'], self.var.currentTimeStep()) * self.var.DtDay * self.var.CalEvaporation
-            # self.var.EWRef = readnetcdf(binding['E0Maps'], self.var.currentTimeStep()) * self.var.DtDay * self.var.CalEvaporation
+
         else:
             # Read from stack of maps in Pcraster format
             self.var.Precipitation = readmapsparse(binding['PrecipitationMaps'], self.var.currentTimeStep(), self.var.Precipitation) * self.var.DtDay * self.var.PrScaling

@@ -39,6 +39,7 @@ from .zusatz import iterOpenNetcdf, iterReadPCRasterMap, iterSetClonePCR, checkm
 from .settings import (calendar_inconsistency_warning, get_calendar_type, calendar, MaskAttrs, CutMap, NetCDFMetadata,
                        LisSettings, MaskInfo)
 from .errors import LisfloodWarning, LisfloodError
+from .decorators import iocache
 
 
 def defsoil(name1, name2=None, name3=None):
@@ -265,6 +266,7 @@ def makenumpy(map):
         return map
 
 
+@iocache
 def loadmap(name, pcr=False, lddflag=False, timestampflag='exact', averageyearflag=False):
     """ Load a static map either value or pcraster map or netcdf (single or stack)
     
@@ -1103,8 +1105,17 @@ def find_main_var(ds, path):
     return var_name
 
 
+@iocache
 def xarray_reader(path):
-    ds = xr.open_mfdataset(path+'.nc', engine='netcdf4', chunks={'time': 'auto'}, combine='by_coords')
+
+    # load dataset using xarray (using chunk from binding)
+    settings = LisSettings.instance()
+    binding = settings.binding
+    time_chunk = binding['NetCDFTimeChunks']  # -1 to load everything, 'auto' to let xarray decide
+    print('Chunk is {}'.format(time_chunk))
+    if time_chunk != 'auto':
+        time_chunk = int(time_chunk)
+    ds = xr.open_mfdataset(path+'.nc', engine='netcdf4', chunks={'time': time_chunk}, combine='by_coords')
     var_name = find_main_var(ds, path)
     da = ds[var_name]
 
@@ -1115,7 +1126,13 @@ def xarray_reader(path):
     # compress dataset (remove missing values)
     masked_da = compress_xarray(da)
 
-    return masked_da
+    # if only one big chunk, already load the whole array
+    if masked_da.chunks[0][0] == masked_da.sizes['time']:
+        chunked_array = masked_da.values
+    else:
+        chunked_array = None
+
+    return masked_da, chunked_array
 
 
 def extract_step_xr(dataset, chunked_array, timestep):
@@ -1124,11 +1141,12 @@ def extract_step_xr(dataset, chunked_array, timestep):
     local_step = timestep % chunksize
 
     # load the values in chunk
-    if chunked_array is None or local_step == 0:
-        index_0 = int(timestep/chunksize)*chunksize
-        index_1 = min(index_0+chunksize, dataset.sizes['time'])
-        chunked_array = dataset.isel(time=range(index_0, index_1))
-        chunked_array = chunked_array.values  # triggers xarray computation
+    if chunksize != dataset.sizes['time']:
+        if chunked_array is None or local_step == 0:
+            index_0 = int(timestep/chunksize)*chunksize
+            index_1 = min(index_0+chunksize, dataset.sizes['time'])
+            chunked_array = dataset.isel(time=range(index_0, index_1))
+            chunked_array = chunked_array.values  # triggers xarray computation
 
     data = chunked_array[local_step]
     return chunked_array, data

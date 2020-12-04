@@ -331,7 +331,7 @@ class LisSettings(with_metaclass(Singleton)):
     def _flags():
         flags = OrderedDict([('quiet', False), ('veryquiet', False), ('loud', False),
                              ('checkfiles', False), ('noheader', False), ('printtime', False),
-                             ('debug', False), ('nancheck', False)])
+                             ('debug', False), ('nancheck', False), ('initonly', False)])
         if 'test' in sys.argv[0] or 'test' in sys.argv[1]:
             # return defaults during tests
             return flags
@@ -339,7 +339,7 @@ class LisSettings(with_metaclass(Singleton)):
         @cached
         def _flags(argz):
             try:
-                opts, arguments = getopt.getopt(argz, 'qvlchtdn', list(flags.keys()))
+                opts, arguments = getopt.getopt(argz, 'qvlchtdni', list(flags.keys()))
             except getopt.GetoptError:
                 from ..main import usage
                 usage()
@@ -347,7 +347,9 @@ class LisSettings(with_metaclass(Singleton)):
                 for o, a in opts:
                     for opt in (('-q', '--quiet'), ('-v', '--veryquiet'),
                                 ('-l', '--loud'), ('-c', '--checkfiles'),
-                                ('-h', '--noheader'), ('-t', '--printtime')):
+                                ('-h', '--noheader'), ('-t', '--printtime'),
+                                ('-d', '--debug'), ('-n', '--nancheck'),
+                                ('-i', '--initonly')):
                         if o in opt:
                             flags[opt[1].lstrip('--')] = True
                             break

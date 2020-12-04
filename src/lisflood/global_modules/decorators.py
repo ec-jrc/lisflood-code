@@ -39,3 +39,18 @@ def cached(f):
         return _cache[args]
 
     return _decorator
+
+
+def iocache(obj):
+    cache = {}
+
+    @wraps(obj)
+    def iocache_wrapper(*args, **kwargs):
+        key = str(args) + str(kwargs)
+        if key not in cache:
+            print('Registering {}'.format(key))
+            cache[key] = obj(*args, **kwargs)
+        else:
+            print('Retrieving {}'.format(key))
+        return cache[key]
+    return iocache_wrapper
