@@ -30,6 +30,7 @@ import os
 import pprint
 import inspect
 from collections import namedtuple
+import multiprocessing
 
 import xml.dom.minidom
 import pcraster
@@ -77,6 +78,43 @@ class Singleton(type):
 
     def instance(cls):
         return cls._current[cls]
+
+
+class ThreadSingleton(type):
+    """
+    Singleton metaclass to keep single instances by init arguments
+    """
+    _instances = {}
+    _init = {}
+    _current = {}
+
+    def __init__(cls, name, bases, dct):
+        key = (multiprocessing.current_process().name, cls)
+        cls._init[key] = dct.get('__init__', None)  # set __init__ method for the class
+        super(ThreadSingleton, cls).__init__(name, bases, dct)
+
+    def __call__(cls, *args, **kwargs):
+        init = cls._init[(multiprocessing.current_process().name, cls)]  # get __init__ method
+        if init is not None:
+            init_args = inspect.getcallargs(init, None, *args, **kwargs).items()
+            new_init_args = []
+            for a in init_args:
+                if isinstance(a[1], np.ndarray):
+                    new_init_args.append((a[0], a[1].tostring()))
+                else:
+                    new_init_args.append(a)
+            key = (multiprocessing.current_process().name, cls, frozenset(new_init_args))
+        else:
+            key = cls
+
+        if key not in cls._instances:
+            cls._instances[key] = super(ThreadSingleton, cls).__call__(*args, **kwargs)
+        cls._current[(multiprocessing.current_process().name, cls)] = cls._instances[key]
+        return cls._instances[key]
+
+    def instance(cls):
+        key = (multiprocessing.current_process().name, cls)
+        return cls._current[key]
 
 
 @nine
@@ -175,7 +213,7 @@ class NetCDFMetadata(with_metaclass(Singleton)):
 
 
 @nine
-class LisSettings(with_metaclass(Singleton)):
+class LisSettings(with_metaclass(ThreadSingleton)):
     printer = pprint.PrettyPrinter(indent=4, width=120)
 
     def __str__(self):

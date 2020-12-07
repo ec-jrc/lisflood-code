@@ -17,7 +17,7 @@ See the Licence for the specific language governing permissions and limitations 
 from __future__ import print_function, absolute_import
 import xarray as xr
 
-from ..global_modules.add1 import loadmap, readnetcdf, checknetcdf,readmapsparse, xarray_reader, extract_step_xr
+from ..global_modules.add1 import loadmap, readnetcdf, checknetcdf,readmapsparse, XarrayChunkedArray
 from ..global_modules.settings import LisSettings
 
 
@@ -36,10 +36,9 @@ class readmeteo(object):
         binding = settings.binding
         if option['readNetcdfStack']:
             # checking if time period in netCDF files (forcings) includes simulation period
-            self.datasets = {}
-            self.arrays_chunked = {}
+            self.forcings = {}
             for data in ['PrecipitationMaps', 'TavgMaps', 'ET0Maps', 'E0Maps']:
-                self.datasets[data], self.arrays_chunked[data] = xarray_reader(binding[data])
+                self.forcings[data] = XarrayChunkedArray(binding[data])
 
 # --------------------------------------------------------------------------
 # --------------------------------------------------------------------------
@@ -56,17 +55,13 @@ class readmeteo(object):
         # ************************************************************
         if option['readNetcdfStack']:
 
-            timestep = self.var.currentTimeStep() - self.var.firstTimeStep()
-
-            forcings = {}
-            for data in ['PrecipitationMaps', 'TavgMaps', 'ET0Maps', 'E0Maps']:
-                self.arrays_chunked[data], forcings[data] = extract_step_xr(self.datasets[data], self.arrays_chunked[data], timestep)
+            step = self.var.currentTimeStep() - self.var.firstTimeStep()
 
             # Read from NetCDF stack files
-            self.var.Precipitation = forcings['PrecipitationMaps'] * self.var.DtDay * self.var.PrScaling
-            self.var.Tavg = forcings['TavgMaps']
-            self.var.ETRef = forcings['ET0Maps'] * self.var.DtDay * self.var.CalEvaporation
-            self.var.EWRef =forcings['E0Maps'] * self.var.DtDay * self.var.CalEvaporation
+            self.var.Precipitation = self.forcings['PrecipitationMaps'][step] * self.var.DtDay * self.var.PrScaling
+            self.var.Tavg = self.forcings['TavgMaps'][step]
+            self.var.ETRef = self.forcings['ET0Maps'][step] * self.var.DtDay * self.var.CalEvaporation
+            self.var.EWRef =self.forcings['E0Maps'][step] * self.var.DtDay * self.var.CalEvaporation
 
         else:
             # Read from stack of maps in Pcraster format

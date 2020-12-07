@@ -1082,6 +1082,7 @@ def date_from_step(timestep):
 
     return currentDate
 
+
 def date_range():
     settings = LisSettings.instance()
     binding = settings.binding
@@ -1106,47 +1107,53 @@ def find_main_var(ds, path):
 
 
 @iocache
-def xarray_reader(path):
+class XarrayChunkedArray():
 
-    # load dataset using xarray (using chunk from binding)
-    settings = LisSettings.instance()
-    binding = settings.binding
-    time_chunk = binding['NetCDFTimeChunks']  # -1 to load everything, 'auto' to let xarray decide
-    print('Chunk is {}'.format(time_chunk))
-    if time_chunk != 'auto':
-        time_chunk = int(time_chunk)
-    ds = xr.open_mfdataset(path+'.nc', engine='netcdf4', chunks={'time': time_chunk}, combine='by_coords')
-    var_name = find_main_var(ds, path)
-    da = ds[var_name]
+    def __init__(self, data_path):
 
-    # extract time range
-    begin, end = date_range()
-    da = da.sel(time=slice(begin, end))
+        # load dataset using xarray (using chunk from binding)
+        settings = LisSettings.instance()
+        binding = settings.binding
+        time_chunk = binding['NetCDFTimeChunks']  # -1 to load everything, 'auto' to let xarray decide
+        # print('Chunk is {}'.format(time_chunk))
+        if time_chunk != 'auto':
+            time_chunk = int(time_chunk)
+        ds = xr.open_mfdataset(data_path+'.nc', engine='netcdf4', chunks={'time': time_chunk}, combine='by_coords')
+        var_name = find_main_var(ds, data_path)
+        da = ds[var_name]
 
-    # compress dataset (remove missing values)
-    masked_da = compress_xarray(da)
+        # extract time range
+        begin, end = date_range()
+        da = da.sel(time=slice(begin, end))
 
-    # if only one big chunk, already load the whole array
-    if masked_da.chunks[0][0] == masked_da.sizes['time']:
-        chunked_array = masked_da.values
-    else:
-        chunked_array = None
+        # compress dataset (remove missing values)
+        self.masked_da = compress_xarray(da)
 
-    return masked_da, chunked_array
+        # if only one big chunk, already load the whole array
+        self.chunks = self.masked_da.chunks[0]
+        self.ichunk = None
+        self.load_chunk(timestep=0)
 
+    def load_chunk(self, timestep):
+        if self.ichunk is None:  # initialisation
+            self.ichunk = 0
+            self.chunk_index = [0, self.chunks[self.ichunk]]
+        else:
+            self.ichunk += 1
+            self.chunk_index[0] = sum(self.chunks[:self.ichunk])
+            self.chunk_index[1] = sum(self.chunks[:self.ichunk+1])
 
-def extract_step_xr(dataset, chunked_array, timestep):
+        chunked_dataset = self.masked_da.isel(time=range(self.chunk_index[0], self.chunk_index[1]))
+        self.chunked_array = chunked_dataset.values  # triggers xarray computation
+        # print('chunk {} loaded'.format(self.ichunk))
 
-    chunksize = dataset.chunks[0][0]
-    local_step = timestep % chunksize
+    def __getitem__(self, timestep):
 
-    # load the values in chunk
-    if chunksize != dataset.sizes['time']:
-        if chunked_array is None or local_step == 0:
-            index_0 = int(timestep/chunksize)*chunksize
-            index_1 = min(index_0+chunksize, dataset.sizes['time'])
-            chunked_array = dataset.isel(time=range(index_0, index_1))
-            chunked_array = chunked_array.values  # triggers xarray computation
+        local_step = timestep - self.chunk_index[0]
+        if local_step == self.chunks[self.ichunk]:  # if at the end of chunk, load new chunk
+            self.load_chunk(timestep)
+            local_step = timestep - self.chunk_index[0]
+            # print('loading array {} at step {}'.format(self.masked_da.name, timestep))
 
-    data = chunked_array[local_step]
-    return chunked_array, data
+        data = self.chunked_array[local_step]
+        return data

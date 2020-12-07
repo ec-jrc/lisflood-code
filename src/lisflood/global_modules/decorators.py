@@ -48,9 +48,9 @@ def iocache(obj):
     def iocache_wrapper(*args, **kwargs):
         key = str(args) + str(kwargs)
         if key not in cache:
-            print('Registering {}'.format(key))
+            # print('Registering {}'.format(key))
             cache[key] = obj(*args, **kwargs)
-        else:
-            print('Retrieving {}'.format(key))
+        # else:
+        #     print('Retrieving {}'.format(key))
         return cache[key]
     return iocache_wrapper
