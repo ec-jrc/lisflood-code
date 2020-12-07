@@ -203,15 +203,16 @@ def main(*args):
     # used when calling lisflood from another python script
     if len(args) > 0:
         print('replaceing sys.argv by {}'.format(args))
-        sys.argv = args
+        options = args
+    else: 
+        options = sys.argv
 
     # if arguments are missing display usage info
-    if len(sys.argv) < 2:
+    if len(options) < 2:
         usage()
 
     # setting.xml file
-    settings = sys.argv[1]
-    lissettings = LisSettings(settings)
+    lissettings = LisSettings(options)
     flags = lissettings.flags
     if not (flags['veryquiet'] or flags['quiet']):
         headerinfo()

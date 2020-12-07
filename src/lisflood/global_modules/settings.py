@@ -85,16 +85,16 @@ class ThreadSingleton(type):
     Singleton metaclass to keep single instances by init arguments
     """
     _instances = {}
-    _init = {}
     _current = {}
 
     def __init__(cls, name, bases, dct):
-        key = (multiprocessing.current_process().name, cls)
-        cls._init[key] = dct.get('__init__', None)  # set __init__ method for the class
+        print('init thread singleton')
         super(ThreadSingleton, cls).__init__(name, bases, dct)
 
     def __call__(cls, *args, **kwargs):
-        init = cls._init[(multiprocessing.current_process().name, cls)]  # get __init__ method
+        print('calling thread singleton')
+        print((multiprocessing.current_process().name, cls))
+        init = cls.__init__
         if init is not None:
             init_args = inspect.getcallargs(init, None, *args, **kwargs).items()
             new_init_args = []
@@ -103,11 +103,13 @@ class ThreadSingleton(type):
                     new_init_args.append((a[0], a[1].tostring()))
                 else:
                     new_init_args.append(a)
-            key = (multiprocessing.current_process().name, cls, frozenset(new_init_args))
+            key = (multiprocessing.current_process().name, cls, str(new_init_args))
         else:
             key = cls
 
         if key not in cls._instances:
+            print('creating instance thread singleton')
+            print((multiprocessing.current_process().name, cls))
             cls._instances[key] = super(ThreadSingleton, cls).__call__(*args, **kwargs)
         cls._current[(multiprocessing.current_process().name, cls)] = cls._instances[key]
         return cls._instances[key]
@@ -233,7 +235,8 @@ class LisSettings(with_metaclass(ThreadSingleton)):
                report_maps_end=self.printer.pformat(self.report_maps_end))
         return res
 
-    def __init__(self, settings_file):
+    def __init__(self, sys_args):
+        settings_file = sys_args[1]
         dom = xml.dom.minidom.parse(settings_file)
         self.settings_dir = os.path.normpath(os.path.dirname((os.path.abspath(settings_file))))
         self.settings_path = os.path.normpath(os.path.abspath(settings_file))
@@ -244,7 +247,7 @@ class LisSettings(with_metaclass(ThreadSingleton)):
         self.ncores = self._ncores(user_settings)
         self.binding = bindings
         self.options = self._options(dom)
-        self.flags = self._flags()
+        self.flags = self._flags(sys_args)
         self.model_steps = self._model_steps()
         self.report_steps = self._report_steps(user_settings, bindings)
         self.filter_steps = self._filter_steps(user_settings)
@@ -366,11 +369,11 @@ class LisSettings(with_metaclass(ThreadSingleton)):
         return pathout
 
     @staticmethod
-    def _flags():
+    def _flags(sys_args):
         flags = OrderedDict([('quiet', False), ('veryquiet', False), ('loud', False),
                              ('checkfiles', False), ('noheader', False), ('printtime', False),
                              ('debug', False), ('nancheck', False), ('initonly', False)])
-        if 'test' in sys.argv[0] or 'test' in sys.argv[1]:
+        if 'test' in sys_args[0] or 'test' in sys_args[1]:
             # return defaults during tests
             return flags
 
@@ -393,7 +396,7 @@ class LisSettings(with_metaclass(ThreadSingleton)):
                             break
             return flags
 
-        args = sys.argv[2:]
+        args = sys_args[2:]
         return _flags(args)
 
     def _bindings(self, dom):

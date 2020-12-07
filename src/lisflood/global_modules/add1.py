@@ -803,7 +803,7 @@ def writenet(flag, inputmap, netfile, DtDay,
     if flag == 0:
         nf1 = iterOpenNetcdf(netfile, "", 'w', format='NETCDF4')
         # general Attributes
-        nf1.settingsfile = os.path.realpath(sys.argv[1])
+        nf1.settingsfile = os.path.realpath(settings.settings_path)
         nf1.date_created = xtime.ctime(xtime.time())
         nf1.Source_Software = 'Lisflood Python'
         nf1.institution = "European Commission DG Joint Research Centre (JRC) - E1, D2 Units"
