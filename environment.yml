@@ -140,7 +140,7 @@ dependencies:
     - jeepney==0.4.3
     - joblib==0.14.1
     - keyring==21.4.0
-    - lisflood-utilities==0.12.9
+    - lisflood-utilities>=0.12.14
     - lxml==4.4.1
     - mccabe==0.6.1
     - meld==0.2.4

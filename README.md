@@ -15,6 +15,20 @@ Other useful resources
 | Lisflood Usecases   |                                                           | https://github.com/ec-jrc/lisflood-usecases                  |
 
 
+## Notes for Release 3.0.0
+
+With version 3.0.0, the computation of Qlimit has been edited.
+
+This could lead to substantial differences in model output, and a new calibration of parameter QSplitMult is required.
+QLimit is a threshold value. Floodplain routing (i.e. the second line of routing) starts when the channel discharge 
+exceeds the value QLimit (bankfull discharge). 
+
+The definition of QLimit was edited to allow a more physically based assessment of its value, which is now independent of the number of routing steps. 
+QLimit is now defined as the product of AvgDis (average discharge value, as computed by the prerun) and QSplitMult. 
+
+The value of the coefficient QSplitMult can be calibrated or provided as input according to statistical relationships. 
+It is here noted that this edited definition of QLimit is consistent with the computation of M3limit.
+
 ## Quick start
 
 You can use conda environment to easily install dependencies.
