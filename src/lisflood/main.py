@@ -205,14 +205,17 @@ def main(*args):
         print('replaceing sys.argv by {}'.format(args))
         options = args
     else: 
-        options = sys.argv
+        options = sys.argv[1:]
 
     # if arguments are missing display usage info
-    if len(options) < 2:
+    if len(options) < 1:
         usage()
 
+    settings_file = options[0]
+    sys_args = options[1:]
+
     # setting.xml file
-    lissettings = LisSettings(options)
+    lissettings = LisSettings(settings_file, sys_args)
     flags = lissettings.flags
     if not (flags['veryquiet'] or flags['quiet']):
         headerinfo()

@@ -45,31 +45,27 @@ from .decorators import iocache
 def defsoil(name1, name2=None, name3=None):
     """ loads 3 array in a list
     """
-    try:
+    if isinstance(name1, str):
         in1 = loadmap(name1)
-    except Exception as e:
-        # FIXME manage exception properly (it spits out some TypeError: unhashable type: 'numpy.ndarray')
-        # print(str(type(e)))
-        # print(str(e))
+    else:
         in1 = name1
 
     if name2 is None:
         in2 = in1
     else:
-        try:
+        if isinstance(name2, str):
             in2 = loadmap(name2)
-        except Exception as e:
-            print(str(type(e)))
-            print(str(e))
+        else:
             in2 = name2
 
     if name3 is None:
         in3 = in1
     else:
-        try:
+        if isinstance(name3, str):
             in3 = loadmap(name3)
-        except Exception as e:
+        else:
             in3 = name3
+
     return [in1, in2, in3]
 
 
@@ -266,7 +262,7 @@ def makenumpy(map):
         return map
 
 
-@iocache
+# @iocache
 def loadmap(name, pcr=False, lddflag=False, timestampflag='exact', averageyearflag=False):
     """ Load a static map either value or pcraster map or netcdf (single or stack)
     
@@ -1106,16 +1102,11 @@ def find_main_var(ds, path):
     return var_name
 
 
-@iocache
-class XarrayChunkedArray():
+class XarrayChunked():
 
-    def __init__(self, data_path):
+    def __init__(self, data_path, time_chunk):
 
-        # load dataset using xarray (using chunk from binding)
-        settings = LisSettings.instance()
-        binding = settings.binding
-        time_chunk = binding['NetCDFTimeChunks']  # -1 to load everything, 'auto' to let xarray decide
-        # print('Chunk is {}'.format(time_chunk))
+        # load dataset using xarray
         if time_chunk != 'auto':
             time_chunk = int(time_chunk)
         ds = xr.open_mfdataset(data_path+'.nc', engine='netcdf4', chunks={'time': time_chunk}, combine='by_coords')
@@ -1124,14 +1115,18 @@ class XarrayChunkedArray():
 
         # extract time range
         begin, end = date_range()
+        # print('date range: {} -> {}'.format(begin, end))
         da = da.sel(time=slice(begin, end))
 
         # compress dataset (remove missing values)
         self.masked_da = compress_xarray(da)
+        # print(self.masked_da)
 
-        # if only one big chunk, already load the whole array
+        # initialise class variables and load first chunk
         self.chunks = self.masked_da.chunks[0]
         self.ichunk = None
+        self.chunk_index = None
+        self.chunked_array = None
         self.load_chunk(timestep=0)
 
     def load_chunk(self, timestep):
@@ -1145,15 +1140,27 @@ class XarrayChunkedArray():
 
         chunked_dataset = self.masked_da.isel(time=range(self.chunk_index[0], self.chunk_index[1]))
         self.chunked_array = chunked_dataset.values  # triggers xarray computation
-        # print('chunk {} loaded'.format(self.ichunk))
+        print('chunk {} loaded'.format(self.ichunk))
 
     def __getitem__(self, timestep):
 
         local_step = timestep - self.chunk_index[0]
-        if local_step == self.chunks[self.ichunk]:  # if at the end of chunk, load new chunk
+
+        # if at the end of chunk, load new chunk
+        if local_step == self.chunks[self.ichunk]:
             self.load_chunk(timestep)
             local_step = timestep - self.chunk_index[0]
             # print('loading array {} at step {}'.format(self.masked_da.name, timestep))
 
+        if local_step < 0:
+            raise Exception('local step cannot be negative! timestep: {}, chunk: {} - {}', timestep, self.chunk_index[0], self.chunk_index[1])
+
         data = self.chunked_array[local_step]
         return data
+
+
+@iocache
+class XarrayCached(XarrayChunked):
+
+    def __init__(self, data_path):
+        super().__init__(data_path, '-1')

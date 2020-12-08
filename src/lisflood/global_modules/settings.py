@@ -88,12 +88,9 @@ class ThreadSingleton(type):
     _current = {}
 
     def __init__(cls, name, bases, dct):
-        print('init thread singleton')
         super(ThreadSingleton, cls).__init__(name, bases, dct)
 
     def __call__(cls, *args, **kwargs):
-        print('calling thread singleton')
-        print((multiprocessing.current_process().name, cls))
         init = cls.__init__
         if init is not None:
             init_args = inspect.getcallargs(init, None, *args, **kwargs).items()
@@ -108,8 +105,6 @@ class ThreadSingleton(type):
             key = cls
 
         if key not in cls._instances:
-            print('creating instance thread singleton')
-            print((multiprocessing.current_process().name, cls))
             cls._instances[key] = super(ThreadSingleton, cls).__call__(*args, **kwargs)
         cls._current[(multiprocessing.current_process().name, cls)] = cls._instances[key]
         return cls._instances[key]
@@ -235,8 +230,7 @@ class LisSettings(with_metaclass(ThreadSingleton)):
                report_maps_end=self.printer.pformat(self.report_maps_end))
         return res
 
-    def __init__(self, sys_args):
-        settings_file = sys_args[1]
+    def __init__(self, settings_file, sys_args=[]):
         dom = xml.dom.minidom.parse(settings_file)
         self.settings_dir = os.path.normpath(os.path.dirname((os.path.abspath(settings_file))))
         self.settings_path = os.path.normpath(os.path.abspath(settings_file))
@@ -373,9 +367,6 @@ class LisSettings(with_metaclass(ThreadSingleton)):
         flags = OrderedDict([('quiet', False), ('veryquiet', False), ('loud', False),
                              ('checkfiles', False), ('noheader', False), ('printtime', False),
                              ('debug', False), ('nancheck', False), ('initonly', False)])
-        if 'test' in sys_args[0] or 'test' in sys_args[1]:
-            # return defaults during tests
-            return flags
 
         @cached
         def _flags(argz):
@@ -396,8 +387,7 @@ class LisSettings(with_metaclass(ThreadSingleton)):
                             break
             return flags
 
-        args = sys_args[2:]
-        return _flags(args)
+        return _flags(sys_args)
 
     def _bindings(self, dom):
         binding = {}

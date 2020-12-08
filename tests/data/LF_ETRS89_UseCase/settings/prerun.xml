@@ -1512,6 +1512,8 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
         <textvar name="numCPUs_parallelKinematicWave" value="$(numCPUs_parallelKinematicWave)"/>
 
+        <textvar name="NetCDFTimeChunks" value="1"/>
+
         <textvar name="proj4_params" value="$(proj4_params)">
             <comment>
                 This is necessary when using projected coordinates (x,y)

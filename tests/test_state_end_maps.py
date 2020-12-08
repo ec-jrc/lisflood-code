@@ -32,7 +32,7 @@ class TestRepMaps(MixinTestSettings):
     settings_files = {'base': os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/base.xml')}
 
     def teardown_method(self):
-        shutil.rmtree(os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/testrep'))
+        shutil.rmtree(os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/testrep'), ignore_errors=True)
 
     def test_no_reported(self):
         path_out = mk_path_out('data/LF_ETRS89_UseCase/out/testrep')

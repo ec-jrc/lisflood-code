@@ -80,5 +80,5 @@ class TestStepsDates(MixinTestSettings):
     def teardown_method(self):
         path_out_a = os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/1')
         path_out_b = os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/2')
-        shutil.rmtree(path_out_a)
-        shutil.rmtree(path_out_b)
+        shutil.rmtree(path_out_a, ignore_errors=True)
+        shutil.rmtree(path_out_b, ignore_errors=True)
