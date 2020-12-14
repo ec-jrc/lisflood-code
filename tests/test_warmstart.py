@@ -109,9 +109,10 @@ class TestWarmStart(MixinTestSettings):
         warm_step_start = prev_settings.step_end_dt + timedelta(seconds=dt_sec)
         warm_step_end = warm_step_start
         timestep_init = prev_settings.step_end_dt.strftime('%d/%m/%Y %H:%M')
+        step_limit = warm_step_start + 20*timedelta(seconds=dt_sec)
         nc_comparator = NetCDFComparator(settings_prerun.maskpath)
         tss_comparator = TSSComparator(array_equal=True)
-        while warm_step_start <= step_end_dt:
+        while warm_step_start <= step_limit:
             run_number += 1
             path_init = prev_settings.output_dir
             path_out = mk_path_out('data/LF_ETRS89_UseCase/out/run{}_{}'.format(dt_sec, run_number))

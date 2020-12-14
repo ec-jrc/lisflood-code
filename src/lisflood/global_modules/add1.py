@@ -628,6 +628,8 @@ def readnetcdf(name, time, timestampflag='exact', averageyearflag=False):
 
     # get index of timestep in netCDF file corresponding to current simulation date
     current_ncdf_index = np.where(t_steps == current_ncdf_step)[0][0]
+
+    # crop map if subcatchment
     cutmap = CutMap.instance()
     mapnp = nf1.variables[variable_name][current_ncdf_index, cutmap.cuts[2]:cutmap.cuts[3], cutmap.cuts[0]:cutmap.cuts[1]]
     nf1.close()
@@ -1041,11 +1043,13 @@ def nanCheckMap(data, filename, name):
         warnings.warn(LisfloodWarning("Warning: {} of {} land values of {} (binding: '{}') are NaN".format(is_nan.sum(), is_nan.size, filename, name)))
 
 
-def mask_array_np(data, mask):
-    return data[:, mask]
+def mask_array_np(data, mask, crop):
+    data_cut = data[:, crop[2]:crop[3], crop[0]:crop[1]]
+    return data_cut[:, mask]
 
 
-def mask_array(data, mask, core_dim=['y', 'x']):
+
+def mask_array(data, mask, crop, core_dim=['y', 'x']):
     n_data = int(mask.sum())
     masked_data = xr.apply_ufunc(mask_array_np, data,
                                  dask='parallelized',
@@ -1054,20 +1058,20 @@ def mask_array(data, mask, core_dim=['y', 'x']):
                                  output_dtypes=[data.dtype],
                                  output_core_dims=[['z']],
                                  output_sizes={'z': n_data},
-                                 kwargs={'mask': mask})
+                                 kwargs={'mask': mask, 'crop': crop})
     return masked_data
 
 
 def compress_xarray(data):
     maskinfo = MaskInfo.instance()
     mask = np.logical_not(maskinfo.info.mask)
-    masked_data = mask_array(data, mask)
+    cutmap = CutMap.instance()
+    crop = cutmap.cuts
+    masked_data = mask_array(data, mask, crop)
     return masked_data
 
 
-def date_from_step(timestep):
-    settings = LisSettings.instance()
-    binding = settings.binding
+def date_from_step(binding, timestep):
     start = calendar(binding['CalendarDayStart'], binding['calendar_type'])
     dt_sec = float(binding['DtSec'])
     dt_day = float(dt_sec / 86400)
@@ -1079,16 +1083,20 @@ def date_from_step(timestep):
     return currentDate
 
 
-def date_range():
-    settings = LisSettings.instance()
-    binding = settings.binding
+def date_range(binding):
     begin = calendar(binding['StepStart'])
     end = calendar(binding['StepEnd'])
     if type(begin) is float: 
-        begin = date_from_step(begin)
+        begin = date_from_step(binding, begin)
     if type(end) is float: 
-        end = date_from_step(end)
-    return begin, end
+        end = date_from_step(binding, end)
+
+    # Not sure this is the best way but the calendar object does not help
+    begin = np.datetime64(begin.strftime('%Y-%m-%d %H:%M'))
+    end = np.datetime64(end.strftime('%Y-%m-%d %H:%M'))
+    dt = np.timedelta64(int(binding['DtSec']),'s')
+
+    return np.arange(begin, end+dt, dt, dtype='datetime64')
 
 
 def find_main_var(ds, path):
@@ -1113,14 +1121,13 @@ class XarrayChunked():
         var_name = find_main_var(ds, data_path)
         da = ds[var_name]
 
-        # extract time range
-        begin, end = date_range()
-        # print('date range: {} -> {}'.format(begin, end))
-        da = da.sel(time=slice(begin, end))
+        # extract time range from binding
+        binding = LisSettings.instance().binding
+        dates = date_range(binding)  # extract date range from bindings
+        da = da.sel(time=dates)
 
         # compress dataset (remove missing values)
         self.masked_da = compress_xarray(da)
-        # print(self.masked_da)
 
         # initialise class variables and load first chunk
         self.chunks = self.masked_da.chunks[0]
@@ -1140,7 +1147,7 @@ class XarrayChunked():
 
         chunked_dataset = self.masked_da.isel(time=range(self.chunk_index[0], self.chunk_index[1]))
         self.chunked_array = chunked_dataset.values  # triggers xarray computation
-        print('chunk {} loaded'.format(self.ichunk))
+        # print('chunk {} loaded'.format(self.ichunk))
 
     def __getitem__(self, timestep):
 
@@ -1162,5 +1169,5 @@ class XarrayChunked():
 @iocache
 class XarrayCached(XarrayChunked):
 
-    def __init__(self, data_path):
-        super().__init__(data_path, '-1')
+    def __init__(self, data_path, dates):
+        super().__init__(data_path, dates, '-1')

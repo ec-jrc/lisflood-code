@@ -2315,7 +2315,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 -->
         <textvar name="numCPUs_parallelKinematicWave" value="2"/>
 
-        <textvar name="NetCDFTimeChunks" value="2"/>
+        <textvar name="NetCDFTimeChunks" value="auto"/>
 
         <textvar name="ChanQState" value="$(PathOut)/chanq">
             <comment>
