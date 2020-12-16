@@ -109,7 +109,11 @@ class TestWarmStart(MixinTestSettings):
         warm_step_start = prev_settings.step_end_dt + timedelta(seconds=dt_sec)
         warm_step_end = warm_step_start
         timestep_init = prev_settings.step_end_dt.strftime('%d/%m/%Y %H:%M')
-        step_limit = warm_step_start + 20*timedelta(seconds=dt_sec)
+
+        # run only 5*13 steps to speed up computation
+        step_limit = warm_step_start + 5*check_every*timedelta(seconds=dt_sec)
+        print('running until {}'.format(step_limit))
+        
         nc_comparator = NetCDFComparator(settings_prerun.maskpath)
         tss_comparator = TSSComparator(array_equal=True)
         while warm_step_start <= step_limit:

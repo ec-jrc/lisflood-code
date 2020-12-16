@@ -17,7 +17,7 @@ See the Licence for the specific language governing permissions and limitations 
 from __future__ import print_function, absolute_import
 import xarray as xr
 
-from ..global_modules.add1 import loadmap, readnetcdf, checknetcdf,readmapsparse, XarrayCached, XarrayChunked
+from ..global_modules.add1 import loadmap, readnetcdf, checknetcdf,readmapsparse, XarrayCached, XarrayChunked, date_range
 from ..global_modules.settings import LisSettings
 
 
@@ -35,14 +35,16 @@ class readmeteo(object):
         option = settings.options
         binding = settings.binding
         if option['readNetcdfStack']:
+            # extract time range from bindings
+            dates = date_range(binding)
             # extract chunk from bindings
             time_chunk = binding['NetCDFTimeChunks']  # -1 to load everything, 'auto' to let xarray decide
             self.forcings = {}
             for data in ['PrecipitationMaps', 'TavgMaps', 'ET0Maps', 'E0Maps']:
-                if time_chunk == '-1':  # if only one chunk, cache the array
-                    self.forcings[data] = XarrayCached(binding[data])
+                if binding['MapsCaching'] == "True":
+                    self.forcings[data] = XarrayCached(binding[data], dates)
                 else:
-                    self.forcings[data] = XarrayChunked(binding[data], time_chunk)
+                    self.forcings[data] = XarrayChunked(binding[data], dates, time_chunk)
 
 # --------------------------------------------------------------------------
 # --------------------------------------------------------------------------

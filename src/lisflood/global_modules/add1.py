@@ -262,8 +262,21 @@ def makenumpy(map):
         return map
 
 
-# @iocache
-def loadmap(name, pcr=False, lddflag=False, timestampflag='exact', averageyearflag=False):
+def loadmap(*args, **kwargs):
+    settings = LisSettings.instance()
+    binding = settings.binding
+    if binding['MapsCaching'] == "True":
+        return loadmap_cached(*args, **kwargs)
+    else:
+        return loadmap_base(*args, **kwargs)
+
+
+@iocache
+def loadmap_cached(*args, **kwargs):
+    return loadmap_base(*args, **kwargs)
+
+
+def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averageyearflag=False):
     """ Load a static map either value or pcraster map or netcdf (single or stack)
     
     Load a static map either value or pcraster map or netcdf (single or stack)
@@ -1096,7 +1109,7 @@ def date_range(binding):
     end = np.datetime64(end.strftime('%Y-%m-%d %H:%M'))
     dt = np.timedelta64(int(binding['DtSec']),'s')
 
-    return np.arange(begin, end+dt, dt, dtype='datetime64')
+    return [begin, end+dt, dt]
 
 
 def find_main_var(ds, path):
@@ -1112,7 +1125,7 @@ def find_main_var(ds, path):
 
 class XarrayChunked():
 
-    def __init__(self, data_path, time_chunk):
+    def __init__(self, data_path, dates, time_chunk):
 
         # load dataset using xarray
         if time_chunk != 'auto':
@@ -1122,9 +1135,10 @@ class XarrayChunked():
         da = ds[var_name]
 
         # extract time range from binding
-        binding = LisSettings.instance().binding
-        dates = date_range(binding)  # extract date range from bindings
-        da = da.sel(time=dates)
+        # binding = LisSettings.instance().binding
+        # dates = date_range(binding)  # extract date range from bindings
+        date_range = np.arange(*dates, dtype='datetime64')
+        da = da.sel(time=date_range)
 
         # compress dataset (remove missing values)
         self.masked_da = compress_xarray(da)
@@ -1170,4 +1184,5 @@ class XarrayChunked():
 class XarrayCached(XarrayChunked):
 
     def __init__(self, data_path, dates):
+
         super().__init__(data_path, dates, '-1')

@@ -1514,6 +1514,8 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
         <textvar name="NetCDFTimeChunks" value="auto"/>
 
+        <textvar name="MapsCaching" value="False"/>
+
         <textvar name="proj4_params" value="$(proj4_params)">
             <comment>
                 This is necessary when using projected coordinates (x,y)
