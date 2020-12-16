@@ -1109,7 +1109,7 @@ def date_range(binding):
     end = np.datetime64(end.strftime('%Y-%m-%d %H:%M'))
     dt = np.timedelta64(int(binding['DtSec']),'s')
 
-    return [begin, end+dt, dt]
+    return (begin, end+dt, dt)
 
 
 def find_main_var(ds, path):
