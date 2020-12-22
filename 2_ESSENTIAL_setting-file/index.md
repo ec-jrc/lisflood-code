@@ -670,7 +670,7 @@ Note that a couple of variables can be [initialized internally](https://ec-jrc.g
 	</textvar>                                                          
 	<textvar name="ThetaForestInit1Value" value="-9999">            
 	<comment>                                                           
-	initial soil moisture content layer 1                                 
+	initial soil moisture content layer 1                                 https://ec-jrc.github.io/lisflood-code/3_step3_preparing-setting-file/
 	-9999: use field capacity values                                      
 	</comment>                                                          
 	</textvar>                                                          
@@ -710,4 +710,8 @@ Within the 'lfoptions' element of the settings file, each option is defined usin
 	<setoption choice="1" name="inflow" /> 
 	</lfoptions>                           	
 ```
+
+### Reference settings file
+In order to facilitate the preparation of the settings file, a complete example is provided here [https://ec-jrc.github.io/lisflood-code/3_step3_preparing-setting-file/lisfloodSettings_reference.xml]. The user is encouraged to update the paths, the names of the maps and of the tables in the provided template.
+
 [:top:](#top)
