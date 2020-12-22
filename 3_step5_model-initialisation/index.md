@@ -42,7 +42,8 @@ Even though the use of a sufficiently long warm-up period usually results in a c
 
 
 **Steady-state storage in practice**
-An actual LISFLOOD simulation differs from the theoretical *steady state* in 2 ways. First, in any real simulation the inflow into the lower zone is not constant, but varies in time. This is not really a problem, since $LZ_{ss}$ can be computed from the *average* recharge. However, this is something we do not know until the end of the simulation! Also, the inflow into the lower zone is controlled by the availability of water in the upper zone, which, in turn, depends on the supply of water from the soil. Hence, it is influenced by any calibration parameters that control behaviour of soil- and subsoil (e.g. $T_{uz}$, $GW_{perc}$, $b$, and so on). This means that --when calibrating the model- the average recharge will be different for every parameter set. Note, however, that it will *always* be smaller than the value of $GW_{perc}$, which is used as an upper limit in the model. Note that the pre-run procedures include a sufficiently long warm-up period.
+An actual LISFLOOD simulation differs from the theoretical *steady state* in 2 ways. First, in any real simulation the inflow into the lower zone is not constant, but varies in time. This is not really a problem, since $LZ_{ss}$ can be computed from the *average* recharge. However, this is something we do not know until the end of the simulation! Also, the inflow into the lower zone is controlled by the availability of water in the upper zone, which, in turn, depends on the supply of water from the soil. Hence, it is influenced by any calibration parameters that control behaviour of soil- and subsoil (e.g. $T_{uz}$, $GW_{perc}$, $b$, and so on). This means that -when calibrating the model- the average recharge will be different for every parameter set. Note, however, that it will *always* be smaller than the value of $GW_{perc}$, which is used as an upper limit in the model. 
+As an alternative to using the internal initialization (and hence the bogus values), LZavin and AvgDis (LZInitValue and PrevDischarge) can be computed using an initialization run (or pre-run). The pre-run procedure must include a sufficiently long warm-up period to allow the computation of reliable values of  LZavin and AvgDis. The set-upo of the iinitialization run is explained below: the protocol differs slightly depending on the settings of the option spli routing.
 
 
 ## What you need to do:  
@@ -51,37 +52,31 @@ An actual LISFLOOD simulation differs from the theoretical *steady state* in 2 w
 
 1) Set  initial state of all state variables to either 0,1 or -9999 (i.e. cold start with default values or internally initialized values) in Settings.XML file
 
-2) Activate the “InitLisfloodwithoutsplit” option in <lfoptions> section of Settings.XML file using:
+2) Activate the “InitLisfloodwithoutsplit” and the "InitLisflood" options in <lfoptions> section of Settings.XML file using:
 ```xml
-    <setoption choice="1" name="InitLisfloodwithoutsplit"/>
-    <setoption choice="0" name="InitLisflood"/>
+       <setoption choice="1" name="InitLisflood"/>
+       <setoption choice="1" name="InitLisfloodwithoutsplit"/>
 ```
   
 3) Activate reporting maps (in NetCDF format) in <lfoptions> section of Settings.XML file using::
 ```xml
-    <setoption choice="1" name="repLZAvInflowMap"/>
     <setoption choice="1" name="repEndMaps"/>
     <setoption choice="1"  name="writeNetcdf"/>
 ```
 
 4) Set split routing option to not active in in <lfoptions> section of Settings.XML file using:
 ```xml
-    <setoption choice="0" name="SplitRouting"/>
+       <setoption choice="0" name="SplitRouting"/>
 ```
 
 5) Set the name of the reporting map for average percolation rate from upper to lower groundwater zone in <lfuser> section of Settings.XML file using:
 ```xml
-    <textvar name="LZAvInflowMap" value="initrun/lzavin.end">
+    <textvar name="LZAvInflowMap" value="$(PathOut)/lzavin">
 ```
 
-6) Set the name of the reporting map for average discharge map in <lfuser> section of Settings.XML file using:
-```xml
-    <textvar name="AvgDis" value="initrun/avgdis.end">
-```
+6) Run the model for a longer period (if possible more than 3 years, best for the whole modelling period)
 
-7) Run the model for a longer period (if possible more than 3 years, best for the whole modelling period)
-
-8) Go back to the LISFLOOD settings file, and set the InitLisfloodwithoutsplit to inactive, leaving all other switches as before:
+7) Go back to the LISFLOOD settings file, and set the InitLisfloodwithoutsplit to inactive, leaving all other switches as before:
 
 ```xml
     <setoption choice="0" name="InitLisfloodwithoutsplit"/>
@@ -100,7 +95,6 @@ An actual LISFLOOD simulation differs from the theoretical *steady state* in 2 w
 
 3) Activate reporting maps (in NetCDF format) in <lfoptions> section of Settings.XML file using:
 ```xml
-    <setoption choice="1" name="repLZAvInflowMap"/>
     <setoption choice="1" name="repEndMaps"/>
     <setoption choice="1"  name="writeNetcdf"/>
 ```
@@ -112,12 +106,12 @@ An actual LISFLOOD simulation differs from the theoretical *steady state* in 2 w
 
 5) Set the name of the reporting map for average percolation rate from upper to lower groundwater zone in <lfuser> section of Settings.XML file using:
 ```xml
-    <textvar name="LZAvInflowMap" value="initrun/lzavin.end">
+    <textvar name="LZAvInflowMap" value="$(PathOut)/lzavin">
 ```
 
 6) Set the name of the reporting map for average discharge map in <lfuser> section of Settings.XML file using:
 ```xml
-    <textvar name="AvgDis" value="initrun/avgdis.end">
+    <textvar name="AvgDis" value="$(PathOut)/avgdis">
 ```
 
 7) Run the model for a longer period (if possible more than 3 years, best for the whole modelling period)
@@ -132,7 +126,7 @@ An actual LISFLOOD simulation differs from the theoretical *steady state* in 2 w
 ### What to do after the initialization run - Proceed with a LISFLOOD run
 
 
-9) Checking the lower zone initialisation
+i) Checking the lower zone initialisation
 
 The presence of any initialisation problems of the lower zone can be checked by adding the following line to the ‘lfoptions’ element of the settings file:
 
@@ -151,13 +145,13 @@ This tells the model to write the values of all state variables (averages, upstr
 
 
 
-10) At the end of the initialization run two files will be created in NetCDF format. Copy those (found in folder "out") into the folder "init":
+ii) At the end of the initialization run one file (initialization without split routing) or two files (initialization with split routing) will be created in NetCDF format. Copy those files (found in folder "out", see the setting $(PathOut) above) into the folder "init" ($(PathInit))
 
-    lzavin.end.nc
-    avgdis.end.nc
+    lzavin.nc
+    avgdis.nc
+    
+Only the file lzavin.nc is required to run the Lisflood model without split routing.
 
-
-11) Replace in the LISFLOOD settings file the 'bogus' values of -9999 for *LZAvInflowMap* and *AvgDis* with the actual map: 
 
 ```xml
 **************************************************************
@@ -166,7 +160,7 @@ INITIAL CONDITIONS FOR THE WATER BALANCE MODEL
 **************************************************************
 </comment>
 
-<textvar name="LZAvInflowMap" value="$(PathInit)/lzavin.map">
+<textvar name="LZAvInflowMap" value="$(PathInit)/lzavin">
 <comment>
 $(PathInit)/lzavin.map
 Reported map of average percolation rate from upper to
@@ -174,7 +168,7 @@ lower groundwater zone (reported for end of simulation)
 </comment>
 </textvar>
 
-<textvar name="AvgDis" value="$(PathInit)/avgdis.map">
+<textvar name="AvgDis" value="$(PathInit)/avgdis">
 <comment>
 $(PathInit)/avgdis.map
 CHANNEL split routing in two lines
@@ -183,7 +177,7 @@ Average discharge map [m3/s]
 </textvar>
 ```
 
-12) launch LISFLOOD
+iii) launch LISFLOOD
 
 To run the model, start up a command prompt (Windows) or a console window (Linux) and type 'lisflood' followed by the name of the settings file, e.g.:
 
