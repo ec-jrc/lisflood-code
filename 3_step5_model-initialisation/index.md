@@ -140,7 +140,7 @@ This tells the model to write the values of all state variables (averages, upstr
 
 ![initLZDemo](../media/image40.png)
 
-***Figure:*** *Initialisation of lower groundwater zone with and without using a pre-run. Note the strong decreasing trend in the simulation without pre-run. *
+***Figure:*** *Initialisation of lower groundwater zone with and without using a pre-run. Note the strong decreasing trend in the simulation without pre-run.*
 
 
 
