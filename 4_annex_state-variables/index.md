@@ -6,13 +6,13 @@
 | OFOtherState                   | ofoth              | OFM3Other             | m3   | ofoth   | Water volume on catchment   surface for other fraction [m3]  |
 | OFForestState                  | offor              | OFM3Forest            | m3   | offor   | Water volume on catchment   surface for forest fraction [m3] |
 | ChanCrossSectionState          | chcro              | TotalCrossSectionArea | m    | chcross | Total cross-section area of channel                          |
-| DSLRState                      | dslr               | DSLR[0]               | -    | dslr    | Reported days since last rain                                |
-| DSLRForestState                | dslf               | DSLR[1]               | -    | dslf    | Reported days since last rain for forest                     |
-| DSLRIrrigationState            | dsli               | DSLR[2]               | -    | dsli    | Reported days since last rain irrigation                     |
+| DSLRState                      | dslr               | DSLR[0]               | day  | dslr    | Reported days since last rain                                |
+| DSLRForestState                | dslf               | DSLR[1]               | day  | dslf    | Reported days since last rain for forest                     |
+| DSLRIrrigationState            | dsli               | DSLR[2]               | day  | dsli    | Reported days since last rain irrigation                     |
 | SnowCoverAState                | scova              | SnowCoverS[0]         | mm   | scova   | Reported snow cover in snow zone A [mm]                      |
 | SnowCoverBState                | scovb              | SnowCoverS[1]         | mm   | scovb   | Reported snow cover in snow zone B [mm]                      |
 | SnowCoverCState                | scovc              | SnowCoverS[2]         | mm   | scovc   | Reported snow cover in snow zone C [mm]                      |
-| FrostIndexState                | frost              | FrostIndex            | -    | frost   | Reported frost index                                         |
+| FrostIndexState                | frost              | FrostIndex            | C/day| frost   | Reported frost index                                         |
 | CumInterceptionState           | cum                | CumInterception[0]    | mm   | cumint  | Reported interception storage                                |
 | CumInterceptionForestState     | cumf               | CumInterception[1]    | mm   | cumf    | Reported interception storage for forest                     |
 | CumInterceptionIrrigationState | cumi               | CumInterception[2]    | mm   | cumi    | Reported interception storage for irrigation                 |
@@ -34,5 +34,5 @@
 | ChanQState                     | chanq              | ChanQ                 | m3/s | chanq   | Reported istantaneous discarge at end of time step           |
 | LakeLevelState                 | lakeh              | LakeLevel             | m    | lakh    | Output map(s) with lake level [m]                            |
 | ReservoirFillState             | rsfil              | ReservoirFill         | -    | rsfil   | Output map(s) with Reservoir Filling [V/V]                   |
-| CrossSection2State             | ch2cr              | CrossSection2Area     | m    | ch2cr   | Cross section area for split routing [m]                     |
-| ChSideState                    | chside             | Sideflow1Chan         | m    | chside  | Sideflow to channel  for 1st line   of routing [m]           |
+| CrossSection2State             | ch2cr              | CrossSection2Area     | m2   | ch2cr   | Cross section area for split routing [m2]                    |
+| ChSideState                    | chside             | Sideflow1Chan         | m2/s | chside  | Sideflow to channel  for 1st line   of routing [m2/s]        |
