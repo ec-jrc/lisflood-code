@@ -1,12 +1,8 @@
 # Step 2: Preparing the Settings file
 
-```R
-  # Add more detail to all those steps!!
-```
-
 This page describes how to prepare your own settings file. Instead of writing the settings file completely from scratch, we suggest to use the settings template that is provided with LISFLOOD as a starting point. In order to use the template, you should make sure the following requirements are met:
 
-  -   All input maps and tables are named according to default file names (see **Chapter XXXX** and **Annex XXXX**)
+  -   All input maps and tables are named according to default file names
   -   All base maps are in the right directories
   -   All tables are in one directory
   -   All meteo input is in one directory
@@ -21,7 +17,7 @@ For simplicity reasons, we suggest to follow the following steps:
 3) 	parameter options
 4)	chose optional model routines (which ones are available; what they do; and how to “activate” them)
 
-
+In order to facilitate the preparation of the settings file, a complete example is provided [here](https://ec-jrc.github.io/lisflood-code/3_step3_preparing-setting-file/lisfloodSettings_reference.xml). The user is encouraged to update the paths, the names of the maps and of the tables in the provided template. Please note that the template contains all the settings for a warm start run; the paths to the initial maps must be replaced with the initial bogus values in oder to perform a pre-run or a cold start run.
 
 ### Time-related constants
 
@@ -168,11 +164,11 @@ The following parameters are all related to the simulation of evapo(transpi)rati
 
 **CalEvaporation** is a multiplier that is applied to the potential evapo(transpi)ration input (**ET0**, **EW0** and **ES0**) [-]
 
-**LeafDrainageTimeConstant** ($T_{int}$ in Eq 2-11) is the time constant for the interception store $[days]$
+**LeafDrainageTimeConstant** ($T_{int}$) is the time constant for the interception store $[days]$
 
-**kdf** is the average extinction for the diffuse radiation flux (Goudriaan, 1977). it is used to calculate the extinction coefficient for global radiation, $κ_{gb}$ ,which is used in Equations 2-9, 2-14 and 2-19 [-]
+**kdf** is the average extinction for the diffuse radiation flux (Goudriaan, 1977). it is used to calculate the extinction coefficient for global radiation, $κ_{gb}$.
 
-**AvWaterRateThreshold** defines a critical amount of water that is used as a threshold for resetting the variable $D_{slr}$ in Eq 2-20. Because the equation was originally developed for daily timesteps only, the threshold is currently defined (somewhat confusingly) as an equivalent **intensity** in $[\frac{mm}{day}]$
+**AvWaterRateThreshold** defines a critical amount of water that is used as a threshold for resetting the variable $D_{slr}$. Because the equation was originally developed for daily timesteps only, the threshold is currently defined (somewhat confusingly) as an equivalent **intensity** in $[\frac{mm}{day}]$
 
 **SMaxSealed** is the maximum depression storage on impervious surface $[mm]$. This storage is emptied by evaporation (EW0).
 
@@ -247,21 +243,21 @@ The following parameters are all related to the simulation of snow accumulation,
 
 **SnowSeasonAdj** is the range [mm C-1 d-1] of the seasonal variation of snow melt. SnowMeltCoef is the average value.
 
-**SnowMeltCoef** ($C_m$ in Eq 2-3) is the degree-day factor that controls the rate of snowmelt $[\frac{mm}{°C \cdot day}]$
+**SnowMeltCoef** ($C_m$) is the degree-day factor that controls the rate of snowmelt $[\frac{mm}{°C \cdot day}]$
 
-**TempMelt** ($T_m$ in Eq 2-3) is the average temperature above which snow starts to melt $[°C]$
+**TempMelt** ($T_m$) is the average temperature above which snow starts to melt $[°C]$
 
 **TempSnow** is the average temperature below which precipitation is assumed to be snow $[°C]$
 
-**TemperatureLapseRate** (**L** in Figure 2.2) is the temperature lapse rate that is used to estimate average temperature at the centroid of each pixel's elevation zones $[\frac{°C}{m}]$
+**TemperatureLapseRate** (**L**) is the temperature lapse rate that is used to estimate average temperature at the centroid of each pixel's elevation zones $[\frac{°C}{m}]$
 
-**Afrost** (**A** in Eq 2-4) is the frost index decay coefficient $[day^{-1}]$. It has a value in the range 0-1.
+**Afrost** (**A**) is the frost index decay coefficient $[day^{-1}]$. It has a value in the range 0-1.
 
-**Kfrost** (**K** in Eq 2-4) is a snow depth reduction coefficient $[cm^{-1}]$
+**Kfrost** (**K**) is a snow depth reduction coefficient $[cm^{-1}]$
 
-**SnowWaterEquivalent** ($we_s$ in Eq 2-4) is the equivalent water depth of a given snow cover, expressed as a fraction [-]
+**SnowWaterEquivalent** ($we_s$) is the equivalent water depth of a given snow cover, expressed as a fraction [-]
 
-**FrostIndexThreshold** is the critical value of the frost index (Eq 2-5) above which the soil is considered frozen $[\frac{°C}{day}]$
+**FrostIndexThreshold** is the critical value of the frost index above which the soil is considered frozen $[\frac{°C}{day}]$
 
 
 ### Infiltration parameters
@@ -286,9 +282,9 @@ The following two parameters control the simulation of infiltration and preferen
 	</comment>                                                          	
 ```
 
-**b\_Xinanjiang** (**b** in Eq 2-23) is the power in the infiltration equation [-]
+**b\_Xinanjiang** ($b$) is the power in the infiltration equation [-]
 
-**PowerPrefFlow** ($c_{pref}$ in Eq 2-25) is the power in the preferential flow equation [-]
+**PowerPrefFlow** ($c_{pref}$) is the power in the preferential flow equation [-]
 
 
 ### Groundwater parameters
@@ -330,13 +326,13 @@ The following parameters control the simulation shallow and deeper groundwater. 
 	</textvar>                                                          
 ```
 
-**UpperZoneTimeConstant** ($T_{uz}$ in Eq 2-42) is the time constant for the upper groundwater zone $[days]$
+**UpperZoneTimeConstant** ($T_{uz}$) is the time constant for the upper groundwater zone $[days]$
 
-**LowerZoneTimeConstant** ($T_{lz}$ in Eq 2-43) is the time constant for the lower groundwater zone $[days]$
+**LowerZoneTimeConstant** ($T_{lz}$) is the time constant for the lower groundwater zone $[days]$
 
-**GwPercValue** ($GW_{perc}$ in Eq 2-44) is the maximum rate of percolation going from the upper to the lower groundwater zone $[\frac{mm}{day}]$
+**GwPercValue** ($GW_{perc}$) is the maximum rate of percolation going from the upper to the lower groundwater zone $[\frac{mm}{day}]$
 
-**GwLoss** ($f_{loss}$ in Eq 2-45) is the maximum rate of percolation from the lower groundwater zone (groundwater loss) zone $[\frac{mm}{day}]$. A value of 0 (closed lower boundary) is recommended as a starting value.
+**GwLoss** ($f_{loss}$) is the maximum rate of percolation from the lower groundwater zone (groundwater loss) zone $[\frac{mm}{day}]$. A value of 0 (closed lower boundary) is recommended as a starting value.
 
 
 ### Routing parameters 
@@ -379,7 +375,7 @@ These parameters are all related to the routing of water in the channels as well
 
 **CalChanMan** is a multiplier that is applied to the Manning's roughness maps of the channel system [-]
 
-**beta** is routing coefficient $β_k$ in Equations 2-51, 2-52, 2-54 and 2-57 [-]
+**beta** is routing coefficient $β_k$ [-]
 
 **OFDepRef** is a reference flow depth from which the flow velocity of the surface runoff is calculated $[mm]$
 
@@ -408,7 +404,7 @@ This category only contains one parameter at the moment, which can only be a sin
 	</textvar>                                                          
 ```
 
-**CourantCrit** ($C_{crit}$ in Eq 2-36) is the critical Courant number which controls the numerical accuracy of the simulated soil moisture fluxes [-]. Any value between 0 and 1 can be used, but using values that are too high can lead to unrealistic "jumps" in the simulated soil moisture, whereas very low values result in reduced computational performance (because many iterations will be necessary to obtain the required accuracy). Values above 1 should never be used, as they will result in a loss of mass balance. In most cases the default value of 0.4 results in sufficiently realistic simulations using just a few iterations.
+**CourantCrit** ($C_{crit}$) is the critical Courant number which controls the numerical accuracy of the simulated soil moisture fluxes [-]. Any value between 0 and 1 can be used, but using values that are too high can lead to unrealistic "jumps" in the simulated soil moisture, whereas very low values result in reduced computational performance (because many iterations will be necessary to obtain the required accuracy). Values above 1 should never be used, as they will result in a loss of mass balance. In most cases the default value of 0.4 results in sufficiently realistic simulations using just a few iterations.
 
 
 
@@ -674,9 +670,9 @@ CumIntForestInitValue, UZForestInitValue, DSLRForestInitValue, LZForestInitValue
 
 ### Using options
 
-As explained in **Chapter XXXX**, the 'lfoptions' element gives you additional control over what LISFLOOD is doing. Using options it is possible to switch certain parts of the model on or off. This way you can tell the model exactly which output files are reported and which ones aren't. Also, they can be used to activate a number of additional model features, such as the simulation of reservoirs and inflow hydrographs.
+The 'lfoptions' element gives you additional control over what LISFLOOD is doing. Using options it is possible to switch certain parts of the model on or off. This way you can tell the model exactly which output files are reported and which ones aren't. Also, they can be used to activate a number of additional model features, such as the simulation of reservoirs and inflow hydrographs.
 
-The table in **Annex XXX** lists all currently implemented options and their corresponding defaults. All currently implemented options are switches (1= on, 0=off). You can set as many options as you want (or none at all). Annex 11 lists all currently implemented options. Note that each option generally requires additional items in the settings file. For instance, using the inflow hydrograph option requires an input map and time series, which have to be specified in the settings file. If you want to report discharge maps at each time step, you will first have to specify under which name they will be written. The template settings file that is provided with LISFLOOD always contains file definitions for all optional output maps and time series. The use of the *output* options is described in detail in Chapter 8.
+This guide provides a [table](https://ec-jrc.github.io/lisflood-code/4_annex_settings_and_options/) that lists all currently implemented options and their corresponding defaults. All currently implemented options are switches (1= on, 0=off). You can set as many options as you want (or none at all). Annex 11 lists all currently implemented options. Note that each option generally requires additional items in the settings file. For instance, using the inflow hydrograph option requires an input map and time series, which have to be specified in the settings file. If you want to report discharge maps at each time step, you will first have to specify under which name they will be written. The template settings file that is provided with LISFLOOD always contains file definitions for all optional output maps and time series. The use of the *output* options is described in detail in Chapter 8.
 
 Within the 'lfoptions' element of the settings file, each option is defined using a 'setoption' element, which has the attributes 'name' and 'choice' (i.e. the actual value). For example:
 
