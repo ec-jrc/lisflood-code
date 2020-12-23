@@ -460,7 +460,7 @@ def checkmap(name, value, map, flagmap, find):
 
 
 def timemeasure(name,loops=0, update = False, sample = 1):
-    timeMes.append(xtime.clock())
+    timeMes.append(xtime.process_time())
     if loops == 0:
         s = name
     else:
