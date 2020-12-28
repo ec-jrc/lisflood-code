@@ -32,8 +32,8 @@ class groundwater(object):
         # ********************************************
         # ****  Groundwater
         # ********************************************
-        UpperZoneTimeConstant = loadmap('UpperZoneTimeConstant')
-        LowerZoneTimeConstant = loadmap('LowerZoneTimeConstant')
+        UpperZoneTimeConstant = loadmap('UpperZoneTimeConstant', force_array=True)
+        LowerZoneTimeConstant = loadmap('LowerZoneTimeConstant', force_array=True)
         self.var.UpperZoneK = np.minimum(self.var.DtDay * (1 / UpperZoneTimeConstant), 1)
         self.var.LowerZoneK = np.minimum(self.var.DtDay * (1 / LowerZoneTimeConstant), 1)
         # Reservoir constants for upper- and lower zone

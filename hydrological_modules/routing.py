@@ -188,7 +188,7 @@ class routing(object):
 
         self.var.ChanGrad = np.maximum(loadmap('ChanGrad'), loadmap('ChanGradMin'))
         # avoid calculation of Alpha using ChanGrad=0: this creates MV!
-        self.var.CalChanMan = loadmap('CalChanMan')
+        self.var.CalChanMan = loadmap('CalChanMan', force_array=True)
         self.var.ChanMan = self.var.CalChanMan * loadmap('ChanMan')
         # Manning's n is multiplied by ChanManCal
         # enables calibration for peak timing

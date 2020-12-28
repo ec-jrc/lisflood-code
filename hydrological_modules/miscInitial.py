@@ -105,8 +105,8 @@ class miscInitial(object):
         self.var.M3toMM = 1 / self.var.MMtoM3
         # Multiplier to convert from cubic metres to mm water slice
 
-        self.var.GwLoss = loadmap('GwLoss')
-        self.var.GwPerc = np.maximum(loadmap('GwPercValue'), self.var.GwLoss)
+        self.var.GwLoss = loadmap('GwLoss', force_array=True)
+        self.var.GwPerc = np.maximum(loadmap('GwPercValue', force_array=True), self.var.GwLoss)
         # new Gwloss  PB 12.11.2009
         # if GWloss > GwPercValue -> GwPerc = GwLoss
         self.var.GwPercStep = self.var.GwPerc * self.var.DtDay

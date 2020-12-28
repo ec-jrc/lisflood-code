@@ -63,7 +63,7 @@ class snow(object):
         # 0.5 x range of sinus function [-1,1]
         self.var.TempSnow = loadmap('TempSnow')
         self.var.SnowFactor = loadmap('SnowFactor')
-        self.var.SnowMeltCoef = loadmap('SnowMeltCoef')
+        self.var.SnowMeltCoef = loadmap('SnowMeltCoef', force_array=True)
         self.var.TempMelt = loadmap('TempMelt')
 
         SnowCoverAInit = loadmap('SnowCoverAInitValue')

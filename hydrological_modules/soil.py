@@ -216,7 +216,7 @@ class soil(object):
 # ***** REPEATEDLY USED EXPRESSIONS IN XINANJIANG
 # ***** INFILTRATION MODEL
 # ************************************************************
-        self.var.b_Xinanjiang = loadmap('b_Xinanjiang')
+        self.var.b_Xinanjiang = loadmap('b_Xinanjiang', force_array=True)
         self.var.PowerInfPot = (self.var.b_Xinanjiang + 1) / self.var.b_Xinanjiang
         # Power in infiltration equation
         # self.var.StoreMaxPervious=self.var.WS1/(self.var.b_Xinanjiang+1)
@@ -230,7 +230,7 @@ class soil(object):
 # ********************************************
 # ****  PowerPrefFlow
 # ********************************************
-        self.var.PowerPrefFlow = loadmap('PowerPrefFlow')
+        self.var.PowerPrefFlow = loadmap('PowerPrefFlow', force_array=True)
 
 # ************************************************************
 # ***** INITIAL VALUES

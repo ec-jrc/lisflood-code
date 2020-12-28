@@ -226,7 +226,7 @@ def makenumpy(map):
     else: return map
 
 
-def loadmap(name,pcr=False, lddflag=False):
+def loadmap(name, pcr=False, lddflag=False, force_array=False):
     """
     load a static map either value or pcraster map or netcdf
     """
@@ -235,6 +235,8 @@ def loadmap(name,pcr=False, lddflag=False):
     pcrmap = False
     try:
         mapC = float(value)
+        if force_array:
+            mapC = np.full(maskinfo['mapC'], mapC)
         flagmap = False
         load = True
         if pcr: map=mapC
