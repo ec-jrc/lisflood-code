@@ -16,6 +16,7 @@ import time as xtime
 import os
 from .zusatz import *
 from . import globals
+np.seterr(divide='ignore', invalid='ignore')
 
 # ------------------------------
 
