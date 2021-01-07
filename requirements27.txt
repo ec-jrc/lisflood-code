@@ -24,7 +24,7 @@ importlib-metadata==0.23
 ipython==5.8.0
 ipython-genutils==0.2.0
 lisflood-utilities>=0.12.14
-lxml==4.5.0
+lxml==4.6.2
 mccabe==0.6.1
 mock==3.0.5
 more-itertools==5.0.0
