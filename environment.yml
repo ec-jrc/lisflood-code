@@ -141,7 +141,7 @@ dependencies:
     - joblib==0.14.1
     - keyring==21.4.0
     - lisflood-utilities>=0.12.14
-    - lxml==4.4.1
+    - lxml==4.6.2
     - mccabe==0.6.1
     - meld==0.2.4
     - more-itertools==7.2.0
