@@ -69,18 +69,16 @@ class reservoir(HydroModule):
             self.var.ReservoirSitesC = loadmap('ReservoirSites')
             self.var.ReservoirSitesC[self.var.ReservoirSitesC < 1] = 0
             self.var.ReservoirSitesC[self.var.IsChannel == 0] = 0
-
-            if self.var.ReservoirSitesC.size == 0:
+            # Get rid of any reservoirs that are not part of the channel network
+            self.var.ReservoirSitesCC = np.compress(self.var.ReservoirSitesC > 0, self.var.ReservoirSitesC)
+            if self.var.ReservoirSitesCC.size == 0:
                 # break if no reservoirs
                 warnings.warn(LisfloodWarning('There are no reservoirs. Reservoirs simulation won\'t run'))
                 option['simulateReservoirs'] = False
                 option['repsimulateReservoirs'] = False
-                # rebuild lists of reported files with repsimulateLakes and simulateLakes = False
+                # rebuild lists of reported files with simulateReservoirs and repsimulateReservoirs = False
                 settings.build_reportedmaps_dicts()
                 return
-
-            # Get rid of any reservoirs that are not part of the channel network
-            self.var.ReservoirSitesCC = np.compress(self.var.ReservoirSitesC > 0, self.var.ReservoirSitesC)
             self.var.ReservoirIndex = np.nonzero(self.var.ReservoirSitesC)[0]
 
             self.var.IsStructureKinematic = np.where(self.var.ReservoirSitesC > 0, np.bool8(1), self.var.IsStructureKinematic)
