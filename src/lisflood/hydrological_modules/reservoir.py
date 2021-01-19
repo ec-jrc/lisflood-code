@@ -80,6 +80,8 @@ class reservoir(HydroModule):
                 warnings.warn(LisfloodWarning('There are no reservoirs. Reservoirs simulation won\'t run'))
                 option['simulateReservoirs'] = False
                 option['repsimulateReservoirs'] = False
+                # rebuild lists of reported files with repsimulateLakes and simulateLakes = False
+                settings.build_reportedmaps_dicts()
                 return
             # break if no reservoirs
 
