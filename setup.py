@@ -66,8 +66,6 @@ try:
 except ImportError:
     HAS_CYTHON = False
 
-IS_PYTHON2 = sys.version_info.major == 2
-
 src_ext = 'src/lisflood/hydrological_modules/kinematic_wave_parallel_tools.{}'
 extension_ext = 'pyx' if HAS_CYTHON else 'c'
 
@@ -155,7 +153,7 @@ def _get_gdal_version():
 
 
 gdal_version = _get_gdal_version()
-req_file = 'requirements.txt' if not IS_PYTHON2 else 'requirements27.txt'
+req_file = 'requirements.txt'
 requirements = [l for l in open(req_file).readlines() if l and not l.startswith('#')]
 requirements += ['GDAL=={}'.format(gdal_version)]
 setup(

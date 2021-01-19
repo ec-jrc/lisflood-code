@@ -69,21 +69,19 @@ class reservoir(HydroModule):
             self.var.ReservoirSitesC = loadmap('ReservoirSites')
             self.var.ReservoirSitesC[self.var.ReservoirSitesC < 1] = 0
             self.var.ReservoirSitesC[self.var.IsChannel == 0] = 0
-            # Get rid of any reservoirs that are not part of the channel network
 
-            # mask reserovoirs sites when using sub-catchments mask
-            # ReservoirSitesC_masked = ifthen(self.var.MaskMap,self.var.ReservoirSitesC)
-            self.var.ReservoirSitesCC = np.compress(self.var.ReservoirSitesC > 0, self.var.ReservoirSitesC)
-            self.var.ReservoirIndex = np.nonzero(self.var.ReservoirSitesC)[0]
-            
             if self.var.ReservoirSitesC.size == 0:
+                # break if no reservoirs
                 warnings.warn(LisfloodWarning('There are no reservoirs. Reservoirs simulation won\'t run'))
                 option['simulateReservoirs'] = False
                 option['repsimulateReservoirs'] = False
                 # rebuild lists of reported files with repsimulateLakes and simulateLakes = False
                 settings.build_reportedmaps_dicts()
                 return
-            # break if no reservoirs
+
+            # Get rid of any reservoirs that are not part of the channel network
+            self.var.ReservoirSitesCC = np.compress(self.var.ReservoirSitesC > 0, self.var.ReservoirSitesC)
+            self.var.ReservoirIndex = np.nonzero(self.var.ReservoirSitesC)[0]
 
             self.var.IsStructureKinematic = np.where(self.var.ReservoirSitesC > 0, np.bool8(1), self.var.IsStructureKinematic)
             # Add reservoir locations to structures map (used to modify LddKinematic
