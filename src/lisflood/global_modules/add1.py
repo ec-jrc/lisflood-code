@@ -266,10 +266,10 @@ def loadmap(*args, **kwargs):
     settings = LisSettings.instance()
     binding = settings.binding
     if binding['MapsCaching'] == "True":
-        return loadmap_cached(*args, **kwargs)
+        data = loadmap_cached(*args, **kwargs)
     else:
-        return loadmap_base(*args, **kwargs)
-
+        data = loadmap_base(*args, **kwargs)
+    return data
 
 @iocache
 def loadmap_cached(*args, **kwargs):

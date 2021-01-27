@@ -54,12 +54,14 @@ def iocache(obj):
             my_obj = obj(*args, **kwargs)
             if not isinstance(my_obj, float):
                 cache[key] = my_obj
+                to_return = cache[key]
             else:
                 return my_obj
         else:
             nonlocal found
             found += 1
-        return cache[key]
+            to_return = cache[key]
+        return to_return
 
     def iocache_clear():
         print('Clearing cache')

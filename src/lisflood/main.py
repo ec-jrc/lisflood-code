@@ -196,6 +196,7 @@ Water balance and flood simulation model for large catchments\n
 # ============== MAIN ==============================
 # ==================================================
 
+from .cache import cache_info
 
 def main(*args):
 
@@ -220,3 +221,5 @@ def main(*args):
     if not (flags['veryquiet'] or flags['quiet']):
         headerinfo()
     lisfloodexe(lissettings)
+
+    cache_info()
