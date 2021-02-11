@@ -44,7 +44,7 @@ class TestLatLonShort(TestLatLon):
     run_type = 'short'
 
     def test_lat_lon_short(self):
-        self.run("01/01/2016 00:00", "01/01/2017 00:00")
+        self.run("01/01/2016 00:00", "01/02/2016 00:00")
 
 
 @pytest.mark.slow
