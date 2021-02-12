@@ -28,11 +28,11 @@ from lisfloodutilities.compare.pcr import TSSComparator
 
 from lisflood.main import lisfloodexe
 
-from . import mk_path_out, MixinTestSettings
+from .test_utils import setoptions, mk_path_out
 
 
 @pytest.mark.slow
-class TestWarmStart(MixinTestSettings):
+class TestWarmStart():
     settings_files = {
         'prerun': os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/prerun.xml'),
         'cold': os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/cold.xml'),
@@ -64,12 +64,12 @@ class TestWarmStart(MixinTestSettings):
         check_every = 13  # steps
         # init
         path_out_init = mk_path_out('data/LF_ETRS89_UseCase/out/init{}'.format(dt_sec))
-        settings_prerun = self.setoptions(self.settings_files['prerun'], opts_to_unset=modules_to_unset,
-                                          vars_to_set={'DtSec': dt_sec,
-                                                       'PathOut': path_out_init,
-                                                       'StepStart': step_start,
-                                                       'ReportSteps': report_steps,
-                                                       'StepEnd': step_end})
+        settings_prerun = setoptions(self.settings_files['prerun'], opts_to_unset=modules_to_unset,
+                                     vars_to_set={'DtSec': dt_sec,
+                                                  'PathOut': path_out_init,
+                                                  'StepStart': step_start,
+                                                  'ReportSteps': report_steps,
+                                                  'StepEnd': step_end})
         step_end_dt = settings_prerun.step_end_dt
         # ** execute
         lisfloodexe(settings_prerun)
@@ -78,14 +78,14 @@ class TestWarmStart(MixinTestSettings):
         lzavin_path = settings_prerun.binding['LZAvInflowMap']
         avgdis_path = settings_prerun.binding['AvgDis']
         path_out_reference = mk_path_out('data/LF_ETRS89_UseCase/out/longrun_reference{}'.format(dt_sec))
-        settings_longrun = self.setoptions(self.settings_files['cold'], opts_to_unset=modules_to_unset,
-                                           vars_to_set={'StepStart': step_start,
-                                                        'StepEnd': step_end,
-                                                        'LZAvInflowMap': lzavin_path,
-                                                        'PathOut': path_out_reference,
-                                                        'AvgDis': avgdis_path,
-                                                        'ReportSteps': report_steps,
-                                                        'DtSec': dt_sec})
+        settings_longrun = setoptions(self.settings_files['cold'], opts_to_unset=modules_to_unset,
+                                      vars_to_set={'StepStart': step_start,
+                                                   'StepEnd': step_end,
+                                                   'LZAvInflowMap': lzavin_path,
+                                                   'PathOut': path_out_reference,
+                                                   'AvgDis': avgdis_path,
+                                                   'ReportSteps': report_steps,
+                                                   'DtSec': dt_sec})
         # ** execute
         lisfloodexe(settings_longrun)
 
@@ -93,14 +93,14 @@ class TestWarmStart(MixinTestSettings):
         run_number = 1
         cold_start_step_end = step_start
         path_out = mk_path_out('data/LF_ETRS89_UseCase/out/run{}_{}'.format(dt_sec, run_number))
-        settings_coldstart = self.setoptions(self.settings_files['cold'], opts_to_unset=modules_to_unset,
-                                             vars_to_set={'StepStart': step_start,
-                                                          'StepEnd': cold_start_step_end,
-                                                          'LZAvInflowMap': lzavin_path,
-                                                          'PathOut': path_out,
-                                                          'AvgDis': avgdis_path,
-                                                          'ReportSteps': report_steps,
-                                                          'DtSec': dt_sec})
+        settings_coldstart = setoptions(self.settings_files['cold'], opts_to_unset=modules_to_unset,
+                                        vars_to_set={'StepStart': step_start,
+                                                     'StepEnd': cold_start_step_end,
+                                                     'LZAvInflowMap': lzavin_path,
+                                                     'PathOut': path_out,
+                                                     'AvgDis': avgdis_path,
+                                                     'ReportSteps': report_steps,
+                                                     'DtSec': dt_sec})
         # ** execute
         lisfloodexe(settings_coldstart)
 
@@ -121,16 +121,16 @@ class TestWarmStart(MixinTestSettings):
             path_init = prev_settings.output_dir
             path_out = mk_path_out('data/LF_ETRS89_UseCase/out/run{}_{}'.format(dt_sec, run_number))
 
-            settings_warmstart = self.setoptions(self.settings_files['warm'], opts_to_unset=modules_to_unset,
-                                                 vars_to_set={'StepStart': warm_step_start.strftime('%d/%m/%Y %H:%M'),
-                                                              'StepEnd': warm_step_end.strftime('%d/%m/%Y %H:%M'),
-                                                              'LZAvInflowMap': lzavin_path,
-                                                              'PathOut': path_out,
-                                                              'PathInit': path_init,
-                                                              'timestepInit': timestep_init,
-                                                              'AvgDis': avgdis_path,
-                                                              'ReportSteps': report_steps,
-                                                              'DtSec': dt_sec})
+            settings_warmstart = setoptions(self.settings_files['warm'], opts_to_unset=modules_to_unset,
+                                            vars_to_set={'StepStart': warm_step_start.strftime('%d/%m/%Y %H:%M'),
+                                                         'StepEnd': warm_step_end.strftime('%d/%m/%Y %H:%M'),
+                                                         'LZAvInflowMap': lzavin_path,
+                                                         'PathOut': path_out,
+                                                         'PathInit': path_init,
+                                                         'timestepInit': timestep_init,
+                                                         'AvgDis': avgdis_path,
+                                                         'ReportSteps': report_steps,
+                                                         'DtSec': dt_sec})
             # ** execute
             lisfloodexe(settings_warmstart)
 

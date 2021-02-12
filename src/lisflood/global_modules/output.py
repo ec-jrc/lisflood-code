@@ -19,10 +19,11 @@ from __future__ import print_function, absolute_import
 import os
 import warnings
 
-from pcraster import report, ifthen, mapmaximum, catchmenttotal
+from pcraster import report, ifthen, catchmenttotal, mapmaximum
 
 from .zusatz import TimeoutputTimeseries
-from .add1 import decompress, valuecell, loadmap, compressArray, writenet
+from .add1 import decompress, valuecell, loadmap, compressArray#, writenet
+from .netcdf import writenet
 from .errors import LisfloodFileError, LisfloodWarning
 from .settings import inttodate, CDFFlags, LisSettings
 
@@ -157,6 +158,12 @@ class outputTssMap(object):
             if not where:
                 continue
             what = 'self.var.' + report_maps_end[maps].output_var
+
+            try:
+                out_var = eval(what)
+            except:
+                continue
+
             if where not in checkifdouble:
                 checkifdouble.append(where)
                 # checks if saved at same place, if no: add to list
@@ -175,32 +182,20 @@ class outputTssMap(object):
                             # CM mod: write end map to netCDF file (single)
                             # CM ##########################
 
-                            try:
-                                writenet(0, eval(what), where, self.var.DtDay, maps, report_maps_end[maps].output_var,
-                                         report_maps_end[maps].unit, 'd', reportStartDate,
-                                         self.var.currentTimeStep(), self.var.currentTimeStep())
-                            except Exception as e:
-                                print(str(e), 'END', what, where, self.var.DtDay, maps, report_maps_end[maps].output_var,
-                                      report_maps_end[maps].unit, 'd', reportStartDate,
-                                      self.var.currentTimeStep(), self.var.currentTimeStep())
-                            ################################
+                            writenet(0, out_var, where, self.var.DtDay, maps, report_maps_end[maps].output_var,
+                                     report_maps_end[maps].unit, 'd', reportStartDate,
+                                     self.var.currentTimeStep(), self.var.currentTimeStep())
 
                         else:
-                            report(decompress(eval(what)), str(where))
+                            report(decompress(out_var), str(where))
                     else:
                         if option['writeNetcdfStack']:
                             
-                            try:
-                                writenet(0, eval(what), where, self.var.DtDay, maps, report_maps_end[maps].output_var,
-                                         report_maps_end[maps].unit, 'd', reportStartDate,
-                                         self.var.currentTimeStep(), self.var.currentTimeStep())
-                            except Exception as e:
-                                print(str(e), 'END', what, where, self.var.DtDay, maps, report_maps_end[maps].output_var,
-                                      report_maps_end[maps].unit, 'd', reportStartDate,
-                                      self.var.currentTimeStep(), self.var.currentTimeStep())
-                            ###########################
+                            writenet(0, out_var, where, self.var.DtDay, maps, report_maps_end[maps].output_var,
+                                     report_maps_end[maps].unit, 'd', reportStartDate,
+                                     self.var.currentTimeStep(), self.var.currentTimeStep())
                         else:
-                            self.var.report(decompress(eval(what)), str(where))
+                            self.var.report(decompress(out_var), str(where))
 
         # Report REPORTSTEPS maps
         for maps in report_maps_steps.keys():
@@ -213,6 +208,12 @@ class outputTssMap(object):
             if not where:
                 continue
             what = 'self.var.' + report_maps_steps[maps].output_var
+
+            try:
+                out_var = eval(what)
+            except:
+                continue
+
             if not(where in checkifdouble):
                 checkifdouble.append(where)
                 # checks if saved at same place, if no: add to list
@@ -244,18 +245,10 @@ class outputTssMap(object):
                             # get step number for last reporting step
                             reportStepEnd = self.var.ReportSteps[-1] - self.var.ReportSteps[0] + 1
                             cdfflags = CDFFlags.instance()
-                            try:
-                                writenet(cdfflags[flagcdf], eval(what), where, self.var.DtDay, maps,
-                                         report_maps_steps[maps].output_var, report_maps_steps[maps].unit, 'd',
-                                         reportStartDate, reportStepStart, reportStepEnd, frequency)
-                            except Exception as e:
-                                print(" +----> ERR: {}".format(str(e)))
-                                print("REP flag:{} - {} {} {} {} {} {} {} {} {} {}".format(
-                                      cdfflags[flagcdf], what, where, self.var.DtDay, maps,
-                                      report_maps_steps[maps].output_var, report_maps_steps[maps].unit, 'd',
-                                      reportStartDate, reportStepStart, reportStepEnd
-                                      ))
 
+                            writenet(cdfflags[flagcdf], out_var, where, self.var.DtDay, maps,
+                                     report_maps_steps[maps].output_var, report_maps_steps[maps].unit, 'd',
+                                     reportStartDate, reportStepStart, reportStepEnd, frequency)
                         else:
                             self.var.report(decompress(eval(what)), str(where))
 
@@ -268,7 +261,14 @@ class outputTssMap(object):
                 where = binding.get(maps)
             if not where:
                 continue
+
             what = 'self.var.' + report_maps_all[maps].output_var
+
+            try:
+                out_var = eval(what)
+            except:
+                continue
+
             if where not in checkifdouble:
                 checkifdouble.append(where)
                 # checks if saved at same place, if no: add to list
@@ -304,15 +304,11 @@ class outputTssMap(object):
                         #get step number for last reporting step which is always the last simulation step
                         #last simulation step referred to reportStartDate
                         reportStepEnd = binding['StepEndInt'] - binding['StepStartInt'] + 1
+                        
+                        cdfflags = CDFFlags.instance()
+                        writenet(cdfflags[flagcdf], out_var, where, self.var.DtDay, maps, report_maps_all[maps].output_var,
+                                 report_maps_all[maps].unit, 'd', reportStartDate, reportStepStart, reportStepEnd, frequency)
 
-                        try:
-                            cdfflags = CDFFlags.instance()
-                            writenet(cdfflags[flagcdf], eval(what), where, self.var.DtDay, maps, report_maps_all[maps].output_var,
-                                     report_maps_all[maps].unit, 'd', reportStartDate, reportStepStart, reportStepEnd, frequency)
-                        except Exception as e:
-                            warnings.warn(LisfloodWarning(str(e)))
-                            print(str(e), "ALL", what, where, self.var.DtDay, maps, report_maps_all[maps].output_var,
-                                  report_maps_all[maps].unit, 'd', reportStartDate,reportStepStart, reportStepEnd)
                     else:
                         self.var.report(decompress(eval(what)), trimPCRasterOutputPath(where))
 

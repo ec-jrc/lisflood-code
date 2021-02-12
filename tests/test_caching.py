@@ -10,13 +10,14 @@ from lisflood.main import lisfloodexe
 from lisflood.cache import cache_clear, cache_size, cache_info, cache_found
 from lisflood.global_modules.settings import LisSettings
 
-from . import MixinTestSettings, mk_path_out, MixinTestLis
+from .test_utils import setoptions, mk_path_out, ETRS89TestCase
 
 
-class TestCaching(MixinTestSettings):
-    settings_files = {
-        'full': os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/full.xml')
-    }
+class TestCaching(ETRS89TestCase):
+    case_dir = os.path.join(os.path.dirname(__file__), 'data', 'LF_ETRS89_UseCase')
+    settings_file = os.path.join(case_dir, 'settings', 'full.xml')
+    out_dir_a = os.path.join(case_dir, 'out', 'a')
+    out_dir_b = os.path.join(case_dir, 'out', 'b')
 
     def test_caching_24h(self):
       dt_sec = 86400
@@ -28,11 +29,11 @@ class TestCaching(MixinTestSettings):
 
     def run_lisflood_caching(self, dt_sec):
         
-        settings_a = self.setoptions(self.settings_files['full'],
-                                     vars_to_set={'StepStart': '30/07/2016 06:00', 'StepEnd': '01/08/2016 06:00',
-                                                  'DtSec': dt_sec, 'PathOut': '$(PathRoot)/out/a',
-                                                  'MapsCaching': 'True'})
-        mk_path_out('data/LF_ETRS89_UseCase/out/a')
+        settings_a = setoptions(self.settings_file,
+                                vars_to_set={'StepStart': '30/07/2016 06:00', 'StepEnd': '01/08/2016 06:00',
+                                             'DtSec': dt_sec, 'PathOut': '$(PathRoot)/out/a',
+                                             'MapsCaching': 'True'})
+        mk_path_out(self.out_dir_a)
         lisfloodexe(settings_a)
 
         cache_size_a = cache_size()
@@ -42,12 +43,11 @@ class TestCaching(MixinTestSettings):
 
         assert cache_found_a == 0
 
-        settings_b = self.setoptions(self.settings_files['full'],
-                                     vars_to_set={'StepStart': '30/07/2016 06:00', 'StepEnd': '01/08/2016 06:00',
-                                                  'DtSec': dt_sec, 'PathOut': '$(PathRoot)/out/b',
-                                                  'MapsCaching': 'True'})
-        mk_path_out('data/LF_ETRS89_UseCase/out/b')
-
+        settings_b = setoptions(self.settings_file,
+                                vars_to_set={'StepStart': '30/07/2016 06:00', 'StepEnd': '01/08/2016 06:00',
+                                             'DtSec': dt_sec, 'PathOut': '$(PathRoot)/out/b',
+                                             'MapsCaching': 'True'})
+        mk_path_out(self.out_dir_b)
         lisfloodexe(settings_b)
 
         cache_size_b = cache_size()
@@ -61,21 +61,18 @@ class TestCaching(MixinTestSettings):
         assert cache_size_a == cache_size_b
 
         comparator = NetCDFComparator(settings_a.maskpath, array_equal=True)
-        out_a = settings_a.output_dir
-        out_b = settings_b.output_dir
-        comparator.compare_dirs(out_a, out_b)
+        comparator.compare_dirs(self.out_dir_b, self.out_dir_a)
 
     def teardown_method(self):
         print('Cleaning directories and cache')
-        path_out_a = os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/a')
-        path_out_b = os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/b')
-        shutil.rmtree(path_out_a, ignore_errors=True)
-        shutil.rmtree(path_out_b, ignore_errors=True)
+        shutil.rmtree(self.out_dir_a, ignore_errors=True)
+        shutil.rmtree(self.out_dir_b, ignore_errors=True)
         cache_clear()
 
 
 @pytest.mark.slow
-class TestCachingSlow(MixinTestLis, MixinTestSettings):
+class TestCachingSlow(ETRS89TestCase):
+    case_dir = os.path.join(os.path.dirname(__file__), 'data', 'LF_ETRS89_UseCase')
     modules_to_set = (
         'SplitRouting',
         'simulateReservoirs',
@@ -86,8 +83,8 @@ class TestCachingSlow(MixinTestLis, MixinTestSettings):
         'indicator',
     )
     settings_files = {
-        'base': os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/base.xml'),
-        'prerun': os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/prerun.xml')
+        'base': os.path.join(case_dir, 'settings/base.xml'),
+        'prerun': os.path.join(case_dir, 'settings/prerun.xml')
     }
 
     def run(self, dt_sec, step_start, step_end):
@@ -101,7 +98,7 @@ class TestCachingSlow(MixinTestLis, MixinTestSettings):
             "repThetaForestMaps", "repLZMaps", "repUZMaps",
             "repGwPercUZLZMaps", "repRWS", "repPFMaps", "repPFForestMaps"
         )
-        settings = self.setoptions(self.settings_files['base'],
+        settings = setoptions(self.settings_files['base'],
                               opts_to_set=('repDischargeTs', 'repDischargeMaps',) + self.modules_to_set,
                               opts_to_unset=opts_to_unset,
                               vars_to_set={'StepStart': step_start,

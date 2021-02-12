@@ -1,16 +1,13 @@
-from __future__ import absolute_import
 import os
-import datetime
 import shutil
 import pytest
 
-from lisfloodutilities.compare.nc import NetCDFComparator
 from lisfloodutilities.compare.pcr import TSSComparator
 
 from lisflood.main import lisfloodexe
 from lisflood.global_modules.settings import LisSettings
 
-from . import setoptions, mk_path_out
+from .test_utils import setoptions, mk_path_out
 
 
 class TestLatLon():

@@ -25,10 +25,10 @@ from lisfloodutilities.compare.nc import NetCDFComparator
 
 from lisflood.main import lisfloodexe
 
-from tests import MixinTestSettings, mk_path_out
+from .test_utils import setoptions, mk_path_out
 
 
-class TestRepMaps(MixinTestSettings):
+class TestRepMaps():
     settings_files = {'base': os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/base.xml')}
 
     def teardown_method(self):
@@ -36,14 +36,14 @@ class TestRepMaps(MixinTestSettings):
 
     def test_no_reported(self):
         path_out = mk_path_out('data/LF_ETRS89_UseCase/out/testrep')
-        settings = self.setoptions(self.settings_files['base'], vars_to_set={'PathOut': path_out})
+        settings = setoptions(self.settings_files['base'], vars_to_set={'PathOut': path_out})
         lisfloodexe(settings)
         files = [os.path.join(settings.output_dir, f) for f in os.listdir(settings.output_dir) if f.endswith('.nc') or f.endswith('.tss')]
         assert not files
 
     def test_end_reported(self):
         path_out = mk_path_out('data/LF_ETRS89_UseCase/out/testrep')
-        settings = self.setoptions(self.settings_files['base'], ['repEndMaps'], vars_to_set={'PathOut': path_out})
+        settings = setoptions(self.settings_files['base'], ['repEndMaps'], vars_to_set={'PathOut': path_out})
         lisfloodexe(settings)
         files = [os.path.join(settings.output_dir, f) for f in os.listdir(settings.output_dir) if f.endswith('.end.nc')]
         no_files = [os.path.join(settings.output_dir, f) for f in os.listdir(settings.output_dir) if f.endswith('.nc') and '.end.' not in f]
@@ -52,7 +52,7 @@ class TestRepMaps(MixinTestSettings):
 
     def test_state_reported(self):
         path_out = mk_path_out('data/LF_ETRS89_UseCase/out/testrep')
-        settings = self.setoptions(self.settings_files['base'], ['repStateMaps'], vars_to_set={'PathOut': path_out})
+        settings = setoptions(self.settings_files['base'], ['repStateMaps'], vars_to_set={'PathOut': path_out})
         lisfloodexe(settings)
         no_files = [os.path.join(settings.output_dir, f) for f in os.listdir(settings.output_dir) if f.endswith('.end.nc')]
         files = [os.path.join(settings.output_dir, f) for f in os.listdir(settings.output_dir) if f.endswith('.nc') and '.end.' not in f]
@@ -61,7 +61,7 @@ class TestRepMaps(MixinTestSettings):
 
     def test_end_state_reported(self):
         path_out = mk_path_out('data/LF_ETRS89_UseCase/out/testrep')
-        settings = self.setoptions(self.settings_files['base'], ['repEndMaps', 'repStateMaps', 'repDischargeMaps'], vars_to_set={'PathOut': path_out})
+        settings = setoptions(self.settings_files['base'], ['repEndMaps', 'repStateMaps', 'repDischargeMaps'], vars_to_set={'PathOut': path_out})
         lisfloodexe(settings)
         comparator = NetCDFComparator(settings.maskpath, array_equal=True)
         end_files = [os.path.join(settings.output_dir, f) for f in os.listdir(settings.output_dir) if f.endswith('.end.nc')]

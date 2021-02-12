@@ -24,15 +24,12 @@ import pytest
 from lisflood.global_modules.settings import LisSettings
 from lisflood.main import lisfloodexe
 
-from tests import setoptions, mk_path_out
-
-from . import MixinTestLis
-
-current_dir = os.path.dirname(os.path.abspath(__file__))
+from .test_utils import setoptions, mk_path_out, ETRS89TestCase
 
 
 @pytest.mark.slow
-class TestCatch(MixinTestLis):
+class TestCatch(ETRS89TestCase):
+    case_dir = os.path.join(os.path.dirname(__file__), 'data', 'LF_ETRS89_UseCase')
     modules_to_set = (
         'SplitRouting',
         'simulateReservoirs',
@@ -43,12 +40,12 @@ class TestCatch(MixinTestLis):
         'indicator',
     )
     settings_files = {
-        'base': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/settings/base.xml'),
-        'prerun': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/settings/prerun.xml')
+        'base': os.path.join(case_dir, 'settings/base.xml'),
+        'prerun': os.path.join(case_dir, 'settings/prerun.xml')
     }
 
     def run(self, dt_sec, step_start, step_end):
-        output_dir = mk_path_out('data/LF_ETRS89_UseCase/out/test_results{}'.format(dt_sec))
+        output_dir = mk_path_out(os.path.join(self.case_dir, 'out/test_results{}'.format(dt_sec)))
         opts_to_unset = (
             "repStateSites", "repRateSites", "repStateUpsGauges", "repRateUpsGauges", "repMeteoUpsGauges",
             "repsimulateLakes", "repStateMaps",
@@ -80,7 +77,7 @@ class TestCatch(MixinTestLis):
         self.compare_reference('chanq', check='tss', step_length='21600')
 
     def test_initvars(self):
-        output_dir = mk_path_out('data/LF_ETRS89_UseCase/out/test_results_initvars')
+        output_dir = mk_path_out(os.path.join(self.case_dir, 'out/test_results_initvars'))
         opts_to_unset = (
             "repStateSites", "repRateSites", "repStateUpsGauges", "repRateUpsGauges", "repMeteoUpsGauges",
             "repsimulateLakes", "repStateMaps",
@@ -107,7 +104,7 @@ class TestCatch(MixinTestLis):
             assert os.path.exists(os.path.join(output_dir, f))
 
     def run_init(self, dt_sec, step_start, step_end):
-        path_out_init = mk_path_out('data/LF_ETRS89_UseCase/out/test_init_{}'.format(dt_sec))
+        path_out_init = mk_path_out(os.path.join(self.case_dir, 'out/test_init_{}'.format(dt_sec)))
         settings = setoptions(self.settings_files['prerun'],
                               opts_to_set=self.modules_to_set,
                               vars_to_set={'DtSec': dt_sec,

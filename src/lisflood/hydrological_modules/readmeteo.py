@@ -17,8 +17,9 @@ See the Licence for the specific language governing permissions and limitations 
 from __future__ import print_function, absolute_import
 import xarray as xr
 
-from ..global_modules.add1 import loadmap, readnetcdf, checknetcdf,readmapsparse, XarrayCached, XarrayChunked, date_range
 from ..global_modules.settings import LisSettings
+from ..global_modules.add1 import readmapsparse
+from ..global_modules.netcdf import XarrayCached, XarrayChunked, date_range
 
 
 class readmeteo(object):

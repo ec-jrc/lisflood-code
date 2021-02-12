@@ -1,5 +1,7 @@
 
-from .global_modules.add1 import XarrayCached, loadmap_cached
+from .global_modules.add1 import loadmap_cached
+from .global_modules.netcdf import XarrayCached
+
 
 def cache_clear():
     XarrayCached.iocache_clear()

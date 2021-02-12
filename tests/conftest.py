@@ -26,3 +26,4 @@ def pytest_collection_modifyitems(config, items):
     for item in items:
         if 'pathroot' in item.keywords and not test_domain:
             item.add_marker(skip_marker)
+
