@@ -13,114 +13,13 @@
 
 TEMPLATE SETTINGS FILE Authors JvdK, PB
 
-MOST RECENT ONES AT TOP!!!
-NEW 19/09/2014 Changes from Ad de Roo included:
-  rice, irrigation
-NEW 20/01/2014: Added a calibration parameter LakeMultiplier
-    Multiplier applied to the lake parameter A
-NEW 15/11/2013: removed option VarNoSubStepChannel and GwLossFraction
-   added ReservoirFillEnd
-NEW 3/6/2013: added upAreaTrans (upstream area) for calculating transmission loss
-NEW 01/03/2013: Land use sensitive version!
-   different way to represent land use:
-   -  instead of tables use maps
-      CropCoef, CropGroupNumber , NManning
-   - instead of texture.map now soil maps are used
-      KSat1, KSat2,Lambda1, Lambda2, GenuAlpha1, GenuAlpha2, ThetaS1, ThetaS2, ThetaRes1, ThetaRes2
-      KSat1_forest,Lambda1_forest, GenuAlpha1_forest, ThetaS1_forest, ThetaRes1_forest  (only 1st soil layer)
-
-   - Removed maps: landuse, soildep, forest, soiltex1, soiltex2
-
-   -   forest, water and impervious surface fraction is used as percentage maps
-      DirectRunoffFraction, ForestFraction , WaterFraction
-      remaining fraction = 1 - direct - forest - water
-   - new path to forest LAI and new prefix for forest LAI
-   - SoilDepth1,2 ,CropCoef, MapCropGroupNumber, MapM (manning's),LAI
-        are for non forest percentage only
-   - SoilDepth1Forest, SoilDepth2Forest for forest soild depth
-   - include intial loss and depression storage for surface runoff from imperious surface
-       SMaxSealed: maximum storage capacity [mm]
-       CumIntSealedInitValue: initial condition
-   - new options:
-      repWatRetMaps: report maps for water retention (8 maps)
-      repRWSforest:  soil transpiration reduction factor for forest
-      new output maps:
-      RWSMapsForest,ThetaMaps (soil layer1+2),AvailGWMaps (availabale groundwater), ETActMaps (act. evapotranspiration)
-    - MaskDischarge. mask for reporting discharge only for bigger rivers: needs a MaskDis map
-
-
-NEW 6/2/2012: Reported total runoff that enters the channel: groundwater + surface runoff mm
-   add:  TotaltoChanMaps
-NEW 30/10/2011: Added initialisation for discharge (needed for lakes and reservoirs)
-  add:   PrevDischarge for init condition discharge
-  add:   DischargeEnd: end map discharge
-  moved: Init lake level moved to other initial condition
-NEW 4/3/2011: Lake: changed instead of a mapLakeAvNetInflowEstimate, a table is taken -> TabLakeAvNetInflowEstimate
-NEW 1/3/2011: changed order of comments!!!
-NEW 1/3/2011: added PrScaling
-NEW 1/3/2011: added water use
-    new option: wateruse, repwateruseMaps, repwateruseTS
-    new path:   PathWaterUse
-    new prefix: PrefixWaterUse
-    new lfbinding variables: WUseMaps,WaterUseMaps, WaterUseTS, StepsWaterUseTS,maxNoWateruse, WUsePercRemain
-NEW 20/08/2010: Added initialisation for 2nd routing channel
-    CrossSection2AreaInitValue and PrevSideflowInitValue
-    also added to repStateMaps and repEndMaps
-NEW 15/01/2010: Added definition: LakeLevelEnd
-NEW 7/12/2009:
-    added minSoilDepth1 - 50 mm for Europe and 200 mm for Africa
-    added option (temporary) GwLossFraction to use old gwlossfraction (default: 0 = use new GwLoss)
-    changed snow accumultation/melt
-       instead of ElevationRange the new ElevationSTD (standard deviation) is used
-       added parameter SnowSeasonAdj - value of range  of seasonal melt factor (default=1)
-NEW 15/11/2009:
-    Added option:TransLoss and calibration parameters: TransPower1, TransSub, TransArea
-        output in repRateUpsGauges: TransLossAvUps
-
-    GwLossFraction is changed to GwLoss (not a fraction but a flux)
-NEW 15/10/2009
-    added CalenderDayStart for new LAI maps prereading reading
-    added LAIOfDay table (LaiOfDay.txt) with days for each LAI maps
-NEW 15/09/2009:
-    Added option: VarNoSubStepChannel  for variabel sub steps for channel routing
-    Added option: SplitRouting and calibration parameters: CalChanMan2, QSplitMult
-    Added option: InitLisflood -> automatic prerun routine
-    dropped LZAvInflowEstimate
-    Added otion repInternalCom for reporting internal computation issues
-    dropped repStepsSoilTs for reporting number of sub steps soil
-    as it is include in repInternalCom
-NEW 27/03/2008: Major reorganisation: all process-related and numerical parameters are now directly accessible
-    in lfuser; this should eliminate any needs for users to edit lfbinding directly. Updated User Manual
-    accordingly, also dropped definition of relative mass balance error TS
-NEW 26/03/2008: Removed all references to GwAlpha; added definitions for PixelLength, PixelArea;
-    replaced (fictitious) absolute file paths by relative ones, which means that in most cases you will be able
-    to run the model from the catchment's root directory directly, without making any changes to the template;
-    moved SnowmeltCoef to calibration parameters in lfuser and lfbinding
-NEW 19/09/2007: Added definitions for sub-pixel snow routine: TemperatureLapseRate, ElevationRange,
-    SnowCoverAInitValue, SnowCoverBInitValue, SnowCoverCInitValue, SnowCoverAState, SnowCoverBState,
-    SnowCoverCState,SnowCoverAEnd, SnowCoverBEnd, SnowCoverCEnd
-NEW 12/07/2007: Dropped NoSteps, CalendarDayStart, definitions for NDVI/LAI tables,
-    added StepStart, StepEnd and definitions for LAI map stacks (PathLAI and PrefixLAI)
-    changed default value of SnowWaterEquivalent to 0.45 (was 0.1, which is very low)
-NEW 24/01/2007: Added definitions for PF maps/timeseries reporting, removed all space preserve stuff
-    in comments
-NEW 03/10/2006: Added tables with polder opening and release times
-NEW 20/06/2006: Added water level reporting stuff (and removed definition of hTS, which is now obsolete!)
-NEW 24/02/2006: Added lake stuff
-NEW 21/02/2006: Added DtSecChannel and DtSecReservoirs
-NEW 02/02/2006: Added polder stuff; replaced old ReservoirFillMaps by ReservoirFillState
-NEW 31/01/2006: Fixed typo in description of initial reservoir filling (-9999 sets initial
-    fill to normal storage limit, NOT 50 % of it!!
-NEW 19/8/2005: Added output map/time series LZAvInflowMap,LZAvInflowTS,LZAvInflowAvUpsTS
-NEW 19/8/2005: Added options repLZAvInflowMap,repLZAvInflowSites,repLZAvInflowUpsGauges
-NEW 19/8/2005: Replaced SteadyStateFraction by LZAvInflowEstimate (input)
-NEW 9/8/2005: Added most commonly used options
-NEW 5/8/2005: Added CourantDynamicCrit
-NEW 4/8/2005: Added dyn wave stuff
-NEW 26/7/2005: added PercRatioMaps (again);SteadyStateFraction now in lfuser
-NEW 26/7/2005: includes reservoirs, inflow hydrographs
-
-   MOST RECENT ONES AT TOP!!!
+TIPS:
+You can use builtin path variables in this template and reference to other paths in a relative way:
+  - SettingsPath: Path to the settings file
+  - SettingsDir: alias for SettingsPath
+  - ProjectPath: path to project root dir
+  - ProjectDir: alias for ProjectPath
+  ex: <textvar name="PathRoot" value="$(SettingsPath)/../../myrootfolder">
 -->
 
 
