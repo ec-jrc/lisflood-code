@@ -6871,7 +6871,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="Sites" value="$(PathMaps)/sites.map">
+                <textvar name="Sites" value="$(PathMaps)/ec_outlets">
 
                     <comment>
 
