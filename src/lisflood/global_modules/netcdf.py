@@ -196,7 +196,7 @@ def get_space_coords(nrow, ncol, dim_lat_y, dim_lon_x):
     return coordinates
 
 
-def write_header(prefix, netfile, DtDay,
+def write_header(var_name, netfile, DtDay,
                  value_standard_name, value_long_name, value_unit, data_format,
                  startdate, repstepstart, repstepend, frequency):
 
@@ -294,16 +294,14 @@ def write_header(prefix, netfile, DtDay,
         time.calendar = binding["calendar_type"]
         nf1.variables["time"][:] = date2num(time_stamps, time.units, time.calendar)
         # for i in metadataNCDF['time']: exec('%s="%s"') % ("time."+i, metadataNCDF['time'][i])
-        if 'x' in meta_netcdf.data:
-            value = nf1.createVariable(prefix, 'd', ('time', 'y', 'x'), zlib=True, fill_value=-9999, chunksizes=(1, nrow, ncol))
-        if 'lon' in meta_netcdf.data:
-            value = nf1.createVariable(prefix, 'd', ('time', 'lat', 'lon'), zlib=True, fill_value=-9999, chunksizes=(1, nrow, ncol))
+        
+        dims = ('time', dim_lat_y, dim_lon_x)
+        chunks = (1, nrow, ncol)
     else:
-        if 'x' in meta_netcdf.data:
-            value = nf1.createVariable(prefix, 'd', ('y', 'x'), zlib=True, fill_value=-9999)
-        if 'lon' in meta_netcdf.data:
-            # for world lat/lon coordinates
-            value = nf1.createVariable(prefix, 'd', ('lat', 'lon'), zlib=True, fill_value=-9999)
+        dims = (dim_lat_y, dim_lon_x)
+        chunks = (nrow, ncol)
+            
+    value = nf1.createVariable(var_name, 'd', dims, zlib=True, fill_value=-9999, chunksizes=chunks)
 
     value.standard_name = value_standard_name
     value.long_name = value_long_name
@@ -313,6 +311,7 @@ def write_header(prefix, netfile, DtDay,
             value.esri_pe_string = meta_netcdf.data[var]['esri_pe_string']
 
     return nf1
+
 
 def writenet(flag, inputmap, netfile, DtDay,
              value_standard_name, value_long_name, value_unit, data_format,
@@ -336,11 +335,11 @@ def writenet(flag, inputmap, netfile, DtDay,
     """
     # prefix = netfile.split('/')[-1].split('\\')[-1].split('.')[0]
     flags = LisSettings.instance().flags
-    prefix = os.path.basename(netfile)
+    var_name = os.path.basename(netfile)
     netfile += ".nc"
     
     if flag == 0:
-        nf1 = write_header(prefix, netfile, DtDay,
+        nf1 = write_header(var_name, netfile, DtDay,
                            value_standard_name, value_long_name, value_unit, data_format,
                            startdate, repstepstart, repstepend, frequency)
     else:
@@ -350,10 +349,10 @@ def writenet(flag, inputmap, netfile, DtDay,
     
     map_np = uncompress_array(inputmap)
     if frequency is not None:
-        nf1.variables[prefix][flag, :, :] = map_np
+        nf1.variables[var_name][flag, :, :] = map_np
         #value[flag,:,:]= mapnp
     else:
         # without timeflag
-        nf1.variables[prefix][:, :] = map_np
+        nf1.variables[var_name][:, :] = map_np
 
     nf1.close()
