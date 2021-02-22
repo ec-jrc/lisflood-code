@@ -294,14 +294,9 @@ def write_header(var_name, netfile, DtDay,
         time.calendar = binding["calendar_type"]
         nf1.variables["time"][:] = date2num(time_stamps, time.units, time.calendar)
         # for i in metadataNCDF['time']: exec('%s="%s"') % ("time."+i, metadataNCDF['time'][i])
-        
-        dims = ('time', dim_lat_y, dim_lon_x)
-        chunks = (1, nrow, ncol)
+        value = nf1.createVariable(var_name, 'd', ('time', dim_lat_y, dim_lon_x), zlib=True, fill_value=-9999, chunksizes=(1, nrow, ncol))
     else:
-        dims = (dim_lat_y, dim_lon_x)
-        chunks = (nrow, ncol)
-            
-    value = nf1.createVariable(var_name, 'd', dims, zlib=True, fill_value=-9999, chunksizes=chunks)
+        value = nf1.createVariable(var_name, 'd', (dim_lat_y, dim_lon_x), zlib=True, fill_value=-9999)
 
     value.standard_name = value_standard_name
     value.long_name = value_long_name
