@@ -81,8 +81,6 @@ class TestSubcatchments(MixinTestSettings):
         modules_to_set = self.modules_to_unset if wateruse_on else []
 
         # long run entire domain
-        print(modules_to_unset)
-        print(modules_to_set)
         path_out_domain = mk_path_out('data/LF_ETRS89_UseCase/out/longrun_domain{}'.format(dt_sec))
         settings_longrun = self.setoptions(self.settings_files['cold'], opts_to_unset=modules_to_unset,
                                            opts_to_set=modules_to_set,
@@ -117,4 +115,4 @@ class TestSubcatchments(MixinTestSettings):
         folders_list = glob.glob(os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/longrun_domain*')) + \
             glob.glob(os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/longrun_subdomain*'))
         for folder in folders_list:
-           shutil.rmtree(folder)
+            shutil.rmtree(folder)
