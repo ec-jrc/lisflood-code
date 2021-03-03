@@ -3,7 +3,6 @@
 __pycache__/
 build/
 *.so
-*.xml
 kinematic_wave_parallel_tools.html
 lisflood_model.egg-info
 /dist/
