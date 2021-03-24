@@ -17,7 +17,7 @@ All input maps roughly fall into any of the following six categories:
 -   maps related to the development of vegetation over time
 -   maps that define at which locations output is generated as time series
 
-All maps that are needed to run the model are listed in the table of Annex 12.
+All maps that are needed to run the model are listed in this [Annex](https://ec-jrc.github.io/lisflood-code/4_annex_input-files/).
 
 #### Role of "mask" and "channels" maps 
 
@@ -138,6 +138,13 @@ The following table gives an overview:
 | Day of the year -\> LAI    | LaiOfDay.txt          | Lookup table: Day of the year -\> LAI map |
 
 
+### Important techincal note for the generation of the water regions map
+
+Water demand and water abstraction are spatially distributed within each water region. As detialed [here](https://ec-jrc.github.io/lisflood-model/2_18_stdLISFLOOD_water-use/), the water resourses (surface water bodies and groundwater) are shared inside the water region in order to meet the cumulative requirements of the water region area. For this reason, it is strongly recommended to include the entire water region(s) in the modelled area. If a portion of the water region is not included in the modelled area, then LISFLOOD cannot adequately compute the water demand and abstraction. In other words, LISFLOOD will not be able to account for sources of water outside of the computational domain (it is important to notice that LISFLOOD will not crush but the results will be affected by this discrepancy).
+The inclusion of the complete water region in the computational domain becomes compulsory under the specific circumstances of model calibration.
+Calibrated parameters are optmised for a specific model set up. It is often required to calibrate the parameters of several subcatchments inside a basin. Each calibration subcatchment must include a finite number of water regions (each water region can belong to only one subctatchment). If this condition is met, the calibrated parameters can be correctly optimised. Conversely, when a water region belongs to one or more calibration sub-catchments, the water resources are allocated and abstracted in different quantities when modelling the calibration subcatchment only or the entire basin. Similarly, the option groundwater smooth leads to different  geometries of the cone of depression due to groundwater abstraction when modelling the subcatchment only or the entire basin. These two scenarios impede the correct calibration of the model parameters and must be avoided. The user is advised to switch off the groundwater smooth option and to ensure the consistency between water regione and calibration cacthments. The utility [waterregions](https://github.com/ec-jrc/lisflood-utilities/) can be used to 1) verify the consistency between calibration catchments and water regions or 2) create a water region map which is consistent with a set of calibration points.
+
+
 ### Organisation of input data
 
 It is up to the user how the input data are organised. However, it is advised to keep the base maps, meteorological maps and tables separated (i.e. store them in separate directories). For practical reasons the **following input structure is suggested**:
@@ -168,8 +175,6 @@ The following Figure illustrates this:
 
 ***Figure:*** *Suggested file structure for LISFLOOD*
 
-### Generating input base maps 
 
-At the time of writing this document, complete sets of LISFLOOD base maps covering the whole of Europe have been compiled at 1- and 5-km pixel resolution. A number of automated procedures have been written that allow you to generate sub-sets of these for pre-defined areas (using either existing mask maps or co-ordinates of catchment outlets).
 
 [:top:](#top)
