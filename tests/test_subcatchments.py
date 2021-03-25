@@ -41,6 +41,9 @@ class TestSubcatchments(MixinTestSettings):
         'wateruseRegion',
         'TransientWaterDemandChange',
     ]
+    modules_to_unsetGW= [
+        'groundwaterSmooth',
+    ]
 
     def test_subcacthment_daily(self):
         step_start = '02/01/2016 06:00'
@@ -49,14 +52,21 @@ class TestSubcatchments(MixinTestSettings):
         report_steps = '3650..4100'
         self.run_subcathmenttest_by_dtsec(dt_sec, step_end, step_start, report_steps=report_steps)
 
-    def test_subcacthment_daily_wateruse(self):
+    def test_subcacthment_daily_wateruse_groundwatersmooth_ON(self):
         step_start = '02/01/2016 06:00'
         step_end = '30/01/2016 06:00'
         dt_sec = 86400
         report_steps = '3650..4100'
         with pytest.raises(AssertionError) as excinfo:
-            self.run_subcathmenttest_by_dtsec(dt_sec, step_end, step_start, report_steps=report_steps, wateruse_on=True)
-        assert 'dis.nc/dis@0 is different' in str(excinfo.value)
+            self.run_subcathmenttest_by_dtsec(dt_sec, step_end, step_start, report_steps=report_steps, wateruse_on=True, groundwatersmooth_off=False)
+        assert 'Arrays are not equal' in str(excinfo.value)
+
+    def test_subcacthment_daily_wateruse_groundwatersmooth_OFF(self):
+        step_start = '02/01/2016 06:00'
+        step_end = '30/01/2016 06:00'
+        dt_sec = 86400
+        report_steps = '3650..4100'
+        self.run_subcathmenttest_by_dtsec(dt_sec, step_end, step_start, report_steps=report_steps, wateruse_on=True, groundwatersmooth_off=True)
 
     def test_subcacthment_6h(self):
         step_start = '01/03/2016 06:00'
@@ -65,8 +75,9 @@ class TestSubcatchments(MixinTestSettings):
         report_steps = '14800..16000'
         self.run_subcathmenttest_by_dtsec(dt_sec, step_end, step_start, report_steps=report_steps)
 
-    def run_subcathmenttest_by_dtsec(self, dt_sec, step_end, step_start, report_steps='1..9999', wateruse_on=False):
+    def run_subcathmenttest_by_dtsec(self, dt_sec, step_end, step_start, report_steps='1..9999', wateruse_on=False, groundwatersmooth_off=False):
         modules_to_unset = self.modules_to_unset if not wateruse_on else []
+        modules_to_unset = self.modules_to_unsetGW if groundwatersmooth_off else []
         modules_to_set = self.modules_to_unset if wateruse_on else []
 
         # long run entire domain
@@ -84,6 +95,7 @@ class TestSubcatchments(MixinTestSettings):
         # long run entire on subdomain
         path_out_subdomain = mk_path_out('data/LF_ETRS89_UseCase/out/longrun_subdomain{}'.format(dt_sec))
         settings_longrun_subdomain = self.setoptions(self.settings_files['cold'], opts_to_unset=modules_to_unset,
+                                                     opts_to_set=modules_to_set,
                                                      vars_to_set={'StepStart': step_start,
                                                                   'StepEnd': step_end,
                                                                   'PathOut': path_out_subdomain,
