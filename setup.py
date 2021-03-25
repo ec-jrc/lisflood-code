@@ -162,7 +162,7 @@ setup(
     package_dir={'': 'src/'},
     py_modules=[os.path.splitext(os.path.basename(path))[0] for path in glob('src/*.py*')],
     include_package_data=True,
-    data_files=[('', ['VERSION']), ('settings', ['src/settings_tpl.xml'])],
+    data_files=[('', ['VERSION']), ('settings', ['src/lisfloodSettings_reference.xml'])],
     packages=find_packages('src'),
     long_description=long_description,
     long_description_content_type='text/markdown',
