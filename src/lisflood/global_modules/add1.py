@@ -70,7 +70,15 @@ def defsoil(name1, name2=None, name3=None):
             in3 = name3
     return [in1, in2, in3]
 
-
+def readInputWithBackup(name, values_if_failure=None):
+    """Read input map/value if name is not None; else the provided backup values are used"""
+    if name is None:
+        return values_if_failure
+    else:
+        try:
+            return loadmap(name)
+        except:
+            return name
 def valuecell(mask, coordx, coordstr):
     """
     to put a value into a pcraster map -> invert of cellvalue

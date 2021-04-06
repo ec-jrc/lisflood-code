@@ -42,6 +42,14 @@ from .decorators import cached
 from .default_options import default_options
 
 project_dir = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../..'))
+#VEGETATION_LANDUSE, LANDUSE_VEGETATION, PRESCRIBED_VEGETATION, PRESCRIBED_LAI
+SOIL_USES = ["Rainfed", "Forest", "Irrigated"]
+PRESCRIBED_VEGETATION = [fract + "_prescribed" for fract in SOIL_USES]
+PRESCRIBED_LAI = OrderedDict(zip(PRESCRIBED_VEGETATION[:], ['LAIOtherMaps', 'LAIForestMaps', 'LAIIrrigationMaps']))
+VEGETATION_LANDUSE = OrderedDict(zip(PRESCRIBED_VEGETATION[:], SOIL_USES[:]))
+LANDUSE_VEGETATION = OrderedDict([(v, [k]) for k, v in VEGETATION_LANDUSE.items()])
+LANDUSE_INPUTMAP = OrderedDict(zip(LANDUSE_VEGETATION.keys(), ["OtherFraction", "ForestFraction", "IrrigationFraction"]))
+
 
 
 class Singleton(type):
@@ -177,7 +185,8 @@ class NetCDFMetadata(with_metaclass(Singleton)):
 @nine
 class LisSettings(with_metaclass(Singleton)):
     printer = pprint.PrettyPrinter(indent=4, width=120)
-
+    # Mapping of vegetation types to land use fractions (and the other way around)
+    
     def __str__(self):
         res = """
     Binding: {binding}
@@ -219,6 +228,9 @@ class LisSettings(with_metaclass(Singleton)):
         self.step_start_dt = inttodate(self.step_start_int - 1, ref_date_start, binding=self.binding)
         self.step_end_dt = inttodate(self.step_end_int - 1, ref_date_start, binding=self.binding)
         self.maskpath = self.binding['MaskMap']
+        
+
+
 
     def build_reportedmaps_dicts(self):
         self.report_timeseries = self._report_tss()
