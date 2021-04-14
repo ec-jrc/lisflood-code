@@ -15,6 +15,8 @@ See the Licence for the specific language governing permissions and limitations 
 
 """
 from __future__ import print_function, absolute_import
+
+from cftime._cftime import real_datetime
 from future.utils import listitems
 
 from nine import range
@@ -727,7 +729,7 @@ def checknetcdf(name, start, end):
     # Time step, expressed as fraction of day (same as self.var.DtSec and self.var.DtDay)
 
     date_first_sim_step = calendar(start, binding['calendar_type'])
-    if type(date_first_sim_step) is not datetime.datetime:
+    if not isinstance(date_first_sim_step, (datetime.datetime, real_datetime)):
         date_first_sim_step = begin + datetime.timedelta(days=(date_first_sim_step - 1) * DtDay)
     if (date_first_sim_step < date_first_step_in_ncdf):
         msg = "First simulation time step is before first time step in netCDF input data file \n" \
@@ -737,7 +739,8 @@ def checknetcdf(name, start, end):
         raise LisfloodError(msg)
 
     date_last_sim_step = calendar(end, binding['calendar_type'])
-    if type(date_last_sim_step) is not datetime.datetime:
+    if not isinstance(date_last_sim_step, (datetime.datetime, real_datetime)):
+    # if type(date_last_sim_step) is not datetime.datetime:
         date_last_sim_step = begin + datetime.timedelta(days=(date_last_sim_step - 1) * DtDay)
     if (date_last_sim_step > date_last_step_in_ncdf):
         msg = "Last simulation time step is after last time step in netCDF input data file \n" \
