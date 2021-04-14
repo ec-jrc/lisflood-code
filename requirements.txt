@@ -6,7 +6,7 @@ certifi>=2019.11.28
 cftime==1.0.4.2
 chardet==3.0.4
 Cython==0.29.14
-dask==2.7.0
+dask>=2.7.0
 decorator==4.4.1
 docopt==0.6.2
 docutils==0.15.2
@@ -20,14 +20,14 @@ idna==2.8
 importlib-metadata==0.23
 jedi==0.15.1
 joblib==0.14.1
-lisflood-utilities>=0.12.16
+# lisflood-utilities>=0.12.16  # used for tests
 lxml==4.6.2
 mccabe==0.6.1
 meld==0.2.4
 more-itertools==7.2.0
-netCDF4==1.5.3
+netCDF4>=1.5.3
 nine==1.0.0
-numexpr==2.7.0
+numexpr>=2.7.0
 numpy==1.19.5
 packaging==19.2
 pandas==0.25.1
@@ -49,7 +49,7 @@ pyproj==2.4.0
 python-dateutil==2.8.1
 pytz==2019.3
 readme-renderer==24.0
-scipy==1.4.0
+scipy>=1.4.0
 scprep==1.0.3
 six==1.12.0
 smmap2==2.0.5
@@ -62,7 +62,7 @@ traitlets==4.3.3
 urllib3==1.25.6
 wcwidth==0.1.7
 webencodings==0.5.1
-xarray==0.15.1
+xarray>=0.15.1
 zipp==0.6.0
 
 # new modules for Epic

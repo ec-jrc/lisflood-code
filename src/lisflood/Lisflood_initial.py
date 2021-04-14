@@ -306,7 +306,11 @@ class LisfloodModel_ini(DynamicModel):
         data.loc[labels[2],:] = readInputWithBackup(name_3, values_1)
         return data
 
-    def deffraction(self, variable):
-        """Weighted sum over the soil fractions of each pixel"""
-        ax_veg = variable.dims.index("vegetation")
-        return _vegSum(ax_veg, variable.values, self.SoilFraction.values)
+    def deffraction(self, para):
+        """Weighted sum over the fractions of each pixel"""
+        return para[0] * self.OtherFraction + para[1] * self.ForestFraction + para[2] * self.IrrigationFraction
+
+    # def deffraction(self, variable):
+    #     """Weighted sum over the soil fractions of each pixel"""
+    #     ax_veg = variable.dims.index("vegetation")
+    #     return _vegSum(ax_veg, variable.values, self.SoilFraction.values)
