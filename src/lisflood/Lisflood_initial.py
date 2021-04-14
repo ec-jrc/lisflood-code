@@ -1,51 +1,46 @@
-# -------------------------------------------------------------------------
-# Name:       Lisflood Model Initial
-# Purpose:
-#
-# Author:      burekpe
-#
-# Created:     27/02/2014
-# Copyright:   (c) burekpe 2014
-# Licence:     <your licence>
-# -------------------------------------------------------------------------
-import xarray as xr
-from numba import njit
+from __future__ import print_function, absolute_import
+
+import os
+import uuid
 from collections import OrderedDict
 
-from hydrological_modules.miscInitial import *
+import numpy as np
+import xarray as xr
+from numba import njit
 
-from hydrological_modules.readmeteo import *
-from hydrological_modules.leafarea import *
-from hydrological_modules.inflow import *
-from hydrological_modules.landusechange import *
-from hydrological_modules.snow import *
-from hydrological_modules.frost import *
-from hydrological_modules.soil import *
-from hydrological_modules.routing import *
-from hydrological_modules.groundwater import *
-from hydrological_modules.surface_routing import *
-from hydrological_modules.reservoir import *
-from hydrological_modules.lakes import *
-from hydrological_modules.polder import *
-#from hydrological_modules.wateruse import *
-from hydrological_modules.waterabstraction import *
-from hydrological_modules.indicatorcalc import *
 
-from hydrological_modules.riceirrigation import *
+from .global_modules.settings import CutMap, LisSettings, NetCDFMetadata, EPICSettings, MaskInfo
+from .global_modules.zusatz import DynamicModel
+from .global_modules.add1 import loadsetclone, mapattrNetCDF
+from .hydrological_modules.miscInitial import miscInitial
 
-from hydrological_modules.evapowater import *
-from hydrological_modules.transmission import *
+from .hydrological_modules.readmeteo import readmeteo
+from .hydrological_modules.leafarea import leafarea
+from .hydrological_modules.landusechange import landusechange
+from .hydrological_modules.snow import snow
+from .hydrological_modules.inflow import inflow
+from .hydrological_modules.frost import frost
+from .hydrological_modules.soil import soil
+from .hydrological_modules.routing import routing
+from .hydrological_modules.groundwater import groundwater
+from .hydrological_modules.surface_routing import surface_routing
+from .hydrological_modules.reservoir import reservoir
+from .hydrological_modules.lakes import lakes
+from .hydrological_modules.polder import polder
+from .hydrological_modules.waterabstraction import waterabstraction
+from .hydrological_modules.indicatorcalc import indicatorcalc
+from .hydrological_modules.riceirrigation import riceirrigation
+from .hydrological_modules.evapowater import evapowater
+from .hydrological_modules.transmission import transmission
+from .hydrological_modules.soilloop import soilloop
+from .hydrological_modules.opensealed import opensealed
+from .hydrological_modules.waterbalance import waterbalance
+from .hydrological_modules.waterlevel import waterlevel
+from .hydrological_modules.structures import structures
 
-#from hydrological_modules.soilloop_OLD import * # TEST SOILLOOP SPEED-UP
-from hydrological_modules.soilloop import *
-from hydrological_modules.opensealed import *
-from hydrological_modules.waterbalance import *
-from hydrological_modules.waterlevel import *
-from hydrological_modules.structures import *
-
-from global_modules.output import *
-from global_modules.stateVar import *
-from global_modules.add1 import readInputWithBackup
+from .global_modules.output import outputTssMap
+from .global_modules.stateVar import stateVar
+from .global_modules.add1 import readInputWithBackup
 
 
 @njit(fastmath=True)
@@ -71,16 +66,23 @@ class LisfloodModel_ini(DynamicModel):
 
         # try to make the maskmap more flexible e.g. col, row,x1,y1  or x1,x2,y1,y2
         self.MaskMap = loadsetclone('MaskMap')
+        self.epic_settings = EPICSettings()
+        self.settings = LisSettings.instance()
+        self.maskinfo = MaskInfo.instance()
+        binding = self.settings.binding
+        option = self.settings.options
+        flags = self.settings.flags
+        report_steps = self.settings.report_steps
 
         if option['readNetcdfStack']:
             # get the extent of the maps from the precipitation input maps
             # and the modelling extent from the MaskMap
             # cutmap[] defines the MaskMap inside the precipitation map
-            cutmap[0], cutmap[1], cutmap[2], cutmap[3] = mapattrNetCDF(binding['E0Maps'])
+            _ = CutMap(*mapattrNetCDF(binding['E0Maps']))  # register cutmaps
         if option['writeNetcdfStack'] or option['writeNetcdf']:
             # if NetCDF is writen, the pr.nc is read to get the metadata
             # like projection
-            metaNetCDF()
+            _ = NetCDFMetadata(uuid.uuid4())  # init meta netcdf
 
         # ----------------------------------------
 
@@ -99,7 +101,6 @@ class LisfloodModel_ini(DynamicModel):
         self.reservoir_module = reservoir(self)
         self.lakes_module = lakes(self)
         self.polder_module = polder(self)
-#
         self.waterabstraction_module = waterabstraction(self)
         self.indicatorcalc_module = indicatorcalc(self)
 
@@ -107,28 +108,28 @@ class LisfloodModel_ini(DynamicModel):
         self.evapowater_module = evapowater(self)
         self.transmission_module = transmission(self)
 
-#        self.soilloop_module_OLD = soilloop_OLD(self) # TEST SOILLOOP SPEED-UP
         self.soilloop_module = soilloop(self)
         self.opensealed_module = opensealed(self)
         self.waterbalance_module = waterbalance(self)
         self.waterlevel_module = waterlevel(self)
         self.structures_module = structures(self)
 
-        self.prescribed_vegetation = PRESCRIBED_VEGETATION
+        self.prescribed_vegetation = self.epic_settings.prescribed_vegetation
         self.interactive_vegetation = []
-        if option["cropsEPIC"]:
+        if option.get('cropsEPIC'):
+            self.prescribed_vegetation = self.epic_settings.prescribed_vegetation
             if int(binding["DtSec"]) != 86400:
                 raise Exception("EPIC runs only using daily time steps!")
             from EPIC_modules.EPIC_main import EPIC_main # EPIC: agriculture simulator
             self.crop_module = EPIC_main(self) # EPIC: agriculture simulation
             if option["allIrrigIsEPIC"]: # the whole irrigated cropland is simulated by EPIC: remove 'Irrigated_prescribed' soil fraction
                 self.prescribed_vegetation.remove('Irrigated_prescribed') # (also removed from PRESCRIBED_VEGETATION)
-                _ = VEGETATION_LANDUSE.pop('Irrigated_prescribed')
-                LANDUSE_VEGETATION['Irrigated'] = []
-                _ = PRESCRIBED_LAI.pop('Irrigated_prescribed')
-            VEGETATION_LANDUSE.update(self.crop_module.crop2landuse.to_dict()) # add EPIC crops to dictionary mapping vegetation fractions to land use types
-            LANDUSE_VEGETATION["Rainfed"] += self.crop_module.rainfed_crops.tolist()
-            LANDUSE_VEGETATION["Irrigated"] += self.crop_module.irrigated_crops.tolist()
+                self.epic_settings.vegetation_landuse.pop('Irrigated_prescribed')
+                self.epic_settings.landuse_vegetation['Irrigated'] = []
+                self.epic_settings.prescribe_lai.pop('Irrigated_prescribed')
+            self.epic_settings.vegetation_landuse.update(self.crop_module.crop2landuse.to_dict()) # add EPIC crops to dictionary mapping vegetation fractions to land use types
+            self.epic_settings.landuse_vegetation["Rainfed"] += self.crop_module.rainfed_crops.tolist()
+            self.epic_settings.landuse_vegetation["Irrigated"] += self.crop_module.irrigated_crops.tolist()
             self.interactive_vegetation += self.crop_module.simulated_crops.tolist()
         self.vegetation = self.prescribed_vegetation + self.interactive_vegetation
 
@@ -143,10 +144,7 @@ class LisfloodModel_ini(DynamicModel):
         # include output of tss and maps
         self.output_module = outputTssMap(self)
 
-        MMaskMap = self.MaskMap
-        # for checking maps
-
-        self.ReportSteps = ReportSteps['rep']
+        self.ReportSteps = report_steps['rep']
 
         self.landusechange_module.initial()
 
@@ -189,8 +187,22 @@ class LisfloodModel_ini(DynamicModel):
         self.waterbalance_module.initial()
         # calculate initial amount of water in the catchment
 
-        if option["cropsEPIC"]:
+        if option.get('cropsEPIC'):
             self.crop_module.initial() # EPIC: agriculture simulator
+
+        # debug start
+        if flags['debug']:
+            # Print value of variables after initialization (from state files)
+            nomefile = 'Debug_init_' + str(self.currentStep + 1) + '.txt'
+            ftemp1 = open(nomefile, 'w+')
+            nelements = len(self.ChanM3)
+            for i in range(0, nelements - 1):
+                if hasattr(self, 'CrossSection2Area'):
+                    print(i, self.TotalCrossSectionArea[i], self.CrossSection2Area[i], self.ChanM3[i], self.Chan2M3Kin[i], file=ftemp1)
+                else:
+                    print(i, self.TotalCrossSectionArea[i], self.ChanM3[i], file=ftemp1)
+
+            ftemp1.close()
 
 # ====== INITIAL ================================
     def initial(self):
@@ -201,7 +213,7 @@ class LisfloodModel_ini(DynamicModel):
         # Perturbe the states
         #self.groundwater_module.var.UpperZoneK = perturbState(self.groundwater_module.var.UpperZoneK, method = "normal", minVal=0, maxVal=100, mu=self.groundwater_module.var.UpperZoneK, sigma=0.05, spatial=False)
         #self.groundwater_module.var.UZ = perturbState(self.groundwater_module.var.UZ, method = "normal", minVal=0, maxVal=100, mu=10, sigma=3, spatial=False, single=False)
-        #pass
+        pass
 
 
 # ====== METHODS ================================
@@ -209,7 +221,8 @@ class LisfloodModel_ini(DynamicModel):
     @property
     def num_pixel(self):
         """"""
-        return maskinfo['mapC'][0]
+        return self.maskinfo.info.mapC[0]
+        # return maskinfo['mapC'][0]
 
     @property
     def dim_pixel(self):
@@ -224,7 +237,7 @@ class LisfloodModel_ini(DynamicModel):
     @property
     def dim_landuse(self):
         """"""
-        return ("landuse", SOIL_USES[:])
+        return ("landuse", self.epic_settings.soil_uses[:])
 
     @property
     def dim_runoff(self):
@@ -260,13 +273,13 @@ class LisfloodModel_ini(DynamicModel):
         """Load a DataArray from a model output netCDF file (typycally an end map).
         This function allows reading netCDF variables with more than 3 dimensions (time, y, x) into a xarray.DataArray.
         The coords argument is used if name does not point to a netCDF file: coordinates to allocate the DataArray before assigning a default value."""
-        file_path = binding[name]
+        file_path = self.settings.binding[name]
         if os.path.exists(file_path):
             variable = ".".join(os.path.split(file_path)[1].split(".")[:-1]) # the outer join allows treating variables name of the type 'variable.end'
             try:
                 with xr.open_dataset(file_path)[variable] as nc:
                     coords = [(dim, nc.coords[dim].values) for dim in nc.dims[:-2]] + [self.dim_pixel]
-                    values = nc.values[...,~maskinfo["mask"]]
+                    values = nc.values[...,~self.maskinfo.info.mask]  # maskinfo["mask"]
             except:
                 raise Exception("{} must be a netCDF file! Check the input {} in the settings file!".format(file_path, name))
         else:

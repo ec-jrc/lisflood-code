@@ -146,6 +146,7 @@ dependencies:
     - nine==1.0.0
     - numexpr==2.7.0
     - numpy==1.19.5
+    - numba
     - packaging==19.2
     - pandas==0.25.1
     - parso==0.5.1
