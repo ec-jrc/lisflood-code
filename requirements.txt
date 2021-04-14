@@ -21,7 +21,7 @@ importlib-metadata==0.23
 jedi==0.15.1
 joblib==0.14.1
 # lisflood-utilities>=0.12.16  # used for tests
-lxml==4.6.2
+lxml>=4.6.3
 mccabe==0.6.1
 meld==0.2.4
 more-itertools==7.2.0
@@ -42,7 +42,7 @@ ptyprocess==0.6.0
 py==1.8.0
 pycodestyle==2.5.0
 pyflakes==2.1.1
-Pygments==2.4.2
+Pygments>=2.7.4
 PyGSP==0.5.1
 pyparsing==2.4.2
 pyproj==2.4.0

@@ -138,7 +138,7 @@ dependencies:
     - joblib==0.14.1
     - keyring==21.4.0
     - lisflood-utilities>=0.12.16
-    - lxml==4.6.2
+    - lxml>=4.6.3
     - mccabe==0.6.1
     - meld==0.2.4
     - more-itertools==7.2.0
@@ -162,7 +162,7 @@ dependencies:
     - pycodestyle==2.5.0
     - pycparser==2.20
     - pyflakes==2.1.1
-    - pygments==2.4.2
+    - pygments>=2.7.4
     - pygsp==0.5.1
     - pyparsing==2.4.2
     - pyproj==2.4.0
