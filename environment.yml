@@ -111,13 +111,11 @@ dependencies:
     - attrs==19.3.0
     - backcall==0.1.0
     - beautifulsoup4==4.8.1
-    - bleach==3.1.1
-    - certifi==2019.11.28
+    - certifi>=2019.11.28
     - cffi==1.14.3
     - cftime==1.0.4.2
     - chardet==3.0.4
     - colorama==0.4.3
-    - coverage==5.0.3
     - cryptography==3.1.1
     - cython==0.29.14
     - dask==2.7.0
@@ -126,7 +124,6 @@ dependencies:
     - docutils==0.15.2
     - entrypoints==0.3
     - filelock==3.0.12
-    - flake8==3.7.9
     - future==0.18.0
     - future-fstrings==1.2.0
     - gdal==3.1.2
@@ -168,10 +165,6 @@ dependencies:
     - pygsp==0.5.1
     - pyparsing==2.4.2
     - pyproj==2.4.0
-    - pytest==5.2.1
-    - pytest-cov==2.8.1
-    - pytest-env==0.6.2
-    - pytest-mock==2.0.0
     - python-dateutil==2.8.1
     - pytz==2019.3
     - pyyaml==5.3
@@ -190,10 +183,8 @@ dependencies:
     - threadpoolctl==2.1.0
     - toml==0.10.0
     - toolz==0.10.0
-    - tox==3.14.0
     - tqdm==4.36.1
     - traitlets==4.3.3
-    - twine==3.2.0
     - urllib3==1.25.6
     - virtualenv==16.7.6
     - wcwidth==0.1.7
