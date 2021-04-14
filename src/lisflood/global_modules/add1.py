@@ -59,8 +59,6 @@ def defsoil(name1, name2=None, name3=None):
         try:
             in2 = loadmap(name2)
         except Exception as e:
-            print(str(type(e)))
-            print(str(e))
             in2 = name2
 
     if name3 is None:

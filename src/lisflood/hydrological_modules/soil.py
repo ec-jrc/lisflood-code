@@ -389,7 +389,7 @@ class soil(HydroModule):
         """ dynamic part of the soil module
             Calculation per Pixel
         """
-        self.var.TaInterceptionAll = self.var.deffraction(self.var.TaInterception) + self.var.DirectRunoffFraction * self.var.TASealed
+        self.var.TaInterceptionAll = self.var.deffraction(self.var.TaInterception[0]) + self.var.DirectRunoffFraction * self.var.TASealed
         self.var.TaInterceptionCUM += self.var.TaInterceptionAll
         # Cumulative evaporation of intercepted water [mm]
 
