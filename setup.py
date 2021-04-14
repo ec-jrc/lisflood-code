@@ -13,9 +13,16 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 ---------------------------------------------------------------------------------------------------------------------------------------
-Use python setup.y upload to publish versioned tags and pypi package
+Use python setup.y publish to publish versioned tags and pypi package
 
-python setup.py upload
+IMPORTANT Note:
+To test pip installation:
+python setup.py testpypi
+pip install --index-url https://test.pypi.org/simple/ lisflood-model==2.8.14
+
+To publish on PyPi:
+
+python setup.py publish
 
 It's equivalent to:
 
@@ -24,15 +31,8 @@ It's equivalent to:
 3. git tag {version}
 4. git push --tags
 
-Note: To upload new package on PyPi Test:
-python setup.py testpypi
-
 Install
 
-3a. Test package install
-pip install --index-url https://test.pypi.org/simple/ lisflood-model==2.8.14
-
-3b. In prod:
 pip install lisflood-model
 """
 
@@ -65,8 +65,6 @@ try:
     HAS_CYTHON = True
 except ImportError:
     HAS_CYTHON = False
-
-IS_PYTHON2 = sys.version_info.major == 2
 
 src_ext = 'src/lisflood/hydrological_modules/kinematic_wave_parallel_tools.{}'
 extension_ext = 'pyx' if HAS_CYTHON else 'c'
@@ -155,7 +153,7 @@ def _get_gdal_version():
 
 
 gdal_version = _get_gdal_version()
-req_file = 'requirements.txt' if not IS_PYTHON2 else 'requirements27.txt'
+req_file = 'requirements.txt'
 requirements = [l for l in open(req_file).readlines() if l and not l.startswith('#')]
 requirements += ['GDAL=={}'.format(gdal_version)]
 setup(
@@ -164,7 +162,7 @@ setup(
     package_dir={'': 'src/'},
     py_modules=[os.path.splitext(os.path.basename(path))[0] for path in glob('src/*.py*')],
     include_package_data=True,
-    data_files=[('', ['VERSION']), ('settings', ['src/settings_tpl.xml'])],
+    data_files=[('', ['VERSION']), ('settings', ['src/lisfloodSettings_reference.xml'])],
     packages=find_packages('src'),
     long_description=long_description,
     long_description_content_type='text/markdown',

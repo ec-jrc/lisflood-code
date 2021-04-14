@@ -145,8 +145,8 @@ class TestWarmStart(MixinTestSettings):
             timestep_init = prev_settings.step_end_dt.strftime('%d/%m/%Y %H:%M')
 
     def teardown_method(self):
-        folders_list = glob.glob(os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/run_*')) + \
-            glob.glob(os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/longrun_reference_*')) + \
-            glob.glob(os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/init_*'))
+        folders_list = glob.glob(os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/run*')) + \
+            glob.glob(os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/longrun_reference*')) + \
+            glob.glob(os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/init*'))
         for folder in folders_list:
             shutil.rmtree(folder)

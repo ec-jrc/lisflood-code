@@ -148,6 +148,13 @@ Command above will also install the executable `lisflood` in the virtualenv, so 
 lisflood /absolute_path/to/my/local/folder/TestCatchment/settings/cold_day_base.xml
 ```
 
+### IMPORTANT NOTE
+
+Please note that there are known issues when installing the LISFLOOD code on Windows (source code and pypi package). We cannot provide Windows support and strongly recommend using LINUX to install the LISFLOOD code.
+Windows users are recommended to execute LISFLOOD with a Docker image.
+
+
+
 ## Collaborate
 
 If you find an issue in our code, please follow the [GitHub flow](https://guides.github.com/introduction/flow/) to propose your changes (Fork, commit your changes and ask for a Pull Request).

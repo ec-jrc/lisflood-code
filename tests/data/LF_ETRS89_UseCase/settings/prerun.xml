@@ -4128,7 +4128,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="Sites" value="$(PathRoot)/maps/sites.map">
+                <textvar name="Sites" value="$(PathRoot)/maps/ec_outlets">
                     <comment>
                         map with monitoring sites (1,2,3 etc)
                     </comment>
