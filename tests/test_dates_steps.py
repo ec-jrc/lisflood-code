@@ -15,6 +15,22 @@ class TestStepsDates():
         'full': os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/full.xml')
     }
 
+    def test_dates_before_1970(self):
+        settings = self.setoptions(self.settings_files['full'],
+                                     opts_to_set=['repStateMaps', 'repEndMaps', 'repDischargeMaps',
+                                                  'repSnowMaps', 'repLZMaps', 'repUZMaps'],
+                                     vars_to_set={'StepStart': '01/01/1951 06:00', 'StepEnd': '05/01/1951 06:00',
+                                                  'CalendarDayStart': '01/01/1900 00:00', 'DtSec': '21600',
+                                                  'PathOut': '$(PathRoot)/out/0', 'PathMeteo': '$(PathRoot)/meteo_1950'}
+                                     )
+        mk_path_out('data/LF_ETRS89_UseCase/out/0')
+        lisfloodexe(settings)
+        assert settings.step_start_int == 74510
+        assert settings.step_end_int == 74526
+        assert settings.step_start_dt == datetime.datetime(1951, 1, 1, 6, 0)
+        assert settings.step_end_dt == datetime.datetime(1951, 1, 5, 6, 0)
+
+
     def test_dates_steps_daily(self):
         settings_a = setoptions(self.settings_files['full'],
                                 opts_to_set=['repStateMaps', 'repEndMaps', 'repDischargeMaps',
@@ -78,7 +94,9 @@ class TestStepsDates():
         comparator.compare_dirs(out_a, out_b)
 
     def teardown_method(self):
+        path_out_0 = os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/0')
         path_out_a = os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/1')
         path_out_b = os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/2')
-        shutil.rmtree(path_out_a, ignore_errors=True)
-        shutil.rmtree(path_out_b, ignore_errors=True)
+        for folder in (path_out_0, path_out_a, path_out_b):
+            if os.path.exists(folder):
+                shutil.rmtree(folder)
