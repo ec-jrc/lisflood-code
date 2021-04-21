@@ -15,13 +15,10 @@ See the Licence for the specific language governing permissions and limitations 
 
 """
 from __future__ import absolute_import, print_function
-
 import os
-import shutil
 
 import pytest
 
-from lisflood.global_modules.settings import LisSettings
 from lisflood.main import lisfloodexe
 
 from .test_utils import setoptions, mk_path_out, ETRS89TestCase
@@ -61,6 +58,7 @@ class TestCatch(ETRS89TestCase):
                               vars_to_set={'StepStart': step_start,
                                            'StepEnd': step_end,
                                            'DtSec': dt_sec,
+                                           'NetCDFTimeChunks': 'auto',
                                            'PathOut': output_dir})
         lisfloodexe(settings)
 
@@ -92,6 +90,7 @@ class TestCatch(ETRS89TestCase):
                               opts_to_unset=opts_to_unset,
                               vars_to_set={'StepStart': '02/02/2016 06:00',
                                            'StepEnd': '05/02/2016 06:00',
+                                           'NetCDFTimeChunks': 'auto',
                                            'PathOut': output_dir})
         lisfloodexe(settings)
         initcond_files = ('ch2cr.end.nc', 'chcro.end.nc', 'chside.end.nc', 'cseal.end.nc', 'cum.end.nc', 'cumf.end.nc',
@@ -111,6 +110,7 @@ class TestCatch(ETRS89TestCase):
                                            'PathOut': path_out_init,
                                            'StepStart': step_start,
                                            'StepEnd': step_end,
+                                           'NetCDFTimeChunks': 'auto',
                                            })
         lisfloodexe(settings)
 

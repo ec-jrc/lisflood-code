@@ -12,7 +12,8 @@ import lisflood
 from lisflood.global_modules.add1 import loadmap
 from lisflood.main import lisfloodexe
 
-from .test_utils import setoptions, mk_path_out
+from .test_utils import setoptions
+
 
 class TestReportedMaps():
 

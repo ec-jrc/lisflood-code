@@ -1,14 +1,10 @@
 from __future__ import absolute_import
 import os
-import datetime
 import shutil
-import pytest
 
 from lisfloodutilities.compare.nc import NetCDFComparator
 
 from lisflood.main import lisfloodexe
-from lisflood.cache import cache_clear, cache_size, cache_info, cache_found
-from lisflood.global_modules.settings import LisSettings
 
 from .test_utils import setoptions, mk_path_out, ETRS89TestCase
 

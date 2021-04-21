@@ -18,20 +18,16 @@ from __future__ import absolute_import
 import os
 
 import pytest
-from nine import IS_PYTHON2
 
 from lisflood.global_modules.errors import LisfloodError
 
-if IS_PYTHON2:
-    from mock import call
-else:
-    from unittest.mock import call
+from unittest.mock import call
 
 import lisflood
 from lisflood.global_modules.add1 import loadmap
 from lisflood.main import lisfloodexe
 
-from .test_utils import setoptions, mk_path_out
+from .test_utils import setoptions
 
 
 class TestOptions():

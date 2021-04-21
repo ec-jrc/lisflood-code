@@ -5,7 +5,6 @@ import pytest
 from lisfloodutilities.compare.pcr import TSSComparator
 
 from lisflood.main import lisfloodexe
-from lisflood.global_modules.settings import LisSettings
 
 from .test_utils import setoptions, mk_path_out
 

@@ -87,7 +87,9 @@ class TestSubcatchments():
                                                    'StepEnd': step_end,
                                                    'PathOut': path_out_domain,
                                                    'ReportSteps': report_steps,
-                                                   'DtSec': dt_sec})
+                                                   'DtSec': dt_sec,
+                                                   'NetCDFTimeChunks': 'auto',
+                                                   })
         # ** execute
         lisfloodexe(settings_longrun)
 
@@ -100,7 +102,9 @@ class TestSubcatchments():
                                                              'PathOut': path_out_subdomain,
                                                              'ReportSteps': report_steps,
                                                              'MaskMap': '$(PathRoot)/maps/subcatchment_mask.map',
-                                                             'DtSec': dt_sec})
+                                                             'DtSec': dt_sec,
+                                                             'NetCDFTimeChunks': 'auto',
+                                                             })
         # ** execute
         lisfloodexe(settings_longrun_subdomain)
 

@@ -29,89 +29,114 @@ You can use builtin path variables in this template and reference to other paths
 #-----------------------------------------------------------
 # modelling and reporting options
 #-----------------------------------------------------------
-# options to turn hydrological modules on/off
-<setoption choice="1" name="groundwaterSmooth"/>
+    <setoption choice="0" name="TemperatureInKelvin"/>
+    <setoption choice="1" name="gridSizeUserDefined"/>
 
-<setoption choice="0" name="wateruse"/>
-<setoption choice="1" name="TransientWaterDemandChange" />
-<setoption choice="0" name="useWaterDemandAveYear" />
-<setoption choice="1" name="wateruseRegion"/>
+    # options to turn hydrological modules on/off
+    <setoption choice="1" name="groundwaterSmooth"/>
 
-<setoption choice="1" name="drainedIrrigation"/>
-<setoption choice="1" name="riceIrrigation"/>
-<setoption choice="1" name="openwaterevapo"/>
-<setoption choice="1" name="simulateLakes"/>
-<setoption choice="1" name="simulateReservoirs"/>
+    <setoption choice="0" name="wateruse"/>
+    <setoption choice="1" name="TransientWaterDemandChange" />
+    <setoption choice="0" name="useWaterDemandAveYear" />
+    <setoption choice="1" name="wateruseRegion"/>
 
-<setoption choice="1" name="SplitRouting"/>
+    <setoption choice="1" name="drainedIrrigation"/>
+    <setoption choice="1" name="riceIrrigation"/>
+    <setoption choice="1" name="openwaterevapo"/>
+    <setoption choice="1" name="simulateLakes"/>
+    <setoption choice="1" name="simulateReservoirs"/>
 
-# use inflow data
-<setoption choice="0" name="inflow"/>
+    <setoption choice="1" name="SplitRouting"/>
 
-# option to compute indicators
-<setoption choice="0" name="indicator"/>
+    # use inflow data
+    <setoption choice="0" name="inflow"/>
 
-# option to initialize Lisflood
-<setoption choice="0" name="InitLisflood"/>
+    # option to compute indicators
+    <setoption choice="0" name="indicator"/>
 
-# option to read/write NetCDF
-<setoption choice="1"  name="readNetcdfStack"/>
-<setoption choice="1"  name="writeNetcdfStack"/>
-<setoption choice="1"  name="writeNetcdf"/>
+    # option to initialize Lisflood
+    <setoption choice="0" name="InitLisflood"/>
+    <setoption choice="0" name="InitLisfloodwithoutsplit"/>
 
-#-----------------------------------------------------------
-# report time series
-#-----------------------------------------------------------
-# report discharge TS
-<setoption choice="1" name="repDischargeTs"/>
-
-# report gauges and sites
-<setoption choice="0" name="repStateSites"/>
-<setoption choice="0" name="repRateSites"/>
-<setoption choice="1" name="repStateUpsGauges"/>
-<setoption choice="1" name="repRateUpsGauges"/>
-<setoption choice="1" name="repMeteoUpsGauges"/>
-
-# report reservoirs and lakes
-<setoption choice="1" name="repsimulateLakes"/>
-<setoption choice="1" name="repsimulateReservoirs"/>
-
-#-----------------------------------------------------------
-# report maps
-#-----------------------------------------------------------
-# report state maps
-<setoption choice="1" name="repStateMaps"/>
-
-# report end maps
-<setoption choice="0" name="repEndMaps"/>
-
-# report maps
-<setoption choice="1" name="repDischargeMaps"/>
-<setoption choice="1" name="repSurfaceRunoffMaps"/>
-<setoption choice="1" name="repRainMaps"/>
-<setoption choice="1" name="repSnowMaps"/>
-<setoption choice="1" name="repSnowCoverMaps"/>
-<setoption choice="1" name="repSnowMeltMaps"/>
-<setoption choice="1" name="repThetaMaps"/>
-<setoption choice="1" name="repThetaForestMaps"/>
-<setoption choice="1" name="repLZMaps"/>
-<setoption choice="1" name="repUZMaps"/>
-<setoption choice="1" name="repGwPercUZLZMaps"/>
-<setoption choice="1" name="repRWS"/>
-<setoption choice="1"  name="repPFMaps"/>
-<setoption choice="1"  name="repPFForestMaps"/>
+    # option to read/write NetCDF
+    <setoption choice="1"  name="readNetcdfStack"/>
+    <setoption choice="1"  name="writeNetcdfStack"/>
+    <setoption choice="1"  name="writeNetcdf"/>
 
 
-<setoption choice="0" name="repTotalAbs"/>
-<setoption choice="0" name="repTotalWUse"/>
-<setoption choice="0" name="repWIndex"/>
+    #-----------------------------------------------------------
+    # report time series
+    #-----------------------------------------------------------
+    # report discharge TS
+    <setoption choice="1" name="repDischargeTs"/>
+
+    # report gauges and sites
+    <setoption choice="0" name="repStateSites"/>
+    <setoption choice="0" name="repRateSites"/>
+    <setoption choice="1" name="repStateUpsGauges"/>
+    <setoption choice="1" name="repRateUpsGauges"/>
+    <setoption choice="1" name="repMeteoUpsGauges"/>
+
+    # report reservoirs and lakes
+    <setoption choice="1" name="repsimulateLakes"/>
+    <setoption choice="1" name="repsimulateReservoirs"/>
+
+    #-----------------------------------------------------------
+    # report maps
+    #-----------------------------------------------------------
+    # report state maps
+    <setoption choice="1" name="repStateMaps"/>
+
+    # report end maps
+    <setoption choice="0" name="repEndMaps"/>
+
+    # report maps
+    <setoption choice="1" name="repDischargeMaps"/>
+    <setoption choice="1" name="repSurfaceRunoffMaps"/>
+    <setoption choice="1" name="repRainMaps"/>
+    <setoption choice="1" name="repSnowMaps"/>
+    <setoption choice="1" name="repSnowCoverMaps"/>
+    <setoption choice="1" name="repSnowMeltMaps"/>
+    <setoption choice="1" name="repThetaMaps"/>
+    <setoption choice="1" name="repThetaForestMaps"/>
+    <setoption choice="1" name="repLZMaps"/>
+    <setoption choice="1" name="repUZMaps"/>
+    <setoption choice="1" name="repGwPercUZLZMaps"/>
+    <setoption choice="1" name="repRWS"/>
+    <setoption choice="1"  name="repPFMaps"/>
+    <setoption choice="1"  name="repPFForestMaps"/>
+
+
+    <setoption choice="0" name="repTotalAbs"/>
+    <setoption choice="0" name="repTotalWUse"/>
+    <setoption choice="0" name="repWIndex"/>
 
 </lfoptions>
 
 <lfuser>
 
 <group>
+<comment>
+**************************************************************
+netCDF parameters
+**************************************************************
 
+!-- Optimization of netCDF I/O through chunking and caching.
+
+The option "NetCDFTimeChunks" may take the following values:
+    - "-1"                         : Load everything upfront
+    - "[positive integer number]"  : Chunk size defined by user
+    - "auto"                       : Let xarray to decide
+</comment>
+<textvar name="NetCDFTimeChunks" value="-1"/>
+
+    <comment>
+
+The option "MapsCaching" may take the following values:
+    - "True"   : Cache maps during execution
+    - "False"  : No caching
+</comment>
+<textvar name="MapsCaching" value="False"/>
 
 <comment>
 **************************************************************
