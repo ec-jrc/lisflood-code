@@ -7,10 +7,10 @@ from lisfloodutilities.compare.nc import NetCDFComparator
 
 from lisflood.main import lisfloodexe
 
-from . import MixinTestSettings, mk_path_out
+from .test_utils import setoptions, mk_path_out
 
 
-class TestStepsDates(MixinTestSettings):
+class TestStepsDates():
     settings_files = {
         'full': os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/full.xml')
     }
@@ -32,19 +32,19 @@ class TestStepsDates(MixinTestSettings):
 
 
     def test_dates_steps_daily(self):
-        settings_a = self.setoptions(self.settings_files['full'],
-                                     opts_to_set=['repStateMaps', 'repEndMaps', 'repDischargeMaps',
-                                                  'repSnowMaps', 'repLZMaps', 'repUZMaps'],
-                                     vars_to_set={'StepStart': '30/07/2016 06:00', 'StepEnd': '01/08/2016 06:00',
-                                                  'PathOut': '$(PathRoot)/out/1'}
-                                     )
+        settings_a = setoptions(self.settings_files['full'],
+                                opts_to_set=['repStateMaps', 'repEndMaps', 'repDischargeMaps',
+                                             'repSnowMaps', 'repLZMaps', 'repUZMaps'],
+                                vars_to_set={'StepStart': '30/07/2016 06:00', 'StepEnd': '01/08/2016 06:00',
+                                             'PathOut': '$(PathRoot)/out/1'}
+                                )
         mk_path_out('data/LF_ETRS89_UseCase/out/1')
         lisfloodexe(settings_a)
-        settings_b = self.setoptions(self.settings_files['full'],
-                                     opts_to_set=['repStateMaps', 'repEndMaps', 'repDischargeMaps',
-                                                  'repSnowMaps', 'repLZMaps', 'repUZMaps'],
-                                     vars_to_set={'StepStart': 6057, 'StepEnd': 6059,
-                                                  'PathOut': '$(PathRoot)/out/2'})
+        settings_b = setoptions(self.settings_files['full'],
+                                opts_to_set=['repStateMaps', 'repEndMaps', 'repDischargeMaps',
+                                             'repSnowMaps', 'repLZMaps', 'repUZMaps'],
+                                vars_to_set={'StepStart': 6057, 'StepEnd': 6059,
+                                             'PathOut': '$(PathRoot)/out/2'})
         mk_path_out('data/LF_ETRS89_UseCase/out/2')
 
         lisfloodexe(settings_b)
@@ -62,21 +62,21 @@ class TestStepsDates(MixinTestSettings):
         comparator.compare_dirs(out_a, out_b)
 
     def test_dates_steps_6h(self):
-        settings_a = self.setoptions(self.settings_files['full'],
-                                     opts_to_set=['repStateMaps', 'repEndMaps', 'repDischargeMaps',
-                                                  'repSnowMaps', 'repLZMaps', 'repUZMaps'],
-                                     vars_to_set={'StepStart': '30/07/2016 06:00', 'StepEnd': '31/07/2016 18:00',
-                                                  'DtSec': '21600',
-                                                  'PathOut': '$(PathRoot)/out/1'}
-                                     )
+        settings_a = setoptions(self.settings_files['full'],
+                                opts_to_set=['repStateMaps', 'repEndMaps', 'repDischargeMaps',
+                                             'repSnowMaps', 'repLZMaps', 'repUZMaps'],
+                                vars_to_set={'StepStart': '30/07/2016 06:00', 'StepEnd': '31/07/2016 18:00',
+                                             'DtSec': '21600',
+                                             'PathOut': '$(PathRoot)/out/1'}
+                                )
         mk_path_out('data/LF_ETRS89_UseCase/out/1')
         lisfloodexe(settings_a)
-        settings_b = self.setoptions(self.settings_files['full'],
-                                     opts_to_set=['repStateMaps', 'repEndMaps', 'repDischargeMaps',
-                                                  'repSnowMaps', 'repLZMaps', 'repUZMaps'],
-                                     vars_to_set={'StepStart': 24225, 'StepEnd': 24231,
-                                                  'DtSec': '21600',
-                                                  'PathOut': '$(PathRoot)/out/2'})
+        settings_b = setoptions(self.settings_files['full'],
+                                opts_to_set=['repStateMaps', 'repEndMaps', 'repDischargeMaps',
+                                             'repSnowMaps', 'repLZMaps', 'repUZMaps'],
+                                vars_to_set={'StepStart': 24225, 'StepEnd': 24231,
+                                             'DtSec': '21600',
+                                             'PathOut': '$(PathRoot)/out/2'})
         mk_path_out('data/LF_ETRS89_UseCase/out/2')
 
         lisfloodexe(settings_b)
@@ -97,6 +97,6 @@ class TestStepsDates(MixinTestSettings):
         path_out_0 = os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/0')
         path_out_a = os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/1')
         path_out_b = os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/2')
-        for folder in (path_out_0, path_out_a, path_out_b):
-            if os.path.exists(folder):
-                shutil.rmtree(folder)
+        shutil.rmtree(path_out_0, ignore_errors=True)
+        shutil.rmtree(path_out_a, ignore_errors=True)
+        shutil.rmtree(path_out_b, ignore_errors=True)

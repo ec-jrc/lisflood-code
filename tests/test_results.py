@@ -21,100 +21,15 @@ import shutil
 
 import pytest
 
-from lisfloodutilities.compare.nc import NetCDFComparator
-from lisfloodutilities.compare.pcr import TSSComparator
-
 from lisflood.global_modules.settings import LisSettings
 from lisflood.main import lisfloodexe
 
-from tests import setoptions, mk_path_out
-
-current_dir = os.path.dirname(os.path.abspath(__file__))
-
-
-class MixinTestLis(object):
-    reference_files = {
-        'dis': {
-            'report_map': 'DischargeMaps',
-            'report_tss': 'DisTS',
-            '86400': {
-                'map': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/dis_daily/dis.nc'),
-                'tss': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/dis_daily/dis.tss'),
-            },
-            '21600': {
-                'map': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/dis_6h/dis.nc'),
-                'tss': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/dis_6h/dis.tss'),
-            },
-        },
-        'chanq': {
-            'report_map': None,
-            'report_tss': 'ChanqTS',
-            '86400': {
-                'map': None,
-                'tss': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/dis_daily/chanqWin.tss'),
-            },
-            '21600': {
-                'map': None,
-                'tss': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/dis_6h/chanqWin.tss'),
-            },
-        },
-        'avgdis': {
-            'report_map': 'AvgDis',
-            'report_tss': None,
-            '86400': {
-                'map': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/init_daily/avgdis.nc'),
-                'tss': None,
-            },
-            '21600': {
-                'map': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/init_6h/avgdis.nc'),
-                'tss': None,
-            },
-        },
-        'lzavin': {
-            'report_map': 'LZAvInflowMap',
-            'report_tss': None,
-            '86400': {
-                'map': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/init_daily/lzavin.nc'),
-                'tss': None,
-            },
-            '21600': {
-                'map': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/reference/init_6h/lzavin.nc'),
-                'tss': None,
-            },
-        },
-    }
-
-    def teardown_method(self):
-        settings = LisSettings.instance()
-        output_dir = settings.output_dir
-        shutil.rmtree(output_dir)
-
-    @classmethod
-    def compare_reference(cls, variable='dis', check='map', step_length='86400'):
-        """
-        :param variable: variable to check. Default 'dis' (Discharge)
-        :param check: either 'map' or 'tss'. Default 'map'
-        :param step_length: DtSec (86400 for daily and 21600 for 6h run)
-        """
-
-        settings = LisSettings.instance()
-        binding = settings.binding
-        reference = cls.reference_files[variable][step_length][check]
-
-        if check == 'map':
-            output_map = os.path.normpath(binding[cls.reference_files[variable]['report_map']]) + '.nc'
-            comparator = NetCDFComparator(settings.maskpath)
-            comparator.compare_files(reference, output_map)
-        elif check == 'tss':
-            output_tss = binding[cls.reference_files[variable]['report_tss']]
-            comparator = TSSComparator()
-            comparator.compare_files(reference, output_tss)
-        # If there are differences, test fails before reaching this line (AssertionError(s) in comparator methods)
-        assert True
+from .test_utils import setoptions, mk_path_out, ETRS89TestCase
 
 
 @pytest.mark.slow
-class TestCatch(MixinTestLis):
+class TestCatch(ETRS89TestCase):
+    case_dir = os.path.join(os.path.dirname(__file__), 'data', 'LF_ETRS89_UseCase')
     modules_to_set = (
         'SplitRouting',
         'simulateReservoirs',
@@ -125,12 +40,12 @@ class TestCatch(MixinTestLis):
         'indicator',
     )
     settings_files = {
-        'base': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/settings/base.xml'),
-        'prerun': os.path.join(current_dir, 'data/LF_ETRS89_UseCase/settings/prerun.xml')
+        'base': os.path.join(case_dir, 'settings/base.xml'),
+        'prerun': os.path.join(case_dir, 'settings/prerun.xml')
     }
 
     def run(self, dt_sec, step_start, step_end):
-        output_dir = mk_path_out('data/LF_ETRS89_UseCase/out/test_results{}'.format(dt_sec))
+        output_dir = mk_path_out(os.path.join(self.case_dir, 'out/test_results{}'.format(dt_sec)))
         opts_to_unset = (
             "repStateSites", "repRateSites", "repStateUpsGauges", "repRateUpsGauges", "repMeteoUpsGauges",
             "repsimulateLakes", "repStateMaps",
@@ -162,7 +77,7 @@ class TestCatch(MixinTestLis):
         self.compare_reference('chanq', check='tss', step_length='21600')
 
     def test_initvars(self):
-        output_dir = mk_path_out('data/LF_ETRS89_UseCase/out/test_results_initvars')
+        output_dir = mk_path_out(os.path.join(self.case_dir, 'out/test_results_initvars'))
         opts_to_unset = (
             "repStateSites", "repRateSites", "repStateUpsGauges", "repRateUpsGauges", "repMeteoUpsGauges",
             "repsimulateLakes", "repStateMaps",
@@ -189,7 +104,7 @@ class TestCatch(MixinTestLis):
             assert os.path.exists(os.path.join(output_dir, f))
 
     def run_init(self, dt_sec, step_start, step_end):
-        path_out_init = mk_path_out('data/LF_ETRS89_UseCase/out/test_init_{}'.format(dt_sec))
+        path_out_init = mk_path_out(os.path.join(self.case_dir, 'out/test_init_{}'.format(dt_sec)))
         settings = setoptions(self.settings_files['prerun'],
                               opts_to_set=self.modules_to_set,
                               vars_to_set={'DtSec': dt_sec,

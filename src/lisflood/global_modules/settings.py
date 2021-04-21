@@ -30,6 +30,7 @@ import os
 import pprint
 import inspect
 from collections import namedtuple
+import multiprocessing
 
 import xml.dom.minidom
 import pcraster
@@ -83,6 +84,40 @@ class Singleton(type):
         return cls._current[cls]
 
 
+class ThreadSingleton(type):
+    """
+    Singleton metaclass to keep single instances by init arguments
+    """
+    _instances = {}
+    _current = {}
+
+    def __init__(cls, name, bases, dct):
+        super(ThreadSingleton, cls).__init__(name, bases, dct)
+
+    def __call__(cls, *args, **kwargs):
+        init = cls.__init__
+        if init is not None:
+            init_args = inspect.getcallargs(init, None, *args, **kwargs).items()
+            new_init_args = []
+            for a in init_args:
+                if isinstance(a[1], np.ndarray):
+                    new_init_args.append((a[0], a[1].tostring()))
+                else:
+                    new_init_args.append(a)
+            key = (multiprocessing.current_process().name, cls, str(new_init_args))
+        else:
+            key = cls
+
+        if key not in cls._instances:
+            cls._instances[key] = super(ThreadSingleton, cls).__call__(*args, **kwargs)
+        cls._current[(multiprocessing.current_process().name, cls)] = cls._instances[key]
+        return cls._instances[key]
+
+    def instance(cls):
+        key = (multiprocessing.current_process().name, cls)
+        return cls._current[key]
+
+
 @nine
 class CDFFlags(with_metaclass(Singleton)):
     """
@@ -90,8 +125,8 @@ class CDFFlags(with_metaclass(Singleton)):
     flagcdf = 0
     flagcdf = 1  # index flag for writing nedcdf = 1 (=steps) -> indicated if a netcdf is created or maps are appended
     flagcdf = 2
-    flagcdf = 4  # set to yearly (step) flag
     flagcdf = 3  # set to monthly (step) flag
+    flagcdf = 4  # set to yearly (step) flag
     flagcdf = 5  # set to monthly flag
     flagcdf = 6  # set to yearly flag
     """
@@ -198,7 +233,7 @@ class EPICSettings(with_metaclass(Singleton)):
 
 
 @nine
-class LisSettings(with_metaclass(Singleton)):
+class LisSettings(with_metaclass(ThreadSingleton)):
     printer = pprint.PrettyPrinter(indent=4, width=120)
 
     def __str__(self):
@@ -218,7 +253,7 @@ class LisSettings(with_metaclass(Singleton)):
                report_maps_end=self.printer.pformat(self.report_maps_end))
         return res
 
-    def __init__(self, settings_file):
+    def __init__(self, settings_file, sys_args=[]):
         dom = xml.dom.minidom.parse(settings_file)
         self.settings_dir = os.path.normpath(os.path.dirname((os.path.abspath(settings_file))))
         self.settings_path = os.path.normpath(os.path.abspath(settings_file))
@@ -229,7 +264,7 @@ class LisSettings(with_metaclass(Singleton)):
         self.ncores = self._ncores(user_settings)
         self.binding = bindings
         self.options = self._options(dom)
-        self.flags = self._flags()
+        self.flags = self._flags(sys_args)
         self.model_steps = self._model_steps()
         self.report_steps = self._report_steps(user_settings, bindings)
         self.filter_steps = self._filter_steps(user_settings)
@@ -351,18 +386,15 @@ class LisSettings(with_metaclass(Singleton)):
         return pathout
 
     @staticmethod
-    def _flags():
+    def _flags(sys_args):
         flags = OrderedDict([('quiet', False), ('veryquiet', False), ('loud', False),
                              ('checkfiles', False), ('noheader', False), ('printtime', False),
-                             ('debug', False), ('nancheck', False)])
-        if 'test' in sys.argv[0] or 'test' in sys.argv[1]:
-            # return defaults during tests
-            return flags
+                             ('debug', False), ('nancheck', False), ('initonly', False)])
 
         @cached
         def _flags(argz):
             try:
-                opts, arguments = getopt.getopt(argz, 'qvlchtdn', list(flags.keys()))
+                opts, arguments = getopt.getopt(argz, 'qvlchtdni', list(flags.keys()))
             except getopt.GetoptError:
                 from ..main import usage
                 usage()
@@ -370,14 +402,15 @@ class LisSettings(with_metaclass(Singleton)):
                 for o, a in opts:
                     for opt in (('-q', '--quiet'), ('-v', '--veryquiet'),
                                 ('-l', '--loud'), ('-c', '--checkfiles'),
-                                ('-h', '--noheader'), ('-t', '--printtime')):
+                                ('-h', '--noheader'), ('-t', '--printtime'),
+                                ('-d', '--debug'), ('-n', '--nancheck'),
+                                ('-i', '--initonly')):
                         if o in opt:
                             flags[opt[1].lstrip('--')] = True
                             break
             return flags
 
-        args = sys.argv[2:]
-        return _flags(args)
+        return _flags(sys_args)
 
     def _bindings(self, dom):
         binding = {}

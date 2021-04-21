@@ -15,9 +15,11 @@ See the Licence for the specific language governing permissions and limitations 
 
 """
 from __future__ import print_function, absolute_import
+import xarray as xr
 
-from ..global_modules.add1 import readnetcdf, checknetcdf,readmapsparse
 from ..global_modules.settings import LisSettings
+from ..global_modules.add1 import readmapsparse
+from ..global_modules.netcdf import XarrayCached, XarrayChunked, date_range
 
 
 class readmeteo(object):
@@ -34,15 +36,19 @@ class readmeteo(object):
         option = settings.options
         binding = settings.binding
         if option['readNetcdfStack']:
-            # checking if time period in netCDF files (forcings) includes simulation period
-            checknetcdf(binding['PrecipitationMaps'], binding['StepStart'], binding['StepEnd'])
-            checknetcdf(binding['TavgMaps'], binding['StepStart'], binding['StepEnd'])
-            checknetcdf(binding['ET0Maps'], binding['StepStart'], binding['StepEnd'])
-            checknetcdf(binding['E0Maps'], binding['StepStart'], binding['StepEnd'])
+            # extract time range from bindings
+            dates = date_range(binding)
+            # extract chunk from bindings
+            time_chunk = binding['NetCDFTimeChunks']  # -1 to load everything, 'auto' to let xarray decide
+            self.forcings = {}
+            for data in ['PrecipitationMaps', 'TavgMaps', 'ET0Maps', 'E0Maps']:
+                if binding['MapsCaching'] == "True":
+                    self.forcings[data] = XarrayCached(binding[data], dates)
+                else:
+                    self.forcings[data] = XarrayChunked(binding[data], dates, time_chunk)
 
 # --------------------------------------------------------------------------
 # --------------------------------------------------------------------------
-
     def dynamic(self):
         """ dynamic part of the readmeteo module
             read meteo input maps
@@ -55,11 +61,15 @@ class readmeteo(object):
         # ***** READ METEOROLOGICAL DATA *****************************
         # ************************************************************
         if option['readNetcdfStack']:
+
+            step = self.var.currentTimeStep() - self.var.firstTimeStep()
+
             # Read from NetCDF stack files
-            self.var.Precipitation = readnetcdf(binding['PrecipitationMaps'], self.var.currentTimeStep()) * self.var.DtDay * self.var.PrScaling
-            self.var.Tavg = readnetcdf(binding['TavgMaps'], self.var.currentTimeStep())
-            self.var.ETRef = readnetcdf(binding['ET0Maps'], self.var.currentTimeStep()) * self.var.DtDay * self.var.CalEvaporation
-            self.var.EWRef = readnetcdf(binding['E0Maps'], self.var.currentTimeStep()) * self.var.DtDay * self.var.CalEvaporation
+            self.var.Precipitation = self.forcings['PrecipitationMaps'][step] * self.var.DtDay * self.var.PrScaling
+            self.var.Tavg = self.forcings['TavgMaps'][step]
+            self.var.ETRef = self.forcings['ET0Maps'][step] * self.var.DtDay * self.var.CalEvaporation
+            self.var.EWRef =self.forcings['E0Maps'][step] * self.var.DtDay * self.var.CalEvaporation
+
         else:
             # Read from stack of maps in Pcraster format
             self.var.Precipitation = readmapsparse(binding['PrecipitationMaps'], self.var.currentTimeStep(), self.var.Precipitation) * self.var.DtDay * self.var.PrScaling

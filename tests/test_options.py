@@ -21,7 +21,6 @@ import pytest
 from nine import IS_PYTHON2
 
 from lisflood.global_modules.errors import LisfloodError
-from tests.test_results import current_dir
 
 if IS_PYTHON2:
     from mock import call
@@ -29,16 +28,21 @@ else:
     from unittest.mock import call
 
 import lisflood
+from lisflood.global_modules.add1 import loadmap
 from lisflood.main import lisfloodexe
 
-from tests import MixinTestSettings, setoptions
+from .test_utils import setoptions, mk_path_out
 
 
-class TestOptions(MixinTestSettings):
+class TestOptions():
     settings_files = {'base': os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/base.xml')}
 
+    @classmethod
+    def dummyloadmap(cls, *args, **kwargs):
+        return loadmap(*args, **kwargs)
+
     def test_basic(self, mocker):
-        settings = self.setoptions(self.settings_files['base'])
+        settings = setoptions(self.settings_files['base'])
         mock_api = mocker.MagicMock(name='loadmap_notcalled')
         mock_api2 = mocker.MagicMock(name='loadmap')
         mock_api.side_effect = self.dummyloadmap
@@ -66,7 +70,7 @@ class TestOptions(MixinTestSettings):
         assert not lisflood.hydrological_modules.waterabstraction.loadmap.called
 
     def test_split_routing_only(self, mocker):
-        settings = self.setoptions(self.settings_files['base'], 'SplitRouting')
+        settings = setoptions(self.settings_files['base'], 'SplitRouting')
         mock_api = mocker.MagicMock(name='loadmap')
         mock_api2 = mocker.MagicMock(name='loadmap_notcalled')
         mock_api.side_effect = self.dummyloadmap
@@ -93,9 +97,9 @@ class TestOptions(MixinTestSettings):
         assert not lisflood.hydrological_modules.waterabstraction.loadmap.called
 
     def test_reservoirs_only(self, mocker):
-        settings = self.setoptions(self.settings_files['base'],
-                                   'simulateReservoirs',
-                                   )
+        settings = setoptions(self.settings_files['base'],
+                              'simulateReservoirs',
+                              )
         mock_api = mocker.MagicMock(name='loadmap')
         mock_api.side_effect = self.dummyloadmap
         mocker.patch('lisflood.hydrological_modules.reservoir.loadmap', new=mock_api)
@@ -105,7 +109,7 @@ class TestOptions(MixinTestSettings):
         lisflood.hydrological_modules.reservoir.loadmap.assert_has_calls(calls)
 
     def test_lakes_only(self, mocker):
-        settings = self.setoptions(self.settings_files['base'], 'simulateLakes')
+        settings = setoptions(self.settings_files['base'], 'simulateLakes')
         mock_api = mocker.MagicMock(name='loadmap')
         mock_api.side_effect = self.dummyloadmap
         mocker.patch('lisflood.hydrological_modules.lakes.loadmap', new=mock_api)
@@ -114,7 +118,7 @@ class TestOptions(MixinTestSettings):
         lisflood.hydrological_modules.lakes.loadmap.assert_has_calls(calls)
 
     def test_rice_only(self, mocker):
-        settings = self.setoptions(self.settings_files['base'], 'riceIrrigation')
+        settings = setoptions(self.settings_files['base'], 'riceIrrigation')
         mock_api = mocker.MagicMock(name='loadmap')
         mock_api2 = mocker.MagicMock(name='loadmap_notcalled')
         mock_api.side_effect = self.dummyloadmap
@@ -136,7 +140,7 @@ class TestOptions(MixinTestSettings):
         assert not lisflood.hydrological_modules.lakes.loadmap.called
 
     def test_pf_only(self, mocker):
-        settings = self.setoptions(self.settings_files['base'], 'simulatePF')
+        settings = setoptions(self.settings_files['base'], 'simulatePF')
         mock_api = mocker.MagicMock(name='loadmap')
         mock_api2 = mocker.MagicMock(name='loadmap_notcalled')
         mock_api.side_effect = self.dummyloadmap
@@ -155,7 +159,7 @@ class TestOptions(MixinTestSettings):
         assert not lisflood.hydrological_modules.reservoir.loadmap.called
 
     def test_waterabstraction_only(self, mocker):
-        settings = self.setoptions(self.settings_files['base'], ['groundwaterSmooth', 'wateruse',
+        settings = setoptions(self.settings_files['base'], ['groundwaterSmooth', 'wateruse',
                                                                  'TransientWaterDemandChange', 'wateruseRegion'])
         mock_api = mocker.MagicMock(name='loadmap')
         mock_api2 = mocker.MagicMock(name='loadmap_notcalled')
@@ -183,7 +187,7 @@ class TestOptions(MixinTestSettings):
 class TestWrongTimestepInit:
 
     def test_raisexc(self):
-        settings_path = os.path.join(current_dir, 'data/LF_ETRS89_UseCase/settings/warm.xml')
+        settings_path = os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/warm.xml')
         with pytest.raises(LisfloodError) as e:
             setoptions(settings_path, vars_to_set={'timestepInit': 'PDAY'})
         assert 'Option timestepInit was not parsable.' in str(e.value)

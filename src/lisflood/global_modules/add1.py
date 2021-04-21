@@ -35,40 +35,41 @@ import pcraster
 from pcraster import Scalar, numpy2pcr, Nominal, setclone, Boolean, pcr2numpy
 from netCDF4 import num2date, date2num
 import numpy as np
+import xarray as xr
 
 from .zusatz import iterOpenNetcdf, iterReadPCRasterMap, iterSetClonePCR, checkmap
 from .settings import (calendar_inconsistency_warning, get_calendar_type, calendar, MaskAttrs, CutMap, NetCDFMetadata,
                        LisSettings, MaskInfo)
 from .errors import LisfloodWarning, LisfloodError
+from .decorators import iocache
 
 
 def defsoil(name1, name2=None, name3=None):
     """ loads 3 array in a list
     """
-    try:
+    if isinstance(name1, str):
         in1 = loadmap(name1)
-    except Exception as e:
-        # FIXME manage exception properly (it spits out some TypeError: unhashable type: 'numpy.ndarray')
-        # print(str(type(e)))
-        # print(str(e))
+    else:
         in1 = name1
 
     if name2 is None:
         in2 = in1
     else:
-        try:
+        if isinstance(name2, str):
             in2 = loadmap(name2)
-        except Exception as e:
+        else:
             in2 = name2
 
     if name3 is None:
         in3 = in1
     else:
-        try:
+        if isinstance(name3, str):
             in3 = loadmap(name3)
-        except Exception as e:
+        else:
             in3 = name3
+
     return [in1, in2, in3]
+
 
 def readInputWithBackup(name, values_if_failure=None):
     """Read input map/value if name is not None; else the provided backup values are used"""
@@ -79,6 +80,8 @@ def readInputWithBackup(name, values_if_failure=None):
             return loadmap(name)
         except:
             return name
+
+
 def valuecell(mask, coordx, coordstr):
     """
     to put a value into a pcraster map -> invert of cellvalue
@@ -272,7 +275,21 @@ def makenumpy(map):
         return map
 
 
-def loadmap(name, pcr=False, lddflag=False, timestampflag='exact', averageyearflag=False):
+def loadmap(*args, **kwargs):
+    settings = LisSettings.instance()
+    binding = settings.binding
+    if binding['MapsCaching'] == "True":
+        data = loadmap_cached(*args, **kwargs)
+    else:
+        data = loadmap_base(*args, **kwargs)
+    return data
+
+@iocache
+def loadmap_cached(*args, **kwargs):
+    return loadmap_base(*args, **kwargs)
+
+
+def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averageyearflag=False):
     """ Load a static map either value or pcraster map or netcdf (single or stack)
     
     Load a static map either value or pcraster map or netcdf (single or stack)
@@ -637,6 +654,8 @@ def readnetcdf(name, time, timestampflag='exact', averageyearflag=False):
 
     # get index of timestep in netCDF file corresponding to current simulation date
     current_ncdf_index = np.where(t_steps == current_ncdf_step)[0][0]
+
+    # crop map if subcatchment
     cutmap = CutMap.instance()
     mapnp = nf1.variables[variable_name][current_ncdf_index, cutmap.cuts[2]:cutmap.cuts[3], cutmap.cuts[0]:cutmap.cuts[1]]
     nf1.close()
@@ -775,184 +794,6 @@ def generateName(name, time):
     result = "%s.%s" % (result[:8], result[8:])
     assert len(result) == 12
     return os.path.join(head, result)
-
-
-def writenet(flag, inputmap, netfile, DtDay,
-             value_standard_name, value_long_name, value_unit, data_format,
-             startdate, repstepstart, repstepend, frequency=None):
-
-    """ Write a netcdf stack
-
-    :param flag: 0 netCDF file format; ?
-    :param inputmap: values to be written to NetCDF file
-    :param netfile: name of output file in NetCDF format
-    :param DtDay: model timestep (self.var.DtDay)
-    :param value_standard_name: variable name to be put into netCDF file
-    :param value_long_name: variable long name to be put into netCDF file
-    :param value_unit: variable unit to be put into netCDF file
-    :param data_format: data format
-    :param startdate: reference date to be used to get start date and end date for netCDF file from start step and end step
-    :param: repstepstart: first reporting step
-    :param: repstepend: final reporting step
-    :param frequency:[None,'all','monthly','annual'] save to netCDF stack; None save to netCDF single
-    :return: 
-    """
-    # prefix = netfile.split('/')[-1].split('\\')[-1].split('.')[0]
-    settings = LisSettings.instance()
-    binding = settings.binding
-    flags = settings.flags
-    prefix = os.path.basename(netfile)
-    netfile += ".nc"
-    cutmap = CutMap.instance()
-    row = np.abs(cutmap.cuts[3] - cutmap.cuts[2])
-    col = np.abs(cutmap.cuts[1] - cutmap.cuts[0])
-    if flag == 0:
-        nf1 = iterOpenNetcdf(netfile, "", 'w', format='NETCDF4')
-        # general Attributes
-        nf1.settingsfile = os.path.realpath(sys.argv[1])
-        nf1.date_created = xtime.ctime(xtime.time())
-        nf1.Source_Software = 'Lisflood Python'
-        nf1.institution = "European Commission DG Joint Research Centre (JRC) - E1, D2 Units"
-        nf1.creator_name = "Peter Burek, A de Roo, Johan van der Knijff"
-        nf1.source = 'Lisflood output maps'
-        nf1.keywords = "Lisflood, EFAS, GLOFAS"
-        nf1.Conventions = 'CF-1.6'
-        # Dimension
-        not_valid_attrs = ('_FillValue', )
-        meta_netcdf = NetCDFMetadata.instance()
-        if 'x' in meta_netcdf.data:
-            lon = nf1.createDimension('x', col)  # x 1000
-            longitude = nf1.createVariable('x', 'f8', ('x',))
-            valid_attrs = [i for i in meta_netcdf.data['x'] if i not in not_valid_attrs]
-            for i in valid_attrs:
-                setattr(longitude, i, meta_netcdf.data['x'][i])
-
-        if 'lon' in meta_netcdf.data:
-            lon = nf1.createDimension('lon', col)
-            longitude = nf1.createVariable('lon', 'f8', ('lon',))
-            valid_attrs = [i for i in meta_netcdf.data['lon'] if i not in not_valid_attrs]
-            for i in valid_attrs:
-                setattr(longitude, i, meta_netcdf.data['lon'][i])
-
-        if 'y' in meta_netcdf.data:
-            lat = nf1.createDimension('y', row)  # x 950
-            latitude = nf1.createVariable('y', 'f8', ('y',))
-            valid_attrs = [i for i in meta_netcdf.data['y'] if i not in not_valid_attrs]
-            for i in valid_attrs:
-                setattr(latitude, i, meta_netcdf.data['y'][i])
-
-        if 'lat' in meta_netcdf.data:
-            lat = nf1.createDimension('lat', row)  # x 950
-            latitude = nf1.createVariable('lat', 'f8', ('lat',))
-            valid_attrs = [i for i in meta_netcdf.data['lat'] if i not in not_valid_attrs]
-            for i in valid_attrs:
-                setattr(latitude, i, meta_netcdf.data['lat'][i])
-
-        # projection
-        if 'laea' in meta_netcdf.data:
-            proj = nf1.createVariable('laea', 'i4')
-            for i in meta_netcdf.data['laea']:
-                setattr(proj, i, meta_netcdf.data['laea'][i])
-
-        if 'lambert_azimuthal_equal_area' in meta_netcdf.data:
-            proj = nf1.createVariable('lambert_azimuthal_equal_area', 'i4')
-            for i in meta_netcdf.data['lambert_azimuthal_equal_area']:
-                setattr(proj, i, meta_netcdf.data['lambert_azimuthal_equal_area'][i])
-        """
-        EUROPE
-        proj.grid_mapping_name='lambert_azimuthal_equal_area'
-        proj.false_easting=4321000.0
-        proj.false_northing=3210000.0
-        proj.longitude_of_projection_origin = 10.0
-        proj.latitude_of_projection_origin = 52.0
-        proj.semi_major_axis = 6378137.0
-        proj.inverse_flattening = 298.257223563
-        proj.proj4_params = "+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs"
-        proj.EPSG_code = "EPSG:3035"
-        """
-        # Fill variables
-        cell = round(pcraster.clone().cellSize(),5)
-        xl = round((pcraster.clone().west() + cell / 2),5)
-        xr = round((xl + col * cell),5)
-        yu = round((pcraster.clone().north() - cell / 2),5)
-        yd = round((yu - row * cell),5)
-        #lats = np.arange(yu, yd, -cell)
-        #lons = np.arange(xl, xr, cell)
-        lats = np.linspace(yu, yd, row, endpoint=False)
-        lons = np.linspace(xl, xr, col, endpoint=False)
-        latitude[:] = lats
-        longitude[:] = lons
-        if frequency is not None:  # output file with "time" dimension
-            #Get initial and final dates for data to be stored in nerCDF file
-            first_date, last_date = [startdate + datetime.timedelta(days=(int(k) - 1)*DtDay) for k in
-                                     (repstepstart, repstepend)]
-            # CM: Create time stamps for each step stored in netCDF file
-            time_stamps = [first_date + datetime.timedelta(days=d*DtDay) for d in range(repstepend - repstepstart +1)]
-
-            units_time = 'days since %s' % startdate.strftime("%Y-%m-%d %H:%M:%S.0")
-            steps = (int(binding["DtSec"]) / 86400.) * np.arange(binding["StepStartInt"] - 1, binding["StepEndInt"])
-            if frequency != "all":
-                dates = num2date(steps, units_time, binding["calendar_type"])
-                next_date_times = np.array([j + datetime.timedelta(seconds=int(binding["DtSec"])) for j in dates])
-                if frequency == "monthly":
-                    months_end = np.array([dates[j].month != next_date_times[j].month for j in range(steps.size)])
-                    steps = steps[months_end]
-                elif frequency == "annual":
-                    years_end = np.array([dates[j].year != next_date_times[j].year for j in range(steps.size)])
-                    steps = steps[years_end]
-            nf1.createDimension('time', steps.size)
-            time = nf1.createVariable('time', float, ('time'))
-            time.standard_name = 'time'
-            # time.units ='days since 1990-01-01 00:00:00.0'
-            # time.units = 'hours since %s' % startdate.strftime("%Y-%m-%d %H:%M:%S.0")
-            # CM: select the time unit according to model time step
-            DtDay_in_sec = DtDay * 86400
-            if DtDay_in_sec >= 86400:
-                # Daily model time steps or larger
-                time.units = 'days since %s' % startdate.strftime("%Y-%m-%d %H:%M:%S.0")
-            elif DtDay_in_sec >= 3600 and DtDay_in_sec < 86400:
-                # CM: hours to days model time steps
-                time.units = 'hours since %s' % startdate.strftime("%Y-%m-%d %H:%M:%S.0")
-            elif DtDay_in_sec >= 60 and DtDay_in_sec <3600:
-                # CM: minutes to hours model time step
-                time.units = 'minutes since %s' % startdate.strftime("%Y-%m-%d %H:%M:%S.0")
-
-            time.calendar = binding["calendar_type"]
-            nf1.variables["time"][:] = date2num(time_stamps, time.units, time.calendar)
-            # for i in metadataNCDF['time']: exec('%s="%s"') % ("time."+i, metadataNCDF['time'][i])
-            if 'x' in meta_netcdf.data:
-                value = nf1.createVariable(prefix, 'd', ('time', 'y', 'x'), zlib=True, fill_value=-9999, chunksizes=(1, row, col))
-            if 'lon' in meta_netcdf.data:
-                value = nf1.createVariable(prefix, 'd', ('time', 'lat', 'lon'), zlib=True, fill_value=-9999, chunksizes=(1, row, col))
-        else:
-            if 'x' in meta_netcdf.data:
-                value = nf1.createVariable(prefix, 'd', ('y', 'x'), zlib=True, fill_value=-9999)
-            if 'lon' in meta_netcdf.data:
-                # for world lat/lon coordinates
-                value = nf1.createVariable(prefix, 'd', ('lat', 'lon'), zlib=True, fill_value=-9999)
-
-        value.standard_name = value_standard_name
-        value.long_name = value_long_name
-        value.units = value_unit
-        for var in meta_netcdf.data:
-            if "esri_pe_string" in meta_netcdf.data[var]:
-                value.esri_pe_string = meta_netcdf.data[var]['esri_pe_string']
-    else:
-        nf1 = iterOpenNetcdf(netfile, "", 'a', format='NETCDF4')
-    if flags['nancheck']:
-        nanCheckMap(inputmap, netfile, value_standard_name)
-    maskinfo = MaskInfo.instance()
-    mapnp = maskinfo.info.maskall.copy()
-    mapnp[~maskinfo.info.maskflat] = inputmap[:]
-    #mapnp = mapnp.reshape(maskinfo['shape']).data
-    mapnp = mapnp.reshape(maskinfo.info.shape)
-    if frequency is not None:
-        nf1.variables[prefix][flag, :, :] = mapnp
-        #value[flag,:,:]= mapnp
-    else:
-        # without timeflag
-        nf1.variables[prefix][:, :] = mapnp
-    nf1.close()
 
 
 def dumpObject(name, var, num):

@@ -51,12 +51,12 @@ class landusechange(HydroModule):
     def initial(self):
         """ initial part of the landusechange module
         """
-        self.var.ForestFraction = loadmap('ForestFraction', timestampflag='closest')
-        self.var.DirectRunoffFraction = loadmap('DirectRunoffFraction', timestampflag='closest')
-        self.var.WaterFraction = loadmap('WaterFraction', timestampflag='closest')
-        self.var.IrrigationFraction = loadmap('IrrigationFraction', timestampflag='closest')
-        self.var.RiceFraction = loadmap('RiceFraction', timestampflag='closest')
-        self.var.OtherFraction = loadmap('OtherFraction', timestampflag='closest')
+        self.var.ForestFraction = loadmap('ForestFraction', timestampflag='closest').copy()
+        self.var.DirectRunoffFraction = loadmap('DirectRunoffFraction', timestampflag='closest').copy()
+        self.var.WaterFraction = loadmap('WaterFraction', timestampflag='closest').copy()
+        self.var.IrrigationFraction = loadmap('IrrigationFraction', timestampflag='closest').copy()
+        self.var.RiceFraction = loadmap('RiceFraction', timestampflag='closest').copy()
+        self.var.OtherFraction = loadmap('OtherFraction', timestampflag='closest').copy()
         settings = LisSettings.instance()
         option = settings.options
         epic_settings = EPICSettings.instance()
@@ -66,7 +66,6 @@ class landusechange(HydroModule):
         # Interactive crop fractions (if EPIC is active)
         if option.get('cropsEPIC'):
             self.var.crop_module.setSoilFractions()
-
 
     def dynamic(self):
         """ dynamic part of the landusechange module"""

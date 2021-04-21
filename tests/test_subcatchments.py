@@ -27,11 +27,10 @@ from lisfloodutilities.compare.nc import NetCDFComparator
 from lisflood.global_modules.settings import LisSettings
 from lisflood.main import lisfloodexe
 
-from . import mk_path_out, MixinTestSettings
-
+from .test_utils import setoptions, mk_path_out
 
 @pytest.mark.slow
-class TestSubcatchments(MixinTestSettings):
+class TestSubcatchments():
     settings_files = {
         'cold': os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/cold.xml'),
     }
@@ -82,26 +81,26 @@ class TestSubcatchments(MixinTestSettings):
 
         # long run entire domain
         path_out_domain = mk_path_out('data/LF_ETRS89_UseCase/out/longrun_domain{}'.format(dt_sec))
-        settings_longrun = self.setoptions(self.settings_files['cold'], opts_to_unset=modules_to_unset,
-                                           opts_to_set=modules_to_set,
-                                           vars_to_set={'StepStart': step_start,
-                                                        'StepEnd': step_end,
-                                                        'PathOut': path_out_domain,
-                                                        'ReportSteps': report_steps,
-                                                        'DtSec': dt_sec})
+        settings_longrun = setoptions(self.settings_files['cold'], opts_to_unset=modules_to_unset,
+                                      opts_to_set=modules_to_set,
+                                      vars_to_set={'StepStart': step_start,
+                                                   'StepEnd': step_end,
+                                                   'PathOut': path_out_domain,
+                                                   'ReportSteps': report_steps,
+                                                   'DtSec': dt_sec})
         # ** execute
         lisfloodexe(settings_longrun)
 
         # long run entire on subdomain
         path_out_subdomain = mk_path_out('data/LF_ETRS89_UseCase/out/longrun_subdomain{}'.format(dt_sec))
-        settings_longrun_subdomain = self.setoptions(self.settings_files['cold'], opts_to_unset=modules_to_unset,
-                                                     opts_to_set=modules_to_set,
-                                                     vars_to_set={'StepStart': step_start,
-                                                                  'StepEnd': step_end,
-                                                                  'PathOut': path_out_subdomain,
-                                                                  'ReportSteps': report_steps,
-                                                                  'MaskMap': '$(PathRoot)/maps/subcatchment_mask.map',
-                                                                  'DtSec': dt_sec})
+        settings_longrun_subdomain = setoptions(self.settings_files['cold'], opts_to_unset=modules_to_unset,
+                                                opts_to_set=modules_to_set,
+                                                vars_to_set={'StepStart': step_start,
+                                                             'StepEnd': step_end,
+                                                             'PathOut': path_out_subdomain,
+                                                             'ReportSteps': report_steps,
+                                                             'MaskMap': '$(PathRoot)/maps/subcatchment_mask.map',
+                                                             'DtSec': dt_sec})
         # ** execute
         lisfloodexe(settings_longrun_subdomain)
 
