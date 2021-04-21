@@ -7,16 +7,16 @@ from lisfloodutilities.compare.nc import NetCDFComparator
 
 from lisflood.main import lisfloodexe
 
-from .test_utils import setoptions, mk_path_out
+from .test_utils import setoptions, mk_path_out, ETRS89TestCase
 
 
-class TestStepsDates():
+class TestStepsDates(ETRS89TestCase):
     settings_files = {
         'full': os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/full.xml')
     }
 
     def test_dates_before_1970(self):
-        settings = self.setoptions(self.settings_files['full'],
+        settings = setoptions(self.settings_files['full'],
                                      opts_to_set=['repStateMaps', 'repEndMaps', 'repDischargeMaps',
                                                   'repSnowMaps', 'repLZMaps', 'repUZMaps'],
                                      vars_to_set={'StepStart': '01/01/1951 06:00', 'StepEnd': '05/01/1951 06:00',

@@ -20,3 +20,4 @@ MANIFEST.in
 *.html
 .coverage
 tests/data/LF_ETRS89_UseCase/out/*
+/.python-version

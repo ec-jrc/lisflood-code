@@ -14,3 +14,4 @@ lisflood_model.egg-info
 !/tests/data/*/*.xml
 .coverage
 *.tox.ini
+/.python-version
