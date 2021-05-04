@@ -18,3 +18,5 @@ MANIFEST.in
 *.so
 *.c
 *.html
+.coverage
+tests/data/LF_ETRS89_UseCase/out/*
