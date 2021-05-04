@@ -15,6 +15,8 @@ See the Licence for the specific language governing permissions and limitations 
 
 """
 from __future__ import print_function, absolute_import
+
+from cftime._cftime import real_datetime
 from future.utils import listitems
 
 from nine import range
@@ -110,11 +112,11 @@ def mapattrNetCDF(name):
     filename = os.path.splitext(name)[0] + '.nc'
     nf1 = iterOpenNetcdf(filename, "Checking netcdf map \n", 'r')
     spatial_dims = ('x', 'y') if 'x' in nf1.variables else ('lon', 'lat')
-    x1, x2, y1, y2 = [np.round(nf1.variables[v][j], 5) for v in spatial_dims for j in (0, 1)]
+    x1, x2, y1, y2 = [nf1.variables[v][j] for v in spatial_dims for j in (0, 1)]
     nf1.close()
     maskattrs = MaskAttrs.instance()
-    cell_x = maskattrs['cell'] - np.round(np.abs(x2 - x1), 4) # this must be same precision as pcraster.clone().cellsize()
-    cell_y = maskattrs['cell'] - np.round(np.abs(y2 - y1), 4) # this must be same precision as pcraster.clone().cellsize()
+    cell_x = maskattrs['cell'] - np.abs(x2 - x1) # this must be same precision as pcraster.clone().cellsize()
+    cell_y = maskattrs['cell'] - np.abs(y2 - y1) # this must be same precision as pcraster.clone().cellsize()
     if abs(cell_x) > 10**-5 or abs(cell_y) > 10**-5:
         raise LisfloodError("Cell size different in maskmap {} and {}".format(
             LisSettings.instance().binding['MaskMap'], filename)
@@ -122,9 +124,9 @@ def mapattrNetCDF(name):
     half_cell = maskattrs['cell'] / 2.
     x = x1 - half_cell  # |
     y = y1 + half_cell  # | coordinates of the upper left corner of the input file upper left pixel
-    cut0 = int(round(np.abs(maskattrs['x'] - x) / maskattrs['cell'], 5))
+    cut0 = int(np.abs(maskattrs['x'] - x) / maskattrs['cell'])
     cut1 = cut0 + maskattrs['col']
-    cut2 = int(round(np.abs(maskattrs['y'] - y) / maskattrs['cell'], 5))
+    cut2 = int(np.abs(maskattrs['y'] - y) / maskattrs['cell'])
     cut3 = cut2 + maskattrs['row']
     return cut0, cut1, cut2, cut3  # input data will be sliced using [cut0:cut1,cut2:cut3]
 
@@ -171,17 +173,17 @@ def loadsetclone(name):
             filename = os.path.splitext(binding[name])[0] + '.nc'
             nf1 = iterOpenNetcdf(filename, "", "r")
             value = listitems(nf1.variables)[-1][0]  # get the last variable name
+            nr_rows, nr_cols = nf1.variables[value].shape  # just use shape to know rows and cols...
             if 'x' in nf1.variables:
                 x1 = nf1.variables['x'][0]
-                x2 = nf1.variables['x'][1]
+                x2 = nf1.variables['x'][-1]
                 y1 = nf1.variables['y'][0]
             else:
                 x1 = nf1.variables['lon'][0]
-                x2 = nf1.variables['lon'][1]
+                x2 = nf1.variables['lon'][-1]
                 y1 = nf1.variables['lat'][0]
 
-            cell_size = round(np.abs(x2 - x1), 4)
-            nr_rows, nr_cols = nf1.variables[value].shape  # just use shape to know rows and cols...
+            cell_size = np.abs(x2 - x1)/(nr_cols - 1)
             x = x1 - cell_size / 2
             y = y1 + cell_size / 2
             mapnp = np.array(nf1.variables[value][0:nr_rows, 0:nr_cols])
@@ -727,7 +729,7 @@ def checknetcdf(name, start, end):
     # Time step, expressed as fraction of day (same as self.var.DtSec and self.var.DtDay)
 
     date_first_sim_step = calendar(start, binding['calendar_type'])
-    if type(date_first_sim_step) is not datetime.datetime:
+    if not isinstance(date_first_sim_step, (datetime.datetime, real_datetime)):
         date_first_sim_step = begin + datetime.timedelta(days=(date_first_sim_step - 1) * DtDay)
     if (date_first_sim_step < date_first_step_in_ncdf):
         msg = "First simulation time step is before first time step in netCDF input data file \n" \
@@ -737,7 +739,8 @@ def checknetcdf(name, start, end):
         raise LisfloodError(msg)
 
     date_last_sim_step = calendar(end, binding['calendar_type'])
-    if type(date_last_sim_step) is not datetime.datetime:
+    if not isinstance(date_last_sim_step, (datetime.datetime, real_datetime)):
+    # if type(date_last_sim_step) is not datetime.datetime:
         date_last_sim_step = begin + datetime.timedelta(days=(date_last_sim_step - 1) * DtDay)
     if (date_last_sim_step > date_last_step_in_ncdf):
         msg = "Last simulation time step is after last time step in netCDF input data file \n" \

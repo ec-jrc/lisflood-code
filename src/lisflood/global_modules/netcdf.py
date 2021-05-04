@@ -182,11 +182,11 @@ def get_core_dims(dims):
 
 
 def get_space_coords(nrow, ncol, dim_lat_y, dim_lon_x):
-    cell = round(pcraster.clone().cellSize(),5)
-    xl = round((pcraster.clone().west() + cell / 2),5)
-    xr = round((xl + ncol * cell),5)
-    yu = round((pcraster.clone().north() - cell / 2),5)
-    yd = round((yu - nrow * cell),5)
+    cell = pcraster.clone().cellSize()
+    xl = pcraster.clone().west() + cell / 2
+    xr = xl + ncol * cell
+    yu = pcraster.clone().north() - cell / 2
+    yd = yu - nrow * cell
     #lats = np.arange(yu, yd, -cell)
     #lons = np.arange(xl, xr, cell)
     coordinates = {}
