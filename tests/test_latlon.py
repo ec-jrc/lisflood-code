@@ -49,5 +49,5 @@ class TestLatLonLong(TestLatLon):
 
     run_type = 'long'
 
-    def test_lat_lon_short(self):
+    def test_lat_lon_long(self):
         self.run("02/01/1986 00:00", "01/01/2018 00:00")

@@ -115,8 +115,8 @@ def mapattrNetCDF(name):
     x1, x2, y1, y2 = [np.round(nf1.variables[v][j], 5) for v in spatial_dims for j in (0, 1)]
     nf1.close()
     maskattrs = MaskAttrs.instance()
-    cell_x = maskattrs['cell'] - np.round(np.abs(x2 - x1), 5)
-    cell_y = maskattrs['cell'] - np.round(np.abs(y2 - y1), 5)
+    cell_x = maskattrs['cell'] - np.round(np.abs(x2 - x1), 4) # this must be same precision as pcraster.clone().cellsize()
+    cell_y = maskattrs['cell'] - np.round(np.abs(y2 - y1), 4) # this must be same precision as pcraster.clone().cellsize()
     if abs(cell_x) > 10**-5 or abs(cell_y) > 10**-5:
         raise LisfloodError("Cell size different in maskmap {} and {}".format(
             LisSettings.instance().binding['MaskMap'], filename)
