@@ -221,5 +221,3 @@ def main(*args):
     if not (flags['veryquiet'] or flags['quiet']):
         headerinfo()
     lisfloodexe(lissettings)
-
-    cache_info()
