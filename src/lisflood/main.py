@@ -203,7 +203,6 @@ def main(*args):
     # if arguments are provided, overwrite sys.argv
     # used when calling lisflood from another python script
     if len(args) > 0:
-        print('replaceing sys.argv by {}'.format(args))
         options = args
     else: 
         options = sys.argv[1:]

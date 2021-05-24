@@ -238,7 +238,6 @@ def write_header(var_name, netfile, DtDay,
 
     dim_lat_y, dim_lon_x = get_core_dims(meta_netcdf.data)
     latlon_coords = get_space_coords(nrow, ncol, dim_lat_y, dim_lon_x)
-    print(dim_lat_y, dim_lon_x)
 
     if dim_lon_x in meta_netcdf.data:
         lon = nf1.createDimension(dim_lon_x, ncol)  # x 1000
