@@ -181,6 +181,8 @@ class miscInitial(HydroModule):
         self.var.SumETpotact = maskinfo.in_zero()
 
         # Read the latitude (radians) from the template NetCDF file
+        if binding["netCDFtemplate"][-3:] != '.nc':
+            binding["netCDFtemplate"] = binding["netCDFtemplate"] + '.nc'
         with xr.open_dataset(binding["netCDFtemplate"]) as nc:
             if all([co in nc.dims for co in ("x", "y")]):
                 try:
