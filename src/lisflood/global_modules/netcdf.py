@@ -111,7 +111,8 @@ class XarrayChunked():
         # load dataset using xarray
         if time_chunk != 'auto':
             time_chunk = int(time_chunk)
-        ds = xr.open_mfdataset(data_path+'.nc', engine='netcdf4', chunks={'time': time_chunk}, combine='by_coords')
+        data_path = data_path + ".nc" if not data_path.endswith('.nc') else data_path
+        ds = xr.open_mfdataset(data_path, engine='netcdf4', chunks={'time': time_chunk}, combine='by_coords')
         var_name = find_main_var(ds, data_path)
         da = ds[var_name]
 
