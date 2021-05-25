@@ -85,11 +85,12 @@ def lisfloodexe(lissettings=None):
     for key in report_steps:
         report_steps[key] = [x for x in report_steps[key] if model_steps[0] <= x <= model_steps[1]]
 
-    print("\nStart Step - End Step: ", model_steps[0], " - ", model_steps[1])
-    print("Start Date - End Date: ",
-          inttodate(model_steps[0] - 1, calendar(binding['CalendarDayStart'], binding['calendar_type'])),
-          " - ",
-          inttodate(model_steps[1] - 1, calendar(binding['CalendarDayStart'], binding['calendar_type'])))
+    if not flags['veryquiet']:
+        print("\nStart Step - End Step: ", model_steps[0], " - ", model_steps[1])
+        print("Start Date - End Date: ",
+            inttodate(model_steps[0] - 1, calendar(binding['CalendarDayStart'], binding['calendar_type'])),
+            " - ",
+            inttodate(model_steps[1] - 1, calendar(binding['CalendarDayStart'], binding['calendar_type'])))
 
     if flags['loud']:
         # print state file date
@@ -145,7 +146,8 @@ def lisfloodexe(lissettings=None):
         model_to_run = stLisflood
 
     # print info about execution
-    print(LisfloodRunInfo(model_to_run))
+    if not flags['veryquiet']:
+        print(LisfloodRunInfo(model_to_run))
     # actual run of the model
     if flags['initonly']:
         print('initonly flag activated... Stopping now before entering time loop.')
