@@ -16,7 +16,7 @@ class TestStepsDates():
     }
 
     def test_dates_before_1970(self):
-        settings = self.setoptions(self.settings_files['full'],
+        settings = setoptions(self.settings_files['full'],
                                      opts_to_set=['repStateMaps', 'repEndMaps', 'repDischargeMaps',
                                                   'repSnowMaps', 'repLZMaps', 'repUZMaps'],
                                      vars_to_set={'StepStart': '01/01/1951 06:00', 'StepEnd': '05/01/1951 06:00',
