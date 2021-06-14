@@ -21,7 +21,7 @@ importlib-metadata==0.23
 jedi==0.15.1
 joblib==0.14.1
 lisflood-utilities>=0.12.16
-lxml==4.6.2
+lxml==4.6.3
 mccabe==0.6.1
 meld==0.2.4
 more-itertools==7.2.0
