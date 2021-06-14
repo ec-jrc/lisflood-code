@@ -64,7 +64,8 @@ class LisfloodModel_dyn(DynamicModel):
                     sys.stdout.flush()
         if i == self.nrTimeSteps():
             # last timestep. Send a new line to the terminal for polishness
-            sys.stdout.write('\n')
+            if not flags['veryquiet']:
+                sys.stdout.write('\n')
             sys.stdout.flush()
 
         # ************************************************************
@@ -251,6 +252,3 @@ class LisfloodModel_dyn(DynamicModel):
         self.stateVar_module.dynamic()
         self.indicatorcalc_module.dynamic_setzero()
         # setting monthly and yearly dindicator to zero at the end of the month (year)
-
-        # garbage collector added to free memory at the end of computation step
-        gc.collect()

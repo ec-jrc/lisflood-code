@@ -180,8 +180,9 @@ class miscInitial(HydroModule):
         self.var.SumETpot = maskinfo.in_zero()
         self.var.SumETpotact = maskinfo.in_zero()
 
-        # Read the latitude (radians) from the precipitation forcing NetCDF file
-        with xr.open_dataset(binding["PrecipitationMaps"] + ".nc") as nc:
+        # Read the latitude (radians) from the template NetCDF file
+        binding["netCDFtemplate"] = binding["netCDFtemplate"] + ".nc" if not binding["netCDFtemplate"].endswith('.nc') else binding["netCDFtemplate"]
+        with xr.open_dataset(binding["netCDFtemplate"]) as nc:
             if all([co in nc.dims for co in ("x", "y")]):
                 try:
                     # look for the projection variable

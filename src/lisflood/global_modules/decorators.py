@@ -39,3 +39,54 @@ def cached(f):
         return _cache[args]
 
     return _decorator
+
+
+def iocache(obj):
+    cache = {}
+
+    found = 0
+
+    @wraps(obj)
+    def iocache_wrapper(*args, **kwargs):
+        key = str(args) + str(kwargs)
+
+        if key not in cache:
+            my_obj = obj(*args, **kwargs)
+            if not isinstance(my_obj, float):
+                cache[key] = my_obj
+                to_return = cache[key]
+            else:
+                return my_obj
+        else:
+            nonlocal found
+            found += 1
+            to_return = cache[key]
+        return to_return
+
+    def iocache_clear():
+        print('Clearing cache')
+        cache.clear()
+        nonlocal found
+        found = 0
+
+    def iocache_size():
+        return len(cache)
+
+    def iocache_found():
+        nonlocal found
+        return found
+
+    def iocache_info():
+        print('Caching {}'.format(obj))
+        print('Number of items cached: {}'.format(iocache_size()))
+        print('Number of items retrieved: {}'.format(iocache_found()))
+        print('Keys:')
+        for key in cache.keys():
+            print('   - {}'.format(key))
+
+    iocache_wrapper.iocache_clear = iocache_clear
+    iocache_wrapper.iocache_found = iocache_found
+    iocache_wrapper.iocache_info = iocache_info
+    iocache_wrapper.iocache_size = iocache_size
+
+    return iocache_wrapper

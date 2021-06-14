@@ -85,11 +85,12 @@ def lisfloodexe(lissettings=None):
     for key in report_steps:
         report_steps[key] = [x for x in report_steps[key] if model_steps[0] <= x <= model_steps[1]]
 
-    print("\nStart Step - End Step: ", model_steps[0], " - ", model_steps[1])
-    print("Start Date - End Date: ",
-          inttodate(model_steps[0] - 1, calendar(binding['CalendarDayStart'], binding['calendar_type'])),
-          " - ",
-          inttodate(model_steps[1] - 1, calendar(binding['CalendarDayStart'], binding['calendar_type'])))
+    if not flags['veryquiet']:
+        print("\nStart Step - End Step: ", model_steps[0], " - ", model_steps[1])
+        print("Start Date - End Date: ",
+            inttodate(model_steps[0] - 1, calendar(binding['CalendarDayStart'], binding['calendar_type'])),
+            " - ",
+            inttodate(model_steps[1] - 1, calendar(binding['CalendarDayStart'], binding['calendar_type'])))
 
     if flags['loud']:
         # print state file date
@@ -145,9 +146,13 @@ def lisfloodexe(lissettings=None):
         model_to_run = stLisflood
 
     # print info about execution
-    print(LisfloodRunInfo(model_to_run))
+    if not flags['veryquiet']:
+        print(LisfloodRunInfo(model_to_run))
     # actual run of the model
-    model_to_run.run()
+    if flags['initonly']:
+        print('initonly flag activated... Stopping now before entering time loop.')
+    else:
+        model_to_run.run()
 
 # ==================================================
 # ============== USAGE ==============================
@@ -174,6 +179,7 @@ def usage():
     -c --check       input maps and stack maps are checked, output for each input map BUT no model run
     -h --noheader    .tss file have no header and start immediately with the time series
     -d --debug       debug outputs
+    -i --initonly    only run initialisation, not the dynamic loop
     """)
     sys.exit(1)
 
@@ -192,15 +198,26 @@ Water balance and flood simulation model for large catchments\n
 # ============== MAIN ==============================
 # ==================================================
 
+from .cache import cache_info
 
-def main():
+def main(*args):
+
+    # if arguments are provided, overwrite sys.argv
+    # used when calling lisflood from another python script
+    if len(args) > 0:
+        options = args
+    else: 
+        options = sys.argv[1:]
+
     # if arguments are missing display usage info
-    if len(sys.argv) < 2:
+    if len(options) < 1:
         usage()
 
+    settings_file = options[0]
+    sys_args = options[1:]
+
     # setting.xml file
-    settings = sys.argv[1]
-    lissettings = LisSettings(settings)
+    lissettings = LisSettings(settings_file, sys_args)
     flags = lissettings.flags
     if not (flags['veryquiet'] or flags['quiet']):
         headerinfo()
