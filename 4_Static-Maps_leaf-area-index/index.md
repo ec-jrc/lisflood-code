@@ -9,7 +9,7 @@ In LISFLOOD LAI has an important role in water interception and evapotranspirati
 
 #### General map information and possible source data
 
-| Map name | File name;type | Units, range | Description |
+| Map name | File name;type | Units; range | Description |
 | :---| :--- | :--- | :--- |
 | LAI for forest        |  laif.nc; Float32          | Units: -; Range: 0 ..7         |10-day average (36 maps in total) Leaf Area Index for closed forested areas (forest fraction per grid-cell ≥ 0.7)|
 | LAI for irrigated crops  | laii.nc; Float32    | Units: -; Range: 0 ..7     |10-day average (36 maps in total) Leaf Area Index for irrigated crop areas (irrigated crop fraction per grid-cell ≥ 0.7)|

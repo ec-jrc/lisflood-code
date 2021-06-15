@@ -6,16 +6,16 @@ Rice is the world’s most important food crop. It is harvested from over 163 m
 
 #### General map information and possible source data
 
-| Map name | File name;type | Units, range | Description |
+| Map name | File name;type | Units; range | Description |
 | :---| :--- | :--- | :--- |
-| Rice planting day        |  riceplantingday**N**.nc; Float32          | Units: calendar day number; Range: 1 ..365         |Map with first/ second rice season's planting day |
-| Rice harvest day  | riceharvestday**N**.nc; Float32       | Units: calendar day number; Range: 1 ..365     |Map with first/ second rice season's harvesting day|
+| Rice planting day        |  riceplantingday**N**.nc; Float32          | Units: calendar day number;<br/> Range: 1 ..365         |Map with first/second rice season's planting day |
+| Rice harvest day  | riceharvestday**N**.nc; Float32       | Units: calendar day number;<br/> Range: 1 ..365     |Map with first/second rice season's harvesting day|
 
 *where **N** is the number of season (N = ’1’ for first season, N = ’2’ for second season). With source data below it is possible to generate N = ’3’ third season.
 
 | Source data| Reference/preparation | Temporal coverage | Spatial information |
 | :---| :--- | :--- | :--- |
-|RiceAtlas, a spatial database of global rice calendars and production; <br/> Version 3 |https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/JE6R2R| up to 2017 | Global, shapefiles|
+|RiceAtlas, a global database of rice calendars and production; <br/> Version 3 |https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/JE6R2R| up to 2017 | Global, shapefiles|
 #### Methodology
 
 For the rice calendar maps, the ‘country subdivision’ shapefiles and 'rice production' table from RiceAtlas can be used. The 'rice production' table provides the following information: 'peak' planting days (named as PLANT_PK1, PLANT_PK2, PLANT_PK3), 'peak' harvest days (named as HARV_PK1, HARV_PK2, HARV_PK3), and number of rice total seasons per year (named as NUM_CROP), seasons varying from 1 (minimum) to 3 (maximum).<br/>
