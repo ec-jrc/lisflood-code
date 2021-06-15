@@ -9,6 +9,11 @@ In LISFLOOD LAI has an important role in water interception and evapotranspirati
 
 #### General map information and possible source data
 
+| Map name | File name;type | Units, range | Description |
+| LAI for forest        |  laif.nc; Float32          | Units: -; Range: 0 ..7         |10-day average (36 maps in total) Leaf Area Index for closed forested areas (forest fraction per grid-cell ≥ 0.7)|
+| LAI for irrigated crops  | laii.nc; Float32    | Units: -; Range: 0 ..7     |10-day average (36 maps in total) Leaf Area Index for irrigated crop areas (irrigated crop fraction per grid-cell ≥ 0.7)|
+| LAI for other     | laio.nc; Float32       | Units: -; Range: 0 ..7     |10-day average (36 maps in total) Leaf Area Index for mainly other land cover type areas (other land cover type fraction per grid-cell ≥ 0.7)|
+
 #### Methodology
 
 To create LAI for forest, irrigated crops and other land cover type, maps Copernicus Global Land Service LAI Collection Version 2 can be used. The dataset provides a 10-day average LAI information, 36 maps each year. Here, to normalise the climate over different regions of the globe, the 10-day average LAI maps are aggregated over a 10-year period (i.e. first 10-day average of years 2010-2019 are aggregated to compute a first 10-day climatological average). As a result 36 climatological LAI maps are calculated. 
@@ -20,12 +25,15 @@ The LAI map resolution of the resulting field is reduced from native to the requ
 
 
 <p float="left">
-  <img src="../media/Static-Maps/laif_0105_European_01min.png" width="350" />
-  <img src="../media/Static-Maps/laif_0105_Global_03min.png" width="650" /> 
+  <img src="../media/Static-Maps/laif_0105_European_01min.png" width="395" />
+  <img src="../media/Static-Maps/laif_0105_Global_03min.png" width="605" /> 
 </p>
+
+*Figure 51: Leaf area index for forest 5th January map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
 
 
 <p float="centre">
-  <img src="../media/Static-Maps/laif_0805_European_01min.png" width="400" />
-  <img src="../media/Static-Maps/laif_0805_Global_03min.png" width="600" /> 
+  <img src="../media/Static-Maps/laif_0805_European_01min.png" width="395" />
+  <img src="../media/Static-Maps/laif_0805_Global_03min.png" width="605" /> 
 </p>
+*Figure 52: Leaf area index for forest 5th August map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
