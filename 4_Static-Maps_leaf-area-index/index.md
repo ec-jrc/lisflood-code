@@ -35,7 +35,7 @@ The LAI map resolution of the resulting field is reduced from native to the requ
 
 <p float="left">
   <img src="../media/Static-Maps/laif_0105_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/laif_0105_Global_03min.png" width="606" /> 
+  <img src="../media/Static-Maps/laif_0105_Global_03min.png" width="609" /> 
 </p>
 
 *Figure 51: Leaf area index for forest 5th January map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
@@ -43,7 +43,7 @@ The LAI map resolution of the resulting field is reduced from native to the requ
 
 <p float="centre">
   <img src="../media/Static-Maps/laif_0805_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/laif_0805_Global_03min.png" width="606" /> 
+  <img src="../media/Static-Maps/laif_0805_Global_03min.png" width="609" /> 
 </p>
 
 *Figure 52: Leaf area index for forest 5th August map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
