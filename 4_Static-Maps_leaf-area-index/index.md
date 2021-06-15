@@ -16,7 +16,7 @@ In LISFLOOD LAI has an important role in water interception and evapotranspirati
 | LAI for other     | laio.nc; Float32       | Units: -; Range: 0 ..7     |10-day average (36 maps in total) Leaf Area Index for mainly other land cover type areas (other land cover type fraction per grid-cell ≥ 0.7)|
 
 
-| Source data| Referece/preparation | Temporal coverage | Spatial information |
+| Source data| Reference/preparation | Temporal coverage | Spatial information |
 | :---| :--- | :--- | :--- |
 | Copernicus Global Land Service LAI Collection Version 2 | https://land.copernicus.eu/global/products/lai | 1 January 2010 - 31 December 2019 | Global, 1 km|
 | Fraction of forest | It can be prepared by using the methodology of section XXX| NA | Global, 1' and 3'|
