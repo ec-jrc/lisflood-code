@@ -8,8 +8,8 @@ Rice is the world’s most important food crop. It is harvested from over 163 m
 
 | Map name | File name;type | Units; range | Description |
 | :---| :--- | :--- | :--- |
-| Rice planting day        |  riceplantingday**N**.nc; Float32          | Units: calendar day number;<br/> Range: 1 ..365         |Map with first/second rice season's planting day |
-| Rice harvest day  | riceharvestday**N**.nc; Float32       | Units: calendar day number;<br/> Range: 1 ..365     |Map with first/second rice season's harvesting day|
+| Rice planting day        |  riceplantingday**N**.nc; Float32          | Units: calendar day number;<br/> Range: 1 ..365         |Map with first/second rice season planting day |
+| Rice harvest day  | riceharvestday**N**.nc; Float32       | Units: calendar day number;<br/> Range: 1 ..365     |Map with first/second rice season harvesting day|
 
 *where **N** is the number of season (N = ’1’ for first season, N = ’2’ for second season). With source data below it is possible to generate N = ’3’ third season.
 
