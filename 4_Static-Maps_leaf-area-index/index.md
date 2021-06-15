@@ -19,8 +19,13 @@ The LAI map resolution of the resulting field is reduced from native to the requ
 
 
 
-                                                        |  
+                                               xxx         |  xxx
 :------------------------------------------------------:|:----------------------------------------------------:
-![](../media/Static-Maps/laif_0105_European_01min.png)  |  ![](../media/Static-Maps/laif_0105_Global_03min.png)
+<img src="../media/Static-Maps/laif_0105_European_01min.png" width="100" height="100"> |  <img src="../media/Static-Maps/laif_0105_European_01min.png" width="100" height="100">
 
-![]()
+
+
+<p float="left">
+  <img src="../media/Static-Maps/laif_0105_European_01min.png" width="100" height="100" />
+  <img src="../media/Static-Maps/laif_0105_European_01min.png" width="100" /> 
+</p>
