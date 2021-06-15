@@ -10,6 +10,7 @@ In LISFLOOD LAI has an important role in water interception and evapotranspirati
 #### General map information and possible source data
 
 | Map name | File name;type | Units, range | Description |
+| :---| :--- | :--- | :--- |
 | LAI for forest        |  laif.nc; Float32          | Units: -; Range: 0 ..7         |10-day average (36 maps in total) Leaf Area Index for closed forested areas (forest fraction per grid-cell ≥ 0.7)|
 | LAI for irrigated crops  | laii.nc; Float32    | Units: -; Range: 0 ..7     |10-day average (36 maps in total) Leaf Area Index for irrigated crop areas (irrigated crop fraction per grid-cell ≥ 0.7)|
 | LAI for other     | laio.nc; Float32       | Units: -; Range: 0 ..7     |10-day average (36 maps in total) Leaf Area Index for mainly other land cover type areas (other land cover type fraction per grid-cell ≥ 0.7)|
@@ -36,4 +37,5 @@ The LAI map resolution of the resulting field is reduced from native to the requ
   <img src="../media/Static-Maps/laif_0805_European_01min.png" width="395" />
   <img src="../media/Static-Maps/laif_0805_Global_03min.png" width="605" /> 
 </p>
+
 *Figure 52: Leaf area index for forest 5th August map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
