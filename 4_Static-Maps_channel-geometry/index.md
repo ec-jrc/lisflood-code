@@ -22,10 +22,14 @@ Channel characteristics, explained above, are shown in the Figure 41 below.  <br
 
 | Map name | File name;type | Units; range | Description |
 | :---| :--- | :--- | :--- |
-|         |           |          |
-|         |           |          |
-|         |           |          |
-
+|Channel mask         | chan.nc; <br> Type: Boolean          | Units: -;<br> Range: NoData or 1         |Boolean map that identifies the channel grid-cells |
+|Side slope        |chans.nc; <br> Type: Float32          | Units: m;<br> Range>0          |Channel side slope|
+|Channel length         |chanlength.nc; <br> Type: Float32          | Units: m;<br> Range>0         |Channel length (value can exceed grid size, to account for meandering rivers)|
+|Channel gradient         |changrad.nc; <br> Type: Float32           |Units: m/m;<br> Range: [0-1]          |Channel longitudinal gradient|
+|Manning's roughness coefficient |chanman.nc; <br> Type: Float32           |Units: XXXXXXXXXXXX         |channels Manning's roughness coefficient |
+|Bottom width         |chanbw.nc; <br> Type: Float32           |Units: m;<br> Range>0          |Channel bottom width|
+|Floodplain         |chanflpn.nc; <br> Type: Float32           |Units: m;<br> Range>0          |Width of the area where the surplus of water is distributed when the water level in the channel exceeds the bankfull channel depth
+|Bankfull channel depth         |chanbnkf.nc; <br> Type: Float32           |Units: m;<br> Range>0          |Bankfull channel depth
 
 | Source data| Reference/preparation | Temporal coverage | Spatial information |
 | :---| :--- | :--- | :--- |
@@ -100,7 +104,7 @@ chanbnkf_{step2} = 1.004 \cdot chanman^{0.6} \cdot (2 \cdot avgdis)^{0.6} \cdot 
 $$
 
 
-#### Results (examples)
+## Results (examples)
 
 <p float="left">
   <img src="../media/Static-Maps/chan_European_01min.png" width="394" />
@@ -109,6 +113,7 @@ $$
 
 *Figure 43: Channel mask map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right) with coloured areas showing the channel pixels.*
 
+
 <p float="centre">
   <img src="../media/Static-Maps/changrad_European_01min.png" width="394" />
   <img src="../media/Static-Maps/changrad_Global_03min.png" width="611" /> 
@@ -116,12 +121,14 @@ $$
 
 *Figure 44: Channel gradient or slope map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
 
+
 <p float="centre">
   <img src="../media/Static-Maps/chanman_European_01min.png" width="394" />
   <img src="../media/Static-Maps/chanman_Global_03min.png" width="611" /> 
 </p>
 
 *Figure 45: Manning’s roughness coefficient for channels map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
+
 
 <p float="centre">
   <img src="../media/Static-Maps/chanlength_European_01min.png" width="394" />
@@ -137,6 +144,7 @@ $$
 
 *Figure 47: Channel bottom width map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
 
+
 <p float="centre">
   <img src="../media/Static-Maps/chans_European_01min.png" width="394" />
   <img src="../media/Static-Maps/chans_Global_03min.png" width="611" /> 
@@ -144,12 +152,14 @@ $$
  
 *Figure 48: Channel side slope map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right) with coloured areas showing channel side slope (equal to 1) pixel.*
  
+ 
 <p float="centre">
   <img src="../media/Static-Maps/chanbnkf_European_01min.png" width="394" />
   <img src="../media/Static-Maps/chanbnkf_Global_03min.png" width="611" /> 
 </p>
 
 *Figure 49: Bankfull channel depth map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
+
 
 <p float="centre">
   <img src="../media/Static-Maps/chanflpn_European_01min.png" width="394" />
