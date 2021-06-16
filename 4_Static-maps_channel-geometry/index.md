@@ -8,17 +8,17 @@ The channel gradient (or channel slope) map is the average gradient of the main 
 The Manning's roughness coefficient map can be derived by an empirical relationship of the DEM and the upstream area according to Burek et al. (2014). The kinematic wave approach uses the Manning’s formula, an empirical formula for open channel flow or free-surface flow driven by gravity. The Manning’s roughness coefficient is reciprocal proportional to the cross-sectional average velocity (in m/s). A lower Manning’s coefficient results in a faster responding time at the outlet. <br/>
 The bottom width map (referred as Wb in Figure 41) is the width of the bottom of the channel. <br/>
 The floodplain map (referred as Wfp in Figure 41) is used to calculate water levels in the LISFLOOD model. <br/>
-The bankfull channel depth map (referred as Dbf in Figure 41) is the difference between floodplain bottom level (referred as zfp in Figure 41) and the channel bottom level (referred as zbot in [Figure 41](#fig:Figure41). <br/>
+The bankfull channel depth map (referred as Dbf in Figure 41) is the difference between floodplain bottom level (referred as zfp in Figure 41) and the channel bottom level (referred as zbot in [Figure 41](######Figure41). <br/>
 Channel characteristics, explained above, are shown in the Figure 41 below.  <br/>
 
 
 
-```{r Figure41, fig.height=2.4, fig.width= 2.5, fig.cap="Figures work nicely", echo = FALSE}
 <p float="left">
   <img src="../media/Static-Maps/channel_geometry1.png" width="600" />
   <img src="../media/Static-Maps/channel_geometry2.png" width="400" /> 
 </p>
-```
+######Figure41
+
 ### Leaf Area Index for land covers forest, irrigated crops, and other
 
 #### General map information and possible source data
