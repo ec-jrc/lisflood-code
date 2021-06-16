@@ -33,9 +33,12 @@ Channel characteristics, explained above, are shown in the Figure 41 below.  <br
 
 | Source data| Reference/preparation | Temporal coverage | Spatial information |
 | :---| :--- | :--- | :--- |
-|         |           |          |
-|         |           |          |
-|         |           |          |
+|Channel width     XXXXXXXXXXX    |http://hydro.iis.u-tokyo.ac.jp/~yamadai/cama-flood/index.html           |2018         |Global, 1' and 3'|
+|River lenght        | http://hydro.iis.u-tokyo.ac.jp/~yamadai/cama-flood/index.html          |2018          |Global, 1' and 3'|
+|MERIT DEM: Multi-Error-Removed Improved-Terrain DEM|http://hydro.iis.u-tokyo.ac.jp/~yamadai/MERIT_DEM/index.html           |2018          |Global, 3" (at about 90 m)|
+|Mask map        |Can be prepared following the instructions of Section XXXX|NA          |Global, 1' and 3'|
+|Local drain direction (ldd)        |Can be prepared following the instructions of Section XXXX|NA          |Global, 1' and 3'|
+|Upstream area map         |Can be prepared following the instructions of Section XXXX|NA          |Global, 1' and 3'|
 
 ## Methodology
 
@@ -45,8 +48,8 @@ The channel mask map is used to identify the cells that have channels. The grid-
 ### Side slope (chans)
 The channel side slope map is calculated by dividing the horizontal distance (referred as 'dx' in Figure 42) by vertical distance (referred as 'dy' in Figure 42); here ‘1’ was assigned to all the grid cells, which correspond to a 45° angle of the side slope.
 
-<p float="centre">
-  <img src="../media/Static-Maps/channel_geometry3.png" width="350" />
+<p float="center">
+  <img src="../media/Static-Maps/channel_geometry3.png" width="300" />
 </p>
 
 *Figure 42: Zoom of Figure 41 with highlighted components dx and dy (in red) used to calculate the channel side slope (original figure is from [Burek et al., 2013](https://publications.jrc.ec.europa.eu/repository/handle/JRC78917)).*
@@ -106,12 +109,14 @@ $$
 
 ## Results (examples)
 
+
 <p float="left">
   <img src="../media/Static-Maps/chan_European_01min.png" width="394" />
   <img src="../media/Static-Maps/chan_Global_03min.png" width="611" /> 
 </p>
 
 *Figure 43: Channel mask map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right) with coloured areas showing the channel pixels.*
+
 
 
 <p float="centre">
@@ -122,12 +127,14 @@ $$
 *Figure 44: Channel gradient or slope map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
 
 
+
 <p float="centre">
   <img src="../media/Static-Maps/chanman_European_01min.png" width="394" />
   <img src="../media/Static-Maps/chanman_Global_03min.png" width="611" /> 
 </p>
 
 *Figure 45: Manning’s roughness coefficient for channels map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
+
 
 
 <p float="centre">
@@ -137,12 +144,15 @@ $$
 
 *Figure 46: Channel length map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
 
+
+
 <p float="centre">
   <img src="../media/Static-Maps/chanbw_European_01min.png" width="394" />
   <img src="../media/Static-Maps/chanbw_Global_03min.png" width="611" /> 
 </p>
 
 *Figure 47: Channel bottom width map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
+
 
 
 <p float="centre">
@@ -153,12 +163,14 @@ $$
 *Figure 48: Channel side slope map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right) with coloured areas showing channel side slope (equal to 1) pixel.*
  
  
+ 
 <p float="centre">
   <img src="../media/Static-Maps/chanbnkf_European_01min.png" width="394" />
   <img src="../media/Static-Maps/chanbnkf_Global_03min.png" width="611" /> 
 </p>
 
 *Figure 49: Bankfull channel depth map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
+
 
 
 <p float="centre">
