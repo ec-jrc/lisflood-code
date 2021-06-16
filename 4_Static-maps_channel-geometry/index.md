@@ -1,28 +1,23 @@
-## Channel geometry
+# Channel geometry
 
 In the LISFLOOD model flow through the channel is simulated using the kinematic wave equations. Channel maps describe the sub grid information of the channel geometry, i.e. the length, slope, width and depth of the main channel inside a grid-cell.  <br/>
-The channel mask map is the Boolean field with '1' for all grid-cells with channels and NoData for all grid-cells with no channels.  <br/>
-The channel side slope map (referred as 's' in Figure 41) defines the slope of the channel banks. <br/>
-The channel length map is the length of the river in each grid-cell, and the value can exceed grid-size to account for meandering rivers. <br/>
-The channel gradient (or channel slope) map is the average gradient of the main river inside a cell. <br/>
-The Manning's roughness coefficient map can be derived by an empirical relationship of the DEM and the upstream area according to Burek et al. (2014). The kinematic wave approach uses the Manning’s formula, an empirical formula for open channel flow or free-surface flow driven by gravity. The Manning’s roughness coefficient is reciprocal proportional to the cross-sectional average velocity (in m/s). A lower Manning’s coefficient results in a faster responding time at the outlet. <br/>
-The bottom width map (referred as Wb in Figure 41) is the width of the bottom of the channel. <br/>
-The floodplain map (referred as Wfp in Figure 41) is used to calculate water levels in the LISFLOOD model. <br/>
-The bankfull channel depth map (referred as Dbf in Figure 41) is the difference between floodplain bottom level (referred as zfp in Figure 41) and the channel bottom level (referred as zbot in [Figure 41](###### Figure41). <br/>
-Channel characteristics, explained above, are shown in the Figure 41 below [Methodology](### Methodology).  <br/>
-
-
++ The **channel mask** map is the Boolean field with '1' for all grid-cells with channels and NoData for all grid-cells with no channels.  <br/>
++ The **channel side slope** map (referred as 's' in Figure 41) defines the slope of the channel banks. <br/>
++ The **channel length** map is the length of the river in each grid-cell, and the value can exceed grid-size to account for meandering rivers. <br/>
++ The **channel gradient** (or channel slope) map is the average gradient of the main river inside a cell. <br/>
++ The **Manning's roughness coefficient** map can be derived by an empirical relationship of the DEM and the upstream area according to [Burek et al. (2014)](https://ec-jrc.github.io/lisflood/pdfs/Dataset_hydro.pdf). The kinematic wave approach uses the Manning’s formula, an empirical formula for open channel flow or free-surface flow driven by gravity. The Manning’s roughness coefficient is reciprocal proportional to the cross-sectional average velocity (in m/s). A lower Manning’s coefficient results in a faster responding time at the outlet. <br/>
++ The **bottom width map** (referred as Wb in Figure 41) is the width of the bottom of the channel. <br/>
++ The **floodplain map** (referred as Wfp in Figure 41) is used to calculate water levels in the LISFLOOD model. <br/>
++ The **bankfull channel depth** map (referred as Dbf in Figure 41) is the difference between floodplain bottom level (referred as zfp in Figure 41) and the channel bottom level (referred as zbot in Figure 41. <br/>
+Channel characteristics, explained above, are shown in the Figure 41 below.  <br/>
 
 <p float="left">
   <img src="../media/Static-Maps/channel_geometry1.png" width="600" />
   <img src="../media/Static-Maps/channel_geometry2.png" width="400" /> 
 </p>
-###### Figure41
+*Figure41: Geometry of channel cross-section in kinematic wave routing (original figure from [Burek et al., 2013](https://publications.jrc.ec.europa.eu/repository/handle/JRC78917)).
 
-### Methodology
-### Leaf Area Index for land covers forest, irrigated crops, and other
-
-#### General map information and possible source data
+## General map information and possible source data
 
 | Map name | File name;type | Units; range | Description |
 | :---| :--- | :--- | :--- |
@@ -38,11 +33,33 @@ Channel characteristics, explained above, are shown in the Figure 41 below [Meth
 | Fraction of irrigated crops | It can be prepared by using the methodology of section XXX| NA | Global, 1' and 3'|
 | Fraction of other land cover type | It can be prepared by using the methodology of section XXX| NA | Global, 1' and 3'|
 
-#### Methodology
+## Methodology
 
-To create LAI for forest, irrigated crops and other land cover type, maps [Copernicus Global Land Service LAI Collection](https://land.copernicus.eu/global/products/lai) Version 2 can be used.<br/> The dataset provides a 10-day average LAI information, 36 maps each year. Here, to normalise the climate over different regions of the globe, the 10-day average LAI maps are aggregated over a 10-year period (i.e. first 10-day average of years 2010-2019 are aggregated to compute a first 10-day climatological average). As a result 36 climatological LAI maps are calculated. 
-Then, fraction maps for forest, irrigated crops, and other land cover type are used to mask non-dense areas of the land cover type in question (i.e. fraction is less than 0.7) over the climatological LAI maps. <br/>
-The LAI map resolution of the resulting field is reduced from native to the required one (e.g. from 1 km to 1 arc min) as follows. Firstly, the resolution is reduced to 1, 3, 15 arc min and 1, 3, 15, 60 degrees with mean.unweighted() reducer, and then all different resolutions are assembled to create a field with no missing values. For each resolution (going from the highest to the coarsest), grid-cells with missing values are identified and filled with the value of the corresponding grid-cell with non-missing value from the next resolution down map (e.g. using 3 arc min to fill in 1 arc min missing values). If the corresponding grid-cell is masked (has a missing value), then the value of the corresponding non-masked grid-cell from the next resolution down map is used, until all resolution maps are explored. If the corresponding grid-cell value of the coarsest resolution (here 60 degree) is still missing, a zero value is given.
+### Channel mask (chan)
+The channel mask map is used to identify the cells that have channels. The grid-cells that have a channel length (see chanlength map creation below) above zero are assigned to the Boolean field '1', the grid-cells that have a channel length below or equal to zero are assigned with NoData.
+
+### Side slope (chans)
+The channel side slope map is calculated by dividing the horizontal distance (referred as 'dx' in Figure 42) by vertical distance (referred as 'dy' in Figure 42); here ‘1’ was assigned to all the grid cells, which correspond to a 45° angle of the side slope.
+
+### Channel length (chanlenght)
+The channel length map (in meters) can be created by using the 'rivlen' layers from the CaMa-Flood dataset (for more information see the FLOW method of Yamazaki, link), multiplied by the LISFLOOD model mask.
+
+### Channel gradient (changrad)
+To compute the channel gradient map, the absolute difference (in meters) of the elevation between two grid-cells is first calculated by using i) the local drain direction (ldd) map to extract the connectivity between grid-cells, and ii) the channel length of the upstream grid-cell:<br/>
+$$
+elevationDifference = elevation_{upstreamCell} - elevation_{downstreamCell}.
+$$
+Then, the channel gradient is computed and assigned to the upstream grid-cell:
+$$
+changrad=\frac{elevationDifference}{chanlength}
+$$
+$changrad$ is set equal 0 where $ldd$ is 5.
+
+### Manning's roughness coefficient (chanman)
+The Manning's roughness coefficient for channels can be derived by an empirical relationship between the elevation (in $m$) of the grid-cell and its upstream area (in $km^2$) following [Burek et al. (2014)](https://ec-jrc.github.io/lisflood/pdfs/Dataset_hydro.pdf):
+$$
+chanman = 0.025 + 0.015 * minimum(\frac{50}{upstreamArea} , 1) + 0.30 * minimum(\frac{elevation}{2000} , 1).
+$$
 
 #### Results (examples)
 
