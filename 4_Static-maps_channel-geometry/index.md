@@ -17,7 +17,7 @@ Channel characteristics, explained above, are shown in the Figure 41 below.  <br
   <img src="../media/Static-Maps/channel_geometry1.png" width="600" />
   <img src="../media/Static-Maps/channel_geometry2.png" width="400" /> 
 </p>
-######Figure41
+###### Figure41
 
 ### Leaf Area Index for land covers forest, irrigated crops, and other
 
