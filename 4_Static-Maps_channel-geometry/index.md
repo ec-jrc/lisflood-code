@@ -12,26 +12,26 @@ In the LISFLOOD model flow through the channel is simulated using the kinematic 
 Channel characteristics, explained above, are shown in the Figure 41 below.  <br/>
 
 <p float="left">
-  <img src="../media/Static-Maps/channel_geometry1.png" width="700" />
-  <img src="../media/Static-Maps/channel_geometry2.png" width="200" /> 
+  <img src="../media/Static-Maps/channel_geometry1.png" width="600" />
+  <img src="../media/Static-Maps/channel_geometry2.png" width="300" /> 
 </p>
+
 *Figure41: Geometry of channel cross-section in kinematic wave routing (original figure from [Burek et al., 2013](https://publications.jrc.ec.europa.eu/repository/handle/JRC78917)).*
 
 ## General map information and possible source data
 
 | Map name | File name;type | Units; range | Description |
 | :---| :--- | :--- | :--- |
-| LAI for forest        |  laif.nc; Float32          | Units: -; Range: 0 ..7         |10-day average (36 maps in total) Leaf Area Index for closed forested areas (forest fraction per grid-cell ≥ 0.7)|
-| LAI for irrigated crops  | laii.nc; Float32    | Units: -; Range: 0 ..7     |10-day average (36 maps in total) Leaf Area Index for irrigated crop areas (irrigated crop fraction per grid-cell ≥ 0.7)|
-| LAI for other     | laio.nc; Float32       | Units: -; Range: 0 ..7     |10-day average (36 maps in total) Leaf Area Index for mainly other land cover type areas (other land cover type fraction per grid-cell ≥ 0.7)|
+|         |           |          |
+|         |           |          |
+|         |           |          |
 
 
 | Source data| Reference/preparation | Temporal coverage | Spatial information |
 | :---| :--- | :--- | :--- |
-| Copernicus Global Land Service LAI Collection Version 2 | https://land.copernicus.eu/global/products/lai | 1 January 2010 - 31 December 2019 | Global, 1 km|
-| Fraction of forest | It can be prepared by using the methodology of section XXX| NA | Global, 1' and 3'|
-| Fraction of irrigated crops | It can be prepared by using the methodology of section XXX| NA | Global, 1' and 3'|
-| Fraction of other land cover type | It can be prepared by using the methodology of section XXX| NA | Global, 1' and 3'|
+|         |           |          |
+|         |           |          |
+|         |           |          |
 
 ## Methodology
 
@@ -42,8 +42,9 @@ The channel mask map is used to identify the cells that have channels. The grid-
 The channel side slope map is calculated by dividing the horizontal distance (referred as 'dx' in Figure 42) by vertical distance (referred as 'dy' in Figure 42); here ‘1’ was assigned to all the grid cells, which correspond to a 45° angle of the side slope.
 
 <p float="centre">
-  <img src="../media/Static-Maps/channel_geometry3.png" width="500" />
+  <img src="../media/Static-Maps/channel_geometry3.png" width="350" />
 </p>
+
 *Figure 42: Zoom of Figure 41 with highlighted components dx and dy (in red) used to calculate the channel side slope (original figure is from [Burek et al., 2013](https://publications.jrc.ec.europa.eu/repository/handle/JRC78917)).*
 
 ### Channel length (chanlenght)
