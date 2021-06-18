@@ -119,7 +119,7 @@ To create an upstream area, pixel area and ldd maps are used with the PCRaster f
   <img src="../media/Static-Maps/upArea_Global_03min.png" width="611" /> 
 </p>
 <p float="centre">
-  <img src="../media/Static-Maps/upArea_European_01min_PoValley.png" width="700" />
+  <img src="../media/Static-Maps/upArea_European_01min_PoValley.png" width="800" />
 </p>
 
 *Figure 8: Map with upstream area at 1 arc min horizontal resolution for European domain (top left) and for the Po River Valley (bottom), and at 3 arc min horizontal resolution for Global domain (top right).*
