@@ -44,8 +44,8 @@ ii) The 'spam2010v1r0_global_physical-area_CROP_r' dataset from the SPAM dataset
 
 | Parameter| Equation | Notes |
 | :---| :--- | :--- | 
-|Crop coefficient| Kc=\frac{fraction1 cdot height1 cdot Kc1 + fraction2 cdot height2 cdot Kc2 + .. + fractionN cdot heightN cdot KcN}{fraction1 cdot height1 + fraction2 cdot height2 + .. + fractionN cdot heightN}|Considers different cover type fractions, default crop coefficient values and default crop height values from  [FAO56](https://www.researchgate.net/publication/284300773_FAO_Irrigation_and_drainage_paper_No_56)|
-|Crop height| H=\frac{fraction1 cdot height1 + fraction2 cdot height2 + .. + fractionN cdot heightN}{fraction1 + fraction2 + .. + fractionN }|Considers different cover type fractions, default crop coefficient values and default crop height values from  [FAO56](https://www.researchgate.net/publication/284300773_FAO_Irrigation_and_drainage_paper_No_56)|
+|Crop coefficient| $$Kc=\frac{fraction1 cdot height1 cdot Kc1 + fraction2 cdot height2 cdot Kc2 + .. + fractionN cdot heightN cdot KcN}{fraction1 cdot height1 + fraction2 cdot height2 + .. + fractionN cdot heightN}$$|Considers different cover type fractions, default crop coefficient values and default crop height values from  [FAO56](https://www.researchgate.net/publication/284300773_FAO_Irrigation_and_drainage_paper_No_56)|
+|Crop height|$$H=\frac{fraction1 cdot height1 + fraction2 cdot height2 + .. + fractionN cdot heightN}{fraction1 + fraction2 + .. + fractionN }$$|Considers different cover type fractions, default crop coefficient values and default crop height values from  [FAO56](https://www.researchgate.net/publication/284300773_FAO_Irrigation_and_drainage_paper_No_56)|
 Next, land cover depending parameters are computed according to the formulas in the table below.<br>
 
 
