@@ -159,11 +159,11 @@ Note: Irrigated rice fraction field should be checked for consistency with all o
 
 | Source data| Reference/preparation | Temporal coverage | Spatial information |
 | :---| :--- | :--- | :--- |
-|Fraction of inland water|It can be prepared by implementing [this methology](../4_Static-Maps_land-use#fraction-of-inland-water)|NA|Glonbal|
-|Fraction of sealed surfaces|It can be prepared by implementing [this methology](../4_Static-Maps_land-use#fraction-of-sealed-surfaces)|NA|Glonbal|
+|Fraction of inland water|It can be prepared by implementing [this methology](../4_Static-Maps_land-use#fraction-of-inland-water)|NA|Global|
+|Fraction of sealed surfaces|It can be prepared by implementing [this methology](../4_Static-Maps_land-use#fraction-of-sealed-surfaces)|NA|Global|
 |Fraction of forest|It can be prepared by implementing [this methology](../4_Static-Maps_land-use#fraction-of-forest)|NA|Glonbal|
-|Fraction of irrigated crops|It can be prepared by implementing [this methology](../4_Static-Maps_land-use#fraction-of-irrigated-crops)|NA|Glonbal|
-|Fraction of rice|It can be prepared by implementing [this methology](../4_Static-Maps_land-use#fraction-of-rice-crops)|NA|Glonbal|
+|Fraction of irrigated crops|It can be prepared by implementing [this methology](../4_Static-Maps_land-use#fraction-of-irrigated-crops)|NA|Global|
+|Fraction of rice|It can be prepared by implementing [this methology](../4_Static-Maps_land-use#fraction-of-rice-crops)|NA|Global|
 
 ### Methodology
 
