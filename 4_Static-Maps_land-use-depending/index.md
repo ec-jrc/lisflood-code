@@ -139,8 +139,19 @@ The LISFLOOD model does not accept missing values for Kc, Kg and Km thus all zer
 | Map name | File name;type | Units; range | Description |
 | :---| :--- | :--- | :--- |
 
+| Parameter| Equation | Notes |
+| :---| :--- | :--- | 
 
+### Methodology
 
+The methodology for the computation of the depth of the three soil layers has been adapted from [Burek et al., 2014](https://ec-jrc.github.io/lisflood/pdfs/Dataset_hydro.pdf). Here, total soil depth is taken as the 'absolute depth to bedrock' from [SoilGrids250m (2017)](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0169748) and 'root depth' for the fractions forest and non-forest is computed following methodology explained [above](../4_Static-Maps_land-use-depending#crop-coefficient,-crop-group-number,-manning’s-surface-roughness-coefficient-for-forest,-irrigated-crops-and-other-land-use-type-maps). Soil depth is expressed in mm. <br>
+Soil depth layer 1 (surface) for forest/non-forest ($SD_1$) is assumed constant, equal to 50 mm all over the world:
+
+$$
+SD_1 = 50 mm
+$$
+
+Soil depth layers 2 (middle, $SD_2$) and 3 (bottom, $SD_3$) for forest/non-forest are computed in several steps – first at native resolution of the input dataset, then at required resolution. First step is following:
 
 <p  float="left">
   <img src="../media/Static-Maps/soildepth1_f_European_01min.png" width="394" />
