@@ -18,6 +18,7 @@ For simplicity reasons, we suggest to follow the following steps:
 4)	chose optional model routines (which ones are available; what they do; and how to “activate” them)
 
 In order to facilitate the preparation of the settings file, a complete example is provided [here](https://ec-jrc.github.io/lisflood-code/3_step3_preparing-setting-file/lisfloodSettings_reference.xml). The user is encouraged to update the paths, the names of the maps and of the tables in the provided template. Please note that the template contains all the settings for a warm start run; the paths to the initial maps must be replaced with the initial bogus values in oder to perform a pre-run or a cold start run.
+TIP:  *$(ProjectDir)* or *$(ProjectPath)* cab used as built-in variable in the XML settings, to refer the project folder.
 
 ### Time-related constants
 
