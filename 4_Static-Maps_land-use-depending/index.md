@@ -131,3 +131,65 @@ The LISFLOOD model does not accept missing values for Kc, Kg and Km thus all zer
 </p>
 
 *Figure 23: Manning’s coefficient for other land cover type map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
+
+
+## Soil depth layers 1,2, and 3 for forested and non-forested areas
+
+### General map informatio and possible source data
+| Map name | File name;type | Units; range | Description |
+| :---| :--- | :--- | :--- |
+
+
+
+
+<p  float="left">
+  <img src="../media/Static-Maps/soildepth1_f_European_01min.png" width="394" />
+  <img src="../media/Static-Maps/soildepth1_f_Global_03min.png" width="611" /> 
+</p>
+
+*Figure 24: Soil depth layer 1 (surface layer) for forest map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
+
+
+
+<p  float="left">
+  <img src="../media/Static-Maps/soildepth1_o_European_01min.png" width="394" />
+  <img src="../media/Static-Maps/soildepth1_o_Global_03min.png" width="611" /> 
+</p>
+
+*Figure 25: Soil depth layer 1 (surface layer) for non-forest map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
+
+
+
+<p  float="left">
+  <img src="../media/Static-Maps/soildepth2_f_European_01min.png" width="394" />
+  <img src="../media/Static-Maps/soildepth2_f_Global_03min.png" width="611" /> 
+</p>
+
+*Figure 26: Soil depth layer 2 (surface layer) for forest map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
+
+
+
+<p  float="left">
+  <img src="../media/Static-Maps/soildepth2_o_European_01min.png" width="394" />
+  <img src="../media/Static-Maps/soildepth2_o_Global_03min.png" width="611" /> 
+</p>
+
+*Figure 27: Soil depth layer 2 (surface layer) for non-forest map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
+
+
+
+<p  float="left">
+  <img src="../media/Static-Maps/soildepth3_f_European_01min.png" width="394" />
+  <img src="../media/Static-Maps/soildepth3_f_Global_03min.png" width="611" /> 
+</p>
+
+*Figure 28: Soil depth layer 3 (surface layer) for forest map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
+
+
+
+<p  float="left">
+  <img src="../media/Static-Maps/soildepth3_o_European_01min.png" width="394" />
+  <img src="../media/Static-Maps/soildepth3_o_Global_03min.png" width="611" /> 
+</p>
+
+*Figure 29: Soil depth layer 3 (surface layer) for non-forest map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
