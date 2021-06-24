@@ -99,7 +99,7 @@ As an alternative to using the internal initialization (and hence the bogus valu
     <setoption choice="1"  name="writeNetcdf"/>
 ```
 
-4) Set split routing option to not active in in <lfoptions> section of Settings.XML file using:
+4) Set split routing option to active in in <lfoptions> section of Settings.XML file using:
 ```xml
     <setoption choice="1" name="SplitRouting"/>
 ```
