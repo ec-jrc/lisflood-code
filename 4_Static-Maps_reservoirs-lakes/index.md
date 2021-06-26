@@ -20,7 +20,7 @@ In the LISFLOOD model lakes and reservoirs maps represent only outflow location 
 | :---| :--- | :--- | :--- |
 |Global Lakes and Wetlands Database (GLWD): <br>Large Lake Polygons (Level 1) |[GLWD leve1](https://www.worldwildlife.org/publications/global-lakes-and-wetlands-database-large-lake-polygons-level-1)|2004|Global, 1:1 to 1:3 million resolution|
 |Global Lakes and Wetlands Database (GLWD): <br>Small Lake Polygons (Level 3) |[GLWD leve1](https://www.worldwildlife.org/publications/global-lakes-and-wetlands-database-large-lake-polygons-level-2)|2004|Global, 1:1 to 1:3 million resolution|
-|Fraction of inland water| It can be prepared by using<br> the methodology explained [here](../4_Static-Maps_land-use)|NA|Global|
+|Fraction of inland water| It can be prepared by using<br> the methodology explained [here](../4_Static-Maps_land-use#lend-use)|NA|Global|
 
 ### Methodology
 
