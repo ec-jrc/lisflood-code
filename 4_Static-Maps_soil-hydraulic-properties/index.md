@@ -33,7 +33,14 @@ The table below lists the data required for the implementation of the PTFs propo
 
 | Source data| Reference/preparation | Temporal coverage | Spatial information |
 | :---| :--- | :--- | :--- |
-
+| % of Clay (C)|[ISRIC](https://files.isric.org/soilgrids/latest/data/clay/), mean value |2020|Global, 250 m available depths (cm):<br> 0-5, 5-15, 15-30, 30-60, 60-100, 100-200|
+| % of Silt (S)|[ISRIC](https://files.isric.org/soilgrids/latest/data/silt/), - |2020|Global, 250 m available depths (cm):<br> 0-5, 5-15, 15-30, 30-60, 60-100, 100-200|
+| % organic carbon (OC)|[ISRIC](https://files.isric.org/soilgrids/latest/data/soc/), mean value|2020|Global, 250 m available depths (cm):<br> 0-5, 5-15, 15-30, 30-60, 60-100, 100-200|
+| Bulk Density (BD)|[ISRIC](https://files.isric.org/soilgrids/latest/data/bdod/), median value (Q0.5)|2020|Global, 250 m available depths (cm):<br> 0-5, 5-15, 15-30, 30-60, 60-100, 100-200|
+| Soil PH |[ISRIC](https://files.isric.org/soilgrids/latest/data/phh2o/), mean value|2020|Global, 250 m available depths (cm):<br> 0-5, 5-15, 15-30, 30-60, 60-100, 100-200|
+| Cation exchange capacity (CEC)|[ISRIC](https://files.isric.org/soilgrids/latest/data/cec/), mean value|2020|Global, 250 m available depths (cm):<br> 0-5, 5-15, 15-30, 30-60, 60-100, 100-200|
+| Soil depth map | It can be prepared by using the methodology explained [here](../4_Static-Maps_landuse-depending)| NA | Global, 250 m |
+| Fraction of forested areas map | It can be prepared by using the methodology explained [here](../4_Static-Maps_landuse)| NA| Global, 100 m |
 
 ## Methodology
 
@@ -72,9 +79,24 @@ If cell's soil depth starts at a greater depth than 2000 mm, then each parameter
 
 The computed soil depth hydraulic property fields are resampled from native to required resolution. For layer 1 and 2 this can be done in a following way: the computed fields at native resolution are combined with forested and non-forested (others) area fields in % per grid-cell by taking the weighted average of the parameter according to the forest (or others) percentage per grid-cell. For layer 3 this can be done following soil depth layer 2 and 3 methodology. Below is an example for layer 2 or 3, by using percentages of forest/ others per grid-cell at 250 m resolution parameter values:
 
-| Parameter | Pedotransfer function | Condition |
+| Forest % | Others % | Parameter value|
 | :---| :--- | :--- | 
-| |  |  | 
+| 5 | 95 | 0.6 |
+| 20 | 80 | 0.6 |
+| 50 | 50 | 0.3 |
+| 90 | 10 | 0.1 |
+
+Parameter value for forested area at 1 arcmin resolution:
+
+$$
+\frac{90 cdot 0.1 + 50 cdot 0.3 + 20 cdot 0.6 + 5 cdot 0.6}{90+50+20+5} = 0.3
+$$
+
+Parameter value for non-forested area at 1 arcmin resolution:
+
+$$
+\frac{10 cdot 0.1 + 50 cdot 0.3 + 80 cdot 0.6 + 95 cdot 0.6}{10+50+80+95} = 0.5
+$$
 
 
 ### Results (examples)
