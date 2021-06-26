@@ -12,11 +12,12 @@ The grid-cell length and grid-cell area maps are used in LISFLOOD model to accur
 
 | Map name | File name;type | Units; range | Description |
 | :---| :--- | :--- | :--- |
-
+| Mask map| area.nc; <br>Type: Float32 |  Units: -; <br>Range: NoData or 1 | Boolean map that defines model boundaries|
+| Land use mask| landuse.nc; <br>Type: Float32 | Units: -; <br>Range: NoData or 1 | Boolean map for land use calculations |
 
 | Source data| Reference/preparation | Temporal coverage | Spatial information |
 | :---| :--- | :--- | :--- |
-
+|Any available map of the region of interest <br>(e.g. digital elevation map, flow direction map)|NA|NA|Global, 1' and 3'|
 
 ### Methodology
 
@@ -43,6 +44,8 @@ If the source data is at a higher resolution and/or is larger than the required 
 
 *Figure 2: Landuse mask map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right) with coloured areas showing land pixel.*
 
+
+
 ## Grid-cell length and grid-cell area maps
 
 
@@ -51,11 +54,12 @@ If the source data is at a higher resolution and/or is larger than the required 
 
 | Map name | File name;type | Units; range | Description |
 | :---| :--- | :--- | :--- |
-
+|Pixel length|pixleng.nc; <br>Type: Float32|Units: -; <br>Range: >0 |Map with grid-cell (pixel) length along the latitude, <br>the only pixel size to change (along the longitude the length is constant)|
+|Pixel area|pixarea.nc; <br>Type: Float32|Units: m<sup>2</sup>; <br>Range: >0 |Map with grid-cell (pixel) area|
 
 | Source data| Reference/preparation | Temporal coverage | Spatial information |
 | :---| :--- | :--- | :--- |
-
+|Mask map|Can be prepared following the instructions provided [here](../4_Static-Maps_general-maps#area-mask-and-land-use-mask-maps)|NA|Global, 1' and 3'|
 
 ### Methodology
 
