@@ -48,8 +48,8 @@ The table below lists the data required for the implementation of the PTFs propo
 
 
 <p float="centre">
-  <img src="../media/Static-Maps/pixarea_o_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/pixarea_o_Global_03min.png" width="611" /> 
+  <img src="../media/Static-Maps/pixarea_European_01min.png" width="394" />
+  <img src="../media/Static-Maps/pixarea_Global_03min.png" width="611" /> 
 </p>
 
 *Figure 4: Pixel area map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
