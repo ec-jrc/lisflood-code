@@ -47,9 +47,17 @@ The table below lists the data required for the implementation of the PTFs propo
 The table below shows the PTFs developed in [Toth et al. (2015)](https://onlinelibrary.wiley.com/doi/full/10.1111/ejss.12192). The column on the right clarifies the conditions that must be considered when computing the soil hydraulic parameters, regardless of the selected PTF. <br>
 
 
-| Parameter | Pedotransfer function | Condition |
+| Parameter | Pedotransfer function* | Condition |
 | :---| :--- | :--- | 
-| |  |  | 
+|Theta saturated |$Thetas$ = (0.83080 - 0.28217 cdot D + 0.0002728 cdot C + 0.000187 cdot S) |$Thetas <1$ (hurdle) | 
+|Theta residual |Sand% = 100 -S-C<br> Thetar=0.179 if Sand%<2.0 <br> Thetar=0.041 if Sand%≥2.0  |Thetar < Thetas (hurdle) | 
+|Lambda |log10(λ) = 0.22236 - 0.30189 * BD - 0.05558 * T - 0.005306 * C - 0.003084 * S - 0.01072 * OC  |lambda≤0.42 (recommended)| 
+|Genu Alpha | log10(Alpha) = -0.43348 - 0.41729 * D - 0.04762 * OC + 0.21810 * T - 0.01581 * C - 0.01207 * S |alpha≤0.055(recommended)| 
+|K saturated** | log10(KSat) = 0.40220 + 0.26122 * pH + 0.44565 * T - 0.02329 * C - 0.01265 * S - 0.01038 * CEC | Ksat>0 (hurdle) | 
+
+*where D is bulk density, C - % of clay, S - % of silt, OC - organic content, CEC - cation exchange capacity, pH - soil pH, and T is the topsoil and subsoil distinction. FAO_2008 (link) defines topsoil as 0-30 cm layer and subsoil as 30-100 cm layer. When soil depth is within the definition of topsoil then T = 1, otherwise T = 0. 
+**K saturated results for Toth equation are in cm/day, the LISFLOOD model requires mm/day.
+
 
 In this example of application, soil hydraulic parameters are firstly computed at the ISRIC soil proprieties resolution (~250 m) and resampled horizontally at a second stage.
 Because in the current LISFLOOD model version, the soil depth layer 1 (surface) is fixed to the uniform value of 50 mm (see Section 6.2), the soil hydraulic parameters for this layer are calculated by applying the PTFs to the ISRIC soil characteristics of the 0-5 cm depth. <br>
