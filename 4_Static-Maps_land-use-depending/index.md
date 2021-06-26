@@ -41,14 +41,18 @@ The 'spam2010v1r0_global_physical-area_CROP_i' dataset from SPAM dataset can be 
 + for **other** land cover type<br>
 i) The 'discrete_classification' dataset from Copernicus Global Land cover Layers, providing values representing a dominant cover type per grid-cell (discrete information) can be used. Here, only the other land cover types are selected (i.e. '20' - shrubland, '30' - herbaceous vegetation, '40' - cropland, '60' - bare/sparse vegetation, '70' - snow & ice, '90' - herbaceous wetland, '100' - moss & lichen). For other land cover types, 7 fraction maps where created – each map contains information only about one other land cover type ('0' - grid-cell has no other land cover type in question, '1' - grid-cell is covered with other land cover type in question). Then, the resolution of these maps is reduced from native 100 m to the needed resolution, e.g. 1 arc min, with mean() reducer.<br>
 ii) The 'spam2010v1r0_global_physical-area_CROP_r' dataset from the SPAM dataset can be used. The files represent the actual area in hectares where each crop is grown, not considering how often its production is harvested, 'r' - denotes a rainfed portion of a crop. All 42 crop types are selected and 42 fraction maps containing information only about one crop type ('0' - grid-cell has no crop type in question, '1' - grid-cell is covered with crop type in question) are created. Then, the resolution of these maps is changed from native to the needed resolution, e.g. 1 arc min.<br>
-
-| Parameter| Equation | Notes |
-| :---| :--- | :--- | 
-|Crop coefficient| $$Kc=\frac{fraction1 cdot height1 cdot Kc1 + fraction2 cdot height2 cdot Kc2 + .. + fractionN cdot heightN cdot KcN}{fraction1 cdot height1 + fraction2 cdot height2 + .. + fractionN cdot heightN}$$|Considers different cover type fractions, default crop coefficient values and default crop height values from  [FAO56](https://www.researchgate.net/publication/284300773_FAO_Irrigation_and_drainage_paper_No_56)|
-|Crop height|$$H=\frac{fraction1 cdot height1 + fraction2 cdot height2 + .. + fractionN cdot heightN}{fraction1 + fraction2 + .. + fractionN }$$|Considers different cover type fractions, default crop coefficient values and default crop height values from  [FAO56](https://www.researchgate.net/publication/284300773_FAO_Irrigation_and_drainage_paper_No_56)|
 Next, land cover depending parameters are computed according to the formulas in the table below.<br>
 
 
+| Parameter| Equation* | Notes |
+| :---| :--- | :--- | 
+|Crop coefficient| $$Kc=\frac{fraction1 cdot height1 cdot Kc1 + fraction2 cdot height2 cdot Kc2 + .. + fractionN cdot heightN cdot KcN}{fraction1 cdot height1 + fraction2 cdot height2 + .. + fractionN cdot heightN}$$|Considers different cover type fractions, default crop coefficient values and default crop height values from [FAO56](https://www.researchgate.net/publication/284300773_FAO_Irrigation_and_drainage_paper_No_56)|
+|Crop height|$$H=\frac{fraction1 cdot height1 + fraction2 cdot height2 + .. + fractionN cdot heightN}{fraction1 + fraction2 + .. + fractionN }$$|Considers different cover type fractions, default crop coefficient values and default crop height values from  [FAO56](https://www.researchgate.net/publication/284300773_FAO_Irrigation_and_drainage_paper_No_56)|
+|Crop root depth|$$R=\frac{fraction1 cdot root1 + fraction2 cdot root2 + .. + fractionN cdot rootN}{fraction1 + fraction2 + .. + fractionN}$$|Considers different cover type fractions and default crop root depth values from [FAO56](https://www.researchgate.net/publication/284300773_FAO_Irrigation_and_drainage_paper_No_56)|
+|Crop group number|$$Kg=\frac{fraction1 cdot Kg1 + fraction2 cdot Kg2 + .. + fractionN cdot KgN}{fraction1 + fraction2 + .. + fractionN}$$|Considers different cover type fractions and default <br> crop group number values from the [Supit et al., 1994](https://op.europa.eu/en/publication-detail/-/publication/a99325a7-c776-11e6-a6db-01aa75ed71a1)|
+|Manning's coefficient|$$Km=\frac{fraction1 cdot Km1 + fraction2 cdot Km2 + .. + fractionN cdot KmN}{fraction1 + fraction2 + .. + fractionN}$$|Considers different cover type fractions and default Manning's surface roughness coefficient values from the [OPEN-CHANNEL HYDRAULICS](http://web.ipb.ac.id/~erizal/hidrolika/Chow%20-%20OPEN%20CHANNEL%20HYDRAULICS.pdf)|
+
+*where for forest **N**=12; for irrigated crops **N**=42; for other land cover type **N**=7 and for ‘40’ ‘cropland’ height, Kc, Kg and Km are for rainfed crops.
 
 
 The LISFLOOD model does not accept missing values for Kc, Kg and Km thus all zero values are filled with field’s global mean values (computed by excluding all nil Kc, Kg and Km values, respectively).<br>
@@ -136,11 +140,19 @@ The LISFLOOD model does not accept missing values for Kc, Kg and Km thus all zer
 ## Soil depth layers 1,2, and 3 for forested and non-forested areas
 
 ### General map informatio and possible source data
-| Map name | File name;type | Units; range | Description |
+| Map name | File name*;type | Units; range | Description |
 | :---| :--- | :--- | :--- |
+|Soil depth|soildeoth**N_T**.nc; <br> Type: Float32| Units: mm;<br>Range: ≥ 50**|Forested/ other (non-forested) area soil depth <br>for soil layer 1 (surface layer)/ 2 (middle layer)/ 3 (bottom layer)|
 
-| Parameter| Equation | Notes |
-| :---| :--- | :--- | 
+*where **N** is the number of soil depth layer (**N**= ’1’ for surface layer, **N** = ’2’ for middle layer, **N** = ’3’ for bottom layer), and **T** is the landcover type (**T** = ’f’ for forested areas, **T** = ’o’ for non-forested areas or others).
+**where range for soil layer 1 (surface layer) equals 50 mm, and for soil layer 2 (middle layer) and 3 (bottom layer) equals ≥ 50 mm.
+
+| Source data| Access |Temporal coverage|Spatial information|
+| :---| :--- | :--- | :---|
+|SoilGrids250m 2017 |[SoilGrids](https://data.isric.org/geonetwork/srv/api/records/f36117ea-9be5-4afd-bb7d-7a3e77bf392a)|2017|Global, 250m|
+|Copernicus Global Land Cover Layers: collection 2|[CGLS-LC100](https://developers.google.com/earth-engine/datasets/catalog/COPERNICUS_Landcover_100m_Proba-V-C3_Global#description)|2015|Global, 100m|
+|Spatial Production Allocation Model (SPAM) <br> Global Spatially-Disaggregated Crop Production Statistics Data<br> for 2010 (V 1.0)|[SPAM](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/PRFF8V)|2010|Global, 5' (~10 km)|
+|FAO Irrigation and Drainage Paper No. 56:<br> Crop Evapotranspiration (guidelines for computing crop water requirements)<br> by Richard G. ALLEN, Luis S. PEREIRA, Dirk RAES, Martin SMITH |[FAO Paper No.56](https://www.researchgate.net/publication/284300773_FAO_Irrigation_and_drainage_paper_No_56)|1998|Global, per crop type|
 
 ### Methodology
 
