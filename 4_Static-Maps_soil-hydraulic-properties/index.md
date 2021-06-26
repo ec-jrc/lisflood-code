@@ -39,8 +39,8 @@ The table below lists the data required for the implementation of the PTFs propo
 | Bulk Density (BD)|[ISRIC](https://files.isric.org/soilgrids/latest/data/bdod/), median value (Q0.5)|2020|Global, 250 m available depths (cm):<br> 0-5, 5-15, 15-30, 30-60, 60-100, 100-200|
 | Soil PH |[ISRIC](https://files.isric.org/soilgrids/latest/data/phh2o/), mean value|2020|Global, 250 m available depths (cm):<br> 0-5, 5-15, 15-30, 30-60, 60-100, 100-200|
 | Cation exchange capacity (CEC)|[ISRIC](https://files.isric.org/soilgrids/latest/data/cec/), mean value|2020|Global, 250 m available depths (cm):<br> 0-5, 5-15, 15-30, 30-60, 60-100, 100-200|
-| Soil depth map | It can be prepared by using the methodology explained [here](../4_Static-Maps_landuse-depending)| NA | Global, 250 m |
-| Fraction of forested areas map | It can be prepared by using the methodology explained [here](../4_Static-Maps_landuse)| NA| Global, 100 m |
+| Soil depth map | It can be prepared by using the <br>methodology explained [here](../4_Static-Maps_land-use-depending)| NA | Global, 250 m |
+| Fraction of forested<br> areas map | It can be prepared by using the <br>methodology explained [here](../4_Static-Maps_land-use)| NA| Global, 100 m |
 
 ## Methodology
 
