@@ -24,6 +24,7 @@ In the following table the soil hydraulic parameters required by the LISFLOOD mo
 |lambda |lambda**N_T**.nc; <br>Type: Float32  |Units: - ; <br> Range: > 0.000 & ≤ 0.42  |Pore size index (λ) for forested/non-forested (others) areas  |
 |Genu Alpha|genua**N_T**.nc; <br>Type: Float32  |Units: cm<sup>-1</sup> ; <br> Range: > 0.000 & ≤ 0.055  |Van Genuchten parameter (α) for forested/non-forested (others) areas soil  |
 |K saturated|ksat**N_T**.nc; <br>Type: Float32  |Units: mm/day ; <br> Range: > 0.000  |Saturated conductivity for forested/non-forested (others) areas  |
+
 *where **N** is the number of soil depth layer (**N** = ’1’ for surface layer, **N** = ’2’ for middle layer, **N** = ’3’ for bottom layer), and **T** is the landcover type (**T** = ’f’ for forested areas, **T** = ’o’ for non-forested areas or others). For **N** = ’3’ landcover type is not differentiated (forested areas and others are combined).
 
 
