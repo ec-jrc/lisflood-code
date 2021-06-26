@@ -153,6 +153,26 @@ $$
 
 Soil depth layers 2 (middle, $SD_2$) and 3 (bottom, $SD_3$) for forest/non-forest are computed in several steps – first at native resolution of the input dataset, then at required resolution. First step is following:
 
++ for soil depth layer 2 (middle, $SD_2$)
+
+| Absolute depth to bedrock | Equation |
+| :---| :--- | 
+| ≤300 mm | $SD_2 = \frac{absolutedepth-SD_1}{2}$ |
+| >300 mm | $SD_2 = \min(rootdepth,(absolutedepth - 300mm - SD_1))$ |
+
+If the computed value of $SD_2$ is lower than 50mm, then it is used $SD_2$ = $50 mm$ (in order to account for data uncertainty).
+
++ for soil depth layer 3 (bottom layer, $SD_3$)
+
+$$ 
+SD_3 = absolutedepth - (SD_1 +SD_2)
+$$
+
+Second step is to reduce the resolution of the resulting field from native to the required one (e.g. from 250 m to 1 arc min) as follows. Firstly, resolution is reduced to 1, 3, 15 arc min and 1, 3, 15, 60 degrees with mean.unweighted() reducer, and then all different resolutions are assembled to create a field with no missing values. For each resolution (going from the highest to the coarsest), grid-cells with missing values are identified and filled with the value of the corresponding grid-cell with non-missing value from the next resolution down map (e.g. using 3 arc min to fill in 1 arc min missing values). If the corresponding grid-cell is masked (has a missing value), then the value of the corresponding non-masked grid-cell from the next resolution down map is used, until all resolution maps are explored. If the corresponding grid-cell value of the coarsest resolution (here 60 degree) is still missing, a zero value is given.<br>
+
+
+### Results (examples)
+
 <p  float="left">
   <img src="../media/Static-Maps/soildepth1_f_European_01min.png" width="394" />
   <img src="../media/Static-Maps/soildepth1_f_Global_03min.png" width="611" /> 
