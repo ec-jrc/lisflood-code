@@ -2,11 +2,12 @@
 
 Soil hydraulic parameters are used to calculate water dynamics through a vertical soil profile. <br/>
 In the LISFLOOD model the relationship between soil moisture and suction pressure (water retention curve), and hydraulic conductivity and soil moisture is described by the Van Genuchten equation and requires the following parameters: saturated hydraulic conductivity, lambda, genu alpha, theta residual and theta saturated. <br/>
-Theta saturated (thetas) is the saturated water content soil hydraulic property representing the maximum water content in the soil.<br/>
-Theta residual (thetar) is the residual water content soil hydraulic property representing the minimum water content in the soil.<br/>
-Lambda is the Van Genuchten parameter λ (also referred as ‘n-1’ in literature) soil hydraulic property representing the pore size index of the soil.
-Genu alpha (genua) is the Van Genuchten parameter α soil hydraulic property. <br/>
-K saturated (Ksat) is the saturated hydraulic conductivity soil hydraulic property describing the ease with which water moves through pore spaces of the soil.<br/>
++ Theta saturated (thetas) is the saturated water content soil hydraulic property representing the maximum water content in the soil.<br/>
++ Theta residual (thetar) is the residual water content soil hydraulic property representing the minimum water content in the soil.<br/>
++ Lambda is the Van Genuchten parameter λ (also referred as ‘n-1’ in literature) soil hydraulic property representing the pore size index of the soil.
++ Genu alpha (genua) is the Van Genuchten parameter α soil hydraulic property. <br/>
++ K saturated (Ksat) is the saturated hydraulic conductivity soil hydraulic property describing the ease with which water moves through pore spaces of the soil.<br/>
+
 Moreover, LISFLOOD differentiates between the water dynamics of areas with topsoil covered by forest and topsoil covered by non-forest land types. Here, forest includes evergreen and deciduous needle leaf and broad leaf trees, and non-forest (also referred to as ’others‘) includes all the other land cover types apart from forest. According to [FAO_2008](http://www.fao.org/uploads/media/Harm-World-Soil-DBv7cv_1.pdf) topsoil represents the first 30 cm, in the LISFLOOD model the topsoil is represented by the first two soil layers of the model (surface and middle layers). As a result, two soil hydraulic parameters are assigned to each LISFLOOD soil depth layer (soil depth layers are explained [here](../4_Static-Maps_landuse-depending/#soil-depth-layers-1,2,-and-3-for-forested-and-non-forested-areas) that represent topsoil, one for forested and one for non-forested areas. The soil hydraulic parameters for the third soil layer (bottom layer) do not depend on the land cover type.<br/>
 Soil hydraulic parameters are often derived from pedotransfer functions (PTFs) which translate soil characteristics to soil hydraulic properties. It should be noted that the same set of PTFs should be used to compute all different soil hydraulic properties. This guide describes the implementation of the PTFs proposed by [Toth et al. (2015)](https://onlinelibrary.wiley.com/doi/full/10.1111/ejss.12192). Clearly, LISFLOOD users can decide to implement a different set of PTFs.<br/>
 
@@ -64,7 +65,7 @@ where 100 is the thickness of ISRIC layer [5-15], 150 is the thickness of ISRIC 
 If cell's soil depth starts at a greater depth than 2000 mm, then each parameter is computed by using the input variables for depth layer (100-200).<br>
 
 <p float="center">
-  <img src="../media/Static-Maps/soil_hydraulic_properties.png" width="300" />
+  <img src="../media/Static-Maps/soil_hydraulic_properties.png" width="500" />
 </p>
 
 *Figure 30: Representation of ISRIC dataset depths (in squared brackets are the available depths), soil hydraulic parameters calculated for each ISRIC depth, LISFLOOD soil depth layer and the final soil hydraulic parameters for LISFLOOD model.*
