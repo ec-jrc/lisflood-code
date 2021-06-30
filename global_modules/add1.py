@@ -504,8 +504,8 @@ def writenet(flag, inputmap, netfile, timestep, value_standard_name, value_long_
         for dim, name, size in zip(dimensions, ["Y", "X"], [row, col]):
             nf1.createDimension(dim, size)
             space_coords[name] = nf1.createVariable(dim, 'f8', (dim,))
-            for key, value in metadataNCDF[dim].items():
-                space_coords[name].setncattr(key, value)
+            for key in np.setdiff1d(list(metadataNCDF[dim]), ['_FillValue']):
+                space_coords[name].setncattr(key, metadataNCDF[dim][key])
         # Other dimensions (if the variable is a xarray.DataArray)
         if isinstance(inputmap, DataArray):
             inner_dims = inputmap.dims[:-1]
