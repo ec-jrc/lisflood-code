@@ -42,7 +42,7 @@ If the source data is at a higher resolution and/or is larger than the required 
   <img src="../media/Static-Maps/lusemask_Global_03min.png" width="611" /> 
 </p>
 
-*Figure 2: Landuse mask map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right) with coloured areas showing land pixel.*
+*Figure 2: Land use mask map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right) with coloured areas showing land pixel.*
 
 
 

@@ -1,6 +1,6 @@
 ## Leaf Area Index
 
-The Leaf Area Index (LAI) is defined as half the total area of green elements of the canopy per unit horizontal ground area m<sup>2<sup>/m<sup>2<sup>. <br/>
+The Leaf Area Index (LAI) is defined as half the total area of green elements of the canopy per unit horizontal ground area m<sup>2</sup>/m<sup>2</sup>. <br/>
 The LAI quantifies the thickness of the vegetation cover. The Global Climate Observing System ([GCOS](https://public.wmo.int/en/programmes/global-climate-observing-system)) recognises LAI as an Essential Climate Variable ([ECV](https://public.wmo.int/en/programmes/global-climate-observing-system/essential-climate-variables)). 
 
 Here, forest includes evergreen and deciduous needle leaf and broad leaf trees, irrigated crops - all possible crops excluding rice (is modelled separately), and other land cover type - agricultural areas, non-forested natural area, pervious surface of urban areas.

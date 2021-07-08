@@ -13,7 +13,7 @@ Soil depth is used to compute the available water storage volume in the soil. In
 
 ## Crop coefficient, crop group number, Manning’s surface roughness coefficient for forest, irrigated crops and other land use type maps
 
-### General map informatio and possible source data
+### General map information and possible source data
 | Map name | File name;type | Units; range | Description |
 | :---| :--- | :--- | :--- |
 |Crop coefficient|cropcoef_**T**.nc; Type: Float32|Units: -; <br> Range: 0.20 .. 1.08| Averaged (by time and ecosystem type) crop coefficient for forest/ irrigated crops/ other land cover type|
@@ -139,7 +139,7 @@ The LISFLOOD model does not accept missing values for Kc, Kg and Km thus all zer
 
 ## Soil depth layers 1,2, and 3 for forested and non-forested areas
 
-### General map informatio and possible source data
+### General map information and possible source data
 | Map name | File name*;type | Units; range | Description |
 | :---| :--- | :--- | :--- |
 |Soil depth|soildeoth**N_T**.nc; <br> Type: Float32| Units: mm;<br>Range: ≥ 50**|Forested/ other (non-forested) area soil depth <br>for soil layer 1 (surface layer)/ 2 (middle layer)/ 3 (bottom layer)|

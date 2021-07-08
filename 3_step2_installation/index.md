@@ -27,12 +27,12 @@ Copy Test catchment files from container to your host, using mapped volumes. `us
 docker run -v /absolute_path/to/my/local/folder:/usecases efas/lisflood:latest usecases
 ```
 
-After this command, you can find all files to run a test against a catchment under the directory you mapped: `/absolute_path/to/my/local/folder/TestCatchment`
-
+After this command, you can find all files to run a test against a catchment under the directory you mapped: `/absolute_path/to/my/local/folder/TestCatchment`,
+where `TestCatchment` is the folder name of the test data.
 
 Now, you can run LISFLOOD as a docker container to test the catchment. Only thing you need to do is to map the TestCatchment folder 
 to the container folder `input`, by using Docker `-v` option. 
-In the XML settings file, all paths are adjusted to be relative to the very same settings file, so you don't need to edit paths, as long as you keep same folders structure.
+In the XML settings file, all paths are adjusted to be relative to the very same settings file, so you don't need to edit paths, as long as you keep same folder's structure.
 
 
 Execute the following docker command to run the simulation:
@@ -59,7 +59,7 @@ pip install lisflood-model
 
 Command above will also install the executable `lisflood` in the conda env, so that you can run LISFLOOD with the following:
 ```bash
-lisflood /absolute_path/to/my/local/folder/TestCatchment/settings/cold_day_base.xml
+lisflood /absolute_path/to/my/local/folder/<TestCatchmentFolder>/settings/cold_day_base.xml
 ```
 
 *Note:* You can use a straight python virtualenvironment to install lisflood-model package but then you have to setup PCRaster/GDAL/NetCDF libraries.
@@ -67,8 +67,8 @@ lisflood /absolute_path/to/my/local/folder/TestCatchment/settings/cold_day_base.
 ### C) Using the python source code
 
 You can download code and dataset for testing the model (or to contribute with bug fixes or new features).
-Follow this instruction for a basic test (a catchment included in this repository under
-[tests/data/TestCatchment](https://github.com/ec-jrc/lisflood-code/tree/master/tests/data/TestCatchment))
+Follow this instruction for a basic test (some sample catchments are included in this repository under
+[tests/data](https://github.com/ec-jrc/lisflood-code/tree/master/tests/data) folder)
 
 1. **Clone the master branch of this repository (you need to have git installed on your machine).**
 
@@ -112,15 +112,16 @@ For details, please follow instruction on [official docs](http://pcraster.geo.uu
   
 4. **Run a cold run for the test catchment**
 
-    Now that your environment should be set up to run lisflood, you may try with a prepared settings file for TestCatchment:
+    Now that your environment should be set up to run lisflood, you may try with a prepared settings file for test catchment included into the tests/data folder:
     
     ```bash
-    python src/lisf1.py tests/data/TestCatchment/settings/cold_day_base.xml
+    python src/lisf1.py tests/data/<TestCatchmentFolder>/settings/cold_day_base.xml
     ```
 4. **Run LISFLOOD unit tests**
 
     ```bash
     pytest tests/
     ```
+    You may need to install ```pytest```, ```pytest-cov```, ```pytest-mock``` and ```gdal``` packages before running the tests, using the command ```pip install <package name>``` for each one.
   
-If commands above succeeded without errors, producing dis.nc into tests/data/TestCatchment/outputs folder, your lisflood installation was correct.
+If commands above succeeded without errors, producing dis.nc into `tests/data/<TestCatchmentFolder>/outputs` folder, your lisflood installation was correct.

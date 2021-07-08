@@ -13,7 +13,7 @@ In the LISFLOOD model lakes and reservoirs maps represent only outflow location 
 
 | Map name | File name;type | Units; range | Description |
 | :---| :--- | :--- | :--- |
-| Laks mask| lakemask.nc; <br>Type: Float32 |  Units: -; <br>Range: 0 or 1 | Map of the footprint of lakes|
+| Lake mask| lakemask.nc; <br>Type: Float32 |  Units: -; <br>Range: 0 or 1 | Map of the footprint of lakes|
 
 
 | Source data| Reference/preparation | Temporal coverage | Spatial information |
@@ -48,8 +48,8 @@ If a grid-cell has any fraction of inland water and is inside the GLWD Level 1 a
 
 | Map name | File name;type | Units; range | Description |
 | :---| :--- | :--- | :--- |
-|Lakes|lakes.nc; <br>Type: Float32|Units: -; <br>Range: integer  ID number to identify eanch lake |Lake outflow location <br> (stores lake ID number in the morphological parameter look-up table)|
-|Reservoirs|res.nc; <br>Type: Float32|Units: -; <br>Range: integer  ID number to identify eanch reservoir |Reservoir outflow location<br> (stores reservoir ID number in the morphological parameter look-up table)|
+|Lakes|lakes.nc; <br>Type: Float32|Units: -; <br>Range: integer  ID number to identify each lake |Lake outflow location <br> (stores lake ID number in the morphological parameter look-up table)|
+|Reservoirs|res.nc; <br>Type: Float32|Units: -; <br>Range: integer  ID number to identify each reservoir |Reservoir outflow location<br> (stores reservoir ID number in the morphological parameter look-up table)|
 
 | Source data| Reference/preparation | Temporal coverage | Spatial information |
 | :---| :--- | :--- | :--- |

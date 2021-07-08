@@ -202,7 +202,7 @@ defaults:
 
       - section_title: "Step-by-step user guide"
         items:
-        - title: "Step 1: essential before getting started"
+        - title: "Step 0: Essential before getting started"
           url: 2_ESSENTIAL_setting-file
         - title: "Step 1: Time convention within LISFLOOD model"
           url: 2_ESSENTIAL_time-management

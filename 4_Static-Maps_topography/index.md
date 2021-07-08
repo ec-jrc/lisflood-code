@@ -61,7 +61,7 @@ $$
 
 $gradient$ is set equal 0 where $ldd$ is 5.
 
-### Results (exmaples)
+### Results (examples)
 
 <p float="left">
   <img src="../media/Static-Maps/gradient_European_01min.png" width="394" />

@@ -691,7 +691,7 @@ CumIntForestInitValue, UZForestInitValue, DSLRForestInitValue, LZForestInitValue
 
 ### Using options
 
-As explained at the start of this page, the 'lfoptions' element gives you additional control over what LISFLOOD is doing. Using options it is possible to switch certain parts of the model on or off. You can decide which output files are reported and which ones aren't. Moreoever, you can activate a number of additional model features, such as the simulation of reservoirs and inflow hydrographs.
+As explained at the start of this page, the 'lfoptions' element gives you additional control over what LISFLOOD is doing. Using options it is possible to switch certain parts of the model on or off. You can decide which output files are reported and which ones aren't. Moreover, you can activate a number of additional model features, such as the simulation of reservoirs and inflow hydrographs.
 
 A list of all currently implemented options and their corresponding defaults can be found in the [LISFLOOD model documentation](https://ec-jrc.github.io/lisflood-model/). 
 All currently implemented options are switches (1= on, 0=off). 
