@@ -20,7 +20,7 @@ Soil depth is used to compute the available water storage volume in the soil. In
 | :---| :--- | :--- | :--- |
 |Crop coefficient|cropcoef_**T**.nc; Type: Float32|Units: -; <br> Range: 0.20 .. 1.08| Averaged (by time and ecosystem type) crop coefficient for forest/ irrigated crops/ other land cover type|
 |Crop group number|cropgrpn_**T**.nc; Type: Float32|Units: -; <br> Range: 1 .. 5| Averaged (by time and ecosystem type) crop group number for forest/ irrigated crops/ other land cover type|
-|Manning's coefficient|mannings_**T**.nc; Type: Float32|Units: XXXX; <br> Range: 0.015 .. 0.200|Averaged (by ecosystem type) Manning’s roughness coefficient for forest/ irrigated crops/ other land cover type|
+|Manning's coefficient|mannings_**T**.nc; Type: Float32|Units: m<sup>1/3<\sup>s<sup>-1<\sup>; <br> Range: 0.015 .. 0.200|Averaged (by ecosystem type) Manning’s roughness coefficient for forest/ irrigated crops/ other land cover type|
 
 *where **T** is the landcover type (**T** = ’f’ for forest, **T** = ’i’ for irrigated crops, **T** = ’o’ for other land cover type).
 
