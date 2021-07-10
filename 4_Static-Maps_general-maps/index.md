@@ -29,8 +29,8 @@ If the source data is at a higher resolution and/or is larger than the required 
 
 
 <p float="left">
-  <img src="../media/Static-Maps/area_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/area_Global_03min.png" width="611" /> 
+  <img src="../media/Static-Maps/area_European_01min.png" width="329" />
+  <img src="../media/Static-Maps/area_Global_03min.png" width="513" /> 
 </p>
 
 *Figure 1: Mask map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right) with coloured areas showing land pixel.*
@@ -38,8 +38,8 @@ If the source data is at a higher resolution and/or is larger than the required 
 
 
 <p float="left">
-  <img src="../media/Static-Maps/lusemask_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/lusemask_Global_03min.png" width="611" /> 
+  <img src="../media/Static-Maps/lusemask_European_01min.png" width="329" />
+  <img src="../media/Static-Maps/lusemask_Global_03min.png" width="513" /> 
 </p>
 
 *Figure 2: Land use mask map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right) with coloured areas showing land pixel.*
@@ -71,8 +71,8 @@ Grid-cell length is computed dividing grid-cell area by its resolution along the
 ### Results (examples)
 
 <p float="centre">
-  <img src="../media/Static-Maps/pixleng_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/pixleng_Global_03min.png" width="611" /> 
+  <img src="../media/Static-Maps/pixleng_European_01min.png" width="329" />
+  <img src="../media/Static-Maps/pixleng_Global_03min.png" width="513" /> 
 </p>
 
 *Figure 3: Pixel length map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
@@ -80,8 +80,8 @@ Grid-cell length is computed dividing grid-cell area by its resolution along the
 
 
 <p float="centre">
-  <img src="../media/Static-Maps/pixarea_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/pixarea_Global_03min.png" width="611" /> 
+  <img src="../media/Static-Maps/pixarea_European_01min.png" width="329" />
+  <img src="../media/Static-Maps/pixarea_Global_03min.png" width="513" /> 
 </p>
 
 *Figure 4: Pixel area map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*

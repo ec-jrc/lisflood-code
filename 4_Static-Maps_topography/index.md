@@ -31,8 +31,8 @@ Note: Obtaining a flow direction map from a digital elevation model is a complex
 ### Results (example)
 
 <p float="left">
-  <img src="../media/Static-Maps/ldd_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/ldd_Global_03min.png" width="611" /> 
+  <img src="../media/Static-Maps/ldd_European_01min.png" width="329" />
+  <img src="../media/Static-Maps/ldd_Global_03min.png" width="513" /> 
 </p>
 
 *Figure 5: Local drain direction map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
@@ -64,8 +64,8 @@ $gradient$ is set equal 0 where $ldd$ is 5.
 ### Results (examples)
 
 <p float="left">
-  <img src="../media/Static-Maps/gradient_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/gradient_Global_03min.png" width="611" /> 
+  <img src="../media/Static-Maps/gradient_European_01min.png" width="329" />
+  <img src="../media/Static-Maps/gradient_Global_03min.png" width="513" /> 
 </p>
 
 *Figure 6: Slope gradient map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
@@ -90,8 +90,8 @@ High resolution of initial elevation data is to be reduced to the needed coarser
 ### Results (examples)
 
 <p float="left">
-  <img src="../media/Static-Maps/elvstd_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/elvstd_Global_03min.png" width="611" /> 
+  <img src="../media/Static-Maps/elvstd_European_01min.png" width="329" />
+  <img src="../media/Static-Maps/elvstd_Global_03min.png" width="513" /> 
 </p>
 
 *Figure 7: Standard deviation of elevation map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
@@ -105,7 +105,7 @@ High resolution of initial elevation data is to be reduced to the needed coarser
 
 | Source data| Reference/preparation | Temporal coverage | Spatial information |
 | :---| :--- | :--- | :--- |
-|Pixel area map    |It can be created using the methodology explained XXXXXXXXXX          |NA         |Global, 1' and 3'|
+|Pixel area map    |It can be created using the methodology explained [here](../4_Static-Maps_general-maps#grid-cell-length-and-grid-cell-area-maps)        |NA         |Global, 1' and 3'|
 |Local drain direction (ldd) map    |It can be created using the methodology explained [here](../4_Static-Maps_topography#local-drain-direction-map)         |NA         |Global, 1' and 3'|
 
 ### Methodology
@@ -115,8 +115,8 @@ To create an upstream area, pixel area and ldd maps are used with the PCRaster f
 ### Results (examples)
 
 <p float="left">
-  <img src="../media/Static-Maps/upArea_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/upArea_Global_03min.png" width="611" /> 
+  <img src="../media/Static-Maps/upArea_European_01min.png" width="329" />
+  <img src="../media/Static-Maps/upArea_Global_03min.png" width="513" /> 
 </p>
 <p float="centre">
   <img src="../media/Static-Maps/upArea_European_01min_PoValley.png" width="800" />

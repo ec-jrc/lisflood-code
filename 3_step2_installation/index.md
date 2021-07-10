@@ -87,7 +87,7 @@ pip install -r requirements.txt
 ```
 
 If you don't use conda but a plain virtualenv, you need to install PCRaster and GDAL by your own and include its python interface in PYTHONPATH environment variable.
-For details, please follow instruction on [official docs](http://pcraster.geo.uu.nl/getting-started/pcraster-on-linux/).
+For details, please follow instruction on [official docs](https://pcraster.geo.uu.nl/pcraster/4.3.1/documentation/pcraster_project/install.html).
     
 
 3. **Compile the cython module kinematic_wave_parallel_tool**

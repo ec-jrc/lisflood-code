@@ -32,8 +32,8 @@ If a grid-cell has any fraction of inland water and is inside the GLWD Level 1 a
 
 
 <p float="left">
-  <img src="../media/Static-Maps/lakemask_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/lakemask_Global_03min.png" width="611" /> 
+  <img src="../media/Static-Maps/lakemask_European_01min.png" width="329" />
+  <img src="../media/Static-Maps/lakemask_Global_03min.png" width="513" /> 
 </p>
 
 *Figure 53: Lakemask map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right) with coloured areas showing land pixel.*

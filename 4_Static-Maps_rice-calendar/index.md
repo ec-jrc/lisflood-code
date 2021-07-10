@@ -26,8 +26,8 @@ Then, the rice planting and harvesting fields for season 1 and 2 are created bas
 
 
 <p float="left">
-  <img src="../media/Static-Maps/riceplantingday1_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/riceplantingday1_Global_03min.png" width="611" /> 
+  <img src="../media/Static-Maps/riceplantingday1_European_01min.png" width="329" />
+  <img src="../media/Static-Maps/riceplantingday1_Global_03min.png" width="513" /> 
 </p>
 
 *Figure 54: Rice planting day 1 (season 1) map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
@@ -35,8 +35,8 @@ Then, the rice planting and harvesting fields for season 1 and 2 are created bas
 
 
 <p float="centre">
-  <img src="../media/Static-Maps/riceharvestday1_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/riceharvestday1_Global_03min.png" width="611" /> 
+  <img src="../media/Static-Maps/riceharvestday1_European_01min.png" width="329" />
+  <img src="../media/Static-Maps/riceharvestday1_Global_03min.png" width="513" /> 
 </p>
 
 *Figure 55: Rice harvest day 1 (season 1) map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
@@ -44,8 +44,8 @@ Then, the rice planting and harvesting fields for season 1 and 2 are created bas
 
 
 <p float="left">
-  <img src="../media/Static-Maps/riceplantingday2_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/riceplantingday2_Global_03min.png" width="611" /> 
+  <img src="../media/Static-Maps/riceplantingday2_European_01min.png" width="329" />
+  <img src="../media/Static-Maps/riceplantingday2_Global_03min.png" width="513" /> 
 </p>
 
 *Figure 55: Rice planting day 2 (season 2) map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
@@ -53,8 +53,8 @@ Then, the rice planting and harvesting fields for season 1 and 2 are created bas
 
 
 <p float="centre">
-  <img src="../media/Static-Maps/riceharvestday2_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/riceharvestday2_Global_03min.png" width="611" /> 
+  <img src="../media/Static-Maps/riceharvestday2_European_01min.png" width="329" />
+  <img src="../media/Static-Maps/riceharvestday2_Global_03min.png" width="513" /> 
 </p>
 
 *Figure 57: Rice harvest day 2 (season 2) map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*

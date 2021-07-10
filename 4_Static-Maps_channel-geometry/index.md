@@ -12,8 +12,8 @@ In the LISFLOOD model flow through the channel is simulated using the kinematic 
 Channel characteristics, explained above, are shown in the Figure 41 below.  <br/>
 
 <p float="left">
-  <img src="../media/Static-Maps/channel_geometry1.png" width="600" />
-  <img src="../media/Static-Maps/channel_geometry2.png" width="300" /> 
+  <img src="../media/Static-Maps/channel_geometry1.png" width="500" />
+  <img src="../media/Static-Maps/channel_geometry2.png" width="270" /> 
 </p>
 
 *Figure41: Geometry of channel cross-section in kinematic wave routing (original figure from [Burek et al., 2013](https://publications.jrc.ec.europa.eu/repository/handle/JRC78917)).*
@@ -26,19 +26,19 @@ Channel characteristics, explained above, are shown in the Figure 41 below.  <br
 |Side slope        |chans.nc; <br> Type: Float32          | Units: m;<br> Range>0          |Channel side slope|
 |Channel length         |chanlength.nc; <br> Type: Float32          | Units: m;<br> Range>0         |Channel length (value can exceed grid size, to account for meandering rivers)|
 |Channel gradient         |changrad.nc; <br> Type: Float32           |Units: m/m;<br> Range: [0-1]          |Channel longitudinal gradient|
-|Manning's roughness coefficient |chanman.nc; <br> Type: Float32           |Units: XXXXXXXXXXXX         |channels Manning's roughness coefficient |
+|Manning's roughness coefficient |chanman.nc; <br> Type: Float32           |Units: m<sup>1/3</sup> s<sup>-1</sup>         |channels Manning's roughness coefficient |
 |Bottom width         |chanbw.nc; <br> Type: Float32           |Units: m;<br> Range>0          |Channel bottom width|
 |Floodplain         |chanflpn.nc; <br> Type: Float32           |Units: m;<br> Range>0          |Width of the area where the surplus of water is distributed when the water level in the channel exceeds the bankfull channel depth
 |Bankfull channel depth         |chanbnkf.nc; <br> Type: Float32           |Units: m;<br> Range>0          |Bankfull channel depth
 
 | Source data| Reference/preparation | Temporal coverage | Spatial information |
 | :---| :--- | :--- | :--- |
-|Channel width     XXXXXXXXXXX    |http://hydro.iis.u-tokyo.ac.jp/~yamadai/cama-flood/index.html           |2018         |Global, 1' and 3'|
+|Channel width        |http://hydro.iis.u-tokyo.ac.jp/~yamadai/cama-flood/index.html           |2018         |Global, 1' and 3'|
 |River lenght        | http://hydro.iis.u-tokyo.ac.jp/~yamadai/cama-flood/index.html          |2018          |Global, 1' and 3'|
 |MERIT DEM: Multi-Error-Removed Improved-Terrain DEM|http://hydro.iis.u-tokyo.ac.jp/~yamadai/MERIT_DEM/index.html           |2018          |Global, 3" (at about 90 m)|
-|Mask map        |Can be prepared following the instructions of Section XXXX|NA          |Global, 1' and 3'|
-|Local drain direction (ldd)        |Can be prepared following the instructions of Section XXXX|NA          |Global, 1' and 3'|
-|Upstream area map         |Can be prepared following the instructions of Section XXXX|NA          |Global, 1' and 3'|
+|Mask map        |Can be prepared following [these instrunctions](../4_Static-Maps_general-maps#area-mask-and-land-use-mask-maps)|NA          |Global, 1' and 3'|
+|Local drain direction (ldd)        |Can be prepared following [these instrunctions](../4_Static-Maps_topography#local-drain-direction-map)|NA          |Global, 1' and 3'|
+|Upstream area map         |Can be prepared following [these instrunctions](../4_Static-Maps_topography#upstream-area)|NA          |Global, 1' and 3'|
 
 ## Methodology
 
@@ -60,59 +60,48 @@ The channel length map (in meters) can be created by using the 'rivlen' layers f
 ### Channel gradient (changrad)
 To compute the channel gradient map, the absolute difference (in meters) of the elevation between two grid-cells is first calculated by using i) the local drain direction (ldd) map to extract the connectivity between grid-cells, and ii) the channel length of the upstream grid-cell:<br/>
 
-$$
-elevationDifference = elevationUpstreamCell-elevationDownstreamCell.
-$$
+$ \small elevationDifference = elevationUpstreamCell-elevationDownstreamCell $
 
 Then, the channel gradient is computed and assigned to the upstream grid-cell:
 
-$$
-changrad=\frac{elevationDifference}{chanlength}
-$$
+$ changrad=\frac{elevationDifference}{chanlength} $
 
 $changrad$ is set equal 0 where $ldd$ is 5.
 
 ### Manning's roughness coefficient (chanman)
 The Manning's roughness coefficient for channels can be derived by an empirical relationship between the elevation (in $m$) of the grid-cell and its upstream area (in $km^2$) following [Burek et al. (2014)](https://ec-jrc.github.io/lisflood/pdfs/Dataset_hydro.pdf):
 
-$$
-chanman = 0.025 + 0.015 \cdot \min(\frac{50}{upstreamArea} , 1) + 0.30 \cdot \min(\frac{elevation}{2000} , 1).
-$$
+$ chanman =$ <br>
+$ 0.025 + 0.015 \cdot \min(\frac{50}{upstreamArea} , 1) + 0.30 \cdot \min(\frac{elevation}{2000} , 1) $
 
 ### Bottom width (chanbw)
 The channel bottom width map can be computed using empirical relationship that relate channel width of the grid-cell with its upstream area (in $km^2$); for example, following [Burek et al. (2014)](https://ec-jrc.github.io/lisflood/pdfs/Dataset_hydro.pdf):<br/>
 
-$$
-chanbw = 0.0032 \cdot upstreamArea.
-$$
+$ chanbw = 0.0032 \cdot upstreamArea $
 
 ### Floodplain width (Wfp)
 The floodplain width (in $m$) can be computed using the following equation from [Burek et al. (2014)](https://ec-jrc.github.io/lisflood/pdfs/Dataset_hydro.pdf):<br/>
 
-$$
-floodplainWidth = 3 \cdot chanbw.
-$$
+$ floodplainWidth = 3 \cdot chanbw $
 
 ### Bankfull channel depth (chanbnkf)
 The channel bankfull depth can be computed in two steps. The first step uses the empirical relationship relating the channel bankfull depth of the grid-cell with its upstream area (in $km^2$) following [Burek et al. (2014)](https://ec-jrc.github.io/lisflood/pdfs/Dataset_hydro.pdf):<br/>
 
-$$
-chanbnkf_{step1} = 0.27 \cdot upstreamArea^{0.33}
-$$
+$ chanbnkf_{step1} = 0.27 \cdot upstreamArea^{0.33} $
 
 The second step uses the Manning's equation following [Burek et al. (2014)](https://ec-jrc.github.io/lisflood/pdfs/Dataset_hydro.pdf). The LISFLOOD model first needs to be run for the calibration period length with the initial channel bottom width and bankfull depth parameters to get a long-term average discharge ($avgdis$) which is then used in the Manning's equation:<br/>
 
-$$
-chanbnkf_{step2} = 1.004 \cdot chanman^{0.6} \cdot (2 \cdot avgdis)^{0.6} \cdot chanbw^{-0.6} \cdot changrad^{-0.3}
-$$
+$ chanbnkf_{step2} =$<br>
+$ 1.004 \cdot chanman^{0.6} \cdot (2 \cdot avgdis)^{0.6} \cdot chanbw^{-0.6} \cdot changrad^{-0.3} $
+
 
 
 ## Results (examples)
 
 
 <p float="left">
-  <img src="../media/Static-Maps/chan_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/chan_Global_03min.png" width="611" /> 
+  <img src="../media/Static-Maps/chan_European_01min.png" width="329" />
+  <img src="../media/Static-Maps/chan_Global_03min.png" width="513" /> 
 </p>
 
 *Figure 43: Channel mask map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right) with coloured areas showing the channel pixels.*
@@ -120,8 +109,8 @@ $$
 
 
 <p float="centre">
-  <img src="../media/Static-Maps/changrad_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/changrad_Global_03min.png" width="611" /> 
+  <img src="../media/Static-Maps/changrad_European_01min.png" width="329" />
+  <img src="../media/Static-Maps/changrad_Global_03min.png" width="513" /> 
 </p>
 
 *Figure 44: Channel gradient or slope map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
@@ -129,8 +118,8 @@ $$
 
 
 <p float="centre">
-  <img src="../media/Static-Maps/chanman_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/chanman_Global_03min.png" width="611" /> 
+  <img src="../media/Static-Maps/chanman_European_01min.png" width="329" />
+  <img src="../media/Static-Maps/chanman_Global_03min.png" width="513" /> 
 </p>
 
 *Figure 45: Manning’s roughness coefficient for channels map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
@@ -138,8 +127,8 @@ $$
 
 
 <p float="centre">
-  <img src="../media/Static-Maps/chanlength_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/chanlength_Global_03min.png" width="611" /> 
+  <img src="../media/Static-Maps/chanlength_European_01min.png" width="329" />
+  <img src="../media/Static-Maps/chanlength_Global_03min.png" width="513" /> 
 </p>
 
 *Figure 46: Channel length map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
@@ -147,8 +136,8 @@ $$
 
 
 <p float="centre">
-  <img src="../media/Static-Maps/chanbw_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/chanbw_Global_03min.png" width="611" /> 
+  <img src="../media/Static-Maps/chanbw_European_01min.png" width="329" />
+  <img src="../media/Static-Maps/chanbw_Global_03min.png" width="513" /> 
 </p>
 
 *Figure 47: Channel bottom width map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
@@ -156,8 +145,8 @@ $$
 
 
 <p float="centre">
-  <img src="../media/Static-Maps/chans_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/chans_Global_03min.png" width="611" /> 
+  <img src="../media/Static-Maps/chans_European_01min.png" width="329" />
+  <img src="../media/Static-Maps/chans_Global_03min.png" width="513" /> 
 </p>
  
 *Figure 48: Channel side slope map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right) with coloured areas showing channel side slope (equal to 1) pixel.*
@@ -165,8 +154,8 @@ $$
  
  
 <p float="centre">
-  <img src="../media/Static-Maps/chanbnkf_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/chanbnkf_Global_03min.png" width="611" /> 
+  <img src="../media/Static-Maps/chanbnkf_European_01min.png" width="329" />
+  <img src="../media/Static-Maps/chanbnkf_Global_03min.png" width="513" /> 
 </p>
 
 *Figure 49: Bankfull channel depth map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
@@ -174,8 +163,8 @@ $$
 
 
 <p float="centre">
-  <img src="../media/Static-Maps/chanflpn_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/chanflpn_Global_03min.png" width="611" /> 
+  <img src="../media/Static-Maps/chanflpn_European_01min.png" width="329" />
+  <img src="../media/Static-Maps/chanflpn_Global_03min.png" width="513" /> 
 </p>
 
 *Figure 50: Channels floodplain width at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*

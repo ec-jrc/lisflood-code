@@ -3,7 +3,7 @@
 The LISFLOOD hydrological model can distinguish the following land cover types: forest, inland water, sealed surface (impervious urban area), irrigated land, rice, and other land cover type. Interception, evapotranspiration, infiltration, and overland (or surface) flow respond differently to each surface type.<br> 
     • Fraction of inland water map
 Inland water map includes information on rivers, freshwater and saline lakes, ponds and other permanent water bodies over the continents. In the LISFLOOD model the inland water fraction map is used to identify the fraction of the pixel covered by open water bodies where the most prominent hydrological process is evaporation.
-Considering that LISFLOOD does not distinguish oceans from inland water it is recommended to verify consistency between water fractions and computational area mask, especially in the coastal areas. Pixels included in the computational area mask cannot be fully covered with ocean. If this happens in coastal areas, then the fraction of inland water must be set to 1 and the lake mask (see Section XXXXX) should be changed accordingly. <br> 
+Considering that LISFLOOD does not distinguish oceans from inland water it is recommended to verify consistency between water fractions and computational area mask, especially in the coastal areas. Pixels included in the computational area mask cannot be fully covered with ocean. If this happens in coastal areas, then the fraction of inland water must be set to 1 and the [lake mask](../4_Static-Maps_reservoirs-lakes#lake-mask-map) should be changed accordingly. <br> 
     • Fraction of sealed surface map
 Here, the sealed surface map describes urban areas, characterizing the human impact on the environment. In the LISFLOOD model the sealed surface fraction map is used to identify impervious areas where there is no water infiltration into the soil, meaning water is accumulated in the surface depression, yet evaporates, but once depression is full - water is transported by a surface runoff.<br> 
     • Fraction of forest map
@@ -16,9 +16,10 @@ Other land cover type map includes agricultural areas, non-forested natural area
 
 ## Fraction of inland water
 ### General map information and possible source data
+
 | Map name | File name;type | Units; range | Description |
 | :---| :--- | :--- | :--- |
-|Fraction of inland water         | fracwater.nc; <br> Type: Float32          | Units: -;<br> Range: [0-1]         |Inland water fraction for each grid-cell; values range from 0 (grid-cell has no inland water) to 1 (grid-cell is fully covered with inland water) |
+|Fraction of inland water         | fracwater.nc; <br> Type: Float32          | Units: -;<br> Range: [0-1]         |Inland water fraction for each grid-cell;<br> values range from 0 (grid-cell has no inland water) to 1 (grid-cell is fully covered with inland water) |
 
 
 | Source data| Reference/preparation | Temporal coverage | Spatial information |
@@ -33,17 +34,19 @@ Note: Inland water fraction field should be checked for consistency with all oth
 ### Results (example)
 
 <p float="left">
-  <img src="../media/Static-Maps/fracwater_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/fracwater_Global_03min.png" width="611" /> 
+  <img src="../media/Static-Maps/fracwater_European_01min.png" width="329" />
+  <img src="../media/Static-Maps/fracwater_Global_03min.png" width="513" /> 
 </p>
 
 *Figure 9: Fraction of inland water map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
 
 ## Fraction of sealed surfaces
 ### General map information and possible source data
+
+
 | Map name | File name;type | Units; range | Description |
 | :---| :--- | :--- | :--- |
-|Fraction of sealed surfaces        | fracsealed.nc; <br> Type: Float32          | Units: -;<br> Range: [0-1]         |Urban surface fraction for each grid-cell; values range from 0 (grid-cell has no urban surface) to 1 (grid-cell is fully covered with urban surface) |
+|Fraction of sealed surfaces | fracsealed.nc; <br> Type: Float32  | Units: -;<br> Range: [0-1]  |Urban surface fraction for each grid-cell;<br> values range from 0 (grid-cell has no urban surface) to 1 (grid-cell is fully covered with urban surface) |
 
 
 | Source data| Reference/preparation | Temporal coverage | Spatial information |
@@ -58,17 +61,19 @@ Note: Sealed surface fraction field should be checked for consistency with all o
 ### Results (example)
 
 <p float="left">
-  <img src="../media/Static-Maps/fracsealed_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/fracsealed_Global_03min.png" width="611" /> 
+  <img src="../media/Static-Maps/fracsealed_European_01min.png" width="329" />
+  <img src="../media/Static-Maps/fracsealed_Global_03min.png" width="513" /> 
 </p>
 
 *Figure 10: Fraction of sealed surfaces map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
 
 ## Fraction of forest 
 ### General map information and possible source data
+
+
 | Map name | File name;type | Units; range | Description |
 | :---| :--- | :--- | :--- |
-|Fraction of forest       | fracforest.nc; <br> Type: Float32          | Units: -;<br> Range: [0-1]         |Forest fraction for each grid-cell; values range from 0 (grid-cell has no forest) to 1 (grid-cell is fully covered with forest) |
+|Fraction of forest       | fracforest.nc; <br> Type: Float32          | Units: -;<br> Range: [0-1]         |Forest fraction for each grid-cell; <br>values range from 0 (grid-cell has no forest) to 1 (grid-cell is fully covered with forest) |
 
 
 | Source data| Reference/preparation | Temporal coverage | Spatial information |
@@ -83,17 +88,19 @@ Note: Forest fraction field should be checked for consistency with all other fra
 ### Results (example)
 
 <p float="left">
-  <img src="../media/Static-Maps/fracforest_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/fracforest_Global_03min.png" width="611" /> 
+  <img src="../media/Static-Maps/fracforest_European_01min.png" width="329" />
+  <img src="../media/Static-Maps/fracforest_Global_03min.png" width="513" /> 
 </p>
 
 *Figure 11: Fraction of forest map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
 
 ## Fraction of irrigated crops
 ### General map information and possible source data
+
+
 | Map name | File name;type | Units; range | Description |
 | :---| :--- | :--- | :--- |
-|Fraction of irrigated crops      | fracirrigated.nc; <br> Type: Float32          | Units: -;<br> Range: [0-1]         |Irrigated crop (except rice) fraction for each grid-cell; values range from 0 (grid-cell has no irrigated crops) to 1 (grid-cell is fully covered with irrigated crops)|
+|Fraction of irrigated crops      | fracirrigated.nc; <br> Type: Float32          | Units: -;<br> Range: [0-1]         |Irrigated crop (except rice) fraction for each grid-cell; <br>values range from 0 (grid-cell has no irrigated crops) to 1 (grid-cell is fully covered with irrigated crops)|
 
 
 | Source data| Reference/preparation | Temporal coverage | Spatial information |
@@ -112,8 +119,8 @@ Note: Irrigated crops fraction field should be checked for consistency with all 
 ### Results (example)
 
 <p float="left">
-  <img src="../media/Static-Maps/fracirrigated_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/fracirrigated_Global_03min.png" width="611" /> 
+  <img src="../media/Static-Maps/fracirrigated_European_01min.png" width="329" />
+  <img src="../media/Static-Maps/fracirrigated_Global_03min.png" width="513" /> 
 </p>
 
 *Figure 12: Fraction of irrigated crops map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
@@ -121,9 +128,11 @@ Note: Irrigated crops fraction field should be checked for consistency with all 
 
 ## Fraction of rice crops
 ### General map information and possible source data
+
+
 | Map name | File name;type | Units; range | Description |
 | :---| :--- | :--- | :--- |
-|Fraction of rice      | fracrice.nc; <br> Type: Float32          | Units: -;<br> Range: [0-1]         |Irrigated rice fraction for each grid-cell; values range from 0 (grid-cell has no irrigated rice) to 1 (grid-cell is fully covered with irrigated rice)|
+|Fraction of rice      | fracrice.nc; <br> Type: Float32          | Units: -;<br> Range: [0-1]         |Irrigated rice fraction for each grid-cell; <br>values range from 0 (grid-cell has no irrigated rice) to 1 (grid-cell is fully covered with irrigated rice)|
 
 
 | Source data| Reference/preparation | Temporal coverage | Spatial information |
@@ -142,8 +151,8 @@ Note: Irrigated rice fraction field should be checked for consistency with all o
 ### Results (example)
 
 <p float="left">
-  <img src="../media/Static-Maps/fracrice_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/fracrice_Global_03min.png" width="611" /> 
+  <img src="../media/Static-Maps/fracrice_European_01min.png" width="329" />
+  <img src="../media/Static-Maps/fracrice_Global_03min.png" width="513" /> 
 </p>
 
 *Figure 13: Fraction of rice crops map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
@@ -152,9 +161,11 @@ Note: Irrigated rice fraction field should be checked for consistency with all o
 
 ## Fraction of other land use type
 ### General map information and possible source data
+
+
 | Map name | File name;type | Units; range | Description |
 | :---| :--- | :--- | :--- |
-|Fraction of other land use type     | fracother.nc; <br> Type: Float32          | Units: -;<br> Range: [0-1]         |Other (e.g. agricultural areas, non-forested natural areas, pervious surface of urban areas) land cover type (not mentioned above) fraction for each grid-cell; values range from 0 (grid-cell has no other land cover type) to 1 (grid-cell is fully covered with other land cover type); computed in a following way: fraction_other = 1 - (fraction_inlandWater + fraction_urban + fraction_forest + fraction_irrigatedCrop + fraction_irrigatedRice + fraction_oceanWater)|
+|Fraction of other land use type     | fracother.nc; <br> Type: Float32          | Units: -;<br> Range: [0-1]         |Other (e.g. agricultural areas, non-forested natural areas, pervious surface of urban areas)<br> land cover type (not mentioned above) fraction for each grid-cell; <br>values range from 0 (grid-cell has no other land cover type) to 1 (grid-cell is fully covered with other land cover type); <br>computed in a following way: fraction_other = 1 - (fraction_inlandWater + fraction_urban + fraction_forest + fraction_irrigatedCrop + fraction_irrigatedRice + fraction_oceanWater)|
 
 
 | Source data| Reference/preparation | Temporal coverage | Spatial information |
@@ -170,21 +181,18 @@ Note: Irrigated rice fraction field should be checked for consistency with all o
 Here the other land cover type map is created based on all other fraction maps required by LISFLOOD model. It should be noted that: i) all fraction maps together (including fraction of other land cover type) should sum up to 1 in each grid-cell, and ii) consistency check for all fractions must be done because data come from different sources and it can happen that fractions summed can result to more than 1. <br>
 The following procedures are recommended to check consistency between fraction maps. All fractions are summed up to compute the other land cover type fraction map. If the fraction sum is less than 1, then the other land cover type fraction is calculated as 1 minus all fraction sum, else other land cover type fraction is 0. For cases when the sum is greater than 1, a correction for forest, irrigated crops, rice, and sealed surface fractions is computed: <br>
 
-$$
-fractionCorrectionFactor= \frac{fractionAllSum-1}{fractionForest+fractionIrrigated+fractionRice+fractionSealed} 
-$$
+$ \small fractionCorrectionFactor=\frac{fractionAllSum-1}{fractionForest+fractionIrrigated+fractionRice+fractionSealed}$
 
 Finally, if data sources for forest, irrigated crops, rice, and sealed surfaces fractions have the same level of uncertainty, each of these fractions are corrected in the same way at the needed resolution (e.g. 1 and 3 arc min):<br>
-$$
-fractionCorrectedX=fractionX-fractionX cdot fractionCorrectionFactor
-$$
+
+$ \small fractionCorrectedX = fractionX-fractionX cdot fractionCorrectionFactor $
 where X is Forest, Irrigated, Rice, Sealed.
 
 ### Results (example)
 
 <p float="left">
-  <img src="../media/Static-Maps/fracother_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/fracother_Global_03min.png" width="611" /> 
+  <img src="../media/Static-Maps/fracother_European_01min.png" width="329" />
+  <img src="../media/Static-Maps/fracother_Global_03min.png" width="513" /> 
 </p>
 
 *Figure 14: Fraction of other land use type map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*

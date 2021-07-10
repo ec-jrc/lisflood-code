@@ -49,11 +49,11 @@ The table below shows the PTFs developed in [Toth et al. (2015)](https://onlinel
 
 | Parameter | Pedotransfer function* | Condition |
 | :---| :--- | :--- | 
-|Theta saturated |$Thetas$ = (0.83080 - 0.28217 cdot D + 0.0002728 cdot C + 0.000187 cdot S) |$Thetas <1$ (hurdle) | 
-|Theta residual |Sand% = 100 -S-C<br> Thetar=0.179 if Sand%<2.0 <br> Thetar=0.041 if Sand%≥2.0  |Thetar < Thetas (hurdle) | 
-|Lambda |log10(λ) = 0.22236 - 0.30189 * BD - 0.05558 * T - 0.005306 * C - 0.003084 * S - 0.01072 * OC  |lambda≤0.42 (recommended)| 
-|Genu Alpha | log10(Alpha) = -0.43348 - 0.41729 * D - 0.04762 * OC + 0.21810 * T - 0.01581 * C - 0.01207 * S |alpha≤0.055(recommended)| 
-|K saturated** | log10(KSat) = 0.40220 + 0.26122 * pH + 0.44565 * T - 0.02329 * C - 0.01265 * S - 0.01038 * CEC | Ksat>0 (hurdle) | 
+|Theta saturated |$Thetas = (0.83080 - 0.28217 \cdot D + 0.0002728 \cdot C + 0.000187 \cdot S)$ |$Thetas <1$ (hurdle) | 
+|Theta residual |$Sand = 100 -S-C$ <br> $Thetar=0.179$    if  Sand<2.0 <br> $Thetar=0.041$    if Sand≥2.0 |Thetar < Thetas (hurdle) | 
+|Lambda |$log10(λ) =$ <br> $ 0.22236 - 0.30189 \cdot  BD - 0.05558 \cdot  T - 0.005306 \cdot  C - 0.003084 \cdot  S - 0.01072 \cdot  OC$  |lambda≤0.42 (recommended)| 
+|Genu Alpha | $log10(Alpha) =$ <br> $ -0.43348 - 0.41729 \cdot  D - 0.04762 \cdot  OC + 0.21810 \cdot  T - 0.01581 \cdot  C - 0.01207 \cdot  S$ |alpha≤0.055(recommended)| 
+|K saturated** | $log10(KSat) =$ <br> $ 0.40220 + 0.26122 \cdot  pH + 0.44565 \cdot  T - 0.02329 \cdot  C - 0.01265 \cdot  S - 0.01038 \cdot  CEC $| Ksat>0 (hurdle) | 
 
 *where D is bulk density, C - % of clay, S - % of silt, OC - organic content, CEC - cation exchange capacity, pH - soil pH, and T is the topsoil and subsoil distinction. FAO_2008 (link) defines topsoil as 0-30 cm layer and subsoil as 30-100 cm layer. When soil depth is within the definition of topsoil then T = 1, otherwise T = 0. 
 **K saturated results for Toth equation are in cm/day, the LISFLOOD model requires mm/day.
@@ -66,15 +66,11 @@ In the first step the soil hydraulic parameters are computed for each ISRIC dept
 The second step consists in computing the value of the soil hydraulic parameter for the specific depth of the LISFLOOD soil depth layers 2 and 3. Unlike soil depth layer 1, the depths of soil layer 2 and soil layer 3 vary spatially (see Figure 26 to Figure 29). Each parameter is calculated as the weighted average of the parameters computed in step 1, for the soil depth corresponding to the grid-cell. Only the parameters that are within specific soil depth layer are used in the averaging operation (see Figure 30, step 2).
 The following equation is used to compute the soil hydraulic parameter for the LISFLOOD model:<br>
 
-$$
-parameter = \frac{ID2 cdot parameter_{ID2} + ID3 cdot parameter_{ID3} + ID4 cdot parameter_{ID4}}{ID2+ID3+ID4}
-$$
+$ \small parameter = \frac{ID2 \cdot parameter_{ID2} + ID3 \cdot parameter_{ID3} + ID4 \cdot parameter_{ID4}}{ID2+ID3+ID4} $
 
 where ID1, ID2 and ID3 are the depths of the input ISRIC soil characteristics. Only the ISRIC depths included in the soil depth layer are used to compute the parameter. In the example, showed in Figure 30, the soil depth for layer 2 is equal to 450 mm, and the LISFLOOD soil hydraulic parameter is computed as: <br>
 
-$$
-parameter = \frac{100 cdot parameter_{ID2} + 150 cdot parameter_{ID3} + 200 cdot parameter_{ID4}}{100+150+200}
-$$
+$ \small parameter = \frac{100 \cdot parameter_{ID2} + 150 \cdot parameter_{ID3} + 200 \cdot parameter_{ID4}}{100+150+200} $
 
 where 100 is the thickness of ISRIC layer [5-15], 150 is the thickness of ISRIC layer [15-30], 200 is the result of the difference between 300 mm thickness of ISRIC layer (30-60) minus the 100 mm that are not in the soil depth grid-cell (ISRIC layer depths are expressed in cm, but for computations values are translated in mm).<br>
 If cell's soil depth starts at a greater depth than 2000 mm, then each parameter is computed by using the input variables for depth layer (100-200).<br>
@@ -96,23 +92,19 @@ The computed soil depth hydraulic property fields are resampled from native to r
 
 Parameter value for forested area at 1 arcmin resolution:
 
-$$
-\frac{90 cdot 0.1 + 50 cdot 0.3 + 20 cdot 0.6 + 5 cdot 0.6}{90+50+20+5} = 0.3
-$$
+$ \frac{90 \cdot 0.1 + 50 \cdot 0.3 + 20 \cdot 0.6 + 5 \cdot 0.6}{90+50+20+5} = 0.3 $
 
 Parameter value for non-forested area at 1 arcmin resolution:
 
-$$
-\frac{10 cdot 0.1 + 50 cdot 0.3 + 80 cdot 0.6 + 95 cdot 0.6}{10+50+80+95} = 0.5
-$$
+$ \frac{10 \cdot 0.1 + 50 \cdot 0.3 + 80 \cdot 0.6 + 95 \cdot 0.6}{10+50+80+95} = 0.5 $
 
 
 ### Results (examples)
 
 
 <p float="left">
-  <img src="../media/Static-Maps/thetas1_f_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/thetas1_f_Global_03min.png" width="611" /> 
+  <img src="../media/Static-Maps/thetas1_f_European_01min.png" width="329" />
+  <img src="../media/Static-Maps/thetas1_f_Global_03min.png" width="513" /> 
 </p>
 
 *Figure 31: Theta saturated layer 1 (surface layer) for forested areas map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
@@ -120,8 +112,8 @@ $$
 
 
 <p float="left">
-  <img src="../media/Static-Maps/thetas1_o_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/thetas1_o_Global_03min.png" width="611" /> 
+  <img src="../media/Static-Maps/thetas1_o_European_01min.png" width="329" />
+  <img src="../media/Static-Maps/thetas1_o_Global_03min.png" width="513" /> 
 </p>
 
 *Figure 32: Theta saturated layer 1 (surface layer) for non-forested areas map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
@@ -129,8 +121,8 @@ $$
 
 
 <p float="centre">
-  <img src="../media/Static-Maps/thetas2_f_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/thetas2_f_Global_03min.png" width="611" /> 
+  <img src="../media/Static-Maps/thetas2_f_European_01min.png" width="329" />
+  <img src="../media/Static-Maps/thetas2_f_Global_03min.png" width="513" /> 
 </p>
 
 *Figure 33: Theta saturated layer 2 (middle layer) for forested areas map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
@@ -138,8 +130,8 @@ $$
 
 
 <p float="centre">
-  <img src="../media/Static-Maps/thetas2_o_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/thetas2_o_Global_03min.png" width="611" /> 
+  <img src="../media/Static-Maps/thetas2_o_European_01min.png" width="329" />
+  <img src="../media/Static-Maps/thetas2_o_Global_03min.png" width="513" /> 
 </p>
 
 *Figure 34: Theta saturated layer 2 (middle layer) for non-forested areas map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
@@ -147,8 +139,8 @@ $$
 
 
 <p float="centre">
-  <img src="../media/Static-Maps/thetas3_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/thetas3_Global_03min.png" width="611" /> 
+  <img src="../media/Static-Maps/thetas3_European_01min.png" width="329" />
+  <img src="../media/Static-Maps/thetas3_Global_03min.png" width="513" /> 
 </p>
 
 *Figure 35: Theta saturated layer 3 (bottom layer) for forested and non-forested areas together map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
@@ -156,8 +148,8 @@ $$
 
 
 <p float="centre">
-  <img src="../media/Static-Maps/ksat1_f_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/ksat1_f_Global_03min.png" width="611" /> 
+  <img src="../media/Static-Maps/ksat1_f_European_01min.png" width="329" />
+  <img src="../media/Static-Maps/ksat1_f_Global_03min.png" width="513" /> 
 </p>
 
 *Figure 36: K saturated layer 1 (surface layer) for forested areas map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
@@ -165,8 +157,8 @@ $$
 
 
 <p float="centre">
-  <img src="../media/Static-Maps/ksat1_o_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/ksat1_o_Global_03min.png" width="611" /> 
+  <img src="../media/Static-Maps/ksat1_o_European_01min.png" width="329" />
+  <img src="../media/Static-Maps/ksat1_o_Global_03min.png" width="513" /> 
 </p>
  
 *Figure 37: K saturated layer 1 (surface layer) for non-forested areas map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
@@ -174,8 +166,8 @@ $$
  
  
 <p float="centre">
-  <img src="../media/Static-Maps/ksat2_f_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/ksat2_f_Global_03min.png" width="611" /> 
+  <img src="../media/Static-Maps/ksat2_f_European_01min.png" width="329" />
+  <img src="../media/Static-Maps/ksat2_f_Global_03min.png" width="513" /> 
 </p>
 
 *Figure 38: K saturated layer 2 (surface layer) for forested areas map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
@@ -183,8 +175,8 @@ $$
 
 
 <p float="centre">
-  <img src="../media/Static-Maps/ksat2_o_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/ksat2_o_Global_03min.png" width="611" /> 
+  <img src="../media/Static-Maps/ksat2_o_European_01min.png" width="329" />
+  <img src="../media/Static-Maps/ksat2_o_Global_03min.png" width="513" /> 
 </p>
 
 *Figure 39: K saturated layer 2 (surface layer) for non-forested areas map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
@@ -192,8 +184,8 @@ $$
 
 
 <p float="centre">
-  <img src="../media/Static-Maps/ksat3_European_01min.png" width="394" />
-  <img src="../media/Static-Maps/ksat3_Global_03min.png" width="611" /> 
+  <img src="../media/Static-Maps/ksat3_European_01min.png" width="329" />
+  <img src="../media/Static-Maps/ksat3_Global_03min.png" width="513" /> 
 </p>
 
 *Figure 40: K saturated layer 3 (bottom layer) for forested and non-forested areas together map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
