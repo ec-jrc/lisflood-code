@@ -2,6 +2,7 @@
 
 + **Area mask & land use mask maps** <br>
 The mask maps in the hydrological model are used to detect where model should perform computations and where it shouldn't (skip the grid-cell). Area and land use masks are both Boolean maps which define model boundaries and land use calculation domain respectively.<br>
+
 + **Grid-cell length & grid-cell area maps** <br>
 The grid-cell length and grid-cell area maps are used in LISFLOOD model to accurately compute the areal sums over grid-cells (e.g. the upstream area of the river when areas of all connected grid-cells are summed together or the rainfall amount over a certain grid-cell). If projection properties are in meters these maps become optional.<br>
 
