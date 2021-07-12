@@ -26,11 +26,11 @@ Soil depth is used to compute the available water storage volume in the soil. In
 
 | Source data| Reference/preparation | Temporal coverage | Spatial information |
 | :---| :--- | :--- | :--- |
-|Copernicus Global Land Cover Layers: CGLS-LC100 collection 2|https://developers.google.com/earth-engine/datasets/catalog/COPERNICUS_Landcover_100m_Proba-V-C3_Global#description|2015|Global, 100m|
-|Spatial Production Allocation Model (SPAM) - Global Spatially-Disaggregated Crop Production Statistics Data for 2010 (V 1.0)|https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/PRFF8V|2010|Global, 5min (~10 km)|
-|FAO Irrigation and Drainage Paper No. 56: Crop Evapotranspiration (guidelines for computing crop water requirements) by Richard G. ALLEN, Luis S. PEREIRA, Dirk RAES, Martin SMITH|https://www.researchgate.net/publication/284300773_FAO_Irrigation_and_drainage_paper_No_56|1998|Global, per crop type|
-|System description of the Wofost 6.0 crop simulation model implemented in CGMS. Volume 1: Theory and Algorithms by I. Supit, A.A. Hoojer and C.A. Van Diepen|https://op.europa.eu/en/publication-detail/-/publication/a99325a7-c776-11e6-a6db-01aa75ed71a1|1994|Global, per crop type|
-|OPEN-CHANNEL HYDRAULICS by Ven Te Chow|http://web.ipb.ac.id/~erizal/hidrolika/Chow%20-%20OPEN%20CHANNEL%20HYDRAULICS.pdf|1959|Global|
+|Copernicus Global Land Cover Layers: CGLS-LC100 collection 2|[CGLS-LC100](https://developers.google.com/earth-engine/datasets/catalog/COPERNICUS_Landcover_100m_Proba-V-C3_Global#description)|2015|Global, 100m|
+|Spatial Production Allocation Model (SPAM) - Global Spatially-Disaggregated Crop Production Statistics Data for 2010 (V 1.0)|[Spatial Production Allocation Model](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/PRFF8V)|2010|Global, 5min (~10 km)|
+|FAO Irrigation and Drainage Paper No. 56: Crop Evapotranspiration (guidelines for computing crop water requirements) by Richard G. ALLEN, Luis S. PEREIRA, Dirk RAES, Martin SMITH|[FAO Paper No.56](https://www.researchgate.net/publication/284300773_FAO_Irrigation_and_drainage_paper_No_56)|1998|Global, per crop type|
+|System description of the Wofost 6.0 crop simulation model implemented in CGMS. Volume 1: Theory and Algorithms by I. Supit, A.A. Hoojer and C.A. Van Diepen|[Wofost 6.0 crop simulation model](https://op.europa.eu/en/publication-detail/-/publication/a99325a7-c776-11e6-a6db-01aa75ed71a1)|1994|Global, per crop type|
+|OPEN-CHANNEL HYDRAULICS by Ven Te Chow|[OPEN-CHANNEL HYDRAULICS](http://web.ipb.ac.id/~erizal/hidrolika/Chow%20-%20OPEN%20CHANNEL%20HYDRAULICS.pdf)|1959|Global|
 
 
 ### Methodology

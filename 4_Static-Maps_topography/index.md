@@ -19,7 +19,7 @@ The upstream area in a distributed hydrological model is the accumulated area of
 
 | Source data| Reference/preparation | Temporal coverage | Spatial information |
 | :---| :--- | :--- | :--- |
-|Flow direction map    |http://hydro.iis.u-tokyo.ac.jp/~yamadai/cama-flood/index.html          |2018         |Global, 1' and 3'|
+|Flow direction map    |[cama-flood](http://hydro.iis.u-tokyo.ac.jp/~yamadai/cama-flood/index.html)         |2018         |Global, 1' and 3'|
 
 
 ### Methodology
@@ -48,7 +48,7 @@ Note: Obtaining a flow direction map from a digital elevation model is a complex
 
 | Source data| Reference/preparation | Temporal coverage | Spatial information |
 | :---| :--- | :--- | :--- |
-| MERIT DEM: Multi-Error-Removed Improved-Terrain DEM| http://hydro.iis.u-tokyo.ac.jp/~yamadai/MERIT_DEM/index.html | 2018 | Global, 3" (~90 m) |
+| MERIT DEM: Multi-Error-Removed Improved-Terrain DEM| [MERIT DEM](http://hydro.iis.u-tokyo.ac.jp/~yamadai/MERIT_DEM/index.html) | 2018 | Global, 3" (~90 m) |
 |Local drain direction (ldd) map    |It can be created using the methodology explained [here](../4_Static-Maps_topography#local-drain-direction-map)         |NA         |Global, 1' and 3'|
 
 ### Methodology
@@ -81,7 +81,7 @@ $gradient$ is set equal 0 where $ldd$ is 5.
 
 | Source data| Reference/preparation | Temporal coverage | Spatial information |
 | :---| :--- | :--- | :--- |
-| MERIT DEM: Multi-Error-Removed Improved-Terrain DEM| http://hydro.iis.u-tokyo.ac.jp/~yamadai/MERIT_DEM/index.html | 2018 | Global, 3" (~90 m) |
+| MERIT DEM: Multi-Error-Removed Improved-Terrain DEM| [MERIT DEM](http://hydro.iis.u-tokyo.ac.jp/~yamadai/MERIT_DEM/index.html) | 2018 | Global, 3" (~90 m) |
 
 ### Methodology
 

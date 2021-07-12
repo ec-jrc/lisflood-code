@@ -1,16 +1,21 @@
 # Land use
 
 The LISFLOOD hydrological model can distinguish the following land cover types: forest, inland water, sealed surface (impervious urban area), irrigated land, rice, and other land cover type. Interception, evapotranspiration, infiltration, and overland (or surface) flow respond differently to each surface type.<br> 
-    • Fraction of inland water map
+
++ **Fraction of inland water map** <br> 
 Inland water map includes information on rivers, freshwater and saline lakes, ponds and other permanent water bodies over the continents. In the LISFLOOD model the inland water fraction map is used to identify the fraction of the pixel covered by open water bodies where the most prominent hydrological process is evaporation.
-Considering that LISFLOOD does not distinguish oceans from inland water it is recommended to verify consistency between water fractions and computational area mask, especially in the coastal areas. Pixels included in the computational area mask cannot be fully covered with ocean. If this happens in coastal areas, then the fraction of inland water must be set to 1 and the [lake mask](../4_Static-Maps_reservoirs-lakes#lake-mask-map) should be changed accordingly. <br> 
-    • Fraction of sealed surface map
+Considering that LISFLOOD does not distinguish oceans from inland water it is recommended to verify consistency between water fractions and computational area mask, especially in the coastal areas. Pixels included in the computational area mask cannot be fully covered with ocean. If this happens in coastal areas, then the fraction of inland water must be set to 1 and the [lake mask](../4_Static-Maps_reservoirs-lakes#lake-mask-map) should be changed accordingly. <br>
+
++ **Fraction of sealed surface map** <br> 
 Here, the sealed surface map describes urban areas, characterizing the human impact on the environment. In the LISFLOOD model the sealed surface fraction map is used to identify impervious areas where there is no water infiltration into the soil, meaning water is accumulated in the surface depression, yet evaporates, but once depression is full - water is transported by a surface runoff.<br> 
-    • Fraction of forest map
+
++ **Fraction of forest map** <br> 
 Forest map describes land use composed of evergreen and deciduous needle leaf and broad leaf trees. In the LISFLOOD model the forest fraction is used to identify forested areas where main hydrological processes are canopy interception, evapotranspiration from canopies, canopies drainage and evapotranspiration.<br/>
-    • Fraction of irrigated crops map
+
++ **Fraction of irrigated crops map** <br> 
 Irrigated crops map includes all possible crops excluding rice (is modelled separately). In the LISFLOOD model the irrigated crops fraction map is used to identify part of the pixel which is used by agriculture - water is abstracted from ground water and surface water bodies to irrigate the fields; main hydrological process connected with the irrigated crops are canopy interception, evapotranspiration from canopies, canopies drainage and evapotranspiration. <br/>
-    • Fraction of other land cover type map
+
++ **Fraction of other land cover type map** <br> 
 Other land cover type map includes agricultural areas, non-forested natural area, pervious surface of urban areas. In the LISFLOOD model the other land cover type fraction map is used in the following hydrological processes: canopy interception, evaporation from the canopies, canopy drainage, plant evapotranspiration, evaporation from the soil. The relative importance of these processes depends on the Leaf Area Index.<br/>
 
 
@@ -24,7 +29,7 @@ Other land cover type map includes agricultural areas, non-forested natural area
 
 | Source data| Reference/preparation | Temporal coverage | Spatial information |
 | :---| :--- | :--- | :--- |
-|Copernicus Global Land Cover Layers: CGLS-LC100 collection 2   |https://developers.google.com/earth-engine/datasets/catalog/COPERNICUS_Landcover_100m_Proba-V-C3_Global#description       |2015        |Global, 100 m|
+|Copernicus Global Land Cover Layers: CGLS-LC100 collection 2   |[CGLS-LC100](https://developers.google.com/earth-engine/datasets/catalog/COPERNICUS_Landcover_100m_Proba-V-C3_Global#description)      |2015        |Global, 100 m|
 
 ### Methodology
 
@@ -51,7 +56,7 @@ Note: Inland water fraction field should be checked for consistency with all oth
 
 | Source data| Reference/preparation | Temporal coverage | Spatial information |
 | :---| :--- | :--- | :--- |
-|Copernicus Global Land Cover Layers: CGLS-LC100 collection 2   |https://developers.google.com/earth-engine/datasets/catalog/COPERNICUS_Landcover_100m_Proba-V-C3_Global#description       |2015        |Global, 100 m|
+|Copernicus Global Land Cover Layers: CGLS-LC100 collection 2   |[CGLS-LC100](https://developers.google.com/earth-engine/datasets/catalog/COPERNICUS_Landcover_100m_Proba-V-C3_Global#description)      |2015        |Global, 100 m|
 
 ### Methodology
 
@@ -78,7 +83,7 @@ Note: Sealed surface fraction field should be checked for consistency with all o
 
 | Source data| Reference/preparation | Temporal coverage | Spatial information |
 | :---| :--- | :--- | :--- |
-|Copernicus Global Land Cover Layers: CGLS-LC100 collection 2   |https://developers.google.com/earth-engine/datasets/catalog/COPERNICUS_Landcover_100m_Proba-V-C3_Global#description       |2015        |Global, 100 m|
+|Copernicus Global Land Cover Layers: CGLS-LC100 collection 2   |[CGLS-LC100](https://developers.google.com/earth-engine/datasets/catalog/COPERNICUS_Landcover_100m_Proba-V-C3_Global#description)       |2015        |Global, 100 m|
 
 ### Methodology
 
@@ -105,8 +110,8 @@ Note: Forest fraction field should be checked for consistency with all other fra
 
 | Source data| Reference/preparation | Temporal coverage | Spatial information |
 | :---| :--- | :--- | :--- |
-|Spatial Production Allocation Model (SPAM) - Global Spatially-Disaggregated Crop Production Statistics Data for 2010 (V 1.0)  |https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/PRFF8V   |2018        |Global, 5 arcmin (approx 10 km)|
-|CORINE Land Cover 2018 CLC2018   |https://land.copernicus.eu/pan-european/corine-land-cover      |2018        |European, 100 m|
+|Spatial Production Allocation Model (SPAM) - Global Spatially-Disaggregated Crop Production Statistics Data for 2010 (V 1.0)  |[Spatial Production Allocation Model](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/PRFF8V)   |2018        |Global, 5 arcmin (approx 10 km)|
+|CORINE Land Cover 2018 CLC2018   |[CLC2018 ](https://land.copernicus.eu/pan-european/corine-land-cover)     |2018        |European, 100 m|
 
 ### Methodology
 
@@ -137,8 +142,8 @@ Note: Irrigated crops fraction field should be checked for consistency with all 
 
 | Source data| Reference/preparation | Temporal coverage | Spatial information |
 | :---| :--- | :--- | :--- |
-|Spatial Production Allocation Model (SPAM) - Global Spatially-Disaggregated Crop Production Statistics Data for 2010 (V 1.0)  |https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/PRFF8V   |2018        |Global, 5 arcmin (approx 10 km)|
-|CORINE Land Cover 2018 CLC2018   |https://land.copernicus.eu/pan-european/corine-land-cover      |2018        |European, 100 m|
+|Spatial Production Allocation Model (SPAM) - Global Spatially-Disaggregated Crop Production Statistics Data for 2010 (V 1.0)  |[Spatial Production Allocation Model](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/PRFF8V)  |2018        |Global, 5 arcmin (approx 10 km)|
+|CORINE Land Cover 2018 CLC2018   |[CLC2018](https://land.copernicus.eu/pan-european/corine-land-cover)      |2018        |European, 100 m|
 
 ### Methodology
 

@@ -13,7 +13,7 @@ Rice is the world’s most important food crop. It is harvested from over 163 m
 
 | Source data| Reference/preparation | Temporal coverage | Spatial information |
 | :---| :--- | :--- | :--- |
-|RiceAtlas, a global database of rice calendars and production; <br/> Version 3 |https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/JE6R2R| up to 2017 | Global, shapefiles|
+|RiceAtlas, a global database of rice calendars and production; <br/> Version 3 |[RiceAtlas](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/JE6R2R)| up to 2017 | Global, shapefiles|
 
 ## Methodology
 

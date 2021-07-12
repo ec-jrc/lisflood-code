@@ -33,9 +33,9 @@ Channel characteristics, explained above, are shown in the Figure 41 below.  <br
 
 | Source data| Reference/preparation | Temporal coverage | Spatial information |
 | :---| :--- | :--- | :--- |
-|Channel width        |http://hydro.iis.u-tokyo.ac.jp/~yamadai/cama-flood/index.html           |2018         |Global, 1' and 3'|
-|River lenght        | http://hydro.iis.u-tokyo.ac.jp/~yamadai/cama-flood/index.html          |2018          |Global, 1' and 3'|
-|MERIT DEM: Multi-Error-Removed Improved-Terrain DEM|http://hydro.iis.u-tokyo.ac.jp/~yamadai/MERIT_DEM/index.html           |2018          |Global, 3" (at about 90 m)|
+|Channel width        |[cama-flood](http://hydro.iis.u-tokyo.ac.jp/~yamadai/cama-flood/index.html)          |2018         |Global, 1' and 3'|
+|River lenght        | [cama-flood](http://hydro.iis.u-tokyo.ac.jp/~yamadai/cama-flood/index.html)         |2018          |Global, 1' and 3'|
+|MERIT DEM: Multi-Error-Removed Improved-Terrain DEM|[MERIT-DEM](http://hydro.iis.u-tokyo.ac.jp/~yamadai/MERIT_DEM/index.html)        |2018          |Global, 3" (at about 90 m)|
 |Mask map        |Can be prepared following [these instrunctions](../4_Static-Maps_general-maps#area-mask-and-land-use-mask-maps)|NA          |Global, 1' and 3'|
 |Local drain direction (ldd)        |Can be prepared following [these instrunctions](../4_Static-Maps_topography#local-drain-direction-map)|NA          |Global, 1' and 3'|
 |Upstream area map         |Can be prepared following [these instrunctions](../4_Static-Maps_topography#upstream-area)|NA          |Global, 1' and 3'|
