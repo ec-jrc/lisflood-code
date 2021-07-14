@@ -3,7 +3,7 @@
 ## About this user guide
 
 This user guide provides instructions and examples to create static maps required as an input for LISFLOOD hydrological model.<br>
-The examples in this user guide have been derived from the generation of the static input maps for the European and Global Flood Awareness Systems (EFAS and GloFAS) of the Copernicus Emergency Management Service. Users are encouraged to create their own static maps for their region of interest and using local, national or any other type of source data. Possible data sources, used as examples in this user guide, are listed in the [Appendix A](../4_Static-Maps_appendix/).<br>
+The examples in this user guide have been derived from the generation of the static input maps for the European and Global Flood Awareness Systems (EFAS and GloFAS) of the Copernicus Emergency Management Service. Users are encouraged to create their own static maps for their region of interest and using local, national or any other type of source data. Possible data sources, used as examples in this user guide, are listed in the [Appendix](../4_Static-Maps_appendix).<br>
 Maps can be elaborated with any GIS/remote sensing software. Examples in this guide have been performed using CDO, GDAL, Python, and Google Earth Engine platform.<br>
 
 ## Projection and file type
