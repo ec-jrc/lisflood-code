@@ -2,7 +2,7 @@
 
 Just as any other hydrological model, LISFLOOD needs to know the initial state (i.e. amount of water stored) of its internal state variables in order to be able to produce reasonable discharge simulations. However, in practice we hardly ever know the initial state of all state variables at a given time. Hence, we have to estimate the state of the initial storages in a reasonable way, which is also called the initialisation of a hydrological model.
 
-In this subsection we will first demonstrate the effect of the model's initial state on the results of a simulation, explain the steady-state sorage in practice and then explain you in detail how to initialize LISFLOOD.
+In this subsection we will first demonstrate the effect of the model's initial state on the results of a simulation, explain the steady-state storage in practice and then explain you in detail how to initialize LISFLOOD.
 
 
 ## The impact of the model's initial state on simulation results 
