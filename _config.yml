@@ -221,13 +221,13 @@ defaults:
         items:
         - title: "Introduction"
           url: 4_Static-Maps-introduction           
-        - title: "Base maps"
+        - title: "General maps"
           url: 4_Static-Maps_general-maps 
         - title: "Topography maps"
           url: 4_Static-Maps_topography   
         - title: "Land use maps"
           url: 4_Static-Maps_land-use   
-        - title: "Land cover depending maps"
+        - title: "Land use depending maps"
           url: 4_Static-Maps_land-use-depending             
         - title: "Soil hydraulic properties maps"
           url: 4_Static-Maps_soil-hydraulic-properties     
