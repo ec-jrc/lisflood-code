@@ -454,7 +454,7 @@ All test cases are executed with following modules activated:
 |riceIrrigation             |
 |indicator                  |
 
-**Note:** Due the current implementation of the reservoir module (and its calibration methods), this test could fail on certain domains having reservoirs with particular attributes.   
+**Note:** Due the current implementation of the reservoir module (and its calibration methods), this test could fail on certain domains having reservoirs with particular attributes. In the current test basin (PO basin) the test must be successful with reservoir ON.   
 **Note:** This test doesn't use a reference dataset so it's not a black-box test. It ensures that cold and warm runs are equivalent.
 
 #### Implementation
@@ -562,7 +562,7 @@ This test demonstrates that wateruse module introduces incongruities between run
 | test_subcacthment_daily                               | 86400 |02/01/2016 06:00 - 30/03/2016 06:00 | all netcdf are array equal     |
 | test_subcacthment_6h                                  | 21600 |01/03/2016 06:00 - 30/03/2016 06:00 | all netcdf are array equal     |
 | test_subcacthment_daily_wateruse_groundwatersmooth_OFF| 86400 |02/01/2016 06:00 - 30/01/2016 06:00 | all netcdf are array equal     |
-| test_subcacthment_daily_wateruse_groundwatersmooth_ON | 86400 |02/01/2016 06:00 - 30/01/2016 06:00 | different values at first step |
+| test_subcacthment_daily_wateruse_groundwatersmooth_ON | 86400 |02/01/2016 06:00 - 30/01/2016 06:00 | the results are not identical  |
 
 **Note:** This test doesn't use a reference dataset so it's not a black-box test. It ensures that simulations on domain and its subdomains are equivalent.
  
@@ -671,7 +671,7 @@ Verifies the correct functioning of the code for projected and geographic coordi
 
 ### Testing Caching
 
-Verifies cache files 
+Verifies the use of cached files. It compares the output generated and the number of cached files used.
 
 #### Implementation
 
@@ -680,8 +680,8 @@ Verifies cache files
 
 |Test case            | DtSec | Simulation period                  | Expected                                                     |
 |---------------------|-------|------------------------------------|--------------------------------------------------------------|
-| test_caching_24h    | 86400 |30/07/2016 06:00 - 01/08/2016 06:00 | compares cache size and items                                |
-| test_caching_6h     | 21600 |30/07/2016 06:00 - 01/08/2016 06:00 | compares cache size and items                                |
+| test_caching_24h    | 86400 |30/07/2016 06:00 - 01/08/2016 06:00 | compares output generated with and without cached files      |
+| test_caching_6h     | 21600 |30/07/2016 06:00 - 01/08/2016 06:00 | compares output generated with and without cached files      |
 
 ### Testing Chunking
 
