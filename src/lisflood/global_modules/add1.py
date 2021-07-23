@@ -269,10 +269,19 @@ def makenumpy(map):
 def loadmap(*args, **kwargs):
     settings = LisSettings.instance()
     binding = settings.binding
+
     if binding['MapsCaching'] == "True":
+        # get path to map file to make sure it's unique in the cache
+        if len(args) > 0:
+            name = args[0]
+        else:
+            name = kwargs['name']
+        value = binding[name]
+        kwargs['value'] = value
         data = loadmap_cached(*args, **kwargs)
     else:
         data = loadmap_base(*args, **kwargs)
+    
     return data
 
 @iocache
@@ -280,7 +289,7 @@ def loadmap_cached(*args, **kwargs):
     return loadmap_base(*args, **kwargs)
 
 
-def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averageyearflag=False):
+def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averageyearflag=False, value=None):
     """ Load a static map either value or pcraster map or netcdf (single or stack)
     
     Load a static map either value or pcraster map or netcdf (single or stack)
@@ -303,7 +312,8 @@ def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averagey
     settings = LisSettings.instance()
     binding = settings.binding
     flags = settings.flags
-    value = binding[name]
+    if value is None:
+        value = binding[name]
     # path and name of the map file
     filename = value
     load = False
