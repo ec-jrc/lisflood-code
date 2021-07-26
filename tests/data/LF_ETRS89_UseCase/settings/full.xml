@@ -263,6 +263,16 @@
 
             </comment>
 
+            <textvar name="CalendarConvention" value="proleptic_gregorian">
+                <comment>
+                    Calendar convention necessary to know how to compute date/time increments.
+                    This setting must be consistent with the time dimension of meteorologic forcing (input) files.
+                    Allowed values: "gregorian" ort "standard", "proleptic_gregorian", "noleap" or "365_day",
+                    "all_leap", "366_day", "360_day", "julian", "none"
+                    Reference: http://cfconventions.org/Data/cf-conventions/cf-conventions-1.7/cf-conventions.pdf
+                </comment>
+            </textvar>
+
 
             <textvar name="CalendarDayStart" value="31/12/1999 06:00">
 
@@ -2417,6 +2427,8 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 **************************************************************
 
             </comment>
+
+            <textvar name="CalendarConvention" value="$(CalendarConvention)"/>
 
 
             <textvar name="CalendarDayStart" value="$(CalendarDayStart)">
