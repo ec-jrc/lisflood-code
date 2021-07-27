@@ -422,7 +422,6 @@ class LisSettings(with_metaclass(ThreadSingleton)):
             binding[i] = expr
 
         # set the calendar type
-        print(binding)
         binding["calendar_type"] = binding['CalendarConvention']
 
         return user, binding

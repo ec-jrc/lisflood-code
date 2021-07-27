@@ -2428,7 +2428,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
             </comment>
 
-            <textvar name="CalendarConvention" value="$(CalendarConvention)"/>
+            <textvar name="CalendarConvention" value="$(CalendarConvention)">
 
 
             <textvar name="CalendarDayStart" value="$(CalendarDayStart)">

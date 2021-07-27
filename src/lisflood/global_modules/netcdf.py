@@ -103,15 +103,14 @@ def find_main_var(ds, path):
         var_name = variable_names[0]
     return var_name
 
-def check_dataset_calendar_type(ds):
+def check_dataset_calendar_type(ds, path):
 
     settings = LisSettings.instance()
     binding = settings.binding
 
     # check calendar type
     if ds.time.encoding['calendar'] != binding['calendar_type']:
-        print(ds)
-        print('WARNING! Wrong calendar type in dataset (see above), is \"{}\" and should be \"{}\"\n Please double check your forcing datasets and update them to use the correct calendar type'.format(ds.time.encoding['calendar'], binding['calendar_type']))
+        print('WARNING! Wrong calendar type in dataset {}.nc, is \"{}\" and should be \"{}\"\n Please double check your forcing datasets and update them to use the correct calendar type'.format(path, ds.time.encoding['calendar'], binding['calendar_type']))
 
 
 class XarrayChunked():
@@ -125,7 +124,7 @@ class XarrayChunked():
         ds = xr.open_mfdataset(data_path, engine='netcdf4', chunks={'time': time_chunk}, combine='by_coords')
 
         # check calendar type
-        check_dataset_calendar_type(ds)
+        check_dataset_calendar_type(ds, data_path)
 
         # extract main variable
         var_name = find_main_var(ds, data_path)
