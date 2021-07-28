@@ -1,4 +1,5 @@
 import os
+import glob
 import xarray as xr
 import numpy as np
 import datetime
@@ -103,14 +104,22 @@ def find_main_var(ds, path):
         var_name = variable_names[0]
     return var_name
 
+
 def check_dataset_calendar_type(ds, path):
 
     settings = LisSettings.instance()
     binding = settings.binding
 
     # check calendar type
-    if ds.time.encoding['calendar'] != binding['calendar_type']:
-        print('WARNING! Wrong calendar type in dataset {}.nc, is \"{}\" and should be \"{}\"\n Please double check your forcing datasets and update them to use the correct calendar type'.format(path, ds.time.encoding['calendar'], binding['calendar_type']))
+    # if using multiple files, the encoding will be droppped (bug in xarray), let's check the calendar fom the first file
+    if '*' in path:
+        first_file = glob.glob(path)[0]
+        ds_tmp = xr.open_dataset(first_file, chunks={'time': -1})
+        calendar = ds_tmp.time.encoding['calendar']
+    else:
+        calendar = ds.time.encoding['calendar']
+    if calendar != binding['calendar_type']:
+        print('WARNING! Wrong calendar type in dataset {}, is \"{}\" and should be \"{}\"\n Please double check your forcing datasets and update them to use the correct calendar type'.format(path, ds.time.encoding['calendar'], binding['calendar_type']))
 
 
 class XarrayChunked():

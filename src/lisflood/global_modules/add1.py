@@ -116,19 +116,21 @@ def mapattrNetCDF(name):
     nf1.close()
     maskattrs = MaskAttrs.instance()
 
-    cell_x = maskattrs['cell'] - np.abs(x2 - x1) # this must be same precision as pcraster.clone().cellsize()
-    cell_y = maskattrs['cell'] - np.abs(y2 - y1) # this must be same precision as pcraster.clone().cellsize()
+    cell_x = np.abs(x2 - x1)
+    cell_y = np.abs(y2 - y1)
+    check_x = maskattrs['cell'] - cell_x # this must be same precision as pcraster.clone().cellsize()
+    check_y = maskattrs['cell'] - cell_y # this must be same precision as pcraster.clone().cellsize()
 
-    if abs(cell_x) > 10**-5 or abs(cell_y) > 10**-5:
+    if abs(check_x) > 10**-5 or abs(check_y) > 10**-5:
         raise LisfloodError("Cell size different in maskmap {} and {}".format(
             LisSettings.instance().binding['MaskMap'], filename)
         )
     half_cell = maskattrs['cell'] / 2.
     x = x1 - half_cell  # |
     y = y1 + half_cell  # | coordinates of the upper left corner of the input file upper left pixel
-    cut0 = int(np.abs(maskattrs['x'] - x) / maskattrs['cell'])
+    cut0 = int(np.abs(maskattrs['x'] - x) / cell_x)
     cut1 = cut0 + maskattrs['col']
-    cut2 = int(np.abs(maskattrs['y'] - y) / maskattrs['cell'])
+    cut2 = int(np.abs(maskattrs['y'] - y) / cell_y)
     cut3 = cut2 + maskattrs['row']
     return cut0, cut1, cut2, cut3  # input data will be sliced using [cut0:cut1,cut2:cut3]
 
