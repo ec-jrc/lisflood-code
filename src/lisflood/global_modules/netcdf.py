@@ -143,14 +143,16 @@ class XarrayChunked():
         date_range = np.arange(*dates, dtype='datetime64')
         da = da.sel(time=date_range)
 
-        # compress dataset (remove missing values)
+        # compress dataset (remove missing values and flatten the array)
         self.masked_da = compress_xarray(da)
 
         # initialise class variables and load first chunk
-        self.chunks = self.masked_da.chunks[0]
-        self.ichunk = None
-        self.chunk_index = None
-        self.chunked_array = None
+        self.chunks = self.masked_da.chunks[0]  # list of chunks indexes in dataset
+        if (time_chunk==-1):  # ensure we only have one chunk when dealing with multiple files
+            self.chunks = [np.sum(self.chunks)]
+        self.ichunk = None  # current chunk number
+        self.chunk_index = None  # current chunk range
+        self.chunked_array = None  # current chunk values
         self.load_chunk(timestep=0)
 
     def load_chunk(self, timestep):
