@@ -89,4 +89,4 @@ In addition, some additional maps and time series may be reported for debugging 
 
 Note again the domains for which variables are valid: all *rate variables* are reported as pixel-average values. Soil moisture and groundwater storage are reported for the permeable fraction of each pixel only. The reported snow cover is the average of the snow depths in snow zones A, B and C.
 
-By default, the names of the reported discharge maps start with the prefix '*dis*' and end with the time step number (the naming conventions are identical to the ones used for the input maps with meteorological variables, which is explained in **Chapter XXXX**). **Annex XXXXX** summarises all options to report additional output maps. The previous remarks related to the domains for which the state variable values are valid also apply to the maps listed in **Annex XXXXX**.
+By default, the names of the reported discharge maps start with the prefix '*dis*'. This [**Annex**](../4_annex_output-files/) summarises all options to report additional output maps. 
