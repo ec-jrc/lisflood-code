@@ -83,8 +83,8 @@ The geographical location of lakes and reservoirs is identified by the two maps 
 | **Table**             | **Default name**      | **Description**       |
 |----------------------------|-----------------------|--------------------------|
 | Lake area   | Lakearea.txt          | Lake syrface area in m2 |
-| Lake alpha parameter   | lakea.txt          | Lake parameter alpha: a detailed descrpition can be found [here] (https://ec-jrc.github.io/lisflood-model/3_02_optLISFLOOD_lakes/)  |
-| Lake average inflow   | lakeaverageinflow.txt          | Average inflow to the lake: a detailed descrpition can be found [here] (https://ec-jrc.github.io/lisflood-model/3_02_optLISFLOOD_lakes/) |
+| Lake alpha parameter   | lakea.txt          | Lake parameter alpha: a detailed descrpition can be found [here](../3_02_optLISFLOOD_lakes/)  |
+| Lake average inflow   | lakeaverageinflow.txt          | Average inflow to the lake: a detailed descrpition can be found [here](../3_02_optLISFLOOD_lakes/) |
 | Reservoir storage   | rstor.txt          | Volume in m3, total reservoirs storage capacity |
 | Reservoir minimum outflow   | rminq.txt          | Discharge in m3/s.   |
 | Reservoir normal outflow   | rnormq.txt          | Discharge in m3/s.  |
