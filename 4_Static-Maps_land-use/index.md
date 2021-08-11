@@ -190,7 +190,7 @@ $ \small fractionCorrectionFactor=\frac{fractionAllSum-1}{fractionForest+fractio
 
 Finally, if data sources for forest, irrigated crops, rice, and sealed surfaces fractions have the same level of uncertainty, each of these fractions are corrected in the same way at the needed resolution (e.g. 1 and 3 arc min):<br>
 
-$ \small fractionCorrectedX = fractionX-fractionX cdot fractionCorrectionFactor $
+$ \small fractionCorrectedX = fractionX - (fractionX \cdot fractionCorrectionFactor) $<br>
 where X is Forest, Irrigated, Rice, Sealed.
 
 ### Results (example)
