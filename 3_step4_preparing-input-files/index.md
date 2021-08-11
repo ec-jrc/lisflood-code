@@ -63,12 +63,12 @@ Both maps should be stored in the same directory where all other input maps are.
 LISFLOOD settings files and the use of options are explained in detail in a [dedicated chapter](https://ec-jrc.github.io/lisflood-code/3_step3_preparing-setting-file/) and [annex](https://ec-jrc.github.io/lisflood-code/4_annex_settings_and_options/) of this document.
 
 
-### Leaf area index maps 
+#### Leaf area index maps 
 
 Because Leaf area index maps follow a yearly circle, only a map stack of one year is necessary which is then used again and again for the  following years (this approach can be used for all input maps following a yearly circle e.g. water use). LAI is therefore defined as sparse map stack with a map every 10 days or a month. After one year the first map is taken again for simulation. 
 
 
-### Important technical note for the generation of the water regions map
+#### Important technical note for the generation of the water regions map
 
 Water demand and water abstraction are spatially distributed within each water region. As detailed [here](https://ec-jrc.github.io/lisflood-model/2_18_stdLISFLOOD_water-use/), the water resources (surface water bodies and groundwater) are shared inside the water region in order to meet the cumulative requirements of the water region area. For this reason, it is strongly recommended to include the entire water region(s) in the modelled area. If a portion of the water region is not included in the modelled area, then LISFLOOD cannot adequately compute the water demand and abstraction. In other words, LISFLOOD will not be able to account for sources of water outside of the computational domain (it is important to notice that LISFLOOD will not crush but the results will be affected by this discrepancy).
 The inclusion of the complete water region in the computational domain becomes compulsory under the specific circumstances of model calibration.
