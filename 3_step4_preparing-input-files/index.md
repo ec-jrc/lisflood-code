@@ -25,11 +25,11 @@ Generally used prefixes for the meteorological forcings maps are: <br>
 
 
 ### Static maps
-The section [Static Maps](../4_Static-maps_introduction) provides detailed guidelines for the preparation of the static maps data set. The following paragraph provides an overview of the different piecies of information provided by the static maps.
+The section [Static Maps](../4_Static-Maps_introduction) provides detailed guidelines for the preparation of the static maps data set. The following paragraph provides an overview of the different piecies of information provided by the static maps.
 +   [general maps](../4_Static-Maps_general-maps/): area mask; landuse mask; grid-cell length; grid-cell area.
 +  [topography](../4_Static-Maps_topography/): local drain direction; gradient; standard deviation of elevation; upstream area.
 +  [land use maps](../4_Static-Maps_land-use/): fraction of forest; fraction of irrigated crops; fraction of rice crops; fraction of inland water; fraction of sealed surfaces; fraction of other land uses.
-+   [land use depending](./4_Static-Maps_land-use-depending/):crop coefficient; crop group number; Manning/s's surface roughness; soil depth.
++   [land use depending](../4_Static-Maps_land-use-depending/):crop coefficient; crop group number; Manning/s's surface roughness; soil depth.
 +   [soil hydraulic properties](../4_Static-Maps_soil-hydraulic-properties/): saturated hydraulic conductivity; soil water content at saturation; residual soil water content; parameters alpha and lambda of Van Genuchten's equations.
 +   [channel geometry](../4_Static-Maps_channel-geometry/): channels mask; channels side slope; channels length; channels gradient; Manning's rougheness coefficient of the channels; channels bottom width; floodplain width; bankfull channels depth.
 +   [leaf area index](../4_Static-Maps_leaf-area-index/): evolution of vegetation over time (leaf area index) for land covers forest, irrigated areas, others.
