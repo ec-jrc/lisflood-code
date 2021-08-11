@@ -25,7 +25,7 @@ Generally used prefixes for the meteorological forcings maps are: <br>
 
 
 ### Static maps
-The section [Static Maps](../4_Static-Maps_introduction) provides detailed guidelines for the preparation of the static maps data set. The following paragraph provides an overview of the different piecies of information provided by the static maps.
+The section [Static Maps](../4_Static-Maps-introduction) provides detailed guidelines for the preparation of the static maps data set. The following paragraph provides an overview of the different piecies of information provided by the static maps.
 +   [general maps](../4_Static-Maps_general-maps/): area mask; landuse mask; grid-cell length; grid-cell area.
 +  [topography](../4_Static-Maps_topography/): local drain direction; gradient; standard deviation of elevation; upstream area.
 +  [land use maps](../4_Static-Maps_land-use/): fraction of forest; fraction of irrigated crops; fraction of rice crops; fraction of inland water; fraction of sealed surfaces; fraction of other land uses.
