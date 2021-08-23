@@ -91,9 +91,7 @@ class waterbalance(object):
             #    self.var.IsUpsOfStructureKinematic, self.var.ChanQ * self.var.DtRouting), scalar(0.0))
 
             DisStructure = np.where(self.var.IsUpsOfStructureKinematicC, self.var.ChanQ * self.var.DtRouting, 0)
-#            DisStructure = np.where(self.var.IsUpsOfStructureKinematicC,
-#                        self.var.ChanM3,0)
-
+            
             # Discharge upstream of structure locations (coded as pits) in [m3/time step]
             # Needed for mass balance error calculations (see comment to calculation of WaterInit below)
             # Inclusion of DischargeM3Structures: adding this corrects a (relatively small) offset that occurs otherwise
@@ -107,11 +105,10 @@ class waterbalance(object):
                 # DisStructure += cover(ifthen(self.var.IsUpsOfStructureLake,
                 #  0.5 * self.var.ChanQ * self.var.DtRouting), scalar(0.0))
                 # because Modified Puls Method is use, some additional offset
-                # has to be add
-            #self.var.DischargeM3StructuresIni = areatotal(DisStructure, catch)
+                # has to be added
+            
             self.var.DischargeM3StructuresIni = np.take(np.bincount(self.var.Catchments, weights=DisStructure), self.var.Catchments)
 
-          #  report(decompress(self.var.WaterInit),'E:/lisflood_test/newDiepoldsau2/winitPy.map')
 # --------------------------------------------------------------------------
 # -------------------------------------------------------------------------
 
@@ -134,12 +131,10 @@ class waterbalance(object):
             #WaterIn = areatotal(cover(decompress(self.var.sumIn), scalar(0.0)), catch) + areatotal(
             #    decompress(self.var.TotalPrecipitation) * self.var.MMtoM3, catch)
 
-            self.var.sumIn[np.isnan(self.var.sumIn)] = 0
-            WaterIn = np.take(np.bincount(self.var.Catchments, weights=self.var.sumIn),self.var.Catchments)
-            WaterIn += np.take(np.bincount(self.var.Catchments, weights=self.var.TotalPrecipitation*self.var.MMtoM3), self.var.Catchments)
-
-            # WaterIn=areatotal(TotalQInM3,Catchments) + areatotal(TotalPrecipitation*MMtoM3,Catchments);
-            # Accumulated incoming water [cu m]
+            self.var.sumInWB[np.isnan(self.var.sumInWB)] = 0
+            WaterIn = np.take(np.bincount(self.var.Catchments, weights=self.var.sumInWB),self.var.Catchments)
+            WaterIn += np.take(np.bincount(self.var.Catchments, weights=self.var.TotalPrecipitationWB*self.var.MMtoM3), self.var.Catchments)
+               # Accumulated incoming water [cu m]
             # NOTE: It is NOT possible to nest all terms into one areatotal statement because channel-related maps have MV for non-channel
             # pixels, resulting in MV creation when adding directly!!
             # MMtoM3 equals MMtoM*PixelArea, which may (or may not) be
@@ -173,31 +168,31 @@ class waterbalance(object):
             #WaterStored = areatotal(decompress(ChannelStoredM3), catch) + areatotal(decompress(HillslopeStoredM3), catch)
             WaterStored = np.take(np.bincount(self.var.Catchments,weights=ChannelStoredM3),self.var.Catchments)
             WaterStored += np.take(np.bincount(self.var.Catchments,weights=HillslopeStoredM3),self.var.Catchments)
-
             # Total water stored [m3]
 
             # This goes out:
-            HillslopeOutM3 = (self.var.TaCUM + self.var.TaInterceptionCUM + self.var.ESActCUM + self.var.GwLossCUM) * self.var.MMtoM3
+            HillslopeOutM3 = (self.var.TaWB + self.var.TaInterceptionWB + self.var.ESActWB + self.var.GwLossWB) * self.var.MMtoM3
             # Water that goes out of the system at the hillslope level [m3]
             # (evaporation and groundwater loss)
 
-            sum1 = self.var.sumDis.copy()
+            ##sum1 = self.var.sumDis.copy()
+            sum1 = self.var.ChanQAvg.copy()
             sum1[self.var.AtLastPointC == 0] = 0
-            WaterOut = np.take(np.bincount(self.var.Catchments,weights=sum1 * self.var.DtRouting),self.var.Catchments)
+            WaterOut = np.take(np.bincount(self.var.Catchments,weights=sum1 * self.var.DtSec),self.var.Catchments)
             WaterOut += np.take(np.bincount(self.var.Catchments,weights=HillslopeOutM3),self.var.Catchments)
 
             #WaterOut = areatotal(cover(ifthen(
             #    self.var.AtLastPoint, self.var.sumDis * self.var.DtRouting), scalar(0.0)), catch)
             #WaterOut += areatotal(decompress(HillslopeOutM3), catch)
             if option['simulateLakes']:
-                WaterOut += np.take(np.bincount(self.var.Catchments, weights=self.var.EWLakeCUMM3),self.var.Catchments)
+                WaterOut += np.take(np.bincount(self.var.Catchments, weights=self.var.EWLakeWBM3),self.var.Catchments)  #### EWLakeCUMM3 is not updated! Always = 0!!
             if option['openwaterevapo']:
-                WaterOut += np.take(np.bincount(self.var.Catchments, weights=self.var.EvaCumM3),self.var.Catchments)
+                WaterOut += np.take(np.bincount(self.var.Catchments, weights=self.var.EvaWBM3),self.var.Catchments)
             if option['TransLoss']:
                 WaterOut += np.take(np.bincount(self.var.Catchments, weights=self.var.TransCum),self.var.Catchments)
             if option['wateruse']:
-                WaterOut += np.take(np.bincount(self.var.Catchments, weights=self.var.IrriLossCUM),self.var.Catchments)
-                WaterOut += np.take(np.bincount(self.var.Catchments, weights=self.var.wateruseCum),self.var.Catchments)
+                WaterOut += np.take(np.bincount(self.var.Catchments, weights=self.var.IrriLossWBM3),self.var.Catchments)
+                WaterOut += np.take(np.bincount(self.var.Catchments, weights=self.var.wateruseWBM3),self.var.Catchments)
             # Accumulated outgoing water [cu m]
             # Inclusion of DischargeM3Structures is because at structure locations the water in the channel is added to the structure
             # (i.e. storage at reservoirs/lakes is accounted for twice). Of course this is not really a 'loss', but merely a correction
@@ -225,24 +220,23 @@ class waterbalance(object):
                 # Needed for mass balance error calculations, because of double counting of structure
                 # storage and water in the channel.
 
-            DischargeM3Structures -= self.var.DischargeM3StructuresIni
+            DischargeM3Structures -= self.var.DischargeM3StructuresIni  
             # minus the initial DischargeStructure
             # Old: DischargeM3Structures=areatotal(cover(ifthen(self.var.IsUpsOfStructureKinematic,self.var.ChanQ*self.var.DtSec),null),self.var.Catchments)
             # Discharge just upstream of structure locations (coded as pits) in [cu m / time step]
             # Needed for mass balance error calculations, because of double counting of structure
             # storage and water in the channel.
-
             # Mass balance:
-            #  self.var.MBError = self.var.WaterInit + WaterIn - WaterStored - WaterOut - DischargeM3Structures
             self.var.MBError = self.var.WaterInit + WaterIn - WaterStored - WaterOut - DischargeM3Structures
-            # Cumulative mass balance error per catchment [cu m]
+            # Totl mass balance error per catchment [cu m]. Mass balance error is computed for each computational time step.
 
-            #CatchArea = areatotal(decompress(self.var.PixelAreaArray), catch)
             CatchArea = np.take(np.bincount(self.var.Catchments, weights=self.var.PixelArea),self.var.Catchments)
-
             self.var.MBErrorMM = self.var.MtoMM * self.var.MBError / CatchArea
+            # Mass balance error per unit area of the catchment [mm water slice]. Mass balance error is computed for each computational time step.
+            
+            self.var.WaterInit = WaterStored.copy() + DischargeM3Structures.copy()
+            
 
-            #self.var.MBError = decompress(self.var.MBError)
-            #self.var.MBErrorMM = decompress(self.var.MBErrorMM)
-            # self.var.MBErrorMM = self.var.MtoMM * self.var.MBError * self.var.InvCatchArea
-            # expressed as mm water slice
+            
+                         
+

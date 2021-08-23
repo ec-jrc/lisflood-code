@@ -65,10 +65,10 @@ class readmeteo(object):
             step = self.var.currentTimeStep() - self.var.firstTimeStep()
 
             # Read from NetCDF stack files
-            self.var.Precipitation = self.forcings['PrecipitationMaps'][step] * self.var.DtDay * self.var.PrScaling
+            self.var.Precipitation = self.forcings['PrecipitationMaps'][step] * self.var.DtDay * self.var.PrScaling 
             self.var.Tavg = self.forcings['TavgMaps'][step]
-            self.var.ETRef = self.forcings['ET0Maps'][step] * self.var.DtDay * self.var.CalEvaporation
-            self.var.EWRef =self.forcings['E0Maps'][step] * self.var.DtDay * self.var.CalEvaporation
+            self.var.ETRef = self.forcings['ET0Maps'][step] * self.var.DtDay * self.var.CalEvaporation 
+            self.var.EWRef =self.forcings['E0Maps'][step] * self.var.DtDay * self.var.CalEvaporation 
 
         else:
             # Read from stack of maps in Pcraster format
@@ -76,10 +76,10 @@ class readmeteo(object):
             # precipitation (conversion to [mm] per time step)
             self.var.Tavg = readmapsparse(binding['TavgMaps'], self.var.currentTimeStep(), self.var.Tavg)
             # average DAILY temperature (even if you are running the model on say an hourly time step) [degrees C]
-            self.var.ETRef = readmapsparse(binding['ET0Maps'], self.var.currentTimeStep(), self.var.ETRef) * self.var.DtDay * self.var.CalEvaporation
+            self.var.ETRef = readmapsparse(binding['ET0Maps'], self.var.currentTimeStep(), self.var.ETRef) * self.var.DtDay * self.var.CalEvaporation 
             # daily reference evapotranspiration (conversion to [mm] per time step)
             # potential evaporation rate from a bare soil surface (conversion to [mm] per time step)
-            self.var.EWRef = readmapsparse(binding['E0Maps'], self.var.currentTimeStep(), self.var.EWRef) * self.var.DtDay * self.var.CalEvaporation
+            self.var.EWRef = readmapsparse(binding['E0Maps'], self.var.currentTimeStep(), self.var.EWRef) * self.var.DtDay * self.var.CalEvaporation 
             # potential evaporation rate from water surface (conversion to [mm] per time step)
 
         self.var.ESRef = (self.var.EWRef + self.var.ETRef)/2

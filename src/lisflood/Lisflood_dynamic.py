@@ -173,8 +173,8 @@ class LisfloodModel_dyn(DynamicModel):
             self.QInM3Old = self.QInM3
             # to calculate the parts of inflow for every routing timestep
             # for the next timestep the old inflow is preserved
-            self.sumIn += self.QInDt*self.NoRoutSteps
-
+            self.sumInWB=self.QinADDEDM3
+             
         # if option['simulatePolders']:
         # ChannelToPolderM3=ChannelToPolderM3Old;
 

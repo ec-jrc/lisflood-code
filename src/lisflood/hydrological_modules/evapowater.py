@@ -150,8 +150,14 @@ class evapowater(HydroModule):
                 # UpstreamEva = upstream(self.var.LddEva,EvaIter)
                 UpstreamEva = np.bincount(self.var.downEva, weights=EvaIter)[:-1]
                 # remaining water use is moved down the the river system,
-
-            self.var.EvaAddM3Dt = self.var.EvaAddM3 * self.var.InvNoRoutSteps
+            
             # splitting water use per timestep into water use per sub time step
-            self.var.EvaCumM3 += self.var.EvaAddM3
+            self.var.EvaAddM3Dt = self.var.EvaAddM3 * self.var.InvNoRoutSteps  
+            
             # summing up for water balance calculation
+            self.var.EvaCumM3 += self.var.EvaAddM3
+            self.var.EvaWBM3 = self.var.EvaAddM3 
+            
+
+            
+            

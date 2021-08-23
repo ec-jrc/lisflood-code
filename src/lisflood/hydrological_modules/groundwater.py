@@ -150,6 +150,7 @@ class groundwater(HydroModule):
         # from GROUNDWATER TRANSFER to here
         # Compute pixel-average fluxes
         self.var.GwLossCUM += self.var.GwLossPixel
+        self.var.GwLossWB = self.var.GwLossPixel
         # Accumulated groundwater loss over simulation period [mm]
         self.var.LZAvInflow = (self.var.LZInflowCUM * self.var.InvDtDay) / self.var.TimeSinceStart
         # Average inflow into lower zone over executed time steps [mm/day]

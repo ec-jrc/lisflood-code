@@ -176,6 +176,10 @@ class snow(HydroModule):
         self.var.Rain /= 3
         self.var.SnowMelt /= 3
         self.var.SnowCover /= 3
-
-        self.var.TotalPrecipitation += self.var.Snow + self.var.Rain
+ 
         # total precipitation in pixel [mm]
+        # cumulate value
+        self.var.TotalPrecipitation += self.var.Snow + self.var.Rain
+        # computational step value 
+        self.var.TotalPrecipitationWB = self.var.Snow + self.var.Rain
+        

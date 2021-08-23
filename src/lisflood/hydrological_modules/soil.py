@@ -258,6 +258,15 @@ class soil(HydroModule):
         WInit2[0] = np.where(ThetaInit2Value[0] == -9999, self.var.WFC2[0], ThetaInit2Value[0] * self.var.SoilDepth2[0])
         WInit2[1] = np.where(ThetaInit2Value[1] == -9999, self.var.WFC2[1], ThetaInit2Value[1] * self.var.SoilDepth2[1])
         WInit2[2] = np.where(ThetaInit2Value[2] == -9999, self.var.WFC2[2], ThetaInit2Value[2] * self.var.SoilDepth2[2])
+        #WInit1a[0] = np.where(ThetaInit1aValue[0] == -9999, self.var.WRes1a[0], ThetaInit1aValue[0] * self.var.SoilDepth1a[0])
+        #WInit1a[1] = np.where(ThetaInit1aValue[1] == -9999, self.var.WRes1a[1], ThetaInit1aValue[1] * self.var.SoilDepth1a[1])
+        #WInit1a[2] = np.where(ThetaInit1aValue[2] == -9999, self.var.WRes1a[2], ThetaInit1aValue[2] * self.var.SoilDepth1a[2])
+        #WInit1b[0] = np.where(ThetaInit1bValue[0] == -9999, self.var.WRes1b[0], ThetaInit1bValue[0] * self.var.SoilDepth1b[0])
+        #WInit1b[1] = np.where(ThetaInit1bValue[1] == -9999, self.var.WRes1b[1], ThetaInit1bValue[1] * self.var.SoilDepth1b[1])
+        #WInit1b[2] = np.where(ThetaInit1bValue[2] == -9999, self.var.WRes1b[2], ThetaInit1bValue[2] * self.var.SoilDepth1b[2])
+        #WInit2[0] = np.where(ThetaInit2Value[0] == -9999, self.var.WRes2[0], ThetaInit2Value[0] * self.var.SoilDepth2[0])
+        #WInit2[1] = np.where(ThetaInit2Value[1] == -9999, self.var.WRes2[1], ThetaInit2Value[1] * self.var.SoilDepth2[1])
+        #WInit2[2] = np.where(ThetaInit2Value[2] == -9999, self.var.WRes2[2], ThetaInit2Value[2] * self.var.SoilDepth2[2])        
         # Initial soil moisture in permeable fraction of pixel
         # Set soil to field capacity if initial value
         # in settings file equals -9999
@@ -391,16 +400,21 @@ class soil(HydroModule):
         """
         self.var.TaInterceptionAll = self.var.deffraction(self.var.TaInterception) + self.var.DirectRunoffFraction * self.var.TASealed
         self.var.TaInterceptionCUM += self.var.TaInterceptionAll
+        self.var.TaInterceptionWB = self.var.TaInterceptionAll
+        
         # Cumulative evaporation of intercepted water [mm]
 
         self.var.TaPixel = self.var.deffraction(self.var.Ta)
         # pixel-average transpiration in [mm] per timestep
         # (no transpiration from direct runoff fraction)
         self.var.TaCUM += self.var.TaPixel
+        self.var.TaWB = self.var.TaPixel
+        
         self.var.ESActPixel = self.var.deffraction(self.var.ESAct) + self.var.WaterFraction * self.var.EWaterAct
         # Pixel-average soil evaporation in [mm] per time step
         # (no evaporation from direct runoff fraction)
         self.var.ESActCUM += self.var.ESActPixel
+        self.var.ESActWB = self.var.ESActPixel
 
         self.var.PrefFlowPixel = self.var.deffraction(self.var.PrefFlow)
         # Pixel-average preferential flow in [mm] per timestep

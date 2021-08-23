@@ -419,6 +419,8 @@ class waterabstraction(HydroModule):
 
             self.var.LZ = self.var.LZ - self.var.TotalAbstractionFromGroundwaterM3 * self.var.M3toMM
             self.var.IrriLossCUM = self.var.IrriLossCUM + self.var.TotalAbstractionFromGroundwaterM3
+            self.var.IrriLossWBM3 = self.var.TotalAbstractionFromGroundwaterM3
+            
             # Abstraction is taken from lower groundwater zone
             # for mass balance calculation also summed up in IrrilossCUM (in M3)
 
@@ -528,6 +530,7 @@ class waterabstraction(HydroModule):
             # splitting water use per timestep into water use per sub time step
 
             self.var.wateruseCum += self.var.WUseAddM3
+            self.var.wateruseWBM3 = self.var.WUseAddM3
             # summing up for water balance calculation
             # If report wateruse
             if (option['repwateruseGauges']) or (option['repwateruseSites']):
@@ -607,6 +610,8 @@ class waterabstraction(HydroModule):
             self.var.Ta[2] = self.var.Ta[2] + IrrigationWaterDemand - Wdiff
 
             self.var.IrriLossCUM = self.var.IrriLossCUM - self.var.IrrigationWaterAbstractionM3 * self.var.IrrigationEfficiency * self.var.ConveyanceEfficiency - Wdiff * self.var.MMtoM3 * self.var.IrrigationFraction
+            
+            self.var.IrriLossWBM3 = self.var.IrriLossWBM3 - self.var.IrrigationWaterAbstractionM3 * self.var.IrrigationEfficiency * self.var.ConveyanceEfficiency - Wdiff * self.var.MMtoM3 * self.var.IrrigationFraction
 
             # Added to TA but also
             # for mass balance calculate the loss of irrigation water

@@ -188,6 +188,7 @@ class lakes(HydroModule):
             np.put(self.var.LakeOutflow, self.var.LakeIndex, self.var.LakeOutflowCC)
 
             self.var.EWLakeCUMM3 = maskinfo.in_zero()
+            self.var.EWLakeWBM3 = maskinfo.in_zero()
             # Initialising cumulative output variables
             # These are all needed to compute the cumulative mass balance error
 
