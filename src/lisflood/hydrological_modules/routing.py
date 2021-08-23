@@ -336,9 +336,10 @@ class routing(HydroModule):
         # cumulative discharge at outlet [m3]
         self.var.TotalQInM3 = maskinfo.in_zero()
         # cumulative inflow from inflow hydrographs [m3]
-        #self.var.sumDis = maskinfo.in_zero()
         self.var.sumDis = maskinfo.in_zero()
         self.var.sumIn = maskinfo.in_zero()
+        self.var.sumInWB = maskinfo.in_zero()
+   
 
     def initialSecond(self):
         """ initial part of the second channel routing module
