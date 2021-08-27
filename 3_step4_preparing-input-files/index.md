@@ -16,7 +16,7 @@ The input maps can be classified according to two main cathegories:<br>
 The meteorological forcing variables are defined in *map stacks*. A *map stack* is simply a series of maps, where each map represents the value of a variable at an individual time step.<br>It is recommented to use the netcdf format. <br> The users that prefer to prepare the meteorological forcings maps in pcraster format, must name the files according to the following rules: the name of each map is made up of a total of 11 characters: 8 characters, a dot and a 3-character suffix. Each map name starts with a *prefix*, and ends with the time step number. All character positions in between are filled with zeros ("0"). <br>
 
 Generally used prefixes for the meteorological forcings maps are: <br>
-+ tp : total precipitation; units: mm/computational time step.<br>
++ tp : total precipitation; units: mm/day.<br>
 + ta : average daily temperature at 2m; units: degrees Celsius or Kelvin (the units must be specified in the [settings file](../3_step3_preparing-setting-file/))<br>
 + EW0 : reference value of evaporation from open water bodies; units: mm/day; these data can be prepared using [LISVAP](https://ec-jrc.github.io/lisflood-lisvap/).<br>
 + ES0 : reference value of evaporation from bare soil; units: mm/day; these data can be prepared using [LISVAP](https://ec-jrc.github.io/lisflood-lisvap/).<br>
