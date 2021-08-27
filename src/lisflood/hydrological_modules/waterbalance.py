@@ -221,6 +221,8 @@ class waterbalance(object):
                 # storage and water in the channel.
 
             DischargeM3Structures -= self.var.DischargeM3StructuresIni  
+            
+            
             # minus the initial DischargeStructure
             # Old: DischargeM3Structures=areatotal(cover(ifthen(self.var.IsUpsOfStructureKinematic,self.var.ChanQ*self.var.DtSec),null),self.var.Catchments)
             # Discharge just upstream of structure locations (coded as pits) in [cu m / time step]
@@ -231,10 +233,14 @@ class waterbalance(object):
             # Totl mass balance error per catchment [cu m]. Mass balance error is computed for each computational time step.
 
             CatchArea = np.take(np.bincount(self.var.Catchments, weights=self.var.PixelArea),self.var.Catchments)
+            #### from ROUTING: CatchArea = np.bincount(self.var.Catchments, weights=self.var.PixelArea)[self.var.Catchments]
             self.var.MBErrorMM = self.var.MtoMM * self.var.MBError / CatchArea
             # Mass balance error per unit area of the catchment [mm water slice]. Mass balance error is computed for each computational time step.
+     
             
             self.var.WaterInit = WaterStored.copy() + DischargeM3Structures.copy()
+            
+
             
 
             

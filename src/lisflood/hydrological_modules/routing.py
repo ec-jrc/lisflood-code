@@ -156,6 +156,8 @@ class routing(HydroModule):
             self.var.AtLastPointC = np.bool8(compressArray(self.var.AtLastPoint))
             # assign unique identifier to each of them
         maskinfo = MaskInfo.instance()
+        print(self.var.AtLastPoint)
+        print(self.var.AtLastPointC)
         lddC = compressArray(self.var.LddKinematic)
         inAr = decompress(np.arange(maskinfo.info.mapC[0], dtype="int32"))
         # giving a number to each non missing pixel as id
@@ -169,6 +171,8 @@ class routing(HydroModule):
         # and assign unique identifier to each of them
         self.var.Catchments = (compressArray(catchment(self.var.Ldd, OutflowPoints))).astype(np.int32)
         CatchArea = np.bincount(self.var.Catchments, weights=self.var.PixelArea)[self.var.Catchments]
+        print(self.var.Catchments)
+        print(CatchArea)
         # define catchment for each outflow point
         # Compute area of each catchment [m2]
         # Note: in earlier versions this was calculated using the "areaarea" function,
@@ -405,6 +409,7 @@ class routing(HydroModule):
                self.var.StorageStepINIT += self.var.ReservoirStorageIniM3  
             if option['simulateLakes']:  
                self.var.StorageStepINIT += self.var.LakeStorageIniM3 
+            self.var.StorageStepINIT = np.take(np.bincount(self.var.Catchments, weights=self.var.StorageStepINIT), self.var.Catchments) 
                 
         if not option['InitLisflood'] and option['repMBTs']:  
            DisStructure = np.where(self.var.IsUpsOfStructureKinematicC, self.var.ChanQ * self.var.DtRouting, 0) 
@@ -423,6 +428,7 @@ class routing(HydroModule):
                self.var.StorageStepINIT += self.var.ReservoirStorageIniM3
             if option['simulateLakes']:   
                self.var.StorageStepINIT += self.var.LakeStorageIniM3
+            self.var.StorageStepINIT = np.take(np.bincount(self.var.Catchments, weights=self.var.StorageStepINIT), self.var.Catchments)    
 # --------------------------------------------------------------------------
 # --------------------------------------------------------------------------
 
@@ -475,23 +481,22 @@ class routing(HydroModule):
                     
             ### check mass balance within routing ###
             if option['repMBTs']:  
-             self.var.totInStep=SideflowChanM3.copy()
              if (NoRoutingExecuted<1):
-                 self.var.AddedTRUN=np.sum(self.var.ToChanM3RunoffDt.copy()) 
+                 self.var.AddedTRUN = np.take(np.bincount(self.var.Catchments, weights=self.var.ToChanM3RunoffDt.copy()),self.var.Catchments)
                  if option['inflow']:
-                     self.var.AddedTRUN+=np.sum(self.var.QInDt)  
+                     self.var.AddedTRUN += np.take(np.bincount(self.var.Catchments, weights=self.var.QInDt),self.var.Catchments)
                  if option['openwaterevapo']:
-                     self.var.AddedTRUN-=np.sum(self.var.EvaAddM3Dt.copy())
+                     self.var.AddedTRUN -= np.take(np.bincount(self.var.Catchments, weights=self.var.EvaAddM3Dt.copy()),self.var.Catchments)
                  if option['wateruse']:
-                     self.var.AddedTRUN-=np.sum(self.var.WUseAddM3Dt.copy())
+                     self.var.AddedTRUN -= np.take(np.bincount(self.var.Catchments, weights=self.var.WUseAddM3Dt.copy()),self.var.Catchments)
              else:
-                 self.var.AddedTRUN+=np.sum(self.var.ToChanM3RunoffDt.copy()) 
+                 self.var.AddedTRUN += np.take(np.bincount(self.var.Catchments, weights=self.var.ToChanM3RunoffDt.copy()),self.var.Catchments)
                  if option['inflow']:
-                     self.var.AddedTRUN+=np.sum(self.var.QInDt)  
+                     self.var.AddedTRUN += np.take(np.bincount(self.var.Catchments, weights=self.var.QInDt),self.var.Catchments) 
                  if option['openwaterevapo']:
-                     self.var.AddedTRUN-=np.sum(self.var.EvaAddM3Dt.copy())
+                     self.var.AddedTRUN -= np.take(np.bincount(self.var.Catchments, weights=self.var.EvaAddM3Dt.copy()),self.var.Catchments)
                  if option['wateruse']:
-                     self.var.AddedTRUN-=np.sum(self.var.WUseAddM3Dt.copy())          
+                     self.var.AddedTRUN -= np.take(np.bincount(self.var.Catchments, weights=self.var.WUseAddM3Dt.copy()),self.var.Catchments)      
                                      
             # Runoff (surface runoff + flow out of Upper and Lower Zone), outflow from
             # reservoirs and lakes and inflow from external hydrographs are added to the channel
@@ -648,7 +653,8 @@ class routing(HydroModule):
   
                   StorageStep=[]
                   StorageStep= self.var.ChanM3Kin.copy()+self.var.Chan2M3Kin.copy()-self.var.Chan2M3Start.copy()                
- 
+                 
+                  
                   maskinfo = MaskInfo.instance()
                   DisStructureSR = maskinfo.in_zero()               
                   DischargeM3StructuresR = maskinfo.in_zero() 
@@ -674,22 +680,15 @@ class routing(HydroModule):
                      DischargeM3StructuresR -= self.var.DischargeM3StructuresIni                    
                                         
                   # Mass Balance Error due to the Split Routing module
-                  MB =-np.sum(StorageStep)+np.sum(self.var.StorageStepINIT) - OutStep[0]  -DischargeM3StructuresR[0] +self.var.AddedTRUN
-                  ############################################### delete?? MBESR=self.var.ChanQ.copy()
-                  MBESR = maskinfo.in_zero()               
-                  ############################################### delete?? MBESR[self.var.AtLastPointC == 0] = 0    
-                  MBESR[self.var.AtLastPointC > 0] = MB
-                  self.var.MBErrorSplitRoutingM3 = np.take(np.bincount(self.var.Catchments,weights=MBESR),self.var.Catchments)
-               
-                  # Discharge error at the outlet pointt [m3/s]
-                  QoutCorrection=MB/self.var.DtRouting                 
-                  ############################################## delete??QoutCorrectionSR=self.var.ChanQ.copy()     
-                  QoutCorrectionSR = maskinfo.in_zero()       
-                  QoutCorrectionSR[self.var.AtLastPointC == 0] = 0    
-                  QoutCorrectionSR[self.var.AtLastPointC > 0] = QoutCorrection
-                  self.var.OutletDischargeErrorSplitRouting = np.take(np.bincount(self.var.Catchments,weights=QoutCorrectionSR),self.var.Catchments)                  
+                  StorageStep1=np.take(np.bincount(self.var.Catchments, weights=StorageStep), self.var.Catchments)
                   
-                  self.var.StorageStepINIT= np.sum(StorageStep.copy())+DischargeM3StructuresR[0]  
+                  self.var.MBErrorSplitRoutingM3  = - StorageStep1 + self.var.StorageStepINIT - OutStep  - DischargeM3StructuresR + self.var.AddedTRUN
+                  # Discharge error at the outlet pointt [m3/s]
+                  QoutCorrection=self.var.MBErrorSplitRoutingM3/self.var.DtRouting                  
+                  QoutCorrection[self.var.AtLastPointC == 0] = 0
+                  self.var.OutletDischargeErrorSplitRouting = np.take(np.bincount(self.var.Catchments,weights=QoutCorrection),self.var.Catchments)                  
+
+                  self.var.StorageStepINIT= StorageStep1.copy()+DischargeM3StructuresR 
  
 
 
