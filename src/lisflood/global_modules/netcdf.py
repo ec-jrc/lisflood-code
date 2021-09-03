@@ -1,4 +1,5 @@
 import os
+import glob
 import xarray as xr
 import numpy as np
 import datetime
@@ -104,6 +105,23 @@ def find_main_var(ds, path):
     return var_name
 
 
+def check_dataset_calendar_type(ds, path):
+
+    settings = LisSettings.instance()
+    binding = settings.binding
+
+    # check calendar type
+    # if using multiple files, the encoding will be droppped (bug in xarray), let's check the calendar fom the first file
+    if '*' in path:
+        first_file = glob.glob(path)[0]
+        ds_tmp = xr.open_dataset(first_file, chunks={'time': -1})
+        calendar = ds_tmp.time.encoding['calendar']
+    else:
+        calendar = ds.time.encoding['calendar']
+    if calendar != binding['calendar_type']:
+        print('WARNING! Wrong calendar type in dataset {}, is \"{}\" and should be \"{}\"\n Please double check your forcing datasets and update them to use the correct calendar type'.format(path, ds.time.encoding['calendar'], binding['calendar_type']))
+
+
 class XarrayChunked():
 
     def __init__(self, data_path, dates, time_chunk):
@@ -113,23 +131,28 @@ class XarrayChunked():
             time_chunk = int(time_chunk)
         data_path = data_path + ".nc" if not data_path.endswith('.nc') else data_path
         ds = xr.open_mfdataset(data_path, engine='netcdf4', chunks={'time': time_chunk}, combine='by_coords')
+
+        # check calendar type
+        check_dataset_calendar_type(ds, data_path)
+
+        # extract main variable
         var_name = find_main_var(ds, data_path)
         da = ds[var_name]
 
-        # extract time range from binding
-        # binding = LisSettings.instance().binding
-        # dates = date_range(binding)  # extract date range from bindings
+        # extract time range
         date_range = np.arange(*dates, dtype='datetime64')
         da = da.sel(time=date_range)
 
-        # compress dataset (remove missing values)
+        # compress dataset (remove missing values and flatten the array)
         self.masked_da = compress_xarray(da)
 
         # initialise class variables and load first chunk
-        self.chunks = self.masked_da.chunks[0]
-        self.ichunk = None
-        self.chunk_index = None
-        self.chunked_array = None
+        self.chunks = self.masked_da.chunks[0]  # list of chunks indexes in dataset
+        if (time_chunk==-1):  # ensure we only have one chunk when dealing with multiple files
+            self.chunks = [np.sum(self.chunks)]
+        self.ichunk = None  # current chunk number
+        self.chunk_index = None  # current chunk range
+        self.chunked_array = None  # current chunk values
         self.load_chunk(timestep=0)
 
     def load_chunk(self, timestep):

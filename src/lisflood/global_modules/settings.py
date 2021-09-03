@@ -421,12 +421,9 @@ class LisSettings(with_metaclass(ThreadSingleton)):
                 expr = expr.replace(expr[a1:a2 + 1], s2)
             binding[i] = expr
 
-        # Read the calendar type from the precipitation forcing NetCDF file
-        precipitation_map_path = binding["PrecipitationMaps"] + '.nc'
-        if not os.path.exists(precipitation_map_path):
-            raise LisfloodFileError(precipitation_map_path)
-        with Dataset(precipitation_map_path) as nc:
-            binding["calendar_type"] = get_calendar_type(nc)
+        # set the calendar type
+        binding["calendar_type"] = binding['CalendarConvention']
+
         return user, binding
 
     @staticmethod
