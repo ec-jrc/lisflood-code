@@ -435,11 +435,13 @@ class routing(HydroModule):
             if option['openwaterevapo']:
                 SideflowChanM3 -= self.var.EvaAddM3Dt
             if option['wateruse']:
-                SideflowChanM3 -= self.var.WUseAddM3Dt
+                SideflowChanM3 -= (self.var.withdrawal_CH_actual_M3_routStep - self.var.returnflow_GwAbs2Channel_M3_routStep)   
             if option['inflow']:
                 SideflowChanM3 += self.var.QInDt
             if option['TransLoss']:
                 SideflowChanM3 -= self.var.TransLossM3Dt
+            if option["cropsEPIC"]:  
+                SideflowChanM3 += self.var.crop_module.irrigation_module.returnFlow()                
             if not(option['InitLisflood']):    # only with no InitLisflood
                 if option['simulateLakes']:
                     SideflowChanM3 += self.var.QLakeOutM3Dt

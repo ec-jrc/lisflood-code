@@ -265,17 +265,23 @@ def write_header(var_name, netfile, DtDay,
         units_time = 'days since %s' % startdate.strftime("%Y-%m-%d %H:%M:%S.0")
         steps = (int(binding["DtSec"]) / 86400.) * np.arange(binding["StepStartInt"] - 1, binding["StepEndInt"])
         if frequency != "all":
-            dates = num2date(steps, units_time, binding["calendar_type"])
+            dates = num2date(steps-binding["StepStartInt"]+1, units_time, binding["calendar_type"])
             next_date_times = np.array([j + datetime.timedelta(seconds=int(binding["DtSec"])) for j in dates])
             if frequency == "monthly":
-                months_end = np.array([dates[j].month != next_date_times[j].month for j in range(steps.size)])
-                steps = steps[months_end]
+                months_end = np.array([dates[j].month != next_date_times[j].month for j in range(repstepend - repstepstart +1)])
+                steps_monthly = steps[months_end]
+                time_stamps_monthly = dates[months_end==True]
             elif frequency == "annual":
                 years_end = np.array([dates[j].year != next_date_times[j].year for j in range(steps.size)])
                 steps = steps[years_end]
-        nf1.createDimension('time', steps.size)
-        time = nf1.createVariable('time', float, ('time'))
-        time.standard_name = 'time'
+        if frequency == "all":
+           nf1.createDimension('time', steps.size)
+           time = nf1.createVariable('time', float, ('time'))
+           time.standard_name = 'time'
+        if frequency == "monthly":
+           nf1.createDimension('time', steps_monthly.size)
+           time = nf1.createVariable('time', float, ('time'))
+           time.standard_name = 'time'           
         # time.units ='days since 1990-01-01 00:00:00.0'
         # time.units = 'hours since %s' % startdate.strftime("%Y-%m-%d %H:%M:%S.0")
         # CM: select the time unit according to model time step
@@ -291,11 +297,16 @@ def write_header(var_name, netfile, DtDay,
             time.units = 'minutes since %s' % startdate.strftime("%Y-%m-%d %H:%M:%S.0")
 
         time.calendar = binding["calendar_type"]
-        nf1.variables["time"][:] = date2num(time_stamps, time.units, time.calendar)
+ 
+        if frequency == "all":
+           nf1.variables["time"][:] = date2num(time_stamps, time.units, time.calendar)
+        if frequency == "monthly":
+           nf1.variables["time"][:] = date2num(time_stamps_monthly, time.units, time.calendar)                  
         # for i in metadataNCDF['time']: exec('%s="%s"') % ("time."+i, metadataNCDF['time'][i])
         value = nf1.createVariable(var_name, 'd', ('time', dim_lat_y, dim_lon_x), zlib=True, fill_value=-9999, chunksizes=(1, nrow, ncol))
     else:
         value = nf1.createVariable(var_name, 'd', (dim_lat_y, dim_lon_x), zlib=True, fill_value=-9999)
+    
 
     value.standard_name = value_standard_name
     value.long_name = value_long_name
@@ -331,7 +342,6 @@ def writenet(flag, inputmap, netfile, DtDay,
     flags = LisSettings.instance().flags
     var_name = os.path.basename(netfile)
     netfile += ".nc"
-    
     if flag == 0:
         nf1 = write_header(var_name, netfile, DtDay,
                            value_standard_name, value_long_name, value_unit, data_format,

@@ -2,7 +2,8 @@
 
 
     <lfoptions>
-
+    
+        <setoption choice="0" name="cropsEPIC"/>
         <setoption choice="0" name="wateruse"/>
         <setoption choice="0" name="groundwaterSmooth"/>
         <setoption choice="0" name="TransientWaterDemandChange"/>
@@ -21,6 +22,7 @@
         <setoption choice="0" name="repStateMaps"/>
         <setoption choice="0" name="repDischargeTs"/>
         <setoption choice="0" name="repDischargeMaps"/>
+        
 
         # report gauges and sites
 
@@ -1017,7 +1019,19 @@ The option "numberParallelThreadsKinematicWave" may take the following values:
                     More than the transpiration is added e.g to prevent salinisation
                 </comment>
             </textvar>
-
+            
+            <textvar name="IrrigationWaterReUseM3" value="0.0">           
+            <comment>           
+                  Annual amount (m3) of treated wastewater reused for irrigation                 
+            </comment>           
+            </textvar>
+                       
+            <textvar name="IrrigationWaterReUseNumDays" value="143">          
+            <comment>           
+                  Number of days over which the annual amount of treated wastewater for irrigation is used                
+            </comment>           
+            </textvar>
+            
             <textvar name="LivestockConsumptiveUseFraction" value="0.15">
                 <comment>
                     Consumptive Use (1-Recycling ratio) for livestock water use (0-1)
@@ -2436,6 +2450,18 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     Factor to irrigation water demand
                     More than the transpiration is added e.g to prevent salinisation
                 </comment>
+            </textvar>
+            
+            <textvar name="IrrigationWaterReUseM3" value="$(IrrigationWaterReUseM3)">           
+                 <comment>           
+                  Annual amount (m3) of treated wastewater reused for irrigation                  
+                 </comment>    
+            </textvar>
+                       
+            <textvar name="IrrigationWaterReUseNumDays" value="$(IrrigationWaterReUseNumDays)">      
+                 <comment>
+                  Number of days over which the annual amount of treated wastewater for irrigation is used                
+                 </comment>          
             </textvar>
 
             <textvar name="MapIrrigationCropCoef" value="$(MapIrrigationCropCoef)">

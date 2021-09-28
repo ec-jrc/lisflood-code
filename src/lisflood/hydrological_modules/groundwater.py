@@ -50,6 +50,20 @@ class groundwater(HydroModule):
         # ********************************************
         UpperZoneTimeConstant = loadmap('UpperZoneTimeConstant')
         LowerZoneTimeConstant = loadmap('LowerZoneTimeConstant')
+        
+        maskinfo = MaskInfo.instance()
+        if type(UpperZoneTimeConstant) == float: ## C, Stef
+          MAP = []
+          MAP = maskinfo.in_zero() + UpperZoneTimeConstant
+          UpperZoneTimeConstant = []
+          UpperZoneTimeConstant = MAP
+
+        if type(LowerZoneTimeConstant) == float: ## C, Stef
+          MAP = []
+          MAP = maskinfo.in_zero() + LowerZoneTimeConstant
+          LowerZoneTimeConstant = []
+          LowerZoneTimeConstant = MAP
+        
         self.var.UpperZoneK = np.minimum(self.var.DtDay * (1 / UpperZoneTimeConstant), 1)
         self.var.LowerZoneK = np.minimum(self.var.DtDay * (1 / LowerZoneTimeConstant), 1)
         # Reservoir constants for upper- and lower zone
@@ -85,9 +99,18 @@ class groundwater(HydroModule):
         self.var.LZThreshold = loadmap('LZThreshold')
         # lz threshold =if lz falls below this there is no outflow to the channel from lz
 
-        # UZInitValue=scalar(loadmap('UZInitValue'))
-        # UZInit=ifthen(defined(self.var.MaskMap),UZInitValue)
-        self.var.UZ = defsoil('UZInitValue', 'UZForestInitValue', 'UZIrrigationInitValue')
+
+        #### stef         
+        if not option["cropsEPIC"]:       
+           self.var.UZ = self.var.allocateVariableAllVegetation()
+           self.var.UZ.loc['Rainfed_prescribed'] = loadmap('UZInitValue')
+           self.var.UZ.loc['Forest_prescribed'] = loadmap('UZForestInitValue')
+           self.var.UZ.loc['Irrigated_prescribed'] = loadmap('UZIrrigationInitValue')         
+        else:
+            self.var.UZ = self.var.initialiseVariableAllVegetation('UZInitValue')
+        #### stef
+
+
         # Water in upper store [mm]
 
         # TotalGroundWaterInit=ifthenelse(defined(self.var.MaskMap),self.var.UZ+self.var.LZ,scalar(0.0))
@@ -103,11 +126,11 @@ class groundwater(HydroModule):
         # Cumulative lower zone inflow [mm]
         # Needed for calculation of average LZ inflow (initialisation)
 
-        self.var.GwPercUZLZ = defsoil(maskinfo.in_zero())
+        self.var.GwPercUZLZ = self.var.allocateVariableAllVegetation()
         self.var.GwLossLZ = maskinfo.in_zero()
-        self.var.UZOutflow = defsoil(maskinfo.in_zero())
+        self.var.UZOutflow = self.var.allocateVariableAllVegetation()
         self.var.LZOutflow = maskinfo.in_zero()
-
+        
     def dynamic(self):
         # outflow from LZ to channel stops when LZ is below its threshold.
         # LZ can be below its threshold because of water abstractions
@@ -125,7 +148,6 @@ class groundwater(HydroModule):
         self.var.UZOutflowPixel = self.var.deffraction(self.var.UZOutflow)
         # outflow from upper zone as pixel flow
         # to surface routing
-
         self.var.GwPercUZLZPixel = self.var.deffraction(self.var.GwPercUZLZ)
         #  Compute pixel-average flux
         # to Lower Zone

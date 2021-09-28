@@ -7,10 +7,10 @@ from lisfloodutilities.compare.nc import NetCDFComparator
 
 from lisflood.main import lisfloodexe
 
-from .test_utils import setoptions, mk_path_out, ETRS89TestCase
+from .test_utils import setoptions, mk_path_out
 
 
-class TestStepsDates(ETRS89TestCase):
+class TestStepsDates():
     settings_files = {
         'full': os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/full.xml')
     }
@@ -97,6 +97,6 @@ class TestStepsDates(ETRS89TestCase):
         path_out_0 = os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/0')
         path_out_a = os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/1')
         path_out_b = os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/2')
-        shutil.rmtree(path_out_0, ignore_errors=True)
-        shutil.rmtree(path_out_a, ignore_errors=True)
-        shutil.rmtree(path_out_b, ignore_errors=True)
+        for folder in (path_out_0, path_out_a, path_out_b):
+            if os.path.exists(folder):
+                shutil.rmtree(folder)

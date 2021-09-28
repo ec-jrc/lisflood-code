@@ -43,7 +43,7 @@ from .global_modules.stateVar import stateVar
 from .global_modules.add1 import readInputWithBackup
 
 
-@njit(fastmath=True)
+@njit(fastmath=False)
 def _vegSum(ax_veg, variable, soil_fracs):
     return (soil_fracs * variable).sum(ax_veg)
 
@@ -73,6 +73,15 @@ class LisfloodModel_ini(DynamicModel):
         option = self.settings.options
         flags = self.settings.flags
         report_steps = self.settings.report_steps
+
+        # Mapping of vegetation types to land use fractions (and the other way around)
+        ##global VEGETATION_LANDUSE, LANDUSE_VEGETATION, PRESCRIBED_VEGETATION, PRESCRIBED_LAI
+        self.SOIL_USES = ["Rainfed", "Forest", "Irrigated"]
+        self.PRESCRIBED_VEGETATION = [fract + "_prescribed" for fract in self.SOIL_USES]
+        self.PRESCRIBED_LAI = OrderedDict(zip(self.PRESCRIBED_VEGETATION[:], ['LAIOtherMaps', 'LAIForestMaps', 'LAIIrrigationMaps']))
+        self.VEGETATION_LANDUSE = OrderedDict(zip(self.PRESCRIBED_VEGETATION[:], self.SOIL_USES[:]))
+        self.LANDUSE_VEGETATION = OrderedDict([(v, [k]) for k, v in self.VEGETATION_LANDUSE.items()])
+        self.LANDUSE_INPUTMAP = OrderedDict(zip(self.LANDUSE_VEGETATION.keys(), ["OtherFraction", "ForestFraction", "IrrigationFraction"]))
 
         if option['readNetcdfStack']:
             # get the extent of the maps from the precipitation input maps
@@ -306,11 +315,7 @@ class LisfloodModel_ini(DynamicModel):
         data.loc[labels[2],:] = readInputWithBackup(name_3, values_1)
         return data
 
-    def deffraction(self, para):
-        """Weighted sum over the fractions of each pixel"""
-        return para[0] * self.OtherFraction + para[1] * self.ForestFraction + para[2] * self.IrrigationFraction
-
-    # def deffraction(self, variable):
-    #     """Weighted sum over the soil fractions of each pixel"""
-    #     ax_veg = variable.dims.index("vegetation")
-    #     return _vegSum(ax_veg, variable.values, self.SoilFraction.values)
+    def deffraction(self, variable):
+         """Weighted sum over the soil fractions of each pixel"""
+         ax_veg = variable.dims.index("vegetation")
+         return _vegSum(ax_veg, variable.values, self.SoilFraction.values)

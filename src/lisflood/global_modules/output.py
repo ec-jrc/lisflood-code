@@ -234,8 +234,7 @@ class outputTssMap(object):
                             frequency = "annual"
                     except:
                         yearly = False
-
-                    if (monthly and self.var.monthend) or (yearly and self.var.yearend) or not (monthly or yearly):
+                    if (monthly and self.var.monthend) or (yearly and self.var.yearend):
                         # checks if a flag monthly or yearly exists
                         if option['writeNetcdfStack']:
                             # Get start date for reporting start step
@@ -245,13 +244,27 @@ class outputTssMap(object):
                             # get step number for last reporting step
                             reportStepEnd = self.var.ReportSteps[-1] - self.var.ReportSteps[0] + 1
                             cdfflags = CDFFlags.instance()
-
                             writenet(cdfflags[flagcdf], out_var, where, self.var.DtDay, maps,
                                      report_maps_steps[maps].output_var, report_maps_steps[maps].unit, 'd',
-                                     reportStartDate, reportStepStart, reportStepEnd, frequency)
+                                     reportStartDate, reportStepStart, reportStepEnd, frequency)      
                         else:
                             self.var.report(decompress(eval(what)), str(where))
-
+                    if frequency == "all":
+                        # checks if a flag monthly or yearly exists
+                        if option['writeNetcdfStack']:
+                            # Get start date for reporting start step
+                            reportStartDate = inttodate(self.var.ReportSteps[0] - 1, self.var.CalendarDayStart)
+                            # get step number for first reporting step
+                            reportStepStart = 1
+                            # get step number for last reporting step
+                            reportStepEnd = self.var.ReportSteps[-1] - self.var.ReportSteps[0] + 1
+                            cdfflags = CDFFlags.instance()
+                            writenet(cdfflags[flagcdf], out_var, where, self.var.DtDay, maps,
+                                     report_maps_steps[maps].output_var, report_maps_steps[maps].unit, 'd',
+                                     reportStartDate, reportStepStart, reportStepEnd, frequency)      
+                        else:
+                            self.var.report(decompress(eval(what)), str(where))
+                            
         # Report ALL maps
         for maps in report_maps_all.keys():
             # report maps for all timesteps
@@ -291,8 +304,8 @@ class outputTssMap(object):
                         frequency = "annual"
                 except:
                     yearly = False
-
-                if (monthly and self.var.monthend) or (yearly and self.var.yearend) or not (monthly or yearly):
+                ## stef
+                if (monthly and self.var.monthend) or (yearly and self.var.yearend):
                     # checks if a flag monthly or yearly exists]
                     if option['writeNetcdfStack']:
                         #Get start date for reporting start step
@@ -311,6 +324,24 @@ class outputTssMap(object):
 
                     else:
                         self.var.report(decompress(eval(what)), trimPCRasterOutputPath(where))
+                if frequency == "all":
+                    if option['writeNetcdfStack']:
+                        #Get start date for reporting start step
+                        reportStartDate = inttodate(binding['StepStartInt'] - 1, self.var.CalendarDayStart)
+                        # CM: get step number for first reporting step which is always the first simulation step
+                        # CM: first simulation step referred to reportStartDate
+                        ##reportStepStart = int(binding['StepStart'])
+                        reportStepStart = 1
+                        #get step number for last reporting step which is always the last simulation step
+                        #last simulation step referred to reportStartDate
+                        reportStepEnd = binding['StepEndInt'] - binding['StepStartInt'] + 1
+                        
+                        cdfflags = CDFFlags.instance()
+                        writenet(cdfflags[flagcdf], out_var, where, self.var.DtDay, maps, report_maps_all[maps].output_var,
+                                 report_maps_all[maps].unit, 'd', reportStartDate, reportStepStart, reportStepEnd, frequency)
+
+                    else:
+                        self.var.report(decompress(eval(what)), trimPCRasterOutputPath(where))                         
 
         cdfflags = CDFFlags.instance()
         # set the falg to indicate if a netcdffile has to be created or is only appended

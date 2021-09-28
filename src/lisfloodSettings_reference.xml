@@ -37,9 +37,10 @@ You can use builtin path variables in this template and reference to other paths
 
     <setoption choice="0" name="wateruse"/>
     <setoption choice="1" name="TransientWaterDemandChange" />
-    <setoption choice="0" name="useWaterDemandAveYear" />
+    <setoption choice="1" name="useWaterDemandAveYear" />
     <setoption choice="1" name="wateruseRegion"/>
 
+    <setoption choice="0" name="cropsEPIC"/>
     <setoption choice="1" name="drainedIrrigation"/>
     <setoption choice="1" name="riceIrrigation"/>
     <setoption choice="1" name="openwaterevapo"/>
@@ -93,6 +94,9 @@ You can use builtin path variables in this template and reference to other paths
     # report maps
     <setoption choice="1" name="repDischargeMaps"/>
     <setoption choice="1" name="repSurfaceRunoffMaps"/>
+    <setoption choice="1" name="repTotalRunoffMaps"/>
+    <setoption choice="1" name="repPrefFlowMaps"/>
+    <setoption choice="1"  name="repTaMaps"/
     <setoption choice="1" name="repRainMaps"/>
     <setoption choice="1" name="repSnowMaps"/>
     <setoption choice="1" name="repSnowCoverMaps"/>
@@ -102,14 +106,13 @@ You can use builtin path variables in this template and reference to other paths
     <setoption choice="1" name="repLZMaps"/>
     <setoption choice="1" name="repUZMaps"/>
     <setoption choice="1" name="repGwPercUZLZMaps"/>
+    <setoption choice="1" name="repPercolationMaps"/>
     <setoption choice="1" name="repRWS"/>
     <setoption choice="1"  name="repPFMaps"/>
-    <setoption choice="1"  name="repPFForestMaps"/>
 
-
-    <setoption choice="0" name="repTotalAbs"/>
-    <setoption choice="0" name="repTotalWUse"/>
-    <setoption choice="0" name="repWIndex"/>
+    <setoption choice="1" name="repTotalAbs"/>
+    <setoption choice="1" name="repTotalWUse"/>
+    <setoption choice="1" name="repWIndex"/>
 
 </lfoptions>
 
@@ -1128,6 +1131,18 @@ More than the transpiration is added e.g to prevent salinisation
 </comment>
 </textvar>
 
+<textvar name="IrrigationWaterReUseM3" value="0.0">           
+<comment>           
+Annual amount (m3) of treated wastewater reused for irrigation                 
+</comment>           
+</textvar>
+   
+<textvar name="IrrigationWaterReUseNumDays" value="143">          
+<comment>           
+Number of days over which the annual amount of treated wastewater for irrigation is used                
+</comment>           
+</textvar>
+
 <textvar name="LivestockConsumptiveUseFraction" value="0.15">
 <comment>
 Consumptive Use (1-Recycling ratio) for livestock water use (0-1) [-]
@@ -1595,6 +1610,65 @@ moisture content (value of HeadMax is arbitrary). Only needed for pF computation
 otherwise doesn't influence model results at all)
 </comment>
 </textvar>
+
+<comment>
+PF MAPS
+</comment>
+
+<textvar name="PF1OtherMaps" value="$(PathOut)/pf0_other">
+<comment>
+Reported pF soil layer 1a, other fraction
+</comment>
+</textvar>
+
+<textvar name="PF2OtherMaps" value="$(PathOut)/pf1_other">
+<comment>
+Reported pF soil layer  1b, other fraction
+</comment>
+</textvar>
+
+<textvar name="PF3OtherMaps" value="$(PathOut)/pf2_other">
+<comment>
+Reported pF soil layer  2, other fraction
+</comment>
+</textvar>
+
+<textvar name="PF1ForestMaps" value="$(PathOut)/pf0_forest">
+<comment>
+Reported pF soil layer 1a, forest fraction
+</comment>
+</textvar>
+
+<textvar name="PF2ForestMaps" value="$(PathOut)/pf1_forest">
+<comment>
+Reported pF soil layer 1b, forest fraction
+</comment>
+</textvar>
+
+<textvar name="PF3ForestMaps" value="$(PathOut)/pf2_forest">
+<comment>
+Reported pF layer  2, forest fraction
+</comment>
+</textvar>
+
+<textvar name="PF1IrrigationMaps" value="$(PathOut)/pf0_irrig">
+<comment>
+Reported pF soil layer 1a, irrigation fraction
+</comment>
+</textvar>
+
+<textvar name="PF2IrrigationMaps" value="$(PathOut)/pf1_irrig">
+<comment>
+Reported pF soil layer 1b, irrigation fraction
+</comment>
+</textvar>
+
+<textvar name="PF3IrrigationMaps" value="$(PathOut)/pf2_irrig">
+<comment>
+Reported pF soil layer 2, irrigation fraction
+</comment>
+</textvar>
+
 
 </group>
 
@@ -2571,6 +2645,18 @@ More than the transpiration is added e.g to prevent salinisation
 </comment>
 </textvar>
 
+<textvar name="IrrigationWaterReUseM3" value="$(IrrigationWaterReUseM3)">           
+<comment>           
+Annual amount (m3) of treated wastewater reused for irrigation                  
+</comment>    
+</textvar>
+    
+<textvar name="IrrigationWaterReUseNumDays" value="$(IrrigationWaterReUseNumDays)">      
+<comment>
+Number of days over which the annual amount of treated wastewater for irrigation is used                
+</comment>          
+</textvar>
+
 <textvar name="MapIrrigationCropCoef" value="$(MapIrrigationCropCoef)">
 <comment>
 Irrigation crop coefficient
@@ -2937,6 +3023,30 @@ soil layer 2 (lowerupper layer) [V/V] [mm3/mm3]
 <textvar name="UZIrrigationState" value="$(PathOut)/uzi">
 <comment>
 Reported storage in upper response box [mm]
+</comment>
+</textvar>
+
+<textvar name="TaOtherMaps" value="$(PathOut)/Ta_other">
+<comment>
+Reported transpiration maps, other fraction [mm]
+</comment>
+</textvar>
+
+<textvar name="TaForestMapa" value="$(PathOut)/Ta_forest">
+<comment>
+Reported transpiration maps, forest fraction [mm]
+</comment>
+</textvar>
+
+<textvar name="TaIrrigationMaps" value="$(PathOut)/Ta_irr">
+<comment>
+Reported transpiration maps, irrigated fraction [mm]
+</comment>
+</textvar>
+
+<textvar name="TaPixelMaps" value="$(PathOut)/Ta_pixel">
+<comment>
+Reported transpiration maps, weighted sum over the fractions of each pixel [mm]
 </comment>
 </textvar>
 
@@ -3469,15 +3579,63 @@ Reported preferential flow [mm]
 </comment>
 </textvar>
 
-<textvar name="PercolationMaps" value="$(PathOut)/to2su">
+<textvar name="Percolation1ato1bOtherMaps" value="$(PathOut)/Percolation1ato1bOther">
 <comment>
-Reported percolation from soil layer 1 to soil layer 2   [mm]
+Reported percolation from soil layer 1a to soil layer 1b, other fraction  [mm]
 </comment>
 </textvar>
 
-<textvar name="SeepSubToGWMaps" value="$(PathOut)/sgw">
+<textvar name="Percolation1ato1bForestMaps" value="$(PathOut)/Percolation1ato1bForest">
 <comment>
-Reported seepage to groundwater(from soil layer 2 to groundwater) [mm]
+Reported percolation from soil layer 1a to soil layer 1b, forest fraction  [mm]
+</comment>
+</textvar>
+
+<textvar name="Percolation1ato1bIrrigationMaps" value="$(PathOut)/Percolation1ato1bIrrigation">
+<comment>
+Reported percolation from soil layer 1a to soil layer 1b, irrigation fraction  [mm]
+</comment>
+</textvar>
+
+<textvar name="Percolation1bto2OtherMaps" value="$(PathOut)/Percolation1bto2Other">
+<comment>
+Reported percolation from soil layer 1b to soil layer 2, other fraction  [mm]
+</comment>
+</textvar>
+
+<textvar name="Percolation1bto2ForestMaps" value="$(PathOut)/Percolation1bto2Forest">
+<comment>
+Reported percolation from soil layer 1b to soil layer 2, forest fraction  [mm]
+</comment>
+</textvar>
+
+<textvar name="Percolation1bto2IrrigationMaps" value="$(PathOut)/Percolation1bto2Irrigation">
+<comment>
+Reported percolation from soil layer 1b to soil layer 2, irrigation fraction  [mm]
+</comment>
+</textvar>
+
+<textvar name="SeepSubToGWOtherMaps" value="$(PathOut)/sgwOther">
+<comment>
+Reported seepage to groundwater(from soil layer 2 to groundwater), other fraction [mm]
+</comment>
+</textvar>
+
+<textvar name="SeepSubToGWForestMaps" value="$(PathOut)/sgwForest">
+<comment>
+Reported seepage to groundwater(from soil layer 2 to groundwater), forest fraction [mm]
+</comment>
+</textvar>
+
+<textvar name="SeepSubToGWIrrigationMaps" value="$(PathOut)/sgwIrrigation">
+<comment>
+Reported seepage to groundwater(from soil layer 2 to groundwater), irrigation fraction [mm]
+</comment>
+</textvar>
+
+<textvar name="SeepSubToGWMaps" value="$(PathOut)/sgwPixel">
+<comment>
+Reported seepage to groundwater(from soil layer 2 to groundwater), weighted sum over the fraction of each pixel [mm]
 </comment>
 </textvar>
 
@@ -5304,70 +5462,15 @@ TotalAbstractionFromSurfaceWater [mm] summed up for water regions
 </comment>
 </textvar>
 
-<textvar name="TotalAbsGroundwaterRegion" value="$(PathOut)/rAbsGW">
+<textvar name="TotalAbsSurfaceGroundwaterRegion" value="$(PathOut)/rAbsGW">
 <comment>
-TotalAbstractionFromGroundwater [mm] summed up for water regions
-</comment>
-</textvar>
-
-<textvar name="TotalIrrigationAbstractionM3" value="$(PathOut)/tAbsIrgt">
-<comment>
-TotalIrrigationAbstraction [m3]
+Total Abstraction From SurfaceWater and Groundwater [mm] summed up for water regions, montly values
 </comment>
 </textvar>
 
 <textvar name="TotalPaddyRiceIrrigationAbstractionM3" value="$(PathOut)/tAbsPdRc">
 <comment>
 TotalPaddyRiceIrrigationAbstraction [m3]
-</comment>
-</textvar>
-
-<textvar name="TotalLivestockAbstractionM3" value="$(PathOut)/tAbsLvSt">
-<comment>
-TotalLivestockAbstraction [m3]
-</comment>
-</textvar>
-
-<textvar name="DomesticConsumptiveUse" value="$(PathOut)/domCo">
-<comment>
-DomesticConsumptiveUseMM [mm]
-</comment>
-</textvar>
-
-<textvar name="LivestockConsumptiveUse" value="$(PathOut)/livCo">
-<comment>
-LivestockConsumptiveUseMM [mm]
-</comment>
-</textvar>
-
-<textvar name="IndustrialConsumptiveUse" value="$(PathOut)/indCo">
-<comment>
-IndustrialConsumptiveUseMM [mm]
-</comment>
-</textvar>
-
-<textvar name="EnergyConsumptiveUse" value="$(PathOut)/eneCo">
-<comment>
-EnergyConsumptiveUseMM [mm]
-</comment>
-</textvar>
-
-<textvar name="IrrigationWaterAbstraction" value="$(PathOut)/irrCo">
-<comment>
-IrrigationWaterAbstraction [mm]
-</comment>
-</textvar>
-
-
-<textvar name="TotalWUse" value="$(PathOut)/tWuse">
-<comment>
-Water use (water demand is reduced by water available)
-</comment>
-</textvar>
-
-<textvar name="TotalWUseRegion" value="$(PathOut)/rWuse">
-<comment>
-Water use (water demand is reduced by water available) summed up for water regions
 </comment>
 </textvar>
 
@@ -5389,6 +5492,11 @@ Water Exploitation Index - Demand; for water regions: demand / internal and exte
 </comment>
 </textvar>
 
+<textvar name="WEI_Plus" value="$(PathOut)/WeiPlus">
+<comment>
+Water Exploitation Index - Consumption; for water regions
+</comment>
+</textvar>
 
 <textvar name="RegionMonthInternalFlowM3" value="$(PathOut)/RgIn">
 <comment>
@@ -5402,21 +5510,15 @@ External available water
 </comment>
 </textvar>
 
-<textvar name="RegionMonthWConsumptionM3" value="$(PathOut)/RgWC">
+<textvar name="RegionMonthConsumptionRequiredM3" value="$(PathOut)/RgWCR"> 
 <comment>
 Region Water Consumption
 </comment>
 </textvar>
 
-<textvar name="RegionMonthWAbstractionM3" value="$(PathOut)/RgWA">
+<textvar name="RegionMonthConsumptionActualM3" value="$(PathOut)/RgWCA">  
 <comment>
-Region Water Demand
-</comment>
-</textvar>
-
-<textvar name="RegionMonthWDemandM3" value="$(PathOut)/RgWD">
-<comment>
-Region Water Demand
+Region Water Consumption
 </comment>
 </textvar>
 
@@ -5518,12 +5620,6 @@ Abstraction from surface water in m3 per timestep
 </comment>
 </textvar>
 
-<textvar name="AreaTotalAbstractionFromGroundwaterM3" value="$(PathOut)/ATAbsGW">
-<comment>
-Region abstraction from groundwater in m3 per timestep
-</comment>
-</textvar>
-
 <textvar name="AreaTotalAbstractionFromSurfaceWaterM3" value="$(PathOut)/ATAbsSW">
 <comment>
 Region abstraction from surface water in m3 per timestep
@@ -5560,24 +5656,6 @@ LakeStorage in M3
 </comment>
 </textvar>
 
-<textvar name="TotalDemandM3" value="$(PathOut)/TotDemd">
-<comment>
-Total Abstraction Demand
-</comment>
-</textvar>
-
-<textvar name="WUseAddM3" value="$(PathOut)/TotAbsCh">
-<comment>
-WUseAddM3
-</comment>
-</textvar>
-
-<textvar name="totalAddM3" value="$(PathOut)/TotAddCh">
-<comment>
-totalAddM3
-</comment>
-</textvar>
-
 <textvar name="AreatotalIrrigationUseM3" value="$(PathOut)/ATIrgUse">
 <comment>
 AreatotalIrrigationUseM3
@@ -5595,6 +5673,36 @@ FractionAbstractedFromChannels
 EFlowIndicator (1 on day with ChanQ smaller than EflowThreshold, 0 on normal days)
 </comment>
 </textvar>
+
+<textvar name="consumption_required_domestic_M3MonthRegion" value="$(PathOut)/consReqDomM3MonReg"/>
+
+<textvar name="consumption_required_energy_M3MonthRegion" value="$(PathOut)/consReqEneM3MonReg"/>
+
+<textvar name="consumption_required_industry_M3MonthRegion" value="$(PathOut)/consReqIndM3MonReg"/>
+
+<textvar name="consumption_required_livestock_M3MonthRegion" value="$(PathOut)/consReqLivM3MonReg"/>
+
+<textvar name="consumption_required_irrigation_M3MonthRegion" value="$(PathOut)/consReqIrrM3MonReg"/>
+
+<textvar name="consumption_actual_irrigation_M3MonthRegion" value="$(PathOut)/consActIrrM3MonReg"/>
+
+<textvar name="abstraction_allSources_required_irrigation_M3MonthRegion" value="$(PathOut)/absAllSrcReqIrrM3MonReg"/>
+
+<textvar name="abstraction_allSources_actual_irrigation_M3MonthRegion" value="$(PathOut)/absAllSrcActIrrM3MonReg"/>
+
+<textvar name="abstraction_SwGw_required_irrigation_M3MonthRegion" value="$(PathOut)/absSwGwReqIrrM3MonReg"/>
+
+<textvar name="abstraction_SwGw_actual_irrigation_M3MonthRegion" value="$(PathOut)/absSwGwActIrrM3MonReg"/>
+
+<textvar name="UpstreamInflowM3" value="$(PathOut)/upstreamInflowAvailableM3MonReg"/>
+
+<textvar name="LocalFreshwaterM3" value="$(PathOut)/localWaterAvailableMonReg"/>
+
+<textvar name="LocalTotalWaterDemandM3" value="$(PathOut)/localWaterDemandMonReg"/>
+
+<textvar name="UpstreamInflowUsedM3" value="$(PathOut)/upstreamInflowUsedMonReg"/>
+
+<textvar name="FossilGroundwaterUsedM3" value="$(PathOut)/fossilGroundwaterUsedMonReg"/>
 
 </group>
 

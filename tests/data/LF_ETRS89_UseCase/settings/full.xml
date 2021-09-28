@@ -18,6 +18,7 @@
         <setoption choice="1" name="simulatePF"/>
         <setoption choice="1" name="SplitRouting"/>
         <setoption choice="0" name="InitLisflood"/>
+        <setoption choice="0" name="cropsEPIC"/>
 
         # report end maps and state maps
         <setoption choice="0" name="repEndMaps"/>
@@ -52,6 +53,7 @@
         <setoption choice="0" name="repTotalAbs"/>
         <setoption choice="0" name="repTotalWUse"/>
         <setoption choice="0" name="repWIndex"/>
+        <setoption choice="0" name="repWaterUse"/>
 
     </lfoptions>
 
@@ -476,11 +478,12 @@
 
             <textvar name="CalChanMan" value="$(PathParams)/params_CalChanMan1.nc">
                 <comment>
-                    default: 2.0
-                    $(PathParams)/params_CalChanMan1.nc
-                    Multiplier applied to Channel Manning's n
+                    default: 3.0
+                    $(PathParams)/params_CalChanMan2.nc
+                    Multiplier applied to Channel Manning's n for second line of routing
                 </comment>
             </textvar>
+
 
             <textvar name="SnowMeltCoef" value="$(PathParams)/params_SnowMeltCoef.nc">
                 <comment>
@@ -1486,6 +1489,28 @@
 
                 </comment>
 
+            </textvar>
+            
+            
+            <textvar name="IrrigationWaterReUseM3" value="0.0">
+            
+            <comment>
+            
+                  Annual amount (m3) of treated wastewater reused for irrigation
+                  
+            </comment>
+            
+            </textvar>
+            
+            
+            <textvar name="IrrigationWaterReUseNumDays" value="143">
+            
+            <comment>
+            
+                  Number of days over which the annual amount of treated wastewater for irrigation is used
+                  
+            </comment>
+            
             </textvar>
 
 
@@ -4008,6 +4033,28 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
             </textvar>
 
+            
+            <textvar name="IrrigationWaterReUseM3" value="$(IrrigationWaterReUseM3)">
+            
+            <comment>
+            
+                  Annual amount (m3) of treated wastewater reused for irrigation
+                  
+            </comment>
+            
+            </textvar>
+            
+            
+            <textvar name="IrrigationWaterReUseNumDays" value="$(IrrigationWaterReUseNumDays)">
+            
+            <comment>
+            
+                  Number of days over which the annual amount of treated wastewater for irrigation is used
+                  
+            </comment>
+            
+
+            </textvar>
 
             <textvar name="MapIrrigationCropCoef" value="$(MapIrrigationCropCoef)">
 
@@ -8723,6 +8770,10 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
                         **************************************************************
 
+                    <textvar name="UpstreamInflowUsedM3" value="$(PathOut)/upstreamInflowUsedMonReg"/>
+                    
+                    <textvar name="abstraction_allSources_actual_irrigation_M3MonthRegion" value="$(PathOut)/absAllSrcActIrrM3MonReg"/>
+                    
                     </comment>
 
 

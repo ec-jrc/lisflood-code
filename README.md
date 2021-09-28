@@ -15,19 +15,20 @@ Other useful resources
 | Lisflood Usecases   |                                                           | https://github.com/ec-jrc/lisflood-usecases                  |
 
 
-## Notes for Release 3.0.0
+## Notes for Release 3.1.0
 
-With version 3.0.0, the computation of Qlimit has been edited.
 
-This could lead to substantial differences in model output, and a new calibration of parameter QSplitMult is required.
-QLimit is a threshold value. Floodplain routing (i.e. the second line of routing) starts when the channel discharge 
-exceeds the value QLimit (bankfull discharge). 
+With version 3.1.0, the way Lisflood handles I/O has been changed.
 
-The definition of QLimit was edited to allow a more physically based assessment of its value, which is now independent of the number of routing steps. 
-QLimit is now defined as the product of AvgDis (average discharge value, as computed by the prerun) and QSplitMult. 
-
-The value of the coefficient QSplitMult can be calibrated or provided as input according to statistical relationships. 
-It is here noted that this edited definition of QLimit is consistent with the computation of M3limit.
+NetCDF reader for forcings (or any other temporal data) now based on Xarray, allowing more flexibility and efficiency (dramatic improvement in calibration mode, i.e. without NetCDF outputs).
+Two new options in the xml settings file:
+• NetCDFTimeChunks: chunking size in the time dimension. Recommended value is “auto" but chunking size can be specified manually or set to “-1" to load the whole time series into memory (very fast but expensive in terms of memory).
+• MapsCaching (True or False): option designed for the lisflood calibration. If set to True, all the static maps and forcings will be stored in a cache so that they don't have to be loaded by each lisflood instance. This option sets the value of NetCDFTimeChunks to "-1", meaning that the whole time series in the NetCDF inputs is loaded into memory.
+Several tests have been added: lat/lon domains, inflows, new reader, etc. This version also makes it easier to use lisflood as a library and to run multiple instances of lisflood in a thread-safe environment. This can be done by doing the following:
+import lisf1
+...
+lisf1.main(settings_file, flags)
+…
 
 ## Quick start
 

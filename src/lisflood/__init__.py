@@ -12,5 +12,5 @@ __version__ = version
 __authors__ = "Ad de Roo, Emiliano Gelati, Peter Burek, Johan van der Knijff, Niko Wanders"
 __date__ = "20/01/2021"
 __copyright__ = "Copyright 2019-2021, European Commission - Joint Research Centre"
-__maintainer__ = "Cinzia Mazzetti, Stefania Grimaldi, Emiliano Gelati, Domenico Nappo, Valerio Lorini, Lorenzo Mentaschi, Ad de Roo"
+__maintainer__ = "Cinzia Mazzetti, Stefania Grimaldi, Emiliano Gelati, Carlo Russo, Valerio Lorini, Lorenzo Mentaschi, Ad de Roo"
 __status__ = "Operation"

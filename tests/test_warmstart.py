@@ -32,7 +32,7 @@ from .test_utils import setoptions, mk_path_out
 
 
 @pytest.mark.slow
-class TestWarmStart:
+class TestWarmStart():
     settings_files = {
         'prerun': os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/prerun.xml'),
         'cold': os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/cold.xml'),
@@ -64,18 +64,16 @@ class TestWarmStart:
         check_every = 13  # steps
         # init
         path_out_init = mk_path_out('data/LF_ETRS89_UseCase/out/init{}'.format(dt_sec))
-        settings_prerun = setoptions(self.settings_files['prerun'],
-                                     opts_to_unset=modules_to_unset,
+        settings_prerun = setoptions(self.settings_files['prerun'], opts_to_unset=modules_to_unset,
                                      vars_to_set={'DtSec': dt_sec,
                                                   'PathOut': path_out_init,
                                                   'StepStart': step_start,
                                                   'ReportSteps': report_steps,
-                                                  'StepEnd': step_end,
-                                                  'NetCDFTimeChunks': 'auto',
-                                                  })
+                                                  'StepEnd': step_end})
         step_end_dt = settings_prerun.step_end_dt
         # ** execute
         lisfloodexe(settings_prerun)
+
         # long run
         lzavin_path = settings_prerun.binding['LZAvInflowMap']
         avgdis_path = settings_prerun.binding['AvgDis']
@@ -87,11 +85,10 @@ class TestWarmStart:
                                                    'PathOut': path_out_reference,
                                                    'AvgDis': avgdis_path,
                                                    'ReportSteps': report_steps,
-                                                   'DtSec': dt_sec,
-                                                   'NetCDFTimeChunks': 'auto',
-                                                   })
+                                                   'DtSec': dt_sec})
         # ** execute
         lisfloodexe(settings_longrun)
+
         # warm run (1. Cold start)
         run_number = 1
         cold_start_step_end = step_start
@@ -103,9 +100,7 @@ class TestWarmStart:
                                                      'PathOut': path_out,
                                                      'AvgDis': avgdis_path,
                                                      'ReportSteps': report_steps,
-                                                     'DtSec': dt_sec,
-                                                     'NetCDFTimeChunks': 'auto',
-                                                     })
+                                                     'DtSec': dt_sec})
         # ** execute
         lisfloodexe(settings_coldstart)
 
@@ -135,11 +130,10 @@ class TestWarmStart:
                                                          'timestepInit': timestep_init,
                                                          'AvgDis': avgdis_path,
                                                          'ReportSteps': report_steps,
-                                                         'DtSec': dt_sec,
-                                                         'NetCDFTimeChunks': 'auto',
-                                                         })
+                                                         'DtSec': dt_sec})
             # ** execute
             lisfloodexe(settings_warmstart)
+
             # checking values at current timestep (using datetime)
             if not (run_number % check_every):
                 # ****** compare *******

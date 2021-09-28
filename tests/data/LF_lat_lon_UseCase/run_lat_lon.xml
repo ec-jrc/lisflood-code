@@ -23,18 +23,19 @@
         <setoption choice="1" name="inflow"/>
 
 
-        <setoption choice="1" name="wateruse"/>
-        <setoption choice="1" name="groundwaterSmooth"/>
-        <setoption choice="1" name="wateruseRegion"/>
+        <setoption choice="0" name="wateruse"/>
+        <setoption choice="0" name="groundwaterSmooth"/>
+        <setoption choice="0" name="wateruseRegion"/>
         <setoption choice="1" name="drainedIrrigation"/>
-        <setoption choice="1" name="riceIrrigation"/>
+        <setoption choice="0" name="riceIrrigation"/>
         <setoption choice="0" name="indicator"/>
+        <setoption choice="0" name="cropsEPIC"/>
 
         <setoption choice="0" name="TransientLandUseChange"/>
         <setoption choice="0" name="TransientWaterDemandChange"/>
-        <setoption choice="1" name="useWateqrDemandAveYear"/>
+        <setoption choice="0" name="useWateqrDemandAveYear"/>
         <setoption choice="1" name="openwaterevapo"/>
-        <setoption choice="1" name="varfractionwater"/>
+        <setoption choice="0" name="varfractionwater"/>
 
         <setoption choice="1" name="simulateLakes"/>
         <setoption choice="1" name="simulateReservoirs"/>
@@ -165,12 +166,12 @@ The option "numberParallelThreadsKinematicWave" may take the following values:
                 </comment>
             </textvar>
 
-            <textvar name="StepStart" value="02/01/1986 00:00">
+            <textvar name="StepStart" value="01/01/2016 00:00">
                 <comment>
                     Date of first time step in simulation
                 </comment>
             </textvar>
-            <textvar name="StepEnd" value="01/01/2018 00:00"/>
+            <textvar name="StepEnd" value="25/01/2016 00:00"/>
 
             <textvar name="ReportSteps" value="99999">
                 <comment>
@@ -353,13 +354,13 @@ The option "numberParallelThreadsKinematicWave" may take the following values:
                 **************************************************************
             </comment>
 
-            <textvar name="PathOut" value="$(PathRoot)/out">
+            <textvar name="PathOut" value="$(PathRoot)/reference_ricewateruseOFF">
                 <comment>
                     Output path (org=$(PathRoot)/out)
                 </comment>
             </textvar>
 
-            <textvar name="PathInit" value="$(PathRoot)/reference">
+            <textvar name="PathInit" value="$(PathRoot)/reference_ricewateruseOFF">
                 <comment>
                     Path of the initial value maps e.g. lzavin.map (org=$(PathRoot)/outPo)
                 </comment>
@@ -968,6 +969,18 @@ The option "numberParallelThreadsKinematicWave" may take the following values:
                     More than the transpiration is added e.g to prevent salinisation
                 </comment>
             </textvar>
+            
+            <textvar name="IrrigationWaterReUseM3" value="0.0">           
+                <comment>           
+                  Annual amount (m3) of treated wastewater reused for irrigation                 
+                </comment>           
+            </textvar>
+                       
+            <textvar name="IrrigationWaterReUseNumDays" value="143">          
+                <comment>           
+                  Number of days over which the annual amount of treated wastewater for irrigation is used                
+                </comment>           
+            </textvar>              
 
             <textvar name="LivestockConsumptiveUseFraction" value="0.15">
                 <comment>
@@ -2282,6 +2295,18 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     More than the transpiration is added e.g to prevent salinisation
                 </comment>
             </textvar>
+            
+            <textvar name="IrrigationWaterReUseM3" value="$(IrrigationWaterReUseM3)">           
+                 <comment>           
+                  Annual amount (m3) of treated wastewater reused for irrigation                  
+                 </comment>    
+            </textvar>
+                       
+            <textvar name="IrrigationWaterReUseNumDays" value="$(IrrigationWaterReUseNumDays)">      
+                 <comment>
+                  Number of days over which the annual amount of treated wastewater for irrigation is used                
+                 </comment>          
+            </textvar>             
 
             <textvar name="MapIrrigationCropCoef" value="$(PathRoot)/maps/cropcoef_i">
                 <comment>

@@ -23,17 +23,17 @@
         <setoption choice="1" name="inflow"/>
 
 
-        <setoption choice="0" name="wateruse"/>
+        <setoption choice="1" name="wateruse"/>
         <setoption choice="0" name="groundwaterSmooth"/>
-        <setoption choice="0" name="wateruseRegion"/>
+        <setoption choice="1" name="wateruseRegion"/>
         <setoption choice="1" name="drainedIrrigation"/>
-        <setoption choice="0" name="riceIrrigation"/>
+        <setoption choice="1" name="riceIrrigation"/>
         <setoption choice="0" name="indicator"/>
         <setoption choice="0" name="cropsEPIC"/>
 
         <setoption choice="0" name="TransientLandUseChange"/>
-        <setoption choice="0" name="TransientWaterDemandChange"/>
-        <setoption choice="0" name="useWateqrDemandAveYear"/>
+        <setoption choice="1" name="TransientWaterDemandChange"/>
+        <setoption choice="1" name="useWateqrDemandAveYear"/>
         <setoption choice="1" name="openwaterevapo"/>
         <setoption choice="0" name="varfractionwater"/>
 
@@ -42,32 +42,33 @@
         <setoption choice="0" name="simulatePF"/>
 
         <setoption choice="1" name="SplitRouting"/>
-        <setoption choice="1" name="InitLisflood"/>
+        <setoption choice="0" name="InitLisflood"/>
         <setoption choice="0" name="InitLisfloodwithoutSplit"/>
 
-        <setoption choice="0" name="repEndMaps"/>
-        <setoption choice="0" name="repTopSoilMoistureMaps"/>
-        <setoption choice="0" name="repSurfaceSoilMoistureMaps"/>
-        <setoption choice="0" name="repDischargeMaps"/>
-        <setoption choice="0" name="repsimulateLakes"/>
-        <setoption choice="0" name="repsimulateReservoirs"/>
+        <setoption choice="1" name="repStateMaps"/>
+        <setoption choice="1" name="repEndMaps"/>
+        <setoption choice="1" name="repTopSoilMoistureMaps"/>
+        <setoption choice="1" name="repSurfaceSoilMoistureMaps"/>
+        <setoption choice="1" name="repDischargeMaps"/>
+        <setoption choice="1" name="repsimulateLakes"/>
+        <setoption choice="1" name="repsimulateReservoirs"/>
 
-        <setoption choice="0" name="repSnowMaps"/>
-        <setoption choice="0" name="repSnowCoverMaps"/>
+        <setoption choice="1" name="repSnowMaps"/>
+        <setoption choice="1" name="repSnowCoverMaps"/>
         <setoption choice="0" name="repRainMaps"/>
         <setoption choice="0" name="repSnowMeltMaps"/>
         <setoption choice="0" name="repPFMaps"/>
-        <setoption choice="0" name="repThetaMaps"/>
-        <setoption choice="0" name="repThetaForestMaps"/>
-        <setoption choice="0" name="repLZMaps"/>
-        <setoption choice="0" name="repUZMaps"/>
-        <setoption choice="0" name="repGwPercUZLZMaps"/>
+        <setoption choice="1" name="repThetaMaps"/>
+        <setoption choice="1" name="repThetaForestMaps"/>
+        <setoption choice="1" name="repLZMaps"/>
+        <setoption choice="1" name="repUZMaps"/>
+        <setoption choice="1" name="repGwPercUZLZMaps"/>
         <setoption choice="0" name="repRWS"/>
         <setoption choice="0" name="repStressDays"/>
 
         <setoption choice="1" name="readNetcdfStack"/>
-        <setoption choice="0" name="writeNetcdfStack"/>
-        <setoption choice="0" name="writeNetcdf"/>
+        <setoption choice="1" name="writeNetcdfStack"/>
+        <setoption choice="1" name="writeNetcdf"/>
 
         <setoption choice="0" name="MonteCarlo"/>
         <setoption choice="0" name="EnKF"/>
@@ -107,12 +108,9 @@ The option "numberParallelThreadsKinematicWave" may take the following values:
                     Root directory
                 </comment>
             </textvar>
+            <textvar name="MaskMap" value="$(PathMaps)/masksmall.map"/>
 
-            <textvar name="MaskMap" value="$(PathMaps)/masksmall.map">
-            </textvar>
-
-            <textvar name="Gauges" value="-122.55 52.95">
-            </textvar>
+            <textvar name="Gauges" value="-122.55 52.95"/>
 
             <textvar name="netCDFtemplate" value="$(PathMaps)/elvstd.nc">
                 <comment>
@@ -169,25 +167,14 @@ The option "numberParallelThreadsKinematicWave" may take the following values:
                 </comment>
             </textvar>
 
-            <textvar name="StepStart" value="02/01/1986 00:00">
+            <textvar name="StepStart" value="01/01/2015 00:00">
                 <comment>
-                    Number of first time step in simulation
+                    Date of first time step in simulation
                 </comment>
             </textvar>
+            <textvar name="StepEnd" value="01/01/2017 00:00"/>
 
-            <textvar name="StepEnd" value="01/01/2018 00:00">
-                <comment>
-                    Reforecasts_2017 1/1/1996 1
-                    Reforecasts_2017 31/12/2009 5114
-                    Reforecasts_2017 1/1/2010 5115
-                    Reforecasts_2017 31/12/2015 7305
-                    Reforecasts_2017 31/12/2016 7671
-
-                    Number of last time step in simulation
-                </comment>
-            </textvar>
-
-            <textvar name="ReportSteps" value="99999">
+            <textvar name="ReportSteps" value="1..99999">
                 <comment>
                     Time steps at which to write model state maps (i.e. only
                     those maps that would be needed to define initial conditions
@@ -368,7 +355,7 @@ The option "numberParallelThreadsKinematicWave" may take the following values:
                 **************************************************************
             </comment>
 
-            <textvar name="PathOut" value="$(PathRoot)/reference_ricewateruseOFF">
+            <textvar name="PathOut" value="/BGFS/DISASTER/grimast/EPICmerge/master_Fraser01deg24h_waterusericeON_gwOFF">
                 <comment>
                     Output path (org=$(PathRoot)/out)
                 </comment>
@@ -392,12 +379,6 @@ The option "numberParallelThreadsKinematicWave" may take the following values:
                 </comment>
             </textvar>
 
-            <textvar name="PathParams" value="$(PathRoot)/params">
-                <comment>
-                    Calibration parameter path
-                </comment>
-            </textvar>
-
             <textvar name="PathTables" value="$(PathRoot)/tables">
                 <comment>
                     Tables path
@@ -416,16 +397,15 @@ The option "numberParallelThreadsKinematicWave" may take the following values:
                 </comment>
             </textvar>
 
-            <textvar name="PathMapsLandUseChange" value="$(PathRoot)/landuse">
-                <comment>
-                    Maps for transient land use changes
-                    rcp85_20062125
-                </comment>
-            </textvar>
-
             <textvar name="PathMapsLanduse" value="$(PathRoot)/landuse">
                 <comment>
                     Maps for land use fractions and related land use maps
+                </comment>
+            </textvar>
+            <textvar name="PathMapsLandUseChange" value="$(PathRoot)/landuse">
+                <comment>
+                    Maps for transient land use changes
+                    We use same maps in this case
                 </comment>
             </textvar>
 
@@ -611,20 +591,6 @@ The option "numberParallelThreadsKinematicWave" may take the following values:
                 <comment>
                     Initial lake level [m]
                     -9999 sets initial value to steady-state level
-                </comment>
-            </textvar>
-
-            <textvar name="LakePrevInflowValue" value="-9999">
-                <comment>
-                    Lake inflow at previous routing sub-step (ChanQ(t-1)) [m3/s]
-                    -9999 sets initial value equal to PrevDischarge (ChanQ(t))
-                </comment>
-            </textvar>
-
-            <textvar name="LakePrevOutflowValue" value="-9999">
-                <comment>
-                    Lake outflow at previous routing sub-step (ChanQ(t-1)) [m3/s]
-                    -9999 sets initial value
                 </comment>
             </textvar>
 
@@ -1015,7 +981,7 @@ The option "numberParallelThreadsKinematicWave" may take the following values:
                 <comment>           
                   Number of days over which the annual amount of treated wastewater for irrigation is used                
                 </comment>           
-            </textvar>     
+            </textvar>              
 
             <textvar name="LivestockConsumptiveUseFraction" value="0.15">
                 <comment>
@@ -1868,8 +1834,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 **************************************************************
             </comment>
 
-            <textvar name="LZAvInflowMap"
-                     value="$(PathOut)/lzavin.map">
+            <textvar name="LZAvInflowMap" value="$(PathInit)/lzavin.map">
                 <comment>
                     $(PathInit)/lzavin.map
                     Reported map of average percolation rate from upper to
@@ -1877,7 +1842,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
             </textvar>
 
-            <textvar name="AvgDis" value="$(PathOut)/avgdis.map">
+            <textvar name="AvgDis" value="$(PathInit)/avgdis.map">
                 <comment>
                     $(PathInit)/avgdis.map
                     CHANNEL split routing in two lines
@@ -2332,7 +2297,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
             </textvar>
             
-             <textvar name="IrrigationWaterReUseM3" value="$(IrrigationWaterReUseM3)">           
+            <textvar name="IrrigationWaterReUseM3" value="$(IrrigationWaterReUseM3)">           
                  <comment>           
                   Annual amount (m3) of treated wastewater reused for irrigation                  
                  </comment>    
@@ -2342,7 +2307,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                  <comment>
                   Number of days over which the annual amount of treated wastewater for irrigation is used                
                  </comment>          
-            </textvar>            
+            </textvar>             
 
             <textvar name="MapIrrigationCropCoef" value="$(PathRoot)/maps/cropcoef_i">
                 <comment>
@@ -3490,13 +3455,12 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 **************************************************************
             </comment>
 
-            <textvar name="DisTS" value="$(PathOut)/dis_prerun.tss">
+            <textvar name="DisTS" value="$(PathOut)/dis_run.tss">
                 <comment>
                     Reported discharge [cu m/s]
                 </comment>
             </textvar>
-
-
+            
             <textvar name="ChanqTS" value="$(PathOut)/chanqWin.tss">
                 <comment>
                     Reported discharge over last routing sub-step [cu m/s]
@@ -4107,7 +4071,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="DirectRunoffFractionMaps" value="$(PathMapsLandUseChange)/fracsealed">
+                <textvar name="DirectRunoffFractionMaps" value="$(PathMapsLanduse)/fracsealed">
                     <comment>
                         stack of Direct Runoff fraction maps (0-1)
                     </comment>
@@ -4194,7 +4158,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="FractionNonConventionalWaterUsed" value="$(PathMapsLandUseChange)/fracncused">
+                <textvar name="FractionNonConventionalWaterUsed" value="$(PathMapsLanduse)/fracncused">
                     <comment>
                         NonConventionalWaterUsed (0-1)
                     </comment>
@@ -4214,7 +4178,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="MapCropCoef" value="$(PathRoot)/maps/cropcoef_o.map">
+                <textvar name="MapCropCoef" value="$(PathRoot)/maps//cropcoef_o.map">
                     <comment>
                         table with crop coefficient for each land use; values ranging from 0.75 to 1.25;
                         source: Supit, p.83 CFET

@@ -66,7 +66,7 @@ class landusechange(HydroModule):
         # Interactive crop fractions (if EPIC is active)
         if option.get('cropsEPIC'):
             self.var.crop_module.setSoilFractions()
-
+         
     def dynamic(self):
         """ dynamic part of the landusechange module"""
         settings = LisSettings.instance()
@@ -76,9 +76,22 @@ class landusechange(HydroModule):
         if option['TransientLandUseChange']:
             if option["cropsEPIC"]:
                 raise Exception("Land use change for EPIC crops not implemented yet!")
+            ''' Stef 27/09/2021
             time_step = self.var.currentTimeStep()
             self.var.DirectRunoffFraction = readnetcdf(binding['DirectRunoffFractionMaps'], time_step)
             self.var.WaterFraction = readnetcdf(binding['WaterFractionMaps'], time_step)
             self.var.RiceFraction = readnetcdf(binding['RiceFractionMaps'], time_step)
             soil = OrderedDict([(name, readnetcdf(binding[epic_settings.landuse_inputmap[epic_settings.vegetation_landuse[name]] + "Maps"], time_step)) for name in self.var.prescribed_vegetation])
             self.var.SoilFraction = xr.DataArray(pd.DataFrame(soil).T, coords=self.var.coord_prescribed_vegetation, dims=self.var.coord_prescribed_vegetation.keys())
+            '''
+
+            self.var.ForestFraction = readnetcdf(binding['ForestFractionMaps'], self.var.currentTimeStep(), timestampflag='closest')
+            self.var.DirectRunoffFraction = readnetcdf(binding['DirectRunoffFractionMaps'], self.var.currentTimeStep(), timestampflag='closest')
+            self.var.WaterFraction = readnetcdf(binding['WaterFractionMaps'], self.var.currentTimeStep(), timestampflag='closest')
+            self.var.IrrigationFraction = readnetcdf(binding['IrrigationFractionMaps'], self.var.currentTimeStep(), timestampflag='closest')
+            self.var.RiceFraction = readnetcdf(binding['RiceFractionMaps'], self.var.currentTimeStep(), timestampflag='closest')
+            self.var.OtherFraction = readnetcdf(binding['OtherFractionMaps'], self.var.currentTimeStep(), timestampflag='closest')
+
+            soil = OrderedDict([(name, loadmap(epic_settings.landuse_inputmap[epic_settings.vegetation_landuse[name]])) for name in self.var.prescribed_vegetation])
+            self.var.SoilFraction = xr.DataArray(pd.DataFrame(soil).T, coords=self.var.coord_prescribed_vegetation, dims=self.var.coord_prescribed_vegetation.keys())
+

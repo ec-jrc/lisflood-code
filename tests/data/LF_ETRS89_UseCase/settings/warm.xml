@@ -21,7 +21,8 @@
         <setoption choice="1" name="openwaterevapo"/>
         <setoption choice="1" name="simulateLakes"/>
         <setoption choice="1" name="simulateReservoirs"/>
-
+        <setoption choice="0" name="cropsEPIC"/>
+        
         <setoption choice="1" name="SplitRouting"/>
 
         # use inflow data
@@ -1029,6 +1030,18 @@
                     More than the transpiration is added e.g to prevent salinisation
                 </comment>
             </textvar>
+            
+            <textvar name="IrrigationWaterReUseM3" value="0.0">           
+                <comment>           
+                  Annual amount (m3) of treated wastewater reused for irrigation                 
+                </comment>           
+            </textvar>
+                       
+            <textvar name="IrrigationWaterReUseNumDays" value="143">          
+                <comment>           
+                  Number of days over which the annual amount of treated wastewater for irrigation is used                
+                </comment>           
+            </textvar>                  
 
             <textvar name="LivestockConsumptiveUseFraction" value="0.15">
                 <comment>
@@ -2472,6 +2485,18 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     More than the transpiration is added e.g to prevent salinisation
                 </comment>
             </textvar>
+            
+            <textvar name="IrrigationWaterReUseM3" value="$(IrrigationWaterReUseM3)">           
+                 <comment>           
+                  Annual amount (m3) of treated wastewater reused for irrigation                  
+                 </comment>    
+            </textvar>
+                       
+            <textvar name="IrrigationWaterReUseNumDays" value="$(IrrigationWaterReUseNumDays)">      
+                 <comment>
+                  Number of days over which the annual amount of treated wastewater for irrigation is used                
+                 </comment>          
+            </textvar>            
 
             <textvar name="MapIrrigationCropCoef" value="$(MapIrrigationCropCoef)">
                 <comment>

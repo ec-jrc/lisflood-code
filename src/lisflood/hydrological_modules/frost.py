@@ -70,6 +70,9 @@ class frost(HydroModule):
         # - second term should be subtracted, not added!!
 
         self.var.FrostIndex = np.maximum(self.var.FrostIndex + FrostIndexChangeRate * self.var.DtDay, 0)
+        
+        self.var.isFrozenSoil = self.var.FrostIndex > self.var.FrostIndexThreshold  #### EPIC
+        
         # frost index in soil [degree days]
         # based on Molnau and Bissel (1983, A Continuous Frozen Ground Index for Flood
         # Forecasting. In: Maidment, Handbook of Hydrology, p. 7.28, 7.55)
