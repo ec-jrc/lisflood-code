@@ -54,6 +54,7 @@ class frost(HydroModule):
         self.var.FrostIndex = loadmap('FrostIndexInitValue')
         # self.var.AfrostIndex=-(1-self.var.Afrost)*self.var.FrostIndex
         # initial Frost Index value
+        self.var.isFrozenSoil = self.var.FrostIndex > self.var.FrostIndexThreshold  #### EPIC
 # --------------------------------------------------------------------------
 # --------------------------------------------------------------------------
 

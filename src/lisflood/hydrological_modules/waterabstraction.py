@@ -373,7 +373,7 @@ class waterabstraction(HydroModule):
                 self.var.Ta.loc[irr_pre] = np.maximum(np.minimum(self.var.RWS.loc[irr_pre] * self.var.potential_transpiration.loc[irr_pre],
                                                              self.var.W1.loc[irr_pre] - self.var.WWP1.loc[self.var.VEGETATION_LANDUSE[irr_pre]]),  maskinfo.in_zero())                 
                 demand_irrigation_MM = (self.var.potential_transpiration.loc[irr_pre] - self.var.Ta.loc[irr_pre]) * self.var.SoilFraction.loc[irr_pre] 
-                demand_irrigation_MM = np.where(self.var.FrostIndex > self.var.FrostIndexThreshold, maskinfo.in_zero(),
+                demand_irrigation_MM = np.where(self.var.isFrozenSoil, maskinfo.in_zero(),
                                                demand_irrigation_MM)  
                 consumption_required_irrigation_MM = demand_irrigation_MM * self.var.IrrigationMult
                 self.var.abstraction_required_irrigation_MM = np.where((self.var.IrrigationEfficiency * self.var.ConveyanceEfficiency) > 0,
