@@ -22,6 +22,10 @@
         <setoption choice="0" name="repStateMaps"/>
         <setoption choice="0" name="repDischargeTs"/>
         <setoption choice="0" name="repDischargeMaps"/>
+        <setoption choice="0" name="repThetaMaps" />
+        <setoption choice="0" name="repThetaForestMaps" />
+        <setoption choice="0" name="repThetaIrrigationMaps" />
+        <setoption choice="0" name="repE2O2" />
         
 
         # report gauges and sites

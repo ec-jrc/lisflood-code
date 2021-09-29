@@ -74,12 +74,12 @@ class ETRS89TestCase(object):
             'report_map': 'DischargeMaps',
             'report_tss': 'DisTS',
             '86400': {
-                'map': os.path.join(ref_dir, 'dis_daily/dis.nc'),
-                'tss': os.path.join(ref_dir, 'dis_daily/dis.tss'),
+                'map': os.path.join(ref_dir, 'output_reference_daily/dis.nc'),
+                'tss': os.path.join(ref_dir, 'output_reference_daily/dis.tss'),
             },
             '21600': {
-                'map': os.path.join(ref_dir, 'dis_6h/dis.nc'),
-                'tss': os.path.join(ref_dir, 'dis_6h/dis.tss'),
+                'map': os.path.join(ref_dir, 'output_reference_6h/dis.nc'),
+                'tss': os.path.join(ref_dir, 'output_reference_6h/dis.tss'),
             },
         },
         'chanq': {
@@ -87,11 +87,95 @@ class ETRS89TestCase(object):
             'report_tss': 'ChanqTS',
             '86400': {
                 'map': None,
-                'tss': os.path.join(ref_dir, 'dis_daily/chanqWin.tss'),
+                'tss': os.path.join(ref_dir, 'output_reference_daily/chanqWin.tss'),
             },
             '21600': {
                 'map': None,
-                'tss': os.path.join(ref_dir, 'dis_6h/chanqWin.tss'),
+                'tss': os.path.join(ref_dir, 'output_reference_6h/chanqWin.tss'),
+            },
+        },
+        'thia': {
+            'report_map': 'Theta1IrrigationState',
+            'report_tss': None,
+            '86400': {
+                'map': os.path.join(ref_dir, 'output_reference_daily/thia.nc'),
+                'tss': None,
+            },
+            '21600': {
+                'map': os.path.join(ref_dir, 'output_reference_6h/thia.nc'),
+                'tss': None,
+            },
+        },
+        'thic': {
+            'report_map': 'Theta3IrrigationState',
+            'report_tss': None,
+            '86400': {
+                'map': os.path.join(ref_dir, 'output_reference_daily/thic.nc'),
+                'tss': None,
+            },
+            '21600': {
+                'map': os.path.join(ref_dir, 'output_reference_6h/thic.nc'),
+                'tss': None,
+            },
+        },
+        'thfa': {
+            'report_map': 'Theta1ForestState',
+            'report_tss': None,
+            '86400': {
+                'map': os.path.join(ref_dir, 'output_reference_daily/thfa.nc'),
+                'tss': None,
+            },
+            '21600': {
+                'map': os.path.join(ref_dir, 'output_reference_6h/thfa.nc'),
+                'tss': None,
+            },
+        },
+        'thfc': {
+            'report_map': 'Theta3ForestState',
+            'report_tss': None,
+            '86400': {
+                'map': os.path.join(ref_dir, 'output_reference_daily/thfc.nc'),
+                'tss': None,
+            },
+            '21600': {
+                'map': os.path.join(ref_dir, 'output_reference_6h/thfc.nc'),
+                'tss': None,
+            },
+        },
+        'tha': {
+            'report_map': 'Theta1State',
+            'report_tss': None,
+            '86400': {
+                'map': os.path.join(ref_dir, 'output_reference_daily/tha.nc'),
+                'tss': None,
+            },
+            '21600': {
+                'map': os.path.join(ref_dir, 'output_reference_6h/tha.nc'),
+                'tss': None,
+            },
+        },
+        'thc': {
+            'report_map': 'Theta3State',
+            'report_tss': None,
+            '86400': {
+                'map': os.path.join(ref_dir, 'output_reference_daily/thc.nc'),
+                'tss': None,
+            },
+            '21600': {
+                'map': os.path.join(ref_dir, 'output_reference_6h/thc.nc'),
+                'tss': None,
+            },
+        },
+        'lz': {
+            'report_map': 'LZState',
+            'report_tss': None,
+            '86400': {
+                'map': os.path.join(ref_dir, 'output_reference_daily/lz.nc'),
+                'tss': None,
+            },
+            '21600': {
+                'map': os.path.join(ref_dir, 'output_reference_6h/lz.nc'),
+                'tss': None,
             },
         },
         'avgdis': {

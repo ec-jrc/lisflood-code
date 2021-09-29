@@ -51,12 +51,14 @@ class TestCatch(ETRS89TestCase):
             "repsimulateLakes", "repStateMaps",
             "repsimulateReservoirs", "repSnowMaps", "repPFMaps", "repLZMaps", "repUZMaps",
             "repGwPercUZLZMaps", "repRWS", "repTotalWUse", "repWIndex",
-            "repSurfaceRunoffMaps", "repRainMaps", "repSnowMaps", "repSnowCoverMaps", "repSnowMeltMaps", "repThetaMaps",
-            "repThetaForestMaps", "repLZMaps", "repUZMaps",
+            "repSurfaceRunoffMaps", "repRainMaps", "repSnowMaps", "repSnowCoverMaps", "repSnowMeltMaps", 
+            "repLZMaps", "repUZMaps",
             "repGwPercUZLZMaps", "repRWS", "repPFMaps", "repPFForestMaps"
         )
         settings = setoptions(self.settings_files['base'],
-                              opts_to_set=('repDischargeTs', 'repDischargeMaps',) + self.modules_to_set,
+                              opts_to_set=('repDischargeTs', 'repDischargeMaps', 
+                                            "repThetaMaps", "repThetaForestMaps",
+                                            "repThetaIrrigationMaps", "repE2O2") + self.modules_to_set,
                               opts_to_unset=opts_to_unset,
                               vars_to_set={'StepStart': step_start,
                                            'StepEnd': step_end,
@@ -64,17 +66,31 @@ class TestCatch(ETRS89TestCase):
                                            'PathOut': output_dir})
         lisfloodexe(settings)
 
-    def test_dis_daily(self):
+    def test_output_daily(self):
         self.run('86400', '02/01/2016 06:00', '02/07/2016 06:00')
         self.compare_reference('dis', check='map', step_length='86400')
         self.compare_reference('dis', check='tss', step_length='86400')
         self.compare_reference('chanq', check='tss', step_length='86400')
+        self.compare_reference('thia', check='map', step_length='86400')
+        self.compare_reference('thic', check='map', step_length='86400')
+        self.compare_reference('thfa', check='map', step_length='86400')
+        self.compare_reference('thfc', check='map', step_length='86400')
+        self.compare_reference('tha', check='map', step_length='86400')
+        self.compare_reference('thc', check='map', step_length='86400')
+        self.compare_reference('lz', check='map', step_length='86400')
 
-    def test_dis_6h(self):
+    def test_output_6h(self):
         self.run('21600', '02/01/2016 06:00', '02/07/2016 06:00')
         self.compare_reference('dis', check='map', step_length='21600')
         self.compare_reference('dis', check='tss', step_length='21600')
         self.compare_reference('chanq', check='tss', step_length='21600')
+        self.compare_reference('thia', check='map', step_length='21600')
+        self.compare_reference('thic', check='map', step_length='21600')
+        self.compare_reference('thfa', check='map', step_length='21600')
+        self.compare_reference('thfc', check='map', step_length='21600')
+        self.compare_reference('tha', check='map', step_length='21600')
+        self.compare_reference('thc', check='map', step_length='21600')
+        self.compare_reference('lz', check='map', step_length='21600')
 
     def test_initvars(self):
         output_dir = mk_path_out(os.path.join(self.case_dir, 'out/test_results_initvars'))
