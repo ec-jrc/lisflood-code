@@ -7,6 +7,7 @@ import pcraster
 from netCDF4 import num2date, date2num
 import time as xtime
 from nine import range
+from pyproj import Proj
 
 from .settings import (calendar_inconsistency_warning, get_calendar_type, calendar, MaskAttrs, CutMap, NetCDFMetadata,
                        LisSettings, MaskInfo)
@@ -192,6 +193,45 @@ class XarrayCached(XarrayChunked):
     def __init__(self, data_path, dates):
 
         super().__init__(data_path, dates, '-1')
+
+
+def coordinatesLand(eastings_forcing, northings_forcing):
+    """"""
+    maskattrs = MaskAttrs.instance()
+    half_cell = maskattrs['cell'] / 2.
+    top_row = np.where(np.round(northings_forcing, 5) == np.round(maskattrs['y'] - half_cell, 5))[0][0]
+    left_col = np.where(np.round(eastings_forcing, 5) == np.round(maskattrs['x'] + half_cell, 5))[0][0]
+    row_slice = slice(top_row, top_row + maskattrs['row'])
+    col_slice = slice(left_col, left_col + maskattrs['col'])
+    maskinfo = MaskInfo.instance()
+    return [co[row_slice, col_slice][~maskinfo.info.mask] for co in np.meshgrid(eastings_forcing, northings_forcing)]
+
+
+@iocache
+def read_lat_from_template(binding):
+    nc_template = binding["netCDFtemplate"] + ".nc" if not binding["netCDFtemplate"].endswith('.nc') else binding["netCDFtemplate"]
+    with xr.open_dataset(nc_template) as nc:
+        if all([co in nc.dims for co in ("x", "y")]):
+            try:
+                # look for the projection variable
+                proj_var = [v for v in nc.data_vars.keys() if 'proj4_params' in nc[v].attrs.keys()][0]
+                # proj4 string
+                proj4_params = nc[proj_var].attrs['proj4_params']
+                # projection object obtained from the PROJ4 string
+            except IndexError:
+                try:
+                    proj4_params = binding['proj4_params']
+                except KeyError:
+                    raise Exception("If using projected coordinates (x, y), a variable with the 'proj4_params' "
+                                    "attribute must be included in the precipitation file or in settings file!")
+
+            # projection object obtained from the PROJ4 string
+            projection = Proj(proj4_params)
+            _, lat_deg = projection(*coordinatesLand(nc.x.values, nc.y.values), inverse=True)  # latitude (degrees)
+        else:
+            _, lat_deg = coordinatesLand(nc.lon.values, nc.lat.values)  # latitude (degrees)
+
+    return lat_deg
 
 
 def get_core_dims(dims):
