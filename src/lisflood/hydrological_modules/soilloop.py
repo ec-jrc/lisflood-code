@@ -503,6 +503,7 @@ class soilloop(HydroModule):
         # GwPercValue*DtDay)
         self.var.UZ[sLoop] = np.maximum(self.var.UZ[sLoop] - self.var.GwPercUZLZ[sLoop], maskinfo.in_zero())
         # (ground)water in upper response box [mm]
+        self.var.UZtotal =+ self.var.UZ[sLoop]
 
     def unsaturatedConductivity(self, fract, tmpW=None):
         """"""
