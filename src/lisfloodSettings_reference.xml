@@ -4147,6 +4147,34 @@ Reported mass balance error at outlet (as mm water slice)
 </comment>
 </textvar>
 
+<textvar name="MassBalanceErrorSplitRoutingTSS" value="$(PathOut)/mbErrorSplitRoutingM3.tss">
+<comment>
+Reported mass balance error due to the split routing module, for each catchment [m3]
+</comment>
+</textvar>  
+
+ 
+<textvar name="OutletDischargeErrorSplitRoutingTSS" value="$(PathOut)/OutletDischargeErrorSplitRoutingM3S.tss">
+<comment>
+Reported discharge error at the outlet as a consequence of the mass balance error within the split routing module, for each catchment [m3/s]
+</comment>
+</textvar>
+ 
+
+<textvar name="MBErrorStorageRatioTSS" value="$(PathOut)/MBErrorStorageRatio.tss">
+<comment>
+Reported ratio between the mass balance error and the water volume storage, for each catchment [m3/m3]
+</comment>
+</textvar>
+
+ 
+<textvar name="AverageFractionsCatchmentTSS" value="$(PathOut)/AverageFractionsCatchment.tss">
+<comment>
+Average value of the sum of the fractions within a catchment: this value must be 1.0 in order to avoid mass balace errors! [-]
+</comment>
+</textvar>
+
+
 <textvar name="Th1LTResTS" value="$(PathOut)/thTopLtRes.tss">
 <comment>
 Number of cells with Theta lower than

@@ -226,7 +226,8 @@ class LisfloodModel_dyn(DynamicModel):
         # *******  Calculate CUMULATIVE MASS BALANCE ERROR  **********
         # ************************************************************
         self.waterbalance_module.dynamic()
-        self.indicatorcalc_module.dynamic()
+        if option['indicator']: ## Stef: DYNAMIC LAND COVER
+           self.indicatorcalc_module.dynamic()
 
         # ************************************************************
         # ***** WRITING RESULTS: TIME SERIES AND MAPS ****************
@@ -250,5 +251,6 @@ class LisfloodModel_dyn(DynamicModel):
 
         ### Report states if EnKF is used and filter moment
         self.stateVar_module.dynamic()
-        self.indicatorcalc_module.dynamic_setzero()
+        if option['indicator']: ## Stef: DYNAMIC LAND COVER
+           self.indicatorcalc_module.dynamic_setzero()
         # setting monthly and yearly dindicator to zero at the end of the month (year)

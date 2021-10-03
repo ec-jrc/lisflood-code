@@ -19,7 +19,7 @@ from __future__ import absolute_import, print_function
 from ..global_modules.add1 import loadmap, readnetcdf
 from ..global_modules.settings import LisSettings
 from . import HydroModule
-
+import numpy as np
 
 class landusechange(HydroModule):
 
@@ -51,13 +51,28 @@ class landusechange(HydroModule):
     def initial(self):
         """ initial part of the landusechange module
         """
-
+        settings = LisSettings.instance()
+        option = settings.options
+        binding = settings.binding
+ 
         self.var.ForestFraction = loadmap('ForestFraction', timestampflag='closest').copy()
         self.var.DirectRunoffFraction = loadmap('DirectRunoffFraction', timestampflag='closest').copy()
         self.var.WaterFraction = loadmap('WaterFraction', timestampflag='closest').copy()
         self.var.IrrigationFraction = loadmap('IrrigationFraction', timestampflag='closest').copy()
         self.var.RiceFraction = loadmap('RiceFraction', timestampflag='closest').copy()
         self.var.OtherFraction = loadmap('OtherFraction', timestampflag='closest').copy()
+     
+        
+        if option['TransientLandUseChange'] and option['readNetcdfStack']:
+                model_steps = settings.model_steps                
+                self.var.ForestFraction = readnetcdf(binding['ForestFractionMaps'], model_steps[0] , timestampflag='closest')        
+                self.var.DirectRunoffFraction = readnetcdf(binding['DirectRunoffFractionMaps'],  model_steps[0] , timestampflag='closest')
+                self.var.WaterFraction = readnetcdf(binding['WaterFractionMaps'],  model_steps[0], timestampflag='closest')
+                self.var.IrrigationFraction = readnetcdf(binding['IrrigationFractionMaps'],  model_steps[0], timestampflag='closest')
+                self.var.RiceFraction = readnetcdf(binding['RiceFractionMaps'],  model_steps[0] , timestampflag='closest')
+                self.var.OtherFraction = readnetcdf(binding['OtherFractionMaps'],  model_steps[0] , timestampflag='closest')
+            
+
 
     def dynamic(self):
         """dynamic part of the landusechange module
@@ -67,11 +82,44 @@ class landusechange(HydroModule):
         binding = settings.binding
 
         if option['TransientLandUseChange'] and option['readNetcdfStack']:
-            self.var.ForestFraction = readnetcdf(binding['ForestFractionMaps'], self.var.currentTimeStep(), timestampflag='closest')
+
+            self.var.ForestFraction = readnetcdf(binding['ForestFractionMaps'], self.var.currentTimeStep(), timestampflag='closest')            
             self.var.DirectRunoffFraction = readnetcdf(binding['DirectRunoffFractionMaps'], self.var.currentTimeStep(), timestampflag='closest')
             self.var.WaterFraction = readnetcdf(binding['WaterFractionMaps'], self.var.currentTimeStep(), timestampflag='closest')
             self.var.IrrigationFraction = readnetcdf(binding['IrrigationFractionMaps'], self.var.currentTimeStep(), timestampflag='closest')
             self.var.RiceFraction = readnetcdf(binding['RiceFractionMaps'], self.var.currentTimeStep(), timestampflag='closest')
             self.var.OtherFraction = readnetcdf(binding['OtherFractionMaps'], self.var.currentTimeStep(), timestampflag='closest')
-
-            self.var.Test = self.var.RiceFraction*1.0
+                          
+            
+            if option['repMBTs']:
+                 self.var.ForestFraction_nextstep = []
+                 self.var.DirectRunoffFraction_nextstep = []
+                 self.var.WaterFraction_nextstep = []
+                 self.var.IrrigationFraction_nextstep = []
+                 self.var.RiceFraction_nextstep = []
+                 self.var.OtherFraction_nextstep = []
+                 self.var.DynamicLandCoverDelta = 0.0
+      
+                 self.var.ForestFraction_nextstep = readnetcdf(binding['ForestFractionMaps'], self.var.currentTimeStep()+1, timestampflag='closest')            
+                 self.var.DirectRunoffFraction_nextstep = readnetcdf(binding['DirectRunoffFractionMaps'], self.var.currentTimeStep()+1, timestampflag='closest')
+                 self.var.WaterFraction_nextstep = readnetcdf(binding['WaterFractionMaps'], self.var.currentTimeStep()+1, timestampflag='closest')
+                 self.var.IrrigationFraction_nextstep = readnetcdf(binding['IrrigationFractionMaps'], self.var.currentTimeStep()+1, timestampflag='closest')
+                 self.var.RiceFraction_nextstep = readnetcdf(binding['RiceFractionMaps'], self.var.currentTimeStep()+1, timestampflag='closest')
+                 self.var.OtherFraction_nextstep = readnetcdf(binding['OtherFractionMaps'], self.var.currentTimeStep()+1, timestampflag='closest')    
+    
+                 
+                 self.var.DynamicLandCoverDelta = np.sum(np.abs(self.var.ForestFraction_nextstep-self.var.ForestFraction)+np.abs(self.var.DirectRunoffFraction_nextstep-self.var.DirectRunoffFraction)+np.abs(self.var.WaterFraction_nextstep-self.var.WaterFraction)+np.abs(self.var.IrrigationFraction_nextstep-self.var.IrrigationFraction)+np.abs(self.var.RiceFraction_nextstep-self.var.RiceFraction)+np.abs(self.var.OtherFraction_nextstep-self.var.OtherFraction))
+                 
+                      
+  
+            self.var.OtherFraction += self.var.RiceFraction
+            # for the moment rice is treated as other fraction
+            # if the fraction of water varies then the other fraction are stored
+            self.var.WaterFractionBase = self.var.WaterFraction.copy()
+            self.var.OtherFractionBase = self.var.OtherFraction.copy()
+            self.var.IrrigationFractionBase = self.var.IrrigationFraction.copy()
+            self.var.ForestFractionBase = self.var.ForestFraction.copy()
+            self.var.DirectRunoffFractionBase = self.var.DirectRunoffFraction.copy()
+            
+            self.var.SoilFraction = self.var.ForestFraction + self.var.OtherFraction + self.var.IrrigationFraction
+            self.var.PermeableFraction = 1 - self.var.DirectRunoffFraction - self.var.WaterFraction                    

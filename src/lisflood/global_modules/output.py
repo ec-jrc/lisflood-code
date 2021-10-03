@@ -319,7 +319,8 @@ class outputTssMap(object):
             # FIXME magic numbers. replace indexes with descriptive keys
             cdfflags.inc(1)
             # globals.cdfFlag[1] += 1
-            if self.var.monthend:
+            if option['indicator']:  ## Stef: DYNAMIC LAND COVER
+             if self.var.monthend:
                 # globals.cdfFlag[3] += 1
                 cdfflags.inc(3)
             if self.var.yearend:
@@ -329,7 +330,8 @@ class outputTssMap(object):
         # increase the counter for report all maps
         cdfflags.inc(2)
         # globals.cdfFlag[2] += 1
-        if self.var.monthend:
+        if option['indicator']: ## Stef: DYNAMIC LAND COVER
+         if self.var.monthend:
             # globals.cdfFlag[5] += 1
             cdfflags.inc(5)
         if self.var.yearend:

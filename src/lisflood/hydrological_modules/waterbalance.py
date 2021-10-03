@@ -20,6 +20,7 @@ import numpy as np
 from ..global_modules.add1 import compressArray
 from ..global_modules.settings import LisSettings, MaskInfo
 
+from ..global_modules.add1 import loadmap, readnetcdf   #### stef 29/09/2021
 
 class waterbalance(object):
 
@@ -109,6 +110,7 @@ class waterbalance(object):
             
             self.var.DischargeM3StructuresIni = np.take(np.bincount(self.var.Catchments, weights=DisStructure), self.var.Catchments)
 
+
 # --------------------------------------------------------------------------
 # -------------------------------------------------------------------------
 
@@ -117,6 +119,11 @@ class waterbalance(object):
         """
         settings = LisSettings.instance()
         option = settings.options
+
+        binding = settings.binding #### stef 29/09/2021
+        
+        
+        
         if (not(option['InitLisflood'])) and option['repMBTs']:
 
             # ************************************************************
@@ -156,8 +163,9 @@ class waterbalance(object):
             Hill1 = self.var.OtherFraction * (self.var.CumInterception[0] + self.var.W1[0] + self.var.W2[0] + self.var.UZ[0])
             Hill1 += self.var.ForestFraction * (self.var.CumInterception[1] + self.var.W1[1] + self.var.W2[1] + self.var.UZ[1])
             Hill1 += self.var.IrrigationFraction * (self.var.CumInterception[2] + self.var.W1[2] + self.var.W2[2] + self.var.UZ[2]) + self.var.LZ
-
+                                       
             HillslopeStoredM3 = (self.var.WaterDepth + self.var.SnowCover + Hill1 + self.var.DirectRunoffFraction * self.var.CumInterSealed) * self.var.MMtoM * self.var.PixelArea
+            
             # Water stored at hillslope elements [m3]
             # Note that W1, W2 and TotalGroundWater are defined for the pixel's permeable fraction
             # only, which is why we need to multiply with PermeableFraction to get the volumes right (no soil moisture
@@ -168,8 +176,23 @@ class waterbalance(object):
             #WaterStored = areatotal(decompress(ChannelStoredM3), catch) + areatotal(decompress(HillslopeStoredM3), catch)
             WaterStored = np.take(np.bincount(self.var.Catchments,weights=ChannelStoredM3),self.var.Catchments)
             WaterStored += np.take(np.bincount(self.var.Catchments,weights=HillslopeStoredM3),self.var.Catchments)
-            # Total water stored [m3]
 
+            if option['TransientLandUseChange'] and (self.var.DynamicLandCoverDelta > 0.0):
+                 self.var.ForestFraction = self.var.ForestFraction_nextstep        
+                 self.var.DirectRunoffFraction = self.var.DirectRunoffFraction_nextstep
+                 self.var.WaterFraction = self.var.WaterFraction_nextstep
+                 self.var.IrrigationFraction = self.var.IrrigationFraction_nextstep
+                 self.var.RiceFraction = self.var.RiceFraction_nextstep
+                 self.var.OtherFraction = self.var.OtherFraction_nextstep
+                 self.var.OtherFraction += self.var.RiceFraction 
+                 Hill1 = self.var.OtherFraction * (self.var.CumInterception[0] + self.var.W1[0] + self.var.W2[0] + self.var.UZ[0])
+                 Hill1 += self.var.ForestFraction * (self.var.CumInterception[1] + self.var.W1[1] + self.var.W2[1] + self.var.UZ[1])
+                 Hill1 += self.var.IrrigationFraction * (self.var.CumInterception[2] + self.var.W1[2] + self.var.W2[2] + self.var.UZ[2]) + self.var.LZ 
+                 HillslopeStoredM3 = (self.var.WaterDepth + self.var.SnowCover + Hill1 + self.var.DirectRunoffFraction * self.var.CumInterSealed) * self.var.MMtoM * self.var.PixelArea                
+                 WaterStored_nextstep =np.take(np.bincount(self.var.Catchments,weights=ChannelStoredM3),self.var.Catchments)
+                 WaterStored_nextstep += np.take(np.bincount(self.var.Catchments,weights=HillslopeStoredM3),self.var.Catchments)
+
+            # Total water stored [m3]
             # This goes out:
             HillslopeOutM3 = (self.var.TaWB + self.var.TaInterceptionWB + self.var.ESActWB + self.var.GwLossWB) * self.var.MMtoM3
             # Water that goes out of the system at the hillslope level [m3]
@@ -221,8 +244,6 @@ class waterbalance(object):
                 # storage and water in the channel.
 
             DischargeM3Structures -= self.var.DischargeM3StructuresIni  
-            
-            
             # minus the initial DischargeStructure
             # Old: DischargeM3Structures=areatotal(cover(ifthen(self.var.IsUpsOfStructureKinematic,self.var.ChanQ*self.var.DtSec),null),self.var.Catchments)
             # Discharge just upstream of structure locations (coded as pits) in [cu m / time step]
@@ -233,16 +254,30 @@ class waterbalance(object):
             # Totl mass balance error per catchment [cu m]. Mass balance error is computed for each computational time step.
 
             CatchArea = np.take(np.bincount(self.var.Catchments, weights=self.var.PixelArea),self.var.Catchments)
-            #### from ROUTING: CatchArea = np.bincount(self.var.Catchments, weights=self.var.PixelArea)[self.var.Catchments]
             self.var.MBErrorMM = self.var.MtoMM * self.var.MBError / CatchArea
             # Mass balance error per unit area of the catchment [mm water slice]. Mass balance error is computed for each computational time step.
-     
             
+
             self.var.WaterInit = WaterStored.copy() + DischargeM3Structures.copy()
+            if option['TransientLandUseChange'] and (self.var.DynamicLandCoverDelta > 0.0):
+                 self.var.WaterInit = WaterStored_nextstep.copy() + DischargeM3Structures.copy()
+            # update the water storage 
             
+            
+            # the lines below compute the ratio between the total mass balance error and the water storage [m3/m3] and the average sum of the fractions for each catchemnt. 
+            # MBErrorStorage and  AverageFractions are useful to analyse the mass balance error values.
+            sumFractionsa11 = []
+            SumFractions = []
+            numpixels = []
+            self.var.MBErrorStorage = []
+            self.var.AverageFractions = []
+            sumFractionsa11 = self.var.ForestFraction + self.var.DirectRunoffFraction  + self.var.WaterFraction  + self.var.IrrigationFraction + self.var.OtherFraction  
+            # self.var.RiceFraction is already included in self.var.OtherFraction
+            SumFractions = np.take(np.bincount(self.var.Catchments, weights=sumFractionsa11),self.var.Catchments)
+            maskinfo = MaskInfo.instance()
+            ones = maskinfo.in_zero() + 1.0
+            numpixels = np.take(np.bincount(self.var.Catchments, weights=ones),self.var.Catchments) 
+            self.var.MBErrorStorage = self.var.MBError/(self.var.WaterInit)  
+            self.var.AverageFractions = SumFractions/numpixels
 
-            
-
-            
-                         
 
