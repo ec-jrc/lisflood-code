@@ -75,8 +75,6 @@ class landusechange(HydroModule):
                 self.var.RiceFraction = readnetcdf(binding['RiceFractionMaps'],  model_steps[0] , timestampflag='closest')
                 self.var.OtherFraction = readnetcdf(binding['OtherFractionMaps'],  model_steps[0] , timestampflag='closest')     
                 
-        settings = LisSettings.instance()
-        option = settings.options
         epic_settings = EPICSettings.instance()        
         # Soil fraction split into: "Rainfed" (previously "Other"), "Forest", "Irrigated".           
         soil = OrderedDict([(name, loadmap(epic_settings.landuse_inputmap[epic_settings.vegetation_landuse[name]])) for name in self.var.prescribed_vegetation])

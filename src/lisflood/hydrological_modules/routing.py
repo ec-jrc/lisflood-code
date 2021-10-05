@@ -458,11 +458,10 @@ class routing(HydroModule):
 
             SideflowChanM3 = self.var.ToChanM3RunoffDt.copy()
             if option['openwaterevapo']:
-                SideflowChanM3 -= self.var.EvaAddM3Dt.copy()
+                SideflowChanM3 -= self.var.EvaAddM3Dt
             if option['wateruse']:
-                SideflowChanM3 -= (self.var.withdrawal_CH_actual_M3_routStep - self.var.returnflow_GwAbs2Channel_M3_routStep) 
-                self.var.WUseAddM3Dt =[]  
                 self.var.WUseAddM3Dt = (self.var.withdrawal_CH_actual_M3_routStep - self.var.returnflow_GwAbs2Channel_M3_routStep)  
+                SideflowChanM3 -= self.var.WUseAddM3Dt 
             if option['inflow']:
                 SideflowChanM3 += self.var.QInDt
             if option['TransLoss']:

@@ -71,8 +71,6 @@ class soil(HydroModule):
     def initial(self):
         """ initial part of the soil module
         """
-        maskinfo = MaskInfo.instance()
-
         def splitlanduse(array1, array2=None, array3=None):
             """ splits maps into the 3 different land use types - other , forest, irrigation
             """

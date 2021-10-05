@@ -26,7 +26,7 @@ from ..global_modules.settings import LisSettings, MaskInfo
 
 
 
-@njit(parallel=True, fastmath=True)
+@njit(parallel=True, fastmath=False)
 def interception_water_balance(Interception, TaInterception, LeafDrainage, CumInterception, LAI, Rain, TaInterceptionMax, drainageK):
     num_vegs, num_pixs = Interception.shape
     for veg in range(num_vegs):
@@ -72,12 +72,12 @@ def interception_water_balance(Interception, TaInterception, LeafDrainage, CumIn
                 LeafDrainage[veg,pix] = 0.
 
 
-@njit(parallel=True, fastmath=True)
+@njit(parallel=True, fastmath=False)
 def potentialTranspiration(TranspirMax, TaInterception):
     return np.maximum(TranspirMax - TaInterception, 0)
 
 
-@njit(parallel=True, fastmath=True)
+@njit(parallel=True, fastmath=False)
 def soilColumnsWaterBalance(index_landuse_all, is_irrigated, is_paddy_irrig, paddy_inactive, DtDay,
                             AvailableWaterForInfiltration, Rain, SnowMelt,
                             LeafDrainage, Interception, DSLR,
@@ -356,7 +356,7 @@ def soilColumnsWaterBalance(index_landuse_all, is_irrigated, is_paddy_irrig, pad
             # (ground)water in upper response box [mm]
         
 
-@njit(nogil=True, fastmath=True)
+@njit(nogil=True, fastmath=False)
 def unsaturatedConductivity(WTemp, PoreSpaceNotZero, WRes, WS, KSat, GenuInvM, GenuM):
     """Saturation term in Van Genuchten equation (always between 0 and 1)
        Due to small precision rounding errors, SatTerm can become slightly
@@ -366,7 +366,7 @@ def unsaturatedConductivity(WTemp, PoreSpaceNotZero, WRes, WS, KSat, GenuInvM, G
     return KSat * np.sqrt(SatTerm) * (1. - (1. - SatTerm ** GenuInvM) ** GenuM) ** 2
 
 
-@njit(parallel=True, fastmath=True)
+@njit(parallel=True, fastmath=False)
 def unsaturatedConductivityVectorized(WTemp, PoreSpaceNotZero, WRes, WS, KSat, GenuInvM, GenuM):
     out = np.empty(WTemp.size)
     for pix in prange(WTemp.size):
@@ -374,7 +374,7 @@ def unsaturatedConductivityVectorized(WTemp, PoreSpaceNotZero, WRes, WS, KSat, G
     return out
 
 
-@njit(nogil=True, fastmath=True)
+@njit(nogil=True, fastmath=False)
 def saturationDegree(w, PoreSpaceNotZero, WRes, WS):
     if PoreSpaceNotZero:
         return max(min((w - WRes) / (WS - WRes), 1.), 0.)
@@ -385,20 +385,20 @@ def saturationDegree(w, PoreSpaceNotZero, WRes, WS):
 def __thetaFun(W, SoilDepth, PoreSpaceNotZero):
     return W / SoilDepth if PoreSpaceNotZero else 0.
 
-thetaFun = njit(nogil=True, fastmath=True)(__thetaFun)
+thetaFun = njit(nogil=True, fastmath=False)(__thetaFun)
 
-thetaFunVectorized = vectorize("f8(f8,f8,b1)", nopython=True, target='parallel', fastmath=True)(__thetaFun)
+thetaFunVectorized = vectorize("f8(f8,f8,b1)", nopython=True, target='parallel', fastmath=False)(__thetaFun)
 
 def __satFun(W, WWP, WFC):
     return (W - WWP) / (WFC - WWP)
 
-satFun = njit(nogil=True, fastmath=True)(__satFun)
+satFun = njit(nogil=True, fastmath=False)(__satFun)
 
-satFunVectorized = vectorize("f8(f8,f8,f8)", nopython=True, target='parallel', fastmath=True)(__satFun)
+satFunVectorized = vectorize("f8(f8,f8,f8)", nopython=True, target='parallel', fastmath=False)(__satFun)
 
 
 '''
-@njit(parallel=True, fastmath=True)
+@njit(parallel=True, fastmath=False)
 def suctionUnsaturatedSoilPF(index_landuse_all, pF0, pF1, pF2, W1a, W1b, W2,
                              WRes1a, WRes1b, WRes2, WS1a, WS1b, WS2,
                              PoreSpaceNotZero1a, PoreSpaceNotZero1b, PoreSpaceNotZero2,
@@ -423,7 +423,7 @@ def suctionUnsaturatedSoilPF(index_landuse_all, pF0, pF1, pF2, W1a, W1b, W2,
             pF2[veg,pix] = np.log10(Head2) if Head2 > 0 else -1.
 '''
 
-@njit(nogil=True, fastmath=True)
+@njit(nogil=True, fastmath=False)
 def pressureHead(SatTerm, GenuInvAlpha, GenuInvM, GenuInvN, HeadMax):
     if SatTerm == 0:
         return HeadMax
@@ -1174,7 +1174,7 @@ class soilloop(HydroModule):
         # ************************************************************
         # ***** CALCULATION OF PF VALUES FROM SOIL MOISTURE (OPTIONAL)
         # ************************************************************
-        @njit(parallel=True, fastmath=True)
+        @njit(parallel=True, fastmath=False)
         def suctionUnsaturatedSoilPF(index_landuse_all, pF0, pF1, pF2, W1a, W1b, W2,
                                      WRes1a, WRes1b, WRes2, WS1a, WS1b, WS2,
                                      PoreSpaceNotZero1a, PoreSpaceNotZero1b, PoreSpaceNotZero2,
