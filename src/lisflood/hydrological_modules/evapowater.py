@@ -51,6 +51,7 @@ class evapowater(HydroModule):
         # ***** EVAPORATION
         # ************************************************************
         self.var.EvaCumM3 = MaskInfo.instance().in_zero()
+        self.var.EvaWBM3 = MaskInfo.instance().in_zero()
         # water use cumulated amount
         # water use substep amount
         settings = LisSettings.instance()
@@ -154,4 +155,5 @@ class evapowater(HydroModule):
             self.var.EvaAddM3Dt = self.var.EvaAddM3 * self.var.InvNoRoutSteps
             # splitting water use per timestep into water use per sub time step
             self.var.EvaCumM3 += self.var.EvaAddM3
+            self.var.EvaWBM3 = self.var.EvaAddM3 
             # summing up for water balance calculation

@@ -246,7 +246,6 @@ class routing(HydroModule):
         self.var.ChanM3Kin = self.var.ChanIniM3.copy().astype(float)
         # Initialise water volume in kinematic wave channels [m3]
         self.var.ChanQKin = np.where(self.var.ChannelAlpha > 0, (self.var.TotalCrossSectionArea / self.var.ChannelAlpha) ** self.var.InvBeta, 0).astype(float)
-
         # Initialise discharge at kinematic wave pixels (note that InvBeta is
         # simply 1/beta, computational efficiency!)
 
@@ -336,9 +335,8 @@ class routing(HydroModule):
         # cumulative discharge at outlet [m3]
         self.var.TotalQInM3 = maskinfo.in_zero()
         # cumulative inflow from inflow hydrographs [m3]
-        #self.var.sumDis = maskinfo.in_zero()
         self.var.sumDis = maskinfo.in_zero()
-        self.var.sumIn = maskinfo.in_zero()
+        self.var.sumInWB = maskinfo.in_zero()
 
     def initialSecond(self):
         """ initial part of the second channel routing module
@@ -362,6 +360,7 @@ class routing(HydroModule):
             if not(option['InitLisflood']):
 
                 self.var.QLimit = loadmap('AvgDis') * loadmap('QSplitMult')
+                
                 # Over bankful discharge starts at QLimit
                 # lower discharge limit for second line of routing
                 # set to mutiple of average discharge (map from prerun)
@@ -398,7 +397,34 @@ class routing(HydroModule):
         self.river_router = kinematicWave(compressArray(self.var.LddKinematic), ~maskinfo.info.mask, self.var.ChannelAlpha,
                                           self.var.Beta, self.var.ChanLength, self.var.DtRouting,
                                           int(binding["numCPUs_parallelKinematicWave"]), alpha_floodplains=self.var.ChannelAlpha2)
-
+        
+        if option['InitLisflood'] and option['repMBTs']:          
+            self.var.StorageStepINIT= self.var.ChanM3Kin 
+            self.var.DischargeM3StructuresIni = maskinfo.in_zero()     
+            if option['simulateReservoirs']:             
+               self.var.StorageStepINIT += self.var.ReservoirStorageIniM3  
+            if option['simulateLakes']:  
+               self.var.StorageStepINIT += self.var.LakeStorageIniM3 
+            self.var.StorageStepINIT = np.take(np.bincount(self.var.Catchments, weights=self.var.StorageStepINIT), self.var.Catchments) 
+                
+        if not option['InitLisflood'] and option['repMBTs']:  
+           DisStructure = np.where(self.var.IsUpsOfStructureKinematicC, self.var.ChanQ * self.var.DtRouting, 0) 
+           if not(option['SplitRouting']): 
+            self.var.StorageStepINIT = self.var.ChanM3Kin      
+            if option['simulateReservoirs']:                        
+               self.var.StorageStepINIT += self.var.ReservoirStorageIniM3  
+               DisStructure = np.where(self.var.IsUpsOfStructureKinematicC, self.var.ChanQ * self.var.DtRouting, 0)  
+            if option['simulateLakes']:  
+               self.var.StorageStepINIT += self.var.LakeStorageIniM3 
+               DisStructure += np.where(compressArray(self.var.IsUpsOfStructureLake), 0.5 * self.var.ChanQ * self.var.DtRouting, 0) 
+            self.var.DischargeM3StructuresIni = np.take(np.bincount(self.var.Catchments, weights=DisStructure), self.var.Catchments)      
+           else:                             
+            self.var.StorageStepINIT= self.var.ChanM3Kin+self.var.Chan2M3Kin-self.var.Chan2M3Start                       
+            if option['simulateReservoirs']: 
+               self.var.StorageStepINIT += self.var.ReservoirStorageIniM3
+            if option['simulateLakes']:   
+               self.var.StorageStepINIT += self.var.LakeStorageIniM3
+            self.var.StorageStepINIT = np.take(np.bincount(self.var.Catchments, weights=self.var.StorageStepINIT), self.var.Catchments)    
 # --------------------------------------------------------------------------
 # --------------------------------------------------------------------------
 
@@ -431,25 +457,45 @@ class routing(HydroModule):
             # ************************************************************
 
             SideflowChanM3 = self.var.ToChanM3RunoffDt.copy()
-
             if option['openwaterevapo']:
-                SideflowChanM3 -= self.var.EvaAddM3Dt
+                SideflowChanM3 -= self.var.EvaAddM3Dt.copy()
             if option['wateruse']:
-                SideflowChanM3 -= (self.var.withdrawal_CH_actual_M3_routStep - self.var.returnflow_GwAbs2Channel_M3_routStep)   
+                SideflowChanM3 -= (self.var.withdrawal_CH_actual_M3_routStep - self.var.returnflow_GwAbs2Channel_M3_routStep) 
+                self.var.WUseAddM3Dt =[]  
+                self.var.WUseAddM3Dt = (self.var.withdrawal_CH_actual_M3_routStep - self.var.returnflow_GwAbs2Channel_M3_routStep)  
             if option['inflow']:
                 SideflowChanM3 += self.var.QInDt
             if option['TransLoss']:
                 SideflowChanM3 -= self.var.TransLossM3Dt
-            if option["cropsEPIC"]:  
-                SideflowChanM3 += self.var.crop_module.irrigation_module.returnFlow()                
             if not(option['InitLisflood']):    # only with no InitLisflood
                 if option['simulateLakes']:
-                    SideflowChanM3 += self.var.QLakeOutM3Dt
+                    SideflowChanM3 += self.var.QLakeOutM3Dt                  
                 if option['simulateReservoirs']:
-                    SideflowChanM3 += self.var.QResOutM3Dt
+                    SideflowChanM3 += self.var.QResOutM3Dt                   
                 if option['simulatePolders']:
                     SideflowChanM3 -= self.var.ChannelToPolderM3Dt
-
+                    
+                
+                    
+            ### check mass balance within routing ###
+            if option['repMBTs']:  
+             if (NoRoutingExecuted<1):
+                 self.var.AddedTRUN = np.take(np.bincount(self.var.Catchments, weights=self.var.ToChanM3RunoffDt.copy()),self.var.Catchments)
+                 if option['inflow']:
+                     self.var.AddedTRUN += np.take(np.bincount(self.var.Catchments, weights=self.var.QInDt),self.var.Catchments)
+                 if option['openwaterevapo']:
+                     self.var.AddedTRUN -= np.take(np.bincount(self.var.Catchments, weights=self.var.EvaAddM3Dt.copy()),self.var.Catchments)
+                 if option['wateruse']:
+                     self.var.AddedTRUN -= np.take(np.bincount(self.var.Catchments, weights=self.var.WUseAddM3Dt.copy()),self.var.Catchments)
+             else:
+                 self.var.AddedTRUN += np.take(np.bincount(self.var.Catchments, weights=self.var.ToChanM3RunoffDt.copy()),self.var.Catchments)
+                 if option['inflow']:
+                     self.var.AddedTRUN += np.take(np.bincount(self.var.Catchments, weights=self.var.QInDt),self.var.Catchments) 
+                 if option['openwaterevapo']:
+                     self.var.AddedTRUN -= np.take(np.bincount(self.var.Catchments, weights=self.var.EvaAddM3Dt.copy()),self.var.Catchments)
+                 if option['wateruse']:
+                     self.var.AddedTRUN -= np.take(np.bincount(self.var.Catchments, weights=self.var.WUseAddM3Dt.copy()),self.var.Catchments)      
+                                     
             # Runoff (surface runoff + flow out of Upper and Lower Zone), outflow from
             # reservoirs and lakes and inflow from external hydrographs are added to the channel
             # system (here in [cu m])
@@ -460,9 +506,8 @@ class routing(HydroModule):
             # Because of wateruse Sideflow might get even smaller than 0,
             # instead of inflow its outflow
 
+            
             SideflowChan = np.where(self.var.IsChannelKinematic, SideflowChanM3 * self.var.InvChanLength * self.var.InvDtRouting,0)
-            # SideflowChan=if(IsChannelKinematic, SideflowChanM3*InvChanLength*InvDtRouting);
-            # Sideflow expressed in [cu m /s / m channel length]
 
             # ************************************************************
             # ***** KINEMATIC WAVE                        ****************
@@ -475,7 +520,7 @@ class routing(HydroModule):
                 # No split routing
                 # side flow consists of runoff (incl. groundwater), inflow from reservoirs (optional) and external inflow hydrographs (optional)
                 SideflowChan[np.isnan(SideflowChan)] = 0 # TEMPORARY FIX - SEE DEBUG ABOVE!
-
+ 
                 self.river_router.kinematicWaveRouting(self.var.ChanQKin, SideflowChan, "main_channel")
                 self.var.ChanM3Kin = self.var.ChanLength * self.var.ChannelAlpha * self.var.ChanQKin**self.var.Beta
                 # Volume in channel at end of computation step
@@ -487,9 +532,11 @@ class routing(HydroModule):
 
                 self.var.ChanQ = self.var.ChanQKin.copy()
                 # at single kin. ChanQ is the same
-
+                
                 self.var.sumDisDay += self.var.ChanQ
                 # Total channel storage [cu m], equal to ChanM3Kin
+                
+                
 
             else:
 
@@ -498,7 +545,9 @@ class routing(HydroModule):
 
                 # Ad
                 SideflowRatio = np.where((self.var.ChanM3Kin + self.var.Chan2M3Kin) > 0, self.var.ChanM3Kin/(self.var.ChanM3Kin+self.var.Chan2M3Kin), 0.0)
+                
 
+          
                 # CM ##################################
                 # self.var.Sideflow1Chan = np.where(self.var.ChanM3Kin > self.var.M3Limit, SideflowRatio*SideflowChan, SideflowChan)
                 # This is creating instability because ChanM3Kin can be < M3Limit between two routing sub-steps
@@ -506,6 +555,8 @@ class routing(HydroModule):
                 self.var.Sideflow1Chan = np.where((self.var.ChanM3Kin + self.var.Chan2M3Kin - self.var.Chan2M3Start) > self.var.M3Limit,
                                                    SideflowRatio*SideflowChan, SideflowChan)
                 #######################################
+                
+                
 
                 self.var.Sideflow1Chan = np.where(np.abs(SideflowChan) < 1e-7, SideflowChan, self.var.Sideflow1Chan)
                 # too small values are avoided
@@ -539,14 +590,105 @@ class routing(HydroModule):
                 
                 self.var.Chan2QKin = (self.var.Chan2M3Kin * self.var.InvChanLength * self.var.InvChannelAlpha2) ** (self.var.InvBeta)
                 # Correct negative discharge at the end of computation step in second line
-
-                self.var.ChanQ = np.maximum(self.var.ChanQKin + self.var.Chan2QKin - self.var.QLimit, 0)
-
+              
+              
+                self.var.ChanQ = np.maximum(self.var.ChanQKin + self.var.Chan2QKin - self.var.QLimit, 0.0)
+                
                 # Superposition Kinematic
                 # Main channel routing and floodplains routing
-
+                #print(np.sum(self.var.sumDisDay))
+                self.var.sumDisDay_NOTlast=self.var.sumDisDay.copy()
                 self.var.sumDisDay += self.var.ChanQ
                 # ----------End splitrouting-------------------------------------------------
+                
+            ###
+            
+            # ---- Uncomment lines 603-635 in order to compute the mass balance error within the routing module for the options (i) initial run or (ii) split routing off ----
+            '''
+            if option['repMBTs']:  
+             if option['InitLisflood'] or (not(option['SplitRouting'])):              
+                if NoRoutingExecuted == (self.var.NoRoutSteps-1):
+                  StorageStep = self.var.ChanM3Kin.copy()               
+                  ChanQAvgR = self.var.sumDisDay/self.var.NoRoutSteps
+                  sum1=ChanQAvgR.copy()
+                  sum1[self.var.AtLastPointC == 0] = 0
+                  OutStep = np.take(np.bincount(self.var.Catchments,weights=sum1 * self.var.DtSec),self.var.Catchments) 
+
+                  maskinfo = MaskInfo.instance()
+                  DisStructureR = maskinfo.in_zero()
+                  DischargeM3StructuresR = maskinfo.in_zero() 
+                  if not option['InitLisflood']:
+                   if option['simulateReservoirs']:
+                     sum1 =self.var.ChanQ.copy()
+                     StorageStep =  StorageStep + self.var.ReservoirStorageM3.copy()
+                     DisStructureR = np.where(self.var.IsUpsOfStructureKinematicC, sum1 * self.var.DtRouting, 0)
+                     DischargeM3StructuresR = np.take(np.bincount(self.var.Catchments, weights=DisStructureR), self.var.Catchments)                
+                     DischargeM3StructuresR -= self.var.DischargeM3StructuresIni
+                  if not option['InitLisflood']:    
+                   if option['simulateLakes']:
+                     sum1 =self.var.ChanQ.copy()
+                     StorageStep =  StorageStep + self.var.LakeStorageM3Balance.copy()
+                     DisStructureR = np.where(self.var.IsUpsOfStructureKinematicC, sum1 * self.var.DtRouting, 0)
+                     DischargeM3StructuresR = np.take(np.bincount(self.var.Catchments, weights=DisStructureR), self.var.Catchments)               
+                     maskinfo = MaskInfo.instance()
+                     DisLake = maskinfo.in_zero()
+                     np.put(DisLake, self.var.LakeIndex, 0.5 * self.var.LakeInflowCC * self.var.DtRouting)
+                     DischargeM3Lake = np.take(np.bincount(self.var.Catchments, weights=DisLake),self.var.Catchments)
+                     DischargeM3StructuresR += DischargeM3Lake
+                     DischargeM3StructuresR -= self.var.DischargeM3StructuresIni
+                  # Total Mass Balance Error in m3 per catchment for Initial Run OR Split Routing OFF
+                  MB =- np.sum(StorageStep)+np.sum(self.var.StorageStepINIT) - OutStep[0]  -DischargeM3StructuresR[0] +self.var.AddedTRUN                     
+                  self.var.StorageStepINIT= np.sum(StorageStep) + DischargeM3StructuresR[0]                  
+            '''
+            if option['repMBTs']:  
+             if (not(option['InitLisflood'])) and (option['SplitRouting']):
+                # compute the mass balance at the last of the sub-routing steps in order to account for the contributions of lakes and reservoirs
+                if NoRoutingExecuted == (self.var.NoRoutSteps-1):
+                  ChanQAvgSR = self.var.sumDisDay/self.var.NoRoutSteps
+                  sum1=ChanQAvgSR.copy()
+                  sum1[self.var.AtLastPointC == 0] = 0
+                  OutStep = np.take(np.bincount(self.var.Catchments,weights=sum1 * self.var.DtSec),self.var.Catchments) 
+  
+                  StorageStep=[]
+                  StorageStep= self.var.ChanM3Kin.copy()+self.var.Chan2M3Kin.copy()-self.var.Chan2M3Start.copy()                
+                 
+                  
+                  maskinfo = MaskInfo.instance()
+                  DisStructureSR = maskinfo.in_zero()               
+                  DischargeM3StructuresR = maskinfo.in_zero() 
+                  
+                  if option['simulateReservoirs']: 
+                     sum1=[]
+                     sum1 =self.var.ChanQ.copy()
+                     StorageStep =  StorageStep + self.var.ReservoirStorageM3.copy()
+                     DisStructureSR = np.where(self.var.IsUpsOfStructureKinematicC, sum1 * self.var.DtRouting, 0)
+                     DischargeM3StructuresR = np.take(np.bincount(self.var.Catchments, weights=DisStructureSR), self.var.Catchments)                
+                     DischargeM3StructuresR -= self.var.DischargeM3StructuresIni
+                       
+                  if option['simulateLakes']:
+                     sum1 =self.var.ChanQ.copy()
+                     StorageStep =  StorageStep + self.var.LakeStorageM3Balance.copy()
+                     DisStructureSR = np.where(self.var.IsUpsOfStructureKinematicC, sum1 * self.var.DtRouting, 0)
+                     DischargeM3StructuresR = np.take(np.bincount(self.var.Catchments, weights=DisStructureSR), self.var.Catchments)               
+                     DisLake = maskinfo.in_zero()
+                     np.put(DisLake, self.var.LakeIndex, 0.5 * self.var.LakeInflowCC * self.var.DtRouting)
+                     DischargeM3Lake = np.take(np.bincount(self.var.Catchments, weights=DisLake),self.var.Catchments)
+                     DischargeM3StructuresR += DischargeM3Lake
+
+                     DischargeM3StructuresR -= self.var.DischargeM3StructuresIni                    
+                                        
+                  # Mass Balance Error due to the Split Routing module
+                  StorageStep1=np.take(np.bincount(self.var.Catchments, weights=StorageStep), self.var.Catchments)
+                  
+                  self.var.MBErrorSplitRoutingM3  = - StorageStep1 + self.var.StorageStepINIT - OutStep  - DischargeM3StructuresR + self.var.AddedTRUN
+                  # Discharge error at the outlet pointt [m3/s]
+                  QoutCorrection=self.var.MBErrorSplitRoutingM3/self.var.DtRouting                  
+                  QoutCorrection[self.var.AtLastPointC == 0] = 0
+                  self.var.OutletDischargeErrorSplitRouting = np.take(np.bincount(self.var.Catchments,weights=QoutCorrection),self.var.Catchments)                  
+
+                  self.var.StorageStepINIT= StorageStep1.copy()+DischargeM3StructuresR 
+ 
+
 
             TotalCrossSectionArea = np.maximum(self.var.ChanM3Kin*self.var.InvChanLength,0.01)
 

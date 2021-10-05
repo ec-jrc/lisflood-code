@@ -80,6 +80,9 @@ class LisfloodModel_ini(DynamicModel):
         self.PRESCRIBED_VEGETATION = [fract + "_prescribed" for fract in self.SOIL_USES]
         self.PRESCRIBED_LAI = OrderedDict(zip(self.PRESCRIBED_VEGETATION[:], ['LAIOtherMaps', 'LAIForestMaps', 'LAIIrrigationMaps']))
         self.VEGETATION_LANDUSE = OrderedDict(zip(self.PRESCRIBED_VEGETATION[:], self.SOIL_USES[:]))
+        
+        
+        
         self.LANDUSE_VEGETATION = OrderedDict([(v, [k]) for k, v in self.VEGETATION_LANDUSE.items()])
         self.LANDUSE_INPUTMAP = OrderedDict(zip(self.LANDUSE_VEGETATION.keys(), ["OtherFraction", "ForestFraction", "IrrigationFraction"]))
 

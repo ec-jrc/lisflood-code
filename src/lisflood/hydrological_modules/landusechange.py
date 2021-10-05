@@ -18,6 +18,7 @@ from . import HydroModule
 from collections import OrderedDict
 import pandas as pd
 import xarray as xr
+import numpy as np
 
 
 class landusechange(HydroModule):
@@ -49,6 +50,11 @@ class landusechange(HydroModule):
 # --------------------------------------------------------------------------
 
     def initial(self):
+    
+        settings = LisSettings.instance()
+        option = settings.options
+        binding = settings.binding
+        
         """ initial part of the landusechange module
         """
         self.var.ForestFraction = loadmap('ForestFraction', timestampflag='closest').copy()
@@ -57,41 +63,82 @@ class landusechange(HydroModule):
         self.var.IrrigationFraction = loadmap('IrrigationFraction', timestampflag='closest').copy()
         self.var.RiceFraction = loadmap('RiceFraction', timestampflag='closest').copy()
         self.var.OtherFraction = loadmap('OtherFraction', timestampflag='closest').copy()
+        ##self.var.OtherFraction = 1 - (self.var.RiceFraction+self.var.IrrigationFraction+self.var.WaterFraction+self.var.DirectRunoffFraction+self.var.ForestFraction) 
+        ## uncomment the line above to check the impact of pixels where the sum is not 1.0 (NB: this is an error in the fraction input maps as the fractions must always add up to 1.0)
+        
+        if option['TransientLandUseChange'] and option['readNetcdfStack']:
+                model_steps = settings.model_steps                
+                self.var.ForestFraction = readnetcdf(binding['ForestFractionMaps'], model_steps[0] , timestampflag='closest')        
+                self.var.DirectRunoffFraction = readnetcdf(binding['DirectRunoffFractionMaps'],  model_steps[0] , timestampflag='closest')
+                self.var.WaterFraction = readnetcdf(binding['WaterFractionMaps'],  model_steps[0], timestampflag='closest')
+                self.var.IrrigationFraction = readnetcdf(binding['IrrigationFractionMaps'],  model_steps[0], timestampflag='closest')
+                self.var.RiceFraction = readnetcdf(binding['RiceFractionMaps'],  model_steps[0] , timestampflag='closest')
+                self.var.OtherFraction = readnetcdf(binding['OtherFractionMaps'],  model_steps[0] , timestampflag='closest')     
+                
         settings = LisSettings.instance()
         option = settings.options
-        epic_settings = EPICSettings.instance()
-        # Soil fraction split into: "Rainfed" (previously "Other"), "Forest", "Irrigated".
+        epic_settings = EPICSettings.instance()        
+        # Soil fraction split into: "Rainfed" (previously "Other"), "Forest", "Irrigated".           
         soil = OrderedDict([(name, loadmap(epic_settings.landuse_inputmap[epic_settings.vegetation_landuse[name]])) for name in self.var.prescribed_vegetation])
         self.var.SoilFraction = xr.DataArray(pd.DataFrame(soil).T, coords=self.var.coord_prescribed_vegetation, dims=self.var.coord_prescribed_vegetation.keys())
         # Interactive crop fractions (if EPIC is active)
         if option.get('cropsEPIC'):
-            self.var.crop_module.setSoilFractions()
-         
+            self.var.crop_module.setSoilFractions()       
+        self.var.SoilFraction = xr.DataArray(pd.DataFrame(soil).T, coords=self.var.coord_prescribed_vegetation, dims=self.var.coord_prescribed_vegetation.keys())
+        self.var.SoilFraction[0] =  self.var.OtherFraction
+        self.var.SoilFraction[1] =  self.var.ForestFraction 
+        self.var.SoilFraction[2] =  self.var.IrrigationFraction     
+        
     def dynamic(self):
         """ dynamic part of the landusechange module"""
         settings = LisSettings.instance()
         option = settings.options
         binding = settings.binding
         epic_settings = EPICSettings.instance()
-        if option['TransientLandUseChange']:
+
+        if option['TransientLandUseChange'] and option['readNetcdfStack']:
+        
             if option["cropsEPIC"]:
                 raise Exception("Land use change for EPIC crops not implemented yet!")
-            ''' Stef 27/09/2021
-            time_step = self.var.currentTimeStep()
-            self.var.DirectRunoffFraction = readnetcdf(binding['DirectRunoffFractionMaps'], time_step)
-            self.var.WaterFraction = readnetcdf(binding['WaterFractionMaps'], time_step)
-            self.var.RiceFraction = readnetcdf(binding['RiceFractionMaps'], time_step)
-            soil = OrderedDict([(name, readnetcdf(binding[epic_settings.landuse_inputmap[epic_settings.vegetation_landuse[name]] + "Maps"], time_step)) for name in self.var.prescribed_vegetation])
-            self.var.SoilFraction = xr.DataArray(pd.DataFrame(soil).T, coords=self.var.coord_prescribed_vegetation, dims=self.var.coord_prescribed_vegetation.keys())
-            '''
-
-            self.var.ForestFraction = readnetcdf(binding['ForestFractionMaps'], self.var.currentTimeStep(), timestampflag='closest')
-            self.var.DirectRunoffFraction = readnetcdf(binding['DirectRunoffFractionMaps'], self.var.currentTimeStep(), timestampflag='closest')
-            self.var.WaterFraction = readnetcdf(binding['WaterFractionMaps'], self.var.currentTimeStep(), timestampflag='closest')
-            self.var.IrrigationFraction = readnetcdf(binding['IrrigationFractionMaps'], self.var.currentTimeStep(), timestampflag='closest')
-            self.var.RiceFraction = readnetcdf(binding['RiceFractionMaps'], self.var.currentTimeStep(), timestampflag='closest')
-            self.var.OtherFraction = readnetcdf(binding['OtherFractionMaps'], self.var.currentTimeStep(), timestampflag='closest')
-
+                                
+            self.var.ForestFraction = readnetcdf(binding['ForestFractionMaps'], self.var.currentTimeStep(), timestampflag='closest')          #self.var.currentTimeStep()  
+            self.var.DirectRunoffFraction = readnetcdf(binding['DirectRunoffFractionMaps'], self.var.currentTimeStep(), timestampflag='closest')          #self.var.currentTimeStep() 
+            self.var.WaterFraction = readnetcdf(binding['WaterFractionMaps'], self.var.currentTimeStep(), timestampflag='closest')          #self.var.currentTimeStep() 
+            self.var.IrrigationFraction = readnetcdf(binding['IrrigationFractionMaps'], self.var.currentTimeStep(), timestampflag='closest')          #self.var.currentTimeStep() 
+            self.var.RiceFraction = readnetcdf(binding['RiceFractionMaps'], self.var.currentTimeStep(), timestampflag='closest')          #self.var.currentTimeStep() 
+            self.var.OtherFraction = readnetcdf(binding['OtherFractionMaps'], self.var.currentTimeStep(), timestampflag='closest')          #self.var.currentTimeStep()  
+            
+            if option['repMBTs']:
+                 self.var.ForestFraction_nextstep = []
+                 self.var.DirectRunoffFraction_nextstep = []
+                 self.var.WaterFraction_nextstep = []
+                 self.var.IrrigationFraction_nextstep = []
+                 self.var.RiceFraction_nextstep = []
+                 self.var.OtherFraction_nextstep = []
+                 self.var.DynamicLandCoverDelta = 0.0      
+                 self.var.ForestFraction_nextstep = readnetcdf(binding['ForestFractionMaps'], self.var.currentTimeStep()+1, timestampflag='closest')            
+                 self.var.DirectRunoffFraction_nextstep = readnetcdf(binding['DirectRunoffFractionMaps'], self.var.currentTimeStep()+1, timestampflag='closest')
+                 self.var.WaterFraction_nextstep = readnetcdf(binding['WaterFractionMaps'], self.var.currentTimeStep()+1, timestampflag='closest')
+                 self.var.IrrigationFraction_nextstep = readnetcdf(binding['IrrigationFractionMaps'], self.var.currentTimeStep()+1, timestampflag='closest')
+                 self.var.RiceFraction_nextstep = readnetcdf(binding['RiceFractionMaps'], self.var.currentTimeStep()+1, timestampflag='closest')
+                 self.var.OtherFraction_nextstep = readnetcdf(binding['OtherFractionMaps'], self.var.currentTimeStep()+1, timestampflag='closest')                     
+                 self.var.DynamicLandCoverDelta = np.sum(np.abs(self.var.ForestFraction_nextstep-self.var.ForestFraction)+np.abs(self.var.DirectRunoffFraction_nextstep-self.var.DirectRunoffFraction)+np.abs(self.var.WaterFraction_nextstep-self.var.WaterFraction)+np.abs(self.var.IrrigationFraction_nextstep-self.var.IrrigationFraction)+np.abs(self.var.RiceFraction_nextstep-self.var.RiceFraction)+np.abs(self.var.OtherFraction_nextstep-self.var.OtherFraction))
+ 
             soil = OrderedDict([(name, loadmap(epic_settings.landuse_inputmap[epic_settings.vegetation_landuse[name]])) for name in self.var.prescribed_vegetation])
-            self.var.SoilFraction = xr.DataArray(pd.DataFrame(soil).T, coords=self.var.coord_prescribed_vegetation, dims=self.var.coord_prescribed_vegetation.keys())
-
+            self.var.SoilFraction = xr.DataArray(pd.DataFrame(soil).T, coords=self.var.coord_prescribed_vegetation, dims=self.var.coord_prescribed_vegetation.keys())    
+            self.var.SoilFraction[0] =  self.var.OtherFraction
+            self.var.SoilFraction[1] =  self.var.ForestFraction 
+            self.var.SoilFraction[2] =  self.var.IrrigationFraction      
+                          
+            if not option["cropsEPIC"]: # If EPIC is active, the rice fraction initialisation is handled by EPIC (setSoilFractions in EPIC_main.py)
+               self.var.SoilFraction.loc["Rainfed_prescribed"] += self.var.RiceFraction
+                             
+            # with EPIC off, rice is treated as other fraction
+            # if the fraction of water varies then the other fraction are stored
+            self.var.WaterFractionBase = self.var.WaterFraction.copy()
+            self.var.OtherFractionBase = self.var.OtherFraction.copy()
+            self.var.IrrigationFractionBase = self.var.IrrigationFraction.copy()
+            self.var.ForestFractionBase = self.var.ForestFraction.copy()
+            self.var.DirectRunoffFractionBase = self.var.DirectRunoffFraction.copy()
+            self.var.PermeableFraction = 1 - self.var.DirectRunoffFraction - self.var.WaterFraction   
+       

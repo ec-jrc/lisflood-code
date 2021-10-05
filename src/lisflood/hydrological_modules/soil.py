@@ -406,8 +406,11 @@ class soil(HydroModule):
         # Initialising cumulative output variables  needed to compute the cumulative mass balance error
         self.var.TotalPrecipitation =  maskinfo.in_zero() # precipitation [mm]
         self.var.TaCUM =  maskinfo.in_zero() # Cumulative transpiration [mm]
+        self.var.TaWB = maskinfo.in_zero() # Cumulative transpiration [mm] at the end of the computational time step (waterbalance.py)
         self.var.TaInterceptionCUM =  maskinfo.in_zero() # Cumulative evaporation from interception store [mm]
+        self.var.TaInterceptionWB =  maskinfo.in_zero() # Evaporation from interception store [mm] at the end of the computational time step (waterbalance.py)
         self.var.ESActCUM =  maskinfo.in_zero() # Cumulative evaporation [mm]
+        self.var.ESActWB = maskinfo.in_zero() # Cumulative evaporation [mm] at the end of the computational time step (waterbalance.py)
         self.var.SoilMoistureStressDays = self.var.allocateVariableAllVegetation() # number of days in simulation with soil moisture stress (days)
         self.var.Theta1a = self.var.allocateVariableAllVegetation() # Theta values are just allocated here - their values are dynamically compute in soilloop.py
         self.var.Theta1b = self.var.allocateVariableAllVegetation()
@@ -463,16 +466,19 @@ class soil(HydroModule):
         """
         self.var.TaInterceptionAll = self.var.deffraction(self.var.TaInterception) + self.var.DirectRunoffFraction * self.var.TASealed
         self.var.TaInterceptionCUM += self.var.TaInterceptionAll
+        self.var.TaInterceptionWB = self.var.TaInterceptionAll
         # Cumulative evaporation of intercepted water [mm]
 
         self.var.TaPixel = self.var.deffraction(self.var.Ta)
         # pixel-average transpiration in [mm] per timestep
         # (no transpiration from direct runoff fraction)
         self.var.TaCUM += self.var.TaPixel
+        self.var.TaWB = self.var.TaPixel
         self.var.ESActPixel = self.var.deffraction(self.var.ESAct) + self.var.WaterFraction * self.var.EWaterAct
         # Pixel-average soil evaporation in [mm] per time step
         # (no evaporation from direct runoff fraction)
         self.var.ESActCUM += self.var.ESActPixel
+        self.var.ESActWB = self.var.ESActPixel
 
         self.var.PrefFlowPixel = self.var.deffraction(self.var.PrefFlow)
         # Pixel-average preferential flow in [mm] per timestep
