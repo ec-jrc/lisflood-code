@@ -26,7 +26,7 @@ class TestLatLon():
         lisfloodexe(settings)
 
         comparator = TSSComparator()
-        reference =  os.path.join(self.case_dir, 'reference_ricewateruseOFF', 'dis_{}.tss'.format(self.run_type))
+        reference =  os.path.join(self.case_dir, 'reference', 'dis_{}.tss'.format(self.run_type))
         output_tss =  os.path.join(out_path, 'dis_run.tss')
         comparator.compare_files(reference, output_tss)
 

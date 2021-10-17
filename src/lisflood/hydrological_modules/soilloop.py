@@ -118,9 +118,10 @@ def soilColumnsWaterBalance(index_landuse_all, is_irrigated, is_paddy_irrig, pad
             sim_pixels = np.arange(num_pixs)
         landuse = index_landuse_all[veg]
         NoSubS = np.empty(sim_pixels.size)
+        DtSub =  np.empty(sim_pixels.size)   ### merge 3 stef
         KUnSat1a, KUnSat1b, KUnSat2 = np.empty(sim_pixels.size), np.empty(sim_pixels.size), np.empty(sim_pixels.size)                         #| REMOVE BEFORE NEW
         AvailableWater1a, AvailableWater1b, AvailableWater2 = np.empty(sim_pixels.size), np.empty(sim_pixels.size), np.empty(sim_pixels.size) #| CALIBRATION
-        CapacityLayer1, CapacityLayer2 = np.empty(sim_pixels.size), np.empty(sim_pixels.size)                                                 #| (SEE [*] BELOW)
+        CapacityLayer1, CapacityLayer2 = np.empty(sim_pixels.size), np.empty(sim_pixels.size)                                                 #| (SEE [*] BELOW)   Stef WHY??
         for q in prange(sim_pixels.size):
             pix = sim_pixels[q]
 
@@ -165,8 +166,7 @@ def soilColumnsWaterBalance(index_landuse_all, is_irrigated, is_paddy_irrig, pad
             # ************************************************************
             # ***** INFILTRATION CAPACITY ********************************
             # ************************************************************
-            # Domain: permeable fraction of pixel only
-            #print np.max(self.var.W1a)
+            # Domain: permeable fraction of pixel only            
             RelSat1 = min(W1[veg,pix] / WS1[landuse,pix], 1.0) if PoreSpaceNotZero1a[landuse,pix] else 0.0
             # Relative saturation term of the first two layers. This will allow to have more infiltration
             # than the storage capacity of layer 1
@@ -250,20 +250,20 @@ def soilColumnsWaterBalance(index_landuse_all, is_irrigated, is_paddy_irrig, pad
             # based on process with largest Courant number
             NoSubS[q] = max(1, np.ceil(CourantSoil / CourantCrit))
             
+
             
-        NoSubSteps = int(np.nanmax(NoSubS))                       #| [*] UNINDENTED CODE BLOCK KEPT FOR CONSISTENCY: IT SHOULD BE REMOVED
+            
+        ### NoSubSteps = int(np.nanmax(NoSubS)) # merge3                      #| [*] UNINDENTED CODE BLOCK KEPT FOR CONSISTENCY: IT SHOULD BE REMOVED
         # Number of sub-steps needed for required numerical       #| WHEN A NEW CALIBRATION IS PERFORMED AS NOW THE NUMBER OF SUB-TIME-STEPS
         # accuracy. Always greater than or equal to 1             #| CAN BE SET INDEPENDENTLY FOR EACH PIXEL (BEFORE IT COULD NOT BE DONE
         # (otherwise division by zero!)                           #| BECAUSE OF VECTORIZATION)
-        DtSub = DtDay / NoSubSteps                                #|
+        ### DtSub = DtDay / NoSubSteps    #merge3                             #|
         # DtSub=spatial(DtDay)/mapmaximum(NoSubSteps)             #|
         # Corresponding sub-timestep [days]                       #|
         # Soil loop is looping for the maximum of NoSubsteps      #|
         # therefore DtSub is calculated as part of the timestep   #|
-        # according to the maximum of NoSubsteps                  #|
-       
-        
-        for q in prange(sim_pixels.size):                         #|
+        # according to the maximum of NoSubsteps                  #|              
+        ### for q in prange(sim_pixels.size):   merge3                      #|
             pix = sim_pixels[q]
             WTemp1a = W1a[veg,pix]
             WTemp1b = W1b[veg,pix]
@@ -277,7 +277,8 @@ def soilColumnsWaterBalance(index_landuse_all, is_irrigated, is_paddy_irrig, pad
             SeepSubToGW[veg,pix] = 0.
             # Initialize fluxes out of subsoil (accumulated value for all sub-steps)
             # Start iterating
-            for i in range(NoSubSteps):
+            DtSub[q] = DtDay / NoSubS[q] ###  merge 3 (NoSubSteps)  
+            for i in range(NoSubS[q]):  ### merge 3 (NoSubSteps)
                 if i > 0:
                     KUnSat1a[q] = unsaturatedConductivity(WTemp1a, PoreSpaceNotZero1a[landuse,pix], WRes1a[landuse,pix], WS1a[landuse,pix],
                                                             KSat1a[landuse,pix], GenuInvM1a[landuse,pix], GenuM1a[landuse,pix])
@@ -286,12 +287,12 @@ def soilColumnsWaterBalance(index_landuse_all, is_irrigated, is_paddy_irrig, pad
                     KUnSat2[q] = unsaturatedConductivity(WTemp2, PoreSpaceNotZero2[landuse,pix], WRes2[landuse,pix], WS2[landuse,pix],
                                                            KSat2[landuse,pix], GenuInvM2[landuse,pix], GenuM2[landuse,pix])
                     # Unsaturated conductivity [mm/day]
-                SeepTopToSubSubStepA = min(KUnSat1a[q] * DtSub, CapacityLayer1[q])
-                SeepTopToSubSubStepB = min(KUnSat1b[q] * DtSub, CapacityLayer2[q])
+                SeepTopToSubSubStepA = min(KUnSat1a[q] * DtSub[q], CapacityLayer1[q])
+                SeepTopToSubSubStepB = min(KUnSat1b[q] * DtSub[q], CapacityLayer2[q])
                 
                 # Flux from top- to subsoil (cannot exceed storage capacity
                 # of layer 2)
-                SeepSubToGWSubStep = min(KUnSat2[q] * DtSub, AvailableWater2[q])
+                SeepSubToGWSubStep = min(KUnSat2[q] * DtSub[q], AvailableWater2[q])
                 # Flux out of soil [mm]
                 # Minimise statement needed for exceptional cases
                 # when Theta2 becomes lt 0 (possible due to small precision errors)
@@ -354,7 +355,9 @@ def soilColumnsWaterBalance(index_landuse_all, is_irrigated, is_paddy_irrig, pad
             # GwPercValue*DtDay)
             UZ[veg,pix] = max(UZ[veg,pix] - GwPercUZLZ[veg,pix], 0.)
             # (ground)water in upper response box [mm]
+          
         
+
 
 @njit(nogil=True, fastmath=False)
 def unsaturatedConductivity(WTemp, PoreSpaceNotZero, WRes, WS, KSat, GenuInvM, GenuM):
@@ -398,7 +401,7 @@ satFunVectorized = vectorize("f8(f8,f8,f8)", nopython=True, target='parallel', f
 
 
 '''
-@njit(parallel=True, fastmath=False)
+@njit(parallel=True, fastmath=True)
 def suctionUnsaturatedSoilPF(index_landuse_all, pF0, pF1, pF2, W1a, W1b, W2,
                              WRes1a, WRes1b, WRes2, WS1a, WS1b, WS2,
                              PoreSpaceNotZero1a, PoreSpaceNotZero1b, PoreSpaceNotZero2,
@@ -1171,6 +1174,10 @@ class soilloop(HydroModule):
                                 self.var.WS1a.values, self.var.WS1b.values, self.var.WS1.values, self.var.WS2.values,
                                 self.var.UpperZoneK, self.var.DrainedFraction, self.var.GwPercStep,
                                 self.var.UZOutflow.values, self.var.UZ.values, self.var.GwPercUZLZ.values)
+                   
+                                
+                                
+                                
         # ************************************************************
         # ***** CALCULATION OF PF VALUES FROM SOIL MOISTURE (OPTIONAL)
         # ************************************************************

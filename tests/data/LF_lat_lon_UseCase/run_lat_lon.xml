@@ -23,17 +23,17 @@
         <setoption choice="1" name="inflow"/>
 
 
-        <setoption choice="0" name="wateruse"/>
+        <setoption choice="1" name="wateruse"/>
         <setoption choice="0" name="groundwaterSmooth"/>
-        <setoption choice="0" name="wateruseRegion"/>
+        <setoption choice="1" name="wateruseRegion"/>
         <setoption choice="1" name="drainedIrrigation"/>
-        <setoption choice="0" name="riceIrrigation"/>
+        <setoption choice="1" name="riceIrrigation"/>
         <setoption choice="0" name="indicator"/>
         <setoption choice="0" name="cropsEPIC"/>
 
         <setoption choice="0" name="TransientLandUseChange"/>
         <setoption choice="0" name="TransientWaterDemandChange"/>
-        <setoption choice="0" name="useWateqrDemandAveYear"/>
+        <setoption choice="1" name="useWateqrDemandAveYear"/>
         <setoption choice="1" name="openwaterevapo"/>
         <setoption choice="0" name="varfractionwater"/>
 
@@ -51,6 +51,7 @@
         <setoption choice="0" name="repDischargeMaps"/>
         <setoption choice="0" name="repsimulateLakes"/>
         <setoption choice="0" name="repsimulateReservoirs"/>
+        <setoption choice="1" name="repDischargeTs"/>
 
         <setoption choice="0" name="repSnowMaps"/>
         <setoption choice="0" name="repSnowCoverMaps"/>
@@ -166,12 +167,12 @@ The option "numberParallelThreadsKinematicWave" may take the following values:
                 </comment>
             </textvar>
 
-            <textvar name="StepStart" value="01/01/2016 00:00">
+            <textvar name="StepStart" value="02/01/1986 00:00">
                 <comment>
                     Date of first time step in simulation
                 </comment>
             </textvar>
-            <textvar name="StepEnd" value="25/01/2016 00:00"/>
+            <textvar name="StepEnd" value="01/01/2018 00:00"/>
 
             <textvar name="ReportSteps" value="99999">
                 <comment>
@@ -354,13 +355,13 @@ The option "numberParallelThreadsKinematicWave" may take the following values:
                 **************************************************************
             </comment>
 
-            <textvar name="PathOut" value="$(PathRoot)/reference_ricewateruseOFF">
+            <textvar name="PathOut" value="$(PathRoot)/reference">
                 <comment>
                     Output path (org=$(PathRoot)/out)
                 </comment>
             </textvar>
 
-            <textvar name="PathInit" value="$(PathRoot)/reference_ricewateruseOFF">
+            <textvar name="PathInit" value="$(PathRoot)/reference">
                 <comment>
                     Path of the initial value maps e.g. lzavin.map (org=$(PathRoot)/outPo)
                 </comment>

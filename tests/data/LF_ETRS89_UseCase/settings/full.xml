@@ -5,9 +5,9 @@
 
         # module activation
         <setoption choice="1" name="wateruse"/>
-        <setoption choice="1" name="groundwaterSmooth"/>
+        <setoption choice="0" name="groundwaterSmooth"/>
         <setoption choice="1" name="TransientWaterDemandChange"/>
-        <setoption choice="0" name="useWaterDemandAveYear"/>
+        <setoption choice="1" name="useWaterDemandAveYear"/>
         <setoption choice="1" name="wateruseRegion"/>
         <setoption choice="1" name="indicator"/>
         <setoption choice="1" name="drainedIrrigation"/>
@@ -3225,7 +3225,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
             </comment>
 
 
-            <textvar name="LZAvInflowMap" value="$(PathMaps)/safe_init/ec_lzavin.nc">
+            <textvar name="LZAvInflowMap" value="$(PathMaps)/safe_init/lzavin.nc">
 
                 <comment>
 
@@ -3242,7 +3242,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
             </textvar>
 
 
-            <textvar name="AvgDis" value="$(PathMaps)/safe_init/ec_avgdis.nc">
+            <textvar name="AvgDis" value="$(PathMaps)/safe_init/avgdis.nc">
 
                 <comment>
 

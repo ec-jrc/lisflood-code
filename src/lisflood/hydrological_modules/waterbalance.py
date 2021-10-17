@@ -117,7 +117,7 @@ class waterbalance(object):
         settings = LisSettings.instance()
         option = settings.options
 
-        binding = settings.binding #### stef 29/09/2021
+        binding = settings.binding 
         
         
         
@@ -211,8 +211,9 @@ class waterbalance(object):
             if option['TransLoss']:
                 WaterOut += np.take(np.bincount(self.var.Catchments, weights=self.var.TransCum),self.var.Catchments)
             if option['wateruse']:
-                WaterOut += np.take(np.bincount(self.var.Catchments, weights=self.var.IrriLossWBM3),self.var.Catchments)
-                WaterOut += np.take(np.bincount(self.var.Catchments, weights=self.var.wateruseWBM3),self.var.Catchments)
+                print('WARNING: the water balance module has NOT been verified yet when the option wateruse is ON!')
+                WaterOut += np.take(np.bincount(self.var.Catchments, weights=self.var.IrriLossCUM),self.var.Catchments)
+                WaterOut += np.take(np.bincount(self.var.Catchments, weights=self.var.wateruseCum),self.var.Catchments)
             # Accumulated outgoing water [cu m]
             # Inclusion of DischargeM3Structures is because at structure locations the water in the channel is added to the structure
             # (i.e. storage at reservoirs/lakes is accounted for twice). Of course this is not really a 'loss', but merely a correction

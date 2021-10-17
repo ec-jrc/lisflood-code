@@ -40,7 +40,7 @@ class TestSubcatchments():
         'wateruseRegion',
         'TransientWaterDemandChange',
     ]
-    modules_to_unsetGW= [
+    modules_to_setGW= [
         'groundwaterSmooth',
     ]
 
@@ -57,7 +57,7 @@ class TestSubcatchments():
         dt_sec = 86400
         report_steps = '3650..4100'
         with pytest.raises(AssertionError) as excinfo:
-            self.run_subcathmenttest_by_dtsec(dt_sec, step_end, step_start, report_steps=report_steps, wateruse_on=True, groundwatersmooth_off=False)
+            self.run_subcathmenttest_by_dtsec(dt_sec, step_end, step_start, report_steps=report_steps, wateruse_on=True, groundwatersmooth_on=True)
         assert 'Arrays are not equal' in str(excinfo.value)
 
     def test_subcacthment_daily_wateruse_groundwatersmooth_OFF(self):
@@ -65,7 +65,7 @@ class TestSubcatchments():
         step_end = '30/01/2016 06:00'
         dt_sec = 86400
         report_steps = '3650..4100'
-        self.run_subcathmenttest_by_dtsec(dt_sec, step_end, step_start, report_steps=report_steps, wateruse_on=True, groundwatersmooth_off=True)
+        self.run_subcathmenttest_by_dtsec(dt_sec, step_end, step_start, report_steps=report_steps, wateruse_on=True, groundwatersmooth_on=False)
 
     def test_subcacthment_6h(self):
         step_start = '01/03/2016 06:00'
@@ -74,10 +74,10 @@ class TestSubcatchments():
         report_steps = '14800..16000'
         self.run_subcathmenttest_by_dtsec(dt_sec, step_end, step_start, report_steps=report_steps)
 
-    def run_subcathmenttest_by_dtsec(self, dt_sec, step_end, step_start, report_steps='1..9999', wateruse_on=False, groundwatersmooth_off=False):
+    def run_subcathmenttest_by_dtsec(self, dt_sec, step_end, step_start, report_steps='1..9999', wateruse_on=False, groundwatersmooth_on=False):
         modules_to_unset = self.modules_to_unset if not wateruse_on else []
-        modules_to_unset = self.modules_to_unsetGW if groundwatersmooth_off else []
-        modules_to_set = self.modules_to_unset if wateruse_on else []
+        modules_to_set = self.modules_to_setGW if groundwatersmooth_on else []
+        #modules_to_set = self.modules_to_unset if wateruse_on else []
 
         # long run entire domain
         path_out_domain = mk_path_out('data/LF_ETRS89_UseCase/out/longrun_domain{}'.format(dt_sec))
