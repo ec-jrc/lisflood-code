@@ -64,7 +64,8 @@ class LisfloodModel_dyn(DynamicModel):
                     sys.stdout.flush()
         if i == self.nrTimeSteps():
             # last timestep. Send a new line to the terminal for polishness
-            sys.stdout.write('\n')
+            if not flags['veryquiet']:
+                sys.stdout.write('\n')
             sys.stdout.flush()
 
         # ************************************************************
