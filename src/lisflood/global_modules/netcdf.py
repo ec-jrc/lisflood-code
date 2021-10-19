@@ -48,12 +48,8 @@ def mask_array(data, mask, crop, core_dims):
     return masked_data
 
 
-def compress_xarray(data):
+def compress_xarray(mask, crop, data):
     core_dims = get_core_dims(data.dims)
-    maskinfo = MaskInfo.instance()
-    mask = np.logical_not(maskinfo.info.mask)
-    cutmap = CutMap.instance()
-    crop = cutmap.cuts
     masked_data = mask_array(data, mask, crop, core_dims=core_dims)
     return masked_data
 
@@ -128,7 +124,7 @@ class XarrayChunked():
     def __init__(self, data_path, dates, time_chunk):
 
         # load dataset using xarray
-        if time_chunk != 'auto':
+        if time_chunk != 'auto' and time_chunk is not None:
             time_chunk = int(time_chunk)
         data_path = data_path + ".nc" if not data_path.endswith('.nc') else data_path
         ds = xr.open_mfdataset(data_path, engine='netcdf4', chunks={'time': time_chunk}, combine='by_coords')
@@ -145,11 +141,15 @@ class XarrayChunked():
         da = da.sel(time=date_range)
 
         # compress dataset (remove missing values and flatten the array)
-        self.masked_da = compress_xarray(da)
+        maskinfo = MaskInfo.instance()
+        mask = np.logical_not(maskinfo.info.mask)
+        cutmap = CutMap.instance()
+        crop = cutmap.cuts
+        self.masked_da = compress_xarray(mask, crop, da)
 
         # initialise class variables and load first chunk
         self.chunks = self.masked_da.chunks[0]  # list of chunks indexes in dataset
-        if (time_chunk==-1):  # ensure we only have one chunk when dealing with multiple files
+        if (time_chunk==-1) or time_chunk is None:  # ensure we only have one chunk when dealing with multiple files
             self.chunks = [np.sum(self.chunks)]
         self.ichunk = None  # current chunk number
         self.chunk_index = None  # current chunk range
@@ -192,7 +192,7 @@ class XarrayCached(XarrayChunked):
 
     def __init__(self, data_path, dates):
 
-        super().__init__(data_path, dates, '-1')
+        super().__init__(data_path, dates, None)
 
 
 def coordinatesLand(eastings_forcing, northings_forcing):
@@ -232,17 +232,6 @@ def read_lat_from_template(binding):
             _, lat_deg = coordinatesLand(nc.lon.values, nc.lat.values)  # latitude (degrees)
 
     return lat_deg
-
-
-def get_core_dims(dims):
-    if 'x' in dims and 'y' in dims:
-        core_dims = ('y', 'x')
-    elif 'lat' in dims and 'lon' in dims:
-        core_dims = ('lat', 'lon')
-    else:
-        msg = 'Core dimension in netcdf file not recognised! Expecting (y, x) or (lat, lon), have '+str(dims)
-        LisfloodError(msg)
-    return core_dims
 
 
 def get_space_coords(nrow, ncol, dim_lat_y, dim_lon_x):
