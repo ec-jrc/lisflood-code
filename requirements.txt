@@ -5,7 +5,7 @@ coverage==6.0
 Cython==0.29.14
 dask==2.7.0
 future==0.18.0
-GDAL==3.3.2
+GDAL==3.3.0
 importlib-metadata==0.23
 iniconfig==1.1.1
 lisflood-utilities==0.12.18
