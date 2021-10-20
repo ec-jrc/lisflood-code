@@ -168,5 +168,5 @@ class miscInitial(HydroModule):
         self.var.SumETpotact = maskinfo.in_zero()
 
         # Read the latitude (radians) from the template NetCDF file
-        lat_deg = netcdf.read_lat_from_template(binding)
+        lat_deg = netcdf.read_lat_from_template(binding["netCDFtemplate"], binding.get('proj4_params', None))
         self.var.lat_rad = np.radians(lat_deg)  # latitude (radians)

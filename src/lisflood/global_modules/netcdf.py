@@ -208,8 +208,8 @@ def coordinatesLand(eastings_forcing, northings_forcing):
 
 
 @iocache
-def read_lat_from_template(binding):
-    nc_template = binding["netCDFtemplate"] + ".nc" if not binding["netCDFtemplate"].endswith('.nc') else binding["netCDFtemplate"]
+def read_lat_from_template(netcdf_template, proj4_params):
+    nc_template = netcdf_template + ".nc" if not netcdf_template.endswith('.nc') else netcdf_template
     with xr.open_dataset(nc_template) as nc:
         if all([co in nc.dims for co in ("x", "y")]):
             try:
@@ -219,9 +219,7 @@ def read_lat_from_template(binding):
                 proj4_params = nc[proj_var].attrs['proj4_params']
                 # projection object obtained from the PROJ4 string
             except IndexError:
-                try:
-                    proj4_params = binding['proj4_params']
-                except KeyError:
+                if proj4_params is None:
                     raise Exception("If using projected coordinates (x, y), a variable with the 'proj4_params' "
                                     "attribute must be included in the precipitation file or in settings file!")
 
