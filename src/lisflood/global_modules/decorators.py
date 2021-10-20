@@ -76,6 +76,13 @@ def iocache(obj):
         nonlocal found
         return found
 
+    def iocache_extract():
+        return cache
+
+    def iocache_apply(to_cache):
+        for i in to_cache:
+            cache[i] = to_cache[i]
+
     def iocache_info():
         print('Caching {}'.format(obj))
         print('Number of items cached: {}'.format(iocache_size()))
@@ -88,5 +95,7 @@ def iocache(obj):
     iocache_wrapper.iocache_found = iocache_found
     iocache_wrapper.iocache_info = iocache_info
     iocache_wrapper.iocache_size = iocache_size
+    iocache_wrapper.iocache_extract = iocache_extract
+    iocache_wrapper.iocache_apply = iocache_apply
 
     return iocache_wrapper
