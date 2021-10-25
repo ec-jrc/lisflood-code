@@ -12,7 +12,7 @@ from pyproj import Proj
 from .settings import (calendar_inconsistency_warning, get_calendar_type, calendar, MaskAttrs, CutMap, NetCDFMetadata,
                        LisSettings, MaskInfo)
 from .errors import LisfloodWarning, LisfloodError
-from .decorators import iocache
+from .decorators import Cache, cached
 from .zusatz import iterOpenNetcdf
 # from .add1 import *
 from .add1 import nanCheckMap, decompress
@@ -63,34 +63,6 @@ def uncompress_array(masked_data):
     return data
 
 
-def date_from_step(binding, timestep):
-    start = calendar(binding['CalendarDayStart'], binding['calendar_type'])
-    dt_sec = float(binding['DtSec'])
-    dt_day = float(dt_sec / 86400)
-    # get date of current simulation step
-    currentDate = calendar(timestep, binding['calendar_type'])
-    if type(currentDate) is not datetime.datetime:
-        currentDate = start + datetime.timedelta(days=(currentDate - 1) * dt_day)
-
-    return currentDate
-
-
-def date_range(binding):
-    begin = calendar(binding['StepStart'])
-    end = calendar(binding['StepEnd'])
-    if type(begin) is float: 
-        begin = date_from_step(binding, begin)
-    if type(end) is float: 
-        end = date_from_step(binding, end)
-
-    # Not sure this is the best way but the calendar object does not help
-    begin = np.datetime64(begin.strftime('%Y-%m-%d %H:%M'))
-    end = np.datetime64(end.strftime('%Y-%m-%d %H:%M'))
-    dt = np.timedelta64(int(binding['DtSec']),'s')
-
-    return (begin, end+dt, dt)
-
-
 def find_main_var(ds, path):
     variable_names = [k for k in ds.variables if len(ds.variables[k].dims) == 3]
     if len(variable_names) > 1:
@@ -110,18 +82,58 @@ def check_dataset_calendar_type(ds, path):
     # check calendar type
     # if using multiple files, the encoding will be droppped (bug in xarray), let's check the calendar fom the first file
     if '*' in path:
-        first_file = glob.glob(path)[0]
-        ds_tmp = xr.open_dataset(first_file, chunks={'time': -1})
-        calendar = ds_tmp.time.encoding['calendar']
-    else:
-        calendar = ds.time.encoding['calendar']
+        ds = xr.open_dataset(glob.glob(path)[0], chunks={'time': -1})
+    
+    calendar = ds.time.encoding['calendar']
     if calendar != binding['calendar_type']:
         print('WARNING! Wrong calendar type in dataset {}, is \"{}\" and should be \"{}\"\n Please double check your forcing datasets and update them to use the correct calendar type'.format(path, ds.time.encoding['calendar'], binding['calendar_type']))
 
 
+def date_from_step(binding, timestep):
+    start = calendar(binding['CalendarDayStart'], binding['calendar_type'])
+    dt_sec = float(binding['DtSec'])
+    dt_day = float(dt_sec / 86400)
+    # get date of current simulation step
+    currentDate = calendar(timestep, binding['calendar_type'])
+    if type(currentDate) is not datetime.datetime:
+        currentDate = start + datetime.timedelta(days=(currentDate - 1) * dt_day)
+
+    return currentDate
+
+
+def run_date_range(binding):
+
+    begin = calendar(binding['StepStart'])
+    end = calendar(binding['StepEnd'])
+    if type(begin) is float: 
+        begin = date_from_step(binding, begin)
+    if type(end) is float: 
+        end = date_from_step(binding, end)
+
+    # Not sure this is the best way but the calendar object does not help
+    begin = np.datetime64(begin.strftime('%Y-%m-%d %H:%M'))
+    end = np.datetime64(end.strftime('%Y-%m-%d %H:%M'))
+    dt = np.timedelta64(int(binding['DtSec']),'s')
+
+    return (begin, end+dt, dt)
+
+def dataset_date_range(run_dates, dataset, indexer):
+    if indexer is None:
+        date_range = np.arange(*run_dates, dtype='datetime64')
+    else:
+        begin = dataset.time.sel(run_dates[0], method=indexer)
+        end = dataset.time.sel(run_dates[1], method=indexer)
+        # using nearest date, dt is max between dataset and model
+        ds_dt = dataset.time[1]-dataset.time[0]
+        run_dt = run_dates[2]
+        timedelta = max(ds_dt, run_dt)
+        date_range = np.arange(begin, end, timedelta, dtype='datetime64')
+    return date_range
+
+
 class XarrayChunked():
 
-    def __init__(self, data_path, dates, time_chunk):
+    def __init__(self, data_path, time_chunk, dates=None, indexer=None):
 
         # load dataset using xarray
         if time_chunk != 'auto' and time_chunk is not None:
@@ -136,48 +148,91 @@ class XarrayChunked():
         var_name = find_main_var(ds, data_path)
         da = ds[var_name]
 
+        # store time indexer
+        # None=exact date, ffill=latest date in dataset (following Xarray sel API)
+        self.indexer=indexer
+
         # extract time range
-        date_range = np.arange(*dates, dtype='datetime64')
-        da = da.sel(time=date_range)
+        if dates is not None:
+            date_range = dataset_date_range(dates, da, self.indexer)
+            da = da.sel(time=date_range)
+            self.index_map = self.map_dates_index(dates, date_range, da.time, self.indexer)
+        else:
+            self.index_map = range(len(da.time))
 
         # compress dataset (remove missing values and flatten the array)
         maskinfo = MaskInfo.instance()
         mask = np.logical_not(maskinfo.info.mask)
         cutmap = CutMap.instance()
         crop = cutmap.cuts
-        self.masked_da = compress_xarray(mask, crop, da)
+        self.dataset = compress_xarray(mask, crop, da) # final dataset to store
 
         # initialise class variables and load first chunk
-        self.chunks = self.masked_da.chunks[0]  # list of chunks indexes in dataset
-        if (time_chunk==-1) or time_chunk is None:  # ensure we only have one chunk when dealing with multiple files
-            self.chunks = [np.sum(self.chunks)]
-        self.ichunk = None  # current chunk number
-        self.chunk_index = None  # current chunk range
-        self.chunked_array = None  # current chunk values
-        self.load_chunk(timestep=0)
+        self.init_chunks(self.dataset, time_chunk)
 
-    def load_chunk(self, timestep):
+    def map_dates_index(self, dates, date_range, time, indexer):
+
+        print(time)
+        dates_map = dict(zip(time.values, range(len(time))))
+        run_dates = time.sel(time=np.arange(*dates, dtype='datetime64'), method=indexer).values
+        index_map = [dates_map[date] for date in run_dates]
+
+        return index_map
+
+    def init_chunks(self, dataset, time_chunk):
+        # compute chunks indexes in dataset
+        chunks = self.dataset.chunks[0]  # list of chunks indexes in dataset
+        if (time_chunk==-1) or time_chunk is None:  # ensure we only have one chunk when dealing with multiple files
+            chunks = [np.sum(chunks)]
+        self.chunk_indexes = []
+        for i in range(len(chunks)):
+            self.chunk_indexes.append(sum(chunks[:i]))
+
+        # compute dates from index ranges
+        self.chunk_dates = []
+        for chunk in self.chunk_indexes:
+            self.chunk_dates.append(dataset.time.isel(time=chunk).values)
+
+        # special case for last index
+        self.chunk_indexes.append(sum(chunks))
+        self.chunk_dates.append(dataset.time.isel(time=-1).values+np.timedelta64(1, 'h'))
+
+        # load first chunk
+        self.ichunk = None
+        self.load_next_chunk()
+
+    def load_next_chunk(self):
         if self.ichunk is None:  # initialisation
             self.ichunk = 0
-            self.chunk_index = [0, self.chunks[self.ichunk]]
         else:
             self.ichunk += 1
-            self.chunk_index[0] = sum(self.chunks[:self.ichunk])
-            self.chunk_index[1] = sum(self.chunks[:self.ichunk+1])
+        begin = self.chunk_indexes[self.ichunk]
+        end = self.chunk_indexes[self.ichunk+1]
+        
+        chunk = self.dataset.isel(time=range(begin, end))
+        self.dataset_chunk = chunk.load()  # triggers xarray computation
+        self.chunked_array = self.dataset_chunk.values
 
-        chunked_dataset = self.masked_da.isel(time=range(self.chunk_index[0], self.chunk_index[1]))
-        self.chunked_array = chunked_dataset.values  # triggers xarray computation
-        # print('chunk {} loaded'.format(self.ichunk))
+    def sel(self, date):  # slow
+        date_np = np.datetime64(date.strftime('%Y-%m-%d %H:%M:%S'))
+        
+        # if at the end of chunk, load new chunk
+        chunk_end = self.chunk_dates[self.ichunk+1]
+        if date_np == chunk_end:
+            self.load_next_chunk()
+        
+        data = self.dataset_chunk.sel(time=date_np, method=self.indexer).values
+
+        return data
 
     def __getitem__(self, timestep):
 
-        local_step = timestep - self.chunk_index[0]
-
         # if at the end of chunk, load new chunk
-        if local_step == self.chunks[self.ichunk]:
-            self.load_chunk(timestep)
-            local_step = timestep - self.chunk_index[0]
+        if timestep == self.chunk_indexes[self.ichunk+1]:
+            self.load_next_chunk()
             # print('loading array {} at step {}'.format(self.masked_da.name, timestep))
+
+        local_step = timestep - self.chunk_indexes[self.ichunk]
 
         if local_step < 0:
             msg = 'local step cannot be negative! timestep: {}, chunk: {} - {}', timestep, self.chunk_index[0], self.chunk_index[1]
@@ -187,12 +242,57 @@ class XarrayChunked():
         return data
 
 
-@iocache
+
+@Cache
 class XarrayCached(XarrayChunked):
 
-    def __init__(self, data_path, dates):
+    def __init__(self, data_path, dates, indexer=None):
+        super().__init__(data_path, None, dates, indexer)
 
-        super().__init__(data_path, dates, None)
+
+# class XarrayClim(XarrayChunked):
+
+#     def __init__(self, data_path, indexer=None):
+#         super().__init__(data_path, time_chunk=None, dates=None, indexer=indexer)
+
+#         self.year = get_dataset_year()
+
+#     def map_dates_index(self, dates, date_range, time, indexer):
+
+#         new_dates = 
+#         try:
+#             date = date.replace(year=self.year)
+#         except:
+#             # CM: if simulation year is leap and average year is not, switch 29/2 with 28/2
+#             date = date.replace(day=28)
+#             date = date.replace(year=self.year)
+#         return super().__getitem__(date)
+
+
+# @Cache
+# class XarrayClimCached(XarrayClim):
+    
+#     def __init__(self, data_path, indexer=None):
+#         super().__init__(data_path, None, indexer)
+
+
+def xarray_reader(binding, dataname, indexer=None, climatology=False):
+    # extract time range from bindings
+    dates = run_date_range(binding)
+    # extract chunk from bindings
+    time_chunk = binding['NetCDFTimeChunks']  # -1 to load everything, 'auto' to let xarray decide
+    if climatology:
+        if binding['MapsCaching'] == "True":
+            data = XarrayClimCached(binding[dataname], indexer)
+        else:
+            data = XarrayClim(binding[dataname], indexer)
+    else:
+        if binding['MapsCaching'] == "True":
+            data = XarrayCached(binding[dataname], dates, indexer)
+        else:
+            data = XarrayChunked(binding[dataname], time_chunk, dates, indexer)
+    
+    return data
 
 
 def coordinatesLand(eastings_forcing, northings_forcing):
@@ -207,8 +307,12 @@ def coordinatesLand(eastings_forcing, northings_forcing):
     return [co[row_slice, col_slice][~maskinfo.info.mask] for co in np.meshgrid(eastings_forcing, northings_forcing)]
 
 
-@iocache
-def read_lat_from_template(netcdf_template, proj4_params):
+@Cache
+def read_lat_from_template_cached(netcdf_template, proj4_params):
+    return read_lat_from_template_base(netcdf_template, proj4_params)
+
+
+def read_lat_from_template_base(netcdf_template, proj4_params):
     nc_template = netcdf_template + ".nc" if not netcdf_template.endswith('.nc') else netcdf_template
     with xr.open_dataset(nc_template) as nc:
         if all([co in nc.dims for co in ("x", "y")]):
@@ -228,6 +332,18 @@ def read_lat_from_template(netcdf_template, proj4_params):
             _, lat_deg = projection(*coordinatesLand(nc.x.values, nc.y.values), inverse=True)  # latitude (degrees)
         else:
             _, lat_deg = coordinatesLand(nc.lon.values, nc.lat.values)  # latitude (degrees)
+
+    return lat_deg
+
+
+def read_lat_from_template(binding):
+    netcdf_template = binding["netCDFtemplate"]
+    proj4_params = binding.get('proj4_params', None)
+
+    if binding['MapsCaching'] == "True":
+        lat_deg = read_lat_from_template_cached(netcdf_template, proj4_params)
+    else:
+        lat_deg = read_lat_from_template_base(netcdf_template, proj4_params)
 
     return lat_deg
 
@@ -316,17 +432,23 @@ def write_header(var_name, netfile, DtDay,
         units_time = 'days since %s' % startdate.strftime("%Y-%m-%d %H:%M:%S.0")
         steps = (int(binding["DtSec"]) / 86400.) * np.arange(binding["StepStartInt"] - 1, binding["StepEndInt"])
         if frequency != "all":
-            dates = num2date(steps, units_time, binding["calendar_type"])
+            dates = num2date(steps-binding["StepStartInt"]+1, units_time, binding["calendar_type"])
             next_date_times = np.array([j + datetime.timedelta(seconds=int(binding["DtSec"])) for j in dates])
             if frequency == "monthly":
-                months_end = np.array([dates[j].month != next_date_times[j].month for j in range(steps.size)])
-                steps = steps[months_end]
+                months_end = np.array([dates[j].month != next_date_times[j].month for j in range(repstepend - repstepstart +1)])
+                steps_monthly = steps[months_end]
+                time_stamps_monthly = dates[months_end==True]
             elif frequency == "annual":
                 years_end = np.array([dates[j].year != next_date_times[j].year for j in range(steps.size)])
                 steps = steps[years_end]
-        nf1.createDimension('time', steps.size)
-        time = nf1.createVariable('time', float, ('time'))
-        time.standard_name = 'time'
+        if frequency == "all":
+           nf1.createDimension('time', steps.size)
+           time = nf1.createVariable('time', float, ('time'))
+           time.standard_name = 'time'
+        if frequency == "monthly":
+           nf1.createDimension('time', steps_monthly.size)
+           time = nf1.createVariable('time', float, ('time'))
+           time.standard_name = 'time'           
         # time.units ='days since 1990-01-01 00:00:00.0'
         # time.units = 'hours since %s' % startdate.strftime("%Y-%m-%d %H:%M:%S.0")
         # CM: select the time unit according to model time step
@@ -342,11 +464,16 @@ def write_header(var_name, netfile, DtDay,
             time.units = 'minutes since %s' % startdate.strftime("%Y-%m-%d %H:%M:%S.0")
 
         time.calendar = binding["calendar_type"]
-        nf1.variables["time"][:] = date2num(time_stamps, time.units, time.calendar)
+ 
+        if frequency == "all":
+           nf1.variables["time"][:] = date2num(time_stamps, time.units, time.calendar)
+        if frequency == "monthly":
+           nf1.variables["time"][:] = date2num(time_stamps_monthly, time.units, time.calendar)                  
         # for i in metadataNCDF['time']: exec('%s="%s"') % ("time."+i, metadataNCDF['time'][i])
         value = nf1.createVariable(var_name, 'd', ('time', dim_lat_y, dim_lon_x), zlib=True, fill_value=-9999, chunksizes=(1, nrow, ncol))
     else:
         value = nf1.createVariable(var_name, 'd', (dim_lat_y, dim_lon_x), zlib=True, fill_value=-9999)
+    
 
     value.standard_name = value_standard_name
     value.long_name = value_long_name
@@ -382,7 +509,6 @@ def writenet(flag, inputmap, netfile, DtDay,
     flags = LisSettings.instance().flags
     var_name = os.path.basename(netfile)
     netfile += ".nc"
-    
     if flag == 0:
         nf1 = write_header(var_name, netfile, DtDay,
                            value_standard_name, value_long_name, value_unit, data_format,

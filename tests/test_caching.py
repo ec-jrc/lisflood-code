@@ -7,7 +7,7 @@ import pytest
 from lisfloodutilities.compare.nc import NetCDFComparator
 
 from lisflood.main import lisfloodexe
-from lisflood.cache import cache_clear, cache_size, cache_info, cache_found
+from lisflood.global_modules.decorators import Cache
 from lisflood.global_modules.settings import LisSettings
 
 from .test_utils import setoptions, mk_path_out, ETRS89TestCase
@@ -26,8 +26,12 @@ class TestCaching(ETRS89TestCase):
     def test_caching_6h(self):
       dt_sec = 21600
       self.run_lisflood_caching(dt_sec)
+    
+    def test_cache_extract(self):
+      dt_sec = 86400
+      self.run_lisflood_caching(dt_sec, test_extract=True)
 
-    def run_lisflood_caching(self, dt_sec):
+    def run_lisflood_caching(self, dt_sec, test_extract=False):
         
         settings_a = setoptions(self.settings_file,
                                 vars_to_set={'StepStart': '30/07/2016 06:00', 'StepEnd': '01/08/2016 06:00',
@@ -36,12 +40,19 @@ class TestCaching(ETRS89TestCase):
         mk_path_out(self.out_dir_a)
         lisfloodexe(settings_a)
 
-        cache_size_a = cache_size()
-        cache_found_a = cache_found()
+        cache_size_a = Cache.size()
+        cache_found_a = Cache.values_found()
         print('Cache size is {}'.format(cache_size_a))
         print('Items found: {}'.format(cache_found_a))
 
         assert cache_found_a == 0
+
+        if test_extract:
+            cache_backup = Cache.extract()
+            Cache.clear()
+            assert Cache.size() == 0
+            Cache.apply(cache_backup)
+            assert Cache.size() == cache_size_a
 
         settings_b = setoptions(self.settings_file,
                                 vars_to_set={'StepStart': '30/07/2016 06:00', 'StepEnd': '01/08/2016 06:00',
@@ -50,12 +61,12 @@ class TestCaching(ETRS89TestCase):
         mk_path_out(self.out_dir_b)
         lisfloodexe(settings_b)
 
-        cache_size_b = cache_size()
-        cache_found_b = cache_found()
+        cache_size_b = Cache.size()
+        cache_found_b = Cache.values_found()
         print('Cache size is {}'.format(cache_size_b))
         print('Items found: {}'.format(cache_found_b))
 
-        cache_info()
+        Cache.info()
 
         assert cache_found_b == cache_size_b
         assert cache_size_a == cache_size_b
@@ -67,7 +78,7 @@ class TestCaching(ETRS89TestCase):
         print('Cleaning directories and cache')
         shutil.rmtree(self.out_dir_a, ignore_errors=True)
         shutil.rmtree(self.out_dir_b, ignore_errors=True)
-        cache_clear()
+        Cache.clear()
 
 
 @pytest.mark.slow
@@ -76,11 +87,14 @@ class TestCachingSlow(ETRS89TestCase):
     modules_to_set = (
         'SplitRouting',
         'simulateReservoirs',
-        'groundwaterSmooth',
+        'simulateLakes',
         'drainedIrrigation',
         'openwaterevapo',
         'riceIrrigation',
-        'indicator',
+        'wateruse',
+        'useWaterDemandAveYear',
+        'wateruseRegion',
+        'TransientWaterDemandChange',
     )
     settings_files = {
         'base': os.path.join(case_dir, 'settings/base.xml'),
@@ -108,8 +122,8 @@ class TestCachingSlow(ETRS89TestCase):
                                            'MapsCaching': 'True'})
         lisfloodexe(settings)
 
-        cache_size_a = cache_size()
-        cache_found_a = cache_found()
+        cache_size_a = Cache.size()
+        cache_found_a = Cache.found()
         print('Cache size is {}'.format(cache_size_a))
         print('Items found: {}'.format(cache_found_a))
 
@@ -117,12 +131,12 @@ class TestCachingSlow(ETRS89TestCase):
 
         lisfloodexe(settings)
 
-        cache_size_b = cache_size()
-        cache_found_b = cache_found()
+        cache_size_b = Cache.size()
+        cache_found_b = Cache.found()
         print('Cache size is {}'.format(cache_size_b))
         print('Items found: {}'.format(cache_found_b))
 
-        cache_info()
+        Cache.info()
 
         assert cache_found_b == cache_size_b + 2
         assert cache_size_a == cache_size_b
@@ -142,4 +156,4 @@ class TestCachingSlow(ETRS89TestCase):
         settings = LisSettings.instance()
         output_dir = settings.output_dir
         shutil.rmtree(output_dir)
-        cache_clear()
+        Cache.clear()
