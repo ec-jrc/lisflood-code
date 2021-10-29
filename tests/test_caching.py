@@ -123,7 +123,7 @@ class TestCachingSlow(ETRS89TestCase):
         lisfloodexe(settings)
 
         cache_size_a = Cache.size()
-        cache_found_a = Cache.found()
+        cache_found_a = Cache.values_found()
         print('Cache size is {}'.format(cache_size_a))
         print('Items found: {}'.format(cache_found_a))
 
@@ -132,7 +132,7 @@ class TestCachingSlow(ETRS89TestCase):
         lisfloodexe(settings)
 
         cache_size_b = Cache.size()
-        cache_found_b = Cache.found()
+        cache_found_b = Cache.values_found()
         print('Cache size is {}'.format(cache_size_b))
         print('Items found: {}'.format(cache_found_b))
 

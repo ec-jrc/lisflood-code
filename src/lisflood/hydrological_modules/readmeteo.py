@@ -18,7 +18,7 @@ from __future__ import print_function, absolute_import
 
 from ..global_modules.settings import LisSettings
 from ..global_modules.add1 import readmapsparse
-from ..global_modules.netcdf import xarray_reader, date_from_step
+from ..global_modules.netcdf import xarray_reader
 
 
 class readmeteo(object):
@@ -33,11 +33,11 @@ class readmeteo(object):
         self.var = readmeteo_variable
         settings = LisSettings.instance()
         option = settings.options
-        binding = settings.binding
+        # initialise xarray readers
         if option['readNetcdfStack']:
             self.forcings = {}
             for data in ['PrecipitationMaps', 'TavgMaps', 'ET0Maps', 'E0Maps']:
-                self.forcings[data] = xarray_reader(binding, data)
+                self.forcings[data] = xarray_reader(data)
 
 # --------------------------------------------------------------------------
 # --------------------------------------------------------------------------

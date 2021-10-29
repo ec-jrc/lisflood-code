@@ -117,23 +117,46 @@ def run_date_range(binding):
 
     return (begin, end+dt, dt)
 
+
 def dataset_date_range(run_dates, dataset, indexer):
     if indexer is None:
         date_range = np.arange(*run_dates, dtype='datetime64')
     else:
-        begin = dataset.time.sel(run_dates[0], method=indexer)
-        end = dataset.time.sel(run_dates[1], method=indexer)
+        begin = dataset.time.sel(time=run_dates[0], method=indexer).values
+        end = dataset.time.sel(time=run_dates[1], method=indexer).values
         # using nearest date, dt is max between dataset and model
-        ds_dt = dataset.time[1]-dataset.time[0]
+        ds_dt = (dataset.time[1]-dataset.time[0]).values
         run_dt = run_dates[2]
         timedelta = max(ds_dt, run_dt)
         date_range = np.arange(begin, end, timedelta, dtype='datetime64')
     return date_range
 
 
+def replace_dates_year(dates, year):
+    dates_new  = [np.datetime64(str(year)+'-'+np.datetime_as_string(date)[5:]) for date in dates]
+    return dates_new
+
+
+def map_dates_index(dates, time, indexer, climatology=False):
+
+    dates_run = np.arange(*dates, dtype='datetime64')
+
+    if climatology:  # use 2020 as a leap year reference
+        dates_run = replace_dates_year(dates_run, 2020)
+        dates_dataset = replace_dates_year(time.values, 2020)
+        time = time.assign_coords({'time': dates_dataset})
+
+    run_dates = time.sel(time=dates_run, method=indexer).values
+
+    dates_map = dict(zip(time.values, range(len(time))))
+    index_map = [dates_map[date] for date in run_dates]
+
+    return index_map
+
+
 class XarrayChunked():
 
-    def __init__(self, data_path, time_chunk, dates=None, indexer=None):
+    def __init__(self, data_path, time_chunk, dates, indexer=None, climatology=False):
 
         # load dataset using xarray
         if time_chunk != 'auto' and time_chunk is not None:
@@ -148,17 +171,11 @@ class XarrayChunked():
         var_name = find_main_var(ds, data_path)
         da = ds[var_name]
 
-        # store time indexer
-        # None=exact date, ffill=latest date in dataset (following Xarray sel API)
-        self.indexer=indexer
-
         # extract time range
-        if dates is not None:
-            date_range = dataset_date_range(dates, da, self.indexer)
+        if not climatology and dates[0] < da.time[-1].values:
+            date_range = dataset_date_range(dates, da, indexer)  # array of dates
             da = da.sel(time=date_range)
-            self.index_map = self.map_dates_index(dates, date_range, da.time, self.indexer)
-        else:
-            self.index_map = range(len(da.time))
+        self.index_map = map_dates_index(dates, da.time, indexer, climatology)
 
         # compress dataset (remove missing values and flatten the array)
         maskinfo = MaskInfo.instance()
@@ -170,15 +187,6 @@ class XarrayChunked():
         # initialise class variables and load first chunk
         self.init_chunks(self.dataset, time_chunk)
 
-    def map_dates_index(self, dates, date_range, time, indexer):
-
-        print(time)
-        dates_map = dict(zip(time.values, range(len(time))))
-        run_dates = time.sel(time=np.arange(*dates, dtype='datetime64'), method=indexer).values
-        index_map = [dates_map[date] for date in run_dates]
-
-        return index_map
-
     def init_chunks(self, dataset, time_chunk):
         # compute chunks indexes in dataset
         chunks = self.dataset.chunks[0]  # list of chunks indexes in dataset
@@ -186,111 +194,83 @@ class XarrayChunked():
             chunks = [np.sum(chunks)]
         self.chunk_indexes = []
         for i in range(len(chunks)):
-            self.chunk_indexes.append(sum(chunks[:i]))
-
-        # compute dates from index ranges
-        self.chunk_dates = []
-        for chunk in self.chunk_indexes:
-            self.chunk_dates.append(dataset.time.isel(time=chunk).values)
-
-        # special case for last index
-        self.chunk_indexes.append(sum(chunks))
-        self.chunk_dates.append(dataset.time.isel(time=-1).values+np.timedelta64(1, 'h'))
+            self.chunk_indexes.append(int(np.sum(chunks[:i])))
+        self.chunk_indexes.append(int(np.sum(chunks)))
 
         # load first chunk
-        self.ichunk = None
+        self.ichunk = -1
         self.load_next_chunk()
 
     def load_next_chunk(self):
-        if self.ichunk is None:  # initialisation
-            self.ichunk = 0
-        else:
-            self.ichunk += 1
+        self.ichunk += 1
         begin = self.chunk_indexes[self.ichunk]
         end = self.chunk_indexes[self.ichunk+1]
         
         chunk = self.dataset.isel(time=range(begin, end))
         self.dataset_chunk = chunk.load()  # triggers xarray computation
-        self.chunked_array = self.dataset_chunk.values
 
-    def sel(self, date):  # slow
-        date_np = np.datetime64(date.strftime('%Y-%m-%d %H:%M:%S'))
-        
-        # if at the end of chunk, load new chunk
-        chunk_end = self.chunk_dates[self.ichunk+1]
-        if date_np == chunk_end:
-            self.load_next_chunk()
-        
-        data = self.dataset_chunk.sel(time=date_np, method=self.indexer).values
+    def __getitem__(self, step):
 
-        return data
-
-    def __getitem__(self, timestep):
+        dataset_index = self.index_map[step]
 
         # if at the end of chunk, load new chunk
-        if timestep == self.chunk_indexes[self.ichunk+1]:
+        if dataset_index == self.chunk_indexes[self.ichunk+1]:
             self.load_next_chunk()
-            # print('loading array {} at step {}'.format(self.masked_da.name, timestep))
 
-        local_step = timestep - self.chunk_indexes[self.ichunk]
+        local_index = dataset_index - self.chunk_indexes[self.ichunk]
 
-        if local_step < 0:
-            msg = 'local step cannot be negative! timestep: {}, chunk: {} - {}', timestep, self.chunk_index[0], self.chunk_index[1]
+        if local_index < 0:
+            msg = 'local step cannot be negative! step: {}, chunk: {} - {}', local_index, self.chunk_index[self.ichunk], self.chunk_index[self.ichunk+1]
             LisfloodError(msg)
 
-        data = self.chunked_array[local_step]
+        data = self.dataset_chunk.values[local_index]
         return data
-
 
 
 @Cache
 class XarrayCached(XarrayChunked):
 
-    def __init__(self, data_path, dates, indexer=None):
-        super().__init__(data_path, None, dates, indexer)
+    def __init__(self, data_path, dates, indexer=None, climatology=False):
+        super().__init__(data_path, None, dates, indexer, climatology)
 
 
-# class XarrayClim(XarrayChunked):
-
-#     def __init__(self, data_path, indexer=None):
-#         super().__init__(data_path, time_chunk=None, dates=None, indexer=indexer)
-
-#         self.year = get_dataset_year()
-
-#     def map_dates_index(self, dates, date_range, time, indexer):
-
-#         new_dates = 
-#         try:
-#             date = date.replace(year=self.year)
-#         except:
-#             # CM: if simulation year is leap and average year is not, switch 29/2 with 28/2
-#             date = date.replace(day=28)
-#             date = date.replace(year=self.year)
-#         return super().__getitem__(date)
-
-
-# @Cache
-# class XarrayClimCached(XarrayClim):
+def xarray_reader(dataname, indexer=None, climatology=False):
+    """ Reads a netcdf time series using Xarray
     
-#     def __init__(self, data_path, indexer=None):
-#         super().__init__(data_path, None, indexer)
+    Parameters
+    ----------
+    dataname : str
+        Name of data to read (used to extract file path from bindings)
+    indexer : str
+        How to index time data (None=exact date, ffill=latest date in dataset (following Xarray sel API))
+    climatology : bool
+        Climatology dataset: one-year time series, no chunking    
+    
+    Returns
+    -------
+    object
+        Xarray reader object, can be accessed as a simple array/list
+    """
 
+    # get bindings
+    settings = LisSettings.instance()
+    binding = settings.binding
 
-def xarray_reader(binding, dataname, indexer=None, climatology=False):
-    # extract time range from bindings
+    data_path = binding[dataname]
+
+    # extract run date range from bindings -> (begin, end, step)
     dates = run_date_range(binding)
+
     # extract chunk from bindings
     time_chunk = binding['NetCDFTimeChunks']  # -1 to load everything, 'auto' to let xarray decide
-    if climatology:
-        if binding['MapsCaching'] == "True":
-            data = XarrayClimCached(binding[dataname], indexer)
-        else:
-            data = XarrayClim(binding[dataname], indexer)
+
+    if binding['MapsCaching'] == "True":
+        data = XarrayCached(data_path, dates, indexer, climatology)
     else:
-        if binding['MapsCaching'] == "True":
-            data = XarrayCached(binding[dataname], dates, indexer)
+        if climatology:  # for climatology, load the entire dataset
+            data = XarrayChunked(data_path, None, dates, indexer, climatology)
         else:
-            data = XarrayChunked(binding[dataname], time_chunk, dates, indexer)
+            data = XarrayChunked(data_path, time_chunk, dates, indexer, climatology)
     
     return data
 
