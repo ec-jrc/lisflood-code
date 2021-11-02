@@ -65,9 +65,9 @@ class indicatorcalc(HydroModule):
             self.var.RegionPopulation = np.take(np.bincount(self.var.WUseRegionC, weights=self.var.Population), self.var.WUseRegionC)
             self.dynamic_setzero()
             
-            self.var.DayCounter = 0           ############### Sept 17
-            self.var.MonthETpotMM = maskinfo.in_zero() ############### Sept 17
-            self.var.MonthETactMM = maskinfo.in_zero() ############### Sept 17
+            self.var.DayCounter = 0           
+            self.var.MonthETpotMM = maskinfo.in_zero() 
+            self.var.MonthETactMM = maskinfo.in_zero() 
            
             
 
@@ -91,13 +91,13 @@ class indicatorcalc(HydroModule):
             # sum up every day
             self.var.DayCounter += 1
             
-            self.var.MonthETpotMM = self.var.MonthETpotMM + self.var.ETRef ############### Sept 17
-            self.var.MonthETactMM = self.var.MonthETactMM + self.var.deffraction(self.var.TaInterception) + self.var.TaPixel + self.var.ESActPixel ############### Sept 17
+            self.var.MonthETpotMM = self.var.MonthETpotMM + self.var.ETRef 
+            self.var.MonthETactMM = self.var.MonthETactMM + self.var.deffraction(self.var.TaInterception) + self.var.TaPixel + self.var.ESActPixel 
 
-            if option['openwaterevapo']: ############### Sept 17
-                self.var.MonthETactMM += self.var.EvaAddM3 * self.var.M3toMM ############### Sept 17
+            if option['openwaterevapo']: 
+                self.var.MonthETactMM += self.var.EvaAddM3 * self.var.M3toMM 
 
-            self.var.MonthETdifMM = np.maximum((self.var.MonthETpotMM - self.var.MonthETactMM)*self.var.LandUseMask, maskinfo.in_zero())  ############### Sept 17
+            self.var.MonthETdifMM = np.maximum((self.var.MonthETpotMM - self.var.MonthETactMM)*self.var.LandUseMask, maskinfo.in_zero())  
             # ; land use mask can be used to mask out deserts and high mountains, where no agriculture is possible            
 
             self.var.MonthAbstractionRequiredAllSourcesM3 += self.var.abstraction_allSources_required_M3
@@ -201,8 +201,8 @@ class indicatorcalc(HydroModule):
         maskinfo = MaskInfo.instance()  
 
         self.var.DayCounter = 0
-        self.var.MonthETpotMM = maskinfo.in_zero() ############### Sept 17
-        self.var.MonthETactMM = maskinfo.in_zero() ############### Sept 17 
+        self.var.MonthETpotMM = maskinfo.in_zero() 
+        self.var.MonthETactMM = maskinfo.in_zero()  
         self.var.MonthAbstractionRequiredAllSourcesM3 =  maskinfo.in_zero()
         self.var.MonthAbstractionRequiredSurfaceGroundWaterM3 =  maskinfo.in_zero()
         self.var.MonthAbstractionRequiredSurfaceWaterM3 =  maskinfo.in_zero()

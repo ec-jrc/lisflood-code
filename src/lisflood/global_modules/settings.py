@@ -77,10 +77,6 @@ class Singleton(type):
         return cls._instances[key]
 
     def instance(cls):
-        # print(cls.__name__)
-        # import time
-        # time.sleep(1)
-        # print(cls._current.keys())
         return cls._current[cls]
 
 

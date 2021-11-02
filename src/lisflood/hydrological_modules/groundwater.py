@@ -52,13 +52,13 @@ class groundwater(HydroModule):
         LowerZoneTimeConstant = loadmap('LowerZoneTimeConstant')
         
         maskinfo = MaskInfo.instance()
-        if type(UpperZoneTimeConstant) == float: ## C, Stef
+        if isinstance(UpperZoneTimeConstant, float):
           MAP = []
           MAP = maskinfo.in_zero() + UpperZoneTimeConstant
           UpperZoneTimeConstant = []
           UpperZoneTimeConstant = MAP
 
-        if type(LowerZoneTimeConstant) == float: ## C, Stef
+        if isinstance(LowerZoneTimeConstant, float):
           MAP = []
           MAP = maskinfo.in_zero() + LowerZoneTimeConstant
           LowerZoneTimeConstant = []
@@ -99,8 +99,6 @@ class groundwater(HydroModule):
         self.var.LZThreshold = loadmap('LZThreshold')
         # lz threshold =if lz falls below this there is no outflow to the channel from lz
 
-
-        #### stef         
         if not option["cropsEPIC"]:       
            self.var.UZ = self.var.allocateVariableAllVegetation()
            self.var.UZ.loc['Rainfed_prescribed'] = loadmap('UZInitValue')
@@ -108,8 +106,6 @@ class groundwater(HydroModule):
            self.var.UZ.loc['Irrigated_prescribed'] = loadmap('UZIrrigationInitValue')         
         else:
             self.var.UZ = self.var.initialiseVariableAllVegetation('UZInitValue')
-        #### stef
-
 
         # Water in upper store [mm]
 

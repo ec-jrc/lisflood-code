@@ -72,10 +72,7 @@ class LisfloodModel_dyn(DynamicModel):
         """ up to here it was fun, now the real stuff starts
         """
         # readmeteo.py
-        self.readmeteo_module.dynamic()     
-        # timemeasure("Read meteo") # 1. timing after read input maps
-        
-            
+        self.readmeteo_module.dynamic()                 
             
         if flags['checkfiles']:
             return  # if check than finish here
@@ -94,73 +91,30 @@ class LisfloodModel_dyn(DynamicModel):
 
         # ***** READ INFLOW HYDROGRAPHS (OPTIONAL)****************
         self.inflow_module.dynamic()
-        # timemeasure("Read LAI") # 2. timing after LAI and inflow
 
         # ***** RAIN AND SNOW *****************************************
         self.snow_module.dynamic()
-        # timemeasure("Snow")  # 3. timing after LAI and inflow
 
         # ***** FROST INDEX IN SOIL **********************************
         self.frost_module.dynamic()
-        # timemeasure("Frost")  # 4. timing after frost index
-
-
 
         # ***** EPIC AGRICULTURE MODEL - 1ST PART: CROP STATE AND ENVIRONMENT *******************
         if option["cropsEPIC"]:
-##              t0 = Timestamp.now() # TIMING
             self.crop_module.dynamic_state()
-##              print('dynamic_state: ', (Timestamp.now() - t0).total_seconds()) # TIMING
 
         # *************************************************************************************
         # **** Loop over vegetation fractions: 1. processes depending directly on the canopy
         # *************************************************************************************
-#        VARS_CANOPY = ['Interception', 'TaInterception', 'LeafDrainage', 'CumInterception', 'potential_transpiration', 'RWS', 'Ta',
-#                       'SoilMoistureStressDays', 'W1a', 'W1b', 'W1'] # TEST SOILLOOP SPEED-UP
-#        backup = self.soilloop_module.backup(VARS_CANOPY) # TEST SOILLOOP SPEED-UP
-#         t0 = Timestamp.now() # TIMING
-
-
         self.soilloop_module.dynamic_canopy()
-#         print('soilloop_module.dynamic_canopy: ', (Timestamp.now() - t0).total_seconds()) # TIMING
-#        new_vals = self.soilloop_module.backup(VARS_CANOPY)                                 # TEST SOILLOOP SPEED-UP
-#        self.soilloop_module.reset(backup)                                                         # TEST SOILLOOP SPEED-UP
-#        t0 = Timestamp.now()                                                                     # TEST SOILLOOP SPEED-UP
-#        for loop, fraction_name in enumerate(self.vegetation):                                    # TEST SOILLOOP SPEED-UP
-#            self.soilloop_module_OLD.dynamic_canopy(fraction_name)                                 # TEST SOILLOOP SPEED-UP
-#            timemeasure("Soil - part 1 (canopy)", loops=loop + 1) # 5/6 timing after soil          # TEST SOILLOOP SPEED-UP
-#        print('soilloop_module_OLD.dynamic_canopy: ', (Timestamp.now() - t0).total_seconds())        # TEST SOILLOOP SPEED-UP
-#        self.soilloop_module.compare(new_vals)                                                # TEST SOILLOOP SPEED-UP
-        ####timemeasure("Soil - part 1 (canopy)")
 
         # ***** EPIC AGRICULTURE MODEL - 2ND PART: CROP GROWTH AND LIMITNG FACTORS *************
         if option["cropsEPIC"]:
-#             t0 = Timestamp.now() # TIMING
             self.crop_module.dynamic_growth()
-#             print('dynamic_growth: ', (Timestamp.now() - t0).total_seconds()) # TIMING
   
         # **************************************************************************************
         # **** Loop over vegetation fractions: 2. internal soil processes
         # **************************************************************************************
-#        VARS_SOIL = ['AvailableWaterForInfiltration', 'DSLR', 'ESAct', 'PrefFlow', 'Infiltration', 'W1a', 'W1b', 'W1', 'W2',
-#                     'SeepTopToSubA', 'SeepTopToSubB', 'SeepSubToGW', 'UZOutflow', 'UZ', 'GwPercUZLZ', 'Theta1a',
-#                     'Theta1b', 'Theta2', 'Sat1a', 'Sat1b', 'Sat1', 'Sat2'] # TEST SOILLOOP SPEED-UP
-#        backup = self.soilloop_module.backup(VARS_SOIL)                # TEST SOILLOOP SPEED-UP
-#         t0 = Timestamp.now() # TIMING
- 
-
         self.soilloop_module.dynamic_soil()
-#         print('soilloop_module.dynamic_soil: ', (Timestamp.now() - t0).total_seconds()) # TIMING
-#        new_vals = self.soilloop_module.backup(VARS_SOIL)                                 # TEST SOILLOOP SPEED-UP
-#        self.soilloop_module.reset(backup)                                                # TEST SOILLOOP SPEED-UP
-#        t0 = Timestamp.now()                                                                 # TEST SOILLOOP SPEED-UP
-#        for loop, fraction_name in enumerate(self.vegetation):                                 # TEST SOILLOOP SPEED-UP
-#            self.soilloop_module_OLD.dynamic_soil(fraction_name)                                   # TEST SOILLOOP SPEED-UP
-#            timemeasure("Soil - part 2 (soil)", loops=loop + 1) # 5/6 timing after soil        # TEST SOILLOOP SPEED-UP
-#        print('soilloop_module_OLD.dynamic_soil: ', (Timestamp.now() - t0).total_seconds())      # TEST SOILLOOP SPEED-UP
-#        self.soilloop_module.compare(new_vals)                                            # TEST SOILLOOP SPEED-UP
-        ####timemeasure("Soil - part 2 (soil)")
-
 
         # -------------------------------------------------------------------
         # -------------------------------------------------------------------
@@ -182,17 +136,12 @@ class LisfloodModel_dyn(DynamicModel):
             if array3 is None:
                 array3 = array1
             return [array1, array2, array3]
- 
-        
-        # timemeasure("Water abstraction")
-
+         
         # ***** Calculation per Pixel ********************************
         self.soil_module.dynamic_perpixel()
-        # timemeasure("Soil done")
-
+ 
         self.groundwater_module.dynamic()
-        # timemeasure("Groundwater")
-
+ 
         # ************************************************************
         # ***** STOP if no routing is required    ********************
         # ************************************************************
@@ -205,19 +154,16 @@ class LisfloodModel_dyn(DynamicModel):
 
         # *********  EVAPORATION FROM OPEN WATER *************
         self.evapowater_module.dynamic()
-        # timemeasure("open water eva.")
-
+ 
         # ***** ROUTING SURFACE RUNOFF TO CHANNEL ********************
         self.surface_routing_module.dynamic()
-        # timemeasure("Surface routing")  # 7 timing after surface routing
-
+ 
         # ***** POLDER INIT **********************************
         self.polder_module.dynamic_init()
 
         # ***** INLETS INIT **********************************
         self.inflow_module.dynamic_init()
-        # timemeasure("Before routing")  # 8 timing before channel routing
-
+ 
         # ************************************************************
         # ***** LOOP ROUTING SUB TIME STEP   *************************
         # ************************************************************
@@ -227,8 +173,7 @@ class LisfloodModel_dyn(DynamicModel):
         for NoRoutingExecuted in range(self.NoRoutSteps):
             self.routing_module.dynamic(NoRoutingExecuted)
             #   routing sub steps
-        # timemeasure("Routing", loops=NoRoutingExecuted + 1)  # 9 timing after routing
-
+ 
         # ----------------------------------------------------------------------
 
         if option['inflow']:
@@ -259,8 +204,6 @@ class LisfloodModel_dyn(DynamicModel):
         # New cross section area (kinematic wave)
         # This is the value after the kinematic wave, so we use ChanM3Kin here
         # (NOT ChanQKin, which is average discharge over whole step, we need state at the end of all iterations!)
-
-        # timemeasure("After routing")  # 10 timing after channel routing
 
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         if not(option['dynamicWave']):
@@ -295,7 +238,6 @@ class LisfloodModel_dyn(DynamicModel):
         # ***** WRITING RESULTS: TIME SERIES AND MAPS ****************
         # ************************************************************
         self.output_module.dynamic()
-        # timemeasure("Water balance")
 
         # debug 
         # Print value of variables after computation (from state files)

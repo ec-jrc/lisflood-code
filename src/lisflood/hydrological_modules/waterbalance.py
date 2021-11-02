@@ -20,7 +20,7 @@ import numpy as np
 from ..global_modules.add1 import compressArray
 from ..global_modules.settings import LisSettings, MaskInfo
 
-from ..global_modules.add1 import loadmap, readnetcdf   #### stef 29/09/2021
+from ..global_modules.add1 import loadmap, readnetcdf
 
 class waterbalance(object):
 
@@ -115,11 +115,8 @@ class waterbalance(object):
         """ dynamic part of the water balance module
         """
         settings = LisSettings.instance()
-        option = settings.options
-
-        binding = settings.binding 
-        
-        
+        option = settings.options        
+        maskinfo = MaskInfo.instance()
         
         if (not(option['InitLisflood'])) and option['repMBTs']:
 
@@ -134,7 +131,7 @@ class waterbalance(object):
             # This comes in:
             #WaterIn = areatotal(cover(decompress(self.var.sumIn), scalar(0.0)), catch) + areatotal(
             #    decompress(self.var.TotalPrecipitation) * self.var.MMtoM3, catch)
-
+        
             self.var.sumInWB[np.isnan(self.var.sumInWB)] = 0
             WaterIn = np.take(np.bincount(self.var.Catchments, weights=self.var.sumInWB),self.var.Catchments)
             WaterIn += np.take(np.bincount(self.var.Catchments, weights=self.var.TotalPrecipitationWB*self.var.MMtoM3), self.var.Catchments)
@@ -228,7 +225,6 @@ class waterbalance(object):
             # (-> the calculation odf the structures is done before the routing)
 
             if option['simulateLakes']:
-                maskinfo = MaskInfo.instance()
                 DisLake = maskinfo.in_zero()
                 np.put(DisLake, self.var.LakeIndex, 0.5 * self.var.LakeInflowCC * self.var.DtRouting)
                 DischargeM3Lake = np.take(np.bincount(self.var.Catchments, weights=DisLake),self.var.Catchments)
@@ -256,9 +252,9 @@ class waterbalance(object):
             # Mass balance error per unit area of the catchment [mm water slice]. Mass balance error is computed for each computational time step.
             
 
-            self.var.WaterInit = WaterStored.copy() + DischargeM3Structures.copy()
+            self.var.WaterInit = WaterStored + DischargeM3Structures
             if option['TransientLandUseChange'] and (self.var.DynamicLandCoverDelta > 0.0):
-                 self.var.WaterInit = WaterStored_nextstep.copy() + DischargeM3Structures.copy()
+                 self.var.WaterInit = WaterStored_nextstep + DischargeM3Structures
             # update the water storage             
             
             # the lines below compute the ratio between the total mass balance error and the water storage [m3/m3] and the average sum of the fractions for each catchemnt. 
@@ -271,7 +267,6 @@ class waterbalance(object):
             sumFractionsa11 = self.var.ForestFraction + self.var.DirectRunoffFraction  + self.var.WaterFraction  + self.var.IrrigationFraction + self.var.OtherFraction  
             # self.var.RiceFraction is already included in self.var.OtherFraction
             SumFractions = np.take(np.bincount(self.var.Catchments, weights=sumFractionsa11),self.var.Catchments)
-            maskinfo = MaskInfo.instance()
             ones = maskinfo.in_zero() + 1.0
             numpixels = np.take(np.bincount(self.var.Catchments, weights=ones),self.var.Catchments) 
             self.var.MBErrorStorage = self.var.MBError/(self.var.WaterInit)  

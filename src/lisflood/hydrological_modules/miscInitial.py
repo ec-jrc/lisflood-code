@@ -129,8 +129,7 @@ class miscInitial(HydroModule):
 
         self.var.GwLoss = loadmap('GwLoss')
         
-        maskinfo = MaskInfo.instance()
-        if type(self.var.GwLoss) == float: ## C, Stef
+        if isinstance(self.var.GwLoss, float):
           MAP = []
           MAP = maskinfo.in_zero() +   self.var.GwLoss
           self.var.GwLoss = []
