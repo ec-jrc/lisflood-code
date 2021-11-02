@@ -88,11 +88,14 @@ class TestCachingSlow(ETRS89TestCase):
     modules_to_set = (
         'SplitRouting',
         'simulateReservoirs',
-        'groundwaterSmooth',
+        'simulateLakes',
         'drainedIrrigation',
         'openwaterevapo',
         'riceIrrigation',
-        'indicator',
+        'wateruse',
+        'useWaterDemandAveYear',
+        'wateruseRegion',
+        'TransientWaterDemandChange',
     )
     settings_files = {
         'base': os.path.join(case_dir, 'settings/base.xml'),
