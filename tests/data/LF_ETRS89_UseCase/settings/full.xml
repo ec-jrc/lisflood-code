@@ -1151,7 +1151,7 @@
             </textvar>
 
 
-            <textvar name="PrefixWaterUseDomestic" value="dom_2014">
+            <textvar name="PrefixWaterUseDomestic" value="dom">
 
                 <comment>
 
@@ -1162,7 +1162,7 @@
             </textvar>
 
 
-            <textvar name="PrefixWaterUseLivestock" value="liv_2014">
+            <textvar name="PrefixWaterUseLivestock" value="liv">
 
                 <comment>
 
@@ -1173,7 +1173,7 @@
             </textvar>
 
 
-            <textvar name="PrefixWaterUseEnergy" value="ene_2014">
+            <textvar name="PrefixWaterUseEnergy" value="ene">
 
                 <comment>
 
@@ -1184,7 +1184,7 @@
             </textvar>
 
 
-            <textvar name="PrefixWaterUseIndustry" value="ind_2014">
+            <textvar name="PrefixWaterUseIndustry" value="ind">
 
                 <comment>
 
