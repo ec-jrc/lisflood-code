@@ -228,7 +228,6 @@ class soil(HydroModule):
 
         # ***** INITIAL VALUES for soil
         
-        #### stef         
         if not option["cropsEPIC"]: 
        
            ThetaInit1aValue = self.var.allocateVariableAllVegetation()
@@ -250,7 +249,6 @@ class soil(HydroModule):
             ThetaInit1aValue = self.var.initialiseVariableAllVegetation('ThetaInit1Value')
             ThetaInit1bValue = self.var.initialiseVariableAllVegetation('ThetaInit2Value')
             ThetaInit2Value = self.var.initialiseVariableAllVegetation('ThetaInit3Value')
-        #### stef
         
   
         # Allocate soil moisture [mm] data structures (merge them into a single xarray.DataArray by adding a "layer" dimension !!!)
@@ -347,8 +345,8 @@ class soil(HydroModule):
         # ***** INFILTRATION MODEL
         # ************************************************************
         self.var.b_Xinanjiang = loadmap('b_Xinanjiang')
-               
-        if type(self.var.b_Xinanjiang) == float: ## C, Stef
+    
+        if isinstance(self.var.b_Xinanjiang, float):
            MAP = []
            MAP = maskinfo.in_zero() +   self.var.b_Xinanjiang
            self.var.b_Xinanjiang = []
@@ -365,7 +363,7 @@ class soil(HydroModule):
         # ********************************************
         self.var.PowerPrefFlow = loadmap('PowerPrefFlow')
                 
-        if type(self.var.PowerPrefFlow) == float:  ## C, Stef
+        if isinstance(self.var.PowerPrefFlow, float):
            MAP = []
            MAP = maskinfo.in_zero() +   self.var.PowerPrefFlow
            self.var.PowerPrefFlow = []
@@ -380,7 +378,6 @@ class soil(HydroModule):
         # DSLRInit = defsoil('DSLRInitValue', 'DSLRForestInitValue','DSLRIrrigationInitValue')
         
         
-        ## stef
         if not option["cropsEPIC"]: 
            self.var.DSLR = self.var.allocateVariableAllVegetation()
            self.var.DSLR.loc['Rainfed_prescribed'] = loadmap('DSLRInitValue')
@@ -399,7 +396,6 @@ class soil(HydroModule):
            self.var.CumInterception.loc['Irrigated_prescribed'] = loadmap('CumIntIrrigationInitValue')
         else:
            self.var.CumInterception = self.var.initialiseVariableAllVegetation('CumIntInitValue')
-        ## stef
         
         # Initialising cumulative output variables  needed to compute the cumulative mass balance error
         self.var.TotalPrecipitation =  maskinfo.in_zero() # precipitation [mm]
