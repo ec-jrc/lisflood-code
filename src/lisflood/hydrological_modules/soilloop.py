@@ -24,6 +24,8 @@ from builtins import min, max
 # from . import HydroModule
 from ..global_modules.settings import LisSettings, MaskInfo
 
+#import time # CR: speed test
+
 
 
 @njit(parallel=True, fastmath=False)
@@ -117,7 +119,7 @@ def soilColumnsWaterBalance(index_landuse_all, is_irrigated, is_paddy_irrig, pad
             is_drained_irrigation = is_irrigated[veg] and (DrainedFraction > 0)
             sim_pixels = np.arange(num_pixs)
         landuse = index_landuse_all[veg]
-        NoSubS = np.empty(sim_pixels.size)
+        NoSubS = np.empty(sim_pixels.size, dtype=np.int_)
         DtSub =  np.empty(sim_pixels.size)   ### merge 3 stef
         KUnSat1a, KUnSat1b, KUnSat2 = np.empty(sim_pixels.size), np.empty(sim_pixels.size), np.empty(sim_pixels.size)                         #| REMOVE BEFORE NEW
         AvailableWater1a, AvailableWater1b, AvailableWater2 = np.empty(sim_pixels.size), np.empty(sim_pixels.size), np.empty(sim_pixels.size) #| CALIBRATION
@@ -1030,6 +1032,7 @@ class soilloop(HydroModule):
 
 
     def dynamic_canopy(self):
+        #t0tot = time.time()     # CR: speed test
         settings = LisSettings.instance()
         option = settings.options
         binding = settings.binding
@@ -1076,65 +1079,90 @@ class soilloop(HydroModule):
         # *****************************************************************************************************************************
         for veg in self.var.prescribed_vegetation:
             landuse = self.epic_settings.vegetation_landuse[veg] # landuse corresponding to vegetation fraction
-            swdf = 1 / (0.76 + 1.5 * np.minimum(0.1 * self.var.ETRef * self.var.InvDtDay, 1.0)) - 0.10 * (5 - self.var.CropGroupNumber.loc[landuse])
+
+            ###CR: optimization 
+            # copy values from xarray to numpy array, to optimize computation
+            self_var_CropGroupNumber_loc_landuse_values = self.var.CropGroupNumber.loc[landuse].values
+            self_var_WFC1_loc_landuse_values = self.var.WFC1.loc[landuse].values
+            self_var_WWP1_loc_landuse_values = self.var.WWP1.loc[landuse].values
+            self_var_WFC1a_loc_landuse_values = self.var.WFC1a.loc[landuse].values 
+            self_var_WFC1b_loc_landuse_values = self.var.WFC1b.loc[landuse].values 
+            self_var_WWP1a_loc_landuse_values = self.var.WWP1a.loc[landuse].values
+            self_var_WWP1b_loc_landuse_values = self.var.WWP1b.loc[landuse].values
+            self_var_W1_loc_veg_values = self.var.W1.loc[veg].values
+            self_var_W1a_loc_veg_values = self.var.W1a.loc[veg].values
+            self_var_W1b_loc_veg_values = self.var.W1b.loc[veg].values
+
+            swdf = 1 / (0.76 + 1.5 * np.minimum(0.1 * self.var.ETRef * self.var.InvDtDay, 1.0)) - 0.10 * (5 - self_var_CropGroupNumber_loc_landuse_values)
             # soil water depletion fraction (easily available soil water)
             # Van Diepen et al., 1988: WOFOST 6.0, p.87
             # to avoid a strange behaviour of the p-formula's, ETRef is set to a maximum of
             # 10 mm/day. Thus, p will range from 0.15 to 0.45 at ETRef eq 10 and
             # CropGroupNumber 1-5
-            swdf = np.where(self.var.CropGroupNumber.loc[landuse] <= 2.5, swdf + (np.minimum(0.1 * self.var.ETRef * self.var.InvDtDay, 1.0) - 0.6) / (
-                self.var.CropGroupNumber.loc[landuse] * (self.var.CropGroupNumber.loc[landuse] + 3)), swdf)
+            swdf = np.where(self_var_CropGroupNumber_loc_landuse_values <= 2.5, swdf + (np.minimum(0.1 * self.var.ETRef * self.var.InvDtDay, 1.0) - 0.6) / (
+                self_var_CropGroupNumber_loc_landuse_values * (self_var_CropGroupNumber_loc_landuse_values + 3)), swdf)
             # correction for crop groups 1 and 2 (Van Diepen et al, 1988)
             swdf = np.maximum(np.minimum(swdf, 1.0), 0)
             # p is between 0 and 1
-            WCrit1 = ((1 - swdf) * (self.var.WFC1.loc[landuse] - self.var.WWP1.loc[landuse])) + self.var.WWP1.loc[landuse]
-            WCrit1a = ((1 - swdf) * (self.var.WFC1a.loc[landuse] - self.var.WWP1a.loc[landuse])) + self.var.WWP1a.loc[landuse]
-            WCrit1b= ((1 - swdf) * (self.var.WFC1b.loc[landuse] - self.var.WWP1b.loc[landuse])) + self.var.WWP1b.loc[landuse]
+            WCrit1 = ((1 - swdf) * (self_var_WFC1_loc_landuse_values - self_var_WWP1_loc_landuse_values)) + self_var_WWP1_loc_landuse_values
+            WCrit1a = ((1 - swdf) * (self_var_WFC1a_loc_landuse_values - self_var_WWP1a_loc_landuse_values)) + self_var_WWP1a_loc_landuse_values
+            WCrit1b= ((1 - swdf) * (self_var_WFC1b_loc_landuse_values - self_var_WWP1b_loc_landuse_values)) + self_var_WWP1b_loc_landuse_values
             # critical moisture amount ([mm] water slice) for all layers
             if option['wateruse']:
                 if landuse == "Irrigated":
+                    #CR: using the original xarray variables WPF3a and WPF3a to keep WFilla and WFillb as xarrays
+                    #N.B: WPF3a and WPF3b values are not changed in this function, so I can use the original
                     self.var.WFilla = np.minimum(WCrit1a, self.var.WPF3a.loc[landuse])
                     self.var.WFillb = np.minimum(WCrit1b, self.var.WPF3b.loc[landuse])
                     # if water use is calculated, get the filling of the soil layer for either pF3 or WCrit1
                     # that is the amount of water the soil gets filled by water from irrigation
                #  bc the divisor can have 0 -> this calculation is done first and raise a warning - zero encountered - even if it is catched afterwards
-            self.var.RWS.loc[veg] = np.where((WCrit1 - self.var.WWP1.loc[landuse]) > 0,\
-                                             (self.var.W1.loc[veg] - self.var.WWP1.loc[landuse]) / (WCrit1 - self.var.WWP1.loc[landuse]), 1)
+            self_var_RWS_loc_veg_values = np.where((WCrit1 - self_var_WWP1_loc_landuse_values) > 0,\
+                                             (self_var_W1_loc_veg_values - self_var_WWP1_loc_landuse_values) / (WCrit1 - self_var_WWP1_loc_landuse_values), 1)
             # Transpiration reduction factor (in case of water stress)
             # if WCrit1 = WWP1, RWS is zero there is no water stress in that case
-            self.var.RWS.loc[veg] = np.maximum(np.minimum(self.var.RWS.loc[veg], 1), 0)
+            self_var_RWS_loc_veg_values = np.maximum(np.minimum(self_var_RWS_loc_veg_values, 1), 0)
             # Transpiration reduction factor (in case of water stress)
             if option['repStressDays']:
-                self.var.SoilMoistureStressDays.loc[veg] = np.where(self.var.RWS.loc[veg] < 1, self.var.DtDay, 0)
+                self_var_SoilMoistureStressDays_loc_veg_values = np.where(self_var_RWS_loc_veg_values < 1, self.var.DtDay, 0)
                 # Count number of days with soil water stress, RWS is between 0 and 1
                 # no reduction of Transpiration at RWS=1, at RWS=0 there is no Transpiration at all
 
-            transpirable_water = np.maximum(self.var.W1.loc[veg] - self.var.WWP1.loc[landuse], 0)
-            self.var.Ta.loc[veg] = np.minimum(self.var.RWS.loc[veg] * self.var.potential_transpiration.loc[veg], transpirable_water)
+            transpirable_water = np.maximum(self_var_W1_loc_veg_values - self_var_WWP1_loc_landuse_values, 0)
+            self_var_Ta_loc_veg_values = np.minimum(self_var_RWS_loc_veg_values * self.var.potential_transpiration.loc[veg].values, transpirable_water)
             # actual transpiration based on both layers 1a and 1b
-            self.var.Ta.loc[veg] = np.where(self.var.isFrozenSoil, 0, self.var.Ta.loc[veg])
+            self_var_Ta_loc_veg_values = np.where(self.var.isFrozenSoil, 0, self_var_Ta_loc_veg_values)
             # transpiration is 0 when soil is frozen
             # calculate distribution where to take Ta from:
             # 1st: above wCrit from layer 1a
             # 2nd: above Wcrit from layer 1b
             # 3rd:  distribute take off according to soil moisture availability below wcrit
-            wc1a = np.maximum(self.var.W1a.loc[veg] - WCrit1a, 0) # unstressed water availability from layer 1a without stress (above critical soil moisture)
-            wc1b = np.maximum(self.var.W1b.loc[veg] - WCrit1b, 0) # (same as above but for layer 1b)
-            Ta1a = np.minimum(self.var.Ta.loc[veg], wc1a)         # temporary transpiration from layer 1a (<= unstressed layer 1a availability)
-            restTa = np.maximum(self.var.Ta.loc[veg] - Ta1a, 0)   # transpiration left after layer 1a unstressed water has been abstracted
+            wc1a = np.maximum(self_var_W1a_loc_veg_values - WCrit1a, 0) # unstressed water availability from layer 1a without stress (above critical soil moisture)
+            wc1b = np.maximum(self_var_W1b_loc_veg_values - WCrit1b, 0) # (same as above but for layer 1b)
+            Ta1a = np.minimum(self_var_Ta_loc_veg_values, wc1a)         # temporary transpiration from layer 1a (<= unstressed layer 1a availability)
+            restTa = np.maximum(self_var_Ta_loc_veg_values - Ta1a, 0)   # transpiration left after layer 1a unstressed water has been abstracted
             Ta1b = np.minimum(restTa, wc1b)                       # temporary transpiration from layer 1b (<= unstressed layer 1b availability)
             restTa = np.maximum(restTa - Ta1b, 0)                 # transpiration left after layers 1a and 1b unstressed water have been abstracted
-            stressed_availability_1a = np.maximum(self.var.W1a.loc[veg] - Ta1a - self.var.WWP1a.loc[landuse], 0) #|
-            stressed_availability_1b = np.maximum(self.var.W1b.loc[veg] - Ta1b - self.var.WWP1b.loc[landuse], 0) #|
+            stressed_availability_1a = np.maximum(self_var_W1a_loc_veg_values - Ta1a - self_var_WWP1a_loc_landuse_values, 0) #|
+            stressed_availability_1b = np.maximum(self_var_W1b_loc_veg_values - Ta1b - self_var_WWP1b_loc_landuse_values, 0) #|
             stressed_availability_tot = stressed_availability_1a + stressed_availability_1b                      #|> distribution of abstractions of
             available = stressed_availability_tot > 0                                                            #|> soil moisture below the critical value
             fraction_rest_1a = np.where(available, stressed_availability_1a / stressed_availability_tot, 0)      #|> proportionally to each root-zone layer (1a and 1b)
             fraction_rest_1b = np.where(available, stressed_availability_1b / stressed_availability_tot, 0)      #|> "stressed" availability
             Ta1a += fraction_rest_1a * restTa                                                                    #|
             Ta1b += fraction_rest_1b * restTa                                                                    #|
-            self.var.W1a.loc[veg] -= Ta1a
-            self.var.W1b.loc[veg] -= Ta1b
-            self.var.W1.loc[veg] = self.var.W1a.loc[veg] + self.var.W1b.loc[veg]
+            self_var_W1a_loc_veg_values -= Ta1a
+            self_var_W1b_loc_veg_values -= Ta1b
+            # copy back values to xarray variables
+            self.var.RWS.loc[veg] = self_var_RWS_loc_veg_values
+            if option['repStressDays']:
+                self.var.SoilMoistureStressDays.loc[veg] = self_var_SoilMoistureStressDays_loc_veg_values
+            self.var.Ta.loc[veg] = self_var_Ta_loc_veg_values
+            self.var.W1a.loc[veg] = self_var_W1a_loc_veg_values
+            self.var.W1b.loc[veg] = self_var_W1b_loc_veg_values
+            self.var.W1.loc[veg] = self_var_W1a_loc_veg_values + self_var_W1b_loc_veg_values
+
+        #print('total time dynamic_canopy: ', (time.time() - t0tot))  # CR: speed test
 
 
 
@@ -1216,17 +1244,23 @@ class soilloop(HydroModule):
 
     def ThetaSatTerms(self, veg):
         landuse = self.epic_settings.vegetation_landuse[veg]
-        self.var.Theta1a.loc[veg] = thetaFunVectorized(self.var.W1a.loc[veg].values, self.var.SoilDepth1a.loc[landuse].values,
+
+        #CR: optimization: copy in np arrays the xarray values used more than once
+        self_var_W1a_loc_veg_values = self.var.W1a.loc[veg].values 
+        self_var_W1b_loc_veg_values = self.var.W1b.loc[veg].values
+        self_var_W2_loc_veg_values = self.var.W2.loc[veg].values
+
+        self.var.Theta1a.loc[veg] = thetaFunVectorized(self_var_W1a_loc_veg_values, self.var.SoilDepth1a.loc[landuse].values,
                                                        self.var.PoreSpaceNotZero1a.loc[landuse].values)
-        self.var.Theta1b.loc[veg] = thetaFunVectorized(self.var.W1b.loc[veg].values, self.var.SoilDepth1b.loc[landuse].values,
+        self.var.Theta1b.loc[veg] = thetaFunVectorized(self_var_W1b_loc_veg_values, self.var.SoilDepth1b.loc[landuse].values,
                                                        self.var.PoreSpaceNotZero1b.loc[landuse].values)
-        self.var.Theta2.loc[veg] = thetaFunVectorized(self.var.W2.loc[veg].values, self.var.SoilDepth2.loc[landuse].values,
+        self.var.Theta2.loc[veg] = thetaFunVectorized(self_var_W2_loc_veg_values, self.var.SoilDepth2.loc[landuse].values,
                                                       self.var.PoreSpaceNotZero2.loc[landuse].values)
-        self.var.Sat1a.loc[veg] = satFunVectorized(self.var.W1a.loc[veg].values, self.var.WWP1a.loc[landuse].values,
+        self.var.Sat1a.loc[veg] = satFunVectorized(self_var_W1a_loc_veg_values, self.var.WWP1a.loc[landuse].values,
                                                    self.var.WFC1a.loc[landuse].values)
-        self.var.Sat1b.loc[veg] = satFunVectorized(self.var.W1b.loc[veg].values, self.var.WWP1b.loc[landuse].values,
+        self.var.Sat1b.loc[veg] = satFunVectorized(self_var_W1b_loc_veg_values, self.var.WWP1b.loc[landuse].values,
                                                    self.var.WFC1b.loc[landuse].values)
         self.var.Sat1.loc[veg] = satFunVectorized(self.var.W1.loc[veg].values, self.var.WWP1.loc[landuse].values,
                                                    self.var.WFC1.loc[landuse].values)
-        self.var.Sat2.loc[veg] = satFunVectorized(self.var.W2.loc[veg].values, self.var.WWP2.loc[landuse].values,
+        self.var.Sat2.loc[veg] = satFunVectorized(self_var_W2_loc_veg_values, self.var.WWP2.loc[landuse].values,
                                                    self.var.WFC2.loc[landuse].values)
