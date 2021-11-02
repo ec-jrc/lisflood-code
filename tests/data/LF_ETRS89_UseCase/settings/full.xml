@@ -7,7 +7,7 @@
         <setoption choice="1" name="wateruse"/>
         <setoption choice="1" name="groundwaterSmooth"/>
         <setoption choice="1" name="TransientWaterDemandChange"/>
-        <setoption choice="0" name="useWaterDemandAveYear"/>
+        <setoption choice="1" name="useWaterDemandAveYear"/>
         <setoption choice="1" name="wateruseRegion"/>
         <setoption choice="1" name="indicator"/>
         <setoption choice="1" name="drainedIrrigation"/>

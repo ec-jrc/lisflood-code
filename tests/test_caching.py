@@ -84,17 +84,15 @@ class TestCaching(ETRS89TestCase):
 @pytest.mark.slow
 class TestCachingSlow(ETRS89TestCase):
     case_dir = os.path.join(os.path.dirname(__file__), 'data', 'LF_ETRS89_UseCase')
+
     modules_to_set = (
         'SplitRouting',
         'simulateReservoirs',
-        'simulateLakes',
+        'groundwaterSmooth',
         'drainedIrrigation',
         'openwaterevapo',
         'riceIrrigation',
-        'wateruse',
-        'useWaterDemandAveYear',
-        'wateruseRegion',
-        'TransientWaterDemandChange',
+        'indicator',
     )
     settings_files = {
         'base': os.path.join(case_dir, 'settings/base.xml'),
