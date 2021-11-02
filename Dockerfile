@@ -23,7 +23,7 @@ RUN conda env create -n lisflood -f environment.yml
 # Copy source code
 COPY src/lisflood/. /lisflood/
 COPY src/lisf1.py /
-COPY src/settings_tpl.xml /
+COPY src/lisfloodSettings_reference.xml /
 COPY LICENSE /
 COPY VERSION /
 

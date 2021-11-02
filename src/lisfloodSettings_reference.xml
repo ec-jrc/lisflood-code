@@ -96,7 +96,7 @@ You can use builtin path variables in this template and reference to other paths
     <setoption choice="1" name="repSurfaceRunoffMaps"/>
     <setoption choice="1" name="repTotalRunoffMaps"/>
     <setoption choice="1" name="repPrefFlowMaps"/>
-    <setoption choice="1"  name="repTaMaps"/
+    <setoption choice="1" name="repTaMaps"/>
     <setoption choice="1" name="repRainMaps"/>
     <setoption choice="1" name="repSnowMaps"/>
     <setoption choice="1" name="repSnowCoverMaps"/>
