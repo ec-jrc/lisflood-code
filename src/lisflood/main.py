@@ -198,8 +198,6 @@ Water balance and flood simulation model for large catchments\n
 # ============== MAIN ==============================
 # ==================================================
 
-from .cache import cache_info
-
 def main(*args):
 
     # if arguments are provided, overwrite sys.argv

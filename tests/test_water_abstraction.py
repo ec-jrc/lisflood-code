@@ -32,7 +32,7 @@ class TestCaching(ETRS89TestCase):
         
         settings_a = setoptions(self.settings_file,
                                 opts_to_set=('TransientWaterDemandChange', 'useWaterDemandAveYear'),
-                                vars_to_set={'StepStart': '30/07/2016 06:00', 'StepEnd': '01/08/2016 06:00',
+                                vars_to_set={'StepStart': '30/07/2016 00:00', 'StepEnd': '01/08/2016 00:00',
                                              'DtSec': dt_sec, 'PathOut': '$(PathRoot)/out/a',
                                              'PathWaterUse': '$(PathRoot)/maps/waterdemand'
                                              })
@@ -41,7 +41,8 @@ class TestCaching(ETRS89TestCase):
 
         settings_b = setoptions(self.settings_file,
                                 opts_to_set=('TransientWaterDemandChange'),
-                                vars_to_set={'StepStart': '30/07/2016 06:00', 'StepEnd': '01/08/2016 06:00',
+                                opts_to_unset=('useWaterDemandAveYear'),
+                                vars_to_set={'StepStart': '30/07/2016 00:00', 'StepEnd': '01/08/2016 00:00',
                                              'DtSec': dt_sec, 'PathOut': '$(PathRoot)/out/b',
                                              'PathWaterUse': '$(PathRoot)/maps/waterdemand19902019'})
         mk_path_out(self.out_dir_b)
