@@ -16,6 +16,7 @@ See the Licence for the specific language governing permissions and limitations 
 """
 
 from functools import wraps
+import copy
 
 
 def counted(fn):
@@ -29,6 +30,10 @@ def counted(fn):
 
 
 def cached(f):
+    """
+    Simple cache for small objects like parsing options
+    """
+
     _cache = {}
 
     @wraps(f)
@@ -41,52 +46,70 @@ def cached(f):
     return _decorator
 
 
-def iocache(obj):
+class Cache:
+    """
+    Class decorator used to cache large objects read from disk
+    Mostly used for forcings and static maps
+    """
+
     cache = {}
+    found = {}
 
-    found = 0
+    def __init__(self, fn):
+        self.name = fn.__name__
+        self.fn = fn
+        # we need to put the counter in a dict
+        # or we lose the reference
+        if self.name not in self.found:
+            self.found[self.name] = 0
 
-    @wraps(obj)
-    def iocache_wrapper(*args, **kwargs):
-        key = str(args) + str(kwargs)
+    def __call__(self, *args, **kwargs):
 
-        if key not in cache:
-            my_obj = obj(*args, **kwargs)
-            if not isinstance(my_obj, float):
-                cache[key] = my_obj
-                to_return = cache[key]
+        key = '{}, {}, {}'.format(self.name, args, kwargs)
+
+        if key not in self.cache:
+            data = self.fn(*args, **kwargs)
+            # we don't cache small objects (e.g. floats from loadmap)
+            if isinstance(data, float):
+                return_data = data
             else:
-                return my_obj
+                self.cache[key] = data
+                return_data = self.cache[key]
         else:
-            nonlocal found
-            found += 1
-            to_return = cache[key]
-        return to_return
-
-    def iocache_clear():
+            return_data = self.cache[key]
+            self.found[self.name] += 1
+        return return_data
+    
+    @classmethod
+    def clear(cls):
         print('Clearing cache')
-        cache.clear()
-        nonlocal found
-        found = 0
+        cls.cache.clear()
+        for i in cls.found:
+            cls.found[i] = 0
 
-    def iocache_size():
-        return len(cache)
+    @classmethod
+    def size(cls):
+        return len(cls.cache)
 
-    def iocache_found():
-        nonlocal found
-        return found
+    @classmethod
+    def extract(cls):
+        return copy.deepcopy(cls.cache)
 
-    def iocache_info():
-        print('Caching {}'.format(obj))
-        print('Number of items cached: {}'.format(iocache_size()))
-        print('Number of items retrieved: {}'.format(iocache_found()))
+    @classmethod
+    def apply(cls, cache_in):
+        # We need to loop to keep the reference to cache
+        for i in cache_in:
+            cls.cache[i] = cache_in[i]
+
+    @classmethod
+    def values_found(cls):
+        return sum(cls.found.values())
+
+    @classmethod
+    def info(cls):
+        print('Caching')
+        print('Number of items cached: {}'.format(cls.size()))
+        print('Number of items retrieved: {}'.format(cls.found))
         print('Keys:')
-        for key in cache.keys():
+        for key in cls.cache.keys():
             print('   - {}'.format(key))
-
-    iocache_wrapper.iocache_clear = iocache_clear
-    iocache_wrapper.iocache_found = iocache_found
-    iocache_wrapper.iocache_info = iocache_info
-    iocache_wrapper.iocache_size = iocache_size
-
-    return iocache_wrapper

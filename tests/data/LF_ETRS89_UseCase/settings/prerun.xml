@@ -828,25 +828,25 @@ The option "numberParallelThreadsKinematicWave" may take the following values:
                 </comment>
             </textvar>
 
-            <textvar name="PrefixWaterUseDomestic" value="dom_2014">
+            <textvar name="PrefixWaterUseDomestic" value="dom">
                 <comment>
                     prefix domestic water use maps
                 </comment>
             </textvar>
 
-            <textvar name="PrefixWaterUseLivestock" value="liv_2014">
+            <textvar name="PrefixWaterUseLivestock" value="liv">
                 <comment>
                     prefix livestock water use maps
                 </comment>
             </textvar>
 
-            <textvar name="PrefixWaterUseEnergy" value="ene_2014">
+            <textvar name="PrefixWaterUseEnergy" value="ene">
                 <comment>
                     prefix energy water use maps
                 </comment>
             </textvar>
 
-            <textvar name="PrefixWaterUseIndustry" value="ind_2014">
+            <textvar name="PrefixWaterUseIndustry" value="ind">
                 <comment>
                     prefix industry water use maps
                 </comment>

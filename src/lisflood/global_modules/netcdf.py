@@ -1,4 +1,5 @@
 import os
+import glob
 import xarray as xr
 import numpy as np
 import datetime
@@ -6,11 +7,12 @@ import pcraster
 from netCDF4 import num2date, date2num
 import time as xtime
 from nine import range
+from pyproj import Proj
 
 from .settings import (calendar_inconsistency_warning, get_calendar_type, calendar, MaskAttrs, CutMap, NetCDFMetadata,
                        LisSettings, MaskInfo)
 from .errors import LisfloodWarning, LisfloodError
-from .decorators import iocache
+from .decorators import Cache, cached
 from .zusatz import iterOpenNetcdf
 # from .add1 import *
 from .add1 import nanCheckMap, decompress
@@ -35,12 +37,8 @@ def mask_array(data, mask, crop, core_dims):
     return masked_data
 
 
-def compress_xarray(data):
+def compress_xarray(mask, crop, data):
     core_dims = get_core_dims(data.dims)
-    maskinfo = MaskInfo.instance()
-    mask = np.logical_not(maskinfo.info.mask)
-    cutmap = CutMap.instance()
-    crop = cutmap.cuts
     masked_data = mask_array(data, mask, crop, core_dims=core_dims)
     return masked_data
 
@@ -52,6 +50,32 @@ def uncompress_array(masked_data):
     #mapnp = mapnp.reshape(maskinfo['shape']).data
     data = data.reshape(maskinfo.info.shape)
     return data
+
+
+def find_main_var(ds, path):
+    variable_names = [k for k in ds.variables if len(ds.variables[k].dims) == 3]
+    if len(variable_names) > 1:
+        raise LisfloodWarning('More than one variable in dataset {}'.format(path))
+    elif len(variable_names) == 0:
+        raise LisfloodWarning('Could not find a valid variable in dataset {}'.format(path))
+    else:
+        var_name = variable_names[0]
+    return var_name
+
+
+def check_dataset_calendar_type(ds, path):
+
+    settings = LisSettings.instance()
+    binding = settings.binding
+
+    # check calendar type
+    # if using multiple files, the encoding will be droppped (bug in xarray), let's check the calendar fom the first file
+    if '*' in path:
+        ds = xr.open_dataset(glob.glob(path)[0], chunks={'time': -1})
+    
+    calendar = ds.time.encoding['calendar']
+    if calendar != binding['calendar_type']:
+        print('WARNING! Wrong calendar type in dataset {}, is \"{}\" and should be \"{}\"\n Please double check your forcing datasets and update them to use the correct calendar type'.format(path, ds.time.encoding['calendar'], binding['calendar_type']))
 
 
 def date_from_step(binding, timestep):
@@ -66,7 +90,8 @@ def date_from_step(binding, timestep):
     return currentDate
 
 
-def date_range(binding):
+def run_date_range(binding):
+
     begin = calendar(binding['StepStart'])
     end = calendar(binding['StepEnd'])
     if type(begin) is float: 
@@ -82,93 +107,214 @@ def date_range(binding):
     return (begin, end+dt, dt)
 
 
-def find_main_var(ds, path):
-    variable_names = [k for k in ds.variables if len(ds.variables[k].dims) == 3]
-    if len(variable_names) > 1:
-        raise LisfloodWarning('More than one variable in dataset {}'.format(path))
-    elif len(variable_names) == 0:
-        raise LisfloodWarning('Could not find a valid variable in dataset {}'.format(path))
+def dataset_date_range(run_dates, dataset, indexer):
+    if indexer is None:
+        date_range = np.arange(*run_dates, dtype='datetime64')
     else:
-        var_name = variable_names[0]
-    return var_name
+        begin = dataset.time.sel(time=run_dates[0], method=indexer).values
+        end = dataset.time.sel(time=run_dates[1], method=indexer).values
+        # using nearest date, dt is max between dataset and model
+        ds_dt = (dataset.time[1]-dataset.time[0]).values
+        run_dt = run_dates[2]
+        timedelta = max(ds_dt, run_dt)
+        date_range = np.arange(begin, end, timedelta, dtype='datetime64')
+    return date_range
+
+
+def replace_dates_year(dates, year):
+    dates_new  = [np.datetime64(str(year)+'-'+np.datetime_as_string(date)[5:]) for date in dates]
+    return dates_new
+
+
+def map_dates_index(dates, time, indexer, climatology=False):
+
+    dates_run = np.arange(*dates, dtype='datetime64')
+
+    if climatology:  # use 2020 as a leap year reference
+        dates_run = replace_dates_year(dates_run, 2020)
+        dates_dataset = replace_dates_year(time.values, 2020)
+        time = time.assign_coords({'time': dates_dataset})
+
+    run_dates = time.sel(time=dates_run, method=indexer).values
+
+    dates_map = dict(zip(time.values, range(len(time))))
+    index_map = [dates_map[date] for date in run_dates]
+
+    return index_map
 
 
 class XarrayChunked():
 
-    def __init__(self, data_path, dates, time_chunk):
+    def __init__(self, data_path, time_chunk, dates, indexer=None, climatology=False):
 
         # load dataset using xarray
-        if time_chunk != 'auto':
+        if time_chunk != 'auto' and time_chunk is not None:
             time_chunk = int(time_chunk)
         data_path = data_path + ".nc" if not data_path.endswith('.nc') else data_path
         ds = xr.open_mfdataset(data_path, engine='netcdf4', chunks={'time': time_chunk}, combine='by_coords')
+
+        # check calendar type
+        check_dataset_calendar_type(ds, data_path)
+
+        # extract main variable
         var_name = find_main_var(ds, data_path)
         da = ds[var_name]
 
-        # extract time range from binding
-        # binding = LisSettings.instance().binding
-        # dates = date_range(binding)  # extract date range from bindings
-        date_range = np.arange(*dates, dtype='datetime64')
-        da = da.sel(time=date_range)
+        # extract time range
+        if not climatology and dates[0] < da.time[-1].values:
+            date_range = dataset_date_range(dates, da, indexer)  # array of dates
+            da = da.sel(time=date_range)
+        self.index_map = map_dates_index(dates, da.time, indexer, climatology)
 
-        # compress dataset (remove missing values)
-        self.masked_da = compress_xarray(da)
+        # compress dataset (remove missing values and flatten the array)
+        maskinfo = MaskInfo.instance()
+        mask = np.logical_not(maskinfo.info.mask)
+        cutmap = CutMap.instance()
+        crop = cutmap.cuts
+        self.dataset = compress_xarray(mask, crop, da) # final dataset to store
 
         # initialise class variables and load first chunk
-        self.chunks = self.masked_da.chunks[0]
-        self.ichunk = None
-        self.chunk_index = None
-        self.chunked_array = None
-        self.load_chunk(timestep=0)
+        self.init_chunks(self.dataset, time_chunk)
 
-    def load_chunk(self, timestep):
-        if self.ichunk is None:  # initialisation
-            self.ichunk = 0
-            self.chunk_index = [0, self.chunks[self.ichunk]]
-        else:
-            self.ichunk += 1
-            self.chunk_index[0] = sum(self.chunks[:self.ichunk])
-            self.chunk_index[1] = sum(self.chunks[:self.ichunk+1])
+    def init_chunks(self, dataset, time_chunk):
+        # compute chunks indexes in dataset
+        chunks = self.dataset.chunks[0]  # list of chunks indexes in dataset
+        if (time_chunk==-1) or time_chunk is None:  # ensure we only have one chunk when dealing with multiple files
+            chunks = [np.sum(chunks)]
+        self.chunk_indexes = []
+        for i in range(len(chunks)):
+            self.chunk_indexes.append(int(np.sum(chunks[:i])))
+        self.chunk_indexes.append(int(np.sum(chunks)))
 
-        chunked_dataset = self.masked_da.isel(time=range(self.chunk_index[0], self.chunk_index[1]))
-        self.chunked_array = chunked_dataset.values  # triggers xarray computation
-        # print('chunk {} loaded'.format(self.ichunk))
+        # load first chunk
+        self.ichunk = -1
+        self.load_next_chunk()
 
-    def __getitem__(self, timestep):
+    def load_next_chunk(self):
+        self.ichunk += 1
+        begin = self.chunk_indexes[self.ichunk]
+        end = self.chunk_indexes[self.ichunk+1]
+        
+        chunk = self.dataset.isel(time=range(begin, end))
+        self.dataset_chunk = chunk.load()  # triggers xarray computation
 
-        local_step = timestep - self.chunk_index[0]
+    def __getitem__(self, step):
+
+        dataset_index = self.index_map[step]
 
         # if at the end of chunk, load new chunk
-        if local_step == self.chunks[self.ichunk]:
-            self.load_chunk(timestep)
-            local_step = timestep - self.chunk_index[0]
-            # print('loading array {} at step {}'.format(self.masked_da.name, timestep))
+        if dataset_index == self.chunk_indexes[self.ichunk+1]:
+            self.load_next_chunk()
 
-        if local_step < 0:
-            msg = 'local step cannot be negative! timestep: {}, chunk: {} - {}', timestep, self.chunk_index[0], self.chunk_index[1]
+        local_index = dataset_index - self.chunk_indexes[self.ichunk]
+
+        if local_index < 0:
+            msg = 'local step cannot be negative! step: {}, chunk: {} - {}', local_index, self.chunk_index[self.ichunk], self.chunk_index[self.ichunk+1]
             LisfloodError(msg)
 
-        data = self.chunked_array[local_step]
+        data = self.dataset_chunk.values[local_index]
         return data
 
 
-@iocache
+@Cache
 class XarrayCached(XarrayChunked):
 
-    def __init__(self, data_path, dates):
+    def __init__(self, data_path, dates, indexer=None, climatology=False):
+        super().__init__(data_path, None, dates, indexer, climatology)
 
-        super().__init__(data_path, dates, '-1')
 
+def xarray_reader(dataname, indexer=None, climatology=False):
+    """ Reads a netcdf time series using Xarray
+    
+    Parameters
+    ----------
+    dataname : str
+        Name of data to read (used to extract file path from bindings)
+    indexer : str
+        How to index time data (None=exact date, ffill=latest date in dataset (following Xarray sel API))
+    climatology : bool
+        Climatology dataset: one-year time series, no chunking    
+    
+    Returns
+    -------
+    object
+        Xarray reader object, can be accessed as a simple array/list
+    """
 
-def get_core_dims(dims):
-    if 'x' in dims and 'y' in dims:
-        core_dims = ('y', 'x')
-    elif 'lat' in dims and 'lon' in dims:
-        core_dims = ('lat', 'lon')
+    # get bindings
+    settings = LisSettings.instance()
+    binding = settings.binding
+
+    data_path = binding[dataname]
+
+    # extract run date range from bindings -> (begin, end, step)
+    dates = run_date_range(binding)
+
+    # extract chunk from bindings
+    time_chunk = binding['NetCDFTimeChunks']  # -1 to load everything, 'auto' to let xarray decide
+
+    if binding['MapsCaching'] == "True":
+        data = XarrayCached(data_path, dates, indexer, climatology)
     else:
-        msg = 'Core dimension in netcdf file not recognised! Expecting (y, x) or (lat, lon), have '+str(dims)
-        raise LisfloodError(msg)
-    return core_dims
+        if climatology:  # for climatology, load the entire dataset
+            data = XarrayChunked(data_path, None, dates, indexer, climatology)
+        else:
+            data = XarrayChunked(data_path, time_chunk, dates, indexer, climatology)
+    
+    return data
+
+
+def coordinatesLand(eastings_forcing, northings_forcing):
+    """"""
+    maskattrs = MaskAttrs.instance()
+    half_cell = maskattrs['cell'] / 2.
+    top_row = np.where(np.round(northings_forcing, 5) == np.round(maskattrs['y'] - half_cell, 5))[0][0]
+    left_col = np.where(np.round(eastings_forcing, 5) == np.round(maskattrs['x'] + half_cell, 5))[0][0]
+    row_slice = slice(top_row, top_row + maskattrs['row'])
+    col_slice = slice(left_col, left_col + maskattrs['col'])
+    maskinfo = MaskInfo.instance()
+    return [co[row_slice, col_slice][~maskinfo.info.mask] for co in np.meshgrid(eastings_forcing, northings_forcing)]
+
+
+@Cache
+def read_lat_from_template_cached(netcdf_template, proj4_params):
+    return read_lat_from_template_base(netcdf_template, proj4_params)
+
+
+def read_lat_from_template_base(netcdf_template, proj4_params):
+    nc_template = netcdf_template + ".nc" if not netcdf_template.endswith('.nc') else netcdf_template
+    with xr.open_dataset(nc_template) as nc:
+        if all([co in nc.dims for co in ("x", "y")]):
+            try:
+                # look for the projection variable
+                proj_var = [v for v in nc.data_vars.keys() if 'proj4_params' in nc[v].attrs.keys()][0]
+                # proj4 string
+                proj4_params = nc[proj_var].attrs['proj4_params']
+                # projection object obtained from the PROJ4 string
+            except IndexError:
+                if proj4_params is None:
+                    raise Exception("If using projected coordinates (x, y), a variable with the 'proj4_params' "
+                                    "attribute must be included in the precipitation file or in settings file!")
+
+            # projection object obtained from the PROJ4 string
+            projection = Proj(proj4_params)
+            _, lat_deg = projection(*coordinatesLand(nc.x.values, nc.y.values), inverse=True)  # latitude (degrees)
+        else:
+            _, lat_deg = coordinatesLand(nc.lon.values, nc.lat.values)  # latitude (degrees)
+
+    return lat_deg
+
+
+def read_lat_from_template(binding):
+    netcdf_template = binding["netCDFtemplate"]
+    proj4_params = binding.get('proj4_params', None)
+
+    if binding['MapsCaching'] == "True":
+        lat_deg = read_lat_from_template_cached(netcdf_template, proj4_params)
+    else:
+        lat_deg = read_lat_from_template_base(netcdf_template, proj4_params)
+
+    return lat_deg
 
 
 def get_space_coords(nrow, ncol, dim_lat_y, dim_lon_x):

@@ -41,7 +41,7 @@ from .zusatz import iterOpenNetcdf, iterReadPCRasterMap, iterSetClonePCR, checkm
 from .settings import (calendar_inconsistency_warning, get_calendar_type, calendar, MaskAttrs, CutMap, NetCDFMetadata,
                        LisSettings, MaskInfo)
 from .errors import LisfloodWarning, LisfloodError
-from .decorators import iocache
+from .decorators import Cache
 
 
 def defsoil(name1, name2=None, name3=None):
@@ -127,19 +127,21 @@ def mapattrNetCDF(name):
     nf1.close()
     maskattrs = MaskAttrs.instance()
 
-    cell_x = maskattrs['cell'] - np.abs(x2 - x1) # this must be same precision as pcraster.clone().cellsize()
-    cell_y = maskattrs['cell'] - np.abs(y2 - y1) # this must be same precision as pcraster.clone().cellsize()
+    cell_x = np.abs(x2 - x1)
+    cell_y = np.abs(y2 - y1)
+    check_x = maskattrs['cell'] - cell_x # this must be same precision as pcraster.clone().cellsize()
+    check_y = maskattrs['cell'] - cell_y # this must be same precision as pcraster.clone().cellsize()
 
-    if abs(cell_x) > 10**-5 or abs(cell_y) > 10**-5:
+    if abs(check_x) > 10**-5 or abs(check_y) > 10**-5:
         raise LisfloodError("Cell size different in maskmap {} and {}".format(
             LisSettings.instance().binding['MaskMap'], filename)
         )
     half_cell = maskattrs['cell'] / 2.
     x = x1 - half_cell  # |
     y = y1 + half_cell  # | coordinates of the upper left corner of the input file upper left pixel
-    cut0 = int(np.abs(maskattrs['x'] - x) / maskattrs['cell'])
+    cut0 = int(np.abs(maskattrs['x'] - x) / cell_x)
     cut1 = cut0 + maskattrs['col']
-    cut2 = int(np.abs(maskattrs['y'] - y) / maskattrs['cell'])
+    cut2 = int(np.abs(maskattrs['y'] - y) / cell_y)
     cut3 = cut2 + maskattrs['row']
     return cut0, cut1, cut2, cut3  # input data will be sliced using [cut0:cut1,cut2:cut3]
 
@@ -280,18 +282,27 @@ def makenumpy(map):
 def loadmap(*args, **kwargs):
     settings = LisSettings.instance()
     binding = settings.binding
+
     if binding['MapsCaching'] == "True":
+        # get path to map file to make sure it's unique in the cache
+        if len(args) > 0:
+            name = args[0]
+        else:
+            name = kwargs['name']
+        value = binding[name]
+        kwargs['value'] = value
         data = loadmap_cached(*args, **kwargs)
     else:
         data = loadmap_base(*args, **kwargs)
+    
     return data
 
-@iocache
+@Cache
 def loadmap_cached(*args, **kwargs):
     return loadmap_base(*args, **kwargs)
 
 
-def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averageyearflag=False):
+def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averageyearflag=False, value=None):
     """ Load a static map either value or pcraster map or netcdf (single or stack)
     
     Load a static map either value or pcraster map or netcdf (single or stack)
@@ -314,7 +325,8 @@ def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averagey
     settings = LisSettings.instance()
     binding = settings.binding
     flags = settings.flags
-    value = binding[name]
+    if value is None:
+        value = binding[name]
     # path and name of the map file
     filename = value
     load = False
