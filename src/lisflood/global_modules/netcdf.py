@@ -18,6 +18,17 @@ from .zusatz import iterOpenNetcdf
 from .add1 import nanCheckMap, decompress
 
 
+def get_core_dims(dims):
+    if 'x' in dims and 'y' in dims:
+        core_dims = ('y', 'x')
+    elif 'lat' in dims and 'lon' in dims:
+        core_dims = ('lat', 'lon')
+    else:
+        msg = 'Core dimension in netcdf file not recognised! Expecting (y, x) or (lat, lon), have '+str(dims)
+        LisfloodError(msg)
+    return core_dims
+
+
 def mask_array_np(data, mask, crop):
     data_cut = data[:, crop[2]:crop[3], crop[0]:crop[1]]
     return data_cut[:, mask]
