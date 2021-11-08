@@ -127,8 +127,11 @@ def dataset_date_range(run_dates, dataset, indexer):
         # using nearest date, dt is max between dataset and model
         ds_dt = (dataset.time[1]-dataset.time[0]).values
         run_dt = run_dates[2]
-        timedelta = max(ds_dt, run_dt)
-        date_range = np.arange(begin, end, timedelta, dtype='datetime64')
+        if run_dt > ds_dt:
+            date_range = np.arange(begin, end, run_dt, dtype='datetime64')
+        else:
+            date_range = slice(begin, end)
+
     return date_range
 
 
