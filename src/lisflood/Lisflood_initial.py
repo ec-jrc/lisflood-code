@@ -22,7 +22,7 @@ from collections import OrderedDict
 
 import numpy as np
 import xarray as xr
-from numba import njit
+from numba import njit, set_num_threads, get_num_threads, config as numba_config
 
 
 from .global_modules.settings import CutMap, LisSettings, NetCDFMetadata, EPICSettings, MaskInfo
@@ -89,6 +89,13 @@ class LisfloodModel_ini(DynamicModel):
         option = self.settings.options
         flags = self.settings.flags
         report_steps = self.settings.report_steps
+
+        # set the maximum number of threads that numba should use (now used in soilloop only)
+        num_threads = int(binding["numCPUs_parallelNumba"])
+        if (num_threads>0):
+            if num_threads<=numba_config.NUMBA_NUM_THREADS:
+                set_num_threads(num_threads)
+        print("Numba max number of threads is: ", get_num_threads())
 
         # Mapping of vegetation types to land use fractions (and the other way around)
         ##global VEGETATION_LANDUSE, LANDUSE_VEGETATION, PRESCRIBED_VEGETATION, PRESCRIBED_LAI
