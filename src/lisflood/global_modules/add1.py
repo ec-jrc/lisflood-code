@@ -35,7 +35,7 @@ import pcraster
 from pcraster import Scalar, numpy2pcr, Nominal, setclone, Boolean, pcr2numpy
 from netCDF4 import num2date, date2num
 import numpy as np
-import xarray as xr
+#import xarray as xr
 
 from .zusatz import iterOpenNetcdf, iterReadPCRasterMap, iterSetClonePCR, checkmap
 from .settings import (calendar_inconsistency_warning, get_calendar_type, calendar, MaskAttrs, CutMap, NetCDFMetadata,

@@ -27,12 +27,15 @@ import numpy as np
 
 from .global_modules.settings import CDFFlags, LisSettings, MaskInfo
 
+#import time  # CR: speed test
 
 class LisfloodModel_dyn(DynamicModel):
 
     # =========== DYNAMIC ====================================================
 
     def dynamic(self):
+        #t0tot=time.time()  # CR: speed test
+
         """ Dynamic part of LISFLOOD
             calls the dynamic part of the hydrological modules
         """
@@ -258,3 +261,5 @@ class LisfloodModel_dyn(DynamicModel):
         if option['wateruse'] and option['indicator'] and self.monthend: 
             self.indicatorcalc_module.dynamic_setzero()
         # setting monthly and yearly dindicator to zero at the end of the month (year)
+
+        #print(' - total time for this step: ', (time.time() - t0tot))  # CR: speed test

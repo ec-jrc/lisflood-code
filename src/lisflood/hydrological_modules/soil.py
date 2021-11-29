@@ -90,7 +90,8 @@ class soil(HydroModule):
         binding = settings.binding
         maskinfo = MaskInfo.instance()
         if not option["cropsEPIC"]: # If EPIC is active, the rice fraction initialisation is handled by EPIC (setSoilFractions in EPIC_main.py)
-            self.var.SoilFraction.loc["Rainfed_prescribed"] += self.var.RiceFraction
+            self.var.SoilFraction[self.var.coord_vegetation['vegetation'].index('Rainfed_prescribed')] += self.var.RiceFraction
+
         # for the moment rice is treated as other fraction
         # if the fraction of water varies then the other fraction are stored
         self.var.WaterFractionBase = self.var.WaterFraction.copy()
@@ -233,18 +234,21 @@ class soil(HydroModule):
            ThetaInit1aValue = self.var.allocateVariableAllVegetation()
            ThetaInit1bValue = self.var.allocateVariableAllVegetation()
            ThetaInit2Value = self.var.allocateVariableAllVegetation()
+
+           iveg = self.var.coord_vegetation['vegetation'].index('Rainfed_prescribed')           
+           ThetaInit1aValue[iveg] = loadmap('ThetaInit1Value')
+           ThetaInit1bValue[iveg] = loadmap('ThetaInit2Value')
+           ThetaInit2Value[iveg] = loadmap('ThetaInit3Value')
            
-           ThetaInit1aValue.loc['Rainfed_prescribed'] = loadmap('ThetaInit1Value')
-           ThetaInit1bValue.loc['Rainfed_prescribed'] = loadmap('ThetaInit2Value')
-           ThetaInit2Value.loc['Rainfed_prescribed'] = loadmap('ThetaInit3Value')
+           iveg = self.var.coord_vegetation['vegetation'].index('Forest_prescribed')
+           ThetaInit1aValue[iveg] = loadmap('ThetaForestInit1Value')
+           ThetaInit1bValue[iveg] = loadmap('ThetaForestInit2Value')
+           ThetaInit2Value[iveg] = loadmap('ThetaForestInit3Value')
            
-           ThetaInit1aValue.loc['Forest_prescribed'] = loadmap('ThetaForestInit1Value')
-           ThetaInit1bValue.loc['Forest_prescribed'] = loadmap('ThetaForestInit2Value')
-           ThetaInit2Value.loc['Forest_prescribed'] = loadmap('ThetaForestInit3Value')
-           
-           ThetaInit1aValue.loc['Irrigated_prescribed'] = loadmap('ThetaIrrigationInit1Value')
-           ThetaInit1bValue.loc['Irrigated_prescribed'] = loadmap('ThetaIrrigationInit2Value')
-           ThetaInit2Value.loc['Irrigated_prescribed'] = loadmap('ThetaIrrigationInit3Value')
+           iveg = self.var.coord_vegetation['vegetation'].index('Irrigated_prescribed')
+           ThetaInit1aValue[iveg] = loadmap('ThetaIrrigationInit1Value')
+           ThetaInit1bValue[iveg] = loadmap('ThetaIrrigationInit2Value')
+           ThetaInit2Value[iveg] = loadmap('ThetaIrrigationInit3Value')
         else:
             ThetaInit1aValue = self.var.initialiseVariableAllVegetation('ThetaInit1Value')
             ThetaInit1bValue = self.var.initialiseVariableAllVegetation('ThetaInit2Value')
@@ -262,12 +266,14 @@ class soil(HydroModule):
         # (since all soil moisture-related calculations are done for permeable fraction only!).
 
         for veg, luse in self.var.VEGETATION_LANDUSE.items():
-            ini_1a = np.where(ThetaInit1aValue.loc[veg] == -9999, self.var.WFC1a.loc[luse], ThetaInit1aValue.loc[veg] * self.var.SoilDepth1a.loc[luse])
-            self.var.W1a.loc[veg] = np.where(self.var.PoreSpaceNotZero1a.loc[luse], ini_1a, 0)
-            ini_1b = np.where(ThetaInit1bValue.loc[veg] == -9999, self.var.WFC1b.loc[luse], ThetaInit1bValue.loc[veg] * self.var.SoilDepth1b.loc[luse])
-            self.var.W1b.loc[veg] = np.where(self.var.PoreSpaceNotZero1b.loc[luse], ini_1b, 0)
-            ini_2 = np.where(ThetaInit2Value.loc[veg] == -9999, self.var.WFC2.loc[luse], ThetaInit2Value.loc[veg] * self.var.SoilDepth2.loc[luse])
-            self.var.W2.loc[veg] = np.where(self.var.PoreSpaceNotZero2.loc[luse], ini_2, 0)
+            iveg = self.var.coord_vegetation['vegetation'].index(veg)
+            iluse = self.var.coord_landuse['landuse'].index(luse)
+            ini_1a = np.where(ThetaInit1aValue[iveg] == -9999, self.var.WFC1a[iluse], ThetaInit1aValue[iveg] * self.var.SoilDepth1a[iluse])
+            self.var.W1a[iveg] = np.where(self.var.PoreSpaceNotZero1a[iluse], ini_1a, 0)
+            ini_1b = np.where(ThetaInit1bValue[iveg] == -9999, self.var.WFC1b[iluse], ThetaInit1bValue[iveg] * self.var.SoilDepth1b[iluse])
+            self.var.W1b[iveg] = np.where(self.var.PoreSpaceNotZero1b[iluse], ini_1b, 0)
+            ini_2 = np.where(ThetaInit2Value[iveg] == -9999, self.var.WFC2[iluse], ThetaInit2Value[iveg] * self.var.SoilDepth2[iluse])
+            self.var.W2[iveg] = np.where(self.var.PoreSpaceNotZero2[iluse], ini_2, 0)
         self.var.W1 = self.var.W1a + self.var.W1b
                     
 
@@ -380,20 +386,24 @@ class soil(HydroModule):
         
         if not option["cropsEPIC"]: 
            self.var.DSLR = self.var.allocateVariableAllVegetation()
-           self.var.DSLR.loc['Rainfed_prescribed'] = loadmap('DSLRInitValue')
-           self.var.DSLR.loc['Forest_prescribed'] = loadmap('DSLRForestInitValue')
-           self.var.DSLR.loc['Irrigated_prescribed'] = loadmap('DSLRIrrigationInitValue')
-           self.var.DSLR.loc['Rainfed_prescribed'] = np.where(self.var.DSLR.loc['Rainfed_prescribed']<1,1,self.var.DSLR.loc['Rainfed_prescribed'])
-           self.var.DSLR.loc['Forest_prescribed'] = np.where(self.var.DSLR.loc['Forest_prescribed']<1,1,self.var.DSLR.loc['Forest_prescribed'])
-           self.var.DSLR.loc['Irrigated_prescribed'] = np.where(self.var.DSLR.loc['Irrigated_prescribed']<1,1,self.var.DSLR.loc['Irrigated_prescribed'])
+           ivegRainfedPrescribed = self.var.coord_vegetation['vegetation'].index('Rainfed_prescribed')
+           ivegForestPrescribed = self.var.coord_vegetation['vegetation'].index('Forest_prescribed')
+           ivegIrrigatedPrescribed = self.var.coord_vegetation['vegetation'].index('Irrigated_prescribed')
+
+           self.var.DSLR[ivegRainfedPrescribed] = loadmap('DSLRInitValue')
+           self.var.DSLR[ivegForestPrescribed]  = loadmap('DSLRForestInitValue')
+           self.var.DSLR[ivegIrrigatedPrescribed]  = loadmap('DSLRIrrigationInitValue')
+           self.var.DSLR[ivegRainfedPrescribed]  = np.where(self.var.DSLR[ivegRainfedPrescribed]<1,1,self.var.DSLR[ivegRainfedPrescribed])
+           self.var.DSLR[ivegForestPrescribed]  = np.where(self.var.DSLR[ivegForestPrescribed]<1,1,self.var.DSLR[ivegForestPrescribed])
+           self.var.DSLR[ivegIrrigatedPrescribed]  = np.where(self.var.DSLR[ivegIrrigatedPrescribed]<1,1,self.var.DSLR[ivegIrrigatedPrescribed])
         else:
            self.var.DSLR = np.maximum(self.var.initialiseVariableAllVegetation('DSLRInitValue'), 1) # DSLR<1 may cause square root of negative number, if Dtsec > 86400!
         
         if not option["cropsEPIC"]:  
            self.var.CumInterception = self.var.allocateVariableAllVegetation()
-           self.var.CumInterception.loc['Rainfed_prescribed'] = loadmap('CumIntInitValue')
-           self.var.CumInterception.loc['Forest_prescribed'] = loadmap('CumIntForestInitValue')
-           self.var.CumInterception.loc['Irrigated_prescribed'] = loadmap('CumIntIrrigationInitValue')
+           self.var.CumInterception[ivegRainfedPrescribed] = loadmap('CumIntInitValue')
+           self.var.CumInterception[ivegForestPrescribed] = loadmap('CumIntForestInitValue')
+           self.var.CumInterception[ivegIrrigatedPrescribed] = loadmap('CumIntIrrigationInitValue')
         else:
            self.var.CumInterception = self.var.initialiseVariableAllVegetation('CumIntInitValue')
         
@@ -422,7 +432,11 @@ class soil(HydroModule):
         self.var.SeepSubToGW = self.var.allocateVariableAllVegetation()
         self.var.Theta = self.var.allocateVariableAllVegetation()
         self.var.AvailableWaterForInfiltration = self.var.allocateVariableAllVegetation()
-        self.var.RWS = self.var.allocateVariableAllVegetation().loc[self.var.prescribed_vegetation]
+        ivegvalues = []
+        for veg in self.var.prescribed_vegetation:
+            ivegvalues.append(self.var.coord_vegetation['vegetation'].index(veg))
+        self.var.RWS = self.var.allocateVariableAllVegetation()[ivegvalues]
+
 
         # ************************************************************
         # ***** INITIALIZATION OF IMPERVIOUS SOIL     ****************
@@ -482,9 +496,15 @@ class soil(HydroModule):
         # (no infiltration in direct runoff fraction)
         tot_sm = self.var.W1a + self.var.W1b + self.var.W2
         for landuse, veg_list in self.var.LANDUSE_VEGETATION.items():
-            self.var.Theta.loc[veg_list] = self.var.SoilFraction.loc[veg_list] * tot_sm.loc[veg_list] / self.var.SoilDepthTotal.loc[landuse]
-        soil_fract_sum = self.var.SoilFraction.sum("vegetation")
-        self.var.ThetaAll = np.where(soil_fract_sum > 0, self.var.Theta.sum("vegetation") / soil_fract_sum, 0)
+            ilanduse = self.var.coord_landuse['landuse'].index(landuse)
+            iveg_list_pres = []
+            iveg_list = []
+            for veg in veg_list:
+                iveg_list_pres.append(self.var.prescribed_vegetation.index(veg))
+                iveg_list.append(self.var.coord_vegetation['vegetation'].index(veg))
+            self.var.Theta[iveg_list] = self.var.SoilFraction[iveg_list_pres] * tot_sm[iveg_list] / self.var.SoilDepthTotal[ilanduse]
+        soil_fract_sum = np.sum(self.var.SoilFraction,0)
+        self.var.ThetaAll = np.where(soil_fract_sum > 0, np.sum(self.var.Theta,0) / soil_fract_sum, 0)
 
         self.var.SeepTopToSubPixelA = self.var.deffraction(self.var.SeepTopToSubA)
         self.var.SeepTopToSubPixelB = self.var.deffraction(self.var.SeepTopToSubB)

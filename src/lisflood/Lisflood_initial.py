@@ -21,8 +21,8 @@ import uuid
 from collections import OrderedDict
 
 import numpy as np
-import xarray as xr
-from numba import njit
+#import xarray as xr
+from numba import njit, set_num_threads, get_num_threads, config as numba_config
 
 
 from .global_modules.settings import CutMap, LisSettings, NetCDFMetadata, EPICSettings, MaskInfo
@@ -59,7 +59,7 @@ from .global_modules.stateVar import stateVar
 from .global_modules.add1 import readInputWithBackup
 
 
-@njit(fastmath=False)
+@njit(fastmath=False, cache=True)
 def _vegSum(ax_veg, variable, soil_fracs):
     return (soil_fracs * variable).sum(ax_veg)
 
@@ -89,6 +89,13 @@ class LisfloodModel_ini(DynamicModel):
         option = self.settings.options
         flags = self.settings.flags
         report_steps = self.settings.report_steps
+
+        # set the maximum number of threads that numba should use (now used in soilloop only)
+        num_threads = int(binding["numCPUs_parallelNumba"])
+        if (num_threads>0):
+            if num_threads<=numba_config.NUMBA_NUM_THREADS:
+                set_num_threads(num_threads)
+        print("Numba max number of threads is: ", get_num_threads())
 
         # Mapping of vegetation types to land use fractions (and the other way around)
         ##global VEGETATION_LANDUSE, LANDUSE_VEGETATION, PRESCRIBED_VEGETATION, PRESCRIBED_LAI
@@ -295,7 +302,8 @@ class LisfloodModel_ini(DynamicModel):
         """Allocate xarray.DataArray filled by 0 with input dimensions.
            Argument 'dimensions' is a list of tuples of the type ('dimension name', coordinate list/array)."""
         coords = OrderedDict(dimensions)
-        return xr.DataArray(np.zeros([len(v) for v in coords.values()], dtype), coords=coords, dims=coords.keys())
+        return np.zeros([len(v) for v in coords.values()], dtype)
+        #return xr.DataArray(np.zeros([len(v) for v in coords.values()], dtype), coords=coords, dims=coords.keys())
 
     def initialiseVariableAllVegetation(self, name, coords=None):
         """Load a DataArray from a model output netCDF file (typycally an end map).
@@ -328,13 +336,16 @@ class LisfloodModel_ini(DynamicModel):
             coords = self.coord_landuse
         data = self.allocateDataArray(coords)
         values_1 = readInputWithBackup(name_1)
-        labels = list(coords.values())[0]
-        data.loc[labels[0],:] = values_1
-        data.loc[labels[1],:] = readInputWithBackup(name_2, values_1)
-        data.loc[labels[2],:] = readInputWithBackup(name_3, values_1)
+        if (list(coords.keys())[0]=="landuse") or (list(coords.keys())[0]=="runoff"):
+            data[0][:] = values_1
+            data[1][:] = readInputWithBackup(name_2, values_1)
+            data[2][:] = readInputWithBackup(name_3, values_1)
+        else:
+            raise Exception("Coords key not found!")
         return data
 
     def deffraction(self, variable):
          """Weighted sum over the soil fractions of each pixel"""
-         ax_veg = variable.dims.index("vegetation")
-         return _vegSum(ax_veg, variable.values, self.SoilFraction.values)
+         #ax_veg = variable.dims.index("vegetation")
+         ax_veg=0
+         return _vegSum(ax_veg, variable, self.SoilFraction)

@@ -76,8 +76,9 @@ class riceirrigation(HydroModule):
         maskinfo = MaskInfo.instance()
         if option['riceIrrigation']:
             veg = "Rainfed_prescribed" # ONCE RICE IS SIMULATED IN EPIC, THIS MODULE SHOULD BE SKIPPED WHEN EPIC IS ON!
-            
+            iveg = self.var.coord_vegetation['vegetation'].index(veg)
             landuse = self.var.VEGETATION_LANDUSE[veg]
+            ilanduse = self.var.coord_landuse['landuse'].index(landuse)
  
             # water needed for paddy rice is assumed to consist of:
             # phase 1: field preparation: soil saturation (assumed to happen in 10 days, 20 days before planting)
@@ -86,7 +87,7 @@ class riceirrigation(HydroModule):
             # phase 4: stop keeping constant water level 20 days before harvest date
             # phase 5: start draining 10 days before harvest date
    
-            RiceSoilSaturationDemandM3 = (self.var.WS1.loc[landuse] - self.var.W1.loc[veg] + self.var.WS2.loc[landuse] - self.var.W2.loc[veg]) * self.var.RiceFraction * self.var.MMtoM3 * self.var.DtDay
+            RiceSoilSaturationDemandM3 = (self.var.WS1[ilanduse] - self.var.W1[iveg] + self.var.WS2[ilanduse] - self.var.W2[iveg]) * self.var.RiceFraction * self.var.MMtoM3 * self.var.DtDay
             # this part is using the whole other fraction to calculate the demand -> an rice only soil part is needed
             # RiceIrrigationDemandM3 unit is m3 per time interval [m3/dt]
 
@@ -108,7 +109,7 @@ class riceirrigation(HydroModule):
             RiceSoilSaturationM3 = np.where((self.var.CalendarDay >= pl_20) & (self.var.CalendarDay < pl_10),
                                             0.1 * RiceSoilSaturationDemandM3, maskinfo.in_zero())
 
-            RiceEva = np.maximum(self.var.EWRef - (self.var.ESAct.loc[veg] + self.var.Ta.loc[veg]), 0)            
+            RiceEva = np.maximum(self.var.EWRef - (self.var.ESAct[iveg] + self.var.Ta[iveg]), 0)            
             RiceEvaporationDemandM3 = RiceEva * self.var.RiceFraction * self.var.MMtoM3  # m3 per time interval
             # should not happen, but just to be sure that this doesnt go <0
             # part of the evaporation is already taken out in soil module!
@@ -144,7 +145,8 @@ class riceirrigation(HydroModule):
                  phase 5: start draining 10 days before harvest date"""
             # RiceDrainageM3=if((CalendarDay ge (RiceHarvestDay1-10)) and (CalendarDay le RiceHarvestDay1),(WS1-WFC1+WS2-WFC2)*RiceFraction*MMtoM3,0)
 
-            RiceDrainageDemandM3 = (self.var.WS1.loc[landuse] - self.var.WFC1.loc[landuse] + self.var.WS2.loc[landuse] - self.var.WFC2.loc[landuse]) * self.var.RiceFraction * self.var.MMtoM3 * self.var.DtDay  # m3 per time interval
+            RiceDrainageDemandM3 = (self.var.WS1[ilanduse] - self.var.WFC1[ilanduse] + self.var.WS2[ilanduse] - \
+                self.var.WFC2[ilanduse]) * self.var.RiceFraction * self.var.MMtoM3 * self.var.DtDay  # m3 per time interval
             RiceDrainageM3 = np.where(
                 (self.var.CalendarDay >= ha_10) & (self.var.CalendarDay < self.var.RiceHarvestDay1),
                 0.1 * RiceDrainageDemandM3, maskinfo.in_zero())
@@ -153,8 +155,8 @@ class riceirrigation(HydroModule):
             # assumption that the last weeks before harvest the 50mm water layer is completely evaporating
             # needs to be transported to channel system or being drained
 
-            self.var.UZ.loc[veg] += np.where(self.var.SoilFraction.loc[veg] > 0.0,
-                                       (RiceDrainageM3 + RicePercolationM3) * self.var.M3toMM / self.var.SoilFraction.loc[veg], ## OtherFraction
+            self.var.UZ[iveg][:] += np.where(self.var.SoilFraction[iveg] > 0.0,
+                                       (RiceDrainageM3 + RicePercolationM3) * self.var.M3toMM / self.var.SoilFraction[iveg], ## OtherFraction
                                        0.0)
             # drained water is added to Upper Zone
             

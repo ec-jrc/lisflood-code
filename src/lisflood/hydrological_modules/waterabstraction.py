@@ -349,9 +349,13 @@ class waterabstraction(HydroModule):
                 self.var.abstraction_required_irrigation_M3 = maskinfo.in_zero()  
             else: # irrigation demand = transpiration deficit multiplied by anti-salinity factor   
                 irr_pre = "Irrigated_prescribed" # It applies only to prescribed irrigation fraction (EPIC simulates specific irrigated crops, if any) 
-                self.var.Ta.loc[irr_pre] = np.maximum(np.minimum(self.var.RWS.loc[irr_pre] * self.var.potential_transpiration.loc[irr_pre],
-                                                             self.var.W1.loc[irr_pre] - self.var.WWP1.loc[self.var.VEGETATION_LANDUSE[irr_pre]]),  maskinfo.in_zero())                 
-                demand_irrigation_MM = (self.var.potential_transpiration.loc[irr_pre] - self.var.Ta.loc[irr_pre]) * self.var.SoilFraction.loc[irr_pre] 
+                landuse_irr_pre = self.var.VEGETATION_LANDUSE[irr_pre] # landuse corresponding to vegetation fraction
+                ivegIrrigatedPrescribed = self.var.coord_vegetation['vegetation'].index(irr_pre)
+                iluseIrrigatedPrescribed = self.var.coord_landuse['landuse'].index(landuse_irr_pre)
+            
+                self.var.Ta[ivegIrrigatedPrescribed] = np.maximum(np.minimum(self.var.RWS[ivegIrrigatedPrescribed] * self.var.potential_transpiration[ivegIrrigatedPrescribed],
+                                                             self.var.W1[ivegIrrigatedPrescribed] - self.var.WWP1[iluseIrrigatedPrescribed]),  maskinfo.in_zero())                 
+                demand_irrigation_MM = (self.var.potential_transpiration[ivegIrrigatedPrescribed] - self.var.Ta[ivegIrrigatedPrescribed]) * self.var.SoilFraction[ivegIrrigatedPrescribed] 
                 demand_irrigation_MM = np.where(self.var.isFrozenSoil, maskinfo.in_zero(),
                                                demand_irrigation_MM)  
                 consumption_required_irrigation_MM = demand_irrigation_MM * self.var.IrrigationMult
@@ -577,27 +581,27 @@ class waterabstraction(HydroModule):
                 irrigation_for_prescribed = np.maximum(self.var.abstraction_SwGw_actual_irrigation_M3 - irrigation_withdrawal_EPIC, 0) 
                 # real irrigation is percentage of avail/demand for waterregion * old surface + old groundwater abstraction           
                 IrrigationWaterDemand = irrigation_for_prescribed*self.var.M3toMM
-                IrrigationWaterDemand = np.where(self.var.SoilFraction.loc[irr_pre] > 0, IrrigationWaterDemand / self.var.SoilFraction.loc[irr_pre], 0)
+                IrrigationWaterDemand = np.where(self.var.SoilFraction[ivegIrrigatedPrescribed] > 0, IrrigationWaterDemand / self.var.SoilFraction[ivegIrrigatedPrescribed], 0)
                 # updating soil moisture of LISFLOOD on Irrigated_prescribed fraction
-                Wold = self.var.W1.loc[irr_pre]
+                Wold = self.var.W1[ivegIrrigatedPrescribed]
                 # if irrigated soil is less than Pf3 then fill up to Pf3 (if there is water demand)
                 # if more than Pf3 the additional water is transpirated
                 # there is no water demand if the soil is frozen                  
-                IrrigationDemandW1b = np.maximum(IrrigationWaterDemand - (self.var.WFilla - self.var.W1a.loc[irr_pre]), 0)
-                self.var.W1a.loc[irr_pre] = np.where(self.var.W1a.loc[irr_pre] >= self.var.WFilla, self.var.W1a.loc[irr_pre],
-                                                 np.minimum(self.var.WFilla, self.var.W1a.loc[irr_pre] + IrrigationWaterDemand))
-                self.var.W1b.loc[irr_pre] = np.where(self.var.W1b.loc[irr_pre] >= self.var.WFillb, self.var.W1b.loc[irr_pre],
-                                                     np.minimum(self.var.WFillb, self.var.W1b.loc[irr_pre] + IrrigationDemandW1b))
-                self.var.W1.loc[irr_pre] = self.var.W1a.loc[irr_pre] + self.var.W1b.loc[irr_pre]            
-                Wdiff = self.var.W1.loc[irr_pre] - Wold              
+                IrrigationDemandW1b = np.maximum(IrrigationWaterDemand - (self.var.WFilla - self.var.W1a[ivegIrrigatedPrescribed]), 0)
+                self.var.W1a[ivegIrrigatedPrescribed] = np.where(self.var.W1a[ivegIrrigatedPrescribed] >= self.var.WFilla, self.var.W1a[ivegIrrigatedPrescribed],
+                                                 np.minimum(self.var.WFilla, self.var.W1a[ivegIrrigatedPrescribed] + IrrigationWaterDemand))
+                self.var.W1b[ivegIrrigatedPrescribed] = np.where(self.var.W1b[ivegIrrigatedPrescribed] >= self.var.WFillb, self.var.W1b[ivegIrrigatedPrescribed],
+                                                     np.minimum(self.var.WFillb, self.var.W1b[ivegIrrigatedPrescribed] + IrrigationDemandW1b))
+                self.var.W1[ivegIrrigatedPrescribed] = self.var.W1a[ivegIrrigatedPrescribed] + self.var.W1b[ivegIrrigatedPrescribed]            
+                Wdiff = self.var.W1[ivegIrrigatedPrescribed] - Wold              
                 # Added to TA but also
                 # for mass balance calculate the loss of irrigation water
                 # AdR: irrigation demand added to W1 and Ta; so assumption here that soil moisture stays the same
                 # we could also abstract more water equivalent to satisfy Ta and bring soil moisture to pF2 or so, for later consideration#
                 # self.var.Ta[2] = np.where(self.var.FrostIndex > self.var.FrostIndexThreshold, maskinfo.in_zero(), self.var.Ta[2])
                 # transpiration is 0 when soil is frozen
-                self.var.Ta.loc[irr_pre] =  self.var.Ta.loc[irr_pre] + IrrigationWaterDemand - Wdiff          
-                self.var.IrriLossCUM += irrigation_for_prescribed * self.efficiency_irrigation - Wdiff * self.var.MMtoM3 * self.var.SoilFraction.loc[irr_pre]
+                self.var.Ta[ivegIrrigatedPrescribed] =  self.var.Ta[ivegIrrigatedPrescribed] + IrrigationWaterDemand - Wdiff          
+                self.var.IrriLossCUM += irrigation_for_prescribed * self.efficiency_irrigation - Wdiff * self.var.MMtoM3 * self.var.SoilFraction[ivegIrrigatedPrescribed]
                 ##### STEF: QUESTION!!! # MASTER # self.var.IrriLossCUM = self.var.IrriLossCUM - self.var.IrrigationWaterAbstractionM3 * self.var.IrrigationEfficiency * self.var.ConveyanceEfficiency - Wdiff * self.var.MMtoM3 * self.var.IrrigationFraction  ### I THINK THAT EPIC IS CORRECT, MASTER IS WRONG!
                 
             # ************************************************************
@@ -663,8 +667,11 @@ class waterabstraction(HydroModule):
             
             veg = "Irrigated_prescribed"
             landuse = self.var.VEGETATION_LANDUSE[veg]    
-            self.var.Theta1a.loc[veg] = self.var.W1a.loc[veg] / self.var.SoilDepth1a.loc[landuse]  
-            self.var.Theta1b.loc[veg]= self.var.W1b.loc[veg] / self.var.SoilDepth1b.loc[landuse] 
+            iveg = self.var.coord_vegetation['vegetation'].index(veg)
+            ilanduse = self.var.coord_landuse['landuse'].index(landuse)
+
+            self.var.Theta1a[iveg] = self.var.W1a[iveg] / self.var.SoilDepth1a[ilanduse] 
+            self.var.Theta1b[iveg] = self.var.W1b[iveg] / self.var.SoilDepth1b[ilanduse]
             
 
 

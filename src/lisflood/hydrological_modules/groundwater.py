@@ -102,9 +102,9 @@ class groundwater(HydroModule):
 
         if not option["cropsEPIC"]:       
            self.var.UZ = self.var.allocateVariableAllVegetation()
-           self.var.UZ.loc['Rainfed_prescribed'] = loadmap('UZInitValue')
-           self.var.UZ.loc['Forest_prescribed'] = loadmap('UZForestInitValue')
-           self.var.UZ.loc['Irrigated_prescribed'] = loadmap('UZIrrigationInitValue')         
+           self.var.UZ[self.var.coord_vegetation['vegetation'].index('Rainfed_prescribed')][:] = loadmap('UZInitValue')
+           self.var.UZ[self.var.coord_vegetation['vegetation'].index('Forest_prescribed')][:] = loadmap('UZForestInitValue')
+           self.var.UZ[self.var.coord_vegetation['vegetation'].index('Irrigated_prescribed')][:] = loadmap('UZIrrigationInitValue')         
         else:
             self.var.UZ = self.var.initialiseVariableAllVegetation('UZInitValue')
 

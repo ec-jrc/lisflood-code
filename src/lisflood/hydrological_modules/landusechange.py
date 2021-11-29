@@ -17,7 +17,7 @@ from . import HydroModule
 
 from collections import OrderedDict
 import pandas as pd
-import xarray as xr
+#import xarray as xr
 import numpy as np
 
 
@@ -78,11 +78,11 @@ class landusechange(HydroModule):
         epic_settings = EPICSettings.instance()        
         # Soil fraction split into: "Rainfed" (previously "Other"), "Forest", "Irrigated".           
         soil = OrderedDict([(name, loadmap(epic_settings.landuse_inputmap[epic_settings.vegetation_landuse[name]])) for name in self.var.prescribed_vegetation])
-        self.var.SoilFraction = xr.DataArray(pd.DataFrame(soil).T, coords=self.var.coord_prescribed_vegetation, dims=self.var.coord_prescribed_vegetation.keys())
+        self.var.SoilFraction = pd.DataFrame(soil).T.values
         # Interactive crop fractions (if EPIC is active)
         if option.get('cropsEPIC'):
             self.var.crop_module.setSoilFractions()       
-        self.var.SoilFraction = xr.DataArray(pd.DataFrame(soil).T, coords=self.var.coord_prescribed_vegetation, dims=self.var.coord_prescribed_vegetation.keys())
+        self.var.SoilFraction = pd.DataFrame(soil).T.values
         self.var.SoilFraction[0] =  self.var.OtherFraction
         self.var.SoilFraction[1] =  self.var.ForestFraction 
         self.var.SoilFraction[2] =  self.var.IrrigationFraction     
@@ -123,13 +123,13 @@ class landusechange(HydroModule):
                  self.var.DynamicLandCoverDelta = np.sum(np.abs(self.var.ForestFraction_nextstep-self.var.ForestFraction)+np.abs(self.var.DirectRunoffFraction_nextstep-self.var.DirectRunoffFraction)+np.abs(self.var.WaterFraction_nextstep-self.var.WaterFraction)+np.abs(self.var.IrrigationFraction_nextstep-self.var.IrrigationFraction)+np.abs(self.var.RiceFraction_nextstep-self.var.RiceFraction)+np.abs(self.var.OtherFraction_nextstep-self.var.OtherFraction))
  
             soil = OrderedDict([(name, loadmap(epic_settings.landuse_inputmap[epic_settings.vegetation_landuse[name]])) for name in self.var.prescribed_vegetation])
-            self.var.SoilFraction = xr.DataArray(pd.DataFrame(soil).T, coords=self.var.coord_prescribed_vegetation, dims=self.var.coord_prescribed_vegetation.keys())    
+            self.var.SoilFraction = pd.DataFrame(soil).T.values
             self.var.SoilFraction[0] =  self.var.OtherFraction
             self.var.SoilFraction[1] =  self.var.ForestFraction 
             self.var.SoilFraction[2] =  self.var.IrrigationFraction      
                           
             if not option["cropsEPIC"]: # If EPIC is active, the rice fraction initialisation is handled by EPIC (setSoilFractions in EPIC_main.py)
-               self.var.SoilFraction.loc["Rainfed_prescribed"] += self.var.RiceFraction
+               self.var.SoilFraction[self.var.coord_vegetation['vegetation'].index('Rainfed_prescribed')] += self.var.RiceFraction
                              
             # with EPIC off, rice is treated as other fraction
             # if the fraction of water varies then the other fraction are stored
