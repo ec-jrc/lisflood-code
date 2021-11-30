@@ -196,7 +196,7 @@ class surface_routing(HydroModule):
         
         self.var.OFM3Direct = self.var.PixelLength * self.var.OFAlpha[self.var.dim_runoff[1].index('Direct')] * self.var.OFQDirect**self.var.Beta
         self.var.OFM3Other = self.var.PixelLength * self.var.OFAlpha[self.var.dim_runoff[1].index('Other')] * self.var.OFQOther**self.var.Beta
-        self.var.OFM3Forest = self.var.PixelLength * self.var.OFAlpha[self.var.dim_runoff[1].index('Direct')] * self.var.OFQForest**self.var.Beta
+        self.var.OFM3Forest = self.var.PixelLength * self.var.OFAlpha[self.var.dim_runoff[1].index('Forest')] * self.var.OFQForest**self.var.Beta
         
         self.var.Qall = self.var.OFQDirect + self.var.OFQOther + self.var.OFQForest
         self.var.M3all = self.var.OFM3Direct + self.var.OFM3Other + self.var.OFM3Forest
