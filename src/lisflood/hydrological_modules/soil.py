@@ -511,3 +511,8 @@ class soil(HydroModule):
         self.var.SeepSubToGWPixel = self.var.deffraction(self.var.SeepSubToGW)
         # Pixel-average seepage values in [mm] per timestep
         # (no seepage from direct runoff fraction)
+        
+        ## for Carlo to check: the lines below are used just for reporting, if these lines makes the code slower, we must remove them!
+        self.var.Theta1aPixel = self.var.deffraction(self.var.Theta1a)
+        self.var.Theta1bPixel = self.var.deffraction(self.var.Theta1b)
+        self.var.Theta2Pixel = self.var.deffraction(self.var.Theta2)
