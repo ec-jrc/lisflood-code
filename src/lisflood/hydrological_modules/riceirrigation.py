@@ -86,10 +86,16 @@ class riceirrigation(HydroModule):
             # phase 3: planting, while keep constant water level during growing season (open water evaporation)
             # phase 4: stop keeping constant water level 20 days before harvest date
             # phase 5: start draining 10 days before harvest date
-   
-            RiceSoilSaturationDemandM3 = (self.var.WS1[ilanduse] - self.var.W1[iveg] + self.var.WS2[ilanduse] - self.var.W2[iveg]) * self.var.RiceFraction * self.var.MMtoM3 * self.var.DtDay
+            
+            # ORIGINAL
+            #RiceSoilSaturationDemandM3 = (self.var.WS1[ilanduse] - self.var.W1[iveg] + self.var.WS2[ilanduse] - self.var.W2[iveg]) * self.var.RiceFraction * self.var.MMtoM3 * self.var.DtDay
             # this part is using the whole other fraction to calculate the demand -> an rice only soil part is needed
             # RiceIrrigationDemandM3 unit is m3 per time interval [m3/dt]
+            
+            # EDITED on Jan 15th 2022: saturation demand is computed considering only soil layers 1a and 1b (NO 2)
+            RiceSoilSaturationDemandM3 = (self.var.WS1[ilanduse] - self.var.W1[iveg]) * self.var.RiceFraction * self.var.MMtoM3 * self.var.DtDay
+            # this part is using the whole other fraction to calculate the demand -> an rice only soil part is needed
+            # RiceIrrigationDemandM3 unit is m3 per time interval [m3/dt]            
 
             pl_20 = self.var.RicePlantingDay1 - 20
             pl_20 = np.where(pl_20 < 0, 365 + pl_20, pl_20)
@@ -138,6 +144,7 @@ class riceirrigation(HydroModule):
                 (self.var.CalendarDay >= self.var.RicePlantingDay1) & (self.var.CalendarDay < ha_20),
                 RicePercolationDemandM3, maskinfo.in_zero())  # m3 per time interval
             # FAO: percolation for heavy clay soils: PERC = 2 mm/day
+            
             self.var.PaddyRiceWaterAbstractionFromSurfaceWaterM3 = RiceSoilSaturationM3 + RiceFloodingM3 + RiceEvaporationM3 + RicePercolationM3  # m3 per time interval
             # m3 water needed for paddyrice
 
@@ -145,8 +152,13 @@ class riceirrigation(HydroModule):
                  phase 5: start draining 10 days before harvest date"""
             # RiceDrainageM3=if((CalendarDay ge (RiceHarvestDay1-10)) and (CalendarDay le RiceHarvestDay1),(WS1-WFC1+WS2-WFC2)*RiceFraction*MMtoM3,0)
 
-            RiceDrainageDemandM3 = (self.var.WS1[ilanduse] - self.var.WFC1[ilanduse] + self.var.WS2[ilanduse] - \
-                self.var.WFC2[ilanduse]) * self.var.RiceFraction * self.var.MMtoM3 * self.var.DtDay  # m3 per time interval
+            # ORIGINAL: DRAINAGE from all the soil layers
+            #RiceDrainageDemandM3 = (self.var.WS1[ilanduse] - self.var.WFC1[ilanduse] + self.var.WS2[ilanduse] - \
+            #   self.var.WFC2[ilanduse]) * self.var.RiceFraction * self.var.MMtoM3 * self.var.DtDay  # m3 per time interval
+            
+            # EDITED on January 15th 2022: DRAINAGE from layers 1a and 1b (NO 2)    
+            RiceDrainageDemandM3 = (self.var.WS1[ilanduse] - self.var.WFC1[ilanduse]) * self.var.RiceFraction * self.var.MMtoM3 * self.var.DtDay  # m3 per time interval    
+            
             RiceDrainageM3 = np.where(
                 (self.var.CalendarDay >= ha_10) & (self.var.CalendarDay < self.var.RiceHarvestDay1),
                 0.1 * RiceDrainageDemandM3, maskinfo.in_zero())
