@@ -512,8 +512,7 @@ class soil(HydroModule):
         # Pixel-average seepage values in [mm] per timestep
         # (no seepage from direct runoff fraction)
         
-        ## for Carlo to check: the lines below are used just for reporting, if these lines makes the code slower, we must remove them!
-        ## lines commented to test the timing of the "slim init" for calibration. TO DO: take the final decision!
-        ##self.var.Theta1aPixel = self.var.deffraction(self.var.Theta1a)
-        ##self.var.Theta1bPixel = self.var.deffraction(self.var.Theta1b)
-        ##self.var.Theta2Pixel = self.var.deffraction(self.var.Theta2)
+        # the variables below were added to report catchment-averaged soil moisture profiles
+        self.var.Theta1aPixel = self.var.deffraction(self.var.Theta1a)
+        self.var.Theta1bPixel = self.var.deffraction(self.var.Theta1b)
+        self.var.Theta2Pixel = self.var.deffraction(self.var.Theta2)
