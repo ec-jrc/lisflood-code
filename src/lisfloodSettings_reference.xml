@@ -3927,15 +3927,21 @@ Water stored as interception [mm]
 </comment>
 </textvar>
 
-<textvar name="Theta1TS" value="$(PathOut)/thTop.tss">
+<textvar name="Theta1TS" value="$(PathOut)/th1a.tss">
 <comment>
-Soil moisture upper layer [mm3/mm3]
+Soil moisture layer 1a [cu mm / cu mm]
 </comment>
 </textvar>
 
-<textvar name="Theta2TS" value="$(PathOut)/thSub.tss">
+<textvar name="Theta2TS" value="$(PathOut)/th1b.tss">
 <comment>
-Soil moisture lower layer [mm3/mm3]
+Soil moisture layer 1b [cu mm / cu mm]
+</comment>
+</textvar>
+
+<textvar name="Theta3TS" value="$(PathOut)/th2.tss">
+<comment>
+Soil moisture layer 2 [cu mm / cu mm]
 </comment>
 </textvar>
 
