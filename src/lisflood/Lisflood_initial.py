@@ -21,8 +21,15 @@ import uuid
 from collections import OrderedDict
 
 import numpy as np
-#import xarray as xr
-from numba import njit, set_num_threads, get_num_threads, config as numba_config
+try:
+    from numba import njit, set_num_threads, get_num_threads, config as numba_config
+    numba_full = True
+except ImportError:
+    import numba
+    print('WARNING! Numba version is probably too old. Only limited functionalities will be available for Numba')
+    print('Numba version: {}'.format(numba.__version__))
+    from numba import njit, config as numba_config
+    numba_full = False
 
 
 from .global_modules.settings import CutMap, LisSettings, NetCDFMetadata, EPICSettings, MaskInfo
@@ -92,10 +99,13 @@ class LisfloodModel_ini(DynamicModel):
 
         # set the maximum number of threads that numba should use (now used in soilloop only)
         num_threads = int(binding["numCPUs_parallelNumba"])
-        if (num_threads>0):
-            if num_threads<=numba_config.NUMBA_NUM_THREADS:
-                set_num_threads(num_threads)
-        print("Numba max number of threads is: ", get_num_threads())
+        if numba_full:
+            if (num_threads>0):
+                if num_threads<=numba_config.NUMBA_NUM_THREADS:
+                    set_num_threads(num_threads)
+            print("Numba max number of threads is: ", get_num_threads())
+        else:
+            print('WARNING! Could not set number of threads for numba! Numba version is too old... using default number of threads value.')
 
         # Mapping of vegetation types to land use fractions (and the other way around)
         ##global VEGETATION_LANDUSE, LANDUSE_VEGETATION, PRESCRIBED_VEGETATION, PRESCRIBED_LAI
