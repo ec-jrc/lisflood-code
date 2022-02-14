@@ -103,9 +103,6 @@ class LisfloodModel_ini(DynamicModel):
             if (num_threads>0):
                 if num_threads<=numba_config.NUMBA_NUM_THREADS:
                     set_num_threads(num_threads)
-            print("Numba max number of threads is: ", get_num_threads())
-        else:
-            print('WARNING! Could not set number of threads for numba! Numba version is too old... using default number of threads value.')
 
         # Mapping of vegetation types to land use fractions (and the other way around)
         ##global VEGETATION_LANDUSE, LANDUSE_VEGETATION, PRESCRIBED_VEGETATION, PRESCRIBED_LAI
