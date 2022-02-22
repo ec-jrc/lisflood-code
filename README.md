@@ -111,7 +111,7 @@ You can use the updated docker image to run lisflood, so without taking care to 
 #### Pull image from repository:
 
 ```bash
-docker pull efas/lisflood:latest
+docker pull jrce1/lisflood:latest
 ```
 
 #### Run test catchments in image:
@@ -120,20 +120,25 @@ docker pull efas/lisflood:latest
 docker run -v /absolute_path/to/my/local/folder:/usecases efas/lisflood:latest usecases
 ```
 
-After this command, you can find all files to run a test against a catchment under the directory you mapped: `/absolute_path/to/my/local/folder/TestCatchment1`
+After this command, you can find all files to run tests against catchments under the directory you mapped: `/absolute_path/to/my/local/folder/`
 
+```
+/absolute_path/to/my/local/folder/LF_ETRS89_UseCase
+/absolute_path/to/my/local/folder/LF_lat_lon_UseCase
+```
 
-Now, you can run LISFLOOD as a docker container to test included catchments. Only thing you need to do is to map the TestCatchment1 folder to the container folder `input`, by using -v option. 
+Now, you can run LISFLOOD as a docker container to test included catchments. Only thing you need to do is to map the test catchment folder to the container folder `input`, by using -v option. 
+
 In the XML settings file, all paths are adjusted to be relative to the very same settings file, so you don't need to edit paths, as long as you keep same folders structure.
 
 
 #### Execute lisflood with a Docker image:
 
 ```bash
-docker run -v /absolute_path/to/my/local/folder/TestCatchment:/input efas/lisflood /input/settings/cold_day_base.xml
+docker run -v /absolute_path/to/my/local/folder/LF_ETRS89_UseCase:/input efas/lisflood /input/settings/cold.xml
 ```
 
-Once LISFLOOD finished, you find reported maps in `/absolute_path/to/my/local/folder/TestCatchment/outputs/` folder.
+Once LISFLOOD finished, you find reported maps in `/absolute_path/to/my/local/folder/LF_ETRS89_UseCase/out/` folder.
 
 ### Pypi packaged LISFLOOD
 
