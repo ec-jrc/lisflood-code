@@ -117,7 +117,7 @@ docker pull jrce1/lisflood:latest
 #### Run test catchments in image:
 
 ```bash
-docker run -v /absolute_path/to/my/local/folder:/usecases efas/lisflood:latest usecases
+docker run -v /absolute_path/to/my/local/folder:/usecases jrce1/lisflood:latest usecases
 ```
 
 After this command, you can find all files to run tests against catchments under the directory you mapped: `/absolute_path/to/my/local/folder/`
@@ -135,7 +135,7 @@ In the XML settings file, all paths are adjusted to be relative to the very same
 #### Execute lisflood with a Docker image:
 
 ```bash
-docker run -v /absolute_path/to/my/local/folder/LF_ETRS89_UseCase:/input efas/lisflood /input/settings/cold.xml
+docker run -v /absolute_path/to/my/local/folder/LF_ETRS89_UseCase:/input jrce1/lisflood /input/settings/cold.xml
 ```
 
 Once LISFLOOD finished, you find reported maps in `/absolute_path/to/my/local/folder/LF_ETRS89_UseCase/out/` folder.
