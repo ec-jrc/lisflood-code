@@ -2,7 +2,7 @@
 
 There are several ways to get lisflood model and to run it on your machines: 
 
-1. Using the Docker image `efas/lisflood`
+1. Using the Docker image `jrce1/lisflood`
 2. Using pip tool together with conda to easily install dependencies
 3. Obtaining the source code, by cloning repository or downloading source distribution, and install dependencies.
 
@@ -18,30 +18,35 @@ You can use the updated docker image to run lisflood, so without taking care to 
 First, you pull image from repository.
 
 ```bash
-docker pull efas/lisflood
+docker pull jrce1/lisflood
 ```
 
 Copy Test catchment files from container to your host, using mapped volumes. `usecases` is the folder in docker where test catchments are.
 
 ```bash
-docker run -v /absolute_path/to/my/local/folder:/usecases efas/lisflood:latest usecases
+docker run -v /absolute_path/to/my/local/folder:/usecases jrce1/lisflood:latest usecases
 ```
 
-After this command, you can find all files to run a test against a catchment under the directory you mapped: `/absolute_path/to/my/local/folder/TestCatchment`,
-where `TestCatchment` is the folder name of the test data.
+After this command, you can find all files to run tests against a catchment under the directory you mapped: `/absolute_path/to/my/local/folder/`,
 
-Now, you can run LISFLOOD as a docker container to test the catchment. Only thing you need to do is to map the TestCatchment folder 
-to the container folder `input`, by using Docker `-v` option. 
+```bash
+/absolute_path/to/my/local/folder/LF_ETRS89_UseCase
+/absolute_path/to/my/local/folder/LF_lat_lon_UseCase
+```
+
+where `LF_ETRS89_UseCase` and `LF_lat_lon_UseCase` are folders containing test data.
+
+Now, you can run LISFLOOD as a docker container to test the catchment. Only thing you need to do is to map a test folder to the container folder `input`, by using Docker `-v` option. 
 In the XML settings file, all paths are adjusted to be relative to the very same settings file, so you don't need to edit paths, as long as you keep same folder's structure.
 
 
 Execute the following docker command to run the simulation:
 
 ```bash
-docker run -v /absolute_path/to/my/local/folder/TestCatchment:/input efas/lisflood /input/settings/cold_day_base.xml
+docker run -v /absolute_path/to/my/local/folder/LF_ETRS89_UseCase:/input jrce1/lisflood /input/settings/cold.xml
 ```
 
-Once LISFLOOD finished, you can find reported maps in `/absolute_path/to/my/local/folder/TestCatchment/outputs/` folder.
+Once LISFLOOD finished, you can find reported maps in `/absolute_path/to/my/local/folder/LF_ETRS89_UseCase/out/` folder.
 
 
 ### B) Pypi packaged LISFLOOD and conda env
