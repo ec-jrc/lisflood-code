@@ -32,6 +32,7 @@ import inspect
 from collections import namedtuple
 import multiprocessing
 import cftime
+import threading
 import xml.dom.minidom
 import pcraster
 from netCDF4 import Dataset, date2num, num2date
@@ -83,7 +84,7 @@ class Singleton(type):
 
 class ThreadSingleton(type):
     """
-    Singleton metaclass to keep single instances by init arguments
+    Singleton metaclass to keep single instances by init arguments and by thread
     """
     _instances = {}
     _current = {}
@@ -93,6 +94,7 @@ class ThreadSingleton(type):
 
     def __call__(cls, *args, **kwargs):
         init = cls.__init__
+        task_id = cls.get_task_id()
         if init is not None:
             init_args = inspect.getcallargs(init, None, *args, **kwargs).items()
             new_init_args = []
@@ -101,19 +103,23 @@ class ThreadSingleton(type):
                     new_init_args.append((a[0], a[1].tostring()))
                 else:
                     new_init_args.append(a)
-            key = (multiprocessing.current_process().name, cls, str(new_init_args))
+            key = (task_id, cls, str(new_init_args))
         else:
-            key = cls
+            key = (task_id, cls)
 
         if key not in cls._instances:
             cls._instances[key] = super(ThreadSingleton, cls).__call__(*args, **kwargs)
-        cls._current[(multiprocessing.current_process().name, cls)] = cls._instances[key]
+        cls._current[(task_id, cls)] = cls._instances[key]
         return cls._instances[key]
 
     def instance(cls):
-        key = (multiprocessing.current_process().name, cls)
+        task_id = cls.get_task_id()
+        key = (task_id, cls)
         return cls._current[key]
 
+    def get_task_id(cls):
+        task_id = multiprocessing.current_process().name + '_' + str(threading.get_ident())
+        return task_id
 
 @nine
 class CDFFlags(with_metaclass(Singleton)):

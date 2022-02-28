@@ -41,7 +41,7 @@ from .zusatz import iterOpenNetcdf, iterReadPCRasterMap, iterSetClonePCR, checkm
 from .settings import (calendar_inconsistency_warning, get_calendar_type, calendar, MaskAttrs, CutMap, NetCDFMetadata,
                        LisSettings, MaskInfo)
 from .errors import LisfloodWarning, LisfloodError
-from .decorators import iocache
+from .decorators import Cache
 
 
 def defsoil(name1, name2=None, name3=None):
@@ -286,7 +286,7 @@ def loadmap(*args, **kwargs):
     
     return data
 
-@iocache
+@Cache
 def loadmap_cached(*args, **kwargs):
     return loadmap_base(*args, **kwargs)
 
