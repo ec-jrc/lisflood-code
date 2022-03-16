@@ -180,7 +180,7 @@ class waterbalance(object):
                  self.var.SoilFraction[2] =  self.var.IrrigationFraction   
 
                  if not option["cropsEPIC"]: # If EPIC is active, the rice fraction initialisation is handled by EPIC (setSoilFractions in EPIC_main.py)
-                    self.var.SoilFraction[self.var.coord_vegetation['vegetation'].index('Rainfed_prescribed')] += self.var.RiceFraction
+                    self.var.SoilFraction.values[self.var.coord_vegetation['vegetation'].index('Rainfed_prescribed')] += self.var.RiceFraction
 
                  Hill1 = self.var.LZ + (self.var.SoilFraction * (self.var.CumInterception + self.var.W1 + self.var.W2 + self.var.UZ)).sum("vegetation").values
                  HillslopeStoredM3 = (self.var.WaterDepth + self.var.SnowCover + Hill1 + self.var.DirectRunoffFraction * self.var.CumInterSealed) * self.var.MMtoM * self.var.PixelArea                

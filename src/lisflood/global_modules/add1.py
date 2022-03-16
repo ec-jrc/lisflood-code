@@ -43,6 +43,17 @@ from .settings import (calendar_inconsistency_warning, get_calendar_type, calend
 from .errors import LisfloodWarning, LisfloodError
 from .decorators import Cache
 
+# modified numpy class to ensure code compatibility with EPIC (that uses XArray in computations)
+# while keeping higher performance when EPIC modules are not needed (use of only numpy arrays in computations)
+class NumpyModified(np.ndarray):
+    def __new__(cls, input_array):
+        obj = np.asarray(input_array).view(cls)
+        return obj
+
+    @property
+    def values(self):
+        return self
+
 
 def defsoil(name1, name2=None, name3=None):
     """ loads 3 array in a list

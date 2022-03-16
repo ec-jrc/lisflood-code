@@ -21,7 +21,7 @@ import uuid
 from collections import OrderedDict
 
 import numpy as np
-#import xarray as xr
+import xarray as xr
 from numba import njit, set_num_threads, get_num_threads, config as numba_config
 
 
@@ -57,7 +57,7 @@ from .hydrological_modules.structures import structures
 from .global_modules.output import outputTssMap
 from .global_modules.stateVar import stateVar
 from .global_modules.add1 import readInputWithBackup
-
+from .global_modules.add1 import NumpyModified
 
 @njit(fastmath=False, cache=True)
 def _vegSum(ax_veg, variable, soil_fracs):
@@ -302,8 +302,11 @@ class LisfloodModel_ini(DynamicModel):
         """Allocate xarray.DataArray filled by 0 with input dimensions.
            Argument 'dimensions' is a list of tuples of the type ('dimension name', coordinate list/array)."""
         coords = OrderedDict(dimensions)
-        return np.zeros([len(v) for v in coords.values()], dtype)
-        #return xr.DataArray(np.zeros([len(v) for v in coords.values()], dtype), coords=coords, dims=coords.keys())
+        option = self.settings.options
+        if option.get('cropsEPIC'):
+            return xr.DataArray(np.zeros([len(v) for v in coords.values()], dtype), coords=coords, dims=coords.keys())
+        else:
+            return NumpyModified(np.zeros([len(v) for v in coords.values()], dtype))
 
     def initialiseVariableAllVegetation(self, name, coords=None):
         """Load a DataArray from a model output netCDF file (typycally an end map).
@@ -337,9 +340,9 @@ class LisfloodModel_ini(DynamicModel):
         data = self.allocateDataArray(coords)
         values_1 = readInputWithBackup(name_1)
         if (list(coords.keys())[0]=="landuse") or (list(coords.keys())[0]=="runoff"):
-            data[0][:] = values_1
-            data[1][:] = readInputWithBackup(name_2, values_1)
-            data[2][:] = readInputWithBackup(name_3, values_1)
+            data.values[0][:] = values_1
+            data.values[1][:] = readInputWithBackup(name_2, values_1)
+            data.values[2][:] = readInputWithBackup(name_3, values_1)
         else:
             raise Exception("Coords key not found!")
         return data
@@ -348,4 +351,4 @@ class LisfloodModel_ini(DynamicModel):
          """Weighted sum over the soil fractions of each pixel"""
          #ax_veg = variable.dims.index("vegetation")
          ax_veg=0
-         return _vegSum(ax_veg, variable, self.SoilFraction)
+         return _vegSum(ax_veg, variable.values, self.SoilFraction.values)

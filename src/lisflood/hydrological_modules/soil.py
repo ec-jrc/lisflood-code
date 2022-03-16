@@ -90,7 +90,7 @@ class soil(HydroModule):
         binding = settings.binding
         maskinfo = MaskInfo.instance()
         if not option["cropsEPIC"]: # If EPIC is active, the rice fraction initialisation is handled by EPIC (setSoilFractions in EPIC_main.py)
-            self.var.SoilFraction[self.var.coord_vegetation['vegetation'].index('Rainfed_prescribed')] += self.var.RiceFraction
+            self.var.SoilFraction.values[self.var.coord_vegetation['vegetation'].index('Rainfed_prescribed')] += self.var.RiceFraction
 
         # for the moment rice is treated as other fraction
         # if the fraction of water varies then the other fraction are stored
@@ -236,19 +236,19 @@ class soil(HydroModule):
            ThetaInit2Value = self.var.allocateVariableAllVegetation()
 
            iveg = self.var.coord_vegetation['vegetation'].index('Rainfed_prescribed')           
-           ThetaInit1aValue[iveg] = loadmap('ThetaInit1Value')
-           ThetaInit1bValue[iveg] = loadmap('ThetaInit2Value')
-           ThetaInit2Value[iveg] = loadmap('ThetaInit3Value')
+           ThetaInit1aValue.values[iveg] = loadmap('ThetaInit1Value')
+           ThetaInit1bValue.values[iveg] = loadmap('ThetaInit2Value')
+           ThetaInit2Value.values[iveg] = loadmap('ThetaInit3Value')
            
            iveg = self.var.coord_vegetation['vegetation'].index('Forest_prescribed')
-           ThetaInit1aValue[iveg] = loadmap('ThetaForestInit1Value')
-           ThetaInit1bValue[iveg] = loadmap('ThetaForestInit2Value')
-           ThetaInit2Value[iveg] = loadmap('ThetaForestInit3Value')
+           ThetaInit1aValue.values[iveg] = loadmap('ThetaForestInit1Value')
+           ThetaInit1bValue.values[iveg] = loadmap('ThetaForestInit2Value')
+           ThetaInit2Value.values[iveg] = loadmap('ThetaForestInit3Value')
            
            iveg = self.var.coord_vegetation['vegetation'].index('Irrigated_prescribed')
-           ThetaInit1aValue[iveg] = loadmap('ThetaIrrigationInit1Value')
-           ThetaInit1bValue[iveg] = loadmap('ThetaIrrigationInit2Value')
-           ThetaInit2Value[iveg] = loadmap('ThetaIrrigationInit3Value')
+           ThetaInit1aValue.values[iveg] = loadmap('ThetaIrrigationInit1Value')
+           ThetaInit1bValue.values[iveg] = loadmap('ThetaIrrigationInit2Value')
+           ThetaInit2Value.values[iveg] = loadmap('ThetaIrrigationInit3Value')
         else:
             ThetaInit1aValue = self.var.initialiseVariableAllVegetation('ThetaInit1Value')
             ThetaInit1bValue = self.var.initialiseVariableAllVegetation('ThetaInit2Value')
