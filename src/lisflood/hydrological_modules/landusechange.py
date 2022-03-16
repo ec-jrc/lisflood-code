@@ -78,16 +78,8 @@ class landusechange(HydroModule):
                 
         epic_settings = EPICSettings.instance()    
 
-        #CR: TODO: CHECK HERE why are we initializing SoilFraction twice?    
         # Soil fraction split into: "Rainfed" (previously "Other"), "Forest", "Irrigated".           
         soil = OrderedDict([(name, loadmap(epic_settings.landuse_inputmap[epic_settings.vegetation_landuse[name]])) for name in self.var.prescribed_vegetation])
-        if option.get('cropsEPIC'):
-            self.var.SoilFraction = xr.DataArray(pd.DataFrame(soil).T, coords=self.var.coord_prescribed_vegetation, dims=self.var.coord_prescribed_vegetation.keys())
-        else:
-            self.var.SoilFraction = NumpyModified(pd.DataFrame(soil).T.values)
-        # Interactive crop fractions (if EPIC is active)
-        if option.get('cropsEPIC'):
-            self.var.crop_module.setSoilFractions()       
         if option.get('cropsEPIC'):
             self.var.SoilFraction = xr.DataArray(pd.DataFrame(soil).T, coords=self.var.coord_prescribed_vegetation, dims=self.var.coord_prescribed_vegetation.keys())
         else:
@@ -95,6 +87,9 @@ class landusechange(HydroModule):
         self.var.SoilFraction[0] =  self.var.OtherFraction
         self.var.SoilFraction[1] =  self.var.ForestFraction 
         self.var.SoilFraction[2] =  self.var.IrrigationFraction     
+        # Interactive crop fractions (if EPIC is active)
+        if option.get('cropsEPIC'):
+            self.var.crop_module.setSoilFractions()       
         
     def dynamic(self):
         """ dynamic part of the landusechange module"""

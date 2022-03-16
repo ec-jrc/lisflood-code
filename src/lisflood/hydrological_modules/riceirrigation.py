@@ -18,6 +18,8 @@ from __future__ import absolute_import, print_function
 
 import numpy as np
 
+from lisflood.global_modules.errors import LisfloodError
+
 from ..global_modules.add1 import loadmap
 from ..global_modules.settings import MaskInfo, LisSettings
 from . import HydroModule
@@ -47,6 +49,12 @@ class riceirrigation(HydroModule):
         settings = LisSettings.instance()
         option = settings.options
         if option['riceIrrigation']:
+            if not option['wateruse']:
+                # flag with an error message and STOP:
+                # riceIrrigation ON MUST HAVE wateruse option ON
+                msg = "riceIrrigation module ON MUST HAVE wateruse option ON in setting file"
+                raise LisfloodError(msg)
+
             # ************************************************************
             # ***** PADDY RICE IRRIGATION AND ABSTRACTION ******************
             # ************************************************************
