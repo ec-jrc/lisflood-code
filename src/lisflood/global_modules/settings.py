@@ -36,7 +36,6 @@ import threading
 import xml.dom.minidom
 import pcraster
 from netCDF4 import Dataset, date2num, num2date
-#from pandas.core.tools.datetimes import parse_time_string
 from pandas.core.tools.datetimes import parsing
 import numpy as np
 
