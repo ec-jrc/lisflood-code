@@ -666,9 +666,7 @@ class waterabstraction(HydroModule):
             # CM Update state variables for changes to W1a[2] and W1b[2]
             
             veg = "Irrigated_prescribed"
-            landuse = self.var.VEGETATION_LANDUSE[veg]    
-            iveg = self.var.coord_vegetation['vegetation'].index(veg)
-            ilanduse = self.var.coord_landuse['landuse'].index(landuse)
+            iveg,ilanduse,_ = self.var.get_landuse_and_indexes_from_vegetation_GLOBAL(veg)
 
             self.var.Theta1a.values[iveg] = self.var.W1a.values[iveg] / self.var.SoilDepth1a.values[ilanduse] 
             self.var.Theta1b.values[iveg] = self.var.W1b.values[iveg] / self.var.SoilDepth1b.values[ilanduse]

@@ -496,12 +496,7 @@ class soil(HydroModule):
         # (no infiltration in direct runoff fraction)
         tot_sm = self.var.W1a + self.var.W1b + self.var.W2
         for landuse, veg_list in self.var.LANDUSE_VEGETATION.items():
-            ilanduse = self.var.coord_landuse['landuse'].index(landuse)
-            iveg_list_pres = []
-            iveg_list = []
-            for veg in veg_list:
-                iveg_list_pres.append(self.var.prescribed_vegetation.index(veg))
-                iveg_list.append(self.var.coord_vegetation['vegetation'].index(veg))
+            iveg_list,iveg_list_pres,ilanduse = self.var.get_indexes_from_landuse_and_veg_list_GLOBAL(landuse, veg_list)
             self.var.Theta[iveg_list] = self.var.SoilFraction[iveg_list_pres] * tot_sm[iveg_list] / self.var.SoilDepthTotal[ilanduse]
         soil_fract_sum = np.sum(self.var.SoilFraction,0)
         self.var.ThetaAll = np.where(soil_fract_sum > 0, np.sum(self.var.Theta,0) / soil_fract_sum, 0)

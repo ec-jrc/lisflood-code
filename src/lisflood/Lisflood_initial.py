@@ -294,6 +294,32 @@ class LisfloodModel_ini(DynamicModel):
         """"""
         return OrderedDict([("vegetation", self.prescribed_vegetation[:]), self.dim_pixel])
 
+    def get_landuse_and_indexes_from_vegetation_epic(self, veg):
+        """"""
+        #iveg = self.coord_vegetation['vegetation'].index(veg)
+        iveg = self.vegetation.index(veg)
+        landuse = self.epic_settings.vegetation_landuse[veg] # landuse corresponding to vegetation fraction
+        #ilanduse = self.coord_landuse['landuse'].index(landuse)
+        ilanduse = self.epic_settings.soil_uses.index(landuse)
+        return iveg,ilanduse,landuse
+
+    def get_landuse_and_indexes_from_vegetation_GLOBAL(self, veg):
+        """"""
+        iveg = self.vegetation.index(veg)
+        landuse = self.VEGETATION_LANDUSE[veg] # landuse corresponding to vegetation fraction
+        ilanduse = self.SOIL_USES.index(landuse)
+        return iveg,ilanduse,landuse
+
+    def get_indexes_from_landuse_and_veg_list_GLOBAL(self, landuse, veg_list):
+        """"""
+        ilanduse = self.SOIL_USES.index(landuse)
+        iveg_list_pres = []
+        iveg_list = []
+        for veg in veg_list:
+            iveg_list_pres.append(self.PRESCRIBED_VEGETATION.index(veg))
+            iveg_list.append(self.vegetation.index(veg))
+        return iveg_list,iveg_list_pres,ilanduse
+
     def allocateVariableAllVegetation(self, dtype=float):
         """Allocate xarray.DataArray filled by 0 with dimensions 'vegetation' and 'pixel'. It covers all vegetation types (including EPIC crops, if simulated)."""
         return self.allocateDataArray(self.coord_vegetation, dtype)

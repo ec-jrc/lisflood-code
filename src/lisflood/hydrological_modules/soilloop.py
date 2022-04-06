@@ -24,10 +24,6 @@ from builtins import min, max
 # from . import HydroModule
 from ..global_modules.settings import LisSettings, MaskInfo
 
-#import time # CR: speed test
-
-
-
 @njit(parallel=True, fastmath=False, cache=True)
 def interception_water_balance(Interception, TaInterception, LeafDrainage, CumInterception, LAI, Rain, TaInterceptionMax, drainageK):
     num_vegs, num_pixs = Interception.shape
@@ -521,7 +517,6 @@ class soilloop(HydroModule):
 
 
     def dynamic_canopy(self):
-        #t0tot = time.time()     # CR: speed test
         settings = LisSettings.instance()
         option = settings.options
         binding = settings.binding
@@ -567,9 +562,7 @@ class soilloop(HydroModule):
         # ***** SOIL WATER STRESS AND ACTUAL TRANSPIRATION FOR LISFLOOD PRESCRIBED FRACTIONS (EPIC IS USED FOR INTERACTIVE CROPS) *****
         # *****************************************************************************************************************************
         for veg in self.var.prescribed_vegetation:
-            iveg = self.var.coord_vegetation['vegetation'].index(veg)
-            landuse = self.epic_settings.vegetation_landuse[veg] # landuse corresponding to vegetation fraction
-            ilanduse = self.var.coord_landuse['landuse'].index(landuse)
+            iveg, ilanduse, landuse = self.var.get_landuse_and_indexes_from_vegetation_epic(veg)
 
             swdf = 1 / (0.76 + 1.5 * np.minimum(0.1 * self.var.ETRef * self.var.InvDtDay, 1.0)) - 0.10 * (5 - self.var.CropGroupNumber.values[ilanduse])
             # soil water depletion fraction (easily available soil water)
@@ -632,9 +625,6 @@ class soilloop(HydroModule):
             self.var.W1a.values[ilanduse] -= Ta1a
             self.var.W1b.values[ilanduse] -= Ta1b
             self.var.W1.values[iveg] = self.var.W1a.values[ilanduse] + self.var.W1b.values[ilanduse]
-
-        #print('total time dynamic_canopy: ', (time.time() - t0tot))  # CR: speed test
-
 
 
     def dynamic_soil(self):
@@ -714,9 +704,7 @@ class soilloop(HydroModule):
                                      self.var.GenuInvN1a.values, self.var.GenuInvN1b.values, self.var.GenuInvN2.values, self.var.HeadMax)
 
     def ThetaSatTerms(self, veg):
-        iveg = self.var.coord_vegetation['vegetation'].index(veg)
-        landuse = self.epic_settings.vegetation_landuse[veg] # landuse corresponding to vegetation fraction
-        ilanduse = self.var.coord_landuse['landuse'].index(landuse)
+        iveg, ilanduse, _ = self.var.get_landuse_and_indexes_from_vegetation_epic(veg)
 
         self.var.Theta1a.values[iveg] = thetaFunVectorized(self.var.W1a.values[ilanduse], self.var.SoilDepth1a.values[ilanduse],
                                                        self.var.PoreSpaceNotZero1a.values[ilanduse])

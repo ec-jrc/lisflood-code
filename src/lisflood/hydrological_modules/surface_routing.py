@@ -122,12 +122,7 @@ class surface_routing(HydroModule):
 
         self.var.SurfaceRunSoil = self.var.allocateDataArray([self.var.dim_landuse, self.var.dim_pixel])
         for landuse, veg_list in self.var.LANDUSE_VEGETATION.items():
-            ilanduse = self.var.coord_landuse['landuse'].index(landuse)
-            iveg_list_pres = []
-            iveg_list = []
-            for veg in veg_list:
-                iveg_list_pres.append(self.var.prescribed_vegetation.index(veg))
-                iveg_list.append(self.var.coord_vegetation['vegetation'].index(veg))
+            iveg_list,iveg_list_pres,ilanduse = self.var.get_indexes_from_landuse_and_veg_list_GLOBAL(landuse, veg_list)
             self.var.SurfaceRunSoil.values[ilanduse] = np.sum((self.var.SoilFraction.values[iveg_list_pres] * \
                     np.maximum(self.var.AvailableWaterForInfiltration.values[iveg_list] - self.var.Infiltration.values[iveg_list],0)),0)
 
