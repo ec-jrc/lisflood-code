@@ -144,10 +144,10 @@ class surface_routing(HydroModule):
         SideflowDirect = self.var.DirectRunoff * self.var.MMtoM3 * self.var.InvPixelLength * self.var.InvDtSec
         ilusevalues = []
         for luse in ["Rainfed","Irrigated"]:
-            ilusevalues.append(self.var.coord_landuse['landuse'].index(luse))
+            ilusevalues.append(self.var.epic_settings.soil_uses.index(luse))
 
         SideflowOther = np.sum(self.var.SurfaceRunSoil.values[ilusevalues],0) * self.var.MMtoM3 * self.var.InvPixelLength * self.var.InvDtSec
-        SideflowForest = self.var.SurfaceRunSoil.values[self.var.coord_landuse['landuse'].index('Forest')] * self.var.MMtoM3 * self.var.InvPixelLength * self.var.InvDtSec
+        SideflowForest = self.var.SurfaceRunSoil.values[self.var.epic_settings.soil_uses.index('Forest')] * self.var.MMtoM3 * self.var.InvPixelLength * self.var.InvDtSec
         # All surface runoff that is generated during current time step added as side flow [m3/s/m pixel-length]
         self.direct_surface_router.kinematicWaveRouting(self.var.OFQDirect, SideflowDirect)
         self.other_surface_router.kinematicWaveRouting(self.var.OFQOther, SideflowOther)

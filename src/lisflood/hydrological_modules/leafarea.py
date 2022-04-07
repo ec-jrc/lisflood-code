@@ -83,7 +83,7 @@ class leafarea(HydroModule):
         ivegvalues = []
         ivegvaluesx = []
         for veg in self.var.prescribed_vegetation:
-            ivegvalues.append(self.var.coord_vegetation['vegetation'].index(veg))
+            ivegvalues.append(self.var.vegetation.index(veg))
             ivegvaluesx.append(self.var.coord_prescribed_vegetation['vegetation'].index(veg))
         self.var.LAI.values[ivegvalues] = lai.values[ivegvaluesx]
         # LAI term used for evapotranspiration calculations

@@ -90,7 +90,7 @@ class soil(HydroModule):
         binding = settings.binding
         maskinfo = MaskInfo.instance()
         if not option["cropsEPIC"]: # If EPIC is active, the rice fraction initialisation is handled by EPIC (setSoilFractions in EPIC_main.py)
-            self.var.SoilFraction.values[self.var.coord_vegetation['vegetation'].index('Rainfed_prescribed')] += self.var.RiceFraction
+            self.var.SoilFraction.values[self.var.vegetation.index('Rainfed_prescribed')] += self.var.RiceFraction
 
         # for the moment rice is treated as other fraction
         # if the fraction of water varies then the other fraction are stored
@@ -235,17 +235,17 @@ class soil(HydroModule):
            ThetaInit1bValue = self.var.allocateVariableAllVegetation()
            ThetaInit2Value = self.var.allocateVariableAllVegetation()
 
-           iveg = self.var.coord_vegetation['vegetation'].index('Rainfed_prescribed')           
+           iveg = self.var.vegetation.index('Rainfed_prescribed')           
            ThetaInit1aValue.values[iveg] = loadmap('ThetaInit1Value')
            ThetaInit1bValue.values[iveg] = loadmap('ThetaInit2Value')
            ThetaInit2Value.values[iveg] = loadmap('ThetaInit3Value')
            
-           iveg = self.var.coord_vegetation['vegetation'].index('Forest_prescribed')
+           iveg = self.var.vegetation.index('Forest_prescribed')
            ThetaInit1aValue.values[iveg] = loadmap('ThetaForestInit1Value')
            ThetaInit1bValue.values[iveg] = loadmap('ThetaForestInit2Value')
            ThetaInit2Value.values[iveg] = loadmap('ThetaForestInit3Value')
            
-           iveg = self.var.coord_vegetation['vegetation'].index('Irrigated_prescribed')
+           iveg = self.var.vegetation.index('Irrigated_prescribed')
            ThetaInit1aValue.values[iveg] = loadmap('ThetaIrrigationInit1Value')
            ThetaInit1bValue.values[iveg] = loadmap('ThetaIrrigationInit2Value')
            ThetaInit2Value.values[iveg] = loadmap('ThetaIrrigationInit3Value')
@@ -266,8 +266,8 @@ class soil(HydroModule):
         # (since all soil moisture-related calculations are done for permeable fraction only!).
 
         for veg, luse in self.var.VEGETATION_LANDUSE.items():
-            iveg = self.var.coord_vegetation['vegetation'].index(veg)
-            iluse = self.var.coord_landuse['landuse'].index(luse)
+            iveg = self.var.vegetation.index(veg)
+            iluse = self.var.epic_settings.soil_uses.index(luse)
             ini_1a = np.where(ThetaInit1aValue[iveg] == -9999, self.var.WFC1a[iluse], ThetaInit1aValue[iveg] * self.var.SoilDepth1a[iluse])
             self.var.W1a[iveg] = np.where(self.var.PoreSpaceNotZero1a[iluse], ini_1a, 0)
             ini_1b = np.where(ThetaInit1bValue[iveg] == -9999, self.var.WFC1b[iluse], ThetaInit1bValue[iveg] * self.var.SoilDepth1b[iluse])
@@ -386,9 +386,9 @@ class soil(HydroModule):
         
         if not option["cropsEPIC"]: 
            self.var.DSLR = self.var.allocateVariableAllVegetation()
-           ivegRainfedPrescribed = self.var.coord_vegetation['vegetation'].index('Rainfed_prescribed')
-           ivegForestPrescribed = self.var.coord_vegetation['vegetation'].index('Forest_prescribed')
-           ivegIrrigatedPrescribed = self.var.coord_vegetation['vegetation'].index('Irrigated_prescribed')
+           ivegRainfedPrescribed = self.var.vegetation.index('Rainfed_prescribed')
+           ivegForestPrescribed = self.var.vegetation.index('Forest_prescribed')
+           ivegIrrigatedPrescribed = self.var.vegetation.index('Irrigated_prescribed')
 
            self.var.DSLR[ivegRainfedPrescribed] = loadmap('DSLRInitValue')
            self.var.DSLR[ivegForestPrescribed]  = loadmap('DSLRForestInitValue')
@@ -434,7 +434,7 @@ class soil(HydroModule):
         self.var.AvailableWaterForInfiltration = self.var.allocateVariableAllVegetation()
         ivegvalues = []
         for veg in self.var.prescribed_vegetation:
-            ivegvalues.append(self.var.coord_vegetation['vegetation'].index(veg))
+            ivegvalues.append(self.var.vegetation.index(veg))
         self.var.RWS = self.var.allocateVariableAllVegetation()[ivegvalues]
 
 

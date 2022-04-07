@@ -136,7 +136,7 @@ class landusechange(HydroModule):
             self.var.SoilFraction[2] =  self.var.IrrigationFraction      
                           
             if not option["cropsEPIC"]: # If EPIC is active, the rice fraction initialisation is handled by EPIC (setSoilFractions in EPIC_main.py)
-               self.var.SoilFraction.values[self.var.coord_vegetation['vegetation'].index('Rainfed_prescribed')] += self.var.RiceFraction
+               self.var.SoilFraction.values[self.var.vegetation.index('Rainfed_prescribed')] += self.var.RiceFraction
                              
             # with EPIC off, rice is treated as other fraction
             # if the fraction of water varies then the other fraction are stored

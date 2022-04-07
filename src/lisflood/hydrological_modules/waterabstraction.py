@@ -350,8 +350,8 @@ class waterabstraction(HydroModule):
             else: # irrigation demand = transpiration deficit multiplied by anti-salinity factor   
                 irr_pre = "Irrigated_prescribed" # It applies only to prescribed irrigation fraction (EPIC simulates specific irrigated crops, if any) 
                 landuse_irr_pre = self.var.VEGETATION_LANDUSE[irr_pre] # landuse corresponding to vegetation fraction
-                ivegIrrigatedPrescribed = self.var.coord_vegetation['vegetation'].index(irr_pre)
-                iluseIrrigatedPrescribed = self.var.coord_landuse['landuse'].index(landuse_irr_pre)
+                ivegIrrigatedPrescribed = self.var.vegetation.index(irr_pre)
+                iluseIrrigatedPrescribed = self.var.epic_settings.soil_uses.index(landuse_irr_pre)
             
                 self.var.Ta.values[ivegIrrigatedPrescribed] = np.maximum(np.minimum(self.var.RWS.values[ivegIrrigatedPrescribed] * self.var.potential_transpiration.values[ivegIrrigatedPrescribed],
                                                              self.var.W1.values[ivegIrrigatedPrescribed] - self.var.WWP1.values[iluseIrrigatedPrescribed]),  maskinfo.in_zero())                 
