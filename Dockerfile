@@ -1,8 +1,8 @@
-# docker build -t efas/lisflood .
-# docker push efas/lisflood
+# docker build -t jrce1/lisflood .
+# docker push jrce1/lisflood
 
 FROM continuumio/miniconda3
-MAINTAINER Domenico Nappo <domenico.nappo@gmail.com>
+LABEL maintainer="Stefania Grimaldi, Cinzia Mazzetti, Carlo Russo, Valerio Lorini, Ad de Roo"
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -23,7 +23,7 @@ RUN conda env create -n lisflood -f environment.yml
 # Copy source code
 COPY src/lisflood/. /lisflood/
 COPY src/lisf1.py /
-COPY src/settings_tpl.xml /
+COPY src/lisfloodSettings_reference.xml /
 COPY LICENSE /
 COPY VERSION /
 
