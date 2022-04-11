@@ -60,6 +60,7 @@ class TestWarmStart():
             'wateruse',
             'useWaterDemandAveYear',
             'wateruseRegion',
+            'riceIrrigation'
         ]
         check_every = 13  # steps
         # init

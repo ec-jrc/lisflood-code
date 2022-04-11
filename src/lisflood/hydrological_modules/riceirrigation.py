@@ -53,9 +53,7 @@ class riceirrigation(HydroModule):
                 # flag with an error message and STOP:
                 # riceIrrigation ON MUST HAVE wateruse option ON
                 msg = "riceIrrigation module ON MUST HAVE wateruse option ON in setting file"
-                # CR: TODO: REMOVE COMMENT to the raise instruction, this should fail (temporarily ignored for unit testing)
-                LisfloodError(msg)
-                #raise LisfloodError(msg)
+                raise LisfloodError(msg)
 
             # ************************************************************
             # ***** PADDY RICE IRRIGATION AND ABSTRACTION ******************

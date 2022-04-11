@@ -39,6 +39,7 @@ class TestSubcatchments():
         'useWaterDemandAveYear',
         'wateruseRegion',
         'TransientWaterDemandChange',
+        'riceIrrigation'
     ]
     modules_to_setGW= [
         'groundwaterSmooth',
