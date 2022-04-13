@@ -47,7 +47,7 @@
     <setoption choice="0" name="indicator"/>
 
     # option to initialize Lisflood
-    <setoption choice="0" name="InitLisflood"/>
+    <setoption choice="1" name="InitLisflood"/>
     <setoption choice="0" name="InitLisfloodwithoutsplit"/>
 
     # option to read/write NetCDF
@@ -80,7 +80,7 @@
     <setoption choice="1" name="repStateMaps"/>
 
     # report end maps
-    <setoption choice="0" name="repEndMaps"/>
+    <setoption choice="1f" name="repEndMaps"/>
 
     # report maps
     <setoption choice="1" name="repDischargeMaps"/>
@@ -664,7 +664,7 @@ variable water fraction maps path
                 </comment>
             </textvar>
 
-            <textvar name="UZInitValue" value="$(PathOut)/UZo_prerun">
+            <textvar name="UZInitValue" value="0">
                 <comment>
                     water in upper store [mm]
                 </comment>
@@ -701,21 +701,21 @@ variable water fraction maps path
                 </comment>
             </textvar>
 
-            <textvar name="ThetaInit1Value" value=" $(PathOut)/th1o_prerun">
+            <textvar name="ThetaInit1Value" value="-9999">
                 <comment>
                     initial soil moisture content layer 1
                     -9999: use field capacity values
                 </comment>
             </textvar>
 
-            <textvar name="ThetaInit2Value" value=" $(PathOut)/th2o_prerun">
+            <textvar name="ThetaInit2Value" value="-9999">
                 <comment>
                     initial soil moisture content layer 2
                     -9999: use field capacity values
                 </comment>
             </textvar>
 
-            <textvar name="ThetaInit3Value" value=" $(PathOut)/th3o_prerun">
+            <textvar name="ThetaInit3Value" value="-9999">
                 <comment>
                     initial soil moisture content layer 2
                     -9999: use field capacity values
@@ -783,7 +783,7 @@ variable water fraction maps path
                 </comment>
             </textvar>
 
-            <textvar name="UZForestInitValue" value=" $(PathOut)/UZf_prerun">
+            <textvar name="UZForestInitValue" value="0">
                 <comment>
                     water in upper store [mm]
                 </comment>
@@ -795,21 +795,21 @@ variable water fraction maps path
                 </comment>
             </textvar>
 
-            <textvar name="ThetaForestInit1Value" value=" $(PathOut)/th1f_prerun">
+            <textvar name="ThetaForestInit1Value" value="-9999">
                 <comment>
                     initial soil moisture content layer 1
                     -9999: use field capacity values
                 </comment>
             </textvar>
 
-            <textvar name="ThetaForestInit2Value" value=" $(PathOut)/th2f_prerun">
+            <textvar name="ThetaForestInit2Value" value="-9999">
                 <comment>
                     initial soil moisture content layer 2
                     -9999: use field capacity values
                 </comment>
             </textvar>
 
-            <textvar name="ThetaForestInit3Value" value=" $(PathOut)/th3f_prerun">
+            <textvar name="ThetaForestInit3Value" value="-9999">
                 <comment>
                     initial soil moisture content layer 2
                     -9999: use field capacity values
@@ -833,7 +833,7 @@ variable water fraction maps path
                 </comment>
             </textvar>
 
-            <textvar name="UZIrrigationInitValue" value=" $(PathOut)/UZi_prerun">
+            <textvar name="UZIrrigationInitValue" value="0">
                 <comment>
                     water in upper store [mm]
                 </comment>
@@ -845,21 +845,21 @@ variable water fraction maps path
                 </comment>
             </textvar>
 
-            <textvar name="ThetaIrrigationInit1Value" value=" $(PathOut)/th1i_prerun">
+            <textvar name="ThetaIrrigationInit1Value" value="-9999">
                 <comment>
                     initial soil moisture content layer 1
                     -9999: use field capacity values
                 </comment>
             </textvar>
 
-            <textvar name="ThetaIrrigationInit2Value" value=" $(PathOut)/th2i_prerun">
+            <textvar name="ThetaIrrigationInit2Value" value="-9999">
                 <comment>
                     initial soil moisture content layer 2
                     -9999: use field capacity values
                 </comment>
             </textvar>
 
-            <textvar name="ThetaIrrigationInit3Value" value=" $(PathOut)/th3i_prerun">
+            <textvar name="ThetaIrrigationInit3Value" value="-9999">
                 <comment>
                     initial soil moisture content layer 2
                     -9999: use field capacity values
@@ -3067,28 +3067,28 @@ Support for these "end" maps will most likely be
 discontinued some time soon
 </comment>
 
-<textvar name="Theta1End" value="$(PathOut)/tha.end">
+<textvar name="Theta1End" value="$(PathOut)/th1o_prerun">
 <comment>
 Reported volumetric soil moisture content for
 soil layer 1a (superficial layer) [V/V] [mm3/mm3]
 </comment>
 </textvar>
 
-<textvar name="Theta2End" value="$(PathOut)/thb.end">
+<textvar name="Theta2End" value="$(PathOut)/th2o_prerun">
 <comment>
 Reported volumetric soil moisture content for both
 soil layer 1b (upper layer) [V/V] [mm3/mm3]
 </comment>
 </textvar>
 
-<textvar name="Theta3End" value="$(PathOut)/thc.end">
+<textvar name="Theta3End" value="$(PathOut)/th3o_prerun">
 <comment>
 Reported volumetric soil moisture content for both
 soil layer 2 (lower layer) [V/V] [mm3/mm3]
 </comment>
 </textvar>
 
-<textvar name="UZEnd" value="$(PathOut)/uz.end">
+<textvar name="UZEnd" value="$(PathOut)/UZo_prerun">
 <comment>
 Reported storage in upper response box [mm]
 </comment>
@@ -3233,26 +3233,26 @@ Reported days since last rain
 Reported interception storage [mm]
 </comment>
 </textvar>
-<textvar name="Theta1ForestEnd" value="$(PathOut)/thfa.end">
+<textvar name="Theta1ForestEnd" value="$(PathOut)/th1f_prerun">
 <comment>
 Reported volumetric soil moisture content for
 soil layer 1a (superficial layer) [V/V] [mm3/mm3]
 </comment>
 </textvar>
-<textvar name="Theta2ForestEnd" value="$(PathOut)/thfb.end">
+<textvar name="Theta2ForestEnd" value="$(PathOut)/th2f_prerun">
 <comment>
 Reported volumetric soil moisture content for both
 soil layer 1b (upper layer) [V/V] [mm3/mm3]
 </comment>
 </textvar>
-<textvar name="Theta3ForestEnd" value="$(PathOut)/thfc.end">
+<textvar name="Theta3ForestEnd" value="$(PathOut)/th3f_prerun">
 <comment>
 Reported volumetric soil moisture content for both
 soil layer 2 (lower layer) [V/V] [mm3/mm3]
 </comment>
 </textvar>
 
-<textvar name="UZForestEnd" value="$(PathOut)/uzf.end">
+<textvar name="UZForestEnd" value="$(PathOut)/UZf_prerun">
 <comment>
 Reported storage in upper response box [mm]
 </comment>
@@ -3275,27 +3275,27 @@ Reported days since last rain
 Reported interception storage [mm]
 </comment>
 </textvar>
-<textvar name="Theta1IrrigationEnd" value="$(PathOut)/thia.end">
+<textvar name="Theta1IrrigationEnd" value="$(PathOut)/th1i_prerun">
 <comment>
 Reported volumetric soil moisture content for
 soil layer 1a (superficial layer) [V/V] [mm3/mm3]
 </comment>
 </textvar>
-<textvar name="Theta2IrrigationEnd" value="$(PathOut)/thib.end">
+<textvar name="Theta2IrrigationEnd" value="$(PathOut)/th2i_prerun">
 <comment>
 Reported volumetric soil moisture content for both
 soil layer 1b (upper layer) [V/V] [mm3/mm3]
 </comment>
 </textvar>
 
-<textvar name="Theta3IrrigationEnd" value="$(PathOut)/thic.end">
+<textvar name="Theta3IrrigationEnd" value="$(PathOut)/th3i_prerun">
 <comment>
 Reported volumetric soil moisture content for both
 soil layer 1c (lower layer) [V/V] [mm3/mm3]
 </comment>
 </textvar>
 
-<textvar name="UZIrrigationEnd" value="$(PathOut)/uzi.end">
+<textvar name="UZIrrigationEnd" value="$(PathOut)/UZi_prerun">
 <comment>
 Reported storage in upper response box [mm]
 </comment>
