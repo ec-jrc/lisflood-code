@@ -10,7 +10,7 @@ importlib-metadata==0.23
 iniconfig==1.1.1
 lisflood-utilities==0.12.18
 llvmlite==0.28.0
-lxml==4.6.3
+lxml==4.6.5
 more-itertools==7.2.0
 netCDF4==1.5.3
 nine==1.0.0
