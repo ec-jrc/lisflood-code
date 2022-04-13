@@ -1088,7 +1088,7 @@
                 </comment>
             </textvar>
 
-            <textvar name="LeakageFraction" value="$(PathRoot)/maps/ad_leakage.nc">
+            <textvar name="LeakageFraction" value="0.2">
                 <comment>
                     0.2
                     $(PathRoot)/maps/leakage.map
@@ -4384,7 +4384,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="FractionGroundwaterUsed" value="$(PathMapsLanduse)/fracgwusedNew.map">
+                <textvar name="FractionGroundwaterUsed" value="$(PathMapsLanduse)/fracgwusedNew">
                     <comment>
                         groundwater used fraction of a pixel (0-1)
                     </comment>

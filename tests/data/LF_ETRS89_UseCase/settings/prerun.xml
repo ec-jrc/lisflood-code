@@ -1071,7 +1071,7 @@ The option "numCPUs_parallelNumba" may take the following values:
                 </comment>
             </textvar>
 
-            <textvar name="LeakageFraction" value="$(PathRoot)/maps/ad_leakage">
+            <textvar name="LeakageFraction" value="0.2">
                 <comment>
                     Fraction of leakage of public water supply (0=no leakage, 1=100% leakage)
                 </comment>
@@ -4322,7 +4322,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="FractionGroundwaterUsed" value="$(PathMapsLanduse)/fracgwused">
+                <textvar name="FractionGroundwaterUsed" value="$(PathMapsLanduse)/fracgwusedNew">
                     <comment>
                         groundwater used fraction of a pixel (0-1)
                     </comment>
