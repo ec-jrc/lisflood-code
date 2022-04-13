@@ -168,7 +168,7 @@ setup(
     long_description_content_type='text/markdown',
     description='LISFLOOD model python module',
     author=__authors__,
-    author_email='domenico.nappo@ext.ec.europa.eu',
+    author_email='carlo.russo@ext.ec.europa.eu',
     keywords=['lisflood', 'lisvap', 'efas', 'glofas', 'copernicus', 'ecmwf'],
     license='EUPL 1.2',
     url='https://github.com/ec-jrc/lisflood-code',

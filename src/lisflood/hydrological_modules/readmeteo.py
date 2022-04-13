@@ -15,11 +15,10 @@ See the Licence for the specific language governing permissions and limitations 
 
 """
 from __future__ import print_function, absolute_import
-import xarray as xr
 
 from ..global_modules.settings import LisSettings
 from ..global_modules.add1 import readmapsparse
-from ..global_modules.netcdf import XarrayCached, XarrayChunked, date_range
+from ..global_modules.netcdf import xarray_reader
 
 
 class readmeteo(object):
@@ -34,18 +33,11 @@ class readmeteo(object):
         self.var = readmeteo_variable
         settings = LisSettings.instance()
         option = settings.options
-        binding = settings.binding
+        # initialise xarray readers
         if option['readNetcdfStack']:
-            # extract time range from bindings
-            dates = date_range(binding)
-            # extract chunk from bindings
-            time_chunk = binding['NetCDFTimeChunks']  # -1 to load everything, 'auto' to let xarray decide
             self.forcings = {}
             for data in ['PrecipitationMaps', 'TavgMaps', 'ET0Maps', 'E0Maps']:
-                if binding['MapsCaching'] == "True":
-                    self.forcings[data] = XarrayCached(binding[data], dates)
-                else:
-                    self.forcings[data] = XarrayChunked(binding[data], dates, time_chunk)
+                self.forcings[data] = xarray_reader(data)
 
 # --------------------------------------------------------------------------
 # --------------------------------------------------------------------------
@@ -63,6 +55,7 @@ class readmeteo(object):
         if option['readNetcdfStack']:
 
             step = self.var.currentTimeStep() - self.var.firstTimeStep()
+            # date = date_from_step(binding, self.var.currentTimeStep())
 
             # Read from NetCDF stack files
             self.var.Precipitation = self.forcings['PrecipitationMaps'][step] * self.var.DtDay * self.var.PrScaling

@@ -160,7 +160,7 @@ class TestOptions():
 
     def test_waterabstraction_only(self, mocker):
         settings = setoptions(self.settings_files['base'], ['groundwaterSmooth', 'wateruse',
-                                                                 'TransientWaterDemandChange', 'wateruseRegion'])
+                                                                 'TransientWaterDemandChange', 'useWaterDemandAveYear', 'wateruseRegion'])
         mock_api = mocker.MagicMock(name='loadmap')
         mock_api2 = mocker.MagicMock(name='loadmap_notcalled')
         mock_api.side_effect = self.dummyloadmap

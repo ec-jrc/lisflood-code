@@ -27,6 +27,7 @@ from netCDF4 import Dataset
 from ..global_modules.add1 import loadmap, decompress, compressArray, readnetcdf, readmapsparse
 from ..global_modules.settings import get_calendar_type, calendar_inconsistency_warning, LisSettings, MaskInfo
 from . import HydroModule
+from ..global_modules.netcdf import xarray_reader
 
 
 class waterabstraction(HydroModule):
@@ -131,13 +132,11 @@ class waterabstraction(HydroModule):
                 self.var.LivestockDemandMM = loadmap('LivestockDemandMaps', timestampflag='closest') * self.var.DtDay
                 self.var.EnergyDemandMM = loadmap('EnergyDemandMaps', timestampflag='closest') * self.var.DtDay
 
-            # Check consistency with the reference calendar that is read from the precipitation forcing file (global_modules.zusatz.optionBinding)
+            # initialise xarray readers
             if option['TransientWaterDemandChange'] and option['readNetcdfStack']:
-                for k in ('DomesticDemandMaps', 'IndustrialDemandMaps', 'LivestockDemandMaps', 'EnergyDemandMaps'):
-                    with Dataset(binding[k] + '.nc') as nc:
-                        cal_type = get_calendar_type(nc)
-                        if cal_type != binding['calendar_type']:
-                            warnings.warn(calendar_inconsistency_warning(binding[k], cal_type, binding['calendar_type']))
+                self.forcings = {}
+                for data in ['DomesticDemandMaps', 'IndustrialDemandMaps', 'LivestockDemandMaps', 'EnergyDemandMaps']:
+                    self.forcings[data] = xarray_reader(data, indexer='ffill', climatology=option['useWaterDemandAveYear'])
 
             if option['groundwaterSmooth']:
                 self.var.GroundwaterBodiesPcr = decompress(self.var.GroundwaterBodies)
@@ -256,34 +255,15 @@ class waterabstraction(HydroModule):
 
             if option['TransientWaterDemandChange']:
                 if option['readNetcdfStack']:
-                    if option['useWaterDemandAveYear']:
-                        # using average year in NetCDF file format
-                        self.var.DomesticDemandMM = readnetcdf(binding['DomesticDemandMaps'],
-                                                               self.var.currentTimeStep(), timestampflag='closest',
-                                                               averageyearflag=True) * self.var.DtDay
-                        self.var.IndustrialDemandMM = readnetcdf(binding['IndustrialDemandMaps'],
-                                                                 self.var.currentTimeStep(), timestampflag='closest',
-                                                                 averageyearflag=True) * self.var.DtDay
-                        self.var.LivestockDemandMM = readnetcdf(binding['LivestockDemandMaps'],
-                                                                self.var.currentTimeStep(), timestampflag='closest',
-                                                                averageyearflag=True) * self.var.DtDay
-                        self.var.EnergyDemandMM = readnetcdf(binding['EnergyDemandMaps'], self.var.currentTimeStep(),
-                                                             timestampflag='closest',
-                                                             averageyearflag=True) * self.var.DtDay
-                    else:
-                        # Read from stack of maps in NetCDF format. Get time step corresponding to model step.
-                        # added management for sub-daily model time steps
-                        self.var.DomesticDemandMM = readnetcdf(binding['DomesticDemandMaps'],
-                                                               self.var.currentTimeStep(),
-                                                               timestampflag='closest') * self.var.DtDay
-                        self.var.IndustrialDemandMM = readnetcdf(binding['IndustrialDemandMaps'],
-                                                                 self.var.currentTimeStep(),
-                                                                 timestampflag='closest') * self.var.DtDay
-                        self.var.LivestockDemandMM = readnetcdf(binding['LivestockDemandMaps'],
-                                                                self.var.currentTimeStep(),
-                                                                timestampflag='closest') * self.var.DtDay
-                        self.var.EnergyDemandMM = readnetcdf(binding['EnergyDemandMaps'], self.var.currentTimeStep(),
-                                                             timestampflag='closest') * self.var.DtDay
+                    # Read using xarray reader
+                    
+                    step = self.var.currentTimeStep() - self.var.firstTimeStep()
+
+                    self.var.DomesticDemandMM = self.forcings['DomesticDemandMaps'][step] * self.var.DtDay
+                    self.var.IndustrialDemandMM = self.forcings['IndustrialDemandMaps'][step] * self.var.DtDay
+                    self.var.LivestockDemandMM = self.forcings['LivestockDemandMaps'][step] * self.var.DtDay
+                    self.var.EnergyDemandMM = self.forcings['EnergyDemandMaps'][step] * self.var.DtDay
+
                 else:
                     # Read from stack of maps in Pcraster format
                     self.var.DomesticDemandMM = readmapsparse(binding['DomesticDemandMaps'], self.var.currentTimeStep(),
