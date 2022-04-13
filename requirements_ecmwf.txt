@@ -16,7 +16,7 @@ netCDF4==1.5.3
 nine==1.0.0
 numba==0.43.1
 numexpr==2.7.0
-numpy==1.19.5
+numpy==1.21.0
 packaging==19.2
 pandas==0.25.1
 pathlib2==2.3.5
