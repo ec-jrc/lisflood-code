@@ -15,11 +15,12 @@ from ..global_modules.add1 import loadmap, readnetcdf
 from ..global_modules.settings import LisSettings, EPICSettings
 from . import HydroModule
 
+from ..global_modules.add1 import NumpyModified
+
 from collections import OrderedDict
 import pandas as pd
 import xarray as xr
 import numpy as np
-
 
 class landusechange(HydroModule):
 
@@ -75,17 +76,20 @@ class landusechange(HydroModule):
                 self.var.RiceFraction = readnetcdf(binding['RiceFractionMaps'],  model_steps[0] , timestampflag='closest')
                 self.var.OtherFraction = readnetcdf(binding['OtherFractionMaps'],  model_steps[0] , timestampflag='closest')     
                 
-        epic_settings = EPICSettings.instance()        
+        epic_settings = EPICSettings.instance()    
+
         # Soil fraction split into: "Rainfed" (previously "Other"), "Forest", "Irrigated".           
         soil = OrderedDict([(name, loadmap(epic_settings.landuse_inputmap[epic_settings.vegetation_landuse[name]])) for name in self.var.prescribed_vegetation])
-        self.var.SoilFraction = xr.DataArray(pd.DataFrame(soil).T, coords=self.var.coord_prescribed_vegetation, dims=self.var.coord_prescribed_vegetation.keys())
-        # Interactive crop fractions (if EPIC is active)
         if option.get('cropsEPIC'):
-            self.var.crop_module.setSoilFractions()       
-        self.var.SoilFraction = xr.DataArray(pd.DataFrame(soil).T, coords=self.var.coord_prescribed_vegetation, dims=self.var.coord_prescribed_vegetation.keys())
+            self.var.SoilFraction = xr.DataArray(pd.DataFrame(soil).T, coords=self.var.coord_prescribed_vegetation, dims=self.var.coord_prescribed_vegetation.keys())
+        else:
+            self.var.SoilFraction = NumpyModified(pd.DataFrame(soil).T.values)
         self.var.SoilFraction[0] =  self.var.OtherFraction
         self.var.SoilFraction[1] =  self.var.ForestFraction 
         self.var.SoilFraction[2] =  self.var.IrrigationFraction     
+        # Interactive crop fractions (if EPIC is active)
+        if option.get('cropsEPIC'):
+            self.var.crop_module.setSoilFractions()       
         
     def dynamic(self):
         """ dynamic part of the landusechange module"""
@@ -123,13 +127,16 @@ class landusechange(HydroModule):
                  self.var.DynamicLandCoverDelta = np.sum(np.abs(self.var.ForestFraction_nextstep-self.var.ForestFraction)+np.abs(self.var.DirectRunoffFraction_nextstep-self.var.DirectRunoffFraction)+np.abs(self.var.WaterFraction_nextstep-self.var.WaterFraction)+np.abs(self.var.IrrigationFraction_nextstep-self.var.IrrigationFraction)+np.abs(self.var.RiceFraction_nextstep-self.var.RiceFraction)+np.abs(self.var.OtherFraction_nextstep-self.var.OtherFraction))
  
             soil = OrderedDict([(name, loadmap(epic_settings.landuse_inputmap[epic_settings.vegetation_landuse[name]])) for name in self.var.prescribed_vegetation])
-            self.var.SoilFraction = xr.DataArray(pd.DataFrame(soil).T, coords=self.var.coord_prescribed_vegetation, dims=self.var.coord_prescribed_vegetation.keys())    
+            if option.get('cropsEPIC'):
+                self.var.SoilFraction = xr.DataArray(pd.DataFrame(soil).T, coords=self.var.coord_prescribed_vegetation, dims=self.var.coord_prescribed_vegetation.keys())
+            else:
+                self.var.SoilFraction = NumpyModified(pd.DataFrame(soil).T.values)
             self.var.SoilFraction[0] =  self.var.OtherFraction
             self.var.SoilFraction[1] =  self.var.ForestFraction 
             self.var.SoilFraction[2] =  self.var.IrrigationFraction      
                           
             if not option["cropsEPIC"]: # If EPIC is active, the rice fraction initialisation is handled by EPIC (setSoilFractions in EPIC_main.py)
-               self.var.SoilFraction.loc["Rainfed_prescribed"] += self.var.RiceFraction
+               self.var.SoilFraction.values[self.var.vegetation.index('Rainfed_prescribed')] += self.var.RiceFraction
                              
             # with EPIC off, rice is treated as other fraction
             # if the fraction of water varies then the other fraction are stored

@@ -79,7 +79,12 @@ class leafarea(HydroModule):
             If EPIC is active, "Rainfed_prescribed" and "Irrigated_prescribed" represent the residuals not modelled by EPIC crops.
         """
         # Set prescribed LAI values ()
-        lai = self.var.LAIX.loc[self.var.L1[self.var.CalendarDay]].copy()
-        self.var.LAI.loc[self.var.prescribed_vegetation] = lai
+        lai = self.var.LAIX.sel(interval=self.var.L1[self.var.CalendarDay]).copy()
+        ivegvalues = []
+        ivegvaluesx = []
+        for veg in self.var.prescribed_vegetation:
+            ivegvalues.append(self.var.vegetation.index(veg))
+            ivegvaluesx.append(self.var.coord_prescribed_vegetation['vegetation'].index(veg))
+        self.var.LAI.values[ivegvalues] = lai.values[ivegvaluesx]
         # LAI term used for evapotranspiration calculations
         self.var.LAITerm = np.exp(-self.var.kgb * lai)

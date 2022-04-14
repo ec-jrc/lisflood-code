@@ -265,6 +265,16 @@
 
             </comment>
 
+            <textvar name="CalendarConvention" value="proleptic_gregorian">
+                <comment>
+                    Calendar convention necessary to know how to compute date/time increments.
+                    This setting must be consistent with the time dimension of meteorologic forcing (input) files.
+                    Allowed values: "gregorian" ort "standard", "proleptic_gregorian", "noleap" or "365_day",
+                    "all_leap", "366_day", "360_day", "julian", "none"
+                    Reference: http://cfconventions.org/Data/cf-conventions/cf-conventions-1.7/cf-conventions.pdf
+                </comment>
+            </textvar>
+
 
             <textvar name="CalendarDayStart" value="31/12/1999 06:00">
 
@@ -1154,7 +1164,7 @@
             </textvar>
 
 
-            <textvar name="PrefixWaterUseDomestic" value="dom_2014">
+            <textvar name="PrefixWaterUseDomestic" value="dom">
 
                 <comment>
 
@@ -1165,7 +1175,7 @@
             </textvar>
 
 
-            <textvar name="PrefixWaterUseLivestock" value="liv_2014">
+            <textvar name="PrefixWaterUseLivestock" value="liv">
 
                 <comment>
 
@@ -1176,7 +1186,7 @@
             </textvar>
 
 
-            <textvar name="PrefixWaterUseEnergy" value="ene_2014">
+            <textvar name="PrefixWaterUseEnergy" value="ene">
 
                 <comment>
 
@@ -1187,7 +1197,7 @@
             </textvar>
 
 
-            <textvar name="PrefixWaterUseIndustry" value="ind_2014">
+            <textvar name="PrefixWaterUseIndustry" value="ind">
 
                 <comment>
 
@@ -2339,6 +2349,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
 -->
         <textvar name="numCPUs_parallelKinematicWave" value="2"/>
+        <textvar name="numCPUs_parallelNumba" value="0"/>
 
         <textvar name="NetCDFTimeChunks" value="auto"/>
             <comment>
@@ -2442,6 +2453,8 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 **************************************************************
 
             </comment>
+
+            <textvar name="CalendarConvention" value="$(CalendarConvention)">
 
 
             <textvar name="CalendarDayStart" value="$(CalendarDayStart)">
@@ -6057,28 +6070,23 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
                 </textvar>
 
-
-                <textvar name="Theta1TS" value="$(PathOut)/thTop.tss">
-
+                <textvar name="Theta1TS" value="$(PathOut)/th1a.tss">
                     <comment>
-
-                        Soil moisture upper layer [cu mm / cu mm]
-
+                        Soil moisture layer 1a [cu mm / cu mm]
                     </comment>
-
                 </textvar>
 
-
-                <textvar name="Theta2TS" value="$(PathOut)/thSub.tss">
-
+                <textvar name="Theta2TS" value="$(PathOut)/th1b.tss">
                     <comment>
-
-                        Soil moisture lower layer [cu mm / cu mm]
-
+                        Soil moisture layer 1b [cu mm / cu mm]
                     </comment>
-
                 </textvar>
 
+                <textvar name="Theta3TS" value="$(PathOut)/th2.tss">
+                    <comment>
+                        Soil moisture layer 2 [cu mm / cu mm]
+                    </comment>
+                </textvar>
 
                 <textvar name="UZTS" value="$(PathOut)/uz.tss">
 

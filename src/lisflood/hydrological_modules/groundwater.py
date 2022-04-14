@@ -19,7 +19,7 @@ from __future__ import absolute_import, print_function
 
 import numpy as np
 
-from ..global_modules.add1 import loadmap, makenumpy, defsoil
+from ..global_modules.add1 import loadmap, loadmap_base, makenumpy, defsoil
 from ..global_modules.settings import LisSettings, MaskInfo
 from ..global_modules.errors import LisfloodError
 from . import HydroModule
@@ -76,7 +76,8 @@ class groundwater(HydroModule):
             LZAvInflowGuess = self.var.GwPerc - self.var.GwLoss
         else:
             try:
-                LZAvInflowGuess = np.minimum(loadmap('LZAvInflowMap'), self.var.GwPerc - self.var.GwLoss)
+                # use loadmap base as we don't want to cache lzavin it in the calibration
+                LZAvInflowGuess = np.minimum(loadmap_base('LZAvInflowMap'), self.var.GwPerc - self.var.GwLoss)
             except Exception as e:
                 msg = "{} Repeat InitLisflood: LZAvin map not existing or not compatible with mask map".format(str(e))
                 raise LisfloodError(msg)
@@ -101,9 +102,9 @@ class groundwater(HydroModule):
 
         if not option["cropsEPIC"]:       
            self.var.UZ = self.var.allocateVariableAllVegetation()
-           self.var.UZ.loc['Rainfed_prescribed'] = loadmap('UZInitValue')
-           self.var.UZ.loc['Forest_prescribed'] = loadmap('UZForestInitValue')
-           self.var.UZ.loc['Irrigated_prescribed'] = loadmap('UZIrrigationInitValue')         
+           self.var.UZ.values[self.var.vegetation.index('Rainfed_prescribed')][:] = loadmap('UZInitValue')
+           self.var.UZ.values[self.var.vegetation.index('Forest_prescribed')][:] = loadmap('UZForestInitValue')
+           self.var.UZ.values[self.var.vegetation.index('Irrigated_prescribed')][:] = loadmap('UZIrrigationInitValue')         
         else:
             self.var.UZ = self.var.initialiseVariableAllVegetation('UZInitValue')
 

@@ -95,6 +95,15 @@ The option "numberParallelThreadsKinematicWave" may take the following values:
                       (if exceeding the number of CPUs, the option is set to "0") -->
             <textvar name="numCPUs_parallelKinematicWave" value="0"/>
 
+            <!-- Parallelisation of using Numba runtime compiled library .
+The option "numCPUs_parallelNumba" may take the following values:
+    - "0"           : set to NUMBA_NUM_THREADS Environment Variable 
+                      (if NUMBA_NUM_THREADS is not set, will take the number of CPU cores determined by python's multiprocessing.cpu_count())
+    - "1"           : serial execution (not parallel)
+    - "2", "3", ... : manual setting of the number of parallel threads.
+                      (if exceeding NUMBA_NUM_THREADS, the value is set to NUMBA_NUM_THREADS) -->
+            <textvar name="numCPUs_parallelNumba" value="0"/>
+
             <comment>
                 **************************************************************
                 AREA AND OUTLETS
@@ -1393,6 +1402,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 -->
 
         <textvar name="numCPUs_parallelKinematicWave" value="$(numCPUs_parallelKinematicWave)"/>
+        <textvar name="numCPUs_parallelNumba" value="$(numCPUs_parallelNumba)"/>
         
         <textvar name="NetCDFTimeChunks" value="auto"/>
 
@@ -1418,7 +1428,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 **************************************************************
             </comment>
 
-            <textvar name="CalendarConvention" value="$(CalendarConvention)"/>
+            <textvar name="CalendarConvention" value="$(CalendarConvention)">
 
             <textvar name="CalendarDayStart" value="$(CalendarDayStart)">
                 <comment>
@@ -3532,15 +3542,21 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="Theta1TS" value="$(PathOut)/thTop.tss">
+                <textvar name="Theta1TS" value="$(PathOut)/th1a.tss">
                     <comment>
-                        Soil moisture upper layer [cu mm / cu mm]
+                        Soil moisture layer 1a [cu mm / cu mm]
                     </comment>
                 </textvar>
 
-                <textvar name="Theta2TS" value="$(PathOut)/thSub.tss">
+                <textvar name="Theta2TS" value="$(PathOut)/th1b.tss">
                     <comment>
-                        Soil moisture lower layer [cu mm / cu mm]
+                        Soil moisture layer 1b [cu mm / cu mm]
+                    </comment>
+                </textvar>
+
+                <textvar name="Theta3TS" value="$(PathOut)/th2.tss">
+                    <comment>
+                        Soil moisture layer 2 [cu mm / cu mm]
                     </comment>
                 </textvar>
 

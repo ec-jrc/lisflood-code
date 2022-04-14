@@ -29,7 +29,7 @@ from .transmission import transmission
 from .kinematic_wave_parallel import kinematicWave, kwpt
 
 from ..global_modules.settings import LisSettings, MaskInfo
-from ..global_modules.add1 import loadmap, compressArray, decompress
+from ..global_modules.add1 import loadmap, loadmap_base, compressArray, decompress
 from . import HydroModule
 
 
@@ -359,8 +359,9 @@ class routing(HydroModule):
 
             if not(option['InitLisflood']):
 
-                self.var.QLimit = loadmap('AvgDis') * loadmap('QSplitMult')
-                
+                # use loadmap_base function as we don't want to cache avgdis it in the calibration
+                self.var.QLimit = loadmap_base('AvgDis') * loadmap('QSplitMult')
+
                 # Over bankful discharge starts at QLimit
                 # lower discharge limit for second line of routing
                 # set to mutiple of average discharge (map from prerun)

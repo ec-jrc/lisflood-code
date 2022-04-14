@@ -57,9 +57,9 @@ from .hydrological_modules.structures import structures
 from .global_modules.output import outputTssMap
 from .global_modules.stateVar import stateVar
 from .global_modules.add1 import readInputWithBackup
+from .global_modules.add1 import NumpyModified
 
-
-@njit(fastmath=False)
+@njit(fastmath=False, cache=True)
 def _vegSum(ax_veg, variable, soil_fracs):
     return (soil_fracs * variable).sum(ax_veg)
 
@@ -110,10 +110,10 @@ class LisfloodModel_ini(DynamicModel):
         self.LANDUSE_INPUTMAP = OrderedDict(zip(self.LANDUSE_VEGETATION.keys(), ["OtherFraction", "ForestFraction", "IrrigationFraction"]))
 
         if option['readNetcdfStack']:
-            # get the extent of the maps from the precipitation input maps
+            # get the extent of the maps from the netCDF template
             # and the modelling extent from the MaskMap
             # cutmap[] defines the MaskMap inside the precipitation map
-            _ = CutMap(*mapattrNetCDF(binding['E0Maps']))  # register cutmaps
+            _ = CutMap(*mapattrNetCDF(binding['netCDFtemplate']))  # register cutmaps
         if option['writeNetcdfStack'] or option['writeNetcdf']:
             # if NetCDF is writen, the pr.nc is read to get the metadata
             # like projection
@@ -294,6 +294,32 @@ class LisfloodModel_ini(DynamicModel):
         """"""
         return OrderedDict([("vegetation", self.prescribed_vegetation[:]), self.dim_pixel])
 
+    def get_landuse_and_indexes_from_vegetation_epic(self, veg):
+        """"""
+        #iveg = self.coord_vegetation['vegetation'].index(veg)
+        iveg = self.vegetation.index(veg)
+        landuse = self.epic_settings.vegetation_landuse[veg] # landuse corresponding to vegetation fraction
+        #ilanduse = self.coord_landuse['landuse'].index(landuse)
+        ilanduse = self.epic_settings.soil_uses.index(landuse)
+        return iveg,ilanduse,landuse
+
+    def get_landuse_and_indexes_from_vegetation_GLOBAL(self, veg):
+        """"""
+        iveg = self.vegetation.index(veg)
+        landuse = self.VEGETATION_LANDUSE[veg] # landuse corresponding to vegetation fraction
+        ilanduse = self.SOIL_USES.index(landuse)
+        return iveg,ilanduse,landuse
+
+    def get_indexes_from_landuse_and_veg_list_GLOBAL(self, landuse, veg_list):
+        """"""
+        ilanduse = self.SOIL_USES.index(landuse)
+        iveg_list_pres = []
+        iveg_list = []
+        for veg in veg_list:
+            iveg_list_pres.append(self.PRESCRIBED_VEGETATION.index(veg))
+            iveg_list.append(self.vegetation.index(veg))
+        return iveg_list,iveg_list_pres,ilanduse
+
     def allocateVariableAllVegetation(self, dtype=float):
         """Allocate xarray.DataArray filled by 0 with dimensions 'vegetation' and 'pixel'. It covers all vegetation types (including EPIC crops, if simulated)."""
         return self.allocateDataArray(self.coord_vegetation, dtype)
@@ -302,7 +328,11 @@ class LisfloodModel_ini(DynamicModel):
         """Allocate xarray.DataArray filled by 0 with input dimensions.
            Argument 'dimensions' is a list of tuples of the type ('dimension name', coordinate list/array)."""
         coords = OrderedDict(dimensions)
-        return xr.DataArray(np.zeros([len(v) for v in coords.values()], dtype), coords=coords, dims=coords.keys())
+        option = self.settings.options
+        if option.get('cropsEPIC'):
+            return xr.DataArray(np.zeros([len(v) for v in coords.values()], dtype), coords=coords, dims=coords.keys())
+        else:
+            return NumpyModified(np.zeros([len(v) for v in coords.values()], dtype))
 
     def initialiseVariableAllVegetation(self, name, coords=None):
         """Load a DataArray from a model output netCDF file (typycally an end map).
@@ -335,13 +365,22 @@ class LisfloodModel_ini(DynamicModel):
             coords = self.coord_landuse
         data = self.allocateDataArray(coords)
         values_1 = readInputWithBackup(name_1)
-        labels = list(coords.values())[0]
-        data.loc[labels[0],:] = values_1
-        data.loc[labels[1],:] = readInputWithBackup(name_2, values_1)
-        data.loc[labels[2],:] = readInputWithBackup(name_3, values_1)
+        option = self.settings.options
+        if option.get('cropsEPIC'):
+            labels = list(coords.values())[0]
+            data.loc[labels[0],:] = values_1
+            data.loc[labels[1],:] = readInputWithBackup(name_2, values_1)
+            data.loc[labels[2],:] = readInputWithBackup(name_3, values_1)
+        else:
+            if (list(coords.keys())[0]=="landuse") or (list(coords.keys())[0]=="runoff"):
+                data.values[0][:] = values_1
+                data.values[1][:] = readInputWithBackup(name_2, values_1)
+                data.values[2][:] = readInputWithBackup(name_3, values_1)
+            else:
+                raise Exception("Coords key not found!")
         return data
 
     def deffraction(self, variable):
-         """Weighted sum over the soil fractions of each pixel"""
-         ax_veg = variable.dims.index("vegetation")
-         return _vegSum(ax_veg, variable.values, self.SoilFraction.values)
+        """Weighted sum over the soil fractions of each pixel"""
+        ax_veg = variable.dims.index("vegetation")
+        return _vegSum(ax_veg, variable.values, self.SoilFraction.values)

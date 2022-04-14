@@ -57,9 +57,6 @@ class TestWarmStart():
         modules_to_unset = [
             'simulateReservoirs',
             'repsimulateReservoirs',
-            'wateruse',
-            'useWaterDemandAveYear',
-            'wateruseRegion',
         ]
         check_every = 13  # steps
         # init

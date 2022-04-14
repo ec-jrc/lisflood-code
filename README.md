@@ -15,20 +15,49 @@ Other useful resources
 | Lisflood Usecases   |                                                           | https://github.com/ec-jrc/lisflood-usecases                  |
 
 
-## Notes for Release 3.1.0
+## Notes for Release 4.0.0
+
+LISFLOOD-OS v4.0.0 includes the following changes:
+
+1) computation of water infiltration into the soil within the soilloop.py module
+
+2) changes in the allocation of water abstraction
+
+3) patches in the modules riceirrigation.py and frost.py to avoid non-realistic results in specific conditions.
+
+4) improvements in the computation of the mass balance.
+ 
+5) bug fixes in the use of the transientlandusechange option, in the use of the option simulatePF, in the writing of the monthly outputs.
+
+Moreover, to ensure compatibility with LISFLOOD-EPIC, modules source code is compatible with XArray variables, and XArray variables will be allocated when EPIC module is ON
+LISFLOOD-EPIC has been developed by JRC-D2. When compared to LISFLOOD v3.2.0, LISFLOOD-EPIC enables a more detailed representation of crop growth and irrigation. References:  ASR - Assessing groundwater irrigation sustainability in the Euro-Mediterranean region with an integrated agro-hydrologic model (copernicus.org) , Gelati, E. et al.: Integrated model of irrigation, crop growth and water resources (LISFLOOD-EPIC): description and application in the Euro-Mediterranean area, in preparation, 2020.
+Important note: EPIC modules are not *yet* available from the OS-LISFLOOD repository.
+
+1) computation of water infiltration into the soil within the soilloop.py module
+LISFLOOD v3.2.0: all the pixels of a land use fraction are allocated to a vector and the number of loops is defined by the most critical pixel. More specifically, all the pixels within the computational domain are allocated the number of iterations that are necessary to allow the numerical stability of the most critical pixel. The number of iterations consequently depends on the specific computational domain. This can lead to different results when modelling sub-catchmennts and entire basins with highly heterogenous soils.
+LISFLOOD v4.0.0: pixel by pixel computation and parallelization of the computations by using the python package numba. The number of
+Benefits of v4.0.0: each pixel is allocated the number of iterations that allow its numerical stability, this guarantees the consistency of results when modelling sub-catchments and the entire basin with highly heterogeneous soils. Decreased computational time due to parallel computations
+
+2) changes in the allocation of water abstraction
+LISFLOOD v3.2.0: direct abstraction of the consumptive water use.
+LISFLOOD v4.0.0: abstraction of the demanded water valume for each use (industrial, domestic, energy, livestock); the consumptive water use leaves the system; the unused water volume is returned to the channels.
+Minor note:  small differences in the computation of the leakages.
+
+3) patches in the modules riceirrigation.py and frost.py to avoid non-realistic results in specific conditions.
+riceirrigation.py: LISFLOOD v3.2.0: in presence of a very thick third soil layer (10^2 m) the drainage of the rice fields causes non realistic large flow discharge values in the channels.
+LISFLOOD v4.0.0: only soil layers 1a and 1b are used by the rice module (for both the saturation and the drainage phases). By definition, the second soil layer includes the roots depth.
+frost.py: LISFLOOD v3.2.0: there is no upper boundary to the frost index value. Rain events on deeply frozen soils are totally converted into runoff and can cause false alarms. 
+LISFLOOD v4.0.0: the maximum frost index value is set to 57.
 
 
-With version 3.1.0, the way Lisflood handles I/O has been changed.
+4) improvements in the computation of the mass balance.
+LISFLOOD v3.2.0: the mass balance is computed by considering the input and output volumes up to the current computational step.  Small numerical errors accumulate over time and give the erroneous impression of large mass balance errors.
+LISFLOOD v4.0.0: computation of the mass balance by considering the single computational step.
 
-NetCDF reader for forcings (or any other temporal data) now based on Xarray, allowing more flexibility and efficiency (dramatic improvement in calibration mode, i.e. without NetCDF outputs).
-Two new options in the xml settings file:
-• NetCDFTimeChunks: chunking size in the time dimension. Recommended value is “auto" but chunking size can be specified manually or set to “-1" to load the whole time series into memory (very fast but expensive in terms of memory).
-• MapsCaching (True or False): option designed for the lisflood calibration. If set to True, all the static maps and forcings will be stored in a cache so that they don't have to be loaded by each lisflood instance. This option sets the value of NetCDFTimeChunks to "-1", meaning that the whole time series in the NetCDF inputs is loaded into memory.
-Several tests have been added: lat/lon domains, inflows, new reader, etc. This version also makes it easier to use lisflood as a library and to run multiple instances of lisflood in a thread-safe environment. This can be done by doing the following:
-import lisf1
-...
-lisf1.main(settings_file, flags)
-…
+5) bug fixes in the use of the transientlandusechange option, in the use of the option simulatePF, in the writing of the monthly outputs.
+Correct use of the rice fraction by landusechange.py DYNAMIC; use of the correct soil water content variable for the computation of pF1 (ws1a replaced ws1); correct reporting of the monthly time steps by the optional module indicatorcalc.py
+
+Note: the users are recommneded to download the referencesettings.xml files and adapt it by inserting their own paths and modelling choices).
 
 ## Quick start
 

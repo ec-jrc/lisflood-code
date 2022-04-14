@@ -72,6 +72,9 @@ class frost(HydroModule):
 
         self.var.FrostIndex = np.maximum(self.var.FrostIndex + FrostIndexChangeRate * self.var.DtDay, 0)
         
+        # EDITED on Jan 27th 2022. The max value of the Frost Index is set to 57 in order to avoid artificial flood events
+        self.var.FrostIndex = np.where(self.var.FrostIndex > 57.0, 57.0, self.var.FrostIndex)
+        
         self.var.isFrozenSoil = self.var.FrostIndex > self.var.FrostIndexThreshold  #### EPIC
         
         # frost index in soil [degree days]

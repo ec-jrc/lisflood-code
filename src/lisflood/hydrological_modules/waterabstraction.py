@@ -21,6 +21,7 @@ from netCDF4 import Dataset
 from ..global_modules.add1 import loadmap, decompress, compressArray, readnetcdf, readmapsparse
 from ..global_modules.settings import get_calendar_type, calendar_inconsistency_warning, LisSettings, MaskInfo
 from . import HydroModule
+from ..global_modules.netcdf import xarray_reader
 
 
 class waterabstraction(HydroModule):
@@ -133,15 +134,12 @@ class waterabstraction(HydroModule):
                 self.var.IndustrialDemandMM = loadmap('IndustrialDemandMaps', timestampflag='closest') * self.var.DtDay
                 self.var.LivestockDemandMM = loadmap('LivestockDemandMaps', timestampflag='closest') * self.var.DtDay
                 self.var.EnergyDemandMM = loadmap('EnergyDemandMaps', timestampflag='closest') * self.var.DtDay
-                
-                
-            # Check consistency with the reference calendar that is read from the precipitation forcing file (global_modules.zusatz.optionBinding)
+          
+            # initialise xarray readers
             if option['TransientWaterDemandChange'] and option['readNetcdfStack']:
-                for k in ('DomesticDemandMaps', 'IndustrialDemandMaps', 'LivestockDemandMaps', 'EnergyDemandMaps'):
-                    with Dataset(binding[k] + '.nc') as nc:
-                        cal_type = get_calendar_type(nc)
-                        if cal_type != binding['calendar_type']:
-                            warnings.warn(calendar_inconsistency_warning(binding[k], cal_type, binding['calendar_type']))
+                self.forcings = {}
+                for data in ['DomesticDemandMaps', 'IndustrialDemandMaps', 'LivestockDemandMaps', 'EnergyDemandMaps']:
+                    self.forcings[data] = xarray_reader(data, indexer='ffill', climatology=option['useWaterDemandAveYear'])
 
             if option['groundwaterSmooth']:
                 self.var.GroundwaterBodiesPcr = decompress(self.var.GroundwaterBodies)
@@ -267,34 +265,15 @@ class waterabstraction(HydroModule):
 
             if option['TransientWaterDemandChange']:
                 if option['readNetcdfStack']:
-                    if option['useWaterDemandAveYear']:
-                        # using average year in NetCDF file format
-                        self.var.DomesticDemandMM = readnetcdf(binding['DomesticDemandMaps'],
-                                                               self.var.currentTimeStep(), timestampflag='closest',
-                                                               averageyearflag=True) * self.var.DtDay
-                        self.var.IndustrialDemandMM = readnetcdf(binding['IndustrialDemandMaps'],
-                                                                 self.var.currentTimeStep(), timestampflag='closest',
-                                                                 averageyearflag=True) * self.var.DtDay
-                        self.var.LivestockDemandMM = readnetcdf(binding['LivestockDemandMaps'],
-                                                                self.var.currentTimeStep(), timestampflag='closest',
-                                                                averageyearflag=True) * self.var.DtDay
-                        self.var.EnergyDemandMM = readnetcdf(binding['EnergyDemandMaps'], self.var.currentTimeStep(),
-                                                             timestampflag='closest',
-                                                             averageyearflag=True) * self.var.DtDay
-                    else:
-                        # Read from stack of maps in NetCDF format. Get time step corresponding to model step.
-                        # added management for sub-daily model time steps
-                        self.var.DomesticDemandMM = readnetcdf(binding['DomesticDemandMaps'],
-                                                               self.var.currentTimeStep(),
-                                                               timestampflag='closest') * self.var.DtDay
-                        self.var.IndustrialDemandMM = readnetcdf(binding['IndustrialDemandMaps'],
-                                                                 self.var.currentTimeStep(),
-                                                                 timestampflag='closest') * self.var.DtDay
-                        self.var.LivestockDemandMM = readnetcdf(binding['LivestockDemandMaps'],
-                                                                self.var.currentTimeStep(),
-                                                                timestampflag='closest') * self.var.DtDay
-                        self.var.EnergyDemandMM = readnetcdf(binding['EnergyDemandMaps'], self.var.currentTimeStep(),
-                                                             timestampflag='closest') * self.var.DtDay
+                    # Read using xarray reader
+                    
+                    step = self.var.currentTimeStep() - self.var.firstTimeStep()
+
+                    self.var.DomesticDemandMM = self.forcings['DomesticDemandMaps'][step] * self.var.DtDay
+                    self.var.IndustrialDemandMM = self.forcings['IndustrialDemandMaps'][step] * self.var.DtDay
+                    self.var.LivestockDemandMM = self.forcings['LivestockDemandMaps'][step] * self.var.DtDay
+                    self.var.EnergyDemandMM = self.forcings['EnergyDemandMaps'][step] * self.var.DtDay
+
                 else:
                     # Read from stack of maps in Pcraster format
                     self.var.DomesticDemandMM = readmapsparse(binding['DomesticDemandMaps'], self.var.currentTimeStep(),
@@ -370,9 +349,11 @@ class waterabstraction(HydroModule):
                 self.var.abstraction_required_irrigation_M3 = maskinfo.in_zero()  
             else: # irrigation demand = transpiration deficit multiplied by anti-salinity factor   
                 irr_pre = "Irrigated_prescribed" # It applies only to prescribed irrigation fraction (EPIC simulates specific irrigated crops, if any) 
-                self.var.Ta.loc[irr_pre] = np.maximum(np.minimum(self.var.RWS.loc[irr_pre] * self.var.potential_transpiration.loc[irr_pre],
-                                                             self.var.W1.loc[irr_pre] - self.var.WWP1.loc[self.var.VEGETATION_LANDUSE[irr_pre]]),  maskinfo.in_zero())                 
-                demand_irrigation_MM = (self.var.potential_transpiration.loc[irr_pre] - self.var.Ta.loc[irr_pre]) * self.var.SoilFraction.loc[irr_pre] 
+                ivegIrrigatedPrescribed, iluseIrrigatedPrescribed, _ = self.var.get_landuse_and_indexes_from_vegetation_GLOBAL(irr_pre)
+            
+                self.var.Ta.values[ivegIrrigatedPrescribed] = np.maximum(np.minimum(self.var.RWS.values[ivegIrrigatedPrescribed] * self.var.potential_transpiration.values[ivegIrrigatedPrescribed],
+                                                             self.var.W1.values[ivegIrrigatedPrescribed] - self.var.WWP1.values[iluseIrrigatedPrescribed]),  maskinfo.in_zero())                 
+                demand_irrigation_MM = (self.var.potential_transpiration.values[ivegIrrigatedPrescribed] - self.var.Ta.values[ivegIrrigatedPrescribed]) * self.var.SoilFraction.values[ivegIrrigatedPrescribed] 
                 demand_irrigation_MM = np.where(self.var.isFrozenSoil, maskinfo.in_zero(),
                                                demand_irrigation_MM)  
                 consumption_required_irrigation_MM = demand_irrigation_MM * self.var.IrrigationMult
@@ -598,27 +579,27 @@ class waterabstraction(HydroModule):
                 irrigation_for_prescribed = np.maximum(self.var.abstraction_SwGw_actual_irrigation_M3 - irrigation_withdrawal_EPIC, 0) 
                 # real irrigation is percentage of avail/demand for waterregion * old surface + old groundwater abstraction           
                 IrrigationWaterDemand = irrigation_for_prescribed*self.var.M3toMM
-                IrrigationWaterDemand = np.where(self.var.SoilFraction.loc[irr_pre] > 0, IrrigationWaterDemand / self.var.SoilFraction.loc[irr_pre], 0)
+                IrrigationWaterDemand = np.where(self.var.SoilFraction.values[ivegIrrigatedPrescribed] > 0, IrrigationWaterDemand / self.var.SoilFraction.values[ivegIrrigatedPrescribed], 0)
                 # updating soil moisture of LISFLOOD on Irrigated_prescribed fraction
-                Wold = self.var.W1.loc[irr_pre]
+                Wold = self.var.W1.values[ivegIrrigatedPrescribed]
                 # if irrigated soil is less than Pf3 then fill up to Pf3 (if there is water demand)
                 # if more than Pf3 the additional water is transpirated
                 # there is no water demand if the soil is frozen                  
-                IrrigationDemandW1b = np.maximum(IrrigationWaterDemand - (self.var.WFilla - self.var.W1a.loc[irr_pre]), 0)
-                self.var.W1a.loc[irr_pre] = np.where(self.var.W1a.loc[irr_pre] >= self.var.WFilla, self.var.W1a.loc[irr_pre],
-                                                 np.minimum(self.var.WFilla, self.var.W1a.loc[irr_pre] + IrrigationWaterDemand))
-                self.var.W1b.loc[irr_pre] = np.where(self.var.W1b.loc[irr_pre] >= self.var.WFillb, self.var.W1b.loc[irr_pre],
-                                                     np.minimum(self.var.WFillb, self.var.W1b.loc[irr_pre] + IrrigationDemandW1b))
-                self.var.W1.loc[irr_pre] = self.var.W1a.loc[irr_pre] + self.var.W1b.loc[irr_pre]            
-                Wdiff = self.var.W1.loc[irr_pre] - Wold              
+                IrrigationDemandW1b = np.maximum(IrrigationWaterDemand - (self.var.WFilla - self.var.W1a.values[ivegIrrigatedPrescribed]), 0)
+                self.var.W1a.values[ivegIrrigatedPrescribed] = np.where(self.var.W1a.values[ivegIrrigatedPrescribed] >= self.var.WFilla, self.var.W1a.values[ivegIrrigatedPrescribed],
+                                                 np.minimum(self.var.WFilla, self.var.W1a.values[ivegIrrigatedPrescribed] + IrrigationWaterDemand))
+                self.var.W1b.values[ivegIrrigatedPrescribed] = np.where(self.var.W1b.values[ivegIrrigatedPrescribed] >= self.var.WFillb, self.var.W1b.values[ivegIrrigatedPrescribed],
+                                                     np.minimum(self.var.WFillb, self.var.W1b.values[ivegIrrigatedPrescribed] + IrrigationDemandW1b))
+                self.var.W1.values[ivegIrrigatedPrescribed] = self.var.W1a.values[ivegIrrigatedPrescribed] + self.var.W1b.values[ivegIrrigatedPrescribed]            
+                Wdiff = self.var.W1.values[ivegIrrigatedPrescribed] - Wold              
                 # Added to TA but also
                 # for mass balance calculate the loss of irrigation water
                 # AdR: irrigation demand added to W1 and Ta; so assumption here that soil moisture stays the same
                 # we could also abstract more water equivalent to satisfy Ta and bring soil moisture to pF2 or so, for later consideration#
                 # self.var.Ta[2] = np.where(self.var.FrostIndex > self.var.FrostIndexThreshold, maskinfo.in_zero(), self.var.Ta[2])
                 # transpiration is 0 when soil is frozen
-                self.var.Ta.loc[irr_pre] =  self.var.Ta.loc[irr_pre] + IrrigationWaterDemand - Wdiff          
-                self.var.IrriLossCUM += irrigation_for_prescribed * self.efficiency_irrigation - Wdiff * self.var.MMtoM3 * self.var.SoilFraction.loc[irr_pre]
+                self.var.Ta.values[ivegIrrigatedPrescribed] =  self.var.Ta.values[ivegIrrigatedPrescribed] + IrrigationWaterDemand - Wdiff          
+                self.var.IrriLossCUM += irrigation_for_prescribed * self.efficiency_irrigation - Wdiff * self.var.MMtoM3 * self.var.SoilFraction.values[ivegIrrigatedPrescribed]
                 ##### STEF: QUESTION!!! # MASTER # self.var.IrriLossCUM = self.var.IrriLossCUM - self.var.IrrigationWaterAbstractionM3 * self.var.IrrigationEfficiency * self.var.ConveyanceEfficiency - Wdiff * self.var.MMtoM3 * self.var.IrrigationFraction  ### I THINK THAT EPIC IS CORRECT, MASTER IS WRONG!
                 
             # ************************************************************
@@ -683,9 +664,10 @@ class waterabstraction(HydroModule):
             # CM Update state variables for changes to W1a[2] and W1b[2]
             
             veg = "Irrigated_prescribed"
-            landuse = self.var.VEGETATION_LANDUSE[veg]    
-            self.var.Theta1a.loc[veg] = self.var.W1a.loc[veg] / self.var.SoilDepth1a.loc[landuse]  
-            self.var.Theta1b.loc[veg]= self.var.W1b.loc[veg] / self.var.SoilDepth1b.loc[landuse] 
+            iveg,ilanduse,_ = self.var.get_landuse_and_indexes_from_vegetation_GLOBAL(veg)
+
+            self.var.Theta1a.values[iveg] = self.var.W1a.values[iveg] / self.var.SoilDepth1a.values[ilanduse] 
+            self.var.Theta1b.values[iveg] = self.var.W1b.values[iveg] / self.var.SoilDepth1b.values[ilanduse]
             
 
 

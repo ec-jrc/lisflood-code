@@ -27,7 +27,6 @@ import numpy as np
 
 from .global_modules.settings import CDFFlags, LisSettings, MaskInfo
 
-
 class LisfloodModel_dyn(DynamicModel):
 
     # =========== DYNAMIC ====================================================
