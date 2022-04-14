@@ -411,13 +411,13 @@ The option "numCPUs_parallelNumba" may take the following values:
                 **************************************************************
             </comment>
 
-            <textvar name="PathOut" value="$(PathRoot)/out/">
+            <textvar name="PathOut" value="$(PathRoot)/out">
                 <comment>
                     Output path
                 </comment>
             </textvar>
 
-            <textvar name="PathInit" value="$(PathRoot)/out/">
+            <textvar name="PathInit" value="$(PathRoot)/out">
                 <comment>
                     Path of the initial value maps e.g. lzavin.map
                 </comment>
@@ -1071,7 +1071,7 @@ The option "numCPUs_parallelNumba" may take the following values:
                 </comment>
             </textvar>
 
-            <textvar name="LeakageFraction" value="0.2">
+            <textvar name="LeakageFraction" value="$(PathRoot)/maps/ad_leakage">
                 <comment>
                     Fraction of leakage of public water supply (0=no leakage, 1=100% leakage)
                 </comment>
@@ -4322,7 +4322,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="FractionGroundwaterUsed" value="$(PathMapsLanduse)/fracgwusedNew">
+                <textvar name="FractionGroundwaterUsed" value="$(PathMapsLanduse)/fracgwused">
                     <comment>
                         groundwater used fraction of a pixel (0-1)
                     </comment>

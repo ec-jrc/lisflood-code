@@ -365,16 +365,22 @@ class LisfloodModel_ini(DynamicModel):
             coords = self.coord_landuse
         data = self.allocateDataArray(coords)
         values_1 = readInputWithBackup(name_1)
-        if (list(coords.keys())[0]=="landuse") or (list(coords.keys())[0]=="runoff"):
-            data.values[0][:] = values_1
-            data.values[1][:] = readInputWithBackup(name_2, values_1)
-            data.values[2][:] = readInputWithBackup(name_3, values_1)
+        option = self.settings.options
+        if option.get('cropsEPIC'):
+            labels = list(coords.values())[0]
+            data.loc[labels[0],:] = values_1
+            data.loc[labels[1],:] = readInputWithBackup(name_2, values_1)
+            data.loc[labels[2],:] = readInputWithBackup(name_3, values_1)
         else:
-            raise Exception("Coords key not found!")
+            if (list(coords.keys())[0]=="landuse") or (list(coords.keys())[0]=="runoff"):
+                data.values[0][:] = values_1
+                data.values[1][:] = readInputWithBackup(name_2, values_1)
+                data.values[2][:] = readInputWithBackup(name_3, values_1)
+            else:
+                raise Exception("Coords key not found!")
         return data
 
     def deffraction(self, variable):
-         """Weighted sum over the soil fractions of each pixel"""
-         #ax_veg = variable.dims.index("vegetation")
-         ax_veg=0
-         return _vegSum(ax_veg, variable.values, self.SoilFraction.values)
+        """Weighted sum over the soil fractions of each pixel"""
+        ax_veg = variable.dims.index("vegetation")
+        return _vegSum(ax_veg, variable.values, self.SoilFraction.values)

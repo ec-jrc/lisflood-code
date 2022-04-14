@@ -122,10 +122,16 @@ class surface_routing(HydroModule):
 
         self.var.SurfaceRunSoil = self.var.allocateDataArray([self.var.dim_landuse, self.var.dim_pixel])
         for landuse, veg_list in self.var.LANDUSE_VEGETATION.items():
+            # TODO: CR: to ensure compatibility with EPIC, get ax_veg for the sum operation from the actual dimesions on the variable
+            # self.var.SurfaceRunSoil.loc[landuse] = (self.var.SoilFraction.loc[veg_list] * \
+            #         np.maximum(self.var.AvailableWaterForInfiltration.loc[veg_list] - self.var.Infiltration.loc[veg_list], 0)).sum("vegetation")
             iveg_list,iveg_list_pres,ilanduse = self.var.get_indexes_from_landuse_and_veg_list_GLOBAL(landuse, veg_list)
             self.var.SurfaceRunSoil.values[ilanduse] = np.sum((self.var.SoilFraction.values[iveg_list_pres] * \
                     np.maximum(self.var.AvailableWaterForInfiltration.values[iveg_list] - self.var.Infiltration.values[iveg_list],0)),0)
 
+        # TODO: CR: to ensure compatibility with EPIC, get ax_veg for the sum operation from the actual dimesions on the variable 
+        # (probably implementing two different NumpyModified classes for vegetation and for landuse, checking also for any drop of performances)
+        # self.var.SurfaceRunoff = self.var.DirectRunoff + self.var.SurfaceRunSoil.sum("landuse").values
         self.var.SurfaceRunoff = self.var.DirectRunoff + np.sum(self.var.SurfaceRunSoil.values,0)
         
         # Surface runoff for this time step (mm)
@@ -142,6 +148,9 @@ class surface_routing(HydroModule):
         # Routing of overland flow to channel using kinematic wave
         # Note that all 'new' water is added as side-flow
         SideflowDirect = self.var.DirectRunoff * self.var.MMtoM3 * self.var.InvPixelLength * self.var.InvDtSec
+        # TODO: CR: to ensure compatibility with EPIC, get ax_veg for the sum operation from the actual dimesions on the variable 
+        # SideflowOther = self.var.SurfaceRunSoil.loc[["Rainfed","Irrigated"]].sum("landuse").values * self.var.MMtoM3 * self.var.InvPixelLength * self.var.InvDtSec
+        # SideflowForest = self.var.SurfaceRunSoil.loc["Forest"].values * self.var.MMtoM3 * self.var.InvPixelLength * self.var.InvDtSec
         ilusevalues = []
         for luse in ["Rainfed","Irrigated"]:
             ilusevalues.append(self.var.epic_settings.soil_uses.index(luse))

@@ -53,6 +53,10 @@ class NumpyModified(np.ndarray):
     @property
     def values(self):
         return self
+    
+    @property
+    def dims(self):
+        return ['vegetation']
 
 
 def defsoil(name1, name2=None, name3=None):

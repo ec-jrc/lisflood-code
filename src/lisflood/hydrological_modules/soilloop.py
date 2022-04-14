@@ -464,7 +464,7 @@ class soilloop(HydroModule):
             self.is_paddy_irrig = np.zeros(len(self.var.vegetation), bool)
 
         self.index_landuse_all = np.array([self.var.SOIL_USES.index(self.var.VEGETATION_LANDUSE[v]) for v in self.var.vegetation]) #######################
-        self.index_landuse_prescr = np.array([self.var.SOIL_USES.index(self.var.VEGETATION_LANDUSE[v]) for v in self.var.prescribed_vegetation]) #######################
+        self.index_landuse_prescr = np.array([self.var.SOIL_USES.index(self.var.VEGETATION_LANDUSE[v]) for v in self.var.PRESCRIBED_VEGETATION]) #######################
         self.is_irrigated = np.array([self.var.VEGETATION_LANDUSE[v] == 'Irrigated' for v in self.var.vegetation]) #######################
         if option["cropsEPIC"]: #######################
             self.is_paddy_irrig = np.array([v in self.var.crop_module.paddy_crops for v in self.var.vegetation]) #######################

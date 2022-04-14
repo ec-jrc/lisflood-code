@@ -267,7 +267,7 @@ class soil(HydroModule):
 
         for veg, luse in self.var.VEGETATION_LANDUSE.items():
             iveg = self.var.vegetation.index(veg)
-            iluse = self.var.epic_settings.soil_uses.index(luse)
+            iluse = self.var.SOIL_USES.index(luse)
             ini_1a = np.where(ThetaInit1aValue[iveg] == -9999, self.var.WFC1a[iluse], ThetaInit1aValue[iveg] * self.var.SoilDepth1a[iluse])
             self.var.W1a[iveg] = np.where(self.var.PoreSpaceNotZero1a[iluse], ini_1a, 0)
             ini_1b = np.where(ThetaInit1bValue[iveg] == -9999, self.var.WFC1b[iluse], ThetaInit1bValue[iveg] * self.var.SoilDepth1b[iluse])
@@ -498,8 +498,9 @@ class soil(HydroModule):
         for landuse, veg_list in self.var.LANDUSE_VEGETATION.items():
             iveg_list,iveg_list_pres,ilanduse = self.var.get_indexes_from_landuse_and_veg_list_GLOBAL(landuse, veg_list)
             self.var.Theta[iveg_list] = self.var.SoilFraction[iveg_list_pres] * tot_sm[iveg_list] / self.var.SoilDepthTotal[ilanduse]
-        soil_fract_sum = np.sum(self.var.SoilFraction,0)
-        self.var.ThetaAll = np.where(soil_fract_sum > 0, np.sum(self.var.Theta,0) / soil_fract_sum, 0)
+        ax_veg=self.var.SoilFraction.dims.index("vegetation")
+        soil_fract_sum = np.sum(self.var.SoilFraction,ax_veg)
+        self.var.ThetaAll = np.where(soil_fract_sum > 0, np.sum(self.var.Theta,ax_veg) / soil_fract_sum, 0)
 
         self.var.SeepTopToSubPixelA = self.var.deffraction(self.var.SeepTopToSubA)
         self.var.SeepTopToSubPixelB = self.var.deffraction(self.var.SeepTopToSubB)
