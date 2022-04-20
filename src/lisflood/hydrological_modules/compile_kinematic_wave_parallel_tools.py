@@ -23,7 +23,7 @@ ext_modules = [
     Extension(
         "kinematic_wave_parallel_tools",
         ["kinematic_wave_parallel_tools.pyx"],
-        extra_compile_args=["-O3", "-ffast-math", "-march=native", "-fopenmp"],
+        extra_compile_args=["-O3", "-march=native", "-fopenmp"],
         extra_link_args=["-fopenmp"]
     )
 ]
