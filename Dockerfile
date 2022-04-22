@@ -1,8 +1,8 @@
-# docker build -t efas/lisflood .
-# docker push efas/lisflood
+# docker build -t jrce1/lisflood .
+# docker push jrce1/lisflood
 
 FROM continuumio/miniconda3
-MAINTAINER Domenico Nappo <domenico.nappo@gmail.com>
+LABEL maintainer="Stefania Grimaldi, Cinzia Mazzetti, Carlo Russo, Valerio Lorini, Ad de Roo"
 
 ENV DEBIAN_FRONTEND=noninteractive
 
