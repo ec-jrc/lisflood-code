@@ -83,7 +83,7 @@ class landusechange(HydroModule):
         if option.get('cropsEPIC'):
             self.var.SoilFraction = xr.DataArray(pd.DataFrame(soil).T, coords=self.var.coord_prescribed_vegetation, dims=self.var.coord_prescribed_vegetation.keys())
         else:
-            self.var.SoilFraction = NumpyModified(pd.DataFrame(soil).T.values)
+            self.var.SoilFraction = NumpyModified(pd.DataFrame(soil).T.values, dims=self.var.coord_prescribed_vegetation.keys())
         self.var.SoilFraction[0] =  self.var.OtherFraction
         self.var.SoilFraction[1] =  self.var.ForestFraction 
         self.var.SoilFraction[2] =  self.var.IrrigationFraction     
@@ -130,7 +130,7 @@ class landusechange(HydroModule):
             if option.get('cropsEPIC'):
                 self.var.SoilFraction = xr.DataArray(pd.DataFrame(soil).T, coords=self.var.coord_prescribed_vegetation, dims=self.var.coord_prescribed_vegetation.keys())
             else:
-                self.var.SoilFraction = NumpyModified(pd.DataFrame(soil).T.values)
+                self.var.SoilFraction = NumpyModified(pd.DataFrame(soil).T.values, dims=self.var.coord_prescribed_vegetation.keys())
             self.var.SoilFraction[0] =  self.var.OtherFraction
             self.var.SoilFraction[1] =  self.var.ForestFraction 
             self.var.SoilFraction[2] =  self.var.IrrigationFraction      

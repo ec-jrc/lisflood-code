@@ -332,7 +332,7 @@ class LisfloodModel_ini(DynamicModel):
         if option.get('cropsEPIC'):
             return xr.DataArray(np.zeros([len(v) for v in coords.values()], dtype), coords=coords, dims=coords.keys())
         else:
-            return NumpyModified(np.zeros([len(v) for v in coords.values()], dtype))
+            return NumpyModified(np.zeros([len(v) for v in coords.values()], dtype), dims=coords.keys())
 
     def initialiseVariableAllVegetation(self, name, coords=None):
         """Load a DataArray from a model output netCDF file (typycally an end map).

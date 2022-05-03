@@ -46,8 +46,10 @@ from .decorators import Cache
 # modified numpy class to ensure code compatibility with EPIC (that uses XArray in computations)
 # while keeping higher performance when EPIC modules are not needed (use of only numpy arrays in computations)
 class NumpyModified(np.ndarray):
-    def __new__(cls, input_array):
+    obj_dims = []
+    def __new__(cls, input_array, dims):
         obj = np.asarray(input_array).view(cls)
+        obj.obj_dims = list(dims)
         return obj
 
     @property
@@ -56,7 +58,7 @@ class NumpyModified(np.ndarray):
     
     @property
     def dims(self):
-        return ['vegetation']
+        return self.obj_dims
 
 
 def defsoil(name1, name2=None, name3=None):
