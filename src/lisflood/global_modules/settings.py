@@ -31,12 +31,12 @@ import pprint
 import inspect
 from collections import namedtuple
 import multiprocessing
+import cftime
 import threading
-
 import xml.dom.minidom
 import pcraster
 from netCDF4 import Dataset, date2num, num2date
-from pandas.core.tools.datetimes import parse_time_string
+from pandas.core.tools.datetimes import parsing
 import numpy as np
 
 from .errors import LisfloodError, LisfloodWarning, LisfloodFileError
@@ -311,7 +311,7 @@ class LisSettings(with_metaclass(ThreadSingleton)):
             float(self.timestep_init)
         except ValueError:
             try:
-                parse_time_string(self.timestep_init, dayfirst=True)
+                parsing.parse_time_string(self.timestep_init, dayfirst=True)
             except ValueError:
                 raise LisfloodError('Option timestepInit was not parsable. Must be integer or date string: {}'.format(self.timestep_init))
             else:
@@ -596,7 +596,7 @@ def calendar(date_in, calendar_type='proleptic_gregorian'):
         # try reading a date in one of available formats
         try:
             _t_units = "hours since 1970-01-01 00:00:00"  # units used for date type conversion (datetime.datetime -> calendar-specific if needed)
-            date = parse_time_string(date_in, dayfirst=True)[0]  # datetime.datetime type
+            date = parsing.parse_time_string(date_in, dayfirst=True)[0]  # datetime.datetime type
             step = date2num(date, _t_units, calendar_type)  # float type
             return num2date(step, _t_units, calendar_type)  # calendar-dependent type from netCDF4.netcdftime._netcdftime module
         except:
@@ -631,6 +631,13 @@ def datetoint(date_in, binding=None):
     # Time step, expressed as fraction of day (same as self.var.DtSec and self.var.DtDay)
 
     if isinstance(date1, datetime.datetime):
+        str1 = date1.strftime("%d/%m/%Y %H:%M")
+        # get total number of seconds corresponding to the time interval between dateIn and CalendarDayStart
+        timeinterval_in_sec = int((date1 - begin).total_seconds())
+        # get total number of steps between dateIn and CalendarDayStart
+        int1 = int(timeinterval_in_sec/dt_sec + 1)
+        # int1 = (date1 - begin).days + 1
+    elif isinstance(date1, cftime.DatetimeProlepticGregorian):
         str1 = date1.strftime("%d/%m/%Y %H:%M")
         # get total number of seconds corresponding to the time interval between dateIn and CalendarDayStart
         timeinterval_in_sec = int((date1 - begin).total_seconds())
