@@ -402,7 +402,7 @@ def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averagey
 
                 # select timestep to use for reading from netCDF stack based on timestep_init (state file time step)
                 timestepI = calendar(settings.timestep_init, binding['calendar_type'])
-                if isinstance(timestepI, datetime.datetime):
+                if isinstance(timestepI, datetime.datetime) or isinstance(timestepI, cftime.DatetimeProlepticGregorian):
                     #reading dates in XML settings file
                     # get step id number in netCDF stack for timestepInit date
                     if averageyearflag:

@@ -99,10 +99,9 @@ class LisfloodModel_ini(DynamicModel):
 
         # set the maximum number of threads that numba should use (now used in soilloop only)
         num_threads = int(binding["numCPUs_parallelNumba"])
-        if numba_full:
-            if (num_threads>0):
-                if num_threads<=numba_config.NUMBA_NUM_THREADS:
-                    set_num_threads(num_threads)
+        if (num_threads>0):
+            if num_threads<=numba_config.NUMBA_NUM_THREADS:
+                set_num_threads(num_threads)
 
         # Mapping of vegetation types to land use fractions (and the other way around)
         ##global VEGETATION_LANDUSE, LANDUSE_VEGETATION, PRESCRIBED_VEGETATION, PRESCRIBED_LAI
