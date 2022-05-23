@@ -630,7 +630,7 @@ def datetoint(date_in, binding=None):
     # DtDay = float(DtSec / 86400.)
     # Time step, expressed as fraction of day (same as self.var.DtSec and self.var.DtDay)
 
-    if isinstance(date1, (datetime.datetime, cftime.DatetimeProlepticGregorian, cftime.DatetimeProlepticGregorian, cftime.real_datetime)):
+    if isinstance(date1, (datetime.datetime, cftime.DatetimeProlepticGregorian, cftime.real_datetime)):
         str1 = date1.strftime("%d/%m/%Y %H:%M")
         # get total number of seconds corresponding to the time interval between dateIn and CalendarDayStart
         timeinterval_in_sec = int((date1 - begin).total_seconds())
