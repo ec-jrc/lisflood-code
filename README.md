@@ -59,6 +59,7 @@ Correct use of the rice fraction by landusechange.py DYNAMIC; use of the correct
 
 Note: the users are recommneded to download the referencesettings.xml files and adapt it by inserting their own paths and modelling choices).
 
+
 ## Quick start
 
 You can use conda environment to easily install dependencies.
