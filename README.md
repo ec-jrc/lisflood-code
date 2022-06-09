@@ -19,9 +19,9 @@ Other useful resources
 
 LISFLOOD-OS v4.0.0 includes the following changes:
 
-1) computation of water infiltration into the soil within the soilloop.py module
+1) pixel-by-pixel computation of water infiltration into the soil within the soilloop.py module.
 
-2) changes in the allocation of water abstraction
+2) changes in the allocation of water abstraction.
 
 3) patches in the modules riceirrigation.py and frost.py to avoid non-realistic results in specific conditions.
 
@@ -29,35 +29,34 @@ LISFLOOD-OS v4.0.0 includes the following changes:
  
 5) bug fixes in the use of the transientlandusechange option, in the use of the option simulatePF, in the writing of the monthly outputs.
 
-Moreover, to ensure compatibility with LISFLOOD-EPIC, modules source code is compatible with XArray variables, and XArray variables will be allocated when EPIC module is ON
-LISFLOOD-EPIC has been developed by JRC-D2. When compared to LISFLOOD v3.2.0, LISFLOOD-EPIC enables a more detailed representation of crop growth and irrigation. References:  ASR - Assessing groundwater irrigation sustainability in the Euro-Mediterranean region with an integrated agro-hydrologic model (copernicus.org) , Gelati, E. et al.: Integrated model of irrigation, crop growth and water resources (LISFLOOD-EPIC): description and application in the Euro-Mediterranean area, in preparation, 2020.
-Important note: EPIC modules are not *yet* available from the OS-LISFLOOD repository.
+Moreover, to ensure compatibility with LISFLOOD-EPIC, modules source code is compatible with XArray variables, and XArray variables will be allocated when EPIC module is ON.  
+LISFLOOD-EPIC has been developed by JRC-D2. When compared to LISFLOOD v3.2.0, LISFLOOD-EPIC enables a more detailed representation of crop growth and irrigation. References:  ASR - Assessing groundwater irrigation sustainability in the Euro-Mediterranean region with an integrated agro-hydrologic model (copernicus.org) , Gelati, E. et al.: Integrated model of irrigation, crop growth and water resources (LISFLOOD-EPIC): description and application in the Euro-Mediterranean area, in preparation, 2020.  
+Important note: EPIC modules are not *yet* available from the OS-LISFLOOD repository.  
 
-1) computation of water infiltration into the soil within the soilloop.py module
-LISFLOOD v3.2.0: all the pixels of a land use fraction are allocated to a vector and the number of loops is defined by the most critical pixel. More specifically, all the pixels within the computational domain are allocated the number of iterations that are necessary to allow the numerical stability of the most critical pixel. The number of iterations consequently depends on the specific computational domain. This can lead to different results when modelling sub-catchmennts and entire basins with highly heterogenous soils.
-LISFLOOD v4.0.0: pixel by pixel computation and parallelization of the computations by using the python package numba. The number of
-Benefits of v4.0.0: each pixel is allocated the number of iterations that allow its numerical stability, this guarantees the consistency of results when modelling sub-catchments and the entire basin with highly heterogeneous soils. Decreased computational time due to parallel computations
+1) <u>computation of water infiltration into the soil within the soilloop.py module.</u>  
+LISFLOOD v3.2.0: all the pixels of a land use fraction are allocated to a vector and the number of loops is defined by the most critical pixel. More specifically, all the pixels within the computational domain are allocated the number of iterations that are necessary to allow the numerical stability of the most critical pixel. The number of iterations consequently depends on the specific computational domain. This can lead to different results when modelling sub-catchmennts and entire basins with highly heterogenous soils.  
+LISFLOOD v4.0.0: pixel by pixel computation and parallelization of the computations by using the python package numba.  
+Benefits of v4.0.0: each pixel is allocated the number of iterations that allow its numerical stability, this guarantees the consistency of results when modelling sub-catchments and the entire basin with highly heterogeneous soils. Decreased computational time due to parallel computations.  
 
-2) changes in the allocation of water abstraction
-LISFLOOD v3.2.0: direct abstraction of the consumptive water use.
-LISFLOOD v4.0.0: abstraction of the demanded water valume for each use (industrial, domestic, energy, livestock); the consumptive water use leaves the system; the unused water volume is returned to the channels.
-Minor note:  small differences in the computation of the leakages.
+2) <u>changes in the allocation of water abstraction.</u>  
+LISFLOOD v3.2.0: direct abstraction of the consumptive water use.  
+LISFLOOD v4.0.0: abstraction of the demanded water valume for each use (industrial, domestic, energy, livestock); the consumptive water use leaves the system; the unused water volume is returned to the channels.  
+Minor note:  small differences in the computation of the leakages.  
 
-3) patches in the modules riceirrigation.py and frost.py to avoid non-realistic results in specific conditions.
-riceirrigation.py: LISFLOOD v3.2.0: in presence of a very thick third soil layer (10^2 m) the drainage of the rice fields causes non realistic large flow discharge values in the channels.
-LISFLOOD v4.0.0: only soil layers 1a and 1b are used by the rice module (for both the saturation and the drainage phases). By definition, the second soil layer includes the roots depth.
-frost.py: LISFLOOD v3.2.0: there is no upper boundary to the frost index value. Rain events on deeply frozen soils are totally converted into runoff and can cause false alarms. 
-LISFLOOD v4.0.0: the maximum frost index value is set to 57.
+3) <u>patches in the modules riceirrigation.py and frost.py to avoid non-realistic results in specific conditions.</u>  
+riceirrigation.py: LISFLOOD v3.2.0: in presence of a very thick third soil layer (10^2 m) the drainage of the rice fields causes non realistic large flow discharge values in the channels.  
+LISFLOOD v4.0.0: only soil layers 1a and 1b are used by the rice module (for both the saturation and the drainage phases). By definition, the second soil layer includes the roots depth.  
+frost.py: LISFLOOD v3.2.0: there is no upper boundary to the frost index value. Rain events on deeply frozen soils are totally converted into runoff and can cause false alarms.  
+LISFLOOD v4.0.0: the maximum frost index value is set to 57.  
 
-
-4) improvements in the computation of the mass balance.
+4) <u>improvements in the computation of the mass balance.</u>  
 LISFLOOD v3.2.0: the mass balance is computed by considering the input and output volumes up to the current computational step.  Small numerical errors accumulate over time and give the erroneous impression of large mass balance errors.
 LISFLOOD v4.0.0: computation of the mass balance by considering the single computational step.
 
-5) bug fixes in the use of the transientlandusechange option, in the use of the option simulatePF, in the writing of the monthly outputs.
-Correct use of the rice fraction by landusechange.py DYNAMIC; use of the correct soil water content variable for the computation of pF1 (ws1a replaced ws1); correct reporting of the monthly time steps by the optional module indicatorcalc.py
+5) <u>bug fixes in the use of the transientlandusechange option, in the use of the option simulatePF, in the writing of the monthly outputs.</u>  
+Correct use of the rice fraction by landusechange.py DYNAMIC; use of the correct soil water content variable for the computation of pF1 (ws1a replaced ws1); correct reporting of the monthly time steps by the optional module indicatorcalc.py.  
 
-Note: the users are recommneded to download the referencesettings.xml files and adapt it by inserting their own paths and modelling choices).
+Note: the users are recommended to download the [reference settings xml](https://github.com/ec-jrc/lisflood-code/tree/master/src/lisfloodSettings_reference.xml) file and adapt it by inserting their own paths and modelling choices).
 
 
 ## Quick start
@@ -80,11 +79,11 @@ pip install lisflood-model
 
 Command above will also install the executable `lisflood` in the conda env, so that you can run LISFLOOD with the following:
 ```bash
-lisflood /absolute_path/to/my/local/folder/TestCatchment/settings/cold_day_base.xml
+lisflood /absolute_path/to/my/local/folder/LF_ETRS89_UseCase/settings/cold.xml
 ```
 
 You can also clone the repository which contains datasets to test the model.
-Follow this instruction for a basic test (included in this repository under [tests/data/TestCatchment1](https://github.com/ec-jrc/lisflood-code/tree/master/tests/data/TestCatchment1))
+Follow this instruction for a basic test (included in this repository under [tests/data](https://github.com/ec-jrc/lisflood-code/tree/master/tests/data))
 
 * Clone the master branch of this repository (you need to have git installed on your machine).
 
@@ -103,7 +102,7 @@ pip install -r requirements.txt
 ```
 
 If you don't use conda but a plain virtualenv, you need to install PCRaster and GDAL by your own and include its python interface in PYTHONPATH environment variable.
-For details, please follow instruction on [official docs](http://pcraster.geo.uu.nl/getting-started/pcraster-on-linux/).
+For details, please follow instruction on [official docs](http://pcraster.geo.uu.nl).
 
 
 3. Compile the cython module kinematic_wave_parallel_tool
@@ -129,10 +128,10 @@ Then in the settings file the option "numberParallelThreadsKinematicWave" may ta
 Now your environment should be set up to run lisflood. Try with a prepared settings file for one of the two test catchments:
 
 ```bash
-python src/lisf1.py tests/data/TestCatchment/settings/cold_day_base.xml
+python src/lisf1.py tests/data/LF_ETRS89_UseCase/settings/cold.xml
 ```
 
-If the command above successed without errors, producing dis.nc into tests/data/TestCatchment1/outputs folder, your lisflood installation was correct.
+If the command above successed without errors, producing dis.nc into tests/data/LF_ETRS89_UseCase/out folder, your lisflood installation was correct.
 
 ### Docker image
 
@@ -181,7 +180,7 @@ pip install lisflood-model
 Command above will also install the executable `lisflood` in the virtualenv, so that you can run LISFLOOD with the following:
 
 ```bash
-lisflood /absolute_path/to/my/local/folder/TestCatchment/settings/cold_day_base.xml
+lisflood /absolute_path/to/my/local/folder/LF_ETRS89_UseCase/settings/cold.xml
 ```
 
 ### IMPORTANT NOTE
@@ -205,7 +204,7 @@ pytest tests/
 Furthermore, before to propose a pull request, there are additional tests we ask you to execute: 
 
 ```bash
-pytest tests/ -m "slow
+pytest tests/ -m "slow"
 ```
 
 These tests could take 30 minutes or several hours, depending on your machine.
