@@ -97,7 +97,7 @@ git clone --single-branch --branch master https://github.com/ec-jrc/lisflood-cod
 ```bash
 conda create --name lisflood python=3.7 -c conda-forge
 conda activate lisflood
-conda install -c conda-forge pcraster
+conda install -c conda-forge pcraster gdal
 cd lisflood-code
 pip install -r requirements.txt
 ```
