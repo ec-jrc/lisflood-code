@@ -36,5 +36,5 @@ soupsieve>=1.9.5
 toml>=0.10.0
 tomli>=1.2.1
 toolz>=0.10.0
-xarray>=0.15.1
+xarray>=0.20.2
 zipp>=0.6.0
