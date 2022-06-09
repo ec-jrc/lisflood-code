@@ -1,6 +1,6 @@
 """
 
-Copyright 2019 European Union
+Copyright 2019-2021 European Union
 
 Licensed under the EUPL, Version 1.2 or as soon they will be approved by the European Commission  subsequent versions of the EUPL (the "Licence");
 
@@ -26,7 +26,6 @@ from pcraster.framework import DynamicModel
 import numpy as np
 
 from .global_modules.settings import CDFFlags, LisSettings, MaskInfo
-
 
 class LisfloodModel_dyn(DynamicModel):
 
@@ -72,9 +71,8 @@ class LisfloodModel_dyn(DynamicModel):
         """ up to here it was fun, now the real stuff starts
         """
         # readmeteo.py
-        self.readmeteo_module.dynamic()     
-        # timemeasure("Read meteo") # 1. timing after read input maps
-
+        self.readmeteo_module.dynamic()                 
+            
         if flags['checkfiles']:
             return  # if check than finish here
 
@@ -92,26 +90,30 @@ class LisfloodModel_dyn(DynamicModel):
 
         # ***** READ INFLOW HYDROGRAPHS (OPTIONAL)****************
         self.inflow_module.dynamic()
-        # timemeasure("Read LAI") # 2. timing after LAI and inflow
 
         # ***** RAIN AND SNOW *****************************************
         self.snow_module.dynamic()
-        # timemeasure("Snow")  # 3. timing after LAI and inflow
 
         # ***** FROST INDEX IN SOIL **********************************
         self.frost_module.dynamic()
-        # timemeasure("Frost")  # 4. timing after frost index
 
-        # ************************************************************
-        # ****Looping soil 2 times - second time for forest fraction *
-        # ************************************************************
+        # ***** EPIC AGRICULTURE MODEL - 1ST PART: CROP STATE AND ENVIRONMENT *******************
+        if option["cropsEPIC"]:
+            self.crop_module.dynamic_state()
 
-        for soilLoop in range(3):
-            self.soilloop_module.dynamic(soilLoop)
-            # soil module is repeated 2 times:
-            # 1. for remaining areas: no forest, no impervious, no water
-            # 2. for forested areas
-            # timemeasure("Soil",loops = soilLoop + 1) # 5/6 timing after soil
+        # *************************************************************************************
+        # **** Loop over vegetation fractions: 1. processes depending directly on the canopy
+        # *************************************************************************************
+        self.soilloop_module.dynamic_canopy()
+
+        # ***** EPIC AGRICULTURE MODEL - 2ND PART: CROP GROWTH AND LIMITNG FACTORS *************
+        if option["cropsEPIC"]:
+            self.crop_module.dynamic_growth()
+  
+        # **************************************************************************************
+        # **** Loop over vegetation fractions: 2. internal soil processes
+        # **************************************************************************************
+        self.soilloop_module.dynamic_soil()
 
         # -------------------------------------------------------------------
         # -------------------------------------------------------------------
@@ -122,15 +124,23 @@ class LisfloodModel_dyn(DynamicModel):
         # *********  WATER USE   *************************
         self.riceirrigation_module.dynamic()
         self.waterabstraction_module.dynamic()
-        # timemeasure("Water abstraction")
-
+         
+        ## repeating lines below to create a variable with the correct structure ##
+        maskinfo = MaskInfo.instance()
+        def splitlanduse(array1, array2=None, array3=None):
+            """ splits maps into the 3 different land use types - other , forest, irrigation
+            """
+            if array2 is None:
+                array2 = array1
+            if array3 is None:
+                array3 = array1
+            return [array1, array2, array3]
+         
         # ***** Calculation per Pixel ********************************
         self.soil_module.dynamic_perpixel()
-        # timemeasure("Soil done")
-
+ 
         self.groundwater_module.dynamic()
-        # timemeasure("Groundwater")
-
+ 
         # ************************************************************
         # ***** STOP if no routing is required    ********************
         # ************************************************************
@@ -143,19 +153,16 @@ class LisfloodModel_dyn(DynamicModel):
 
         # *********  EVAPORATION FROM OPEN WATER *************
         self.evapowater_module.dynamic()
-        # timemeasure("open water eva.")
-
+ 
         # ***** ROUTING SURFACE RUNOFF TO CHANNEL ********************
         self.surface_routing_module.dynamic()
-        # timemeasure("Surface routing")  # 7 timing after surface routing
-
+ 
         # ***** POLDER INIT **********************************
         self.polder_module.dynamic_init()
 
         # ***** INLETS INIT **********************************
         self.inflow_module.dynamic_init()
-        # timemeasure("Before routing")  # 8 timing before channel routing
-
+ 
         # ************************************************************
         # ***** LOOP ROUTING SUB TIME STEP   *************************
         # ************************************************************
@@ -165,15 +172,14 @@ class LisfloodModel_dyn(DynamicModel):
         for NoRoutingExecuted in range(self.NoRoutSteps):
             self.routing_module.dynamic(NoRoutingExecuted)
             #   routing sub steps
-        # timemeasure("Routing", loops=NoRoutingExecuted + 1)  # 9 timing after routing
-
+ 
         # ----------------------------------------------------------------------
 
         if option['inflow']:
             self.QInM3Old = self.QInM3
             # to calculate the parts of inflow for every routing timestep
             # for the next timestep the old inflow is preserved
-            self.sumIn += self.QInDt*self.NoRoutSteps
+            self.sumInWB = self.QinADDEDM3
 
         # if option['simulatePolders']:
         # ChannelToPolderM3=ChannelToPolderM3Old;
@@ -197,8 +203,6 @@ class LisfloodModel_dyn(DynamicModel):
         # New cross section area (kinematic wave)
         # This is the value after the kinematic wave, so we use ChanM3Kin here
         # (NOT ChanQKin, which is average discharge over whole step, we need state at the end of all iterations!)
-
-        # timemeasure("After routing")  # 10 timing after channel routing
 
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         if not(option['dynamicWave']):
@@ -226,13 +230,13 @@ class LisfloodModel_dyn(DynamicModel):
         # *******  Calculate CUMULATIVE MASS BALANCE ERROR  **********
         # ************************************************************
         self.waterbalance_module.dynamic()
-        self.indicatorcalc_module.dynamic()
+        if option['indicator']:
+           self.indicatorcalc_module.dynamic()
 
         # ************************************************************
         # ***** WRITING RESULTS: TIME SERIES AND MAPS ****************
         # ************************************************************
         self.output_module.dynamic()
-        # timemeasure("Water balance")
 
         # debug 
         # Print value of variables after computation (from state files)
@@ -250,5 +254,6 @@ class LisfloodModel_dyn(DynamicModel):
 
         ### Report states if EnKF is used and filter moment
         self.stateVar_module.dynamic()
-        self.indicatorcalc_module.dynamic_setzero()
+        if option['wateruse'] and option['indicator'] and self.monthend: 
+            self.indicatorcalc_module.dynamic_setzero()
         # setting monthly and yearly dindicator to zero at the end of the month (year)

@@ -15,19 +15,50 @@ Other useful resources
 | Lisflood Usecases   |                                                           | https://github.com/ec-jrc/lisflood-usecases                  |
 
 
-## Notes for Release 3.2.0
+## Notes for Release 4.0.0
 
-This release includes the following changes:
-- a new xarray reader for the water abstraction demand maps;
-- a unit test to verify the functioning of the reader for the water abstraction maps;
-- bug fixes and improvements to the caching function and the chunking function;
-- improvements of the management of latitude and longitude grids to allow maximum precision of the reference system;
-- improvements of the definition of the output variables.
+LISFLOOD-OS v4.0.0 includes the following changes:
 
-All of the changes above improve the code capability to handle input and outputs.
-The modelling of the hydrological processes has not been changed.
+1) computation of water infiltration into the soil within the soilloop.py module
 
-IMPORTANT NOTE: the results of the unit tests of this release are different from the results of the unit tests of the release 3.1.1. The differences are due exclusively to a different use of of the optional moduels (e.g. groundwatersmooth) within the .xml setttings file of the unit tests. When using the same settings of .xml file, and the same dataset, v3.1.1 and v3.2.0 provide the same results.
+2) changes in the allocation of water abstraction
+
+3) patches in the modules riceirrigation.py and frost.py to avoid non-realistic results in specific conditions.
+
+4) improvements in the computation of the mass balance.
+ 
+5) bug fixes in the use of the transientlandusechange option, in the use of the option simulatePF, in the writing of the monthly outputs.
+
+Moreover, to ensure compatibility with LISFLOOD-EPIC, modules source code is compatible with XArray variables, and XArray variables will be allocated when EPIC module is ON
+LISFLOOD-EPIC has been developed by JRC-D2. When compared to LISFLOOD v3.2.0, LISFLOOD-EPIC enables a more detailed representation of crop growth and irrigation. References:  ASR - Assessing groundwater irrigation sustainability in the Euro-Mediterranean region with an integrated agro-hydrologic model (copernicus.org) , Gelati, E. et al.: Integrated model of irrigation, crop growth and water resources (LISFLOOD-EPIC): description and application in the Euro-Mediterranean area, in preparation, 2020.
+Important note: EPIC modules are not *yet* available from the OS-LISFLOOD repository.
+
+1) computation of water infiltration into the soil within the soilloop.py module
+LISFLOOD v3.2.0: all the pixels of a land use fraction are allocated to a vector and the number of loops is defined by the most critical pixel. More specifically, all the pixels within the computational domain are allocated the number of iterations that are necessary to allow the numerical stability of the most critical pixel. The number of iterations consequently depends on the specific computational domain. This can lead to different results when modelling sub-catchmennts and entire basins with highly heterogenous soils.
+LISFLOOD v4.0.0: pixel by pixel computation and parallelization of the computations by using the python package numba. The number of
+Benefits of v4.0.0: each pixel is allocated the number of iterations that allow its numerical stability, this guarantees the consistency of results when modelling sub-catchments and the entire basin with highly heterogeneous soils. Decreased computational time due to parallel computations
+
+2) changes in the allocation of water abstraction
+LISFLOOD v3.2.0: direct abstraction of the consumptive water use.
+LISFLOOD v4.0.0: abstraction of the demanded water valume for each use (industrial, domestic, energy, livestock); the consumptive water use leaves the system; the unused water volume is returned to the channels.
+Minor note:  small differences in the computation of the leakages.
+
+3) patches in the modules riceirrigation.py and frost.py to avoid non-realistic results in specific conditions.
+riceirrigation.py: LISFLOOD v3.2.0: in presence of a very thick third soil layer (10^2 m) the drainage of the rice fields causes non realistic large flow discharge values in the channels.
+LISFLOOD v4.0.0: only soil layers 1a and 1b are used by the rice module (for both the saturation and the drainage phases). By definition, the second soil layer includes the roots depth.
+frost.py: LISFLOOD v3.2.0: there is no upper boundary to the frost index value. Rain events on deeply frozen soils are totally converted into runoff and can cause false alarms. 
+LISFLOOD v4.0.0: the maximum frost index value is set to 57.
+
+
+4) improvements in the computation of the mass balance.
+LISFLOOD v3.2.0: the mass balance is computed by considering the input and output volumes up to the current computational step.  Small numerical errors accumulate over time and give the erroneous impression of large mass balance errors.
+LISFLOOD v4.0.0: computation of the mass balance by considering the single computational step.
+
+5) bug fixes in the use of the transientlandusechange option, in the use of the option simulatePF, in the writing of the monthly outputs.
+Correct use of the rice fraction by landusechange.py DYNAMIC; use of the correct soil water content variable for the computation of pF1 (ws1a replaced ws1); correct reporting of the monthly time steps by the optional module indicatorcalc.py
+
+Note: the users are recommneded to download the referencesettings.xml files and adapt it by inserting their own paths and modelling choices).
+
 
 ## Quick start
 
@@ -66,7 +97,7 @@ git clone --single-branch --branch master https://github.com/ec-jrc/lisflood-cod
 ```bash
 conda create --name lisflood python=3.7 -c conda-forge
 conda activate lisflood
-conda install -c conda-forge pcraster
+conda install -c conda-forge pcraster gdal
 cd lisflood-code
 pip install -r requirements.txt
 ```

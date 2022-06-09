@@ -27,7 +27,7 @@ class TestInflow():
                               vars_to_set={'StepStart': date_start,
                                            'StepEnd': date_end,
                                            'CalendarDayStart': date_start,
-                                           'dt_sec' : dtsec,
+                                           'DtSec' : dtsec,
                                            'MaskMap': '$(PathRoot)/maps/intercatchment_mask.map',
                                            'InflowPoints': '$(PathRoot)/maps/inflow_point_1.nc',
                                            'QInTS': '$(PathRoot)/'+'reference/inflow_'+type+'/inflow.tss',

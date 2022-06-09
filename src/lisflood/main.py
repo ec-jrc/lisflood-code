@@ -36,7 +36,7 @@ from .Lisflood_dynamic import LisfloodModel_dyn
 from .Lisflood_initial import LisfloodModel_ini
 from .Lisflood_monteCarlo import LisfloodModel_monteCarlo
 from .global_modules.settings import LisSettings, CDFFlags
-from .global_modules.errors import LisfloodWarning, LisfloodError
+from .global_modules.errors import LisfloodError
 from lisflood.global_modules.settings import LisfloodRunInfo
 from .global_modules.settings import calendar, inttodate
 from . import __authors__, __version__, __date__, __status__

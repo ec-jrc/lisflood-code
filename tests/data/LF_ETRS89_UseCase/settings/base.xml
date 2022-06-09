@@ -2,7 +2,8 @@
 
 
     <lfoptions>
-
+    
+        <setoption choice="0" name="cropsEPIC"/>
         <setoption choice="0" name="wateruse"/>
         <setoption choice="0" name="groundwaterSmooth"/>
         <setoption choice="0" name="TransientWaterDemandChange"/>
@@ -21,6 +22,11 @@
         <setoption choice="0" name="repStateMaps"/>
         <setoption choice="0" name="repDischargeTs"/>
         <setoption choice="0" name="repDischargeMaps"/>
+        <setoption choice="0" name="repThetaMaps" />
+        <setoption choice="0" name="repThetaForestMaps" />
+        <setoption choice="0" name="repThetaIrrigationMaps" />
+        <setoption choice="0" name="repE2O2" />
+        
 
         # report gauges and sites
 
@@ -71,7 +77,16 @@ The option "numberParallelThreadsKinematicWave" may take the following values:
     - "1"           : serial execution (not parallel)
     - "2", "3", ... : manual setting of the number of parallel threads.
                       (if exceeding the number of CPUs, the option is set to "0") -->
-            <textvar name="numCPUs_parallelKinematicWave" value="0"/>
+            <textvar name="numCPUs_parallelKinematicWave" value="1"/>
+
+            <!-- Parallelisation of using Numba runtime compiled library .
+The option "numCPUs_parallelNumba" may take the following values:
+    - "0"           : set to NUMBA_NUM_THREADS Environment Variable 
+                      (if NUMBA_NUM_THREADS is not set, will take the number of CPU cores determined by python's multiprocessing.cpu_count())
+    - "1"           : serial execution (not parallel)
+    - "2", "3", ... : manual setting of the number of parallel threads.
+                      (if exceeding NUMBA_NUM_THREADS, the value is set to NUMBA_NUM_THREADS) -->
+            <textvar name="numCPUs_parallelNumba" value="1"/>
 
             <comment>
                 **************************************************************
@@ -1017,7 +1032,19 @@ The option "numberParallelThreadsKinematicWave" may take the following values:
                     More than the transpiration is added e.g to prevent salinisation
                 </comment>
             </textvar>
-
+            
+            <textvar name="IrrigationWaterReUseM3" value="0.0">           
+            <comment>           
+                  Annual amount (m3) of treated wastewater reused for irrigation                 
+            </comment>           
+            </textvar>
+                       
+            <textvar name="IrrigationWaterReUseNumDays" value="143">          
+            <comment>           
+                  Number of days over which the annual amount of treated wastewater for irrigation is used                
+            </comment>           
+            </textvar>
+            
             <textvar name="LivestockConsumptiveUseFraction" value="0.15">
                 <comment>
                     Consumptive Use (1-Recycling ratio) for livestock water use (0-1)
@@ -1481,6 +1508,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 **************************************************************
 -->
         <textvar name="numCPUs_parallelKinematicWave" value="$(numCPUs_parallelKinematicWave)"/>
+        <textvar name="numCPUs_parallelNumba" value="$(numCPUs_parallelNumba)"/>
 
         <textvar name="NetCDFTimeChunks" value="auto"/>
             <comment>
@@ -1515,7 +1543,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 **************************************************************
             </comment>
 
-            <textvar name="CalendarConvention" value="$(CalendarConvention)">
+            <textvar name="CalendarConvention" value="$(CalendarConvention)"/>
 
             <textvar name="CalendarDayStart" value="$(CalendarDayStart)">
                 <comment>
@@ -1981,7 +2009,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 **************************************************************
             </comment>
 
-            <textvar name="LZAvInflowMap" value="$(PathRoot)/maps/safe_init/ec_lzavin">
+            <textvar name="LZAvInflowMap" value="$(PathRoot)/maps/safe_init/lzavin">
                 <comment>
                     $(PathInit)/lzavin.map
                     Reported map of average percolation rate from upper to
@@ -1989,7 +2017,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
             </textvar>
 
-            <textvar name="AvgDis" value="$(PathRoot)/maps/safe_init/ec_avgdis">
+            <textvar name="AvgDis" value="$(PathRoot)/maps/safe_init/avgdis">
                 <comment>
                     $(PathInit)/avgdis.map
                     CHANNEL split routing in two lines
@@ -2436,6 +2464,18 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     Factor to irrigation water demand
                     More than the transpiration is added e.g to prevent salinisation
                 </comment>
+            </textvar>
+            
+            <textvar name="IrrigationWaterReUseM3" value="$(IrrigationWaterReUseM3)">           
+                 <comment>           
+                  Annual amount (m3) of treated wastewater reused for irrigation                  
+                 </comment>    
+            </textvar>
+                       
+            <textvar name="IrrigationWaterReUseNumDays" value="$(IrrigationWaterReUseNumDays)">      
+                 <comment>
+                  Number of days over which the annual amount of treated wastewater for irrigation is used                
+                 </comment>          
             </textvar>
 
             <textvar name="MapIrrigationCropCoef" value="$(MapIrrigationCropCoef)">
@@ -3610,15 +3650,21 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="Theta1TS" value="$(PathOut)/thTop.tss">
+                <textvar name="Theta1TS" value="$(PathOut)/th1a.tss">
                     <comment>
-                        Soil moisture upper layer [cu mm / cu mm]
+                        Soil moisture layer 1a [cu mm / cu mm]
                     </comment>
                 </textvar>
 
-                <textvar name="Theta2TS" value="$(PathOut)/thSub.tss">
+                <textvar name="Theta2TS" value="$(PathOut)/th1b.tss">
                     <comment>
-                        Soil moisture lower layer [cu mm / cu mm]
+                        Soil moisture layer 1b [cu mm / cu mm]
+                    </comment>
+                </textvar>
+
+                <textvar name="Theta3TS" value="$(PathOut)/th2.tss">
+                    <comment>
+                        Soil moisture layer 2 [cu mm / cu mm]
                     </comment>
                 </textvar>
 
@@ -4010,6 +4056,30 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 <textvar name="MassBalanceMMTSS" value="$(PathOut)/mbErrorMm.tss">
                     <comment>
                         Reported mass balance error at outlet (as mm water slice)
+                    </comment>
+                </textvar>
+
+                <textvar name="MassBalanceErrorSplitRoutingTSS" value="$(PathOut)/mbErrorSplitRoutingM3.tss">
+                    <comment>
+                        Reported mass balance error due to the split routing module, for each catchment [m3]
+                    </comment>
+                </textvar>  
+
+                <textvar name="OutletDischargeErrorSplitRoutingTSS" value="$(PathOut)/OutletDischargeErrorSplitRoutingM3S.tss">
+                    <comment>
+                        Reported discharge error at the outlet as a consequence of the mass balance error within the split routing module, for each catchment [m3/s]
+                    </comment>
+                </textvar>
+
+                <textvar name="MBErrorStorageRatioTSS" value="$(PathOut)/MBErrorStorageRatio.tss">
+                    <comment>
+                        Reported ratio between the mass balance error and the water volume storage, for each catchment [m3/m3]
+                    </comment>
+                </textvar>
+
+                <textvar name="AverageFractionsCatchmentTSS" value="$(PathOut)/AverageFractionsCatchment.tss">
+                    <comment>
+                        Average value of the sum of the fractions within a catchment: this value must be 1.0 in order to avoid mass balace errors! [-]
                     </comment>
                 </textvar>
 

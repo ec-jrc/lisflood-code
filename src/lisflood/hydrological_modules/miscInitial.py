@@ -115,6 +115,15 @@ class miscInitial(HydroModule):
         # Multiplier to convert from cubic metres to mm water slice
 
         self.var.GwLoss = loadmap('GwLoss')
+        
+        if isinstance(self.var.GwLoss, float):
+          MAP = []
+          MAP = maskinfo.in_zero() +   self.var.GwLoss
+          self.var.GwLoss = []
+          self.var.GwLoss = MAP
+
+        
+        
         self.var.GwPerc = np.maximum(loadmap('GwPercValue'), self.var.GwLoss)
         # new Gwloss  PB 12.11.2009
         # if GWloss > GwPercValue -> GwPerc = GwLoss

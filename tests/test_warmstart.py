@@ -38,14 +38,14 @@ class TestWarmStart():
         'cold': os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/cold.xml'),
         'warm': os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/warm.xml')
     }
-
+    
     def test_warmstart_daily(self):
         step_start = '02/01/2016 06:00'
         step_end = '31/12/2016 06:00'
         dt_sec = 86400
         report_steps = '9496..9861'
         self.run_warmstart_by_dtsec(dt_sec, step_end, step_start, report_steps=report_steps)
-
+    
     def test_warmstart_6h(self):
         step_start = '01/03/2016 06:00'
         step_end = '31/07/2016 06:00'
@@ -57,9 +57,6 @@ class TestWarmStart():
         modules_to_unset = [
             'simulateReservoirs',
             'repsimulateReservoirs',
-            'wateruse',
-            'useWaterDemandAveYear',
-            'wateruseRegion',
         ]
         check_every = 13  # steps
         # init

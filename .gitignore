@@ -12,3 +12,4 @@ lisflood_model.egg-info
 /src/lisflood/hydrological_modules/kinematic_wave_parallel_tools.c
 .coverage
 *.tox.ini
+.vscode/

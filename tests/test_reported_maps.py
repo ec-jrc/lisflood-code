@@ -196,19 +196,19 @@ class TestReportedMaps():
         self._not_reported_map(self.settings_files['full'],
                                map_to_check=['GwPercUZLZForestMaps', 'GwPercUZLZMaps'], mocker=mocker)
 
-    def test_rep_totalabs(self, mocker):
+    def test_rep_wateruse(self, mocker):
         self._reported_map(self.settings_files['full'],
-                           opts_to_set=['repTotalAbs', 'repStateMaps'],
-                           map_to_check=['AreaTotalAbstractionFromGroundwaterM3',
-                                         'AreaTotalAbstractionFromSurfaceWaterM3',
-                                         'DomesticConsumptiveUse', 'EFlowIndicator'], mocker=mocker)
+                           opts_to_set=['repWaterUse', 'repWIndex', 'repStateMaps'],
+                           map_to_check=['FalkenmarkM3Capita1',
+                                         'UpstreamInflowUsedM3',
+                                         'abstraction_allSources_actual_irrigation_M3MonthRegion', 'WEI_Abs'], mocker=mocker)
 
-    def test_rep_totalabs_not_called(self, mocker):
+    def test_rep_wateruse_not_called(self, mocker):
         self._not_reported_map(self.settings_files['full'],
-                               map_to_check=['AreaTotalAbstractionFromGroundwaterM3',
-                                             'AreaTotalAbstractionFromSurfaceWaterM3',
-                                             'DomesticConsumptiveUse', 'EFlowIndicator'], mocker=mocker)
-
+                           map_to_check=['FalkenmarkM3Capita1',
+                                         'UpstreamInflowUsedM3',
+                                         'abstraction_allSources_actual_irrigation_M3MonthRegion', 'WEI_Abs'], mocker=mocker)
+    '''
     def test_rep_totalwuse(self, mocker):
         self._reported_map(self.settings_files['full'],
                            opts_to_set=['repTotalWUse', 'repStateMaps'],
@@ -231,3 +231,4 @@ class TestReportedMaps():
                                              'WEI_Dem', 'FalkenmarkM3Capita1', 'FalkenmarkM3Capita2',
                                              'FalkenmarkM3Capita3',
                                              'WEI_Abs', 'MonthETactMM', 'MonthETdifMM', 'MonthETpotMM'], mocker=mocker)
+    '''

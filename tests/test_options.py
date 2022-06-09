@@ -118,7 +118,9 @@ class TestOptions():
         lisflood.hydrological_modules.lakes.loadmap.assert_has_calls(calls)
 
     def test_rice_only(self, mocker):
-        settings = setoptions(self.settings_files['base'], 'riceIrrigation')
+        settings = setoptions(self.settings_files['base'], 
+            ('riceIrrigation', 'wateruse',
+            'TransientWaterDemandChange', 'useWaterDemandAveYear', 'wateruseRegion'))
         mock_api = mocker.MagicMock(name='loadmap')
         mock_api2 = mocker.MagicMock(name='loadmap_notcalled')
         mock_api.side_effect = self.dummyloadmap
@@ -126,14 +128,13 @@ class TestOptions():
         mocker.patch('lisflood.hydrological_modules.riceirrigation.loadmap', new=mock_api)
         mocker.patch('lisflood.hydrological_modules.reservoir.loadmap', new=mock_api2)
         mocker.patch('lisflood.hydrological_modules.evapowater.loadmap', new=mock_api2)
-        mocker.patch('lisflood.hydrological_modules.waterabstraction.loadmap', new=mock_api2)
+        mocker.patch('lisflood.hydrological_modules.waterabstraction.loadmap', new=mock_api)
         mocker.patch('lisflood.hydrological_modules.inflow.loadmap', new=mock_api2)
         mocker.patch('lisflood.hydrological_modules.lakes.loadmap', new=mock_api2)
         lisfloodexe(settings)
         calls = [call('RiceFlooding'), call('RicePercolation'), call('RicePlantingDay1'),
                  call('RiceHarvestDay1'), call('RicePlantingDay2'), call('RiceHarvestDay2'), ]
         lisflood.hydrological_modules.riceirrigation.loadmap.assert_has_calls(calls)
-        assert not lisflood.hydrological_modules.waterabstraction.loadmap.called
         assert not lisflood.hydrological_modules.evapowater.loadmap.called
         assert not lisflood.hydrological_modules.reservoir.loadmap.called
         assert not lisflood.hydrological_modules.inflow.loadmap.called

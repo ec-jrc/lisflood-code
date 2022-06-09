@@ -23,7 +23,7 @@ import warnings
 from pcraster import numpy2pcr, Nominal, pcr2numpy, timeinputscalar
 import numpy as np
 
-from ..global_modules.settings import LisSettings
+from ..global_modules.settings import LisSettings, MaskInfo
 from ..global_modules.add1 import loadmap, read_tss_header, compressArray
 from ..global_modules.errors import LisfloodWarning
 from . import HydroModule
@@ -131,11 +131,17 @@ class inflow(HydroModule):
            inside the sub time step routing routine
         """
 
+        if (NoRoutingExecuted < 1):
+           maskinfo = MaskInfo.instance()  
+           self.var.QinADDEDM3 = maskinfo.in_zero()  
         # ************************************************************
         # ***** INLFLOW **********************************************
         # ************************************************************
         settings = LisSettings.instance()
         option = settings.options
+        
         if option['inflow']:
+
             self.var.QInDt = (self.var.QInM3Old + (NoRoutingExecuted + 1) * self.var.QDelta) * self.var.InvNoRoutSteps
             # flow from inlets per sub step
+            self.var.QinADDEDM3 += self.var.QInDt 

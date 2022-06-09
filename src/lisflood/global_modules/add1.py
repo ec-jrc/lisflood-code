@@ -16,7 +16,7 @@ See the Licence for the specific language governing permissions and limitations 
 """
 from __future__ import print_function, absolute_import
 
-from cftime._cftime import real_datetime
+import cftime
 from future.utils import listitems
 
 from nine import range
@@ -35,13 +35,30 @@ import pcraster
 from pcraster import Scalar, numpy2pcr, Nominal, setclone, Boolean, pcr2numpy
 from netCDF4 import num2date, date2num
 import numpy as np
-import xarray as xr
+#import xarray as xr
 
 from .zusatz import iterOpenNetcdf, iterReadPCRasterMap, iterSetClonePCR, checkmap
 from .settings import (calendar_inconsistency_warning, get_calendar_type, calendar, MaskAttrs, CutMap, NetCDFMetadata,
                        LisSettings, MaskInfo)
 from .errors import LisfloodWarning, LisfloodError
 from .decorators import Cache
+
+# modified numpy class to ensure code compatibility with EPIC (that uses XArray in computations)
+# while keeping higher performance when EPIC modules are not needed (use of only numpy arrays in computations)
+class NumpyModified(np.ndarray):
+    obj_dims = []
+    def __new__(cls, input_array, dims):
+        obj = np.asarray(input_array).view(cls)
+        obj.obj_dims = list(dims)
+        return obj
+
+    @property
+    def values(self):
+        return self
+    
+    @property
+    def dims(self):
+        return self.obj_dims
 
 
 def defsoil(name1, name2=None, name3=None):
@@ -69,6 +86,17 @@ def defsoil(name1, name2=None, name3=None):
             in3 = name3
 
     return [in1, in2, in3]
+
+
+def readInputWithBackup(name, values_if_failure=None):
+    """Read input map/value if name is not None; else the provided backup values are used"""
+    if name is None:
+        return values_if_failure
+    else:
+        try:
+            return loadmap(name)
+        except:
+            return name
 
 
 def valuecell(mask, coordx, coordstr):
@@ -374,7 +402,7 @@ def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averagey
 
                 # select timestep to use for reading from netCDF stack based on timestep_init (state file time step)
                 timestepI = calendar(settings.timestep_init, binding['calendar_type'])
-                if isinstance(timestepI, datetime.datetime):
+                if isinstance(timestepI, (datetime.datetime, cftime.DatetimeProlepticGregorian, cftime.real_datetime)):
                     #reading dates in XML settings file
                     # get step id number in netCDF stack for timestepInit date
                     if averageyearflag:
@@ -743,7 +771,7 @@ def checknetcdf(name, start, end):
     # Time step, expressed as fraction of day (same as self.var.DtSec and self.var.DtDay)
 
     date_first_sim_step = calendar(start, binding['calendar_type'])
-    if not isinstance(date_first_sim_step, (datetime.datetime, real_datetime)):
+    if not isinstance(date_first_sim_step, (datetime.datetime, cftime.real_datetime)):
         date_first_sim_step = begin + datetime.timedelta(days=(date_first_sim_step - 1) * DtDay)
     if (date_first_sim_step < date_first_step_in_ncdf):
         msg = "First simulation time step is before first time step in netCDF input data file \n" \
@@ -753,7 +781,7 @@ def checknetcdf(name, start, end):
         raise LisfloodError(msg)
 
     date_last_sim_step = calendar(end, binding['calendar_type'])
-    if not isinstance(date_last_sim_step, (datetime.datetime, real_datetime)):
+    if not isinstance(date_last_sim_step, (datetime.datetime, cftime.real_datetime)):
     # if type(date_last_sim_step) is not datetime.datetime:
         date_last_sim_step = begin + datetime.timedelta(days=(date_last_sim_step - 1) * DtDay)
     if (date_last_sim_step > date_last_step_in_ncdf):

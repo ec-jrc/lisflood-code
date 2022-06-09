@@ -54,6 +54,7 @@ class frost(HydroModule):
         self.var.FrostIndex = loadmap('FrostIndexInitValue')
         # self.var.AfrostIndex=-(1-self.var.Afrost)*self.var.FrostIndex
         # initial Frost Index value
+        self.var.isFrozenSoil = self.var.FrostIndex > self.var.FrostIndexThreshold  #### EPIC
 # --------------------------------------------------------------------------
 # --------------------------------------------------------------------------
 
@@ -70,6 +71,12 @@ class frost(HydroModule):
         # - second term should be subtracted, not added!!
 
         self.var.FrostIndex = np.maximum(self.var.FrostIndex + FrostIndexChangeRate * self.var.DtDay, 0)
+        
+        # EDITED on Jan 27th 2022. The max value of the Frost Index is set to 57 in order to avoid artificial flood events
+        self.var.FrostIndex = np.where(self.var.FrostIndex > 57.0, 57.0, self.var.FrostIndex)
+        
+        self.var.isFrozenSoil = self.var.FrostIndex > self.var.FrostIndexThreshold  #### EPIC
+        
         # frost index in soil [degree days]
         # based on Molnau and Bissel (1983, A Continuous Frozen Ground Index for Flood
         # Forecasting. In: Maidment, Handbook of Hydrology, p. 7.28, 7.55)

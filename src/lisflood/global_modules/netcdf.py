@@ -43,7 +43,7 @@ def mask_array(data, mask, crop, core_dims):
                                  exclude_dims=set(core_dims),
                                  output_dtypes=[data.dtype],
                                  output_core_dims=[['z']],
-                                 output_sizes={'z': n_data},
+                                 dask_gufunc_kwargs = dict(output_sizes={'z': n_data}),
                                  kwargs={'mask': mask, 'crop': crop})
     return masked_data
 

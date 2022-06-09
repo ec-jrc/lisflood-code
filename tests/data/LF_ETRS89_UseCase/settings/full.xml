@@ -5,7 +5,7 @@
 
         # module activation
         <setoption choice="1" name="wateruse"/>
-        <setoption choice="1" name="groundwaterSmooth"/>
+        <setoption choice="0" name="groundwaterSmooth"/>
         <setoption choice="1" name="TransientWaterDemandChange"/>
         <setoption choice="1" name="useWaterDemandAveYear"/>
         <setoption choice="1" name="wateruseRegion"/>
@@ -18,6 +18,7 @@
         <setoption choice="1" name="simulatePF"/>
         <setoption choice="1" name="SplitRouting"/>
         <setoption choice="0" name="InitLisflood"/>
+        <setoption choice="0" name="cropsEPIC"/>
 
         # report end maps and state maps
         <setoption choice="0" name="repEndMaps"/>
@@ -52,6 +53,7 @@
         <setoption choice="0" name="repTotalAbs"/>
         <setoption choice="0" name="repTotalWUse"/>
         <setoption choice="0" name="repWIndex"/>
+        <setoption choice="0" name="repWaterUse"/>
 
     </lfoptions>
 
@@ -486,11 +488,12 @@
 
             <textvar name="CalChanMan" value="$(PathParams)/params_CalChanMan1.nc">
                 <comment>
-                    default: 2.0
-                    $(PathParams)/params_CalChanMan1.nc
-                    Multiplier applied to Channel Manning's n
+                    default: 3.0
+                    $(PathParams)/params_CalChanMan2.nc
+                    Multiplier applied to Channel Manning's n for second line of routing
                 </comment>
             </textvar>
+
 
             <textvar name="SnowMeltCoef" value="$(PathParams)/params_SnowMeltCoef.nc">
                 <comment>
@@ -1497,6 +1500,28 @@
                 </comment>
 
             </textvar>
+            
+            
+            <textvar name="IrrigationWaterReUseM3" value="0.0">
+            
+            <comment>
+            
+                  Annual amount (m3) of treated wastewater reused for irrigation
+                  
+            </comment>
+            
+            </textvar>
+            
+            
+            <textvar name="IrrigationWaterReUseNumDays" value="143">
+            
+            <comment>
+            
+                  Number of days over which the annual amount of treated wastewater for irrigation is used
+                  
+            </comment>
+            
+            </textvar>
 
 
             <textvar name="LivestockConsumptiveUseFraction" value="0.15">
@@ -2323,7 +2348,8 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 **************************************************************
 
 -->
-        <textvar name="numCPUs_parallelKinematicWave" value="2"/>
+        <textvar name="numCPUs_parallelKinematicWave" value="1"/>
+        <textvar name="numCPUs_parallelNumba" value="1"/>
 
         <textvar name="NetCDFTimeChunks" value="auto"/>
             <comment>
@@ -3212,7 +3238,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
             </comment>
 
 
-            <textvar name="LZAvInflowMap" value="$(PathMaps)/safe_init/ec_lzavin.nc">
+            <textvar name="LZAvInflowMap" value="$(PathMaps)/safe_init/lzavin.nc">
 
                 <comment>
 
@@ -3229,7 +3255,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
             </textvar>
 
 
-            <textvar name="AvgDis" value="$(PathMaps)/safe_init/ec_avgdis.nc">
+            <textvar name="AvgDis" value="$(PathMaps)/safe_init/avgdis.nc">
 
                 <comment>
 
@@ -4020,6 +4046,28 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
             </textvar>
 
+            
+            <textvar name="IrrigationWaterReUseM3" value="$(IrrigationWaterReUseM3)">
+            
+            <comment>
+            
+                  Annual amount (m3) of treated wastewater reused for irrigation
+                  
+            </comment>
+            
+            </textvar>
+            
+            
+            <textvar name="IrrigationWaterReUseNumDays" value="$(IrrigationWaterReUseNumDays)">
+            
+            <comment>
+            
+                  Number of days over which the annual amount of treated wastewater for irrigation is used
+                  
+            </comment>
+            
+
+            </textvar>
 
             <textvar name="MapIrrigationCropCoef" value="$(MapIrrigationCropCoef)">
 
@@ -6022,28 +6070,23 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
                 </textvar>
 
-
-                <textvar name="Theta1TS" value="$(PathOut)/thTop.tss">
-
+                <textvar name="Theta1TS" value="$(PathOut)/th1a.tss">
                     <comment>
-
-                        Soil moisture upper layer [cu mm / cu mm]
-
+                        Soil moisture layer 1a [cu mm / cu mm]
                     </comment>
-
                 </textvar>
 
-
-                <textvar name="Theta2TS" value="$(PathOut)/thSub.tss">
-
+                <textvar name="Theta2TS" value="$(PathOut)/th1b.tss">
                     <comment>
-
-                        Soil moisture lower layer [cu mm / cu mm]
-
+                        Soil moisture layer 1b [cu mm / cu mm]
                     </comment>
-
                 </textvar>
 
+                <textvar name="Theta3TS" value="$(PathOut)/th2.tss">
+                    <comment>
+                        Soil moisture layer 2 [cu mm / cu mm]
+                    </comment>
+                </textvar>
 
                 <textvar name="UZTS" value="$(PathOut)/uz.tss">
 
@@ -6754,6 +6797,29 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
                 </textvar>
 
+                <textvar name="MassBalanceErrorSplitRoutingTSS" value="$(PathOut)/mbErrorSplitRoutingM3.tss">
+                    <comment>
+                        Reported mass balance error due to the split routing module, for each catchment [m3]
+                    </comment>
+                </textvar>  
+
+                <textvar name="OutletDischargeErrorSplitRoutingTSS" value="$(PathOut)/OutletDischargeErrorSplitRoutingM3S.tss">
+                    <comment>
+                        Reported discharge error at the outlet as a consequence of the mass balance error within the split routing module, for each catchment [m3/s]
+                    </comment>
+                </textvar>
+
+                <textvar name="MBErrorStorageRatioTSS" value="$(PathOut)/MBErrorStorageRatio.tss">
+                    <comment>
+                        Reported ratio between the mass balance error and the water volume storage, for each catchment [m3/m3]
+                    </comment>
+                </textvar>
+
+                <textvar name="AverageFractionsCatchmentTSS" value="$(PathOut)/AverageFractionsCatchment.tss">
+                    <comment>
+                        Average value of the sum of the fractions within a catchment: this value must be 1.0 in order to avoid mass balace errors! [-]
+                    </comment>
+                </textvar>
 
                 <textvar name="Th1LTResTS" value="$(PathOut)/thTopLtRes.tss">
 
@@ -8735,6 +8801,10 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
                         **************************************************************
 
+                    <textvar name="UpstreamInflowUsedM3" value="$(PathOut)/upstreamInflowUsedMonReg"/>
+                    
+                    <textvar name="abstraction_allSources_actual_irrigation_M3MonthRegion" value="$(PathOut)/absAllSrcActIrrM3MonReg"/>
+                    
                     </comment>
 
 

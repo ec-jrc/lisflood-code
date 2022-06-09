@@ -79,16 +79,8 @@ class surface_routing(HydroModule):
         # 2 times fixed reference depth
         # (Note that using grid size as flow width is a bit odd, as results will depend on cell size!)
 
-        AlpTermOF = [(self.var.NManning[0] / (np.sqrt(Grad))) ** self.var.Beta, (self.var.NManning[1] / (np.sqrt(Grad))) ** self.var.Beta, (self.var.NManning[2] / (np.sqrt(Grad))) ** self.var.Beta]
-        # self.var.OFAlpha = [AlpTermOF[0]*(OFWettedPerimeter**AlpPow),AlpTermOF[1]*(OFWettedPerimeter**AlpPow),AlpTermOF[2]*(OFWettedPerimeter**AlpPow)]
-
-        self.var.OFAlphaOther = (AlpTermOF[0] * (OFWettedPerimeter ** self.var.AlpPow)).astype(float)
-        self.var.OFAlphaForest = (AlpTermOF[1] * (OFWettedPerimeter ** self.var.AlpPow)).astype(float)
-        self.var.OFAlphaDirect = (AlpTermOF[2] * (OFWettedPerimeter ** self.var.AlpPow)).astype(float)
-        self.var.InvOFAlphaOther  = 1 / self.var.OFAlphaOther
-        self.var.InvOFAlphaForest = 1 / self.var.OFAlphaForest
-        self.var.InvOFAlphaDirect = 1 / self.var.OFAlphaDirect
-
+        self.var.OFAlpha = (((self.var.NManning / np.sqrt(Grad)) ** self.var.Beta) * (OFWettedPerimeter ** self.var.AlpPow)).astype(float)
+        self.var.InvOFAlpha  = 1 / self.var.OFAlpha
         # Alpha to separate int 3 different overland routing: forest, water and sealed area, remaining area
         # overland flow Alpha for kinematic wave
         # OFCrossSectionArea = self.var.MMtoM * self.var.WaterDepth * self.var.PixelLength
@@ -98,9 +90,9 @@ class surface_routing(HydroModule):
         # self.var.OFM3=[cover(OFM3all*self.var.OtherFraction,scalar(0.0)),cover(OFM3all*self.var.ForestFraction,scalar(0.0)),cover(OFM3all*(self.var.DirectRunoffFraction+self.var.WaterFraction),scalar(0.0))]
 
         # Initial overland discharge [m3 s-1]
-        self.var.OFQDirect = ((self.var.OFM3Direct * self.var.InvPixelLength * self.var.InvOFAlphaDirect) ** self.var.InvBeta).astype(float)
-        self.var.OFQOther = ((self.var.OFM3Other * self.var.InvPixelLength * self.var.InvOFAlphaOther) ** self.var.InvBeta).astype(float)
-        self.var.OFQForest = ((self.var.OFM3Forest * self.var.InvPixelLength * self.var.InvOFAlphaForest) ** self.var.InvBeta).astype(float)
+        self.var.OFQDirect = ((self.var.OFM3Direct * self.var.InvPixelLength * self.var.InvOFAlpha.values[self.var.dim_runoff[1].index('Direct')])**(self.var.InvBeta)).astype(float)
+        self.var.OFQOther = ((self.var.OFM3Other * self.var.InvPixelLength * self.var.InvOFAlpha.values[self.var.dim_runoff[1].index('Other')])**(self.var.InvBeta)).astype(float)
+        self.var.OFQForest = ((self.var.OFM3Forest * self.var.InvPixelLength * self.var.InvOFAlpha.values[self.var.dim_runoff[1].index('Forest')])**(self.var.InvBeta)).astype(float)
 
     def initialSecond(self):
         """ 2nd initialisation part of the surface routing module:
@@ -113,27 +105,29 @@ class surface_routing(HydroModule):
         settings = LisSettings.instance()
         binding = settings.binding
         num_threads = int(binding["numCPUs_parallelKinematicWave"])
-        self.direct_surface_router = kinematicWave(compressArray(self.var.LddToChan), land_mask, self.var.OFAlphaDirect, self.var.Beta,\
-                                                   self.var.PixelLength, dt_surf_routing, num_threads)
-        self.other_surface_router = kinematicWave(compressArray(self.var.LddToChan), land_mask, self.var.OFAlphaOther, self.var.Beta,\
-                                                  self.var.PixelLength, dt_surf_routing, num_threads)
-        self.forest_surface_router = kinematicWave(compressArray(self.var.LddToChan), land_mask, self.var.OFAlphaForest, self.var.Beta,\
-                                                   self.var.PixelLength, dt_surf_routing, num_threads)
 
+        self.direct_surface_router = kinematicWave(compressArray(self.var.LddToChan), land_mask, self.var.OFAlpha.values[self.var.dim_runoff[1].index('Direct')], self.var.Beta,\
+                                                   self.var.PixelLength, dt_surf_routing, num_threads)
+        self.other_surface_router = kinematicWave(compressArray(self.var.LddToChan), land_mask, self.var.OFAlpha.values[self.var.dim_runoff[1].index('Other')], self.var.Beta,\
+                                                  self.var.PixelLength, dt_surf_routing, num_threads)
+        self.forest_surface_router = kinematicWave(compressArray(self.var.LddToChan), land_mask, self.var.OFAlpha.values[self.var.dim_runoff[1].index('Forest')], self.var.Beta,\
+                                                   self.var.PixelLength, dt_surf_routing, num_threads)        
+        
     def dynamic(self):
         """ dynamic part of the surface routing module
         """
         # ************************************************************
         # ***** COMPONENTS OF RUNOFF                               ***
         # ************************************************************
-        self.var.SurfaceRunOther = self.var.OtherFraction * \
-            np.maximum(self.var.AvailableWaterForInfiltration[0] - self.var.Infiltration[0], 0)
-        self.var.SurfaceRunForest = self.var.ForestFraction * \
-            np.maximum(self.var.AvailableWaterForInfiltration[1] - self.var.Infiltration[1], 0)
-        self.var.SurfaceRunIrrigation = self.var.IrrigationFraction * \
-            np.maximum(self.var.AvailableWaterForInfiltration[2] - self.var.Infiltration[2], 0)
 
-        self.var.SurfaceRunoff = self.var.DirectRunoff + self.var.SurfaceRunOther + self.var.SurfaceRunForest + self.var.SurfaceRunIrrigation
+        self.var.SurfaceRunSoil = self.var.allocateDataArray([self.var.dim_landuse, self.var.dim_pixel])
+        for landuse, veg_list in self.var.LANDUSE_VEGETATION.items():
+            iveg_list,iveg_list_pres,ilanduse = self.var.get_indexes_from_landuse_and_veg_list_GLOBAL(landuse, veg_list)
+            self.var.SurfaceRunSoil.values[ilanduse] = np.sum((self.var.SoilFraction.values[iveg_list_pres] * \
+                    np.maximum(self.var.AvailableWaterForInfiltration.values[iveg_list] - self.var.Infiltration.values[iveg_list],0)),self.var.SoilFraction.dims.index("vegetation"))
+
+        self.var.SurfaceRunoff = self.var.DirectRunoff + np.sum(self.var.SurfaceRunSoil.values,self.var.SurfaceRunSoil.dims.index("landuse"))
+        
         # Surface runoff for this time step (mm)
         # Note that SurfaceRunoff ONLY includes surface runoff generated during current time
         # step (WaterDepth includes routed runoff from previous steps as well)
@@ -148,14 +142,17 @@ class surface_routing(HydroModule):
         # Routing of overland flow to channel using kinematic wave
         # Note that all 'new' water is added as side-flow
         SideflowDirect = self.var.DirectRunoff * self.var.MMtoM3 * self.var.InvPixelLength * self.var.InvDtSec
-        SideflowOther = (self.var.SurfaceRunOther + self.var.SurfaceRunIrrigation) * self.var.MMtoM3 * self.var.InvPixelLength * self.var.InvDtSec
-        SideflowForest = self.var.SurfaceRunForest * self.var.MMtoM3 * self.var.InvPixelLength * self.var.InvDtSec
-        # All surface runoff that is generated during current time step added as side flow [m3/s/m pixel-length]
+        ilusevalues = []
+        for luse in ["Rainfed","Irrigated"]:
+            ilusevalues.append(self.var.epic_settings.soil_uses.index(luse))
 
+        SideflowOther = np.sum(self.var.SurfaceRunSoil.values[ilusevalues],self.var.SurfaceRunSoil.dims.index("landuse")) * self.var.MMtoM3 * self.var.InvPixelLength * self.var.InvDtSec
+        SideflowForest = self.var.SurfaceRunSoil.values[self.var.epic_settings.soil_uses.index('Forest')] * self.var.MMtoM3 * self.var.InvPixelLength * self.var.InvDtSec
+        # All surface runoff that is generated during current time step added as side flow [m3/s/m pixel-length]
         self.direct_surface_router.kinematicWaveRouting(self.var.OFQDirect, SideflowDirect)
         self.other_surface_router.kinematicWaveRouting(self.var.OFQOther, SideflowOther)
         self.forest_surface_router.kinematicWaveRouting(self.var.OFQForest, SideflowForest)
-
+        
 # to PCRASTER
 
         #SideflowDirect =  decompress(self.var.DirectRunoff * self.var.MMtoM3 * self.var.InvPixelLength * self.var.InvDtSec)
@@ -191,9 +188,11 @@ class surface_routing(HydroModule):
         #self.var.OFQForest=(self.var.OFM3Forest * self.var.InvPixelLength *
         #                    self.var.InvOFAlphaForest)**(self.var.InvBeta)
 
-        self.var.OFM3Direct = self.var.PixelLength * self.var.OFAlphaDirect * self.var.OFQDirect**self.var.Beta
-        self.var.OFM3Other = self.var.PixelLength * self.var.OFAlphaOther * self.var.OFQOther**self.var.Beta
-        self.var.OFM3Forest = self.var.PixelLength * self.var.OFAlphaForest * self.var.OFQForest**self.var.Beta
+        
+        self.var.OFM3Direct = self.var.PixelLength * self.var.OFAlpha.values[self.var.dim_runoff[1].index('Direct')] * self.var.OFQDirect**self.var.Beta
+        self.var.OFM3Other = self.var.PixelLength * self.var.OFAlpha.values[self.var.dim_runoff[1].index('Other')] * self.var.OFQOther**self.var.Beta
+        self.var.OFM3Forest = self.var.PixelLength * self.var.OFAlpha.values[self.var.dim_runoff[1].index('Forest')] * self.var.OFQForest**self.var.Beta
+        
         self.var.Qall = self.var.OFQDirect + self.var.OFQOther + self.var.OFQForest
         self.var.M3all = self.var.OFM3Direct + self.var.OFM3Other + self.var.OFM3Forest
         # Overland flow storage [m3]
