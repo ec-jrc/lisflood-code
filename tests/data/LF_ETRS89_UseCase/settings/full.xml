@@ -2348,8 +2348,8 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 **************************************************************
 
 -->
-        <textvar name="numCPUs_parallelKinematicWave" value="2"/>
-        <textvar name="numCPUs_parallelNumba" value="0"/>
+        <textvar name="numCPUs_parallelKinematicWave" value="1"/>
+        <textvar name="numCPUs_parallelNumba" value="1"/>
 
         <textvar name="NetCDFTimeChunks" value="auto"/>
             <comment>
