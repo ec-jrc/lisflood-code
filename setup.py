@@ -185,7 +185,7 @@ setup(
     zip_safe=True,
     classifiers=[
         # complete classifier list: http://pypi.python.org/pypi?%3Aaction=list_classifiers
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
         'Intended Audience :: Education',
         'Intended Audience :: Financial and Insurance Industry',
@@ -197,7 +197,7 @@ setup(
         'Operating System :: Microsoft :: Windows',
         'Operating System :: MacOS :: MacOS X',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.7',
         'Topic :: Scientific/Engineering :: Physics',
     ],
     # setup.py publish to pypi.
