@@ -40,7 +40,7 @@ Benefits of v4.0.0: each pixel is allocated the number of iterations that allow 
 
 2) <ins>changes in the allocation of water abstraction.</ins>  
 LISFLOOD v3.2.0: direct abstraction of the consumptive water use.  
-LISFLOOD v4.0.0: abstraction of the demanded water valume for each use (industrial, domestic, energy, livestock); the consumptive water use leaves the system; the unused water volume is returned to the channels.  
+LISFLOOD v4.0.0: abstraction of the demanded water volume for each use (industrial, domestic, energy, livestock); the consumptive water use leaves the system; the unused water volume is returned to the channels.  
 Minor note:  small differences in the computation of the leakages.  
 
 3) <ins>patches in the modules riceirrigation.py and frost.py to avoid non-realistic results in specific conditions.</ins>  
