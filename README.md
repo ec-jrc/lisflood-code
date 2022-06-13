@@ -56,6 +56,8 @@ LISFLOOD v4.0.0: computation of the mass balance by considering the single compu
 5) <ins>bug fixes in the use of the transientlandusechange option, in the use of the option simulatePF, in the writing of the monthly outputs.</ins>  
 Correct use of the rice fraction by landusechange.py DYNAMIC; use of the correct soil water content variable for the computation of pF1 (ws1a replaced ws1); correct reporting of the monthly time steps by the optional module indicatorcalc.py.  
 
+Lisflood 4.0.0 is the version used for EFAS 5 and GloFAS 4 calibration.  
+
 Note: the users are recommended to download the [reference settings xml](https://github.com/ec-jrc/lisflood-code/tree/master/src/lisfloodSettings_reference.xml) file and adapt it by inserting their own paths and modelling choices).
 
 
