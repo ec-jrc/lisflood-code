@@ -1,5 +1,6 @@
 import os
 import glob
+from re import L
 import xarray as xr
 import numpy as np
 import datetime
@@ -10,7 +11,7 @@ from nine import range
 from pyproj import Proj
 
 from .settings import (calendar_inconsistency_warning, get_calendar_type, calendar, MaskAttrs, CutMap, NetCDFMetadata,
-                       LisSettings, MaskInfo)
+                       LisSettings, MaskInfo, CDFFlags, inttodate)
 from .errors import LisfloodWarning, LisfloodError
 from .decorators import Cache, cached
 from .zusatz import iterOpenNetcdf
@@ -346,9 +347,9 @@ def get_space_coords(nrow, ncol, dim_lat_y, dim_lon_x):
     return coordinates
 
 
-def write_header(var_name, netfile, DtDay,
-                 value_standard_name, value_long_name, value_unit, data_format,
-                 startdate, repstepstart, repstepend, frequency):
+def write_netcdf_header(var_name, netfile, DtDay,
+                        value_standard_name, value_long_name, value_unit, data_format,
+                        startdate, repstepstart, repstepend, frequency):
 
     nf1 = iterOpenNetcdf(netfile, "", 'w', format='NETCDF4')
 
@@ -421,7 +422,7 @@ def write_header(var_name, netfile, DtDay,
                 months_end = np.array([dates[j].month != next_date_times[j].month for j in range(repstepend - repstepstart +1)])
                 steps_monthly = steps[months_end]
                 time_stamps_monthly = dates[months_end==True]
-            elif frequency == "annual":
+            elif frequency == "yearly":
                 years_end = np.array([dates[j].year != next_date_times[j].year for j in range(steps.size)])
                 steps = steps[years_end]
         if frequency == "all":
@@ -474,7 +475,7 @@ def writenet(flag, inputmap, netfile, DtDay,
 
     """ Write a netcdf stack
 
-    :param flag: 0 netCDF file format; ?
+    :param flag: 0 -> one value map, 1-5 -> time serie (all steps, monthly, yearly, etc.)
     :param inputmap: values to be written to NetCDF file
     :param netfile: name of output file in NetCDF format
     :param DtDay: model timestep (self.var.DtDay)
@@ -485,7 +486,7 @@ def writenet(flag, inputmap, netfile, DtDay,
     :param startdate: reference date to be used to get start date and end date for netCDF file from start step and end step
     :param: repstepstart: first reporting step
     :param: repstepend: final reporting step
-    :param frequency:[None,'all','monthly','annual'] save to netCDF stack; None save to netCDF single
+    :param frequency:[None,'all','monthly','yearly'] save to netCDF stack; None save to netCDF single
     :return: 
     """
     # prefix = netfile.split('/')[-1].split('\\')[-1].split('.')[0]
@@ -493,9 +494,9 @@ def writenet(flag, inputmap, netfile, DtDay,
     var_name = os.path.basename(netfile)
     netfile += ".nc"
     if flag == 0:
-        nf1 = write_header(var_name, netfile, DtDay,
-                           value_standard_name, value_long_name, value_unit, data_format,
-                           startdate, repstepstart, repstepend, frequency)
+        nf1 = write_netcdf_header(var_name, netfile, DtDay,
+                                  value_standard_name, value_long_name, value_unit, data_format,
+                                  startdate, repstepstart, repstepend, frequency)
     else:
         nf1 = iterOpenNetcdf(netfile, "", 'a', format='NETCDF4')
     if flags['nancheck']:
@@ -503,10 +504,289 @@ def writenet(flag, inputmap, netfile, DtDay,
     
     map_np = uncompress_array(inputmap)
     if frequency is not None:
-        nf1.variables[var_name][flag, :, :] = map_np
-        #value[flag,:,:]= mapnp
+        cdfflags = CDFFlags.instance()
+        step = cdfflags[flag]
+
+        nf1.variables[var_name][step, :, :] = map_np
     else:
-        # without timeflag
         nf1.variables[var_name][:, :] = map_np
 
     nf1.close()
+
+
+class Writer():
+
+    def write(self, map_data, start_date, start_step, end_step):
+        raise NotImplementedError
+
+class NetcdfWriter(Writer):
+
+    def __init__(self, var, map_key, map_value, map_path, frequency=None):
+
+        self.var = var
+
+        self.map_key = map_key
+        self.map_value = map_value
+        self.map_path = map_path
+        self.map_name = os.path.basename(self.map_path)+'.nc'
+
+        self.frequency = frequency
+
+    def write(self, map_data, start_date, start_step, end_step):
+        
+        nf1 = write_netcdf_header(self.map_name, self.map_path, self.var.DtDay,
+                                  self.map_key, self.map_value.output_var, self.map_value.unit, 'd', 
+                                  start_date, start_step, end_step, self.frequency)
+
+        flags = LisSettings.instance().flags
+        if flags['nancheck']:
+            nanCheckMap(map_data, self.map_name, self.map_key)
+        
+        map_np = uncompress_array(map_data)
+        
+        nf1.variables[self.map_name][:, :] = map_np
+
+        nf1.close()
+
+class NetcdfStepsWriter(NetcdfWriter):
+
+    def __init__(self, var, map_key, map_value, map_path, frequency, flag):
+
+        self.flag = flag
+        self.chunks = 1
+        self.step_range = []
+        self.data_steps = []
+
+        super().__init__(var, map_key, map_value, map_path, frequency)
+
+    def checkpoint(self):
+        write = False
+        if len(self.data_steps) == self.chunks:
+            write = True
+        return write
+
+    def write(self, map_data, start_date, start_step, end_step):
+        
+        cdfflags = CDFFlags.instance()
+        step = cdfflags[self.flag]
+
+        if self.checkpoint():
+
+            if self.step_range[0] == 0:
+                nf1 = write_netcdf_header(self.map_name, self.map_path, self.var.DtDay,
+                                        self.map_key, self.map_value.output_var, self.map_value.unit, 'd', 
+                                        start_date, start_step, end_step, self.frequency)
+            else:
+                nf1 = iterOpenNetcdf(self.map_path, "", 'a', format='NETCDF4')
+
+
+            flags = LisSettings.instance().flags
+            if flags['nancheck']:
+                nanCheckMap(map_data, self.map_name, self.map_key)
+            
+            maps_uncompressed = []
+            for data in self.data_steps:
+                maps_uncompressed.append(uncompress_array(data))
+            maps_np = np.array(maps_uncompressed)
+            
+            nf1.variables[self.map_name][self.step_range, :, :] = maps_np
+
+            nf1.close()
+
+            # clear lists for next chunk
+            self.step_range.clear()
+            self.data_steps.clear()
+
+        else:
+            self.step_range.append(step)
+            self.data_steps.append(map_data)
+
+
+class PCRasterWriter(Writer):
+
+    def __init__(self, map_path):
+        self.map_path = map_path
+
+    def write(self, map_data, start_date, start_step, end_step):
+            self.var.report(decompress(map_data), str(self.map_path))
+
+
+class MapOutput():
+
+    def __init__(self, var, out_type, frequency, map_key, map_value):
+
+        settings = LisSettings.instance()
+        option = settings.options
+
+        self.var = var
+
+        cdfflags = CDFFlags.instance()
+        self.flag = cdfflags.get_flag(out_type, frequency)
+        self.frequency = frequency
+
+        self.map_key = map_key
+        self.map_value = map_value
+        self.map_data = self.extract_map()
+        self.map_path = self.extract_path(settings)
+
+        if option['writeNetcdf'] or option['writeNetcdfStack']:
+            if self.flag == 0:
+                self.writer = NetcdfWriter(self.var, self.map_key, self.map_value, self.map_path)
+            else:
+                self.writer = NetcdfStepsWriter(self.var, self.map_key, self.map_value, self.map_path, self.frequency)
+        else:  #PCRaster
+            self.writer = PCRasterWriter(self.map_path)
+
+    def extract_map(self):
+        what = 'self.var.' + self.map_value.output_var
+        try:
+            map_var = eval(what)
+        except:
+            print(f'Warning! {self.map_key} could not be found for outputs')
+        return map_var
+
+    def extract_path(self, settings):
+        binding = settings.binding
+        # report end map filename
+        if settings.mc_set:
+            # MonteCarlo model
+            map_path = os.path.join(str(self.var.currentSampleNumber()), binding[self.map_key].split("/")[-1])
+        else:
+            map_path = binding.get(self.map_key)
+        return map_path
+
+    def frequency_check(self):
+        if self.frequency == 'all':
+            check = True
+        elif self.frequency == 'monthly':
+            check = self.var.monthend
+        elif self.frequency == 'yearly':
+            check = self.var.yearend
+        else:
+            raise ValueError(f'Output frequency {self.frequency} not recognised! Valid values are: (all, monthly, yearly)')
+        return check
+    
+    def output_checkpoint(self):
+        raise NotImplementedError
+
+    @property
+    def start_date(self):
+        raise NotImplementedError
+
+    def step_range(self):
+        raise NotImplementedError
+
+    def write(self):
+
+        if self.output_checkpoint():
+
+            start_step, end_step = self.step_range()
+            self.writer.write(self.map_data, self.start_date, start_step, end_step)
+
+
+class MapOutputEnd(MapOutput):
+
+    def __init__(self, var, map_key, map_value):
+        out_type = 'end'
+        frequency = None
+        super().__init__(var, out_type, frequency, map_key, map_value)
+    
+    def output_checkpoint(self):
+        check = self.var.currentTimeStep() == self.var.nrTimeSteps()
+        return check
+    
+    @property
+    def start_date(self):
+        start_date = inttodate(self.var.currentTimeStep() - 1, self.var.CalendarDayStart)
+        return start_date
+    
+    def step_range(self):
+        start_step = self.var.currentTimeStep()
+        end_step = self.var.currentTimeStep()
+        return start_step, end_step
+
+
+class MapOutputSteps(MapOutput):
+
+    def __init__(self, var, map_key, map_value, frequency):
+        out_type = 'steps'
+        self._start_date = inttodate(self.var.ReportSteps[0] - 1, self.var.CalendarDayStart)
+        super().__init__(var, out_type, frequency, map_key, map_value)
+    
+    def output_checkpoint(self):
+        check = self.var.currentTimeStep() in self.var.ReportSteps and self.frequency_check()
+        return check
+
+    @property
+    def start_date(self):
+        return self._start_date
+
+    def step_range(self):
+        start_step = 1
+        end_step = self.var.ReportSteps[-1] - self.var.ReportSteps[0] + 1
+        return start_step, end_step
+
+
+class MapOutputAll(MapOutput):
+
+    def __init__(self, var, map_key, map_value, frequency):
+        out_type = 'all'
+        settings = LisSettings.instance()
+        binding = settings.binding
+        self._start_date = inttodate(binding['StepStartInt'] - 1, var.CalendarDayStart)
+        super().__init__(var, out_type, frequency, map_key, map_value)
+    
+    def output_checkpoint(self):
+        check = self.frequency_check()
+        return check
+
+    @property
+    def start_date(self):
+        return self._start_date
+
+    def step_range(self):
+        start_step = 1
+        end_step = self.var.ReportSteps[-1] - self.var.ReportSteps[0] + 1
+        return start_step, end_step
+
+
+def output_maps_factory(var):
+
+    settings = LisSettings.instance()
+
+    report_maps_end = settings.report_maps_end
+    report_maps_steps = settings.report_maps_steps
+    report_maps_all = settings.report_maps_all
+
+    outputs = []
+    
+    for map_key, map_value in report_maps_end.items():
+        out = MapOutputEnd(settings, var, map_key, map_value)
+        outputs.append(out)
+
+    for map_key, map_value in report_maps_steps.items():
+        if map_value.monthly:
+            out = MapOutputSteps(settings, var, map_key, map_value, frequency='monthly')
+        elif map_value.yearly:
+            out = MapOutputSteps(settings, var, map_key, map_value, frequency='yearly')
+        else:
+            out = MapOutputSteps(settings, var, map_key, map_value, frequency='all')
+        outputs.append(out)
+        
+    for map_key, map_value in report_maps_all.items():
+        if map_value.monthly:
+            out = MapOutputAll(settings, var, map_key, map_value, frequency='monthly')
+        elif map_value.yearly:
+            out = MapOutputAll(settings, var, map_key, map_value, frequency='yearly')
+        else:
+            out = MapOutputAll(settings, var, map_key, map_value, frequency='all')
+        outputs.append(out)
+
+    check_duplicates = []
+    for out in outputs:
+        if out.map_path in check_duplicates:
+            raise Exception(f'Map {out.map_path} is duplicated, check list of outputs')
+        else:
+            check_duplicates.append(out.map_path)
+
+    return outputs

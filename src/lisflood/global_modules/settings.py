@@ -137,6 +137,31 @@ class CDFFlags(with_metaclass(Singleton)):
         # FIXME magic numbers. replace indexes with descriptive keys (end, steps, all, monthly (steps), etc.)
         self.flags = [0, 0, 0, 0, 0, 0, 0]
 
+    def get_flag(self, out_type, frequency):
+        if out_type == 'end':
+            flag = 0
+        elif out_type == 'steps':
+            if frequency == 'all':
+                flag = 1
+            elif frequency == 'monthly':
+                flag = 3
+            elif frequency == 'yearly':
+                flag = 4
+            else:
+                raise ValueError(f'Output frequency {frequency} not recognised! Valid values are: (all, monthly, yearly)')
+        elif out_type == 'all':
+            if frequency == 'all':
+                flag = 1
+            elif frequency == 'monthly':
+                flag = 3
+            elif frequency == 'yearly':
+                flag = 4
+            else:
+                raise ValueError(f'Output frequency {frequency} not recognised! Valid values are: (all, monthly, yearly)')
+        else:
+            raise ValueError(f'Output type {out_type} not recognised! Valid values are: (end, steps, all)')
+        return flag
+
     def inc(self, idx):
         self.flags[idx] += 1
 
@@ -145,6 +170,31 @@ class CDFFlags(with_metaclass(Singleton)):
 
     def __getitem__(self, item):
         return self.flags[item]
+    
+    def update(self, var):
+        # set the falg to indicate if a netcdffile has to be created or is only appended
+        # if reportstep than increase the counter
+        if var.currentTimeStep() in var.ReportSteps:
+            # FIXME magic numbers. replace indexes with descriptive keys
+            self.inc(1)
+            # globals.cdfFlag[1] += 1
+            if var.monthend:
+                # globals.cdfFlag[3] += 1
+                self.inc(3)
+            if var.yearend:
+                # globals.cdfFlag[4] += 1
+                self.inc(4)
+
+        # increase the counter for report all maps
+        self.inc(2)
+        # globals.cdfFlag[2] += 1
+        if var.monthend:
+            # globals.cdfFlag[5] += 1
+            self.inc(5)
+        if var.yearend:
+            # globals.cdfFlag[6] += 1
+            self.inc(6)
+
 
 
 @nine
