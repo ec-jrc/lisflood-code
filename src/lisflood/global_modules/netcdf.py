@@ -519,6 +519,7 @@ class Writer():
     def write(self, map_data, start_date, start_step, end_step):
         raise NotImplementedError
 
+
 class NetcdfWriter(Writer):
 
     def __init__(self, var, map_key, map_value, map_path, frequency=None):
@@ -528,7 +529,8 @@ class NetcdfWriter(Writer):
         self.map_key = map_key
         self.map_value = map_value
         self.map_path = map_path
-        self.map_name = os.path.basename(self.map_path)+'.nc'
+        self.map_name = os.path.basename(self.map_path)
+        self.map_path = map_path+'.nc'
 
         self.frequency = frequency
 
@@ -548,6 +550,7 @@ class NetcdfWriter(Writer):
 
         nf1.close()
 
+
 class NetcdfStepsWriter(NetcdfWriter):
 
     def __init__(self, var, map_key, map_value, map_path, frequency, flag):
@@ -561,7 +564,8 @@ class NetcdfStepsWriter(NetcdfWriter):
 
     def checkpoint(self):
         write = False
-        if len(self.data_steps) == self.chunks:
+        end_run = self.var.currentTimeStep() == self.var.nrTimeSteps()
+        if len(self.data_steps) == self.chunks or end_run:
             write = True
         return write
 
@@ -569,6 +573,15 @@ class NetcdfStepsWriter(NetcdfWriter):
         
         cdfflags = CDFFlags.instance()
         step = cdfflags[self.flag]
+
+        flags = LisSettings.instance().flags
+        if flags['nancheck']:
+            nanCheckMap(map_data, self.map_name, self.map_key)
+
+        map_np = uncompress_array(map_data)
+
+        self.step_range.append(step)
+        self.data_steps.append(map_np)
 
         if self.checkpoint():
 
@@ -578,28 +591,14 @@ class NetcdfStepsWriter(NetcdfWriter):
                                         start_date, start_step, end_step, self.frequency)
             else:
                 nf1 = iterOpenNetcdf(self.map_path, "", 'a', format='NETCDF4')
-
-
-            flags = LisSettings.instance().flags
-            if flags['nancheck']:
-                nanCheckMap(map_data, self.map_name, self.map_key)
-            
-            maps_uncompressed = []
-            for data in self.data_steps:
-                maps_uncompressed.append(uncompress_array(data))
-            maps_np = np.array(maps_uncompressed)
-            
-            nf1.variables[self.map_name][self.step_range, :, :] = maps_np
+                        
+            nf1.variables[self.map_name][self.step_range, :, :] = np.array(self.data_steps)
 
             nf1.close()
 
             # clear lists for next chunk
             self.step_range.clear()
             self.data_steps.clear()
-
-        else:
-            self.step_range.append(step)
-            self.data_steps.append(map_data)
 
 
 class PCRasterWriter(Writer):
@@ -626,24 +625,32 @@ class MapOutput():
 
         self.map_key = map_key
         self.map_value = map_value
-        self.map_data = self.extract_map()
         self.map_path = self.extract_path(settings)
 
-        if option['writeNetcdf'] or option['writeNetcdfStack']:
-            if self.flag == 0:
-                self.writer = NetcdfWriter(self.var, self.map_key, self.map_value, self.map_path)
-            else:
-                self.writer = NetcdfStepsWriter(self.var, self.map_key, self.map_value, self.map_path, self.frequency)
-        else:  #PCRaster
-            self.writer = PCRasterWriter(self.map_path)
+        if self.is_valid():
+            if option['writeNetcdf'] or option['writeNetcdfStack']:
+                if self.flag == 0:
+                    self.writer = NetcdfWriter(self.var, self.map_key, self.map_value, self.map_path)
+                else:
+                    self.writer = NetcdfStepsWriter(self.var, self.map_key, self.map_value, self.map_path, self.frequency, self.flag)
+            else:  # PCRaster
+                self.writer = PCRasterWriter(self.map_path)
+
+    def is_valid(self):
+        valid = True
+        map_data = self.extract_map()
+        if map_data is None or self.map_path is None:
+            valid = False
+        return valid
 
     def extract_map(self):
         what = 'self.var.' + self.map_value.output_var
         try:
-            map_var = eval(what)
+            map_data = eval(what)
         except:
+            map_data = None
             print(f'Warning! {self.map_key} could not be found for outputs')
-        return map_var
+        return map_data
 
     def extract_path(self, settings):
         binding = settings.binding
@@ -681,7 +688,9 @@ class MapOutput():
         if self.output_checkpoint():
 
             start_step, end_step = self.step_range()
-            self.writer.write(self.map_data, self.start_date, start_step, end_step)
+
+            map_data = self.extract_map()
+            self.writer.write(map_data, self.start_date, start_step, end_step)
 
 
 class MapOutputEnd(MapOutput):
@@ -710,9 +719,17 @@ class MapOutputSteps(MapOutput):
 
     def __init__(self, var, map_key, map_value, frequency):
         out_type = 'steps'
-        self._start_date = inttodate(self.var.ReportSteps[0] - 1, self.var.CalendarDayStart)
+        if len(var.ReportSteps) > 0:
+            self._start_date = inttodate(var.ReportSteps[0] - 1, var.CalendarDayStart)
         super().__init__(var, out_type, frequency, map_key, map_value)
     
+    def is_valid(self):
+        valid = False
+        if len(self.var.ReportSteps) > 0:
+            valid = True
+        return valid and super().is_valid()
+
+
     def output_checkpoint(self):
         check = self.var.currentTimeStep() in self.var.ReportSteps and self.frequency_check()
         return check
@@ -734,6 +751,8 @@ class MapOutputAll(MapOutput):
         settings = LisSettings.instance()
         binding = settings.binding
         self._start_date = inttodate(binding['StepStartInt'] - 1, var.CalendarDayStart)
+        self._start_step = 1
+        self._end_step = binding['StepEndInt'] - binding['StepStartInt'] + 1
         super().__init__(var, out_type, frequency, map_key, map_value)
     
     def output_checkpoint(self):
@@ -745,9 +764,7 @@ class MapOutputAll(MapOutput):
         return self._start_date
 
     def step_range(self):
-        start_step = 1
-        end_step = self.var.ReportSteps[-1] - self.var.ReportSteps[0] + 1
-        return start_step, end_step
+        return self._start_step, self._end_step
 
 
 def output_maps_factory(var):
@@ -761,32 +778,37 @@ def output_maps_factory(var):
     outputs = []
     
     for map_key, map_value in report_maps_end.items():
-        out = MapOutputEnd(settings, var, map_key, map_value)
-        outputs.append(out)
+        out = MapOutputEnd(var, map_key, map_value)
+        if out.is_valid():
+            outputs.append(out)
 
     for map_key, map_value in report_maps_steps.items():
         if map_value.monthly:
-            out = MapOutputSteps(settings, var, map_key, map_value, frequency='monthly')
+            out = MapOutputSteps(var, map_key, map_value, frequency='monthly')
         elif map_value.yearly:
-            out = MapOutputSteps(settings, var, map_key, map_value, frequency='yearly')
+            out = MapOutputSteps(var, map_key, map_value, frequency='yearly')
         else:
-            out = MapOutputSteps(settings, var, map_key, map_value, frequency='all')
-        outputs.append(out)
+            out = MapOutputSteps(var, map_key, map_value, frequency='all')
+        if out.is_valid():
+            outputs.append(out)
         
     for map_key, map_value in report_maps_all.items():
         if map_value.monthly:
-            out = MapOutputAll(settings, var, map_key, map_value, frequency='monthly')
+            out = MapOutputAll(var, map_key, map_value, frequency='monthly')
         elif map_value.yearly:
-            out = MapOutputAll(settings, var, map_key, map_value, frequency='yearly')
+            out = MapOutputAll(var, map_key, map_value, frequency='yearly')
         else:
-            out = MapOutputAll(settings, var, map_key, map_value, frequency='all')
-        outputs.append(out)
+            out = MapOutputAll(var, map_key, map_value, frequency='all')
+        if out.is_valid():
+            outputs.append(out)
 
     check_duplicates = []
+    outputs_clean = []
     for out in outputs:
         if out.map_path in check_duplicates:
-            raise Exception(f'Map {out.map_path} is duplicated, check list of outputs')
+            print(f'Warning! Output map {out.map_path} is duplicated, check list of outputs')
         else:
             check_duplicates.append(out.map_path)
+            outputs_clean.append(out)
 
-    return outputs
+    return outputs_clean
