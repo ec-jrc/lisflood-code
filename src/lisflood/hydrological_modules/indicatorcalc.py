@@ -75,6 +75,7 @@ class indicatorcalc(HydroModule):
             self.var.UpstreamInflowUsedM3 = maskinfo.in_zero()
             self.var.abstraction_allSources_actual_irrigation_M3MonthRegion = maskinfo.in_zero()
             self.var.WEI_Abs = maskinfo.in_zero()
+                
 
     def dynamic(self):
         """ dynamic part of the indicator calculation module
@@ -120,7 +121,7 @@ class indicatorcalc(HydroModule):
 
                 # INTERNAL FLOW
                 # available LakeStorageM3 and ReservoirStorageM3 for potential abstraction at end of month in region  
-                if option['simulateLakes'] and option['simulateReservoirs']:            
+                if option['simulateLakes'] and option['simulateReservoirs']:   
                    self.var.RegionMonthReservoirAndLakeStorageM3 = np.take(np.bincount(self.var.WUseRegionC,weights=self.var.ReservoirStorageM3+self.var.LakeStorageM3),self.var.WUseRegionC)
                    # monthly abstraction from lakes and reservoirs
                    self.var.RegionMonthWaterAbstractedfromLakesReservoirsM3 = np.take(np.bincount(self.var.WUseRegionC,weights=self.var.MonthWaterAbstractedfromLakesReservoirsM3),self.var.WUseRegionC)
@@ -232,6 +233,3 @@ class indicatorcalc(HydroModule):
         self.var.abstraction_allSources_actual_irrigation_M3Month = np.zeros(self.var.num_pixel)
         self.var.abstraction_SwGw_required_irrigation_M3Month = np.zeros(self.var.num_pixel)
         self.var.abstraction_SwGw_actual_irrigation_M3Month = np.zeros(self.var.num_pixel)                                 
-
-        
-            

@@ -28,13 +28,6 @@ from .errors import LisfloodFileError, LisfloodWarning
 from .settings import inttodate, CDFFlags, LisSettings
 
 
-def trimPCRasterOutputPath(output_path):
-    """Right-trim the output file name to comply with the maximum length allowed by PCRaster, if necessary."""
-    folder, name = os.path.split(output_path)
-    if len(name) > 6:
-        name = name[:6]
-    return os.path.join(folder, name)
-
 # ------------------------------------------------------------------------
 # Writer classes
 # ------------------------------------------------------------------------
@@ -167,8 +160,10 @@ class MapOutput():
 
     def is_valid(self):
         valid = True
-        map_data = self.extract_map()
-        if map_data is None or self.map_path is None:
+        # map_data = self.extract_map()
+        # if map_data is None or self.map_path is None:
+        #     valid = False
+        if self.map_path is None:
             valid = False
         return valid
 
@@ -178,7 +173,7 @@ class MapOutput():
             map_data = eval(what)
         except:
             map_data = None
-            print(f'Warning! {self.map_value.output_var} could not be found for outputs. \
+            raise Exception(f'ERROR! {self.map_value.output_var} could not be found for outputs. \
             Variable needs to be initialised in the initial() function of the relevant hydrological module')
         return map_data
 
@@ -247,7 +242,6 @@ class MapOutputSteps(MapOutput):
         if len(self.var.ReportSteps) > 0:
             valid = True
         return valid and super().is_valid()
-
 
     def output_checkpoint(self):
         cdfflags = CDFFlags.instance()
@@ -401,10 +395,6 @@ class outputTssMap(object):
         # ************************************************************
         # ***** WRITING RESULTS: TIME SERIES *************************
         # ************************************************************
-
-        # xxx=catchmenttotal(self.var.SurfaceRunForest * self.var.PixelArea, self.var.Ldd) * self.var.InvUpArea
-        # self.var.Tss['DisTS'].sample(xxx)
-        # self.report(self.Precipitation,binding['TaMaps'])
 
         # if fast init than without time series
         settings = LisSettings.instance()
