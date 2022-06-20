@@ -244,7 +244,8 @@ class waterabstraction(HydroModule):
             self.var.AreaTotalAvailableWaterFromChannelsM3 = maskinfo.in_zero()
             self.var.LakeAbstractionM3 = maskinfo.in_zero()
             self.var.FractionAbstractedFromChannels = maskinfo.in_zero()
-            self.var.areatotal_abstraction_SW_actual_irrigation_M3 = maskinfo.in_zero()  
+            self.var.areatotal_abstraction_SW_actual_irrigation_M3 = maskinfo.in_zero()
+            self.var.areatotal_withdrawal_SW_actual_M3 = maskinfo.in_zero()
               
 
     def dynamic(self):

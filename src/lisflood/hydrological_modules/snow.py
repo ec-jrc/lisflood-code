@@ -88,6 +88,9 @@ class snow(HydroModule):
         self.var.SnowCoverInit = (SnowCoverAInit + SnowCoverBInit + SnowCoverCInit) / 3
         # Pixel-average initial snow cover: average of values in 3 elevation zones
         self.var.SnowCover = maskinfo.in_zero()
+        self.var.Snow = maskinfo.in_zero()
+        self.var.Rain = maskinfo.in_zero()
+        self.var.SnowMelt = maskinfo.in_zero()
 
     def dynamic(self):
         """ dynamic part of the snow module

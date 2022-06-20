@@ -195,6 +195,16 @@ class CDFFlags(with_metaclass(Singleton)):
             # globals.cdfFlag[6] += 1
             self.inc(6)
 
+    def frequency_check(self, var, frequency):
+        if frequency == 'all':
+            check = True
+        elif frequency == 'monthly':
+            check = var.monthend
+        elif frequency == 'yearly':
+            check = var.yearend
+        else:
+            raise ValueError(f'Output frequency {frequency} not recognised! Valid values are: (all, monthly, yearly)')
+        return check
 
 
 @nine
