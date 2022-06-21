@@ -346,7 +346,7 @@ Execute lisflood with report options activated, using dates formats for StepStar
 Then execute lisflood with same setup, this time using integers for StepStart and StepEnd.
 **Assert that results are identical.**
 
-Test is repeated for 6-hourly timesteps.
+Test is repeated for 6-hourly timesteps. An additional test is done to check dates before year 1970.
 
 **Example: test_dates_steps_daily**
 
@@ -454,7 +454,7 @@ All test cases are executed with following modules activated:
 |riceIrrigation             |
 |indicator                  |
 
-**Note:** Due the current implementation of the reservoir module (and its calibration methods), this test could fail on certain domains having reservoirs with particular attributes.   
+**Note:** Due the current implementation of the reservoir module (and its calibration methods), this test could fail on certain domains having reservoirs with particular attributes. In the current test basin (PO basin) the test must be successful with reservoir ON.   
 **Note:** This test doesn't use a reference dataset so it's not a black-box test. It ensures that cold and warm runs are equivalent.
 
 #### Implementation
@@ -552,16 +552,17 @@ Compare all state maps. Results must be identical.
 
 **Important note:** Since water abastraction modules are introducing incongruities in subcatchments, 
 we've added a test that assert that values are different between the two identical runs when 
-water demand modules are activated (e.g. `wateruse=1`).  
+water demand modules are activated (e.g. `wateruse=1` and `groundwatersmooth=1`).  
 
 This test demonstrates that wateruse module introduces incongruities between running the model on subcatchments and on the entire domain.
 
 
-|Test case                         | DtSec | Simulation period                  | Expected                       |
-|----------------------------------|-------|------------------------------------|--------------------------------|
-| test_subcacthment_daily          | 86400 |02/01/2016 06:00 - 30/03/2016 06:00 | all netcdf are array equal     |
-| test_subcacthment_6h             | 21600 |01/03/2016 06:00 - 30/03/2016 06:00 | all netcdf are array equal     |
-| test_subcacthment_daily_wateruse | 21600 |02/01/2016 06:00 - 30/01/2016 06:00 | different values at first step |
+|Test case                                              | DtSec | Simulation period                  | Expected                       |
+|-------------------------------------------------------|-------|------------------------------------|--------------------------------|
+| test_subcacthment_daily                               | 86400 |02/01/2016 06:00 - 30/03/2016 06:00 | all netcdf are array equal     |
+| test_subcacthment_6h                                  | 21600 |01/03/2016 06:00 - 30/03/2016 06:00 | all netcdf are array equal     |
+| test_subcacthment_daily_wateruse_groundwatersmooth_OFF| 86400 |02/01/2016 06:00 - 30/01/2016 06:00 | all netcdf are array equal     |
+| test_subcacthment_daily_wateruse_groundwatersmooth_ON | 86400 |02/01/2016 06:00 - 30/01/2016 06:00 | the results are not identical  |
 
 **Note:** This test doesn't use a reference dataset so it's not a black-box test. It ensures that simulations on domain and its subdomains are equivalent.
  
@@ -579,6 +580,9 @@ modules_to_unset = [
     'wateruseRegion',
     'TransientWaterDemandChange',
 ]
+modules_to_unsetGW= [
+    'groundwaterSmooth',
+]
 
 def test_subcacthment_daily(self):
     step_start = '02/01/2016 06:00'
@@ -587,14 +591,15 @@ def test_subcacthment_daily(self):
     report_steps = '3650..4100'
     self.run_subcathmenttest_by_dtsec(dt_sec, step_end, step_start, report_steps=report_steps)
 
-def test_subcacthment_daily_wateruse(self):
+def test_subcacthment_daily_wateruse_groundwatersmooth_ON(self):
     step_start = '02/01/2016 06:00'
     step_end = '30/01/2016 06:00'
     dt_sec = 86400
     report_steps = '3650..4100'
     with pytest.raises(AssertionError) as excinfo:
-        self.run_subcathmenttest_by_dtsec(dt_sec, step_end, step_start, report_steps=report_steps, wateruse_on=True)
-    assert 'dis.nc/dis@0 is different' in str(excinfo.value)
+        self.run_subcathmenttest_by_dtsec(dt_sec, step_end, step_start, report_steps=report_steps, wateruse_on=True, groundwatersmooth_off=False)
+    assert 'Arrays are not equal' in str(excinfo.value)
+
 ```
 
 The method `run_subcathmenttest_by_dtsec` executes two cold runs of lisflood: one on domain and one on subdomain, and then compare results using subdomain mask.
@@ -634,6 +639,63 @@ def run_subcathmenttest_by_dtsec(self, dt_sec, step_end, step_start, report_step
     nc_comparator = NetCDFComparator(settings.maskpath, array_equal=True)
     nc_comparator.compare_dirs(path_out_subdomain, path_out_domain)
 ```
+
+### Testing Inflow
+
+This test verifies the correct functioning of the option inflow. Uses a catchment with a nested sub-catchment, i.e. a catchment with 2 output points, one upstream of the other. After completing a 1 year model run for the full catchment, the upstream output point is used as inflow point to model the sub-catchment. Only discharge files are compared, differences should be <0.001 m<sup>3</sup>/s.
+
+#### Implementation
+
+[test_inflow.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_inflow.py){:target="_blank"}
+
+
+|Test case            | DtSec | Simulation period                  | Expected                                                     |
+|---------------------|-------|------------------------------------|--------------------------------------------------------------|
+| test_inflow_daily   | 86400 |02/01/2016 06:00 - 30/01/2016 06:00 | reference dis.tss and new dis.tss are within tolerances      |
+| test_inflow_6h      | 21600 |01/03/2016 06:00 - 30/03/2016 06:00 | reference dis.tss and new dis.tss are within tolerances      |
+
+### Testing Reference system
+
+Verifies the correct functioning of the code for projected and geographic coordinate systems
+
+#### Implementation
+
+[test_latlon.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_latlon.py){:target="_blank"}
+
+
+|Test case            | DtSec | Simulation period                  | Expected                                                     |
+|---------------------|-------|------------------------------------|--------------------------------------------------------------|
+| test_lat_lon_short  | 86400 |01/01/2016 00:00 - 01/02/2016 00:00 | dis_run.tss and reference dis_short.tss are within tolerances|
+| test_lat_lon_long   | 21600 |02/01/1986 00:00 - 01/01/2018 00:00 | dis_run.tss and reference dis_long.tss are within tolerances |
+
+
+### Testing Caching
+
+Verifies the use of cached files. It compares the output generated and the number of cached files used.
+
+#### Implementation
+
+[test_caching.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_caching.py){:target="_blank"}
+
+
+|Test case            | DtSec | Simulation period                  | Expected                                                     |
+|---------------------|-------|------------------------------------|--------------------------------------------------------------|
+| test_caching_24h    | 86400 |30/07/2016 06:00 - 01/08/2016 06:00 | compares output generated with and without cached files      |
+| test_caching_6h     | 21600 |30/07/2016 06:00 - 01/08/2016 06:00 | compares output generated with and without cached files      |
+
+### Testing Chunking
+
+Verifies chunking files using NetCDFTimeChunks with values `1`, `10`, `auto` and `-1` 
+
+#### Implementation
+
+[test_chunking.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_chunking.py){:target="_blank"}
+
+
+|Test case            | DtSec | Simulation period                  | Expected                                                     |
+|---------------------|-------|------------------------------------|--------------------------------------------------------------|
+| test_chunking_24h   | 86400 |30/07/2016 06:00 - 01/09/2016 06:00 | compares output chunking files with reference files             |
+| test_chunking_6h    | 21600 |30/07/2016 06:00 - 01/09/2016 06:00 | compares output chunking files with reference files             |
 
 ## Release test for EFAS and GloFAS
 

@@ -2,7 +2,7 @@
 
 In the current version of LISFLOOD, all the model inputs are provided as either maps (grid files in PCRaster format or NetCDF format) or text files (.txt extension). This chapter provides an overview of the data set that is required to run the model.
 
-### Input maps
+### INPUT MAPS
 
 LISFLOOD requires that all maps must have *identical* location attributes (number of rows, columns, cellsize, upper x and y coordinates).
 
@@ -11,12 +11,12 @@ The input maps can be classified according to two main cathegories:<br>
 + **static maps**. These maps provide information of morphological, physical, soil, and land use properties for each pixel of the computational domain. 
 
 
-#### Meteorological forcings
+### Meteorological forcings
 
-The meteorological forcing variables are defined in *map stacks*. A *map stack* is simply a series of maps, where each map represents the value of a variable at an individual time step.<br>It is recommented to use the netcdf format. <br> The users that prefer to prepare the meteorological forcings maps in pcraster format, must name the files according to the rules explained in this paragraph. The name of each map is made up of a total of 11 characters: 8 characters, a dot and a 3-character suffix. Each map name starts with a *prefix*, and ends with the time step number. All character positions in between are
-filled with zeros ("0"). <br>
+The meteorological forcing variables are defined in *map stacks*. A *map stack* is simply a series of maps, where each map represents the value of a variable at an individual time step.<br>It is recommented to use the netcdf format. <br> The users that prefer to prepare the meteorological forcings maps in pcraster format, must name the files according to the following rules: the name of each map is made up of a total of 11 characters: 8 characters, a dot and a 3-character suffix. Each map name starts with a *prefix*, and ends with the time step number. All character positions in between are filled with zeros ("0"). <br>
+
 Generally used prefixes for the meteorological forcings maps are: <br>
-+ tp : total precipitation; units: mm/computational time step.<br>
++ tp : total precipitation; units: mm/day.<br>
 + ta : average daily temperature at 2m; units: degrees Celsius or Kelvin (the units must be specified in the [settings file](../3_step3_preparing-setting-file/))<br>
 + EW0 : reference value of evaporation from open water bodies; units: mm/day; these data can be prepared using [LISVAP](https://ec-jrc.github.io/lisflood-lisvap/).<br>
 + ES0 : reference value of evaporation from bare soil; units: mm/day; these data can be prepared using [LISVAP](https://ec-jrc.github.io/lisflood-lisvap/).<br>
@@ -24,12 +24,12 @@ Generally used prefixes for the meteorological forcings maps are: <br>
 
 
 
-#### Static maps
-The section [Static Maps](../4_Static-maps_introduction) provides detailed guidelines for the preparation of the static maps data set. The following paragraph provides an overview of the different piecies of information provided by the static maps.
+### Static maps
+The section [Static Maps](../4_Static-Maps-introduction) provides detailed guidelines for the preparation of the static maps data set. The following paragraph provides an overview of the different piecies of information provided by the static maps.
 +   [general maps](../4_Static-Maps_general-maps/): area mask; landuse mask; grid-cell length; grid-cell area.
 +  [topography](../4_Static-Maps_topography/): local drain direction; gradient; standard deviation of elevation; upstream area.
 +  [land use maps](../4_Static-Maps_land-use/): fraction of forest; fraction of irrigated crops; fraction of rice crops; fraction of inland water; fraction of sealed surfaces; fraction of other land uses.
-+   [land use depending](./4_Static-Maps_land-use-depending/):crop coefficient; crop group number; Manning/s's surface roughness; soil depth.
++   [land use depending](../4_Static-Maps_land-use-depending/):crop coefficient; crop group number; Manning/s's surface roughness; soil depth.
 +   [soil hydraulic properties](../4_Static-Maps_soil-hydraulic-properties/): saturated hydraulic conductivity; soil water content at saturation; residual soil water content; parameters alpha and lambda of Van Genuchten's equations.
 +   [channel geometry](../4_Static-Maps_channel-geometry/): channels mask; channels side slope; channels length; channels gradient; Manning's rougheness coefficient of the channels; channels bottom width; floodplain width; bankfull channels depth.
 +   [leaf area index](../4_Static-Maps_leaf-area-index/): evolution of vegetation over time (leaf area index) for land covers forest, irrigated areas, others.
@@ -68,14 +68,14 @@ LISFLOOD settings files and the use of options are explained in detail in a [ded
 Because Leaf area index maps follow a yearly circle, only a map stack of one year is necessary which is then used again and again for the  following years (this approach can be used for all input maps following a yearly circle e.g. water use). LAI is therefore defined as sparse map stack with a map every 10 days or a month. After one year the first map is taken again for simulation. 
 
 
-### Important technical note for the generation of the water regions map
+#### Important technical note for the generation of the water regions map
 
 Water demand and water abstraction are spatially distributed within each water region. As detailed [here](https://ec-jrc.github.io/lisflood-model/2_18_stdLISFLOOD_water-use/), the water resources (surface water bodies and groundwater) are shared inside the water region in order to meet the cumulative requirements of the water region area. For this reason, it is strongly recommended to include the entire water region(s) in the modelled area. If a portion of the water region is not included in the modelled area, then LISFLOOD cannot adequately compute the water demand and abstraction. In other words, LISFLOOD will not be able to account for sources of water outside of the computational domain (it is important to notice that LISFLOOD will not crush but the results will be affected by this discrepancy).
 The inclusion of the complete water region in the computational domain becomes compulsory under the specific circumstances of model calibration.
 Calibrated parameters are optimised for a specific model set up. It is often required to calibrate the parameters of several subcatchments inside a basin. Each calibration subcatchment must include a finite number of water regions (each water region can belong to only one subctatchment). If this condition is met, the calibrated parameters can be correctly optimised. Conversely, when a water region belongs to one or more calibration sub-catchments, the water resources are allocated and abstracted in different quantities when modelling the calibration subcatchment only or the entire basin. Similarly, the option groundwater smooth leads to different  geometries of the cone of depression due to groundwater abstraction when modelling the subcatchment only or the entire basin. These two scenarios impede the correct calibration of the model parameters and must be avoided. The user is advised to switch off the groundwater smooth option and to ensure the consistency between water regions and calibration cacthments. The utility [waterregions](https://github.com/ec-jrc/lisflood-utilities/) can be used to 1) verify the consistency between calibration catchments and water regions or 2) create a water region map which is consistent with a set of calibration points.
 
 
-### Input tables
+### INPUT TABLES
 
 The geographical location of lakes and reservoirs is identified by the two maps described [here](../4_Static-Maps_reservoirs-lakes/). These maps provide the location of lakes and reservoirs. Each lake and each reservoir is identified by its ID (a in integer number). LISFLOOD requires additional information for the adequate modelling of [lakes](https://ec-jrc.github.io/lisflood-model/3_02_optLISFLOOD_lakes/) and [reservoirs](https://ec-jrc.github.io/lisflood-model/3_03_optLISFLOOD_reservoirs/). These additional pieces of information are supplied to the numerical code by using tables in *.txt* format. Each table has 2 colums: the first column is the ID of the lake or of the reservoir, the second column is the quantity required by LISFLOOD. The table below provides the list of the pieces of information which are required for the adequate modelling of lakes and reservoirs.
 ##### Table: LISFLOOD input tables
@@ -83,8 +83,8 @@ The geographical location of lakes and reservoirs is identified by the two maps 
 | **Table**             | **Default name**      | **Description**       |
 |----------------------------|-----------------------|--------------------------|
 | Lake area   | Lakearea.txt          | Lake syrface area in m2 |
-| Lake alpha parameter   | lakea.txt          | Lake parameter alpha: a detailed descrpition can be found [here] (https://ec-jrc.github.io/lisflood-model/3_02_optLISFLOOD_lakes/)  |
-| Lake average inflow   | lakeaverageinflow.txt          | Average inflow to the lake: a detailed descrpition can be found [here] (https://ec-jrc.github.io/lisflood-model/3_02_optLISFLOOD_lakes/) |
+| Lake alpha parameter   | lakea.txt          | Lake parameter alpha: a detailed descrpition can be found [here](https://ec-jrc.github.io/lisflood-model/3_02_optLISFLOOD_lakes/)  |
+| Lake average inflow   | lakeaverageinflow.txt          | Average inflow to the lake: a detailed descrpition can be found [here](https://ec-jrc.github.io/lisflood-model/3_02_optLISFLOOD_lakes/) |
 | Reservoir storage   | rstor.txt          | Volume in m3, total reservoirs storage capacity |
 | Reservoir minimum outflow   | rminq.txt          | Discharge in m3/s.   |
 | Reservoir normal outflow   | rnormq.txt          | Discharge in m3/s.  |
