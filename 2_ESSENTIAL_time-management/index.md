@@ -8,7 +8,7 @@ Accordingly,  if timestamp "02/01/2017 06:00" is used for naming a time step of 
 
 ![](../media/image62.png)
 
-Outputs  of LISFLOOD model will use the same naming convention. If timestamp  "02/01/2017 06:00" is used for naming a time step of daily dischage  (output), that time step will contain average discharge over the period  between  "01/01/2017 06:00" and "02/01/2017 06:00" (see following  figure)
+Outputs  of LISFLOOD model will use the same naming convention. If timestamp  "02/01/2017 06:00" is used for naming a time step of daily discharge (output), that time step will contain average discharge over the period  between  "01/01/2017 06:00" and "02/01/2017 06:00" (see following  figure)
 
 ![](../media/image63.png)
 

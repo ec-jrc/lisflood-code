@@ -691,7 +691,7 @@ CumIntForestInitValue, UZForestInitValue, DSLRForestInitValue, LZForestInitValue
 
 ### Using options
 
-As explained at the start of this page, the 'lfoptions' element gives you additional control over what LISFLOOD is doing. Using options it is possible to switch certain parts of the model on or off. You can decide which output files are reported and which ones aren't. Moreoever, you can activate a number of additional model features, such as the simulation of reservoirs and inflow hydrographs.
+As explained at the start of this page, the 'lfoptions' element gives you additional control over what LISFLOOD is doing. Using options it is possible to switch certain parts of the model on or off. You can decide which output files are reported and which ones aren't. Moreover, you can activate a number of additional model features, such as the simulation of reservoirs and inflow hydrographs.
 
 A list of all currently implemented options and their corresponding defaults can be found in the [LISFLOOD model documentation](https://ec-jrc.github.io/lisflood-model/). 
 All currently implemented options are switches (1= on, 0=off). 
@@ -701,7 +701,7 @@ For instance, using the inflow hydrograph option requires an input map and time 
 If you want to report discharge maps at each time step, you will first have to specify under which name they will be written. 
 
 The template settings file that is provided with LISFLOOD always contains file definitions for all optional output maps and time series. 
-The use of the *output* options is described in detail in [a dedicated section](https://ec-jrc.github.io/lisflood-code/4_annex_output-files/).
+The use of the *output* options is described in detail in [a dedicated section](../4_annex_output-files/).
 
 Within the 'lfoptions' element of the settings file, each option is defined using a 'setoption' element, which has the attributes 'name' and 'choice' (i.e. the actual value). For example:
 
@@ -711,7 +711,13 @@ Within the 'lfoptions' element of the settings file, each option is defined usin
 	</lfoptions>                           	
 ```
 
+### Options to manage input and output files
+
++ **NetCDFTimeChunks**: chunking size in the time dimension. Recommended value is “auto" but chunking size can be specified manually or set to “-1" to load the whole time series into memory (very fast but expensive in terms of memory). 
++ **MapsCaching** (True or False): option designed for the lisflood calibration. If set to True, all the static maps and forcings will be stored in a cache so that they don't have to be loaded by each lisflood instance. This option sets the value of NetCDFTimeChunks to "-1", meaning that the whole time series in the NetCDF inputs is loaded into memory. 
+
+
 ### Reference settings file
-In order to facilitate the preparation of the settings file, a complete example is provided [here](https://ec-jrc.github.io/lisflood-code/3_step3_preparing-setting-file/lisfloodSettings_reference.xml). The user is encouraged to update the paths, the names of the maps and of the tables in the provided template.
+In order to facilitate the preparation of the settings file, a complete example is provided [here](../3_step3_preparing-setting-file/lisfloodSettings_reference.xml). The user is encouraged to update the paths, the names of the maps and of the tables in the provided template.
 
 [:top:](#top)

@@ -550,7 +550,7 @@ tss_comparator.compare_dirs(path_out, path_out_reference, timestep=timestep)
 Run a simulation on entire domain (e.g. Po basin), then run one subcatchment for the same period of time.
 Compare all state maps. Results must be identical.
 
-**Important note:** Since water abastraction modules are introducing incongrueties in subcatchments, 
+**Important note:** Since water abastraction modules are introducing incongruities in subcatchments, 
 we've added a test that assert that values are different between the two identical runs when 
 water demand modules are activated (e.g. `wateruse=1`).  
 

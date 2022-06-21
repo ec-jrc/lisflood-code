@@ -195,18 +195,17 @@ defaults:
         - title: "About this user guide"
           url: 1_introduction_usermanual
 
-      - section_title: "ESSENTIALS before getting started"
+      - section_title: "Installation"
         items:
-        - title: "Settings.xml (LISFLOOD settings file)"
-          url: 2_ESSENTIAL_setting-file
-        - title: "Time convention within LISFLOOD model"
-          url: 2_ESSENTIAL_time-management
-
+        - title: "Installation and testing"
+          url: 3_step2_installation         
 
       - section_title: "Step-by-step user guide"
         items:
-        - title: "Step 1: Installation"
-          url: 3_step2_installation
+        - title: "Step 0: Essential before getting started"
+          url: 2_ESSENTIAL_setting-file
+        - title: "Step 1: Time convention within LISFLOOD model"
+          url: 2_ESSENTIAL_time-management
         - title: "Step 2: Preparing the settings file"
           url: 3_step3_preparing-setting-file
         - title: "Step 3: Preparing input files"
@@ -217,7 +216,32 @@ defaults:
           url: 3_step6_running-LISFLOOD
         - title: "Step 6: model output"
           url: 3_step6_model-output
-
+          
+      - section_title: "Static maps"
+        items:
+        - title: "Introduction"
+          url: 4_Static-Maps-introduction           
+        - title: "General maps"
+          url: 4_Static-Maps_general-maps 
+        - title: "Topography maps"
+          url: 4_Static-Maps_topography   
+        - title: "Land use maps"
+          url: 4_Static-Maps_land-use   
+        - title: "Land use depending maps"
+          url: 4_Static-Maps_land-use-depending             
+        - title: "Soil hydraulic properties maps"
+          url: 4_Static-Maps_soil-hydraulic-properties     
+        - title: "Channel geometry maps"
+          url: 4_Static-Maps_channel-geometry               
+        - title: "Leaf area index maps"
+          url: 4_Static-Maps_leaf-area-index           
+        - title: "Reservoirs and lakes maps"
+          url: 4_Static-Maps_reservoirs-lakes   
+        - title: "Rice calendar maps"
+          url: 4_Static-Maps_rice-calendar  
+        - title: "Static maps: appendix"
+          url: 4_Static-Maps_appendix   
+                                                                       
       - section_title: "Annex"
         items:
         - title: "LISFLOOD input files"

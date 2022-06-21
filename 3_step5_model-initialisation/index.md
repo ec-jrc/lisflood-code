@@ -2,7 +2,7 @@
 
 Just as any other hydrological model, LISFLOOD needs to know the initial state (i.e. amount of water stored) of its internal state variables in order to be able to produce reasonable discharge simulations. However, in practice we hardly ever know the initial state of all state variables at a given time. Hence, we have to estimate the state of the initial storages in a reasonable way, which is also called the initialisation of a hydrological model.
 
-In this subsection we will first demonstrate the effect of the model's initial state on the results of a simulation, explain the steady-state sorage in practice and then explain you in detail how to initialize LISFLOOD.
+In this subsection we will first demonstrate the effect of the model's initial state on the results of a simulation, explain the steady-state storage in practice and then explain you in detail how to initialize LISFLOOD.
 
 
 ## The impact of the model's initial state on simulation results 
@@ -43,7 +43,7 @@ Even though the use of a sufficiently long warm-up period usually results in a c
 
 **Steady-state storage in practice**
 An actual LISFLOOD simulation differs from the theoretical *steady state* in 2 ways. First, in any real simulation the inflow into the lower zone is not constant, but varies in time. This is not really a problem, since $LZ_{ss}$ can be computed from the *average* recharge. However, this is something we do not know until the end of the simulation! Also, the inflow into the lower zone is controlled by the availability of water in the upper zone, which, in turn, depends on the supply of water from the soil. Hence, it is influenced by any calibration parameters that control behaviour of soil- and subsoil (e.g. $T_{uz}$, $GW_{perc}$, $b$, and so on). This means that -when calibrating the model- the average recharge will be different for every parameter set. Note, however, that it will *always* be smaller than the value of $GW_{perc}$, which is used as an upper limit in the model. 
-As an alternative to using the internal initialization (and hence the bogus values), LZavin and AvgDis (LZInitValue and PrevDischarge) can be computed using an initialization run (or pre-run). The pre-run procedure must include a sufficiently long warm-up period to allow the computation of reliable values of  LZavin and AvgDis. The set-upo of the iinitialization run is explained below: the protocol differs slightly depending on the settings of the option spli routing.
+As an alternative to using the internal initialization (and hence the bogus values), LZavin and AvgDis (LZInitValue and PrevDischarge) can be computed using an initialization run (or pre-run). The pre-run procedure must include a sufficiently long warm-up period to allow the computation of reliable values of  LZavin and AvgDis. The set-up of the initialization run is explained below: the protocol differs slightly depending on the settings of the option split routing.
 
 
 ## What you need to do:  
@@ -58,13 +58,13 @@ As an alternative to using the internal initialization (and hence the bogus valu
        <setoption choice="1" name="InitLisfloodwithoutsplit"/>
 ```
   
-3) Activate reporting maps (in NetCDF format) in <lfoptions> section of Settings.XML file using::
+3) Activate reporting maps (in NetCDF format) in <lfoptions> section of Settings.XML file using:
 ```xml
     <setoption choice="1" name="repEndMaps"/>
     <setoption choice="1"  name="writeNetcdf"/>
 ```
 
-4) Set split routing option to not active in in <lfoptions> section of Settings.XML file using:
+4) Set split routing option to not active in <lfoptions> section of Settings.XML file using:
 ```xml
        <setoption choice="0" name="SplitRouting"/>
 ```
@@ -99,7 +99,7 @@ As an alternative to using the internal initialization (and hence the bogus valu
     <setoption choice="1"  name="writeNetcdf"/>
 ```
 
-4) Set split routing option to not active in in <lfoptions> section of Settings.XML file using:
+4) Set split routing option to active in <lfoptions> section of Settings.XML file using:
 ```xml
     <setoption choice="1" name="SplitRouting"/>
 ```
