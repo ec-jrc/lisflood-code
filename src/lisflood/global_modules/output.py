@@ -200,7 +200,7 @@ class MapOutput():
     def write(self):
 
         if self.output_checkpoint():
-            print(f'Writing {self.map_path}')
+            # print(f'Writing {self.map_path}')
             start_step, end_step = self.step_range()
 
             map_data = self.extract_map()
@@ -235,7 +235,7 @@ class MapOutputSteps(MapOutput):
         out_type = 'steps'
         if len(var.ReportSteps) > 0:
             self._start_date = var.CalendarDayStart
-            print(f'{map_key}: steps {var.ReportSteps}')
+            # print(f'{map_key}: steps {var.ReportSteps}')
             self._start_step = var.ReportSteps[0]
             self._end_step = var.ReportSteps[-1]
         super().__init__(var, out_type, frequency, map_key, map_value)
