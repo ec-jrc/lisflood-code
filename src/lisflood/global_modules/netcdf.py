@@ -349,7 +349,7 @@ def get_space_coords(nrow, ncol, dim_lat_y, dim_lon_x):
 
 def write_netcdf_header(var_name, netfile, DtDay,
                         value_standard_name, value_long_name, value_unit, data_format,
-                        startdate, repstepstart, repstepend, frequency):
+                        startdate, rep_step_start, rep_step_end, frequency):
 
     nf1 = iterOpenNetcdf(netfile, "", 'w', format='NETCDF4')
 
@@ -365,6 +365,7 @@ def write_netcdf_header(var_name, netfile, DtDay,
     nf1.source = 'Lisflood output maps'
     nf1.keywords = "Lisflood, EFAS, GLOFAS"
     nf1.Conventions = 'CF-1.6'
+
     # Dimension
     not_valid_attrs = ('_FillValue', )
     meta_netcdf = NetCDFMetadata.instance()
@@ -381,7 +382,6 @@ def write_netcdf_header(var_name, netfile, DtDay,
             setattr(proj, i, meta_netcdf.data['lambert_azimuthal_equal_area'][i])
 
     # Space coordinates
-
     cutmap = CutMap.instance()
     nrow = np.abs(cutmap.cuts[3] - cutmap.cuts[2])
     ncol = np.abs(cutmap.cuts[1] - cutmap.cuts[0])
@@ -405,36 +405,38 @@ def write_netcdf_header(var_name, netfile, DtDay,
             setattr(latitude, i, meta_netcdf.data[dim_lat_y][i])
     latitude[:] = latlon_coords[dim_lat_y]
 
-
+    # time coordinates and associated values
     if frequency is not None:  # output file with "time" dimension
+        n_steps = rep_step_end - rep_step_start +1
         #Get initial and final dates for data to be stored in nerCDF file
-        first_date, last_date = [startdate + datetime.timedelta(days=(int(k) - 1)*DtDay) for k in
-                                 (repstepstart, repstepend)]
-        # CM: Create time stamps for each step stored in netCDF file
-        time_stamps = [first_date + datetime.timedelta(days=d*DtDay) for d in range(repstepend - repstepstart +1)]
+        first_date = startdate + datetime.timedelta(days=(int(rep_step_start) - 1)*DtDay)
 
-        units_time = 'days since %s' % startdate.strftime("%Y-%m-%d %H:%M:%S.0")
-        steps = (int(binding["DtSec"]) / 86400.) * np.arange(binding["StepStartInt"] - 1, binding["StepEndInt"])
-        if frequency != "all":
-            dates = num2date(steps-binding["StepStartInt"]+1, units_time, binding["calendar_type"])
-            next_date_times = np.array([j + datetime.timedelta(seconds=int(binding["DtSec"])) for j in dates])
-            if frequency == "monthly":
-                months_end = np.array([dates[j].month != next_date_times[j].month for j in range(repstepend - repstepstart +1)])
-                steps_monthly = steps[months_end]
-                time_stamps_monthly = dates[months_end==True]
-            elif frequency == "yearly":
-                years_end = np.array([dates[j].year != next_date_times[j].year for j in range(steps.size)])
-                steps = steps[years_end]
+        # CM: Create time stamps for each step stored in netCDF file
+        all_dates = [first_date + datetime.timedelta(days=d*DtDay) for d in range(n_steps)]
+        all_steps = np.arange(rep_step_start, rep_step_end+1)
         if frequency == "all":
-           nf1.createDimension('time', steps.size)
-           time = nf1.createVariable('time', float, ('time'))
-           time.standard_name = 'time'
-        if frequency == "monthly":
-           nf1.createDimension('time', steps_monthly.size)
-           time = nf1.createVariable('time', float, ('time'))
-           time.standard_name = 'time'           
-        # time.units ='days since 1990-01-01 00:00:00.0'
-        # time.units = 'hours since %s' % startdate.strftime("%Y-%m-%d %H:%M:%S.0")
+            steps = all_steps
+            time_stamps = all_dates
+        elif frequency == 'monthly':
+            # check next date (step+1) and see if we are still in the same month
+            next_date_times = np.array([j + datetime.timedelta(seconds=int(binding["DtSec"])) for j in time_stamps])
+            months_end = np.array([time_stamps[j].month != next_date_times[j].month for j in range(n_steps)])
+            steps = all_steps[months_end]
+            time_stamps= all_dates[months_end]
+        elif frequency == 'yearly':
+            # check next date (step+1) and see if we are still in the same month
+            next_date_times = np.array([j + datetime.timedelta(seconds=int(binding["DtSec"])) for j in time_stamps])
+            years_end = np.array([time_stamps[j].year != next_date_times[j].year for j in range(n_steps)])
+            steps = all_steps[years_end]
+            time_stamps= all_dates[years_end]
+        else:
+            raise ValueError(f'ERROR! Frequency {frequency} not supported! Value accepted: [all, monthly, yearly]')
+        
+        print(f'Creating time dimension using {steps}')
+        nf1.createDimension('time', steps.size)
+        time = nf1.createVariable('time', float, ('time'))
+        time.standard_name = 'time'
+        time.calendar = binding["calendar_type"]
         # CM: select the time unit according to model time step
         DtDay_in_sec = DtDay * 86400
         if DtDay_in_sec >= 86400:
@@ -446,19 +448,13 @@ def write_netcdf_header(var_name, netfile, DtDay,
         elif DtDay_in_sec >= 60 and DtDay_in_sec <3600:
             # CM: minutes to hours model time step
             time.units = 'minutes since %s' % startdate.strftime("%Y-%m-%d %H:%M:%S.0")
+        nf1.variables["time"][:] = date2num(time_stamps, time.units, time.calendar)
 
-        time.calendar = binding["calendar_type"]
- 
-        if frequency == "all":
-           nf1.variables["time"][:] = date2num(time_stamps, time.units, time.calendar)
-        if frequency == "monthly":
-           nf1.variables["time"][:] = date2num(time_stamps_monthly, time.units, time.calendar)                  
-        # for i in metadataNCDF['time']: exec('%s="%s"') % ("time."+i, metadataNCDF['time'][i])
         value = nf1.createVariable(var_name, 'd', ('time', dim_lat_y, dim_lon_x), zlib=True, fill_value=-9999, chunksizes=(1, nrow, ncol))
     else:
         value = nf1.createVariable(var_name, 'd', (dim_lat_y, dim_lon_x), zlib=True, fill_value=-9999)
     
-
+    # value attributes
     value.standard_name = value_standard_name
     value.long_name = value_long_name
     value.units = value_unit

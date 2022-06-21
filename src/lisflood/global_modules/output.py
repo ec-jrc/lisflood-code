@@ -73,7 +73,7 @@ class NetcdfStepsWriter(NetcdfWriter):
     def __init__(self, var, map_key, map_value, map_path, frequency, flag):
 
         self.flag = flag
-        self.chunks = 10
+        self.chunks = 1
         self.step_range = []
         self.data_steps = []
 
@@ -200,7 +200,7 @@ class MapOutput():
     def write(self):
 
         if self.output_checkpoint():
-
+            print(f'Writing {self.map_path}')
             start_step, end_step = self.step_range()
 
             map_data = self.extract_map()
@@ -234,7 +234,10 @@ class MapOutputSteps(MapOutput):
     def __init__(self, var, map_key, map_value, frequency):
         out_type = 'steps'
         if len(var.ReportSteps) > 0:
-            self._start_date = inttodate(var.ReportSteps[0] - 1, var.CalendarDayStart)
+            self._start_date = var.CalendarDayStart
+            print(f'{map_key}: steps {var.ReportSteps}')
+            self._start_step = var.ReportSteps[0]
+            self._end_step = var.ReportSteps[-1]
         super().__init__(var, out_type, frequency, map_key, map_value)
     
     def is_valid(self):
@@ -254,9 +257,7 @@ class MapOutputSteps(MapOutput):
         return self._start_date
 
     def step_range(self):
-        start_step = 1
-        end_step = self.var.ReportSteps[-1] - self.var.ReportSteps[0] + 1
-        return start_step, end_step
+        return self._start_step, self._end_step
 
 
 class MapOutputAll(MapOutput):
@@ -265,9 +266,9 @@ class MapOutputAll(MapOutput):
         out_type = 'all'
         settings = LisSettings.instance()
         binding = settings.binding
-        self._start_date = inttodate(binding['StepStartInt'] - 1, var.CalendarDayStart)
-        self._start_step = 1
-        self._end_step = binding['StepEndInt'] - binding['StepStartInt'] + 1
+        self._start_date = var.CalendarDayStart
+        self._start_step = binding['StepStartInt']
+        self._end_step = binding['StepEndInt']
         super().__init__(var, out_type, frequency, map_key, map_value)
     
     def output_checkpoint(self):
