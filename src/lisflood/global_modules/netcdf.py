@@ -432,7 +432,6 @@ def write_netcdf_header(var_name, netfile, DtDay,
         else:
             raise ValueError(f'ERROR! Frequency {frequency} not supported! Value accepted: [all, monthly, yearly]')
         
-        # print(f'Creating time dimension using {steps}')
         nf1.createDimension('time', steps.size)
         time = nf1.createVariable('time', float, ('time'))
         time.standard_name = 'time'

@@ -70,10 +70,14 @@ class NetcdfWriter(Writer):
 
 class NetcdfStepsWriter(NetcdfWriter):
 
-    def __init__(self, var, map_key, map_value, map_path, frequency, flag):
+    def __init__(self, var, map_key, map_value, map_path, frequency, flag, end_step):
+
+        settings = LisSettings.instance()
+        binding = settings.binding
 
         self.flag = flag
-        self.chunks = 1
+        self.chunks = int(binding['OutputMapsChunks'])
+        self.end_step = end_step
         self.step_range = []
         self.data_steps = []
 
@@ -81,7 +85,7 @@ class NetcdfStepsWriter(NetcdfWriter):
 
     def checkpoint(self):
         write = False
-        end_run = self.var.currentTimeStep() == self.var.nrTimeSteps()
+        end_run = self.var.currentTimeStep() == self.end_step
         if len(self.data_steps) == self.chunks or end_run:
             write = True
         return write
@@ -154,7 +158,7 @@ class MapOutput():
                 if self.flag == 0:
                     self.writer = NetcdfWriter(self.var, self.map_key, self.map_value, self.map_path)
                 else:
-                    self.writer = NetcdfStepsWriter(self.var, self.map_key, self.map_value, self.map_path, self.frequency, self.flag)
+                    self.writer = NetcdfStepsWriter(self.var, self.map_key, self.map_value, self.map_path, self.frequency, self.flag, self.end_step)
             else:  # PCRaster
                 self.writer = PCRasterWriter(self.var, self.map_path)
 
@@ -194,17 +198,18 @@ class MapOutput():
     def start_date(self):
         raise NotImplementedError
 
-    def step_range(self):
+    @property
+    def start_step(self):
+        raise NotImplementedError
+
+    @property
+    def end_step(self):
         raise NotImplementedError
 
     def write(self):
-
         if self.output_checkpoint():
-            # print(f'Writing {self.map_path}')
-            start_step, end_step = self.step_range()
-
             map_data = self.extract_map()
-            self.writer.write(map_data, self.start_date, start_step, end_step)
+            self.writer.write(map_data, self.start_date, self.start_step, self.end_step)
 
 
 class MapOutputEnd(MapOutput):
@@ -222,11 +227,14 @@ class MapOutputEnd(MapOutput):
     def start_date(self):
         start_date = inttodate(self.var.currentTimeStep() - 1, self.var.CalendarDayStart)
         return start_date
-    
-    def step_range(self):
-        start_step = self.var.currentTimeStep()
-        end_step = self.var.currentTimeStep()
-        return start_step, end_step
+
+    @property
+    def start_step(self):
+        return self.var.currentTimeStep()
+
+    @property
+    def end_step(self):
+        return self.var.currentTimeStep()
 
 
 class MapOutputSteps(MapOutput):
@@ -235,7 +243,6 @@ class MapOutputSteps(MapOutput):
         out_type = 'steps'
         if len(var.ReportSteps) > 0:
             self._start_date = var.CalendarDayStart
-            # print(f'{map_key}: steps {var.ReportSteps}')
             self._start_step = var.ReportSteps[0]
             self._end_step = var.ReportSteps[-1]
         super().__init__(var, out_type, frequency, map_key, map_value)
@@ -256,8 +263,13 @@ class MapOutputSteps(MapOutput):
     def start_date(self):
         return self._start_date
 
-    def step_range(self):
-        return self._start_step, self._end_step
+    @property
+    def start_step(self):
+        return self._start_step
+
+    @property
+    def end_step(self):
+        return self._end_step
 
 
 class MapOutputAll(MapOutput):
@@ -280,8 +292,13 @@ class MapOutputAll(MapOutput):
     def start_date(self):
         return self._start_date
 
-    def step_range(self):
-        return self._start_step, self._end_step
+    @property
+    def start_step(self):
+        return self._start_step
+
+    @property
+    def end_step(self):
+        return self._end_step
 
 
 # ------------------------------------------------------------------------

@@ -151,15 +151,16 @@ class CDFFlags(with_metaclass(Singleton)):
                 raise ValueError(f'Output frequency {frequency} not recognised! Valid values are: (all, monthly, yearly)')
         elif out_type == 'all':
             if frequency == 'all':
-                flag = 1
+                flag = 2
             elif frequency == 'monthly':
-                flag = 3
+                flag = 5
             elif frequency == 'yearly':
-                flag = 4
+                flag = 6
             else:
                 raise ValueError(f'Output frequency {frequency} not recognised! Valid values are: (all, monthly, yearly)')
         else:
             raise ValueError(f'Output type {out_type} not recognised! Valid values are: (end, steps, all)')
+       
         return flag
 
     def inc(self, idx):
