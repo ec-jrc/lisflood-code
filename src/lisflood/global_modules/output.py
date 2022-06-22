@@ -15,6 +15,7 @@ See the Licence for the specific language governing permissions and limitations 
 
 """
 from __future__ import print_function, absolute_import
+#from msilib.schema import Property
 
 import os
 import warnings
@@ -33,7 +34,7 @@ from .settings import inttodate, CDFFlags, LisSettings
 # ------------------------------------------------------------------------
 class Writer():
 
-    def write(self, map_data, start_date, start_step, end_step):
+    def write(self, map_data, start_date, rep_steps):
         raise NotImplementedError
 
 
@@ -51,11 +52,11 @@ class NetcdfWriter(Writer):
 
         self.frequency = frequency
 
-    def write(self, map_data, start_date, start_step, end_step):
+    def write(self, map_data, start_date, rep_steps):
         
         nf1 = write_netcdf_header(self.map_name, self.map_path, self.var.DtDay,
                                   self.map_key, self.map_value.output_var, self.map_value.unit, 'd', 
-                                  start_date, start_step, end_step, self.frequency)
+                                  start_date, rep_steps, self.frequency)
 
         flags = LisSettings.instance().flags
         if flags['nancheck']:
@@ -90,7 +91,7 @@ class NetcdfStepsWriter(NetcdfWriter):
             write = True
         return write
 
-    def write(self, map_data, start_date, start_step, end_step):
+    def write(self, map_data, start_date, rep_steps):
         
         cdfflags = CDFFlags.instance()
         step = cdfflags[self.flag]
@@ -109,7 +110,7 @@ class NetcdfStepsWriter(NetcdfWriter):
             if self.step_range[0] == 0:
                 nf1 = write_netcdf_header(self.map_name, self.map_path, self.var.DtDay,
                                         self.map_key, self.map_value.output_var, self.map_value.unit, 'd', 
-                                        start_date, start_step, end_step, self.frequency)
+                                        start_date, rep_steps, self.frequency)
             else:
                 nf1 = iterOpenNetcdf(self.map_path, "", 'a', format='NETCDF4')
 
@@ -129,7 +130,7 @@ class PCRasterWriter(Writer):
         self.var = var
         self.map_path = map_path
 
-    def write(self, map_data, start_date, start_step, end_step):
+    def write(self, map_data, start_date, rep_steps):
             self.var.report(decompress(map_data), str(self.map_path))
 
 
@@ -158,7 +159,7 @@ class MapOutput():
                 if self.flag == 0:
                     self.writer = NetcdfWriter(self.var, self.map_key, self.map_value, self.map_path)
                 else:
-                    self.writer = NetcdfStepsWriter(self.var, self.map_key, self.map_value, self.map_path, self.frequency, self.flag, self.end_step)
+                    self.writer = NetcdfStepsWriter(self.var, self.map_key, self.map_value, self.map_path, self.frequency, self.flag, self.rep_steps[-1])
             else:  # PCRaster
                 self.writer = PCRasterWriter(self.var, self.map_path)
 
@@ -199,17 +200,13 @@ class MapOutput():
         raise NotImplementedError
 
     @property
-    def start_step(self):
-        raise NotImplementedError
-
-    @property
-    def end_step(self):
+    def rep_steps(self):
         raise NotImplementedError
 
     def write(self):
         if self.output_checkpoint():
             map_data = self.extract_map()
-            self.writer.write(map_data, self.start_date, self.start_step, self.end_step)
+            self.writer.write(map_data, self.start_date, self.rep_steps)
 
 
 class MapOutputEnd(MapOutput):
@@ -229,13 +226,8 @@ class MapOutputEnd(MapOutput):
         return start_date
 
     @property
-    def start_step(self):
+    def rep_steps(self):
         return self.var.currentTimeStep()
-
-    @property
-    def end_step(self):
-        return self.var.currentTimeStep()
-
 
 class MapOutputSteps(MapOutput):
 
@@ -243,8 +235,7 @@ class MapOutputSteps(MapOutput):
         out_type = 'steps'
         if len(var.ReportSteps) > 0:
             self._start_date = var.CalendarDayStart
-            self._start_step = var.ReportSteps[0]
-            self._end_step = var.ReportSteps[-1]
+            self._rep_steps = var.ReportSteps
         super().__init__(var, out_type, frequency, map_key, map_value)
     
     def is_valid(self):
@@ -264,12 +255,8 @@ class MapOutputSteps(MapOutput):
         return self._start_date
 
     @property
-    def start_step(self):
-        return self._start_step
-
-    @property
-    def end_step(self):
-        return self._end_step
+    def rep_steps(self):
+        return self._rep_steps
 
 
 class MapOutputAll(MapOutput):
@@ -279,8 +266,7 @@ class MapOutputAll(MapOutput):
         settings = LisSettings.instance()
         binding = settings.binding
         self._start_date = var.CalendarDayStart
-        self._start_step = binding['StepStartInt']
-        self._end_step = binding['StepEndInt']
+        self._rep_steps = range(binding['StepStartInt'],binding['StepEndInt']+1)
         super().__init__(var, out_type, frequency, map_key, map_value)
     
     def output_checkpoint(self):
@@ -293,13 +279,8 @@ class MapOutputAll(MapOutput):
         return self._start_date
 
     @property
-    def start_step(self):
-        return self._start_step
-
-    @property
-    def end_step(self):
-        return self._end_step
-
+    def rep_steps(self):
+        return self._rep_steps
 
 # ------------------------------------------------------------------------
 # Output factory

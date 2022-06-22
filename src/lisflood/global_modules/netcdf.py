@@ -349,7 +349,7 @@ def get_space_coords(nrow, ncol, dim_lat_y, dim_lon_x):
 
 def write_netcdf_header(var_name, netfile, DtDay,
                         value_standard_name, value_long_name, value_unit, data_format,
-                        startdate, rep_step_start, rep_step_end, frequency):
+                        startdate, rep_steps, frequency):
 
     nf1 = iterOpenNetcdf(netfile, "", 'w', format='NETCDF4')
 
@@ -407,32 +407,29 @@ def write_netcdf_header(var_name, netfile, DtDay,
 
     # time coordinates and associated values
     if frequency is not None:  # output file with "time" dimension
-        n_steps = rep_step_end - rep_step_start +1
         #Get initial and final dates for data to be stored in nerCDF file
-        first_date = startdate + datetime.timedelta(days=(int(rep_step_start) - 1)*DtDay)
-
         # CM: Create time stamps for each step stored in netCDF file
-        all_dates = [first_date + datetime.timedelta(days=d*DtDay) for d in range(n_steps)]
-        all_steps = np.arange(rep_step_start, rep_step_end+1)
+        all_dates = [startdate + datetime.timedelta(days=(int(d)-1)*DtDay) for d in rep_steps]
+        all_steps = rep_steps
         if frequency == "all":
             steps = all_steps
             time_stamps = all_dates
         elif frequency == 'monthly':
             # check next date (step+1) and see if we are still in the same month
             next_date_times = np.array([j + datetime.timedelta(seconds=int(binding["DtSec"])) for j in time_stamps])
-            months_end = np.array([time_stamps[j].month != next_date_times[j].month for j in range(n_steps)])
+            months_end = np.array([time_stamps[j].month != next_date_times[j].month for j in len(rep_steps)])
             steps = all_steps[months_end]
             time_stamps= all_dates[months_end]
         elif frequency == 'yearly':
             # check next date (step+1) and see if we are still in the same month
             next_date_times = np.array([j + datetime.timedelta(seconds=int(binding["DtSec"])) for j in time_stamps])
-            years_end = np.array([time_stamps[j].year != next_date_times[j].year for j in range(n_steps)])
+            years_end = np.array([time_stamps[j].year != next_date_times[j].year for j in len(rep_steps)])
             steps = all_steps[years_end]
             time_stamps= all_dates[years_end]
         else:
             raise ValueError(f'ERROR! Frequency {frequency} not supported! Value accepted: [all, monthly, yearly]')
         
-        nf1.createDimension('time', steps.size)
+        nf1.createDimension('time', len(steps))
         time = nf1.createVariable('time', float, ('time'))
         time.standard_name = 'time'
         time.calendar = binding["calendar_type"]
@@ -466,7 +463,7 @@ def write_netcdf_header(var_name, netfile, DtDay,
 
 def writenet(flag, inputmap, netfile, DtDay,
              value_standard_name, value_long_name, value_unit, data_format,
-             startdate, repstepstart, repstepend, frequency=None):
+             startdate, rep_steps, frequency=None):
 
     """ Write a netcdf stack
 
@@ -491,7 +488,7 @@ def writenet(flag, inputmap, netfile, DtDay,
     if flag == 0:
         nf1 = write_netcdf_header(var_name, netfile, DtDay,
                                   value_standard_name, value_long_name, value_unit, data_format,
-                                  startdate, repstepstart, repstepend, frequency)
+                                  startdate, rep_steps, frequency)
     else:
         nf1 = iterOpenNetcdf(netfile, "", 'a', format='NETCDF4')
     if flags['nancheck']:
