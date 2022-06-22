@@ -225,10 +225,6 @@ class MapOutputEnd(MapOutput):
         start_date = inttodate(self.var.currentTimeStep() - 1, self.var.CalendarDayStart)
         return start_date
 
-    @property
-    def rep_steps(self):
-        return self.var.currentTimeStep()
-
 class MapOutputSteps(MapOutput):
 
     def __init__(self, var, map_key, map_value, frequency):

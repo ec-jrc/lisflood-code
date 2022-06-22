@@ -407,29 +407,30 @@ def write_netcdf_header(var_name, netfile, DtDay,
 
     # time coordinates and associated values
     if frequency is not None:  # output file with "time" dimension
+        n_steps = len(rep_steps)
         #Get initial and final dates for data to be stored in nerCDF file
         # CM: Create time stamps for each step stored in netCDF file
-        all_dates = [startdate + datetime.timedelta(days=(int(d)-1)*DtDay) for d in rep_steps]
-        all_steps = rep_steps
+        all_dates = np.array([startdate + datetime.timedelta(days=(int(d)-1)*DtDay) for d in rep_steps])
+        all_steps = np.array(rep_steps)
         if frequency == "all":
             steps = all_steps
             time_stamps = all_dates
         elif frequency == 'monthly':
             # check next date (step+1) and see if we are still in the same month
-            next_date_times = np.array([j + datetime.timedelta(seconds=int(binding["DtSec"])) for j in time_stamps])
-            months_end = np.array([time_stamps[j].month != next_date_times[j].month for j in len(rep_steps)])
+            next_date_times = np.array([j + datetime.timedelta(seconds=int(binding["DtSec"])) for j in all_dates])
+            months_end = np.array([all_dates[j].month != next_date_times[j].month for j in range(n_steps)])
             steps = all_steps[months_end]
             time_stamps= all_dates[months_end]
         elif frequency == 'yearly':
             # check next date (step+1) and see if we are still in the same month
-            next_date_times = np.array([j + datetime.timedelta(seconds=int(binding["DtSec"])) for j in time_stamps])
-            years_end = np.array([time_stamps[j].year != next_date_times[j].year for j in len(rep_steps)])
+            next_date_times = np.array([j + datetime.timedelta(seconds=int(binding["DtSec"])) for j in all_dates])
+            years_end = np.array([all_dates[j].year != next_date_times[j].year for j in range(n_steps)])
             steps = all_steps[years_end]
             time_stamps= all_dates[years_end]
         else:
             raise ValueError(f'ERROR! Frequency {frequency} not supported! Value accepted: [all, monthly, yearly]')
         
-        nf1.createDimension('time', len(steps))
+        nf1.createDimension('time', steps.size)
         time = nf1.createVariable('time', float, ('time'))
         time.standard_name = 'time'
         time.calendar = binding["calendar_type"]

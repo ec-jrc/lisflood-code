@@ -516,38 +516,26 @@ class LisSettings(with_metaclass(ThreadSingleton)):
     def _report_steps(user_settings, bindings):
 
         res = {}
-        # repsteps = user_settings['ReportSteps'].split(',')
-        # if repsteps[0] == 'starttime':
-        #     repsteps[0] = str(bindings['StepStartInt'])
-        # if repsteps[-1] == 'endtime':
-        #     repsteps[-1] = str(bindings['StepEndInt'])
-        # jjj = []
-        # for i in repsteps:
-        #     if '..' in i:
-        #         j = list(map(int, i.split('..')))
-        #         jjj = list(range(j[0], j[1] + 1))
-        #     else:
-        #         jjj.append(i)
-        # res['rep'] = list(map(int, jjj))
         reportstepstring=str(user_settings['ReportSteps']) \
             .replace('starttime',str(bindings['StepStartInt'])) \
             .replace('endtime',str(bindings['StepEndInt']))
         
         try:
-            if '..' in reportstepstring:
-                repsteps = reportstepstring.split(',')
-                listvalues = []
-                for i in repsteps:
-                    if '..' in i:
-                        j = list(map(int, i.split('..')))
-                        listvalues = list(range(j[0], j[1] + 1))
+            repsteps = reportstepstring.split(',')
+            listvalues = []
+            for i in repsteps:
+                if '..' in i:
+                    j = list(i.split('..'))
+                    if '+' in j[0]:
+                        jj = list(map(int, j[0].split('+')))
+                        listvalues = list(range(jj[0], int(j[1]) + 1, jj[1]))
                     else:
-                        listvalues.append(i)
-                res['rep'] = list(map(int, listvalues))
-            else:
-                res['rep'] = list(map(int, eval(reportstepstring,{'__builtins__': None}, {'range': range})))
+                        listvalues = list(range(int(j[0]),  int(j[1]) + 1))
+                else:
+                    listvalues.append(i)
+            res['rep'] = list(map(int, listvalues))
         except:
-            raise Exception("ReportSteps must be either a value, a list of values, a range defined by the keyword '..', or a python expression (e.g. range(1,1000,5))\nFound: {}".format(user_settings['ReportSteps']))
+            raise Exception("ReportSteps must be either a value, a list of values, a range defined by the keyword '..' or a range with '+step' keyword (e.g. 10+5..endtime)\nPlease refer to the lisflood documentation user guide\n\nFound: {}".format(user_settings['ReportSteps']))
 
         if res['rep'][0] > bindings['StepEndInt'] or res['rep'][-1] < bindings['StepStartInt']:
             warnings.warn(LisfloodWarning('No maps are reported as report steps configuration is outside simulation time interval'))
