@@ -2,7 +2,7 @@
 
 
     <lfoptions>
-    
+        <setoption choice="0" name="repMBTs"/>
         <setoption choice="0" name="cropsEPIC"/>
         <setoption choice="0" name="wateruse"/>
         <setoption choice="0" name="groundwaterSmooth"/>
