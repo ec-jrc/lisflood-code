@@ -1,6 +1,7 @@
 import os
 import glob
 from re import L
+import warnings
 import xarray as xr
 import numpy as np
 import datetime
@@ -17,6 +18,9 @@ from .decorators import Cache, cached
 from .zusatz import iterOpenNetcdf
 # from .add1 import *
 from .add1 import nanCheckMap, decompress
+
+from .. import __authors__, __version__, __date__, __status__, __institution__
+
 
 
 def get_core_dims(dims):
@@ -359,9 +363,9 @@ def write_netcdf_header(var_name, netfile, DtDay,
     # general Attributes
     nf1.settingsfile = os.path.realpath(settings.settings_path)
     nf1.date_created = xtime.ctime(xtime.time())
-    nf1.Source_Software = 'Lisflood Python'
-    nf1.institution = "European Commission DG Joint Research Centre (JRC) - E1, D2 Units"
-    nf1.creator_name = "Peter Burek, A de Roo, Johan van der Knijff"
+    nf1.Source_Software = 'Lisflood OS v' + __version__
+    nf1.institution = __institution__
+    nf1.creator_name = __authors__
     nf1.source = 'Lisflood output maps'
     nf1.keywords = "Lisflood, EFAS, GLOFAS"
     nf1.Conventions = 'CF-1.6'
