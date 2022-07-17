@@ -1,4 +1,4 @@
-"""
+f"""
 
 Copyright 2019 European Union
 
@@ -192,7 +192,7 @@ class lakes(HydroModule):
             np.put(self.var.LakeInflowOld, self.var.LakeIndex, self.var.LakeInflowOldCC)
             np.put(self.var.LakeOutflow, self.var.LakeIndex, self.var.LakeOutflowCC)
             
-            print('Initial LAKE STORAGE', np.sum(self.var.LakeStorageM3))
+            #print('Initial LAKE STORAGE', np.sum(self.var.LakeStorageM3))
 
             self.var.EWLakeCUMM3 = maskinfo.in_zero()
             self.var.EWLakeWBM3 = maskinfo.in_zero()
