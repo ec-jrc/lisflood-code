@@ -58,7 +58,7 @@ class reservoir(HydroModule):
         settings = LisSettings.instance()
         option = settings.options
         maskinfo = MaskInfo.instance()
-        if option['simulateReservoirs']:
+        if option['simulateReservoirs'] and not option['InitLisflood']:
 
             # NoSubStepsRes=max(1,roundup(self.var.DtSec/loadmap('DtSecReservoirs')))
             # Number of sub-steps based on value of DtSecReservoirs,
@@ -181,7 +181,7 @@ class reservoir(HydroModule):
         settings = LisSettings.instance()
         option = settings.options
         maskinfo = MaskInfo.instance()
-        if option['simulateReservoirs']:
+        if option['simulateReservoirs'] and not option['InitLisflood']:
             InvDtSecDay = 1 / float(86400)
             # InvDtSecDay=self.var.InvDtSec
             # ReservoirInflow = cover(ifthen(defined(self.var.ReservoirSites), upstream(
@@ -197,7 +197,12 @@ class reservoir(HydroModule):
 
             QResInM3Dt = ReservoirInflowCC * self.var.DtRouting
             # Reservoir inflow in [m3] per timestep (routing step)
-
+            
+            # print('RESERVOIRS MODULE IN')
+            # print(np.sum(self.var.ReservoirStorageM3))
+            self.var.ReservoirStorageM3CC=np.compress(self.var.ReservoirSitesC > 0, self.var.ReservoirStorageM3)  ########################
+            # print(np.sum(self.var.ReservoirStorageM3CC))
+            
             self.var.ReservoirStorageM3CC += QResInM3Dt
             # New reservoir storage [m3] = plus inflow for this sub step
             self.var.ReservoirFillCC = self.var.ReservoirStorageM3CC / self.var.TotalReservoirStorageM3CC
@@ -296,6 +301,8 @@ class reservoir(HydroModule):
                     self.var.sumResOutCC += QResOutM3DtCC
                     # summing up over all sub timesteps
 
+
+
             if NoRoutingExecuted == (self.var.NoRoutSteps-1):
 
                 # expanding the size after last sub timestep
@@ -303,6 +310,11 @@ class reservoir(HydroModule):
                 self.var.ReservoirFill = maskinfo.in_zero()
                 np.put(self.var.ReservoirStorageM3, self.var.ReservoirIndex, self.var.ReservoirStorageM3CC)
                 np.put(self.var.ReservoirFill, self.var.ReservoirIndex, self.var.ReservoirFillCC)
+
+                # print('RESERVOIRS MODULE OUT')
+                # print(np.sum(self.var.ReservoirStorageM3))
+                # print(np.sum(self.var.ReservoirStorageM3CC))
+
 
                 if option['repsimulateReservoirs']:
                     np.put(self.var.ReservoirInflowM3S, self.var.ReservoirIndex, self.var.sumResInCC / self.var.DtSec)

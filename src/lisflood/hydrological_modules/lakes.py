@@ -57,7 +57,7 @@ class lakes(HydroModule):
         binding = settings.binding
         maskinfo = MaskInfo.instance()
 
-        if option['simulateLakes']:
+        if option['simulateLakes'] and not option['InitLisflood']:
 
             LakeSitesC = loadmap('LakeSites')
             LakeSitesC[LakeSitesC < 1] = 0
@@ -99,6 +99,10 @@ class lakes(HydroModule):
             LakeArea = pcraster.lookupscalar(str(binding['TabLakeArea']), LakeSitePcr)
             LakeAreaC = compressArray(LakeArea)
             self.var.LakeAreaCC = np.compress(LakeSitesC > 0, LakeAreaC)
+            
+            
+            
+            self.var.LakeSitesC2 = LakeSitesC   ######################
 
             # Surface area of each lake [m2]
             LakeA = pcraster.lookupscalar(str(binding['TabLakeA']), LakeSitePcr)
@@ -176,7 +180,8 @@ class lakes(HydroModule):
 
             self.var.LakeStorageM3CC = LakeStorageIniM3CC.copy()
             self.var.LakeStorageM3BalanceCC = LakeStorageIniM3CC.copy()
-
+            
+          
             self.var.LakeStorageIniM3 = maskinfo.in_zero()
             self.var.LakeLevel = maskinfo.in_zero()
             self.var.LakeInflowOld = maskinfo.in_zero()
@@ -186,6 +191,8 @@ class lakes(HydroModule):
             np.put(self.var.LakeLevel, self.var.LakeIndex, self.var.LakeLevelCC)
             np.put(self.var.LakeInflowOld, self.var.LakeIndex, self.var.LakeInflowOldCC)
             np.put(self.var.LakeOutflow, self.var.LakeIndex, self.var.LakeOutflowCC)
+            
+            print('Initial LAKE STORAGE', np.sum(self.var.LakeStorageM3))
 
             self.var.EWLakeCUMM3 = maskinfo.in_zero()
             self.var.EWLakeWBM3 = maskinfo.in_zero()
@@ -205,6 +212,11 @@ class lakes(HydroModule):
         maskinfo = MaskInfo.instance()
         if not(option['InitLisflood']) and option['simulateLakes']:    # only with no InitLisflood
             #self.var.LakeInflow = cover(ifthen(defined(self.var.LakeSites), upstream(self.var.LddStructuresKinematic, self.var.ChanQ)), scalar(0.0))
+            self.var.LakeStorageM3CC=np.compress(self.var.LakeSitesC2 > 0, self.var.LakeStorageM3)
+            #self.var.LakeStorageM3CC = self.var.LakeStorageM3 
+            #print('LAKE STORAGE LakeStorageM3 before lake routine', np.sum(self.var.LakeStorageM3))
+            #print('LAKE STORAGE  self.var.LakeStorageM3CC before lake routine', np.sum( self.var.LakeStorageM3CC))
+            
             self.var.LakeInflowCC = np.bincount(self.var.downstruct, weights=self.var.ChanQ)[self.var.LakeIndex]
             # Lake inflow in [m3/s]
 
@@ -269,6 +281,7 @@ class lakes(HydroModule):
                     self.var.sumLakeOutCC += QLakeOutM3DtCC
                     # summing up over all sub timesteps
 
+
             if NoRoutingExecuted == (self.var.NoRoutSteps-1):
 
                 # expanding the size after last sub timestep
@@ -282,6 +295,9 @@ class lakes(HydroModule):
                 np.put(self.var.LakeLevel, self.var.LakeIndex, self.var.LakeLevelCC)
                 np.put(self.var.LakeInflowOld, self.var.LakeIndex, self.var.LakeInflowOldCC)
                 np.put(self.var.LakeOutflow, self.var.LakeIndex, self.var.LakeOutflowCC)
+
+                #print('LAKE STORAGE LakeStorageM3 exiting lake routine', np.sum(self.var.LakeStorageM3))
+                #print('LAKE STORAGE  self.var.LakeStorageM3CC exiting lake routine', np.sum( self.var.LakeStorageM3CC))
 
                 if option['repsimulateLakes']:
                     np.put(self.var.LakeInflowM3S, self.var.LakeIndex, self.var.sumLakeInCC / self.var.DtSec)

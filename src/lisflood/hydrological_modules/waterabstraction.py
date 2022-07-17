@@ -73,7 +73,11 @@ class waterabstraction(HydroModule):
             self.var.FractionGroundwaterUsed = np.minimum(
                 np.maximum(loadmap('FractionGroundwaterUsed'), maskinfo.in_zero()), 1.0)
             self.var.FractionNonConventionalWaterUsed = loadmap('FractionNonConventionalWaterUsed')
-            self.var.FractionLakeReservoirWaterUsed = loadmap('FractionLakeReservoirWaterUsed')
+            
+            if not option['InitLisflood']:
+               self.var.FractionLakeReservoirWaterUsed = loadmap('FractionLakeReservoirWaterUsed')
+            else:
+               self.var.FractionLakeReservoirWaterUsed = maskinfo.in_zero()  
             self.var.EFlowThreshold = loadmap('EFlowThreshold')
             # EFlowThreshold is map with m3/s discharge, e.g. the 10th percentile discharge of the baseline run
 
@@ -431,7 +435,7 @@ class waterabstraction(HydroModule):
             # 9. Lakes and reservoirs abstraction
             # ************************************************************
             # 9.1 Max abstractable volumes from lakes and reservoirs: pixel values and integral over water use regions 
-            if option['simulateReservoirs']:
+            if option['simulateReservoirs'] and not(option['InitLisflood']):
                 PotentialAbstractionFromReservoirsM3 = np.minimum(0.02 * self.var.ReservoirStorageM3,
                                                                   0.01 * self.var.TotalReservoirStorageM3C) * self.var.DtDay  #  self.var.DtDay is required when DtSec is not 86400
                 PotentialAbstractionFromReservoirsM3 = np.where(np.isnan(PotentialAbstractionFromReservoirsM3), 0,
@@ -439,37 +443,80 @@ class waterabstraction(HydroModule):
             else:
                 PotentialAbstractionFromReservoirsM3 = maskinfo.in_zero()
 
-            if option['simulateLakes']:
+            if option['simulateLakes'] and not(option['InitLisflood']):
                 PotentialAbstractionFromLakesM3 = 0.10 * self.var.LakeStorageM3 * self.var.DtDay #  self.var.DtDay is required when DtSec is not 86400
                 PotentialAbstractionFromLakesM3 = np.where(np.isnan(PotentialAbstractionFromLakesM3), 0,
                                                            PotentialAbstractionFromLakesM3)
             else:
                 PotentialAbstractionFromLakesM3 = maskinfo.in_zero()
 
-            if option['simulateReservoirs'] or option['simulateLakes']:
+            if option['simulateReservoirs'] or option['simulateLakes'] and not(option['InitLisflood']):
                 PotentialAbstractionFromLakesAndReservoirsM3 = PotentialAbstractionFromLakesM3 + PotentialAbstractionFromReservoirsM3
                 # potential total m3 that can be extracted from all lakes and reservoirs in a pixel
             else:
                 PotentialAbstractionFromLakesAndReservoirsM3 = maskinfo.in_zero()
 
+            
             AreatotalPotentialAbstractionFromLakesAndReservoirsM3 = np.take(
                 np.bincount(self.var.WUseRegionC, weights=PotentialAbstractionFromLakesAndReservoirsM3),
                 self.var.WUseRegionC)
             # 9.2 Water regions' required and actual abstraction from lakes (Lak) and reservoirs (Res)
             areatotal_withdrawal_LakRes_required_M3 = self.var.FractionLakeReservoirWaterUsed * areatotal_withdrawal_SW_required
+            
+            #print('this areatotal_withdrawal_LakRes_required_M3')
+            #print(np.sum(areatotal_withdrawal_LakRes_required_M3))
             # total amount of m3 abstracted from all lakes and reservoirs in the water regions
             self.var.areatotal_withdrawal_LakRes_actual_M3 = np.minimum(areatotal_withdrawal_LakRes_required_M3, AreatotalPotentialAbstractionFromLakesAndReservoirsM3)
+            #print(' self.var.areatotal_withdrawal_LakRes_actual_M3')
+            #print(np.sum( self.var.areatotal_withdrawal_LakRes_actual_M3))
             FractionAbstractedByLakesReservoirs = np.where(is_SW_withdrawal_required_WUR, self.var.areatotal_withdrawal_LakRes_actual_M3 / areatotal_withdrawal_SW_required,maskinfo.in_zero())
             # 9.3 Distribute actual abstractions among lakes and reservoirs inside each water region
             FractionLakesReservoirsEmptying = np.where(AreatotalPotentialAbstractionFromLakesAndReservoirsM3 > 0,
                                                    self.var.areatotal_withdrawal_LakRes_actual_M3 / AreatotalPotentialAbstractionFromLakesAndReservoirsM3, maskinfo.in_zero())
             # 9.4 Update the storages of lakes and reservoirs
             self.var.LakeAbstractionM3 = PotentialAbstractionFromLakesM3 * FractionLakesReservoirsEmptying
-            if option['simulateLakes']:
-                self.var.LakeStorageM3 = self.var.LakeStorageM3 - self.var.LakeAbstractionM3
+            #print('self.var.LakeAbstractionM3')
+            #print(np.sum(self.var.LakeAbstractionM3))
+            if option['simulateLakes'] and not(option['InitLisflood']):
+                self.var.LakeStorageM3 = self.var.LakeStorageM3 - self.var.LakeAbstractionM3             
+                '''
+                if option['InitLisflood']:
+                   self.var.LakeAreaCCindex = maskinfo.in_zero()
+                   self.var.LakeStorageM3index = maskinfo.in_zero()
+                   print(self.var.LakeStorageM3.shape)
+                   print(np.sum(self.var.LakeStorageM3))
+                   self.var.LakeStorageM3index = self.var.LakeStorageM3
+                   print(np.sum(self.var.LakeStorageM3index))
+                   #np.put(self.var.LakeStorageM3index,self.var.LakeIndex,self.var.LakeStorageM3)
+                   #print(np.sum(self.var.LakeStorageM3index))
+                   np.put(self.var.LakeAreaCCindex,self.var.LakeIndex,self.var.LakeAreaCC)
+                   print(self.var.LakeStorageM3index.shape)
+                   print(self.var.LakeAreaCC.shape)
+                   print(self.var.LakeAreaCCindex.shape)
+                   print(np.sum(self.var.LakeAreaCC))
+                   print(np.sum(self.var.LakeLevelCC))
+                   self.var.LakeLevelCC = np.where(self.var.LakeStorageM3index>0, self.var.LakeStorageM3index / self.var.LakeAreaCCindex, 0.0)
+                   print(self.var.LakeLevelCC.shape)
+                   print(np.sum(self.var.LakeLevelCC))
+                   self.var.LakeLevel = self.var.LakeLevelCC
+                   print(np.sum(self.var.LakeLevel))
+                   print('shape')
+                   print(self.var.LakeLevel.shape)
+                '''   
             self.var.ReservoirAbstractionM3 = PotentialAbstractionFromReservoirsM3 * FractionLakesReservoirsEmptying
-            if option['simulateReservoirs']:
+            #print('self.var.ReservoirAbstractionM3')
+            #print(np.sum(self.var.ReservoirAbstractionM3))
+            if option['simulateReservoirs'] and not(option['InitLisflood']):          
                 self.var.ReservoirStorageM3 = self.var.ReservoirStorageM3 - self.var.ReservoirAbstractionM3
+                '''
+                if option['InitLisflood']:
+                   self.var.TotalReservoirStorageM3CCindex = maskinfo.in_zero()
+                   np.put(self.var.TotalReservoirStorageM3CCindex,self.var.ReservoirIndex,self.var.TotalReservoirStorageM3CC)
+                   self.var.ReservoirFillindex =np.where(self.var.ReservoirStorageM3>0, self.var.ReservoirStorageM3 / self.var.TotalReservoirStorageM3CCindex,0.0)                   
+                   self.var.ReservoirFill = self.var.ReservoirFillindex
+                   print('reservoirs')
+                   print(np.sum(self.var.ReservoirFill))
+                '''
                 # subtract abstracted water from lakes and reservoir storage
  
  
