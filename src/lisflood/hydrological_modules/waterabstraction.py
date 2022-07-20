@@ -467,10 +467,21 @@ class waterabstraction(HydroModule):
             self.var.LakeAbstractionM3 = PotentialAbstractionFromLakesM3 * FractionLakesReservoirsEmptying
             if option['simulateLakes']:
                 self.var.LakeStorageM3 = self.var.LakeStorageM3 - self.var.LakeAbstractionM3
+                if option['InitLisflood']:
+                   self.var.LakeAreaCCindex = maskinfo.in_zero()
+                   np.put(self.var.LakeAreaCCindex,self.var.LakeIndex,self.var.LakeAreaCC)
+                   self.var.LakeLevelCC = np.where(self.var.LakeStorageM3index>0, self.var.LakeStorageM3 / self.var.LakeAreaCCindex, 0.0)
+                   self.var.LakeLevel = self.var.LakeLevelCC
+  
             self.var.ReservoirAbstractionM3 = PotentialAbstractionFromReservoirsM3 * FractionLakesReservoirsEmptying
             if option['simulateReservoirs']:
                 self.var.ReservoirStorageM3 = self.var.ReservoirStorageM3 - self.var.ReservoirAbstractionM3
-                # subtract abstracted water from lakes and reservoir storage
+                if option['InitLisflood']:
+                   self.var.TotalReservoirStorageM3CCindex = maskinfo.in_zero()
+                   np.put(self.var.TotalReservoirStorageM3CCindex,self.var.ReservoirIndex,self.var.TotalReservoirStorageM3CC)
+                   self.var.ReservoirFillindex =np.where(self.var.ReservoirStorageM3>0, self.var.ReservoirStorageM3 / self.var.TotalReservoirStorageM3CCindex,0.0)                   
+                   self.var.ReservoirFill = self.var.ReservoirFillindex
+            # subtract abstracted water from lakes and reservoir storage
  
  
             # ************************************************************
