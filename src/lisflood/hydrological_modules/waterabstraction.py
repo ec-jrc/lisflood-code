@@ -452,11 +452,13 @@ class waterabstraction(HydroModule):
             else:
                 PotentialAbstractionFromLakesAndReservoirsM3 = maskinfo.in_zero()
 
+            
             AreatotalPotentialAbstractionFromLakesAndReservoirsM3 = np.take(
                 np.bincount(self.var.WUseRegionC, weights=PotentialAbstractionFromLakesAndReservoirsM3),
                 self.var.WUseRegionC)
             # 9.2 Water regions' required and actual abstraction from lakes (Lak) and reservoirs (Res)
             areatotal_withdrawal_LakRes_required_M3 = self.var.FractionLakeReservoirWaterUsed * areatotal_withdrawal_SW_required
+            
             # total amount of m3 abstracted from all lakes and reservoirs in the water regions
             self.var.areatotal_withdrawal_LakRes_actual_M3 = np.minimum(areatotal_withdrawal_LakRes_required_M3, AreatotalPotentialAbstractionFromLakesAndReservoirsM3)
             FractionAbstractedByLakesReservoirs = np.where(is_SW_withdrawal_required_WUR, self.var.areatotal_withdrawal_LakRes_actual_M3 / areatotal_withdrawal_SW_required,maskinfo.in_zero())
@@ -466,15 +468,15 @@ class waterabstraction(HydroModule):
             # 9.4 Update the storages of lakes and reservoirs
             self.var.LakeAbstractionM3 = PotentialAbstractionFromLakesM3 * FractionLakesReservoirsEmptying
             if option['simulateLakes']:
-                self.var.LakeStorageM3 = self.var.LakeStorageM3 - self.var.LakeAbstractionM3
+                self.var.LakeStorageM3 = self.var.LakeStorageM3 - self.var.LakeAbstractionM3             
                 if option['InitLisflood']:
                    self.var.LakeAreaCCindex = maskinfo.in_zero()
                    np.put(self.var.LakeAreaCCindex,self.var.LakeIndex,self.var.LakeAreaCC)
-                   self.var.LakeLevelCC = np.where(self.var.LakeStorageM3index>0, self.var.LakeStorageM3 / self.var.LakeAreaCCindex, 0.0)
-                   self.var.LakeLevel = self.var.LakeLevelCC
-  
+                   self.var.LakeLevelindex = np.where(self.var.LakeStorageM3>0, self.var.LakeStorageM3 / self.var.LakeAreaCCindex, 0.0)
+                   self.var.LakeLevel = self.var.LakeLevelindex
+                   
             self.var.ReservoirAbstractionM3 = PotentialAbstractionFromReservoirsM3 * FractionLakesReservoirsEmptying
-            if option['simulateReservoirs']:
+            if option['simulateReservoirs']:          
                 self.var.ReservoirStorageM3 = self.var.ReservoirStorageM3 - self.var.ReservoirAbstractionM3
                 if option['InitLisflood']:
                    self.var.TotalReservoirStorageM3CCindex = maskinfo.in_zero()
