@@ -1,4 +1,4 @@
-timeseries valuescale.scalar settingsfile: /home/carlo/unittests_stef/lisflood-code/tests/data/LF_lat_lon_UseCase/run_lat_lon.xml_1f6caec6-8e7d-4b4d-9eb5-9ed5cae3c603.xml date: Mon Feb  7 09:51:14 2022
+timeseries valuescale.scalar settingsfile: /BGFS/DISASTER/grimast/LISFLOODv410/lisflood-code/tests/data/LF_lat_lon_UseCase/run_lat_lon_createreference.xml date: Thu Jul 21 11:58:21 2022
 2
 timestep
 1
@@ -26,11 +26,11 @@ timestep
     10978        488.528
     10979         486.59
     10980        489.077
-    10981        490.607
-    10982        491.283
-    10983        489.099
-    10984        486.349
-    10985        485.137
-    10986        490.366
-    10987        505.738
-    10988        535.057
+    10981        490.604
+    10982        491.281
+    10983        489.158
+    10984        486.328
+    10985        485.111
+    10986        490.378
+    10987        505.737
+    10988        535.156
