@@ -209,7 +209,8 @@ class lakes(HydroModule):
         maskinfo = MaskInfo.instance()
         if not(option['InitLisflood']) and option['simulateLakes']:    # only with no InitLisflood
 
-            self.var.LakeStorageM3CC=np.compress(self.var.LakeSitesC2 > 0, self.var.LakeStorageM3)
+            if NoRoutingExecuted==0:
+                self.var.LakeStorageM3CC=np.compress(self.var.LakeSitesC2 > 0, self.var.LakeStorageM3)
             
             self.var.LakeInflowCC = np.bincount(self.var.downstruct, weights=self.var.ChanQ)[self.var.LakeIndex]
             # Lake inflow in [m3/s]

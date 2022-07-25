@@ -200,7 +200,8 @@ class reservoir(HydroModule):
             
             # print('RESERVOIRS MODULE IN')
             # print(np.sum(self.var.ReservoirStorageM3))
-            self.var.ReservoirStorageM3CC=np.compress(self.var.ReservoirSitesC > 0, self.var.ReservoirStorageM3)  ########################
+            if NoRoutingExecuted==0:
+                self.var.ReservoirStorageM3CC=np.compress(self.var.ReservoirSitesC > 0, self.var.ReservoirStorageM3)  ########################
             # print(np.sum(self.var.ReservoirStorageM3CC))
             
             self.var.ReservoirStorageM3CC += QResInM3Dt
