@@ -142,3 +142,30 @@ class TestCatch(ETRS89TestCase):
         self.run_init('21600', '31/12/2015 06:00', '06/01/2017 06:00')
         self.compare_reference('avgdis', check='map', step_length='21600')
         self.compare_reference('lzavin', check='map', step_length='21600')
+
+    def run_waterbalance(self, dt_sec, step_start, step_end):
+        # "AvgDis" value="$(PathRoot)/maps/safe_init/avgdis"
+        # "LZAvInflowMap" value="$(PathRoot)/maps/safe_init/lzavin"
+        output_dir = mk_path_out(os.path.join(self.case_dir, 'out/test_results{}'.format(dt_sec)))
+        opts_to_unset = (
+            'wateruse','riceIrrigation','groundwaterSmooth'
+        )
+        settings = setoptions(self.settings_files['base'],
+                              opts_to_set=('SplitRouting','repMBTs','openwaterevapo','drainedIrrigation','simulateLakes','simulateReservoirs'),
+                              opts_to_unset=opts_to_unset,
+                              vars_to_set={'StepStart': step_start,
+                                           'StepEnd': step_end,
+                                           'DtSec': dt_sec,
+                                           'PathOut': output_dir})
+        lisfloodexe(settings)
+
+    def test_waterbalance_daily(self):
+        self.run_waterbalance('86400', '02/01/2016 06:00', '02/07/2016 06:00')
+        self.compare_reference('mbError', check='tss', step_length='86400')
+        self.compare_reference('mbErrorSplitRoutingM3', check='tss', step_length='86400')
+
+    def test_waterbalance_6h(self):
+        self.run_waterbalance('21600', '02/01/2016 06:00', '02/07/2016 06:00')
+        self.compare_reference('mbError', check='tss', step_length='21600')
+        self.compare_reference('mbErrorSplitRoutingM3', check='tss', step_length='21600')
+
