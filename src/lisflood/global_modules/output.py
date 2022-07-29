@@ -16,10 +16,12 @@ See the Licence for the specific language governing permissions and limitations 
 """
 from __future__ import print_function, absolute_import
 #from msilib.schema import Property
+import threading
+from multiprocessing import pool
 
 import os
 import warnings
-
+import numpy as np
 from pcraster import report, ifthen, catchmenttotal, mapmaximum
 
 from .zusatz import TimeoutputTimeseries
@@ -34,16 +36,32 @@ from .settings import inttodate, CDFFlags, LisSettings
 # ------------------------------------------------------------------------
 class Writer():
 
-    def write(self, map_data, start_date, rep_steps):
+    def stage(self, map_data):
         raise NotImplementedError
+
+    def write(self, start_date, rep_steps):
+        raise NotImplementedError
+
+    def extract_map(self):
+        what = 'self.var.' + self.map_value.output_var
+        try:
+            map_data = eval(what)
+        except:
+            map_data = None
+            raise Exception(f'ERROR! {self.map_value.output_var} could not be found for outputs. \
+            Variable needs to be initialised in the initial() function of the relevant hydrological module')
+
+        return np.copy(map_data)
 
 
 class NetcdfWriter(Writer):
 
     def __init__(self, var, map_key, map_value, map_path, frequency=None):
 
-        self.var = var
+        self.settings = LisSettings.instance()
 
+        self.var = var
+        
         self.map_key = map_key
         self.map_value = map_value
         self.map_path = map_path
@@ -52,29 +70,37 @@ class NetcdfWriter(Writer):
 
         self.frequency = frequency
 
-    def write(self, map_data, start_date, rep_steps):
-        
-        nf1 = write_netcdf_header(self.map_name, self.map_path, self.var.DtDay,
-                                  self.map_key, self.map_value.output_var, self.map_value.unit, 'd', 
-                                  start_date, rep_steps, self.frequency)
+        self.data = None
 
-        flags = LisSettings.instance().flags
+    def stage(self):
+        self.data = self.extract_map()
+        flags = self.settings.flags
         if flags['nancheck']:
-            nanCheckMap(map_data, self.map_name, self.map_key)
-        
-        map_np = uncompress_array(map_data)
-        
-        nf1.variables[self.map_name][:, :] = map_np
+            nanCheckMap(self.data, self.map_name, self.map_key)
 
-        nf1.close()
+    def write(self, start_date, rep_steps):
+        if self.data is not None:
+            print(f'Writing {self.map_path} from thread {threading.get_ident()}')
+            nf1 = write_netcdf_header(self.settings, self.map_name, self.map_path, self.var.DtDay,
+                                    self.map_key, self.map_value.output_var, self.map_value.unit, 'd', 
+                                    start_date, rep_steps, self.frequency)
+
+            map_np = uncompress_array(self.data)
+            
+            nf1.variables[self.map_name][:, :] = map_np
+
+            nf1.close()
+            print(f'Done writing {self.map_path} from thread {threading.get_ident()}')
+        else:
+            raise Exception('You need to stage data before writing!')
 
 
 class NetcdfStepsWriter(NetcdfWriter):
 
     def __init__(self, var, map_key, map_value, map_path, frequency, flag, end_step):
 
-        settings = LisSettings.instance()
-        binding = settings.binding
+        self.settings = LisSettings.instance()
+        binding = self.settings.binding
 
         self.flag = flag
         self.chunks = int(binding['OutputMapsChunks'])
@@ -91,37 +117,42 @@ class NetcdfStepsWriter(NetcdfWriter):
             write = True
         return write
 
-    def write(self, map_data, start_date, rep_steps):
-        
+    def stage(self):
+
+        map_np = self.extract_map()
+
         cdfflags = CDFFlags.instance()
         step = cdfflags[self.flag]
 
         flags = LisSettings.instance().flags
         if flags['nancheck']:
-            nanCheckMap(map_data, self.map_name, self.map_key)
-
-        map_np = uncompress_array(map_data)
+            nanCheckMap(map_np, self.map_name, self.map_key)
 
         self.step_range.append(step)
         self.data_steps.append(map_np)
 
+    def write(self, start_date, rep_steps):
         if self.checkpoint():
+            if self.data_steps:
+                print(f'Writing {self.map_path} from thread {threading.get_ident()}')
+                if self.step_range[0] == 0:
+                    nf1 = write_netcdf_header(self.settings, self.map_name, self.map_path, self.var.DtDay,
+                                            self.map_key, self.map_value.output_var, self.map_value.unit, 'd', 
+                                            start_date, rep_steps, self.frequency)
+                else:
+                    nf1 = iterOpenNetcdf(self.map_path, "", 'a', format='NETCDF4')
 
-            if self.step_range[0] == 0:
-                nf1 = write_netcdf_header(self.map_name, self.map_path, self.var.DtDay,
-                                        self.map_key, self.map_value.output_var, self.map_value.unit, 'd', 
-                                        start_date, rep_steps, self.frequency)
+                for step, data in zip(self.step_range, self.data_steps):
+                    nf1.variables[self.map_name][step, :, :] = uncompress_array(data)
+
+                nf1.close()
+
+                # clear lists for next chunk
+                self.step_range.clear()
+                self.data_steps.clear()
+                print(f'Done writing {self.map_path} from thread {threading.get_ident()}')
             else:
-                nf1 = iterOpenNetcdf(self.map_path, "", 'a', format='NETCDF4')
-
-            for step, data in zip(self.step_range, self.data_steps):
-                nf1.variables[self.map_name][step, :, :] = data
-
-            nf1.close()
-
-            # clear lists for next chunk
-            self.step_range.clear()
-            self.data_steps.clear()
+                raise Exception('You need to stage data before writing!')
 
 
 class PCRasterWriter(Writer):
@@ -129,9 +160,16 @@ class PCRasterWriter(Writer):
     def __init__(self, var, map_path):
         self.var = var
         self.map_path = map_path
+        self.data = None
 
-    def write(self, map_data, start_date, rep_steps):
-            self.var.report(decompress(map_data), str(self.map_path))
+    def stage(self):
+        self.data = self.extract_map()
+        
+    def write(self, start_date, rep_steps):
+        if self.data is not None:
+            self.var.report(decompress(self.data), str(self.map_path))
+        else:
+            raise Exception('You need to stage data before writing!')
 
 
 # ------------------------------------------------------------------------
@@ -154,6 +192,9 @@ class MapOutput():
         self.map_value = map_value
         self.map_path = self.extract_path(settings)
 
+        # staging data
+        self.step = None
+
         if self.is_valid():
             if option['writeNetcdf'] or option['writeNetcdfStack']:
                 if self.flag == 0:
@@ -171,16 +212,6 @@ class MapOutput():
         if self.map_path is None:
             valid = False
         return valid
-
-    def extract_map(self):
-        what = 'self.var.' + self.map_value.output_var
-        try:
-            map_data = eval(what)
-        except:
-            map_data = None
-            raise Exception(f'ERROR! {self.map_value.output_var} could not be found for outputs. \
-            Variable needs to be initialised in the initial() function of the relevant hydrological module')
-        return map_data
 
     def extract_path(self, settings):
         binding = settings.binding
@@ -203,31 +234,47 @@ class MapOutput():
     def rep_steps(self):
         raise NotImplementedError
 
+    def stage(self):
+        self.step = self.var.currentTimeStep()
+        if self.output_checkpoint():
+            self.writer.stage()
+
     def write(self):
         if self.output_checkpoint():
-            map_data = self.extract_map()
-            self.writer.write(map_data, self.start_date, self.rep_steps)
+            try:
+                return self.writer.write(self.start_date, self.rep_steps)
+            except:
+                import traceback
+                import sys
+                print(traceback.format_exc())
+                raise Exception('exception')
+                return False
+                
 
 
 class MapOutputEnd(MapOutput):
 
     def __init__(self, var, map_key, map_value):
+
+        settings = LisSettings.instance()
+        self.binding = settings.binding
         out_type = 'end'
         frequency = None
         super().__init__(var, out_type, frequency, map_key, map_value)
     
     def output_checkpoint(self):
-        check = self.var.currentTimeStep() == self.var.nrTimeSteps()
+        check = self.step == self.var.nrTimeSteps()
         return check
     
     @property
     def start_date(self):
-        start_date = inttodate(self.var.currentTimeStep() - 1, self.var.CalendarDayStart)
+        start_date = inttodate(self.step - 1, self.var.CalendarDayStart, self.binding)
         return start_date
 
     @property
     def rep_steps(self):
         return None
+
 
 class MapOutputSteps(MapOutput):
 
@@ -247,7 +294,7 @@ class MapOutputSteps(MapOutput):
     def output_checkpoint(self):
         cdfflags = CDFFlags.instance()
         freq_check = cdfflags.frequency_check(self.var, self.frequency)
-        check = (self.var.currentTimeStep() in self.var.ReportSteps) and freq_check
+        check = (self.step in self.var.ReportSteps) and freq_check
         return check
 
     @property
@@ -282,55 +329,110 @@ class MapOutputAll(MapOutput):
     def rep_steps(self):
         return self._rep_steps
 
+
 # ------------------------------------------------------------------------
-# Output factory
+# Output factory classes
 # ------------------------------------------------------------------------
-def output_maps_factory(var):
 
-    settings = LisSettings.instance()
-
-    report_maps_end = settings.report_maps_end
-    report_maps_steps = settings.report_maps_steps
-    report_maps_all = settings.report_maps_all
-
-    outputs = []
+# class Worker(threading.Thread):
+#     """Thread executing tasks from a given tasks queue"""
+#     def __init__(self, tasks):
+#         threading.Thread.__init__(self)
+#         self.tasks = tasks
+#         self.daemon = True
+#         self.start()
     
-    for map_key, map_value in report_maps_end.items():
-        out = MapOutputEnd(var, map_key, map_value)
-        if out.is_valid():
-            outputs.append(out)
+#     def run(self):
+#         while True:
+#             func, args, kargs = self.tasks.get()
+#             try: func(*args, **kargs)
+#             except Exception: 
+#                 raise Exception('Writing thread failed')
+#             self.tasks.task_done()
 
-    for map_key, map_value in report_maps_steps.items():
-        if map_value.monthly:
-            out = MapOutputSteps(var, map_key, map_value, frequency='monthly')
-        elif map_value.yearly:
-            out = MapOutputSteps(var, map_key, map_value, frequency='yearly')
-        else:
-            out = MapOutputSteps(var, map_key, map_value, frequency='all')
-        if out.is_valid():
-            outputs.append(out)
+# class ThreadPool:
+#     """Pool of threads consuming tasks from a queue"""
+#     def __init__(self, num_threads):
+#         self.tasks = Queue(num_threads)
+#         for _ in range(num_threads): Worker(self.tasks)
+
+#     def add_task(self, func, *args, **kargs):
+#         """Add a task to the queue"""
+#         self.tasks.put((func, args, kargs))
+
+#     def wait_completion(self):
+#         """Wait for completion of all the tasks in the queue"""
+#         if not self.tasks.empty():
+#             self.tasks.join()
+
+def write_output(output_map):
+    output_map.write()
+
+class OutputMapsFactory():
+    def __init__(self, var):
+
+        self.var = var
+
+        settings = LisSettings.instance()
+
+        report_maps_end = settings.report_maps_end
+        report_maps_steps = settings.report_maps_steps
+        report_maps_all = settings.report_maps_all
+
+        outputs = []
         
-    for map_key, map_value in report_maps_all.items():
-        if map_value.monthly:
-            out = MapOutputAll(var, map_key, map_value, frequency='monthly')
-        elif map_value.yearly:
-            out = MapOutputAll(var, map_key, map_value, frequency='yearly')
-        else:
-            out = MapOutputAll(var, map_key, map_value, frequency='all')
-        if out.is_valid():
-            outputs.append(out)
+        for map_key, map_value in report_maps_end.items():
+            out = MapOutputEnd(var, map_key, map_value)
+            if out.is_valid():
+                outputs.append(out)
 
-    check_duplicates = []
-    outputs_clean = []
-    for out in outputs:
-        if out.map_path in check_duplicates:
-            print(f'Warning! Output map {out.map_path} is duplicated, check list of outputs')
-        else:
-            check_duplicates.append(out.map_path)
-            outputs_clean.append(out)
+        for map_key, map_value in report_maps_steps.items():
+            if map_value.monthly:
+                out = MapOutputSteps(var, map_key, map_value, frequency='monthly')
+            elif map_value.yearly:
+                out = MapOutputSteps(var, map_key, map_value, frequency='yearly')
+            else:
+                out = MapOutputSteps(var, map_key, map_value, frequency='all')
+            if out.is_valid():
+                outputs.append(out)
+            
+        for map_key, map_value in report_maps_all.items():
+            if map_value.monthly:
+                out = MapOutputAll(var, map_key, map_value, frequency='monthly')
+            elif map_value.yearly:
+                out = MapOutputAll(var, map_key, map_value, frequency='yearly')
+            else:
+                out = MapOutputAll(var, map_key, map_value, frequency='all')
+            if out.is_valid():
+                outputs.append(out)
 
-    return outputs_clean
+        check_duplicates = []
+        outputs_clean = []
+        for out in outputs:
+            if out.map_path in check_duplicates:
+                print(f'Warning! Output map {out.map_path} is duplicated, check list of outputs')
+            else:
+                check_duplicates.append(out.map_path)
+                outputs_clean.append(out)
 
+        self.output_maps = outputs_clean
+        self.thread_pool = pool.ThreadPool(16)
+        self.thread_out = None
+
+    def write(self):
+        # make sure that previous step finished writing, then stage data
+        if self.thread_out:
+            self.thread_out.wait()
+        for out in self.output_maps:
+            out.stage()
+        from time import sleep
+        # write outputs using thread pool
+        # for out in self.output_maps:
+        #     write_output(out)
+        self.thread_out = self.thread_pool.map_async(write_output, self.output_maps)
+
+        if self.var.currentTimeStep() == self.var.nrTimeSteps():
+            self.thread_out.wait()
 
 # ------------------------------------------------------------------------
 # Output Module
@@ -386,7 +488,7 @@ class outputTssMap(object):
                     raise LisfloodFileError(str(binding[tss]), msg)
 
         # initialise output objects
-        self.output_maps = output_maps_factory(self.var)
+        self.outputs = OutputMapsFactory(self.var)
 
     def dynamic(self):
         """ dynamic part of the output module
@@ -426,9 +528,7 @@ class outputTssMap(object):
         # ************************************************************
         # ***** WRITING RESULTS: MAPS   ******************************
         # ************************************************************
-
-        for out in self.output_maps:
-            out.write()                   
+        self.outputs.write()
 
         # update local output steps
         cdfflags = CDFFlags.instance()

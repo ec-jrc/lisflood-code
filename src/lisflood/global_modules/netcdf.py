@@ -351,13 +351,12 @@ def get_space_coords(nrow, ncol, dim_lat_y, dim_lon_x):
     return coordinates
 
 
-def write_netcdf_header(var_name, netfile, DtDay,
+def write_netcdf_header(settings, var_name, netfile, DtDay,
                         value_standard_name, value_long_name, value_unit, data_format,
                         startdate, rep_steps, frequency):
 
     nf1 = iterOpenNetcdf(netfile, "", 'w', format='NETCDF4')
 
-    settings = LisSettings.instance()
     binding = settings.binding
 
     # general Attributes
