@@ -1,4 +1,4 @@
-timeseries valuescale.scalar settingsfile: /BGFS/DISASTER/grimast/LISFLOODv410/lisflood-code/tests/data/LF_ETRS89_UseCase/settings/prerun_testinit_createreference.xml date: Thu Jul 21 14:59:45 2022
+timeseries valuescale.scalar settingsfile: /BGFS/DISASTER/grimast/LF411/lisflood-code/tests/data/LF_ETRS89_UseCase/settings/prerun_testinit_createreference.xml date: Thu Jul 28 14:23:29 2022
 31
 timestep
 334

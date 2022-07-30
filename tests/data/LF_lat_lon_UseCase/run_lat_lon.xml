@@ -67,8 +67,8 @@
         <setoption choice="0" name="repStressDays"/>
 
         <setoption choice="1" name="readNetcdfStack"/>
-        <setoption choice="0" name="writeNetcdfStack"/>
-        <setoption choice="0" name="writeNetcdf"/>
+        <setoption choice="1" name="writeNetcdfStack"/>
+        <setoption choice="1" name="writeNetcdf"/>
 
         <setoption choice="0" name="MonteCarlo"/>
         <setoption choice="0" name="EnKF"/>
