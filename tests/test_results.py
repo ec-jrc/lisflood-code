@@ -144,6 +144,7 @@ class TestCatch(ETRS89TestCase):
         self.compare_reference('lzavin', check='map', step_length='21600')
 
     def run_waterbalance(self, dt_sec, step_start, step_end):
+        # init files from .../LF_ETRS89_UseCase/maps/safe_init
         output_dir = mk_path_out(os.path.join(self.case_dir, 'out/test_results{}'.format(dt_sec)))
         opts_to_unset = (
             'wateruse','riceIrrigation','groundwaterSmooth'
