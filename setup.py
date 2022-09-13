@@ -59,27 +59,6 @@ with open(version_file, 'r') as f:
     version = f.read().strip()
 
 print(">>>>>>>>>>>>>>>> Building LISFLOOD version {} <<<<<<<<<<<<<<<<<<".format(version))
-try:
-    # noqa
-    from Cython.Build import cythonize
-    HAS_CYTHON = True
-except ImportError:
-    HAS_CYTHON = False
-
-src_ext = 'src/lisflood/hydrological_modules/kinematic_wave_parallel_tools.{}'
-extension_ext = 'pyx' if HAS_CYTHON else 'c'
-
-ext_modules = [
-    Extension(
-        'lisflood.hydrological_modules.kinematic_wave_parallel_tools',
-        [src_ext.format(extension_ext)],
-        extra_compile_args=['-O3', "-march=native", '-fopenmp'],
-        extra_link_args=['-fopenmp']
-    )
-]
-
-if HAS_CYTHON:
-    ext_modules = cythonize(ext_modules)
 
 readme_file = os.path.join(current_dir, 'README.md')
 with open(readme_file, 'r') as f:
@@ -177,7 +156,6 @@ setup(
             'nine',
             'setuptools>=41.0',
             'numpy>=1.15',
-            'cython',
     ],
     install_requires=requirements,
     scripts=['bin/lisflood'],
