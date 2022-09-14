@@ -140,15 +140,13 @@ def mapattrNetCDF(name):
     filename = os.path.splitext(name)[0] + '.nc'
     nf1 = iterOpenNetcdf(filename, "Checking netcdf map \n", 'r')
     spatial_dims = ('x', 'y') if 'x' in nf1.variables else ('lon', 'lat')
-    coords0 = [nf1.variables[v][0] for v in spatial_dims]
 
     # check cell size
     maskattrs = MaskAttrs.instance()
     for dim in spatial_dims:
         if len(nf1.variables[dim]) > 1:
-            coord0 = coords0[dim]  # take first coordinate
-            coord1 = nf1.variables[dim][1]  # take second coordinate
-            cell_size = np.abs(coord1 - coord0)
+            x0, x1 = [nf1.variables[dim][i] for i in (0, 1)]
+            cell_size = np.abs(x1 - x0)
             check_cell = maskattrs['cell'] - cell_size # this must be same precision as pcraster.clone().cellsize()
 
             if abs(check_cell) > 10**-5 or abs(check_cell) > 10**-5:
@@ -158,9 +156,10 @@ def mapattrNetCDF(name):
     
     nf1.close()
 
+    x0, y0 = {dim: nf1.variables[dim][0] for dim in spatial_dims}
     half_cell = maskattrs['cell'] / 2.
-    x = coords0[0] - half_cell  # |
-    y = coords0[1] + half_cell  # | coordinates of the upper left corner of the input file upper left pixel
+    x = x0 - half_cell  # |
+    y = y0 + half_cell  # | coordinates of the upper left corner of the input file upper left pixel
     cut0 = int(np.abs(maskattrs['x'] - x) / cell_x)
     cut1 = cut0 + maskattrs['col']
     cut2 = int(np.abs(maskattrs['y'] - y) / cell_y)
