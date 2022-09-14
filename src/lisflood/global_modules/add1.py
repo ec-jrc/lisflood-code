@@ -156,7 +156,7 @@ def mapattrNetCDF(name):
     
     nf1.close()
 
-    x0, y0 = {dim: nf1.variables[dim][0] for dim in spatial_dims}
+    x0, y0 = [nf1.variables[dim][0] for dim in spatial_dims]
     half_cell = maskattrs['cell'] / 2.
     x = x0 - half_cell  # |
     y = y0 + half_cell  # | coordinates of the upper left corner of the input file upper left pixel
