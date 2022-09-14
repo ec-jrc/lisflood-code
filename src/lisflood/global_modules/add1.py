@@ -140,22 +140,27 @@ def mapattrNetCDF(name):
     filename = os.path.splitext(name)[0] + '.nc'
     nf1 = iterOpenNetcdf(filename, "Checking netcdf map \n", 'r')
     spatial_dims = ('x', 'y') if 'x' in nf1.variables else ('lon', 'lat')
-    x1, x2, y1, y2 = [nf1.variables[v][j] for v in spatial_dims for j in (0, 1)]
-    nf1.close()
+    coords0 = [nf1.variables[v][0] for v in spatial_dims]
+
+    # check cell size
     maskattrs = MaskAttrs.instance()
+    for dim in spatial_dims:
+        if len(nf1.variables[dim]) > 1:
+            coord0 = coords0[dim]  # take first coordinate
+            coord1 = nf1.variables[dim][1]  # take second coordinate
+            cell_size = np.abs(coord1 - coord0)
+            check_cell = maskattrs['cell'] - cell_size # this must be same precision as pcraster.clone().cellsize()
 
-    cell_x = np.abs(x2 - x1)
-    cell_y = np.abs(y2 - y1)
-    check_x = maskattrs['cell'] - cell_x # this must be same precision as pcraster.clone().cellsize()
-    check_y = maskattrs['cell'] - cell_y # this must be same precision as pcraster.clone().cellsize()
+            if abs(check_cell) > 10**-5 or abs(check_cell) > 10**-5:
+                raise LisfloodError("Cell size different in maskmap {} and {}".format(
+                    LisSettings.instance().binding['MaskMap'], filename)
+                )
+    
+    nf1.close()
 
-    if abs(check_x) > 10**-5 or abs(check_y) > 10**-5:
-        raise LisfloodError("Cell size different in maskmap {} and {}".format(
-            LisSettings.instance().binding['MaskMap'], filename)
-        )
     half_cell = maskattrs['cell'] / 2.
-    x = x1 - half_cell  # |
-    y = y1 + half_cell  # | coordinates of the upper left corner of the input file upper left pixel
+    x = coords0[0] - half_cell  # |
+    y = coords0[1] + half_cell  # | coordinates of the upper left corner of the input file upper left pixel
     cut0 = int(np.abs(maskattrs['x'] - x) / cell_x)
     cut1 = cut0 + maskattrs['col']
     cut2 = int(np.abs(maskattrs['y'] - y) / cell_y)
