@@ -149,11 +149,9 @@ def mapattrNetCDF(name):
         if len(nf1.variables[dim]) > 1:
             x0, x1 = [nf1.variables[dim][i] for i in (0, 1)]
             check_cell = abs(cell_size - np.abs(x1 - x0)) # this must be same precision as pcraster.clone().cellsize()
-
             if check_cell > 10**-5 or check_cell > 10**-5:
                 raise LisfloodError("Cell size different in maskmap {} and {}".format(
-                    LisSettings.instance().binding['MaskMap'], filename)
-                )
+                    LisSettings.instance().binding['MaskMap'], filename))
     
     nf1.close()
 
