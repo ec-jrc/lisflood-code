@@ -153,8 +153,6 @@ def mapattrNetCDF(name):
                 raise LisfloodError("Cell size different in maskmap {} and {}".format(
                     LisSettings.instance().binding['MaskMap'], filename))
     
-    nf1.close()
-
     x0, y0 = [nf1.variables[dim][0] for dim in spatial_dims]
     half_cell = cell_size / 2.
     x = x0 - half_cell  # |
@@ -163,6 +161,8 @@ def mapattrNetCDF(name):
     cut1 = cut0 + maskattrs['col']
     cut2 = int(np.abs(maskattrs['y'] - y) / cell_size)
     cut3 = cut2 + maskattrs['row']
+
+    nf1.close()
     return cut0, cut1, cut2, cut3  # input data will be sliced using [cut0:cut1,cut2:cut3]
 
 
