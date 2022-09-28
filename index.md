@@ -11,9 +11,8 @@ Ad’s ability to push the boundaries of science and to see the applications of 
 <br>
 Ad provided a safe space for his students and early-career colleagues, helping them to flourish and make the best of their skills for our institution. He provided scientific advice to peers, and was always a highly professional, dependable, reliable and much valued colleague.
 <br>
-Ad leaves a big gap not only at the JRC and Commission but also in the wider academic world, particularly the hydrological research community. Though, at this saddest of times, our heartfelt sympathies go out to his family and friends.
-<br>
 Enyone who's ever met Ad remembers him with a smile, with kind words and easy going attitude. We will mourn now, and then continue to work on his Lisflood legacy.
+<br>
 <span style="color:black; font-family:Georgia; font-size:1.5em;">LISFLOOD - a distributed hydrological rainfall-runoff model</span>
 <br>
 <br>
