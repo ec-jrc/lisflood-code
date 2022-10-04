@@ -14,12 +14,6 @@ Other useful resources
 | Lisflood Utilities  |                                                           | https://github.com/ec-jrc/lisflood-utilities                 |
 | Lisflood Usecases   |                                                           | https://github.com/ec-jrc/lisflood-usecases                  |
 
-## Notes for Release 4.0.1
-
-The changes of this release allow the warm start of the initialization run (or prerun; ```<setoption choice="1" name="InitLisflood"/>```).
-
-More specifically, the changes of this release allow to print the end step of all the state files required to correctly perform the warm start of the initilization run.
-Before this release, the warm start could be correctly performed only for the run (```<setoption choice="0" name="InitLisflood"/>```).
 
 ## Notes for Release 4.0.0
 
