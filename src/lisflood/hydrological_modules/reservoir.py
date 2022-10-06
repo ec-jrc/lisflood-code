@@ -162,7 +162,7 @@ class reservoir(HydroModule):
             ReservoirStorageIniM3CC = ReservoirInitialFill * self.var.TotalReservoirStorageM3CC
             # Initial reservoir storage [m3] from state or initvalue
             self.var.ReservoirStorageM3CC = ReservoirStorageIniM3CC.copy()
-            # self.var.ReservoirFill = ReservoirInitialFill.copy()
+            self.var.ReservoirFill = maskinfo.in_zero()
             # Initial fill of reservoirs (fraction of total storage, [-])
 
             self.var.ReservoirStorageIniM3 = maskinfo.in_zero()

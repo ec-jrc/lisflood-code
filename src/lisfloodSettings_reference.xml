@@ -133,13 +133,22 @@ The option "NetCDFTimeChunks" may take the following values:
 </comment>
 <textvar name="NetCDFTimeChunks" value="-1"/>
 
-    <comment>
+<comment>
 
 The option "MapsCaching" may take the following values:
     - "True"   : Cache maps during execution
     - "False"  : No caching
 </comment>
 <textvar name="MapsCaching" value="False"/>
+
+<comment>
+
+<comment>
+
+The option "OutputMapsChunks" may take the following values:
+    - "[positive integer number]"  : Dump outputs to disk every X steps (default 1) 
+</comment>
+<textvar name="OutputMapsChunks" value="1"/>
 
 <comment>
 **************************************************************

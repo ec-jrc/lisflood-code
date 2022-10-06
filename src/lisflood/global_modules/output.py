@@ -15,6 +15,7 @@ See the Licence for the specific language governing permissions and limitations 
 
 """
 from __future__ import print_function, absolute_import
+#from msilib.schema import Property
 
 import os
 import warnings
@@ -22,20 +23,318 @@ import warnings
 from pcraster import report, ifthen, catchmenttotal, mapmaximum
 
 from .zusatz import TimeoutputTimeseries
-from .add1 import decompress, valuecell, loadmap, compressArray#, writenet
-from .netcdf import writenet
+from .add1 import decompress, valuecell, loadmap, compressArray
+from .netcdf import write_netcdf_header, iterOpenNetcdf, nanCheckMap, uncompress_array
 from .errors import LisfloodFileError, LisfloodWarning
 from .settings import inttodate, CDFFlags, LisSettings
 
 
-def trimPCRasterOutputPath(output_path):
-    """Right-trim the output file name to comply with the maximum length allowed by PCRaster, if necessary."""
-    folder, name = os.path.split(output_path)
-    if len(name) > 6:
-        name = name[:6]
-    return os.path.join(folder, name)
+# ------------------------------------------------------------------------
+# Writer classes
+# ------------------------------------------------------------------------
+class Writer():
+
+    def write(self, map_data, start_date, rep_steps):
+        raise NotImplementedError
 
 
+class NetcdfWriter(Writer):
+
+    def __init__(self, var, map_key, map_value, map_path, frequency=None):
+
+        self.var = var
+
+        self.map_key = map_key
+        self.map_value = map_value
+        self.map_path = map_path
+        self.map_name = os.path.basename(self.map_path)
+        self.map_path = map_path+'.nc'
+
+        self.frequency = frequency
+
+    def write(self, map_data, start_date, rep_steps):
+        
+        nf1 = write_netcdf_header(self.map_name, self.map_path, self.var.DtDay,
+                                  self.map_key, self.map_value.output_var, self.map_value.unit, 'd', 
+                                  start_date, rep_steps, self.frequency)
+
+        flags = LisSettings.instance().flags
+        if flags['nancheck']:
+            nanCheckMap(map_data, self.map_name, self.map_key)
+        
+        map_np = uncompress_array(map_data)
+        
+        nf1.variables[self.map_name][:, :] = map_np
+
+        nf1.close()
+
+
+class NetcdfStepsWriter(NetcdfWriter):
+
+    def __init__(self, var, map_key, map_value, map_path, frequency, flag, end_step):
+
+        settings = LisSettings.instance()
+        binding = settings.binding
+
+        self.flag = flag
+        self.chunks = int(binding['OutputMapsChunks'])
+        self.end_step = end_step
+        self.step_range = []
+        self.data_steps = []
+
+        super().__init__(var, map_key, map_value, map_path, frequency)
+
+    def checkpoint(self):
+        write = False
+        end_run = self.var.currentTimeStep() == self.end_step
+        if len(self.data_steps) == self.chunks or end_run:
+            write = True
+        return write
+
+    def write(self, map_data, start_date, rep_steps):
+        
+        cdfflags = CDFFlags.instance()
+        step = cdfflags[self.flag]
+
+        flags = LisSettings.instance().flags
+        if flags['nancheck']:
+            nanCheckMap(map_data, self.map_name, self.map_key)
+
+        map_np = uncompress_array(map_data)
+
+        self.step_range.append(step)
+        self.data_steps.append(map_np)
+
+        if self.checkpoint():
+
+            if self.step_range[0] == 0:
+                nf1 = write_netcdf_header(self.map_name, self.map_path, self.var.DtDay,
+                                        self.map_key, self.map_value.output_var, self.map_value.unit, 'd', 
+                                        start_date, rep_steps, self.frequency)
+            else:
+                nf1 = iterOpenNetcdf(self.map_path, "", 'a', format='NETCDF4')
+
+            for step, data in zip(self.step_range, self.data_steps):
+                nf1.variables[self.map_name][step, :, :] = data
+
+            nf1.close()
+
+            # clear lists for next chunk
+            self.step_range.clear()
+            self.data_steps.clear()
+
+
+class PCRasterWriter(Writer):
+
+    def __init__(self, var, map_path):
+        self.var = var
+        self.map_path = map_path
+
+    def write(self, map_data, start_date, rep_steps):
+            self.var.report(decompress(map_data), str(self.map_path))
+
+
+# ------------------------------------------------------------------------
+# Map Output classes
+# ------------------------------------------------------------------------
+class MapOutput():
+
+    def __init__(self, var, out_type, frequency, map_key, map_value):
+
+        settings = LisSettings.instance()
+        option = settings.options
+
+        self.var = var
+
+        cdfflags = CDFFlags.instance()
+        self.flag = cdfflags.get_flag(out_type, frequency)
+        self.frequency = frequency
+
+        self.map_key = map_key
+        self.map_value = map_value
+        self.map_path = self.extract_path(settings)
+
+        if self.is_valid():
+            if option['writeNetcdf'] or option['writeNetcdfStack']:
+                if self.flag == 0:
+                    self.writer = NetcdfWriter(self.var, self.map_key, self.map_value, self.map_path)
+                else:
+                    self.writer = NetcdfStepsWriter(self.var, self.map_key, self.map_value, self.map_path, self.frequency, self.flag, self.rep_steps[-1])
+            else:  # PCRaster
+                self.writer = PCRasterWriter(self.var, self.map_path)
+
+    def is_valid(self):
+        valid = True
+        # map_data = self.extract_map()
+        # if map_data is None or self.map_path is None:
+        #     valid = False
+        if self.map_path is None:
+            valid = False
+        return valid
+
+    def extract_map(self):
+        what = 'self.var.' + self.map_value.output_var
+        try:
+            map_data = eval(what)
+        except:
+            map_data = None
+            raise Exception(f'ERROR! {self.map_value.output_var} could not be found for outputs. \
+            Variable needs to be initialised in the initial() function of the relevant hydrological module')
+        return map_data
+
+    def extract_path(self, settings):
+        binding = settings.binding
+        # report end map filename
+        if settings.mc_set:
+            # MonteCarlo model
+            map_path = os.path.join(str(self.var.currentSampleNumber()), binding[self.map_key].split("/")[-1])
+        else:
+            map_path = binding.get(self.map_key)
+        return map_path
+    
+    def output_checkpoint(self):
+        raise NotImplementedError
+
+    @property
+    def start_date(self):
+        raise NotImplementedError
+
+    @property
+    def rep_steps(self):
+        raise NotImplementedError
+
+    def write(self):
+        if self.output_checkpoint():
+            map_data = self.extract_map()
+            self.writer.write(map_data, self.start_date, self.rep_steps)
+
+
+class MapOutputEnd(MapOutput):
+
+    def __init__(self, var, map_key, map_value):
+        out_type = 'end'
+        frequency = None
+        super().__init__(var, out_type, frequency, map_key, map_value)
+    
+    def output_checkpoint(self):
+        check = self.var.currentTimeStep() == self.var.nrTimeSteps()
+        return check
+    
+    @property
+    def start_date(self):
+        start_date = inttodate(self.var.currentTimeStep() - 1, self.var.CalendarDayStart)
+        return start_date
+
+    @property
+    def rep_steps(self):
+        return None
+
+class MapOutputSteps(MapOutput):
+
+    def __init__(self, var, map_key, map_value, frequency):
+        out_type = 'steps'
+        if len(var.ReportSteps) > 0:
+            self._start_date = var.CalendarDayStart
+            self._rep_steps = var.ReportSteps
+        super().__init__(var, out_type, frequency, map_key, map_value)
+    
+    def is_valid(self):
+        valid = False
+        if len(self.var.ReportSteps) > 0:
+            valid = True
+        return valid and super().is_valid()
+
+    def output_checkpoint(self):
+        cdfflags = CDFFlags.instance()
+        freq_check = cdfflags.frequency_check(self.var, self.frequency)
+        check = (self.var.currentTimeStep() in self.var.ReportSteps) and freq_check
+        return check
+
+    @property
+    def start_date(self):
+        return self._start_date
+
+    @property
+    def rep_steps(self):
+        return self._rep_steps
+
+
+class MapOutputAll(MapOutput):
+
+    def __init__(self, var, map_key, map_value, frequency):
+        out_type = 'all'
+        settings = LisSettings.instance()
+        binding = settings.binding
+        self._start_date = var.CalendarDayStart
+        self._rep_steps = range(binding['StepStartInt'],binding['StepEndInt']+1)
+        super().__init__(var, out_type, frequency, map_key, map_value)
+    
+    def output_checkpoint(self):
+        cdfflags = CDFFlags.instance()
+        check = cdfflags.frequency_check(self.var, self.frequency)
+        return check
+
+    @property
+    def start_date(self):
+        return self._start_date
+
+    @property
+    def rep_steps(self):
+        return self._rep_steps
+
+# ------------------------------------------------------------------------
+# Output factory
+# ------------------------------------------------------------------------
+def output_maps_factory(var):
+
+    settings = LisSettings.instance()
+
+    report_maps_end = settings.report_maps_end
+    report_maps_steps = settings.report_maps_steps
+    report_maps_all = settings.report_maps_all
+
+    outputs = []
+    
+    for map_key, map_value in report_maps_end.items():
+        out = MapOutputEnd(var, map_key, map_value)
+        if out.is_valid():
+            outputs.append(out)
+
+    for map_key, map_value in report_maps_steps.items():
+        if map_value.monthly:
+            out = MapOutputSteps(var, map_key, map_value, frequency='monthly')
+        elif map_value.yearly:
+            out = MapOutputSteps(var, map_key, map_value, frequency='yearly')
+        else:
+            out = MapOutputSteps(var, map_key, map_value, frequency='all')
+        if out.is_valid():
+            outputs.append(out)
+        
+    for map_key, map_value in report_maps_all.items():
+        if map_value.monthly:
+            out = MapOutputAll(var, map_key, map_value, frequency='monthly')
+        elif map_value.yearly:
+            out = MapOutputAll(var, map_key, map_value, frequency='yearly')
+        else:
+            out = MapOutputAll(var, map_key, map_value, frequency='all')
+        if out.is_valid():
+            outputs.append(out)
+
+    check_duplicates = []
+    outputs_clean = []
+    for out in outputs:
+        if out.map_path in check_duplicates:
+            print(f'Warning! Output map {out.map_path} is duplicated, check list of outputs')
+        else:
+            check_duplicates.append(out.map_path)
+            outputs_clean.append(out)
+
+    return outputs_clean
+
+
+# ------------------------------------------------------------------------
+# Output Module
+# ------------------------------------------------------------------------
 class outputTssMap(object):
 
     """
@@ -90,17 +389,15 @@ class outputTssMap(object):
                     msg = "Checking output timeseries \n"
                     raise LisfloodFileError(str(binding[tss]), msg)
 
+        # initialise output objects
+        self.output_maps = output_maps_factory(self.var)
+
     def dynamic(self):
         """ dynamic part of the output module
         """
-
         # ************************************************************
         # ***** WRITING RESULTS: TIME SERIES *************************
         # ************************************************************
-
-        # xxx=catchmenttotal(self.var.SurfaceRunForest * self.var.PixelArea, self.var.Ldd) * self.var.InvUpArea
-        # self.var.Tss['DisTS'].sample(xxx)
-        # self.report(self.Precipitation,binding['TaMaps'])
 
         # if fast init than without time series
         settings = LisSettings.instance()
@@ -108,9 +405,6 @@ class outputTssMap(object):
         binding = settings.binding
         flags = settings.flags
         report_time_serie_act = settings.report_timeseries
-        report_maps_end = settings.report_maps_end
-        report_maps_steps = settings.report_maps_steps
-        report_maps_all = settings.report_maps_all
 
         if not(option['InitLisfloodwithoutSplit']):
 
@@ -137,229 +431,9 @@ class outputTssMap(object):
         # ***** WRITING RESULTS: MAPS   ******************************
         # ************************************************************
 
-        # started nicely but now it becomes way to complicated, I am not happy about the next part -> has to be chaged
+        for out in self.output_maps:
+            out.write()                   
 
-        checkifdouble = []  # list to check if map is reported more than once
-        monthly = False
-        yearly = False
-
-        # Report END maps
-
-        for maps in report_maps_end.keys():
-            # report end map filename
-            if settings.mc_set:
-                # MonteCarlo model
-                where = os.path.join(str(self.var.currentSampleNumber()), binding[maps].split("/")[-1])
-            else:
-                where = binding.get(maps)
-            if not where:
-                continue
-            what = 'self.var.' + report_maps_end[maps].output_var
-
-            try:
-                out_var = eval(what)
-            except:
-                continue
-
-            if where not in checkifdouble:
-                checkifdouble.append(where)
-                # checks if saved at same place, if no: add to list
-
-                if self.var.currentTimeStep() == self.var.nrTimeSteps():
-                    # final step: Write end maps
-                    # Get start date for reporting start step
-                    # (last step indeed)
-                    reportStartDate = inttodate(self.var.currentTimeStep() - 1, self.var.CalendarDayStart)
-
-                    # if suffix with '.' is part of the filename report with
-                    # suffix
-                    head, tail = os.path.split(where)
-                    if '.' in tail:
-                        if option['writeNetcdf']:
-                            # CM mod: write end map to netCDF file (single)
-                            # CM ##########################
-
-                            writenet(0, out_var, where, self.var.DtDay, maps, report_maps_end[maps].output_var,
-                                     report_maps_end[maps].unit, 'd', reportStartDate,
-                                     self.var.currentTimeStep(), self.var.currentTimeStep())
-
-                        else:
-                            report(decompress(out_var), str(where))
-                    else:
-                        if option['writeNetcdfStack']:
-                            
-                            writenet(0, out_var, where, self.var.DtDay, maps, report_maps_end[maps].output_var,
-                                     report_maps_end[maps].unit, 'd', reportStartDate,
-                                     self.var.currentTimeStep(), self.var.currentTimeStep())
-                        else:
-                            self.var.report(decompress(out_var), str(where))
-
-        # Report REPORTSTEPS maps
-        for maps in report_maps_steps.keys():
-            # report reportsteps maps
-            if settings.mc_set:
-                # MonteCarlo model
-                where = os.path.join(str(self.var.currentSampleNumber()), binding[maps].split("/")[-1])
-            else:
-                where = binding.get(maps)
-            if not where:
-                continue
-            what = 'self.var.' + report_maps_steps[maps].output_var
-
-            try:
-                out_var = eval(what)
-            except:
-                continue
-
-            if not(where in checkifdouble):
-                checkifdouble.append(where)
-                # checks if saved at same place, if no: add to list
-                if self.var.currentTimeStep() in self.var.ReportSteps:
-                    flagcdf = 1  # index flag for writing nedcdf = 1 (=steps) -> indicated if a netcdf is created or maps are appended
-                    frequency = "all"
-                    try:
-                        if report_maps_steps[maps].monthly:
-                            monthly = True
-                            flagcdf = 3  # set to monthly (step) flag
-                            frequency = "monthly"
-                    except:
-                        monthly = False
-                    try:
-                        if report_maps_steps[maps].yearly:
-                            yearly = True
-                            flagcdf = 4  # set to yearly (step) flag
-                            frequency = "annual"
-                    except:
-                        yearly = False
-                    if (monthly and self.var.monthend) or (yearly and self.var.yearend):
-                        # checks if a flag monthly or yearly exists
-                        if option['writeNetcdfStack']:
-                            # Get start date for reporting start step
-                            reportStartDate = inttodate(self.var.ReportSteps[0] - 1, self.var.CalendarDayStart)
-                            # get step number for first reporting step
-                            reportStepStart = 1
-                            # get step number for last reporting step
-                            reportStepEnd = self.var.ReportSteps[-1] - self.var.ReportSteps[0] + 1
-                            cdfflags = CDFFlags.instance()
-                            writenet(cdfflags[flagcdf], out_var, where, self.var.DtDay, maps,
-                                     report_maps_steps[maps].output_var, report_maps_steps[maps].unit, 'd',
-                                     reportStartDate, reportStepStart, reportStepEnd, frequency)      
-                        else:
-                            self.var.report(decompress(eval(what)), str(where))
-                    if frequency == "all":
-                        # checks if a flag monthly or yearly exists
-                        if option['writeNetcdfStack']:
-                            # Get start date for reporting start step
-                            reportStartDate = inttodate(self.var.ReportSteps[0] - 1, self.var.CalendarDayStart)
-                            # get step number for first reporting step
-                            reportStepStart = 1
-                            # get step number for last reporting step
-                            reportStepEnd = self.var.ReportSteps[-1] - self.var.ReportSteps[0] + 1
-                            cdfflags = CDFFlags.instance()
-                            writenet(cdfflags[flagcdf], out_var, where, self.var.DtDay, maps,
-                                     report_maps_steps[maps].output_var, report_maps_steps[maps].unit, 'd',
-                                     reportStartDate, reportStepStart, reportStepEnd, frequency)      
-                        else:
-                            self.var.report(decompress(eval(what)), str(where))
-                            
-        # Report ALL maps
-        for maps in report_maps_all.keys():
-            # report maps for all timesteps
-            if settings.mc_set:
-                where = os.path.join(str(self.var.currentSampleNumber()), binding[maps].split("/")[-1])
-            else:
-                where = binding.get(maps)
-            if not where:
-                continue
-
-            what = 'self.var.' + report_maps_all[maps].output_var
-
-            try:
-                out_var = eval(what)
-            except:
-                continue
-
-            if where not in checkifdouble:
-                checkifdouble.append(where)
-                # checks if saved at same place, if no: add to list
-
-                # index flag for writing nedcdf = 1 (=all) -> indicated if a netcdf is created or maps are appended
-                # cannot check only if netcdf exists, because than an old netcdf will be used accidently
-                flagcdf = 2
-                frequency = "all"
-                try:
-                    if report_maps_all[maps].monthly:
-                        monthly = True
-                        flagcdf = 5  # set to monthly flag
-                        frequency = "monthly"
-                except:
-                   monthly = False
-                try:
-                    if report_maps_all[maps].yearly:
-                        yearly = True
-                        flagcdf = 6  # set to yearly flag
-                        frequency = "annual"
-                except:
-                    yearly = False
-                ## stef
-                if (monthly and self.var.monthend) or (yearly and self.var.yearend):
-                    # checks if a flag monthly or yearly exists]
-                    if option['writeNetcdfStack']:
-                        #Get start date for reporting start step
-                        reportStartDate = inttodate(binding['StepStartInt'] - 1, self.var.CalendarDayStart)
-                        # CM: get step number for first reporting step which is always the first simulation step
-                        # CM: first simulation step referred to reportStartDate
-                        ##reportStepStart = int(binding['StepStart'])
-                        reportStepStart = 1
-                        #get step number for last reporting step which is always the last simulation step
-                        #last simulation step referred to reportStartDate
-                        reportStepEnd = binding['StepEndInt'] - binding['StepStartInt'] + 1
-                        
-                        cdfflags = CDFFlags.instance()
-                        writenet(cdfflags[flagcdf], out_var, where, self.var.DtDay, maps, report_maps_all[maps].output_var,
-                                 report_maps_all[maps].unit, 'd', reportStartDate, reportStepStart, reportStepEnd, frequency)
-
-                    else:
-                        self.var.report(decompress(eval(what)), trimPCRasterOutputPath(where))
-                if frequency == "all":
-                    if option['writeNetcdfStack']:
-                        #Get start date for reporting start step
-                        reportStartDate = inttodate(binding['StepStartInt'] - 1, self.var.CalendarDayStart)
-                        # CM: get step number for first reporting step which is always the first simulation step
-                        # CM: first simulation step referred to reportStartDate
-                        ##reportStepStart = int(binding['StepStart'])
-                        reportStepStart = 1
-                        #get step number for last reporting step which is always the last simulation step
-                        #last simulation step referred to reportStartDate
-                        reportStepEnd = binding['StepEndInt'] - binding['StepStartInt'] + 1
-                        
-                        cdfflags = CDFFlags.instance()
-                        writenet(cdfflags[flagcdf], out_var, where, self.var.DtDay, maps, report_maps_all[maps].output_var,
-                                 report_maps_all[maps].unit, 'd', reportStartDate, reportStepStart, reportStepEnd, frequency)
-
-                    else:
-                        self.var.report(decompress(eval(what)), trimPCRasterOutputPath(where))                         
-
+        # update local output steps
         cdfflags = CDFFlags.instance()
-        # set the falg to indicate if a netcdffile has to be created or is only appended
-        # if reportstep than increase the counter
-        if self.var.currentTimeStep() in self.var.ReportSteps:
-            # FIXME magic numbers. replace indexes with descriptive keys
-            cdfflags.inc(1)
-            # globals.cdfFlag[1] += 1
-            if self.var.monthend:
-                # globals.cdfFlag[3] += 1
-                cdfflags.inc(3)
-            if self.var.yearend:
-                # globals.cdfFlag[4] += 1
-                cdfflags.inc(4)
-
-        # increase the counter for report all maps
-        cdfflags.inc(2)
-        # globals.cdfFlag[2] += 1
-        if self.var.monthend:
-            # globals.cdfFlag[5] += 1
-            cdfflags.inc(5)
-        if self.var.yearend:
-            # globals.cdfFlag[6] += 1
-            cdfflags.inc(6)
+        cdfflags.update(self.var)

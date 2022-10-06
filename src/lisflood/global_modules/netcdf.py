@@ -1,5 +1,7 @@
 import os
 import glob
+from re import L
+import warnings
 import xarray as xr
 import numpy as np
 import datetime
@@ -10,12 +12,15 @@ from nine import range
 from pyproj import Proj
 
 from .settings import (calendar_inconsistency_warning, get_calendar_type, calendar, MaskAttrs, CutMap, NetCDFMetadata,
-                       LisSettings, MaskInfo)
+                       LisSettings, MaskInfo, CDFFlags, inttodate)
 from .errors import LisfloodWarning, LisfloodError
 from .decorators import Cache, cached
 from .zusatz import iterOpenNetcdf
 # from .add1 import *
 from .add1 import nanCheckMap, decompress
+
+from .. import __authors__, __version__, __date__, __status__, __institution__
+
 
 
 def get_core_dims(dims):
@@ -346,9 +351,9 @@ def get_space_coords(nrow, ncol, dim_lat_y, dim_lon_x):
     return coordinates
 
 
-def write_header(var_name, netfile, DtDay,
-                 value_standard_name, value_long_name, value_unit, data_format,
-                 startdate, repstepstart, repstepend, frequency):
+def write_netcdf_header(var_name, netfile, DtDay,
+                        value_standard_name, value_long_name, value_unit, data_format,
+                        startdate, rep_steps, frequency):
 
     nf1 = iterOpenNetcdf(netfile, "", 'w', format='NETCDF4')
 
@@ -358,12 +363,13 @@ def write_header(var_name, netfile, DtDay,
     # general Attributes
     nf1.settingsfile = os.path.realpath(settings.settings_path)
     nf1.date_created = xtime.ctime(xtime.time())
-    nf1.Source_Software = 'Lisflood Python'
-    nf1.institution = "European Commission DG Joint Research Centre (JRC) - E1, D2 Units"
-    nf1.creator_name = "Peter Burek, A de Roo, Johan van der Knijff"
+    nf1.Source_Software = 'Lisflood OS v' + __version__
+    nf1.institution = __institution__
+    nf1.creator_name = __authors__
     nf1.source = 'Lisflood output maps'
     nf1.keywords = "Lisflood, EFAS, GLOFAS"
     nf1.Conventions = 'CF-1.6'
+
     # Dimension
     not_valid_attrs = ('_FillValue', )
     meta_netcdf = NetCDFMetadata.instance()
@@ -380,7 +386,6 @@ def write_header(var_name, netfile, DtDay,
             setattr(proj, i, meta_netcdf.data['lambert_azimuthal_equal_area'][i])
 
     # Space coordinates
-
     cutmap = CutMap.instance()
     nrow = np.abs(cutmap.cuts[3] - cutmap.cuts[2])
     ncol = np.abs(cutmap.cuts[1] - cutmap.cuts[0])
@@ -404,36 +409,35 @@ def write_header(var_name, netfile, DtDay,
             setattr(latitude, i, meta_netcdf.data[dim_lat_y][i])
     latitude[:] = latlon_coords[dim_lat_y]
 
-
+    # time coordinates and associated values
     if frequency is not None:  # output file with "time" dimension
+        n_steps = len(rep_steps)
         #Get initial and final dates for data to be stored in nerCDF file
-        first_date, last_date = [startdate + datetime.timedelta(days=(int(k) - 1)*DtDay) for k in
-                                 (repstepstart, repstepend)]
         # CM: Create time stamps for each step stored in netCDF file
-        time_stamps = [first_date + datetime.timedelta(days=d*DtDay) for d in range(repstepend - repstepstart +1)]
-
-        units_time = 'days since %s' % startdate.strftime("%Y-%m-%d %H:%M:%S.0")
-        steps = (int(binding["DtSec"]) / 86400.) * np.arange(binding["StepStartInt"] - 1, binding["StepEndInt"])
-        if frequency != "all":
-            dates = num2date(steps-binding["StepStartInt"]+1, units_time, binding["calendar_type"])
-            next_date_times = np.array([j + datetime.timedelta(seconds=int(binding["DtSec"])) for j in dates])
-            if frequency == "monthly":
-                months_end = np.array([dates[j].month != next_date_times[j].month for j in range(repstepend - repstepstart +1)])
-                steps_monthly = steps[months_end]
-                time_stamps_monthly = dates[months_end==True]
-            elif frequency == "annual":
-                years_end = np.array([dates[j].year != next_date_times[j].year for j in range(steps.size)])
-                steps = steps[years_end]
+        all_dates = np.array([startdate + datetime.timedelta(days=(int(d)-1)*DtDay) for d in rep_steps])
+        all_steps = np.array(rep_steps)
         if frequency == "all":
-           nf1.createDimension('time', steps.size)
-           time = nf1.createVariable('time', float, ('time'))
-           time.standard_name = 'time'
-        if frequency == "monthly":
-           nf1.createDimension('time', steps_monthly.size)
-           time = nf1.createVariable('time', float, ('time'))
-           time.standard_name = 'time'           
-        # time.units ='days since 1990-01-01 00:00:00.0'
-        # time.units = 'hours since %s' % startdate.strftime("%Y-%m-%d %H:%M:%S.0")
+            steps = all_steps
+            time_stamps = all_dates
+        elif frequency == 'monthly':
+            # check next date (step+1) and see if we are still in the same month
+            next_date_times = np.array([j + datetime.timedelta(seconds=int(binding["DtSec"])) for j in all_dates])
+            months_end = np.array([all_dates[j].month != next_date_times[j].month for j in range(n_steps)])
+            steps = all_steps[months_end]
+            time_stamps= all_dates[months_end]
+        elif frequency == 'yearly':
+            # check next date (step+1) and see if we are still in the same month
+            next_date_times = np.array([j + datetime.timedelta(seconds=int(binding["DtSec"])) for j in all_dates])
+            years_end = np.array([all_dates[j].year != next_date_times[j].year for j in range(n_steps)])
+            steps = all_steps[years_end]
+            time_stamps= all_dates[years_end]
+        else:
+            raise ValueError(f'ERROR! Frequency {frequency} not supported! Value accepted: [all, monthly, yearly]')
+        
+        nf1.createDimension('time', steps.size)
+        time = nf1.createVariable('time', float, ('time'))
+        time.standard_name = 'time'
+        time.calendar = binding["calendar_type"]
         # CM: select the time unit according to model time step
         DtDay_in_sec = DtDay * 86400
         if DtDay_in_sec >= 86400:
@@ -445,19 +449,13 @@ def write_header(var_name, netfile, DtDay,
         elif DtDay_in_sec >= 60 and DtDay_in_sec <3600:
             # CM: minutes to hours model time step
             time.units = 'minutes since %s' % startdate.strftime("%Y-%m-%d %H:%M:%S.0")
+        nf1.variables["time"][:] = date2num(time_stamps, time.units, time.calendar)
 
-        time.calendar = binding["calendar_type"]
- 
-        if frequency == "all":
-           nf1.variables["time"][:] = date2num(time_stamps, time.units, time.calendar)
-        if frequency == "monthly":
-           nf1.variables["time"][:] = date2num(time_stamps_monthly, time.units, time.calendar)                  
-        # for i in metadataNCDF['time']: exec('%s="%s"') % ("time."+i, metadataNCDF['time'][i])
         value = nf1.createVariable(var_name, 'd', ('time', dim_lat_y, dim_lon_x), zlib=True, fill_value=-9999, chunksizes=(1, nrow, ncol))
     else:
         value = nf1.createVariable(var_name, 'd', (dim_lat_y, dim_lon_x), zlib=True, fill_value=-9999)
     
-
+    # value attributes
     value.standard_name = value_standard_name
     value.long_name = value_long_name
     value.units = value_unit
@@ -470,11 +468,11 @@ def write_header(var_name, netfile, DtDay,
 
 def writenet(flag, inputmap, netfile, DtDay,
              value_standard_name, value_long_name, value_unit, data_format,
-             startdate, repstepstart, repstepend, frequency=None):
+             startdate, rep_steps, frequency=None):
 
     """ Write a netcdf stack
 
-    :param flag: 0 netCDF file format; ?
+    :param flag: 0 -> one value map, 1-5 -> time serie (all steps, monthly, yearly, etc.)
     :param inputmap: values to be written to NetCDF file
     :param netfile: name of output file in NetCDF format
     :param DtDay: model timestep (self.var.DtDay)
@@ -485,7 +483,7 @@ def writenet(flag, inputmap, netfile, DtDay,
     :param startdate: reference date to be used to get start date and end date for netCDF file from start step and end step
     :param: repstepstart: first reporting step
     :param: repstepend: final reporting step
-    :param frequency:[None,'all','monthly','annual'] save to netCDF stack; None save to netCDF single
+    :param frequency:[None,'all','monthly','yearly'] save to netCDF stack; None save to netCDF single
     :return: 
     """
     # prefix = netfile.split('/')[-1].split('\\')[-1].split('.')[0]
@@ -493,9 +491,9 @@ def writenet(flag, inputmap, netfile, DtDay,
     var_name = os.path.basename(netfile)
     netfile += ".nc"
     if flag == 0:
-        nf1 = write_header(var_name, netfile, DtDay,
-                           value_standard_name, value_long_name, value_unit, data_format,
-                           startdate, repstepstart, repstepend, frequency)
+        nf1 = write_netcdf_header(var_name, netfile, DtDay,
+                                  value_standard_name, value_long_name, value_unit, data_format,
+                                  startdate, rep_steps, frequency)
     else:
         nf1 = iterOpenNetcdf(netfile, "", 'a', format='NETCDF4')
     if flags['nancheck']:
@@ -503,10 +501,11 @@ def writenet(flag, inputmap, netfile, DtDay,
     
     map_np = uncompress_array(inputmap)
     if frequency is not None:
-        nf1.variables[var_name][flag, :, :] = map_np
-        #value[flag,:,:]= mapnp
+        cdfflags = CDFFlags.instance()
+        step = cdfflags[flag]
+
+        nf1.variables[var_name][step, :, :] = map_np
     else:
-        # without timeflag
         nf1.variables[var_name][:, :] = map_np
 
     nf1.close()
