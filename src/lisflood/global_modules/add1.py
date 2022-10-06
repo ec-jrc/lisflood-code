@@ -140,26 +140,29 @@ def mapattrNetCDF(name):
     filename = os.path.splitext(name)[0] + '.nc'
     nf1 = iterOpenNetcdf(filename, "Checking netcdf map \n", 'r')
     spatial_dims = ('x', 'y') if 'x' in nf1.variables else ('lon', 'lat')
-    x1, x2, y1, y2 = [nf1.variables[v][j] for v in spatial_dims for j in (0, 1)]
-    nf1.close()
+
     maskattrs = MaskAttrs.instance()
+    cell_size = maskattrs['cell']
 
-    cell_x = np.abs(x2 - x1)
-    cell_y = np.abs(y2 - y1)
-    check_x = maskattrs['cell'] - cell_x # this must be same precision as pcraster.clone().cellsize()
-    check_y = maskattrs['cell'] - cell_y # this must be same precision as pcraster.clone().cellsize()
-
-    if abs(check_x) > 10**-5 or abs(check_y) > 10**-5:
-        raise LisfloodError("Cell size different in maskmap {} and {}".format(
-            LisSettings.instance().binding['MaskMap'], filename)
-        )
-    half_cell = maskattrs['cell'] / 2.
-    x = x1 - half_cell  # |
-    y = y1 + half_cell  # | coordinates of the upper left corner of the input file upper left pixel
-    cut0 = int(np.abs(maskattrs['x'] - x) / cell_x)
+    # check cell size
+    for dim in spatial_dims:
+        if len(nf1.variables[dim]) > 1:
+            x0, x1 = [nf1.variables[dim][i] for i in (0, 1)]
+            check_cell = abs(cell_size - np.abs(x1 - x0)) # this must be same precision as pcraster.clone().cellsize()
+            if check_cell > 10**-5 or check_cell > 10**-5:
+                raise LisfloodError("Cell size different in maskmap {} and {}".format(
+                    LisSettings.instance().binding['MaskMap'], filename))
+    
+    x0, y0 = [nf1.variables[dim][0] for dim in spatial_dims]
+    half_cell = cell_size / 2.
+    x = x0 - half_cell  # |
+    y = y0 + half_cell  # | coordinates of the upper left corner of the input file upper left pixel
+    cut0 = int(np.abs(maskattrs['x'] - x) / cell_size)
     cut1 = cut0 + maskattrs['col']
-    cut2 = int(np.abs(maskattrs['y'] - y) / cell_y)
+    cut2 = int(np.abs(maskattrs['y'] - y) / cell_size)
     cut3 = cut2 + maskattrs['row']
+
+    nf1.close()
     return cut0, cut1, cut2, cut3  # input data will be sliced using [cut0:cut1,cut2:cut3]
 
 
