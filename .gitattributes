@@ -1,6 +1,6 @@
-assets/fonts/* linguist-vendored
-assets/js/main.min.js linguist-vendored
-assets/js/lunr/* linguist-vendored
-assets/js/plugins/* linguist-vendored
-assets/js/vendor/* linguist-vendored
-_sass/minimal-mistakes/vendor/* linguist-vendored
+docs/assets/fonts/* linguist-vendored
+docs/assets/js/main.min.js linguist-vendored
+docs/assets/js/lunr/* linguist-vendored
+docs/assets/js/plugins/* linguist-vendored
+docs/assets/js/vendor/* linguist-vendored
+docs/_sass/minimal-mistakes/vendor/* linguist-vendored
