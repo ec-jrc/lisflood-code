@@ -31,7 +31,7 @@ from pcraster.framework import *  # TODO fix import star
 import numpy as np
 
 from .decorators import counted
-from .settings import datetoint, LisSettings, MaskInfo
+from .settings import datetoint, LisSettings, MaskInfo, MaskAreaInfo
 from .errors import LisfloodError, LisfloodFileError
 
 
@@ -58,8 +58,12 @@ def checkmap(name, value, map_to_check, flagmap, find):
     :return: 
     """
     s = [name, value]
-    maskinfo = MaskInfo.instance()
-    maskmap = maskinfo.maskmap
+    if name == 'Ldd':
+        maskchkareainfo = MaskAreaInfo.instance()
+        maskmap = maskchkareainfo.maskmap
+    else:
+        maskinfo = MaskInfo.instance()
+        maskmap = maskinfo.maskmap
     if flagmap:
         amap = scalar(defined(maskmap))
         try:

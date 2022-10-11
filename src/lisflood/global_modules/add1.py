@@ -39,7 +39,7 @@ import numpy as np
 
 from .zusatz import iterOpenNetcdf, iterReadPCRasterMap, iterSetClonePCR, checkmap
 from .settings import (calendar_inconsistency_warning, get_calendar_type, calendar, MaskAttrs, CutMap, NetCDFMetadata,
-                       LisSettings, MaskInfo)
+                       LisSettings, MaskInfo, MaskAreaInfo)
 from .errors import LisfloodWarning, LisfloodError
 from .decorators import Cache
 
@@ -228,21 +228,26 @@ def loadsetclone(name):
             map_out = numpy2pcr(Boolean, mapnp, 0)
             flagmap = True
 
-        if flags['checkfiles']:
-            checkmap(name, filename, map_out, flagmap, 0)
     else:
         raise LisfloodError("Maskmap: {} is not a valid mask map nor valid coordinates".format(name))
     _ = MaskAttrs(uuid.uuid4())  # init maskattrs
+    # convert numpy map to 8bit
+    maskarea = np.bool8(mapnp)
+    #check ldd map by maskchkarea map
+    maskchkarea = np.logical_not(maskarea)
+    _ = MaskAreaInfo(maskchkarea, map_out)  # MaskAreaInfo init here
     # put in the ldd map
     # if there is no ldd at a cell, this cell should be excluded from modelling
     ldd = loadmap('Ldd', pcr=True)
     # convert ldd to numpy
     maskldd = pcr2numpy(ldd, np.nan)
-    # convert numpy map to 8bit
-    maskarea = np.bool8(mapnp)
+
     # compute mask (pixels in maskldd AND maskarea)
     mask = np.logical_not(np.logical_and(maskldd, maskarea))
     _ = MaskInfo(mask, map_out)  # MaskInfo init here
+
+    if flags['checkfiles'] and (len(coord) == 1):
+        checkmap(name, filename, map_out, flagmap, 0)
 
     if flags['nancheck']:
         nanCheckMap(ldd, binding['Ldd'], 'Ldd')
