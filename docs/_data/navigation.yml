@@ -1,0 +1,15 @@
+# main links
+main:
+  - section_title: "LISFLOOD"
+  - title: "Lisflood OS page"
+    url: https://ec-jrc.github.io/lisflood/
+  - title: "Model Documentation"
+    url: https://ec-jrc.github.io/lisflood-model/
+  - title: "User Guide"
+    url: https://ec-jrc.github.io/lisflood-code/
+  - title: "Use Cases"
+    url: https://github.com/ec-jrc/lisflood-usecases/
+  - title: "Utilities"
+    url: https://github.com/ec-jrc/lisflood-utilities/
+  - title: "LISVAP"
+    url: https://ec-jrc.github.io/lisflood-lisvap/
