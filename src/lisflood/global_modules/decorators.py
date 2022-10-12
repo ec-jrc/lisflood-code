@@ -25,6 +25,7 @@ def counted(fn):
         return fn(*args, **kwargs)
 
     wrapper.called = 0
+    wrapper.errors = 0
     wrapper.__name__ = fn.__name__
     return wrapper
 

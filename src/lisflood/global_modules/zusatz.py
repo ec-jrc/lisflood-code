@@ -32,7 +32,7 @@ import numpy as np
 
 from .decorators import counted
 from .settings import datetoint, LisSettings, MaskInfo, MaskAreaInfo
-from .errors import LisfloodError, LisfloodFileError
+from .errors import LisfloodError, LisfloodFileError, LisfloodWarning
 
 
 MAX_READ_TRIALS = 100 # max number of trial allowed re-read an input file: to avoid crashes due to temporary network interruptions
@@ -104,8 +104,12 @@ def checkmap(name, value, map_to_check, flagmap, find):
 
     # print check results
     if checkmap.called == 1:
-        print("%-25s%-40s%11s%11s%11s%11s%11s" %("Name","File/Value","nonMV","MV","min","mean","max"))
-    print("%-25s%-40s%11i%11i%11.2f%11.2f%11.2f" %(s[0],s[1][-39:],s[2],s[3],s[4],s[5],s[6]))
+        print("%-35s%-40s%11s%11s%11s%11s%11s" %("Name","File/Value","nonMV","MV","min","mean","max"))
+    print("%-35s%-40s%11i%11i%11.2f%11.2f%11.2f" %(s[0],s[1][-39:],s[2],s[3],s[4],s[5],s[6]))
+    if s[3]>0:
+        checkmap.errors += 1
+        warnings.warn(LisfloodWarning("WARNING! missing values for map {}".format(s[0])))
+
     return
 
 

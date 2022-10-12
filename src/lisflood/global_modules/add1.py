@@ -493,13 +493,13 @@ def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averagey
         mapC = compressArray(map, name=filename)
 
     if flags['checkfiles']:
-        print(name, filename)
+        #print(name, filename)
         if flagmap == False:
             checkmap(name, filename, mapC, flagmap, 0)
         elif pcr:
             checkmap(name, filename, map, flagmap, 0)
         else:
-            print(name, mapC.size)
+            #print(name, mapC.size)
             if mapC.size > 0:
                 map= decompress(mapC)
                 checkmap(name, filename, map, flagmap, 0)
