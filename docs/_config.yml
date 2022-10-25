@@ -1,0 +1,263 @@
+# Welcome to Jekyll!
+#
+# This config file is meant for settings that affect your entire site, values
+# which you are expected to set up once and rarely need to edit after that.
+# For technical reasons, this file is *NOT* reloaded automatically when you use
+# `jekyll serve`. If you change this file, please restart the server process.
+
+# Theme Settings
+#
+# Review documentation to determine if you should use `theme` or `remote_theme`
+# https://mmistakes.github.io/minimal-mistakes/docs/quick-start-guide/#installing-the-theme
+
+# theme                  : "minimal-mistakes-jekyll"
+# remote_theme           : "mmistakes/minimal-mistakes"
+theme: jekyll-theme-minimal
+minimal_mistakes_skin    : "default" # "air", "aqua", "contrast", "dark", "dirt", "neon", "mint", "plum", "sunrise"
+
+# Site Settings
+locale                   : "en-US"
+title                    : "LISFLOOD"
+title_separator          : "-"
+name                     : "JRC D2,E1"
+description              : "Lisflood User Guide"
+url                      : # the base hostname & protocol for your site e.g. "https://mmistakes.github.io"
+baseurl                  : "/lisflood-code" # the subpath of your site, e.g. "/blog"
+repository               : # GitHub username/repo-name e.g. "mmistakes/minimal-mistakes"
+teaser                   : # path of fallback teaser image, e.g. "/assets/images/500x300.png"
+# breadcrumbs            : false # true, false (default)
+words_per_minute         : 200
+staticman:
+  allowedFields          : # ['name', 'email', 'url', 'message']
+  branch                 : # "master"
+  commitMessage          : # "New comment."
+  filename               : # comment-{@timestamp}
+  format                 : # "yml"
+  moderation             : # true
+  path                   : # "/_data/comments/{options.slug}" (default)
+  requiredFields         : # ['name', 'email', 'message']
+  transforms:
+    email                : # "md5"
+  generatedFields:
+    date:
+      type               : # "date"
+      options:
+        format           : # "iso8601" (default), "timestamp-seconds", "timestamp-milliseconds"
+
+# Site Author
+author:
+  name             : "JRC D2,E1"
+  avatar           : # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
+  bio              : "Index"
+  location         : ""
+  email            :
+  uri              :
+  home             : # null (default), "absolute or relative url to link to author home"
+  bitbucket        :
+  codepen          :
+  dribbble         :
+  flickr           :
+  facebook         :
+  foursquare       :
+  github           :
+  gitlab           :
+  google_plus      :
+  keybase          :
+  instagram        :
+  lastfm           :
+  linkedin         : # "john-doe-12345678" (the last part of your profile url, e.g. https://www.linkedin.com/in/john-doe-12345678)
+  pinterest        :
+  soundcloud       :
+  stackoverflow    : # "123456/username" (the last part of your profile url, e.g. https://stackoverflow.com/users/123456/username)
+  steam            : # "steamId" (the last part of your profile url, e.g. https://steamcommunity.com/id/steamId/)
+  tumblr           :
+  twitter          :
+  vine             :
+  weibo            :
+  xing             :
+  youtube          : # "https://youtube.com/c/MichaelRoseDesign"
+
+
+# Reading Files
+include: ["_pages"]
+exclude:
+  - "*.sublime-project"
+  - "*.sublime-workspace"
+  - vendor
+  - .asset-cache
+  - .bundle
+  - .jekyll-assets-cache
+  - .sass-cache
+  - .idea/
+  - assets/js/plugins
+  - assets/js/_main.js
+  - assets/js/vendor
+  - Capfile
+  - CHANGELOG
+  - config
+  - Gemfile
+  - Gruntfile.js
+  - gulpfile.js
+  - LICENSE
+  - log
+  - node_modules
+  - package.json
+  - Rakefile
+  - README
+  - tmp
+  - /docs # ignore Minimal Mistakes /docs
+  - /test # ignore Minimal Mistakes /test
+keep_files:
+  - .git
+  - .svn
+encoding: "utf-8"
+markdown_ext: "markdown,mkdown,mkdn,mkd,md"
+
+
+# Conversion
+markdown: kramdown
+highlighter: rouge
+lsi: false
+excerpt_separator: "\n\n"
+incremental: false
+
+
+# Markdown Processing
+kramdown:
+  input: GFM
+  hard_wrap: false
+  auto_ids: true
+  footnote_nr: 1
+  entity_output: as_char
+  toc_levels: 1..3
+  smart_quotes: lsquo,rsquo,ldquo,rdquo
+  enable_coderay: false
+
+
+# Sass/SCSS
+sass:
+  sass_dir: _sass
+  style: compressed # http://sass-lang.com/documentation/file.SASS_REFERENCE.html#output_style
+
+
+# Outputting
+permalink: /:categories/:title/
+#paginate: 5 # amount of posts to show
+#paginate_path: /page:num/
+timezone: # https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+
+
+# Plugins (previously gems:)
+plugins:
+  - jekyll-sitemap
+
+# mimic GitHub Pages with --safe
+whitelist:
+  - jekyll-sitemap
+
+category_archive:
+  type: liquid
+  path: /categories/
+tag_archive:
+  type: liquid
+  path: /tags/
+
+# HTML Compression
+# - http://jch.penibelst.de/
+compress_html:
+  clippings: all
+  ignore:
+    envs: development
+
+
+# Defaults
+
+defaults:
+  # _pages
+  - scope:
+      path: ""
+      type: pages
+    values:
+      layout: single
+      author_profile: true
+      read_time: false
+      toc: true
+      toc_sticky: true
+      comments: # true
+      share: false
+      related: false
+      sidebar:
+
+      - section_title: "Introduction"
+        items:
+        - title: "About LISFLOOD"
+          url: 1_introduction_LISFLOOD
+        - title: "About this user guide"
+          url: 1_introduction_usermanual
+
+      - section_title: "Installation"
+        items:
+        - title: "Installation and testing"
+          url: 3_step2_installation         
+
+      - section_title: "Step-by-step user guide"
+        items:
+        - title: "Step 0: Essential before getting started"
+          url: 2_ESSENTIAL_setting-file
+        - title: "Step 1: Time convention within LISFLOOD model"
+          url: 2_ESSENTIAL_time-management
+        - title: "Step 2: Preparing the settings file"
+          url: 3_step3_preparing-setting-file
+        - title: "Step 3: Preparing input files"
+          url: 3_step4_preparing-input-files
+        - title: "Step 4: Initialisation of LISFLOOD"
+          url: 3_step5_model-initialisation
+        - title: "Step 5: Running LISFLOOD"
+          url: 3_step6_running-LISFLOOD
+        - title: "Step 6: model output"
+          url: 3_step6_model-output
+          
+      - section_title: "Static maps"
+        items:
+        - title: "Introduction"
+          url: 4_Static-Maps-introduction           
+        - title: "General maps"
+          url: 4_Static-Maps_general-maps 
+        - title: "Topography maps"
+          url: 4_Static-Maps_topography   
+        - title: "Land use maps"
+          url: 4_Static-Maps_land-use   
+        - title: "Land use depending maps"
+          url: 4_Static-Maps_land-use-depending             
+        - title: "Soil hydraulic properties maps"
+          url: 4_Static-Maps_soil-hydraulic-properties     
+        - title: "Channel geometry maps"
+          url: 4_Static-Maps_channel-geometry               
+        - title: "Leaf area index maps"
+          url: 4_Static-Maps_leaf-area-index           
+        - title: "Reservoirs and lakes maps"
+          url: 4_Static-Maps_reservoirs-lakes   
+        - title: "Rice calendar maps"
+          url: 4_Static-Maps_rice-calendar  
+        - title: "Static maps: appendix"
+          url: 4_Static-Maps_appendix   
+                                                                       
+      - section_title: "Annex"
+        items:
+        - title: "LISFLOOD input files"
+          url: 4_annex_input-files
+        - title: "LISFLOOD output files"
+          url: 4_annex_output-files
+        - title: "LISFLOOD settings and options"
+          url: 4_annex_settings_and_options
+        - title: "LISFLOOD state variables"
+          url: 4_annex_state-variables
+        - title: "LISFLOOD Tests documentation"
+          url: 4_annex_tests
+
+      - section_title: "Not to forget"
+        items:
+        - title: "References"
+          url: 0_references
+        - title: "Disclaimer"
+          url: 0_disclaimer

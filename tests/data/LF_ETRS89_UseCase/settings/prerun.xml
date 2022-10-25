@@ -65,6 +65,34 @@
 <lfuser>
 
         <group>
+            <comment>
+            **************************************************************
+            netCDF parameters
+            **************************************************************
+
+            !-- Optimization of netCDF I/O through chunking and caching.
+
+            The option "NetCDFTimeChunks" may take the following values:
+                - "-1"                         : Load everything upfront
+                - "[positive integer number]"  : Chunk size defined by user
+                - "auto"                       : Let xarray to decide
+            </comment>
+            <textvar name="NetCDFTimeChunks" value="auto"/>
+
+            <comment>
+
+            The option "MapsCaching" may take the following values:
+                - "True"   : Cache maps during execution
+                - "False"  : No caching
+            </comment>
+            <textvar name="MapsCaching" value="False"/>
+
+            <comment>
+
+            The option "OutputMapsChunks" may take the following values:
+                - "[positive integer number]"  : Dump outputs to disk every X steps (default 1) 
+            </comment>
+            <textvar name="OutputMapsChunks" value="1"/>
 
             <!-- Parallelisation of using Numba runtime compiled library .
 The option "numCPUs_parallelNumba" may take the following values:
@@ -1496,18 +1524,9 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 -->
         <textvar name="numCPUs_parallelNumba" value="$(numCPUs_parallelNumba)"/>
 
-        <textvar name="NetCDFTimeChunks" value="auto"/>
-            <comment>
-                Chunking in time dimension used when reading NetCDF forcings (or other NetCDF temporal inputs).
-                Special values:
-                "auto": recommended, uses default XArray chunking (depends on the size and type of the array)
-                "-1": load the whole time series in memory (fastest option but memory consuming)
-            </comment>
-
-        <textvar name="MapsCaching" value="False"/>
-            <comment>
-                Option designed for the calibration. All the static maps and forcings will be stored in a cache so that they don't have to be loaded by each lisflood instance. This option sets the value of NetCDFTimeChunks to -1, meaning that the whole time series in the NetCDF inputs is loaded into memory.
-            </comment>
+        <textvar name="OutputMapsChunks" value="$(OutputMapsChunks)"/>
+        <textvar name="NetCDFTimeChunks" value="$(NetCDFTimeChunks)"/>
+        <textvar name="MapsCaching" value="$(MapsCaching)"/>
 
         <textvar name="MaskMap" value="$(MaskMap)">
             <comment>

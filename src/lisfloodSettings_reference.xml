@@ -133,13 +133,20 @@ The option "NetCDFTimeChunks" may take the following values:
 </comment>
 <textvar name="NetCDFTimeChunks" value="-1"/>
 
-    <comment>
+<comment>
 
 The option "MapsCaching" may take the following values:
     - "True"   : Cache maps during execution
     - "False"  : No caching
 </comment>
 <textvar name="MapsCaching" value="False"/>
+
+<comment>
+
+The option "OutputMapsChunks" may take the following values:
+    - "[positive integer number]"  : Dump outputs to disk every X steps (default 1) 
+</comment>
+<textvar name="OutputMapsChunks" value="1"/>
 
 <comment>
 **************************************************************
@@ -520,7 +527,7 @@ Path of the initial value maps e.g. lzavin.map (org=$(PathRoot)/outPo)
 </comment>
 </textvar>
 
-<textvar name="PathMaps" value="/XXX/staticMaps/">
+<textvar name="PathMaps" value="/XXXX/staticMaps/">
 <comment>
     Static maps path
     /perm/mo/mocm/proj/efas/xdom/data/staticData/lisflood
@@ -1700,6 +1707,10 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 This is necessary when using projected coordinates (x,y)
 </comment>
 </textvar>
+
+<textvar name="OutputMapsChunks" value="$(OutputMapsChunks)"/>
+<textvar name="NetCDFTimeChunks" value="$(NetCDFTimeChunks)"/>
+<textvar name="MapsCaching" value="$(MapsCaching)"/>
 
 <textvar name="MaskMap" value="$(MaskMap)">
 <comment>

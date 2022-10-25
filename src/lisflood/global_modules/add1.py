@@ -39,7 +39,7 @@ import numpy as np
 
 from .zusatz import iterOpenNetcdf, iterReadPCRasterMap, iterSetClonePCR, checkmap
 from .settings import (calendar_inconsistency_warning, get_calendar_type, calendar, MaskAttrs, CutMap, NetCDFMetadata,
-                       LisSettings, MaskInfo)
+                       LisSettings, MaskInfo, MaskAreaInfo)
 from .errors import LisfloodWarning, LisfloodError
 from .decorators import Cache
 
@@ -140,26 +140,29 @@ def mapattrNetCDF(name):
     filename = os.path.splitext(name)[0] + '.nc'
     nf1 = iterOpenNetcdf(filename, "Checking netcdf map \n", 'r')
     spatial_dims = ('x', 'y') if 'x' in nf1.variables else ('lon', 'lat')
-    x1, x2, y1, y2 = [nf1.variables[v][j] for v in spatial_dims for j in (0, 1)]
-    nf1.close()
+
     maskattrs = MaskAttrs.instance()
+    cell_size = maskattrs['cell']
 
-    cell_x = np.abs(x2 - x1)
-    cell_y = np.abs(y2 - y1)
-    check_x = maskattrs['cell'] - cell_x # this must be same precision as pcraster.clone().cellsize()
-    check_y = maskattrs['cell'] - cell_y # this must be same precision as pcraster.clone().cellsize()
-
-    if abs(check_x) > 10**-5 or abs(check_y) > 10**-5:
-        raise LisfloodError("Cell size different in maskmap {} and {}".format(
-            LisSettings.instance().binding['MaskMap'], filename)
-        )
-    half_cell = maskattrs['cell'] / 2.
-    x = x1 - half_cell  # |
-    y = y1 + half_cell  # | coordinates of the upper left corner of the input file upper left pixel
-    cut0 = int(np.abs(maskattrs['x'] - x) / cell_x)
+    # check cell size
+    for dim in spatial_dims:
+        if len(nf1.variables[dim]) > 1:
+            x0, x1 = [nf1.variables[dim][i] for i in (0, 1)]
+            check_cell = abs(cell_size - np.abs(x1 - x0)) # this must be same precision as pcraster.clone().cellsize()
+            if check_cell > 10**-5:
+                raise LisfloodError("Cell size different in maskmap {} and {}".format(
+                    LisSettings.instance().binding['MaskMap'], filename))
+    
+    x0, y0 = [nf1.variables[dim][0] for dim in spatial_dims]
+    half_cell = cell_size / 2.
+    x = x0 - half_cell  # |
+    y = y0 + half_cell  # | coordinates of the upper left corner of the input file upper left pixel
+    cut0 = int(np.abs(maskattrs['x'] - x) / cell_size)
     cut1 = cut0 + maskattrs['col']
-    cut2 = int(np.abs(maskattrs['y'] - y) / cell_y)
+    cut2 = int(np.abs(maskattrs['y'] - y) / cell_size)
     cut3 = cut2 + maskattrs['row']
+
+    nf1.close()
     return cut0, cut1, cut2, cut3  # input data will be sliced using [cut0:cut1,cut2:cut3]
 
 
@@ -225,21 +228,26 @@ def loadsetclone(name):
             map_out = numpy2pcr(Boolean, mapnp, 0)
             flagmap = True
 
-        if flags['checkfiles']:
-            checkmap(name, filename, map_out, flagmap, 0)
     else:
         raise LisfloodError("Maskmap: {} is not a valid mask map nor valid coordinates".format(name))
     _ = MaskAttrs(uuid.uuid4())  # init maskattrs
+    # convert numpy map to 8bit
+    maskarea = np.bool8(mapnp)
+    #check ldd map by maskchkarea map
+    maskchkarea = np.logical_not(maskarea)
+    _ = MaskAreaInfo(maskchkarea, map_out)  # MaskAreaInfo init here
     # put in the ldd map
     # if there is no ldd at a cell, this cell should be excluded from modelling
     ldd = loadmap('Ldd', pcr=True)
     # convert ldd to numpy
     maskldd = pcr2numpy(ldd, np.nan)
-    # convert numpy map to 8bit
-    maskarea = np.bool8(mapnp)
+
     # compute mask (pixels in maskldd AND maskarea)
     mask = np.logical_not(np.logical_and(maskldd, maskarea))
     _ = MaskInfo(mask, map_out)  # MaskInfo init here
+
+    if flags['checkfiles'] and (len(coord) == 1):
+        checkmap(name, filename, map_out, flagmap, 0)
 
     if flags['nancheck']:
         nanCheckMap(ldd, binding['Ldd'], 'Ldd')
@@ -485,13 +493,13 @@ def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averagey
         mapC = compressArray(map, name=filename)
 
     if flags['checkfiles']:
-        print(name, filename)
+        #print(name, filename)
         if flagmap == False:
             checkmap(name, filename, mapC, flagmap, 0)
         elif pcr:
             checkmap(name, filename, map, flagmap, 0)
         else:
-            print(name, mapC.size)
+            #print(name, mapC.size)
             if mapC.size > 0:
                 map= decompress(mapC)
                 checkmap(name, filename, map, flagmap, 0)

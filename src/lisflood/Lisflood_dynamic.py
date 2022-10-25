@@ -15,6 +15,7 @@ See the Licence for the specific language governing permissions and limitations 
 
 """
 from __future__ import print_function, absolute_import
+import warnings
 from nine import range
 
 import uuid
@@ -24,6 +25,9 @@ import gc
 
 from pcraster.framework import DynamicModel
 import numpy as np
+from lisflood.global_modules.errors import LisfloodWarning
+
+from lisflood.global_modules.zusatz import checkmap
 
 from .global_modules.settings import CDFFlags, LisSettings, MaskInfo
 
@@ -74,6 +78,8 @@ class LisfloodModel_dyn(DynamicModel):
         self.readmeteo_module.dynamic()                 
             
         if flags['checkfiles']:
+            if checkmap.errors>0:
+                warnings.warn(LisfloodWarning("WARNING! some maps have missing values."))
             return  # if check than finish here
 
         """ Here it starts with hydrological modules:
