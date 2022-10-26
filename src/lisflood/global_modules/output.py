@@ -19,6 +19,7 @@ from __future__ import print_function, absolute_import
 
 import os
 import warnings
+import sys
 
 from pcraster import report, ifthen, catchmenttotal, mapmaximum
 
@@ -411,9 +412,10 @@ class outputTssMap(object):
             if flags['loud']:
                 # print the discharge of the first output map loc
                 try:
-                    print(" %10.2f" % self.var.Tss["DisTS"].firstout(decompress(self.var.ChanQAvg)))
+                    sys.stdout.write(" %10.2f" % self.var.Tss["DisTS"].firstout(decompress(self.var.ChanQAvg)))
                 except:
                     pass
+                sys.stdout.write("\n")
 
             for tss in report_time_serie_act:
                 # report time series

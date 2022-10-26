@@ -216,6 +216,8 @@ defaults:
           url: 3_step6_running-LISFLOOD
         - title: "Step 6: model output"
           url: 3_step6_model-output
+        - title: "Step 7: commmand line flags"
+          url: 3_step7_commmand-line-flags
           
       - section_title: "Static maps"
         items:

@@ -400,7 +400,7 @@ class routing(HydroModule):
         maskinfo = MaskInfo.instance()
         self.river_router = kinematicWave(compressArray(self.var.LddKinematic), ~maskinfo.info.mask, self.var.ChannelAlpha,
                                           self.var.Beta, self.var.ChanLength, self.var.DtRouting,
-                                          alpha_floodplains=self.var.ChannelAlpha2, flagnancheck=flags["nancheck"])
+                                          alpha_floodplains=self.var.ChannelAlpha2, flagnancheck=flags['nancheck'])
         
         if option['InitLisflood'] and option['repMBTs']:          
             self.var.StorageStepINIT= self.var.ChanM3Kin 
