@@ -114,10 +114,11 @@ def topoDistFromSea(downstream_lookup, upstream_lookup):
 class kinematicWave:
     """"""
 
-    def __init__(self, compressed_encoded_ldd, land_mask, alpha_channel, beta, space_delta, time_delta, alpha_floodplains=None):
+    def __init__(self, compressed_encoded_ldd, land_mask, alpha_channel, beta, space_delta, time_delta, alpha_floodplains=None, flagnancheck=False):
         """"""
         # variable to avoid printing repeated warning messages
         self.kinematic_wave_warning_printed=False
+        self.flagnancheck=flagnancheck
         # Parameters for the solution of the discretised Kinematic wave continuity equation
         self.space_delta = space_delta
         self.beta = beta
@@ -176,7 +177,8 @@ class kinematicWave:
         kwpt.kinematicRouting(discharge, lateral_inflow, constant, self.upstream_lookup,\
                               self.num_upstream_pixels, self.pixels_ordered, self.order_start_stop,\
                               self.beta, self.inv_beta, self.b_minus_1, a_dx_div_dt, b_a_dx_div_dt)
-        if self.kinematic_wave_warning_printed==False:
-            if np.all(np.isfinite(discharge))==False:
-                warnings.warn(LisfloodWarning("Warning: NaN or Inf values after kinematicRouting module. Suggestion: please check the input maps (e.g. channel geometry and ldd)"))
-                self.kinematic_wave_warning_printed=True
+        if self.flagnancheck:
+            if self.kinematic_wave_warning_printed==False:
+                if np.all(np.isfinite(discharge))==False:
+                    warnings.warn(LisfloodWarning("Warning: NaN or Inf values after kinematicRouting module. Suggestion: please check the input maps (e.g. channel geometry and ldd)"))
+                    self.kinematic_wave_warning_printed=True

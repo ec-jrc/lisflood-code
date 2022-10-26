@@ -103,14 +103,14 @@ class surface_routing(HydroModule):
         maskinfo = MaskInfo.instance()
         land_mask = ~maskinfo.info.mask
         settings = LisSettings.instance()
-        binding = settings.binding
+        flags = settings.flags
 
         self.direct_surface_router = kinematicWave(compressArray(self.var.LddToChan), land_mask, self.var.OFAlpha.values[self.var.dim_runoff[1].index('Direct')], self.var.Beta,\
-                                                   self.var.PixelLength, dt_surf_routing)
+                                                   self.var.PixelLength, dt_surf_routing, flagnancheck=flags["nancheck"])
         self.other_surface_router = kinematicWave(compressArray(self.var.LddToChan), land_mask, self.var.OFAlpha.values[self.var.dim_runoff[1].index('Other')], self.var.Beta,\
-                                                  self.var.PixelLength, dt_surf_routing)
+                                                  self.var.PixelLength, dt_surf_routing, flagnancheck=flags["nancheck"])
         self.forest_surface_router = kinematicWave(compressArray(self.var.LddToChan), land_mask, self.var.OFAlpha.values[self.var.dim_runoff[1].index('Forest')], self.var.Beta,\
-                                                   self.var.PixelLength, dt_surf_routing)        
+                                                   self.var.PixelLength, dt_surf_routing, flagnancheck=flags["nancheck"])        
         
     def dynamic(self):
         """ dynamic part of the surface routing module

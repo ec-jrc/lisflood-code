@@ -135,13 +135,7 @@
 
             <comment>
                 **************************************************************
-                PARALLELIZED KINEMATIC ROUTING
-                **************************************************************
-            </comment>
-           
-            <comment>
-                **************************************************************
-                PARALLELISATION WITH NUMBA (USED IN SOILLOOP)
+                PARALLELISATION WITH NUMBA (USED IN ROUTING AND SOILLOOP)
                 **************************************************************
             </comment>
 
