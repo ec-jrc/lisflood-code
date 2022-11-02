@@ -421,18 +421,18 @@ class OutputMapsFactory():
 
     def write(self):
         # make sure that previous step finished writing, then stage data
-        if self.thread_out:
-            self.thread_out.wait()
+        # if self.thread_out:
+        #     self.thread_out.wait()
         for out in self.output_maps:
             out.stage()
-        from time import sleep
-        # write outputs using thread pool
-        # for out in self.output_maps:
-        #     write_output(out)
-        self.thread_out = self.thread_pool.map_async(write_output, self.output_maps)
 
-        if self.var.currentTimeStep() == self.var.nrTimeSteps():
-            self.thread_out.wait()
+        # # write outputs using thread pool
+        # # for out in self.output_maps:
+        # #     write_output(out)
+        # self.thread_out = self.thread_pool.map_async(write_output, self.output_maps)
+
+        # if self.var.currentTimeStep() == self.var.nrTimeSteps():
+        #     self.thread_out.wait()
 
 # ------------------------------------------------------------------------
 # Output Module
