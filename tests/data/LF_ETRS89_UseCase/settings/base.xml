@@ -2984,6 +2984,20 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
+                <textvar name="LakePrevInflowEnd" value="$(PathOut)/lakeprevinq.end">
+                    <comment>
+                        Reported lake inflow at previous routing sub-step (ChanQ(t-1)) [m3/s]
+                        -9999 sets initial value equal to PrevDischarge (ChanQ(t))
+                    </comment>
+                </textvar>
+
+                <textvar name="LakePrevOutflowEnd" value="$(PathOut)/lakeprevoutq.end">
+                    <comment>
+                        Reported lake outflow at previous routing sub-step (ChanQ(t-1)) [m3/s]
+                        -9999 sets initial value
+                    </comment>
+                </textvar>
+
                 <textvar name="LakeStorageM3" value="$(PathOut)/lakest.end">
                     <comment>
                         Reported lake storage
@@ -3150,21 +3164,21 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     SWITCHED ON (DEFAULT: ALL SWITCHED OFF)
                 </comment>
 
-                <textvar name="Theta1Maps" value="$(PathOut)/thtop">
+                <textvar name="Theta1Maps" value="$(PathOut)/tha">
                     <comment>
                         Reported volumetric soil moisture content for
                         soil layer 1 [V/V]
                     </comment>
                 </textvar>
 
-                <textvar name="Theta2Maps" value="$(PathOut)/thsub">
+                <textvar name="Theta2Maps" value="$(PathOut)/thb">
                     <comment>
                         Reported volumetric soil moisture content for
                         soil layer 2 [V/V]
                     </comment>
                 </textvar>
 
-                <textvar name="Theta3Maps" value="$(PathOut)/thbot">
+                <textvar name="Theta3Maps" value="$(PathOut)/thc">
                     <comment>
                         Reported volumetric soil moisture content for
                         soil layer 3 [V/V]
@@ -3282,21 +3296,21 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="Theta1ForestMaps" value="$(PathOut)/thFt">
+                <textvar name="Theta1ForestMaps" value="$(PathOut)/thfa">
                     <comment>
                         Reported volumetric soil moisture content for
                         soil layer 1 [V/V]
                     </comment>
                 </textvar>
 
-                <textvar name="Theta2ForestMaps" value="$(PathOut)/thFs">
+                <textvar name="Theta2ForestMaps" value="$(PathOut)/thfb">
                     <comment>
                         Reported volumetric soil moisture content for both
                         soil layer 2 [V/V]
                     </comment>
                 </textvar>
 
-                <textvar name="Theta3ForestMaps" value="$(PathOut)/thFb">
+                <textvar name="Theta3ForestMaps" value="$(PathOut)/thfc">
                     <comment>
                         Reported volumetric soil moisture content for both
                         soil layer 3 [V/V]
@@ -3546,21 +3560,21 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="Theta1IrrigationMaps" value="$(PathOut)/thIt">
+                <textvar name="Theta1IrrigationMaps" value="$(PathOut)/thia">
                     <comment>
                         Reported volumetric soil moisture content for
                         soil layer 1 [V/V]
                     </comment>
                 </textvar>
 
-                <textvar name="Theta2IrrigationMaps" value="$(PathOut)/thIs">
+                <textvar name="Theta2IrrigationMaps" value="$(PathOut)/thib">
                     <comment>
                         Reported volumetric soil moisture content for both
                         soil layer 2 [V/V]
                     </comment>
                 </textvar>
 
-                <textvar name="Theta3IrrigationMaps" value="$(PathOut)/thIb">
+                <textvar name="Theta3IrrigationMaps" value="$(PathOut)/thic">
                     <comment>
                         Reported volumetric soil moisture content for both
                         soil layer 3 [V/V]
@@ -4880,6 +4894,19 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 <textvar name="LakeLevelState" value="$(PathOut)/lakeh">
                     <comment>
                         Output map(s) with lake level [m]
+                    </comment>
+                </textvar>
+                <textvar name="LakePrevInflowState" value="$(PathOut)/lakeprevinq">
+                    <comment>
+                        Output map with lake inflow at previous routing sub-step (ChanQ(t-1)) [m3/s]
+                        -9999 sets initial value equal to PrevDischarge (ChanQ(t))
+                    </comment>
+                </textvar>
+
+                <textvar name="LakePrevOutflowState" value="$(PathOut)/lakeprevoutq">
+                    <comment>
+                        Output map with lake outflow at previous routing sub-step (ChanQ(t-1)) [m3/s]
+                        -9999 sets initial value
                     </comment>
                 </textvar>
 
