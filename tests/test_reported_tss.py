@@ -23,7 +23,7 @@ class TestReportedTSS():
         for c in lisflood.global_modules.output.TimeoutputTimeseries.call_args_list:
             args, kwargs = c
             for tss in tss_to_check:
-                if tss in args[0]:
+                if ('/' + tss) in args[0]:
                     to_check.remove(tss)
                     if not to_check:
                         break
@@ -85,4 +85,30 @@ class TestReportedTSS():
     def test_rep_meteoupgaugestss_not_called(self, mocker):
         self._not_reported_tss(self.settings_files['full'],
                                tss_to_check=['etUps.tss', 'ewUps.tss', 'tAvgUps.tss'],
+                               mocker=mocker)
+
+    def test_rep_statesitestss(self, mocker):
+        self._reported_tss(self.settings_files['full'], opts_to_set=['repStateSites'],
+                           tss_to_check=['dslr.tss', 'frost.tss', 'lz.tss','scov.tss','wDepth.tss'],
+                           mocker=mocker)
+
+    def test_rep_statesitestss_not_called(self, mocker):
+        self._not_reported_tss(self.settings_files['full'],
+                               tss_to_check=['dslr.tss', 'frost.tss', 'lz.tss','scov.tss','wDepth.tss'],
+                               mocker=mocker)
+
+    def test_rep_ratesitestss(self, mocker):
+        self._reported_tss(self.settings_files['full'], opts_to_set=['repRateSites'],
+                           tss_to_check=['esAct.tss', 'ewIntAct.tss', 'percUZLZ.tss','infiltration.tss',
+                           'qLz.tss', 'dTopToSub.tss','prefFlow.tss',
+                           'rain.tss','dSubToUz.tss','snow.tss','snowMelt.tss',
+                           'surfaceRunoff.tss','tAct.tss','totalRunoff.tss','qUz.tss'],
+                           mocker=mocker)
+
+    def test_rep_ratesitestss_not_called(self, mocker):
+        self._not_reported_tss(self.settings_files['full'],
+                               tss_to_check=['esAct.tss', 'ewIntAct.tss', 'percUZLZ.tss','infiltration.tss',
+                               'qLz.tss', 'dTopToSub.tss','prefFlow.tss',
+                               'rain.tss','dSubToUz.tss','snow.tss','snowMelt.tss',
+                               'surfaceRunoff.tss','tAct.tss','totalRunoff.tss','qUz.tss'],
                                mocker=mocker)
