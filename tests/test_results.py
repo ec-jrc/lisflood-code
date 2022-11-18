@@ -145,12 +145,14 @@ class TestCatch(ETRS89TestCase):
 
     def run_waterbalance(self, dt_sec, step_start, step_end):
         # init files from .../LF_ETRS89_UseCase/maps/safe_init
+        # "AvgDis" value="$(PathRoot)/maps/safe_init/avgdis"
+        # "LZAvInflowMap" value="$(PathRoot)/maps/safe_init/lzavin"
         output_dir = mk_path_out(os.path.join(self.case_dir, 'out/test_results{}'.format(dt_sec)))
         opts_to_unset = (
             'wateruse','riceIrrigation','groundwaterSmooth'
         )
         settings = setoptions(self.settings_files['base'],
-                              opts_to_set=('SplitRouting','repMBTs','openwaterevapo'),
+                              opts_to_set=('SplitRouting','repMBTs','openwaterevapo','drainedIrrigation','simulateLakes','simulateReservoirs'),
                               opts_to_unset=opts_to_unset,
                               vars_to_set={'StepStart': step_start,
                                            'StepEnd': step_end,

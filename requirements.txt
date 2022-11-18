@@ -5,8 +5,8 @@ coverage>=6.0
 Cython>=0.29.14
 dask>=2021.10.0 
 future>=0.18.0
-GDAL>=3.3.0
-importlib-metadata>=0.23
+GDAL>=3.2.0
+importlib-metadata<5.0.0
 iniconfig>=1.1.1
 lisflood-utilities>=0.12.19
 llvmlite>=0.37.0

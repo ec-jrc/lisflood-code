@@ -389,6 +389,8 @@ class routing(HydroModule):
 
                 self.var.Chan2M3Kin = self.var.CrossSection2Area * self.var.ChanLength + self.var.Chan2M3Start
                 self.var.ChanM3Kin = self.var.ChanM3 - self.var.Chan2M3Kin + self.var.Chan2M3Start
+                
+                self.var.ChanM3Kin = np.where((self.var.ChanM3Kin < 0.0) & (self.var.ChanM3Kin > -0.0000001),0.0,self.var.ChanM3Kin)
 
                 self.var.Chan2QKin = (self.var.Chan2M3Kin * self.var.InvChanLength * self.var.InvChannelAlpha2) ** (self.var.InvBeta)
                 self.var.ChanQKin = (self.var.ChanM3Kin * self.var.InvChanLength * self.var.InvChannelAlpha) ** (self.var.InvBeta)
