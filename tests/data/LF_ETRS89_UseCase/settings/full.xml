@@ -5169,7 +5169,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
 
 
-                <textvar name="Theta1Maps" value="$(PathOut)/thtop">
+                <textvar name="Theta1Maps" value="$(PathOut)/tha">
 
                     <comment>
 
@@ -5182,7 +5182,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="Theta2Maps" value="$(PathOut)/thsub">
+                <textvar name="Theta2Maps" value="$(PathOut)/thb">
 
                     <comment>
 
@@ -5195,7 +5195,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="Theta3Maps" value="$(PathOut)/thbot">
+                <textvar name="Theta3Maps" value="$(PathOut)/thc">
 
                     <comment>
 
@@ -5375,7 +5375,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="Theta1ForestMaps" value="$(PathOut)/thFt">
+                <textvar name="Theta1ForestMaps" value="$(PathOut)/thfa">
 
                     <comment>
 
@@ -5388,7 +5388,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="Theta2ForestMaps" value="$(PathOut)/thFs">
+                <textvar name="Theta2ForestMaps" value="$(PathOut)/thfb">
 
                     <comment>
 
@@ -5401,7 +5401,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="Theta3ForestMaps" value="$(PathOut)/thFb">
+                <textvar name="Theta3ForestMaps" value="$(PathOut)/thfc">
 
                     <comment>
 
@@ -5858,7 +5858,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="Theta1IrrigationMaps" value="$(PathOut)/thIt">
+                <textvar name="Theta1IrrigationMaps" value="$(PathOut)/thia">
 
                     <comment>
 
@@ -5871,7 +5871,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="Theta2IrrigationMaps" value="$(PathOut)/thIs">
+                <textvar name="Theta2IrrigationMaps" value="$(PathOut)/thib">
 
                     <comment>
 
@@ -5884,7 +5884,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="Theta3IrrigationMaps" value="$(PathOut)/thIb">
+                <textvar name="Theta3IrrigationMaps" value="$(PathOut)/thic">
 
                     <comment>
 
