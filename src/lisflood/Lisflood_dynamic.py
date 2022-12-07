@@ -196,21 +196,8 @@ class LisfloodModel_dyn(DynamicModel):
         # sum of both lines
         # CrossSection2Area = pcraster.max(scalar(0.0), (self.Chan2M3Kin - self.Chan2M3Start) / self.ChanLength)
 
-        # temporary subtract routing ChanQ here, to be added after checks for small values
-        self.sumDisDay -= self.ChanQ
-
         self.TotalCrossSectionArea = self.ChanM3 * self.InvChanLength
 
-        if option['SplitRouting']:
-            self.TotalCrossSectionAreaSAFE =  self.TotalCrossSectionArea
-            self.CrossSection2AreaSAFE = self.CrossSection2Area
-            self.TotalCrossSectionArea = np.where(np.abs(self.TotalCrossSectionAreaSAFE - self.CrossSection2AreaSAFE)<0.0000001,0.0,self.TotalCrossSectionArea)
-            self.CrossSection2Area = np.where(np.abs(self.TotalCrossSectionAreaSAFE - self.CrossSection2AreaSAFE)<0.0000001,0.0,self.CrossSection2Area)
-            self.ChanQ = np.where(np.abs(self.TotalCrossSectionAreaSAFE - self.CrossSection2AreaSAFE)<0.0000001,0.0,self.ChanQ)
-            self.ChanM3 = np.where(np.abs(self.TotalCrossSectionAreaSAFE - self.CrossSection2AreaSAFE)<0.0000001,0.0,self.ChanM3)
-
-        # add ChanQ again after small values check
-        self.sumDisDay += self.ChanQ
         self.sumDis += self.sumDisDay
         self.ChanQAvg = self.sumDisDay/self.NoRoutSteps
 
