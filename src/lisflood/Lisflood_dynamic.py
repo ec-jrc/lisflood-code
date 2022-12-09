@@ -196,9 +196,11 @@ class LisfloodModel_dyn(DynamicModel):
         # sum of both lines
         # CrossSection2Area = pcraster.max(scalar(0.0), (self.Chan2M3Kin - self.Chan2M3Start) / self.ChanLength)
 
+        self.TotalCrossSectionArea = self.ChanM3 * self.InvChanLength
+
         self.sumDis += self.sumDisDay
         self.ChanQAvg = self.sumDisDay/self.NoRoutSteps
-        self.TotalCrossSectionArea = self.ChanM3 * self.InvChanLength
+
         # Total volume of water in channel per inv channel length
         # New cross section area (kinematic wave)
         # This is the value after the kinematic wave, so we use ChanM3Kin here
