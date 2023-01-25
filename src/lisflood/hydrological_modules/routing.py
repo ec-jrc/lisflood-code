@@ -44,7 +44,8 @@ class routing(HydroModule):
                                 'CalChanMan', 'ChanMan', 'ChanBottomWidth', 'ChanDepthThreshold',
                                 'ChanSdXdY', 'TotalCrossSectionAreaInitValue', 'PrevDischarge'],
                         'SplitRouting': ['CrossSection2AreaInitValue', 'PrevSideflowInitValue', 'CalChanMan2'],
-                        'dynamicWave': ['ChannelsDynamic']}
+                        'dynamicWave': ['ChannelsDynamic'],
+                        'MCTRouting': ['ChannelsMCT']}
     module_name = 'Routing'
 
     def __init__(self, routing_variable):
@@ -87,7 +88,7 @@ class routing(HydroModule):
 
 # -------------------------- LDD
 
-        self.var.Ldd = lddmask(loadmap('Ldd', pcr=True, lddflag=True), self.var.MaskMap)
+        self.var.Ldd = lddmask(loadmap('Ldd', pcr=True, lddflag=True), self.var.MaskMap)    #pcr
         # Cut ldd to size of MaskMap (NEW, 29/9/2004)
         # Prevents 'unsound' ldd if MaskMap covers sub-area of ldd
 
@@ -95,36 +96,38 @@ class routing(HydroModule):
         # Needed if we want to calculate average values of variables
         # upstream of gauge locations
 
-        self.var.UpArea = accuflux(self.var.Ldd, self.var.PixelAreaPcr)
+        self.var.UpArea = accuflux(self.var.Ldd, self.var.PixelAreaPcr)     #pcr
         # Upstream contributing area for each pixel
         # Note that you might expext that values of UpArea would be identical to
         # those of variable CatchArea (see below) at the outflow points.
         # This is NOT actually the case, because outflow points are shifted 1
         # cell in upstream direction in the calculation of CatchArea!
-        self.var.InvUpArea = 1 / self.var.UpArea
+        self.var.InvUpArea = 1 / self.var.UpArea    #pcr
         # Calculate inverse, so we can multiply in dynamic (faster than divide)
 
-        self.var.IsChannelPcr = boolean(loadmap('Channels', pcr=True))
-        self.var.IsChannel = np.bool8(compressArray(self.var.IsChannelPcr))
+        self.var.IsChannelPcr = boolean(loadmap('Channels', pcr=True))  #pcr
+        self.var.IsChannel = np.bool8(compressArray(self.var.IsChannelPcr))     #bool
         # Identify channel pixels
-        self.var.IsChannelKinematic = self.var.IsChannel.copy()
+        self.var.IsChannelKinematic = self.var.IsChannel.copy()     #bool
         # Identify kinematic wave channel pixels
         # (identical to IsChannel, unless dynamic wave is used, see below)
-        self.var.IsStructureKinematic = np.bool8(maskinfo.in_zero())
-
+        self.var.IsStructureKinematic = np.bool8(maskinfo.in_zero())        #bool
         # Map that identifies special inflow/outflow structures (reservoirs, lakes) within the
         # kinematic wave channel routing. Set to (dummy) value of zero modified in reservoir and lake
         # routines (if those are used)
-        LddChan = lddmask(self.var.Ldd, self.var.IsChannelPcr)
+
+        LddChan = lddmask(self.var.Ldd, self.var.IsChannelPcr)  #pcr
+        LddChanNp=compressArray(LddChan)    #np
         # ldd for Channel network
-        self.var.MaskMap = boolean(self.var.Ldd)
+        self.var.MaskMap = boolean(self.var.Ldd)    #pcr
+        self.var.MaskMapNp=compressArray(self.var.MaskMap)  #np
         # Use boolean version of Ldd as calculation mask
-        # (important for correct mass balance check
-        # any water generated outside of Ldd won't reach
-        # channel anyway)
-        self.var.LddToChan = lddrepair(ifthenelse(self.var.IsChannelPcr, 5, self.var.Ldd))
+        # (important for correct mass balance check any water generated outside of Ldd won't reachchannel anyway)
+        self.var.LddToChan = lddrepair(ifthenelse(self.var.IsChannelPcr, 5, self.var.Ldd)) #pcr
+        self.var.LddToChanNp=compressArray(self.var.LddToChan)  #np
         # Routing of runoff (incl. ground water)en
-        AtOutflow = boolean(pit(self.var.Ldd))
+        AtOutflow = boolean(pit(self.var.Ldd))  #pcr
+        AtOutflowNp=compressArray(AtOutflow)    #np
         # find outlet points...
 
         if option['dynamicWave']:
@@ -149,27 +152,58 @@ class routing(HydroModule):
             # are included, for which the mass balance cannot be calculated
             # properly)
 
+        elif option['MCTRouting']:
+            #print('MCTRouting setting LDD')
+            self.var.IsChannelMCTPcr = boolean(loadmap('ChannelsMCT', pcr=True))    #pcr
+            self.var.IsChannelMCT = np.bool8(compressArray(self.var.IsChannelMCTPcr))   #bool
+            self.var.IsChannelKinematicPcr = (self.var.IsChannelPcr == 1) & (self.var.IsChannelMCTPcr == 0)  #pcr
+            # Identify channel pixels where Muskingum-Cunge-Todini is used
+
+            self.var.LddMCT = lddmask(self.var.Ldd, self.var.IsChannelMCTPcr)  #pcr
+            self.var.LddMCTNp = compressArray(self.var.LddMCT)    #np
+            self.var.IsChannelKinematic = np.bool8(compressArray(self.var.IsChannelKinematicPcr))
+            # Ldd for MCT wave
+
+            self.var.LddKinematic = lddmask(self.var.Ldd, self.var.IsChannelKinematicPcr)    #pcr
+            # Ldd for kinematic wave: ends (pit) just before dynamic stretch
+            # Following statements produce an ldd network that connects the pits in
+            # LddKinematic to the nearest downstream mct wave pixel
+
         else:
             self.var.LddKinematic = LddChan
             # No dynamic wave, so kinematic ldd equals channel ldd
-            self.var.AtLastPoint = AtOutflow
-            self.var.AtLastPointC = np.bool8(compressArray(self.var.AtLastPoint))
-            # assign unique identifier to each of them
+
+        self.var.LddKinematicNp = compressArray(self.var.LddKinematic)    #np
+
+        self.var.LddChan = LddChan  #pcr
+        self.var.LddChanNp = compressArray(self.var.LddChan)    #np
+
+        self.var.AtLastPoint = AtOutflow
+        #AtOutflowNp=compressArray(AtOutflow)    #np
+        self.var.AtLastPointC = np.bool8(compressArray(self.var.AtLastPoint))
+        # assign unique identifier to each of them
+
         maskinfo = MaskInfo.instance()
-        lddC = compressArray(self.var.LddKinematic)
-        inAr = decompress(np.arange(maskinfo.info.mapC[0], dtype="int32"))
+        #lddC = compressArray(self.var.LddKinematic)     #np
+        lddC = compressArray(LddChan)     #np
+        inAr = decompress(np.arange(maskinfo.info.mapC[0], dtype="int32"))  #pcr
+        inArNp=compressArray(inAr)  #np
         # giving a number to each non missing pixel as id
-        self.var.downstruct = (compressArray(downstream(self.var.LddKinematic, inAr))).astype("int32")
+        #self.var.downstruct = (compressArray(downstream(self.var.LddKinematic, inAr))).astype("int32")  #np
+        self.var.downstruct = (compressArray(downstream(LddChan, inAr))).astype("int32")  #np
         # each upstream pixel gets the id of the downstream pixel
-        self.var.downstruct[lddC == 5] = maskinfo.info.mapC[0]
-        # all pits gets a high number
+        self.var.downstruct[lddC == 5] = maskinfo.info.mapC[0]  #np
+        # all pits get a high number than any of the cells
         # upstream function in numpy
 
-        OutflowPoints = nominal(uniqueid(self.var.AtLastPoint))
+        OutflowPoints = nominal(uniqueid(self.var.AtLastPoint))     #pcr
+        OutflowPointsNp = compressArray(OutflowPoints)      #np
         # and assign unique identifier to each of them
-        self.var.Catchments = (compressArray(catchment(self.var.Ldd, OutflowPoints))).astype(np.int32)
-        CatchArea = np.bincount(self.var.Catchments, weights=self.var.PixelArea)[self.var.Catchments]
+        # assigning id to the outflow points starting from 1
+        self.var.Catchments = (compressArray(catchment(self.var.Ldd, OutflowPoints))).astype(np.int32)  #np
+        # assign outlet id to all pixel in its catchment
         # define catchment for each outflow point
+        CatchArea = np.bincount(self.var.Catchments, weights=self.var.PixelArea)[self.var.Catchments]   #np
         # Compute area of each catchment [m2]
         # Note: in earlier versions this was calculated using the "areaarea" function,
         # changed to "areatotal" in order to enable handling of grids with spatially
@@ -240,12 +274,13 @@ class routing(HydroModule):
         # ***** CHANNEL INITIAL DISCHARGE ****************************
         # ************************************************************
 
-        self.var.ChanM3 = self.var.TotalCrossSectionArea * self.var.ChanLength
+        self.var.ChanM3 = self.var.TotalCrossSectionArea * self.var.ChanLength  #np
         # channel water volume [m3]
-        self.var.ChanIniM3 = self.var.ChanM3.copy()
-        self.var.ChanM3Kin = self.var.ChanIniM3.copy().astype(float)
+        self.var.ChanIniM3 = self.var.ChanM3.copy() #np
+        self.var.ChanM3Kin = self.var.ChanIniM3.copy().astype(float)    #np
         # Initialise water volume in kinematic wave channels [m3]
         self.var.ChanQKin = np.where(self.var.ChannelAlpha > 0, (self.var.TotalCrossSectionArea / self.var.ChannelAlpha) ** self.var.InvBeta, 0).astype(float)
+
         # Initialise discharge at kinematic wave pixels (note that InvBeta is
         # simply 1/beta, computational efficiency!)
 
@@ -323,8 +358,8 @@ class routing(HydroModule):
             # Dummy code if dynamic wave is not used, in which case ChanQ equals ChanQKin
             # (needed only for polder routine)
 
-            PrevDischarge = loadmap('PrevDischarge')
-            self.var.ChanQ = np.where(PrevDischarge == -9999, self.var.ChanQKin, PrevDischarge)
+            PrevDischarge = loadmap('PrevDischarge')    #discharge at the end of previous step
+            self.var.ChanQ = np.where(PrevDischarge == -9999, self.var.ChanQKin, PrevDischarge) #np
             # initialise channel discharge: cold start: equal to ChanQKin
             # [m3/s]
 
@@ -336,7 +371,8 @@ class routing(HydroModule):
         self.var.TotalQInM3 = maskinfo.in_zero()
         # cumulative inflow from inflow hydrographs [m3]
         self.var.sumDis = maskinfo.in_zero()
-        self.var.sumInWB = maskinfo.in_zero()
+        self.var.sumIn = maskinfo.in_zero() #non so se sostituita da self.var.sumInWB
+        # self.var.sumInWB = maskinfo.in_zero()
 
     def initialSecond(self):
         """ initial part of the second channel routing module
@@ -428,6 +464,46 @@ class routing(HydroModule):
             if option['simulateLakes']:   
                self.var.StorageStepINIT += self.var.LakeStorageIniM3
             self.var.StorageStepINIT = np.take(np.bincount(self.var.Catchments, weights=self.var.StorageStepINIT), self.var.Catchments)    
+
+
+    def initialMCT(self):
+        """ initial part of the Muskingum-Kunge-Todini routing module
+        """
+        settings = LisSettings.instance()
+        option = settings.options
+        binding = settings.binding
+
+        #self.var.ChannelAlpha2 = None  # default value, if split-routing is not active and only water is routed only in the main channel
+        # ************************************************************
+        # ***** CHANNEL INITIAL SPLIT UP IN SECOND CHANNEL************
+        # ************************************************************
+        if option['MCTRouting']:
+            #print('initialMCT')
+
+            ChanMan2 = (self.var.ChanMan / self.var.CalChanMan) * loadmap('CalChanMan2')
+            AlpTermChan2 = (ChanMan2 / (np.sqrt(self.var.ChanGrad))) ** self.var.Beta
+            self.var.ChannelAlpha2 = (AlpTermChan2 * (self.var.ChanWettedPerimeterAlpha ** self.var.AlpPow)).astype(float)
+            self.var.InvChannelAlpha2 = 1 / self.var.ChannelAlpha2
+            # calculating second Alpha for second (virtual) channel
+
+            if not(option['InitLisflood']):
+
+                # use loadmap_base function as we don't want to cache avgdis it in the calibration
+                self.var.QLimit = loadmap_base('AvgDis') * loadmap('QSplitMult')
+                # Over bankful discharge starts at QLimit
+                # set to mutiple of average discharge (map from prerun)
+                # QSplitMult =2 is around 90 to 95% of Q
+
+                self.var.M3Limit = self.var.ChannelAlpha * self.var.ChanLength * (self.var.QLimit ** self.var.Beta)
+                # Water volume in bankful when over bankful discharge starts
+
+                #self.var.ChanM3Kin = ...
+
+                #self.var.ChanQKin = ...
+
+ #       maskinfo = MaskInfo.instance()
+
+
 # --------------------------------------------------------------------------
 # --------------------------------------------------------------------------
 
@@ -460,6 +536,7 @@ class routing(HydroModule):
             # ************************************************************
 
             SideflowChanM3 = self.var.ToChanM3RunoffDt.copy()
+
             if option['openwaterevapo']:
                 SideflowChanM3 -= self.var.EvaAddM3Dt
             if option['wateruse']:
@@ -507,102 +584,126 @@ class routing(HydroModule):
             # the polder routine is ever modified to make it work with kin. wave)
             # Because of wateruse Sideflow might get even smaller than 0,
             # instead of inflow its outflow
-
-            
+           
             SideflowChan = np.where(self.var.IsChannelKinematic, SideflowChanM3 * self.var.InvChanLength * self.var.InvDtRouting,0)
+            # Sideflow expressed in [cu m /s / m channel length]
+            if option['MCTRouting']:
+                SideflowChanMCT = np.where(self.var.IsChannelMCT, SideflowChanM3 * self.var.InvChanLength * self.var.InvDtRouting,0)
+            else:
+                SideflowChanMCT = 0
+                # Sideflow for MCT cells
+
 
             # ************************************************************
-            # ***** KINEMATIC WAVE                        ****************
+            # ***** ROUTING                               ****************
             # ************************************************************
+            if option['InitLisflood']: self.var.IsChannelKinematic = self.var.IsChannel.copy()
 
             if option['InitLisflood'] or (not(option['SplitRouting'])):
-                # if InitLisflood no split routing is use
+                # KINEMATIC ROUTING AND MUSKINGUM-CUNGE-TODINI
+                # Kinematic routing
+                ChanQKinIn = self.var.ChanQKin.copy()
+                #ChanM3KinNp = self.var.ChanM3Kin.copy()
+                ChanQKinOut,ChanQOut,ChanM3KinOut = self.KinematicRouting(ChanQKinIn,SideflowChan)
 
-                #  ---- Single Routing ---------------
-                # No split routing
-                # side flow consists of runoff (incl. groundwater), inflow from reservoirs (optional) and external inflow hydrographs (optional)
-                SideflowChan[np.isnan(SideflowChan)] = 0 # TEMPORARY FIX - SEE DEBUG ABOVE!
- 
-                self.river_router.kinematicWaveRouting(self.var.ChanQKin, SideflowChan, "main_channel")
-                self.var.ChanM3Kin = self.var.ChanLength * self.var.ChannelAlpha * self.var.ChanQKin**self.var.Beta
-                # Volume in channel at end of computation step
+                # MCT routing
+                ChanQMCTIn = self.var.ChanQKin.copy()
+                ChanQMCTOut,ChanQQMCTOut,ChanM3MCTOut = self.MCTRouting(ChanQMCTIn,SideflowChanMCT)
 
-                self.var.ChanM3Kin = np.maximum(self.var.ChanM3Kin, 0.0)
-                # Check for negative volumes at the end of computation step
-                self.var.ChanQKin = (self.var.ChanM3Kin * self.var.InvChanLength * self.var.InvChannelAlpha) ** (self.var.InvBeta)
-                # Correct negative discharge at the end of computation step
+                # combine results
+                self.var.ChanQKin = np.where(self.var.IsChannelKinematic, ChanQKinOut, ChanQMCTOut)
+                self.var.ChanM3Kin = np.where(self.var.IsChannelKinematic, ChanM3KinOut, ChanM3MCTOut)
+                self.var.ChanQ = np.where(self.var.IsChannelKinematic, ChanQOut, ChanQQMCTOut)
 
-                self.var.ChanQ = self.var.ChanQKin.copy()
-                # at single kin. ChanQ is the same
-                
                 self.var.sumDisDay += self.var.ChanQ
                 # Total channel storage [cu m], equal to ChanM3Kin
-                
-                
+
+                    # print('Computing Kinematic routing')
+                    # if InitLisflood no split routing is use
+
+                    # #  ---- Single Routing ---------------
+                    # # No split routing
+                    # # side flow consists of runoff (incl. groundwater), inflow from reservoirs (optional) and external inflow hydrographs (optional)
+                    # SideflowChan[np.isnan(SideflowChan)] = 0 # TEMPORARY FIX - SEE DEBUG ABOVE!
+                    #
+                    # self.river_router.kinematicWaveRouting(self.var.ChanQKin, SideflowChan, "main_channel")
+                    # self.var.ChanM3Kin = self.var.ChanLength * self.var.ChannelAlpha * self.var.ChanQKin**self.var.Beta
+                    # # Volume in channel at end of computation step
+                    #
+                    # self.var.ChanM3Kin = np.maximum(self.var.ChanM3Kin, 0.0)
+                    # # Check for negative volumes at the end of computation step
+                    # self.var.ChanQKin = (self.var.ChanM3Kin * self.var.InvChanLength * self.var.InvChannelAlpha) ** (self.var.InvBeta)
+                    # # Correct negative discharge at the end of computation step
+                    #
+                    # self.var.ChanQ = self.var.ChanQKin.copy()
+                    # # at single kin. ChanQ is the same
+                    #
+                    # self.var.sumDisDay += self.var.ChanQ
+                    # # Total channel storage [cu m], equal to ChanM3Kin
 
             else:
+                # SPLIT ROUTING AND MUSKINGUM-CUNGE-TODINI
 
-                #  ---- Double Routing ---------------
-                # routing is split in two (virtual) channels)
+                np.where(self.var.IsChannelKinematic, self.SplitRouting(SideflowChan),self.MCTRouting(SideflowChanMCT))
+                    # #  ---- Double Routing ---------------
+                    # # routing is split in two (virtual) channels)
+                    #
+                    # # Ad
+                    # SideflowRatio = np.where((self.var.ChanM3Kin + self.var.Chan2M3Kin) > 0, self.var.ChanM3Kin/(self.var.ChanM3Kin+self.var.Chan2M3Kin), 0.0)
+                    #
+                    # # CM ##################################
+                    # # self.var.Sideflow1Chan = np.where(self.var.ChanM3Kin > self.var.M3Limit, SideflowRatio*SideflowChan, SideflowChan)
+                    # # This is creating instability because ChanM3Kin can be < M3Limit between two routing sub-steps
+                    # # TO BY REPLACED WITH THE FOLLOWING
+                    # self.var.Sideflow1Chan = np.where((self.var.ChanM3Kin + self.var.Chan2M3Kin - self.var.Chan2M3Start) > self.var.M3Limit,
+                    #                                    SideflowRatio*SideflowChan, SideflowChan)
+                    # #######################################
+                    #
+                    # self.var.Sideflow1Chan = np.where(np.abs(SideflowChan) < 1e-7, SideflowChan, self.var.Sideflow1Chan)
+                    # # too small values are avoided
+                    # Sideflow2Chan = SideflowChan - self.var.Sideflow1Chan
+                    #
+                    # Sideflow2Chan = Sideflow2Chan + self.var.Chan2QStart * self.var.InvChanLength   # originale
+                    # # as kinematic wave gets slower with less water
+                    # # a constant amount of water has to be added
+                    # # -> add QLimit discharge
+                    #
+                    # # --- Main channel routing ---
+                    # self.river_router.kinematicWaveRouting(self.var.ChanQKin, self.var.Sideflow1Chan, "main_channel")
+                    # self.var.ChanM3Kin = self.var.ChanLength * self.var.ChannelAlpha * self.var.ChanQKin ** self.var.Beta
+                    #
+                    # self.var.ChanM3Kin = np.maximum(self.var.ChanM3Kin, 0.0)
+                    # # Check for negative volumes at the end of computation step
+                    # self.var.ChanQKin = (self.var.ChanM3Kin * self.var.InvChanLength * self.var.InvChannelAlpha) ** (self.var.InvBeta)
+                    # # Correct negative discharge at the end of computation step
+                    #
+                    #
+                    # # --- Floodplains routing ---
+                    # self.river_router.kinematicWaveRouting(self.var.Chan2QKin, Sideflow2Chan, "floodplains")
+                    # self.var.Chan2M3Kin = self.var.ChanLength * self.var.ChannelAlpha2 * self.var.Chan2QKin ** self.var.Beta
+                    #
+                    # diffM3 = self.var.Chan2M3Kin - self.var.Chan2M3Start
+                    # self.var.Chan2M3Kin = np.where(diffM3 < 0.0, self.var.Chan2M3Start, self.var.Chan2M3Kin)
+                    # # Check for negative volume in second line of routing at the end of routing substep
+                    #
+                    # self.var.CrossSection2Area = (self.var.Chan2M3Kin - self.var.Chan2M3Start) * self.var.InvChanLength
+                    # # Compute cross-section for second line of routing
+                    #
+                    # self.var.Chan2QKin = (self.var.Chan2M3Kin * self.var.InvChanLength * self.var.InvChannelAlpha2) ** (self.var.InvBeta)
+                    # # Correct negative discharge at the end of computation step in second line
+                    #
+                    # self.var.ChanQ = np.maximum(self.var.ChanQKin + self.var.Chan2QKin - self.var.QLimit, 0)
+                    #
+                    # # Superposition Kinematic
+                    # # Main channel routing and floodplains routing
+                    #
+                    # self.var.sumDisDay += self.var.ChanQ
+                    # # ----------End splitrouting-------------------------------------------------
 
-                # Ad
-                SideflowRatio = np.where((self.var.ChanM3Kin + self.var.Chan2M3Kin) > 0, self.var.ChanM3Kin/(self.var.ChanM3Kin+self.var.Chan2M3Kin), 0.0)
+
                 
-
-          
-                # CM ##################################
-                # self.var.Sideflow1Chan = np.where(self.var.ChanM3Kin > self.var.M3Limit, SideflowRatio*SideflowChan, SideflowChan)
-                # This is creating instability because ChanM3Kin can be < M3Limit between two routing sub-steps
-                # TO BY REPLACED WITH THE FOLLOWING
-                self.var.Sideflow1Chan = np.where((self.var.ChanM3Kin + self.var.Chan2M3Kin - self.var.Chan2M3Start) > self.var.M3Limit,
-                                                   SideflowRatio*SideflowChan, SideflowChan)
-                #######################################
-                
-                
-
-                self.var.Sideflow1Chan = np.where(np.abs(SideflowChan) < 1e-7, SideflowChan, self.var.Sideflow1Chan)
-                # too small values are avoided
-                Sideflow2Chan = SideflowChan - self.var.Sideflow1Chan
-               
-                Sideflow2Chan = Sideflow2Chan + self.var.Chan2QStart * self.var.InvChanLength   # originale
-                # as kinematic wave gets slower with less water
-                # a constant amount of water has to be added
-                # -> add QLimit discharge
-
-                # --- Main channel routing ---
-                self.river_router.kinematicWaveRouting(self.var.ChanQKin, self.var.Sideflow1Chan, "main_channel")
-                self.var.ChanM3Kin = self.var.ChanLength * self.var.ChannelAlpha * self.var.ChanQKin ** self.var.Beta
-
-                self.var.ChanM3Kin = np.maximum(self.var.ChanM3Kin, 0.0)
-                # Check for negative volumes at the end of computation step
-                self.var.ChanQKin = (self.var.ChanM3Kin * self.var.InvChanLength * self.var.InvChannelAlpha) ** (self.var.InvBeta)
-                # Correct negative discharge at the end of computation step
-
-
-                # --- Floodplains routing ---
-                self.river_router.kinematicWaveRouting(self.var.Chan2QKin, Sideflow2Chan, "floodplains")
-                self.var.Chan2M3Kin = self.var.ChanLength * self.var.ChannelAlpha2 * self.var.Chan2QKin ** self.var.Beta
-
-                diffM3 = self.var.Chan2M3Kin - self.var.Chan2M3Start
-                self.var.Chan2M3Kin = np.where(diffM3 < 0.0, self.var.Chan2M3Start, self.var.Chan2M3Kin)
-                # Check for negative volume in second line of routing at the end of routing substep
-
-                self.var.CrossSection2Area = (self.var.Chan2M3Kin - self.var.Chan2M3Start) * self.var.InvChanLength   
-                # Compute cross-section for second line of routing
-                
-                self.var.Chan2QKin = (self.var.Chan2M3Kin * self.var.InvChanLength * self.var.InvChannelAlpha2) ** (self.var.InvBeta)
-                # Correct negative discharge at the end of computation step in second line
-              
-              
-                self.var.ChanQ = np.maximum(self.var.ChanQKin + self.var.Chan2QKin - self.var.QLimit, 0.0)
-                
-                # Superposition Kinematic
-                # Main channel routing and floodplains routing
-                #print(np.sum(self.var.sumDisDay))
-                self.var.sumDisDay_NOTlast=self.var.sumDisDay.copy()
-                self.var.sumDisDay += self.var.ChanQ
-                # ----------End splitrouting-------------------------------------------------
-                
+            TotalCrossSectionArea = np.maximum(self.var.ChanM3Kin*self.var.InvChanLength,0.01)
+    
             ###
             
             # ---- Uncomment lines 603-635 in order to compute the mass balance error within the routing module for the options (i) initial run or (ii) split routing off ----
@@ -691,9 +792,6 @@ class routing(HydroModule):
                   self.var.StorageStepINIT= StorageStep1.copy()+DischargeM3StructuresR 
  
 
-
-            TotalCrossSectionArea = np.maximum(self.var.ChanM3Kin*self.var.InvChanLength,0.01)
-
             self.var.FlowVelocity = np.minimum(self.var.ChanQKin/TotalCrossSectionArea, 0.36*self.var.ChanQKin**0.24)
             # Channel velocity (m/s); dividing Q (m3/s) by CrossSectionArea (m2)
             # avoid extreme velocities by using the Wollheim 2006 equation
@@ -704,3 +802,120 @@ class routing(HydroModule):
             # if flow is fast, Traveltime=1, TravelDistance is high: Pixellength*DtSec
             # if flow is slow, Traveltime=DtSec then TravelDistance=PixelLength
             # maximum set to 30km/day for 5km cell, is at DtSec/Traveltime=6, is at Traveltime<DtSec/6
+
+
+    def KinematicRouting(self,ChanQKin,SideflowChan):
+        #  ---- Single Routing ---------------
+        # No split routing
+        # side flow consists of runoff (incl. groundwater), inflow from reservoirs (optional) and external inflow hydrographs (optional)
+        SideflowChan[np.isnan(SideflowChan)] = 0 # TEMPORARY FIX - SEE DEBUG ABOVE!
+
+        #self.river_router.kinematicWaveRouting(self.var.ChanQKin, SideflowChan, "main_channel")
+        self.river_router.kinematicWaveRouting(ChanQKin, SideflowChan, "main_channel")
+
+        #self.var.ChanM3Kin = self.var.ChanLength * self.var.ChannelAlpha * self.var.ChanQKin**self.var.Beta
+        ChanM3Kin = self.var.ChanLength * self.var.ChannelAlpha * ChanQKin**self.var.Beta
+        # Volume in channel at end of computation step
+
+        #self.var.ChanM3Kin = np.maximum(self.var.ChanM3Kin, 0.0)
+        ChanM3Kin = np.maximum(ChanM3Kin, 0.0)
+        # Check for negative volumes at the end of computation step
+        #self.var.ChanQKin = (self.var.ChanM3Kin * self.var.InvChanLength * self.var.InvChannelAlpha) ** (self.var.InvBeta)
+        ChanQKin = (ChanM3Kin * self.var.InvChanLength * self.var.InvChannelAlpha) ** (self.var.InvBeta)
+        # Correct negative discharge at the end of computation step
+
+        # self.var.ChanQ = self.var.ChanQKin.copy()
+        ChanQ = ChanQKin.copy()
+        # at single kin. ChanQ is the same
+        #
+        # self.var.sumDisDay += self.var.ChanQ
+        # # Total channel storage [cu m], equal to ChanM3Kin
+
+        return ChanQKin,ChanQ,ChanM3Kin
+
+
+    def SplitRouting(self, SideflowChan):
+        #  ---- Double Routing ---------------
+        # routing is split in two (virtual) channels)
+
+        # Ad
+        SideflowRatio = np.where((self.var.ChanM3Kin + self.var.Chan2M3Kin) > 0, self.var.ChanM3Kin/(self.var.ChanM3Kin+self.var.Chan2M3Kin), 0.0)
+
+
+          
+        # CM ##################################
+        # self.var.Sideflow1Chan = np.where(self.var.ChanM3Kin > self.var.M3Limit, SideflowRatio*SideflowChan, SideflowChan)
+        # This is creating instability because ChanM3Kin can be < M3Limit between two routing sub-steps
+        # TO BY REPLACED WITH THE FOLLOWING
+        self.var.Sideflow1Chan = np.where((self.var.ChanM3Kin + self.var.Chan2M3Kin - self.var.Chan2M3Start) > self.var.M3Limit,
+                                          SideflowRatio*SideflowChan, SideflowChan)
+        #######################################
+
+                
+
+        self.var.Sideflow1Chan = np.where(np.abs(SideflowChan) < 1e-7, SideflowChan, self.var.Sideflow1Chan)
+        # too small values are avoided
+        Sideflow2Chan = SideflowChan - self.var.Sideflow1Chan
+
+        Sideflow2Chan = Sideflow2Chan + self.var.Chan2QStart * self.var.InvChanLength   # originale
+        # as kinematic wave gets slower with less water
+        # a constant amount of water has to be added
+        # -> add QLimit discharge
+
+        # --- Main channel routing ---
+        self.river_router.kinematicWaveRouting(self.var.ChanQKin, self.var.Sideflow1Chan, "main_channel")
+        self.var.ChanM3Kin = self.var.ChanLength * self.var.ChannelAlpha * self.var.ChanQKin ** self.var.Beta
+
+        self.var.ChanM3Kin = np.maximum(self.var.ChanM3Kin, 0.0)
+        # Check for negative volumes at the end of computation step
+        self.var.ChanQKin = (self.var.ChanM3Kin * self.var.InvChanLength * self.var.InvChannelAlpha) ** (self.var.InvBeta)
+        # Correct negative discharge at the end of computation step
+
+
+        # --- Floodplains routing ---
+        self.river_router.kinematicWaveRouting(self.var.Chan2QKin, Sideflow2Chan, "floodplains")
+        self.var.Chan2M3Kin = self.var.ChanLength * self.var.ChannelAlpha2 * self.var.Chan2QKin ** self.var.Beta
+
+        diffM3 = self.var.Chan2M3Kin - self.var.Chan2M3Start
+        self.var.Chan2M3Kin = np.where(diffM3 < 0.0, self.var.Chan2M3Start, self.var.Chan2M3Kin)
+        # Check for negative volume in second line of routing at the end of routing substep
+
+        self.var.CrossSection2Area = (self.var.Chan2M3Kin - self.var.Chan2M3Start) * self.var.InvChanLength
+        # Compute cross-section for second line of routing
+
+        self.var.Chan2QKin = (self.var.Chan2M3Kin * self.var.InvChanLength * self.var.InvChannelAlpha2) ** (self.var.InvBeta)
+        # Correct negative discharge at the end of computation step in second line
+
+              
+        self.var.ChanQ = np.maximum(self.var.ChanQKin + self.var.Chan2QKin - self.var.QLimit, 0.0)
+
+        # Superposition Kinematic
+        # Main channel routing and floodplains routing
+        #print(np.sum(self.var.sumDisDay))
+        self.var.sumDisDay_NOTlast=self.var.sumDisDay.copy()
+        self.var.sumDisDay += self.var.ChanQ
+        # ----------End splitrouting-------------------------------------------------
+
+
+    def MCTRouting(self,ChanQMCT,SideflowChanMCT):
+        ChanQMCTPcr=decompress(ChanQMCT)
+        ChanQMCTUp=compressArray(upstream(self.var.LddChan,ChanQMCTPcr))
+        # calc contribution from upstream pixels
+
+        x = np.ma.masked_where(self.var.IsChannelKinematic,ChanQMCTUp)
+        y = x.compressed()
+
+        xside = np.ma.masked_where(self.var.IsChannelKinematic,SideflowChanMCT)
+        yside = xside.compressed()
+
+        z = y + yside
+        # tanto arriva tanto esce
+
+        x[~x.mask] = z
+        ChanQMCT = x.data
+
+        ChanQQMCT = ChanQMCT.copy()
+        ChanM3MCT = self.var.ChanM3Kin.copy()
+
+        return ChanQMCT,ChanQQMCT,ChanM3MCT
+

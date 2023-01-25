@@ -220,6 +220,10 @@ class LisfloodModel_ini(DynamicModel):
         # CHANNEL INITIAL SPLIT UP IN SECOND CHANNEL
         self.surface_routing_module.initialSecond()
 
+        if option.get('MCTRouting'):
+            self.routing_module.initialMCT()
+            # initialising Muskingum-Cunge-Todini routing for channel
+
         self.evapowater_module.initial()
         self.riceirrigation_module.initial()
         self.waterabstraction_module.initial()
