@@ -428,7 +428,7 @@ All test cases are executed with following modules activated:
 
 |Initial state files checked by **test_initvars** |
 |-------------------------------------------------|
-|ch2cr.end.nc, chcro.end.nc, chside.end.nc, cseal.end.nc, cum.end.nc, cumf.end.nc, cumi.end.nc, dis.end.nc, dslf.end.nc, dsli.end.nc, dslr.end.nc, frost.end.nc, lz.end.nc, rsfil.end.nc, scova.end.nc, scovb.end.nc, scovc.end.nc, tha.end.nc, thb.end.nc, thc.end.nc, thfa.end.nc, thfb.end.nc, thfc.end.nc, thia.end.nc, thib.end.nc,thic.end.nc, uz.end.nc, uzf.end.nc, uzi.end.nc, wdept.end.nc|
+|ch2cr.end.nc, chanq.end.nc, chcro.end.nc, chside.end.nc, cseal.end.nc, cum.end.nc, cumf.end.nc, cumi.end.nc, dslf.end.nc, dsli.end.nc, dslr.end.nc, frost.end.nc, lakeh.end.nc, lakeprevinq.end.nc, lakeprevoutq.end.nc, lz.end.nc,  ofdir.end.nc, offor.end.nc, ofoth.end.nc, rsfil.end.nc, scova.end.nc, scovb.end.nc, scovc.end.nc, tha.end.nc, thb.end.nc, thc.end.nc, thfa.end.nc, thfb.end.nc, thfc.end.nc, thia.end.nc, thib.end.nc,thic.end.nc, uz.end.nc, uzf.end.nc, uzi.end.nc|
 
 ### Testing Warm start
 Test ensures that a long cold run is equivalent to an initial cold start + repeated warm starts.
