@@ -120,7 +120,7 @@ For details, please follow instruction on [official docs](https://pcraster.geo.u
     Now that your environment should be set up to run lisflood, you may try with a prepared settings file for test catchment included into the tests/data folder:
     
     ```bash
-    python src/lisf1.py tests/data/<TestCatchmentFolder>/settings/cold_day_base.xml
+    python src/lisf1.py tests/data/<TestCatchmentFolder>/settings/cold.xml
     ```
 4. **Run LISFLOOD unit tests**
 

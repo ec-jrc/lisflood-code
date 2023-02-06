@@ -110,8 +110,9 @@ $^2$ Output only if option 'InitLisflood' = 0
 | depth of water on soil surface                               | $mm$                       | WaterDepthTS           | wDepth.tss             |
 | depth of snow cover on soil surface (pixel-average)          | $mm$                       | SnowCoverTS            | snowCover.tss          |
 | depth of interception storage                                | $mm$                       | CumInterceptionTS      | cumInt.tss             |
-| soil moisture content upper layer                            | $\frac{mm^3}{mm^3}$        | Theta1TS               | thTop.tss              |
-| soil moisture content lower layer                            | $\frac{mm^3}{mm^3}$        | Theta2TS               | thSub.tss              |
+| soil moisture content upper layer                            | $\frac{mm^3}{mm^3}$        | Theta1TS               | th1a.tss              |
+| soil moisture content lower layer                            | $\frac{mm^3}{mm^3}$        | Theta2TS               | th1b.tss              |
+| soil moisture layer 2                                        | $\frac{mm^3}{mm^3}$        | Theta3TS               | th2.tss              |
 | storage in upper groundwater zone                            | $mm$                       | UZTS                   | uz.tss                 |
 | storage in lower groundwater zone                            | $mm$                       | LZTS                   | lz.tss                 |
 | number of days since last rain                               | $days$                     | DSLRTS                 | dslr.tss               |
@@ -146,8 +147,9 @@ $^2$ Output only if option 'InitLisflood' = 0
 | depth of water on soil surface                               | $mm$                       | WaterDepthAvUpsTS      | wdepthUps.tss          |
 | depth of snow cover on                                       | $mm$                       | SnowCoverAvUpsTS       | snowCoverUps.tss       |
 | depth of interception storage                                | $mm$                       | CumInterceptionAvUpsTS | cumInterceptionUps.tss |
-| soil moisture upper layer                                    | $\frac{mm^3}{mm^3}$        | Theta1AvUpsTS          | thTopUps.tss           |
-| soil moisture lower layer                                    | $\frac{mm^3}{mm^3}$        | Theta2AvUpsTS          | thSubUps.tss           |
+| soil moisture upper layer                                    | $\frac{mm^3}{mm^3}$        | Theta1AvUpsTS          | th1aAvUps.tss           |
+| soil moisture lower layer                                    | $\frac{mm^3}{mm^3}$        | Theta2AvUpsTS          | th1bAvUps.tss           |
+| soil moisture layer 2                                        | $\frac{mm^3}{mm^3}$        | Theta3AvUpsTS          | th2AvUps.tss           |
 | groundwater upper zone                                       | $mm$                       | UZAvUpsTS              | uzUps.tss              |
 | groundwater lower zone                                       | $mm$                       | LZAvUpsTS              | lzUps.tss              |
 | number of days since last rain                               | $days$                     | DSLRAvUpsTS            | dslrUps.tss            |
