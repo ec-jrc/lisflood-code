@@ -2719,6 +2719,12 @@ Reported evaporation of canopy-intercepted water [mm]
 </comment>
 </textvar>
 
+<textvar name="EWater" value="$(PathOut)/evap_water">
+<comment>
+Reported evaporation from open water and impervious surfaces [mm]
+</comment>
+</textvar>
+
 <textvar name="ETActMaps" value="$(PathOut)/etact">
 <comment>
 Reported actual evapotranspiration [mm]

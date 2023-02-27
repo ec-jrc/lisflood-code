@@ -455,19 +455,19 @@ def generateName(name, time):
     if len(tail) == 0:
         msg = "No filename specified"
         raise LisfloodError(msg)
-    if len(tail) > 8:
-        msg = "Filename '" + name + "' must be shorter than 8 characters"
-        raise LisfloodError(msg)
+#    if len(tail) > 8:
+#        msg = "Filename '" + name + "' must be shorter than 8 characters"
+#        raise LisfloodError(msg)
     if time < 0:
         msg = "Timestep must be larger than 0"
         raise LisfloodError(msg)
 
     nr = "%d" % (time)
     space = 11 - (len(tail) + len(nr))
-    assert space >= 0
+#    assert space >= 0
     result = "%s%s%s" % (tail, space * "0", nr)
     result = "%s.%s" % (result[:8], result[8:])
-    assert len(result) == 12
+#    assert len(result) == 12
     return os.path.join(head, result)
 
 

@@ -453,7 +453,7 @@
 <setmap name="TaMaps"            outputVar="TaPixel"                               unit="mm"   end=""  steps=""  all="repE2O1"    restrictoption="nonInit" />
 <setmap name="ESActMaps"         outputVar="ESActPixel"                            unit="mm"   end=""  steps=""  all="repE2O1"    restrictoption="nonInit" />
 <setmap name="EWIntMaps"         outputVar="TaInterceptionAll"                     unit="mm"   end=""  steps=""  all="repE2O1"    restrictoption="nonInit" />
-<setmap name="EWater"            outputVar="EvaAddM3*self.var.M3toMM"              unit="mm"   end=""  steps=""  all="repE2O1"    restrictoption="nonInit" />
+<setmap name="EWater"            outputVar="EvaAddM3*self.var.M3toMM + self.var.DirectRunoffFraction*self.var.TASealed"              unit="mm"   end=""  steps=""  all="repEvapPix"    restrictoption="nonInit" />
 
 <setmap name="RainMaps"         outputVar="Rain"                                   unit="mm"   end=""  steps=""  all="repE2O1"    restrictoption="nonInit" />
 <setmap name="SnowMeltMaps"      outputVar="SnowMelt"                              unit="mm"   end=""  steps=""  all="repE2O1"    restrictoption="nonInit" />
