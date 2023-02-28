@@ -170,7 +170,11 @@ class XarrayChunked():
         if time_chunk != 'auto' and time_chunk is not None:
             time_chunk = int(time_chunk)
         data_path = data_path + ".nc" if not data_path.endswith('.nc') else data_path
-        ds = xr.open_mfdataset(data_path, engine='netcdf4', chunks={'time': time_chunk}, combine='by_coords')
+        try:
+            ds = xr.open_mfdataset(data_path, engine='netcdf4', chunks={'time': time_chunk}, combine='by_coords')
+        except:
+            raise Exception("{} file error! Check the file in input folder or the input name in the settings file!".format(data_path))
+
 
         # check calendar type
         check_dataset_calendar_type(ds, data_path)
