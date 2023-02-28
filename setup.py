@@ -159,7 +159,6 @@ setup(
     ],
     install_requires=requirements,
     scripts=['bin/lisflood'],
-    ext_modules=ext_modules,
     zip_safe=True,
     classifiers=[
         # complete classifier list: http://pypi.python.org/pypi?%3Aaction=list_classifiers
