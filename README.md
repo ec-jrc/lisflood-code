@@ -71,7 +71,7 @@ You can use conda environment to easily install dependencies.
 ```bash
 conda create --name lisflood python=3.7 -c conda-forge
 conda activate lisflood
-conda install -c conda-forge pcraster
+conda install -c conda-forge pcraster gdal
 ```
 
 * Install lisflood-model pypi package
