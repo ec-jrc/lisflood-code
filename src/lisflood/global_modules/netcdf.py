@@ -321,9 +321,11 @@ def read_lat_from_template(binding):
 
 
 def get_space_coords(template, dim_lat_y, dim_lon_x):
+    cutmap = CutMap.instance()
+    crop = cutmap.cuts
     coordinates = {}
-    coordinates[dim_lat_y] = template.coords[dim_lat_y]
-    coordinates[dim_lon_x] = template.coords[dim_lon_x]
+    coordinates[dim_lat_y] = template.coords[dim_lat_y][crop[2]:crop[3]]
+    coordinates[dim_lon_x] = template.coords[dim_lon_x][crop[0]:crop[1]]
     return coordinates
 
 
@@ -333,12 +335,9 @@ def get_space_coords_pcraster(nrow, ncol, dim_lat_y, dim_lon_x):
     xr = xl + ncol * cell
     yu = pcraster.clone().north() - cell / 2
     yd = yu - nrow * cell
-    #lats = np.arange(yu, yd, -cell)
-    #lons = np.arange(xl, xr, cell)
     coordinates = {}
     coordinates[dim_lat_y] = np.linspace(yu, yd, nrow, endpoint=False)
     coordinates[dim_lon_x] = np.linspace(xl, xr, ncol, endpoint=False)
-
     return coordinates
 
 
