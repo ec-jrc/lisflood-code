@@ -10,23 +10,12 @@ from nine import range
 from pyproj import Proj
 
 from .settings import (calendar_inconsistency_warning, get_calendar_type, calendar, MaskAttrs, CutMap, NetCDFMetadata,
-                       LisSettings, MaskInfo)
+                       get_core_dims, LisSettings, MaskInfo)
 from .errors import LisfloodWarning, LisfloodError
 from .decorators import Cache, cached
 from .zusatz import iterOpenNetcdf
 # from .add1 import *
 from .add1 import nanCheckMap, decompress
-
-
-def get_core_dims(dims):
-    if 'x' in dims and 'y' in dims:
-        core_dims = ('y', 'x')
-    elif 'lat' in dims and 'lon' in dims:
-        core_dims = ('lat', 'lon')
-    else:
-        msg = 'Core dimension in netcdf file not recognised! Expecting (y, x) or (lat, lon), have '+str(dims)
-        LisfloodError(msg)
-    return core_dims
 
 
 def mask_array_np(data, mask, crop):
@@ -332,11 +321,9 @@ def read_lat_from_template(binding):
 
 
 def get_space_coords(template, dim_lat_y, dim_lon_x):
-
     coordinates = {}
-    coordinates[dim_lat_y] = template[dim_lat_y]
-    coordinates[dim_lon_x] = template[dim_lon_x]
-
+    coordinates[dim_lat_y] = template.coords[dim_lat_y]
+    coordinates[dim_lon_x] = template.coords[dim_lon_x]
     return coordinates
 
 
