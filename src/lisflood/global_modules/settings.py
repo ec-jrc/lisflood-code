@@ -43,6 +43,7 @@ from .errors import LisfloodError, LisfloodWarning, LisfloodFileError
 from .decorators import cached
 from .default_options import default_options
 
+
 project_dir = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../..'))
 
 
@@ -189,6 +190,17 @@ class MaskInfo(with_metaclass(Singleton)):
         return iter(self.info)
 
 
+def get_core_dims(dims):
+    if 'x' in dims and 'y' in dims:
+        core_dims = ('y', 'x')
+    elif 'lat' in dims and 'lon' in dims:
+        core_dims = ('lat', 'lon')
+    else:
+        msg = 'Core dimension in netcdf file not recognised! Expecting (y, x) or (lat, lon), have '+str(dims)
+        LisfloodError(msg)
+    return core_dims
+
+
 @nine
 class NetCDFMetadata(with_metaclass(Singleton)):
     def __init__(self, uid):
@@ -203,6 +215,10 @@ class NetCDFMetadata(with_metaclass(Singleton)):
             nf1 = iterOpenNetcdf(filename, "Trying to get metadata from netcdf template \n", 'r')
             for var in nf1.variables:
                 self.data[var] = {k: v for k, v in iteritems(nf1.variables[var].__dict__) if k != '_FillValue'}
+            core_dims = get_core_dims(self.data)
+            self.coords = {}
+            for dim in core_dims:
+                self.coords[dim] = nf1.variables[dim][:]
             nf1.close()
             return
         except (KeyError, IOError, IndexError, Exception):
@@ -212,6 +228,10 @@ class NetCDFMetadata(with_metaclass(Singleton)):
         nf1 = iterOpenNetcdf(filename, "Trying to get metadata from E0 maps \n", 'r')
         for var in nf1.variables:
             self.data[var] = {k: v for k, v in iteritems(nf1.variables[var].__dict__) if k != '_FillValue'}
+        core_dims = get_core_dims(self.data)
+        self.coords = {}
+        for dim in core_dims:
+            self.coords[dim] = nf1.variables[dim]
         nf1.close()
 
 @nine
