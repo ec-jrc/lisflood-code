@@ -10,23 +10,12 @@ from nine import range
 from pyproj import Proj
 
 from .settings import (calendar_inconsistency_warning, get_calendar_type, calendar, MaskAttrs, CutMap, NetCDFMetadata,
-                       LisSettings, MaskInfo)
+                       get_core_dims, LisSettings, MaskInfo)
 from .errors import LisfloodWarning, LisfloodError
 from .decorators import Cache, cached
 from .zusatz import iterOpenNetcdf
 # from .add1 import *
 from .add1 import nanCheckMap, decompress
-
-
-def get_core_dims(dims):
-    if 'x' in dims and 'y' in dims:
-        core_dims = ('y', 'x')
-    elif 'lat' in dims and 'lon' in dims:
-        core_dims = ('lat', 'lon')
-    else:
-        msg = 'Core dimension in netcdf file not recognised! Expecting (y, x) or (lat, lon), have '+str(dims)
-        LisfloodError(msg)
-    return core_dims
 
 
 def mask_array_np(data, mask, crop):
@@ -331,18 +320,24 @@ def read_lat_from_template(binding):
     return lat_deg
 
 
-def get_space_coords(nrow, ncol, dim_lat_y, dim_lon_x):
+def get_space_coords(template, dim_lat_y, dim_lon_x):
+    cutmap = CutMap.instance()
+    crop = cutmap.cuts
+    coordinates = {}
+    coordinates[dim_lat_y] = template.coords[dim_lat_y][crop[2]:crop[3]]
+    coordinates[dim_lon_x] = template.coords[dim_lon_x][crop[0]:crop[1]]
+    return coordinates
+
+
+def get_space_coords_pcraster(nrow, ncol, dim_lat_y, dim_lon_x):
     cell = pcraster.clone().cellSize()
     xl = pcraster.clone().west() + cell / 2
     xr = xl + ncol * cell
     yu = pcraster.clone().north() - cell / 2
     yd = yu - nrow * cell
-    #lats = np.arange(yu, yd, -cell)
-    #lons = np.arange(xl, xr, cell)
     coordinates = {}
     coordinates[dim_lat_y] = np.linspace(yu, yd, nrow, endpoint=False)
     coordinates[dim_lon_x] = np.linspace(xl, xr, ncol, endpoint=False)
-
     return coordinates
 
 
@@ -386,10 +381,10 @@ def write_header(var_name, netfile, DtDay,
     ncol = np.abs(cutmap.cuts[1] - cutmap.cuts[0])
 
     dim_lat_y, dim_lon_x = get_core_dims(meta_netcdf.data)
-    latlon_coords = get_space_coords(nrow, ncol, dim_lat_y, dim_lon_x)
+    latlon_coords = get_space_coords(meta_netcdf, dim_lat_y, dim_lon_x)
 
     if dim_lon_x in meta_netcdf.data:
-        lon = nf1.createDimension(dim_lon_x, ncol)  # x 1000
+        nf1.createDimension(dim_lon_x, ncol)  # x 1000
         longitude = nf1.createVariable(dim_lon_x, 'f8', (dim_lon_x,))
         valid_attrs = [i for i in meta_netcdf.data[dim_lon_x] if i not in not_valid_attrs]
         for i in valid_attrs:
@@ -397,7 +392,7 @@ def write_header(var_name, netfile, DtDay,
     longitude[:] = latlon_coords[dim_lon_x]
 
     if dim_lat_y in meta_netcdf.data:
-        lat = nf1.createDimension(dim_lat_y, nrow)  # x 950
+        nf1.createDimension(dim_lat_y, nrow)  # x 950
         latitude = nf1.createVariable(dim_lat_y, 'f8', (dim_lat_y,))
         valid_attrs = [i for i in meta_netcdf.data[dim_lat_y] if i not in not_valid_attrs]
         for i in valid_attrs:
