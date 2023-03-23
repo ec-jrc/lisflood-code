@@ -615,12 +615,9 @@ class routing(HydroModule):
 
             # SPLIT ROUTING
             if option['SplitRouting'] and not(option['MCTRouting']):
-
                 self.SplitRouting(SideflowChan)
                 self.var.sumDisDay += self.var.ChanQ
-
                 # ----------End splitrouting-------------------------------------------------
-                TotalCrossSectionArea = np.maximum(self.var.ChanM3Kin * self.var.InvChanLength, 0.01)
 
 
             # KINEMATIC ROUTING AND MUSKINGUM-CUNGE-TODINI
@@ -641,6 +638,8 @@ class routing(HydroModule):
 
                 self.var.sumDisDay += self.var.ChanQ
 
+
+            TotalCrossSectionArea = np.maximum(self.var.ChanM3Kin * self.var.InvChanLength, 0.01)
 
             ###
             
