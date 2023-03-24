@@ -473,13 +473,11 @@ class routing(HydroModule):
         option = settings.options
         binding = settings.binding
 
-        #self.var.ChannelAlpha2 = None  # default value, if split-routing is not active and only water is routed only in the main channel
         # ************************************************************
         # ***** CHANNEL INITIAL SPLIT UP IN SECOND CHANNEL************
         # ************************************************************
-        if option['MCTRouting']:
-            #print('initialMCT')
-
+        if option['MCTRouting'] and option['SplitRouting']:
+            print('initialMCT')
             ChanMan2 = (self.var.ChanMan / self.var.CalChanMan) * loadmap('CalChanMan2')
             AlpTermChan2 = (ChanMan2 / (np.sqrt(self.var.ChanGrad))) ** self.var.Beta
             self.var.ChannelAlpha2 = (AlpTermChan2 * (self.var.ChanWettedPerimeterAlpha ** self.var.AlpPow)).astype(float)
@@ -628,6 +626,7 @@ class routing(HydroModule):
 
                 # MCT routing
                 ChanQMCTIn = self.var.ChanQKin.copy()
+                # ChanQMCTOut,ChanQQMCTOut,ChanM3MCTOut = self.KinematicRouting(ChanQMCTIn,SideflowChanMCT)
                 ChanQMCTOut,ChanQQMCTOut,ChanM3MCTOut = self.MCTRouting(ChanQMCTIn,SideflowChanMCT)
 
                 # combine results
