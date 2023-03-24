@@ -599,7 +599,7 @@ class routing(HydroModule):
             # ************************************************************
             if option['InitLisflood']: self.var.IsChannelKinematic = self.var.IsChannel.copy()
 
-            # KINEMATIC ROUTING ONLY
+            # KINEMATIC ROUTING ONLY - InitLisflood
             if option['InitLisflood'] or (not(option['SplitRouting']) and (not(option['MCTRouting']))):
                 # Kinematic routing
                 ChanQKinIn = self.var.ChanQKin.copy()
@@ -613,14 +613,13 @@ class routing(HydroModule):
                 self.var.sumDisDay += self.var.ChanQ
 
 
-            # SPLIT ROUTING
-            if option['SplitRouting'] and not(option['MCTRouting']):
+            # SPLIT ROUTING - no InitLisfllod
+            if not option['InitLisflood'] and option['SplitRouting'] and not(option['MCTRouting']):
                 self.SplitRouting(SideflowChan)
                 self.var.sumDisDay += self.var.ChanQ
-                # ----------End splitrouting-------------------------------------------------
 
 
-            # KINEMATIC ROUTING AND MUSKINGUM-CUNGE-TODINI
+            # KINEMATIC ROUTING AND MUSKINGUM-CUNGE-TODINI - no InitLisflood
             if not option['InitLisflood'] and (not(option['SplitRouting']) and (option['MCTRouting'])):
                 # Kinematic routing
                 ChanQKinIn = self.var.ChanQKin.copy()
@@ -823,9 +822,9 @@ class routing(HydroModule):
         # Correct negative discharge at the end of computation step in second line
 
         self.var.ChanQ = np.maximum(self.var.ChanQKin + self.var.Chan2QKin - self.var.QLimit, 0)
-
         # Superposition Kinematic
         # Main channel routing and floodplains routing
+        # ----------End splitrouting-------------------------------------------------
         return
 
 
