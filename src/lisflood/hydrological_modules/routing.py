@@ -110,7 +110,7 @@ class routing(HydroModule):
         # Identify channel pixels
         self.var.IsChannelKinematic = self.var.IsChannel.copy()     #bool
         # Identify kinematic wave channel pixels
-        # (identical to IsChannel, unless dynamic wave is used, see below)
+        # (identical to IsChannel, unless dynamic/MCT wave is used, see below)
         self.var.IsStructureKinematic = np.bool8(maskinfo.in_zero())        #bool
         # Map that identifies special inflow/outflow structures (reservoirs, lakes) within the
         # kinematic wave channel routing. Set to (dummy) value of zero modified in reservoir and lake
@@ -156,12 +156,14 @@ class routing(HydroModule):
             #print('MCTRouting setting LDD')
             self.var.IsChannelMCTPcr = boolean(loadmap('ChannelsMCT', pcr=True))    #pcr
             self.var.IsChannelMCT = np.bool8(compressArray(self.var.IsChannelMCTPcr))   #bool
-            self.var.IsChannelKinematicPcr = (self.var.IsChannelPcr == 1) & (self.var.IsChannelMCTPcr == 0)  #pcr
             # Identify channel pixels where Muskingum-Cunge-Todini is used
+
+            self.var.IsChannelKinematicPcr = (self.var.IsChannelPcr == 1) & (self.var.IsChannelMCTPcr == 0)  #pcr
+            self.var.IsChannelKinematic = np.bool8(compressArray(self.var.IsChannelKinematicPcr))   #np
+            # Identify channel pixels where Kinematic wave is used
 
             self.var.LddMCT = lddmask(self.var.Ldd, self.var.IsChannelMCTPcr)  #pcr
             self.var.LddMCTNp = compressArray(self.var.LddMCT)    #np
-            self.var.IsChannelKinematic = np.bool8(compressArray(self.var.IsChannelKinematicPcr))
             # Ldd for MCT wave
 
             self.var.LddKinematic = lddmask(self.var.Ldd, self.var.IsChannelKinematicPcr)    #pcr
@@ -171,7 +173,7 @@ class routing(HydroModule):
 
         else:
             self.var.LddKinematic = LddChan
-            # No dynamic wave, so kinematic ldd equals channel ldd
+            # No dynamic/MCT wave, so kinematic ldd equals channel ldd
 
         self.var.LddKinematicNp = compressArray(self.var.LddKinematic)    #np
 
@@ -280,16 +282,15 @@ class routing(HydroModule):
         self.var.ChanM3Kin = self.var.ChanIniM3.copy().astype(float)    #np
         # Initialise water volume in kinematic wave channels [m3]
         self.var.ChanQKin = np.where(self.var.ChannelAlpha > 0, (self.var.TotalCrossSectionArea / self.var.ChannelAlpha) ** self.var.InvBeta, 0).astype(float)
-
         # Initialise discharge at kinematic wave pixels (note that InvBeta is
         # simply 1/beta, computational efficiency!)
 
         self.var.CumQ = maskinfo.in_zero()
         # ininialise sum of discharge to calculate average
 
-# ************************************************************
-# ***** CHANNEL INITIAL DYNAMIC WAVE *************************
-# ************************************************************
+        # ************************************************************
+        # ***** CHANNEL INITIAL DYNAMIC WAVE *************************
+        # ************************************************************
         if option['dynamicWave']:
             pass
             # TODO !!!!!!!!!!!!!!!!!!!!
@@ -381,7 +382,7 @@ class routing(HydroModule):
         option = settings.options
         binding = settings.binding
 
-        self.var.ChannelAlpha2 = None  # default value, if split-routing is not active and only water is routed only in the main channel
+        self.var.ChannelAlpha2 = None  # default value, if split-routing is not active and water is routed only in the main channel
         # ************************************************************
         # ***** CHANNEL INITIAL SPLIT UP IN SECOND CHANNEL************
         # ************************************************************
@@ -431,12 +432,14 @@ class routing(HydroModule):
                 self.var.Chan2QKin = (self.var.Chan2M3Kin * self.var.InvChanLength * self.var.InvChannelAlpha2) ** (self.var.InvBeta)
                 self.var.ChanQKin = (self.var.ChanM3Kin * self.var.InvChanLength * self.var.InvChannelAlpha) ** (self.var.InvBeta)
 
+
         # Initialise parallel kinematic wave router: main channel-only routing if self.var.ChannelAlpha2 is None; else split-routing(main channel + floodplains)
         maskinfo = MaskInfo.instance()
         self.river_router = kinematicWave(compressArray(self.var.LddKinematic), ~maskinfo.info.mask, self.var.ChannelAlpha,
                                           self.var.Beta, self.var.ChanLength, self.var.DtRouting,
                                           int(binding["numCPUs_parallelKinematicWave"]), alpha_floodplains=self.var.ChannelAlpha2)
-        
+
+
         if option['InitLisflood'] and option['repMBTs']:          
             self.var.StorageStepINIT= self.var.ChanM3Kin 
             self.var.DischargeM3StructuresIni = maskinfo.in_zero()     
@@ -466,40 +469,46 @@ class routing(HydroModule):
             self.var.StorageStepINIT = np.take(np.bincount(self.var.Catchments, weights=self.var.StorageStepINIT), self.var.Catchments)    
 
 
-    def initialMCT(self):
-        """ initial part of the Muskingum-Kunge-Todini routing module
-        """
-        settings = LisSettings.instance()
-        option = settings.options
-        binding = settings.binding
-
-        # ************************************************************
-        # ***** CHANNEL INITIAL SPLIT UP IN SECOND CHANNEL************
-        # ************************************************************
-        if option['MCTRouting'] and option['SplitRouting']:
-            print('initialMCT')
-            ChanMan2 = (self.var.ChanMan / self.var.CalChanMan) * loadmap('CalChanMan2')
-            AlpTermChan2 = (ChanMan2 / (np.sqrt(self.var.ChanGrad))) ** self.var.Beta
-            self.var.ChannelAlpha2 = (AlpTermChan2 * (self.var.ChanWettedPerimeterAlpha ** self.var.AlpPow)).astype(float)
-            self.var.InvChannelAlpha2 = 1 / self.var.ChannelAlpha2
-            # calculating second Alpha for second (virtual) channel
-
-            if not(option['InitLisflood']):
-
-                # use loadmap_base function as we don't want to cache avgdis it in the calibration
-                self.var.QLimit = loadmap_base('AvgDis') * loadmap('QSplitMult')
-                # Over bankful discharge starts at QLimit
-                # set to mutiple of average discharge (map from prerun)
-                # QSplitMult =2 is around 90 to 95% of Q
-
-                self.var.M3Limit = self.var.ChannelAlpha * self.var.ChanLength * (self.var.QLimit ** self.var.Beta)
-                # Water volume in bankful when over bankful discharge starts
-
-                #self.var.ChanM3Kin = ...
-
-                #self.var.ChanQKin = ...
-
- #       maskinfo = MaskInfo.instance()
+ #    def initialMCT(self):
+ #        """ initial part of the Muskingum-Kunge-Todini routing module
+ #        """
+ #        settings = LisSettings.instance()
+ #        option = settings.options
+ #        binding = settings.binding
+ #
+ #        self.var.ChannelAlpha2 = None  # default value, if split-routing is not active and water is routed only in the main channel
+ #        # ************************************************************
+ #        # ***** CHANNEL INITIAL SPLIT UP IN SECOND CHANNEL************
+ #        # ************************************************************
+ #        if option['MCTRouting']:
+ #
+ #        # ************************************************************
+ #        # ***** CHANNEL INITIAL SPLIT UP IN SECOND CHANNEL************
+ #        # ************************************************************
+ #        if option['MCTRouting'] and option['SplitRouting']:
+ #            print('initialMCT')
+ #            ChanMan2 = (self.var.ChanMan / self.var.CalChanMan) * loadmap('CalChanMan2')
+ #            AlpTermChan2 = (ChanMan2 / (np.sqrt(self.var.ChanGrad))) ** self.var.Beta
+ #            self.var.ChannelAlpha2 = (AlpTermChan2 * (self.var.ChanWettedPerimeterAlpha ** self.var.AlpPow)).astype(float)
+ #            self.var.InvChannelAlpha2 = 1 / self.var.ChannelAlpha2
+ #            # calculating second Alpha for second (virtual) channel
+ #
+ #            if not(option['InitLisflood']):
+ #
+ #                # use loadmap_base function as we don't want to cache avgdis it in the calibration
+ #                self.var.QLimit = loadmap_base('AvgDis') * loadmap('QSplitMult')
+ #                # Over bankful discharge starts at QLimit
+ #                # set to mutiple of average discharge (map from prerun)
+ #                # QSplitMult =2 is around 90 to 95% of Q
+ #
+ #                self.var.M3Limit = self.var.ChannelAlpha * self.var.ChanLength * (self.var.QLimit ** self.var.Beta)
+ #                # Water volume in bankful when over bankful discharge starts
+ #
+ #                #self.var.ChanM3Kin = ...
+ #
+ #                #self.var.ChanQKin = ...
+ #
+ # #       maskinfo = MaskInfo.instance()
 
 
 # --------------------------------------------------------------------------
@@ -620,13 +629,13 @@ class routing(HydroModule):
             # KINEMATIC ROUTING AND MUSKINGUM-CUNGE-TODINI - no InitLisflood
             if not option['InitLisflood'] and (not(option['SplitRouting']) and (option['MCTRouting'])):
                 # Kinematic routing
+
                 ChanQKinIn = self.var.ChanQKin.copy()
                 #ChanM3KinNp = self.var.ChanM3Kin.copy()
                 ChanQKinOut,ChanQOut,ChanM3KinOut = self.KinematicRouting(ChanQKinIn,SideflowChan)
 
                 # MCT routing
                 ChanQMCTIn = self.var.ChanQKin.copy()
-                # ChanQMCTOut,ChanQQMCTOut,ChanM3MCTOut = self.KinematicRouting(ChanQMCTIn,SideflowChanMCT)
                 ChanQMCTOut,ChanQQMCTOut,ChanM3MCTOut = self.MCTRouting(ChanQMCTIn,SideflowChanMCT)
 
                 # combine results
@@ -731,9 +740,9 @@ class routing(HydroModule):
             # Channel velocity (m/s); dividing Q (m3/s) by CrossSectionArea (m2)
             # avoid extreme velocities by using the Wollheim 2006 equation
             # assume 0.1 for upstream areas (outside ChanLdd)
-            self.var.FlowVelocity *= np.minimum(np.sqrt(self.var.PixelArea)*self.var.InvChanLength,1);
+            self.var.FlowVelocity *= np.minimum(np.sqrt(self.var.PixelArea)*self.var.InvChanLength,1)
             # reduction for sinuosity of channels
-            self.var.TravelDistance=self.var.FlowVelocity*self.var.DtSec;
+            self.var.TravelDistance=self.var.FlowVelocity*self.var.DtSec
             # if flow is fast, Traveltime=1, TravelDistance is high: Pixellength*DtSec
             # if flow is slow, Traveltime=DtSec then TravelDistance=PixelLength
             # maximum set to 30km/day for 5km cell, is at DtSec/Traveltime=6, is at Traveltime<DtSec/6
