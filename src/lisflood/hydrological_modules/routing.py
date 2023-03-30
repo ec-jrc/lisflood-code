@@ -226,6 +226,7 @@ class routing(HydroModule):
         self.var.ChanBottomWidth = loadmap('ChanBottomWidth')
         ChanDepthThreshold = loadmap('ChanDepthThreshold')
         ChanSdXdY = loadmap('ChanSdXdY')
+        self.var.ChanSdXdY = loadmap('ChanSdXdY')
         self.var.ChanUpperWidth = self.var.ChanBottomWidth + 2 * ChanSdXdY * ChanDepthThreshold
         # Channel upper width [m]
         self.var.TotalCrossSectionAreaBankFull = 0.5 * \
@@ -836,25 +837,246 @@ class routing(HydroModule):
         return
 
 
+    # def MCTRouting(self,ChanQMCT,SideflowChanMCT):
+    #     ChanQMCTPcr=decompress(ChanQMCT)    #pcr
+    #     ChanQMCTUp=compressArray(upstream(self.var.LddChan,ChanQMCTPcr))
+    #     # calc contribution from upstream pixels (dim=all pixels)
+    #     # LddChan is necessary to include Kin pixels contributing to MCT pixels
+    #
+    #     x = np.ma.masked_where(self.var.IsChannelKinematic,ChanQMCTUp)
+    #     y = x.compressed()
+    #     # only include upstream contributions for MCT pixels (dim=MCTpix)
+    #
+    #     xside = np.ma.masked_where(self.var.IsChannelKinematic,SideflowChanMCT)
+    #     yside = xside.compressed()
+    #     # calc side contributions for MCT pixels only (dim=MCTpix)
+    #
+    #     z = y + yside
+    #     # calc routing for MCT pixels only (dim=MCTpix)
+    #
+    #     x[~x.mask] = z
+    #     # explode results the the MCT pixels mask (dim=all)
+    #     ChanQMCT = x.data
+    #     # update results in vector (dim=all)
+    #
+    #     ChanQQMCT = ChanQMCT.copy()
+    #     ChanM3MCT = self.var.ChanM3Kin.copy()
+    #
+    #     return ChanQMCT,ChanQQMCT,ChanM3MCT
+
     def MCTRouting(self,ChanQMCT,SideflowChanMCT):
-        ChanQMCTPcr=decompress(ChanQMCT)
+        ChanQMCTPcr=decompress(ChanQMCT)    #pcr
         ChanQMCTUp=compressArray(upstream(self.var.LddChan,ChanQMCTPcr))
-        # calc contribution from upstream pixels
+        # calc contribution from upstream pixels (dim=all pixels)
+        # LddChan is necessary to include Kin pixels contributing to MCT pixels
 
         x = np.ma.masked_where(self.var.IsChannelKinematic,ChanQMCTUp)
         y = x.compressed()
+        # only include upstream contributions for MCT pixels (dim=MCTpix)
 
         xside = np.ma.masked_where(self.var.IsChannelKinematic,SideflowChanMCT)
         yside = xside.compressed()
+        # calc side contributions for MCT pixels only (dim=MCTpix)
 
         z = y + yside
-        # tanto arriva tanto esce
+        # calc routing for MCT pixels only (dim=MCTpix)
+
+        ################################################
+        q = self.qdy(1.)
+
+        ################################################
+
 
         x[~x.mask] = z
+        # explode results the the MCT pixels mask (dim=all)
         ChanQMCT = x.data
+        # update results in vector (dim=all)
 
         ChanQQMCT = ChanQMCT.copy()
         ChanM3MCT = self.var.ChanM3Kin.copy()
 
         return ChanQMCT,ChanQQMCT,ChanM3MCT
+
+
+
+    def scalax(self,q):
+        """Given a generic section (rectangular, triangular or trapezoidal) and a steady-state discharge q=Q*, it computes
+        water depth (y), wet contour (Bx), wat area (Ax) and wave celerity (cel) using Newton-Raphson method.
+        q: steady-state discharge river discharge [m3/s]
+        Ax: wet area [m2]
+        Bx: cross-section width at water surface [m]
+        Px: cross-section wet contour [m]
+        cel: wave celerity [m/s]
+
+        Reference: Reggiani, P., Todini, E., & Meißner, D. (2016). On mass and momentum conservation in the variable-parameter Muskingum method. Journal of Hydrology, 543, 562–576. https://doi.org/10.1016/j.jhydrol.2016.10.030
+
+        :return:
+        y,Ax,Bx,cel
+        """
+
+        # Characteristics of the channel cross-section
+        xpix = self.get_mct_pix(self.var.ChanLength)         # dimension along the flow direction  [m]
+        s0 = self.get_mct_pix(self.var.ChanGrad)             # river bed slope (tan B)
+        alpha = 5./3.                                        # exponent (5/3)
+        dt = self.var.DtSecChannel                           # computation timestep for channel [s]
+        Balv = self.get_mct_pix(self.var.ChanBottomWidth)    # width of the riverbed [m]
+        ANalv = self.get_mct_pix(self.var.ChanSdXdY)         # angle of the riverbed side [rad]
+        Nalv = self.get_mct_pix(self.var.ChanMan)            # channel mannings coefficient n for the riverbed [s/m1/3]
+
+        pim = 1.57079632679    # pi/2
+        eps = 1.e-06
+        max_tries = 1000
+
+        rs0 = s0 ** .5
+        usalpha = 1. / alpha
+
+        # np.where(ANalv < pim, triang. or trapeiz., rectangular)
+        # cotangent(angle of the riverbed side - dXdY)
+        c = np.where(ANalv < pim,
+                     # triangular or trapezoid cross-section
+                     self.cotan(ANalv),
+                     # rectangular corss-section
+                     0.)
+
+        # sin(angle of the riverbed side - dXdY)
+        s = np.where(ANalv < pim,
+                     # triangular or trapezoid cross-section
+                     np.sin(ANalv),
+                     # rectangular corss-section
+                     1.)
+
+        # water depth first approximation y0 based on steady state q
+        y = np.where(Balv == 0,
+                     # triangular cross-section
+                     (Nalv * q / rs0) ** (3. / 8.) * (2 / s) ** .25 / c ** (5. / 8.),
+                     # rectangular cross-section and first approx for trapezoidal cross-section
+                     (Nalv * q / (rs0 * Balv)) ** usalpha
+                     )
+
+        y = np.where(Balv != 0 & ANalv < pim,
+                     # trapezoid cross-section
+                     (Nalv * q / rs0) ** usalpha * (Balv + 2. * y / s) ** .4 / (Balv + c * y),
+                     )
+
+        for tries in range(1,max_tries):
+            # calc Q(y) for the different tries of y
+            q0,Ax,Bx,Px,cel = self.qdy(y)
+            # this is the function we want to find the 0 for f(y)=Q(y)-Q*
+            fy = q0 - q
+            # calc first derivative of f(y)  f'(y)=Bx(y)*cel(y)
+            dfy = Bx * cel
+            # calc update for water depth y
+            dy = fy / dfy
+            # update yt+1=yt-f'(yt)/f(yt)
+            y = y - dy
+            # stop loop if correction becomes too small
+            if abs(dy) < eps: break
+
+        return y
+
+
+    def qdy(self,y):
+        """ Given a generic river cross-section (rectangular, triangular and trapezoidal)
+        and a water depth (y [m]) referred to the bottom of the riverbed, it uses Manning’s formula to calculate:
+        q: steady-state discharge river discharge [m3/s]
+        a: wet area [m2]
+        b: cross-section width at water surface [m]
+        p: cross-section wet contour [m]
+        cel: wave celerity [m/s]
+
+        Reference: Reggiani, P., Todini, E., & Meißner, D. (2016). On mass and momentum conservation in the variable-parameter Muskingum method. Journal of Hydrology, 543, 562–576. https://doi.org/10.1016/j.jhydrol.2016.10.030
+        :return:
+        q: steady-state discharge [m3/s]
+        """
+
+        # Characteristics of the channel cross-section
+        s0 = self.get_mct_pix(self.var.ChanGrad)             # river bed slope (tan B)
+        alpha = 5./3.                                        # exponent (5/3)
+        Balv = self.get_mct_pix(self.var.ChanBottomWidth)    # width of the riverbed [m]
+        ANalv = self.get_mct_pix(self.var.ChanSdXdY)         # angle of the riverbed side [rad]
+        Nalv = self.get_mct_pix(self.var.ChanMan)            # channel mannings coefficient n for the riverbed [s/m1/3]
+        pim = 1.57079632679                                  # pi/2
+
+        rs0 = s0 ** .5
+        alpham = alpha - 1.
+
+        # np.where(ANalv < pim, triang. or trapeiz., rectangular)
+        # cotangent(angle of the riverbed side - dXdY)
+        c = np.where(ANalv < pim,
+                     # triangular or trapezoid cross-section
+                     self.cotan(ANalv),
+                     # rectangular corss-section
+                     0.)
+        # sin(angle of the riverbed side - dXdY)
+        s = np.where(ANalv < pim,
+                     # triangular or trapezoid cross-section
+                     np.sin(ANalv),
+                     # rectangular corss-section
+                     1.)
+
+        # if ANalv.lt.pim:
+        #     Triangular or trapezoidal cross-section
+        #     c = self.cotan(ANalv)
+        #     s = np.sin(ANalv)
+        # else:
+        #     Rectangular cross-section
+        #     c = 0.
+        #     s = 1.
+
+        a = (Balv + y * c) * y  # wet area [m2]
+        b = Balv + 2. * y * c   # cross-section width at water surface [m]
+        p = Balv + 2. * y / s   # cross-section wet contour [m]
+        q = rs0 / Nalv * a ** alpha / p ** alpham       # steady-state discharge [m3/s]
+        cel = (q / 3.) * (5. / a - 4. / (p * b * s))    # wave celerity [m/s]
+
+        return q,a,b,p,cel
+
+
+    def hdv(self,V):
+        """ Given a generic river cross-section (rectangular, triangular and trapezoidal) and and a volume V,
+        it calculates the water depth referred to the bottom of the riverbed [m] (y).
+
+        Reference: Reggiani, P., Todini, E., & Meißner, D. (2016). On mass and momentum conservation in the variable-parameter Muskingum method. Journal of Hydrology, 543, 562–576. https://doi.org/10.1016/j.jhydrol.2016.10.030
+        :return:
+        y
+        """
+
+        # Characteristics of the channel cross-section
+        xpix = self.get_mct_pix(self.var.ChanLength)         # dimension along the flow direction  [m]
+        Balv = self.get_mct_pix(self.var.ChanBottomWidth)    # width of the riverbed [m]
+        ANalv = self.get_mct_pix(self.var.ChanSdXdY)         # angle of the riverbed side [rad]
+        pim = 1.57079632679                                  # pi/2
+
+        c = np.where(ANalv < pim,           # angle of the riverbed side dXdY [rad]
+                     self.cotan(ANalv),     # triangular or trapezoidal cross-section
+                     0.)                    # rectangular cross-section
+
+        a = V / xpix    # wet area [m2]
+
+        # np.where(c < 1.d-6, rectangular, triangular or trapezoidal)
+        y = np.where(c < 1e-6,
+                     a/Balv,                                            # rectangular cross-section
+                     (- Balv + ( Balv**2 + 4. * a * c)**.5)/(2. * c))   # triangular or trapezoidal cross-section
+
+        return y
+
+
+    def cotan(self,x):
+        """There is no cotangent function in numpy"""
+        return np.cos(x) / np.sin(x)
+
+
+    def get_mct_pix(self,var):
+        """For any array (var) with all pixels, it masks the MCT pixels (x) and
+        reduces the dimension of the array (y).
+        :return:
+        y: same as input array (var) but only MCT pixels
+        """
+        x = np.ma.masked_where(self.var.IsChannelKinematic,var)
+        y = x.compressed()
+
+        return y
+
+
+
 
