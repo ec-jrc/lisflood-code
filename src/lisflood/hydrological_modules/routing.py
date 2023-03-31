@@ -485,14 +485,14 @@ class routing(HydroModule):
         if option['MCTRouting']:
             # initialisation for MCT routing
             PrevQMCTin = loadmap('PrevQMCTinInitValue')     # instant input discharge for MCT
-            self.var.PrevQMCTin = np.where(PrevQMCTin == -9999, 0., PrevQMCTin) #np
+            self.var.PrevQMCTin = np.where(PrevQMCTin == -9999, self.var.ChanQKin * 0, PrevQMCTin) #np
             PrevQMCTout = loadmap('PrevQMCToutInitValue')     # instant output discharge for MCT
-            self.var.PrevQMCTout = np.where(PrevQMCTout == -9999, 0., PrevQMCTout) #np
+            self.var.PrevQMCTout = np.where(PrevQMCTout == -9999, self.var.ChanQKin * 0, PrevQMCTout) #np
 
             PrevCmMCT = loadmap('PrevCmMCTInitValue')     # Cm for MCT
-            self.var.PrevCm0 = np.where(PrevCmMCT == -9999, 1., PrevCmMCT) #np
+            self.var.PrevCm0 = np.where(PrevCmMCT == -9999, self.var.ChanQKin/self.var.ChanQKin, PrevCmMCT) #np
             PrevDmMCT = loadmap('PrevDmMCTInitValue')     # Dm for MCT
-            self.var.PrevDm0 = np.where(PrevDmMCT == -9999, 0., PrevDmMCT) #np
+            self.var.PrevDm0 = np.where(PrevDmMCT == -9999, self.var.ChanQKin * 0, PrevDmMCT) #np
 
 
 
@@ -932,7 +932,9 @@ class routing(HydroModule):
         # Calc O' first guess for the outflow at time t+dt
         # O'(t+dt)=O(t)+(I(t+dt)-I(t))
         q11 = q10 + (q01 - q00)
-        if q11 < 0: q11 = 0.
+        #if q11 < 0: q11 = 0.
+        # check for negative discharge values
+        q11 = [0 if i < 0 else i for i in q11]
 
         # calc reference discharge at time t
         # qm0 = (I(t)+O(t))/2
@@ -943,18 +945,21 @@ class routing(HydroModule):
 
             # reference I discharge at x=0
             qmx0 = (q00 + q01) / 2.
-            if qmx0 == 0: qmx0 = eps
+            # if qmx0 == 0: qmx0 = eps
+            qmx0 = [0 if i < 0 else i for i in qmx0]
             hmx0 = self.scalax(qmx0)
 
             # reference O discharge at x=1
             qmx1 = (q10 + q11) / 2.
-            if qmx1 == 0: qmx1 = eps
+            # if qmx1 == 0: qmx1 = eps
+            qmx1 = [0 if i < 0 else i for i in qmx1]
             hmx1 = self.scalax(qmx1)
 
             # # reference discharge at time t+dt
             # # qmm = (I(t+dt)+O(t+dt))/2
             # qmm = (q01 + q11) / 2
             # if qmm == 0: qmm = eps
+            # qmm = [0 if i < 0 else i for i in qmm]
             # hmm = self.scalax(qmm)
             # dummy, Amm,Bmm,Pmm, cmm = self.qdy(hmm)
             # dummy, Amx0,Bmx0,Pmx0, cmx0 = self.qdy(hmx0)
@@ -963,14 +968,16 @@ class routing(HydroModule):
             # Calc riverbed slope correction factor
             cor = 1 - (1 / slp * (hmx1 - hmx0) / xpix)
             sfx = slp * cor
-            if sfx < (0.8 * slp): sfx = 0.8 * slp   # Nel caso di oscillazioni aumentare 0.5 a 0.8
+            # if sfx < (0.8 * slp): sfx = 0.8 * slp   # Nel caso di oscillazioni aumentare 0.5 a 0.8
+            sfx = [0.8 * slp if i < (0.8 * slp) else i for i in sfx]
 
             # Calc reference discharge time t+dt
             # Q(t+dt)=(I(t+dt)+O'(t+dt))/2
             qm1 = (q01 + q11) / 2.
             hm1 = self.scalax(qm1)
             dummy, Ax1,Bx1,Px1,ck1 = self.qdy(hm1)
-            if (ck1 <= eps): ck1 = eps
+            # if (ck1 <= eps): ck1 = eps
+            ck1 = [eps if i < eps else i for i in ck1]
 
             # Calc correcting factor Beta at time t+dt
             Beta1 = ck1 / (qm1 / Ax1)
@@ -989,7 +996,8 @@ class routing(HydroModule):
             # Calc flow at time t+1
             q11 =c1 * q01 + c2 * q00 + c3 * q10
 
-            if (q11 < 0.): q11=0.
+            # if (q11 < 0.): q11=0.
+            q11 = [0 if i < 0 else i for i in q11]
             # end of loop
 
         k1 = dt / Cm1
@@ -998,7 +1006,8 @@ class routing(HydroModule):
         # Calc the corrected mass-conservative expression for the reach segment storage at time t+dt
         V11 = (1-Dm1)*dt/(2*Cm1)*q01 + (1+Dm1)*dt/(2*Cm1)*q11
         # V0 = k1 * (x1 * q01 + (1. - x1) * q11)
-        if (V11 < 0): V11=0.
+        # if (V11 < 0): V11=0.
+        V11 = [0 if i < 0 else i for i in V11]
 
         # save Courant and Reynolds numbers at t+1 for state files
         Cm0 = Cm1
@@ -1033,7 +1042,6 @@ class routing(HydroModule):
         xpix = self.get_mct_pix(self.var.ChanLength)         # dimension along the flow direction  [m]
         s0 = self.get_mct_pix(self.var.ChanGrad)             # river bed slope (tan B)
         alpha = 5./3.                                        # exponent (5/3)
-        dt = self.get_mct_pix(self.var.DtSecChannel)                          # computation timestep for channel [s]
         Balv = self.get_mct_pix(self.var.ChanBottomWidth)    # width of the riverbed [m]
         ANalv = self.get_mct_pix(self.var.ChanSdXdY)         # angle of the riverbed side [rad]
         Nalv = self.get_mct_pix(self.var.ChanMan)            # channel mannings coefficient n for the riverbed [s/m1/3]
@@ -1044,45 +1052,32 @@ class routing(HydroModule):
         rs0 = np.sqrt(s0)
         usalpha = 1. / alpha
 
-        # # np.where(ANalv < np.pi/2, triang. or trapeiz., rectangular)
-        # # cotangent(angle of the riverbed side - dXdY)
-        # c = np.where(ANalv < np.pi/2,
-        #              # triangular or trapezoid cross-section
-        #              self.cotan(ANalv),
-        #              # rectangular corss-section
-        #              0.)
-        #
-        # # sin(angle of the riverbed side - dXdY)
-        # s = np.where(ANalv < np.pi/2,
-        #              # triangular or trapezoid cross-section
-        #              np.sin(ANalv),
-        #              # rectangular corss-section
-        #              1.)
-        #
-        # # water depth first approximation y0 based on steady state q
-        # y = np.where(Balv == 0,
-        #              # triangular cross-section
-        #              (Nalv * q / rs0)**(3. / 8.) * (2 / s)**.25 / c**(5. / 8.),
-        #              # rectangular cross-section and first approx for trapezoidal cross-section
-        #              (Nalv * q / (rs0 * Balv))**usalpha
-        #              )
-        #
-        # y = np.where(Balv != 0 & ANalv < np.pi/2,
-        #              # trapezoid cross-section
-        #              (Nalv * q / rs0)**usalpha * (Balv + 2. * y / s)**.4 / (Balv + c * y),
-        #              )
+        # np.where(ANalv < np.pi/2, triang. or trapeiz., rectangular)
+        # cotangent(angle of the riverbed side - dXdY)
+        c = np.where(ANalv < np.pi/2,
+                     # triangular or trapezoid cross-section
+                     self.cotan(ANalv),
+                     # rectangular corss-section
+                     0.)
 
-        if Balv == 0:
-            c = 1 / np.tan(ANalv)
-            s = np.sin(ANalv)
-            y = (Nalv * q / rs0)**(3 / 8) * (2 / s)**0.25 / c**(5 / 8)
-        else:
-            y = (Nalv * q / (rs0 * Balv))**usalpha
-            if ANalv < np.pi/2:
-                c = 1 / np.tan(ANalv)
-                s = np.sin(ANalv)
-                y = (Nalv * q / rs0)**usalpha * (Balv + 2 * y / s)**0.4 / (Balv + c * y)
+        # sin(angle of the riverbed side - dXdY)
+        s = np.where(ANalv < np.pi/2,
+                     # triangular or trapezoid cross-section
+                     np.sin(ANalv),
+                     # rectangular corss-section
+                     1.)
 
+        # water depth first approximation y0 based on steady state q
+        y = np.where(Balv == 0,
+                     # triangular cross-section
+                     (Nalv * q / rs0)**(3. / 8.) * (2 / s)**.25 / c**(5. / 8.),
+                     # rectangular cross-section and first approx for trapezoidal cross-section
+                     (Nalv * q / (rs0 * Balv))**usalpha)
+
+        y = np.where((Balv != 0) & (ANalv < np.pi/2),
+                     # trapezoid cross-section
+                     (Nalv * q / rs0)**usalpha * (Balv + 2. * y / s)**.4 / (Balv + c * y),
+                     y)
 
         for tries in range(1,max_tries):
             # calc Q(y) for the different tries of y
@@ -1096,7 +1091,8 @@ class routing(HydroModule):
             # update yt+1=yt-f'(yt)/f(yt)
             y = y - dy
             # stop loop if correction becomes too small
-            if np.abs(dy) < eps: break
+            # if np.abs(dy) < eps: break
+            if all(i < eps for i in dy): break
 
         return y
 
@@ -1125,28 +1121,19 @@ class routing(HydroModule):
         rs0 = np.sqrt(s0)
         alpham = alpha - 1.
 
-        # # np.where(ANalv < np.pi/2, triang. or trapeiz., rectangular)
-        # # cotangent(angle of the riverbed side - dXdY)
-        # c = np.where(ANalv < np.pi/2,
-        #              # triangular or trapezoid cross-section
-        #              self.cotan(ANalv),
-        #              # rectangular corss-section
-        #              0.)
-        # # sin(angle of the riverbed side - dXdY)
-        # s = np.where(ANalv < np.pi/2,
-        #              # triangular or trapezoid cross-section
-        #              np.sin(ANalv),
-        #              # rectangular corss-section
-        #              1.)
-
-        if ANalv < np.pi/2:
-            # triangular or trapezoid cross-section
-            c = 1 / np.tan(ANalv)
-            s = np.sin(ANalv)
-        else:
-            # rectangular corss-section
-            c = 0
-            s = 1
+        # np.where(ANalv < np.pi/2, triang. or trapeiz., rectangular)
+        # cotangent(angle of the riverbed side - dXdY)
+        c = np.where(ANalv < np.pi/2,
+                     # triangular or trapezoid cross-section
+                     self.cotan(ANalv),
+                     # rectangular corss-section
+                     0.)
+        # sin(angle of the riverbed side - dXdY)
+        s = np.where(ANalv < np.pi/2,
+                     # triangular or trapezoid cross-section
+                     np.sin(ANalv),
+                     # rectangular corss-section
+                     1.)
 
         a = (Balv + y * c) * y  # wet area [m2]
         b = Balv + 2. * y * c   # cross-section width at water surface [m]
@@ -1179,16 +1166,9 @@ class routing(HydroModule):
         a = V / xpix    # wet area [m2]
 
         # np.where(c < 1.d-6, rectangular, triangular or trapezoidal)
-        # y = np.where(np.abs(c) < eps,
-        #              a/Balv,                                                # rectangular cross-section
-        #              (-Balv + np.sqrt(Balv**2 + 4 * a * c)) / (2 * c))    # triangular or trapezoidal cross-section
-
-        if np.abs(c) < eps:
-            # rectangular section
-            y = a / Balv
-        else:
-            # triangular or trapezoidal cross-section
-            y = (-Balv + np.sqrt(Balv**2 + 4 * a * c)) / (2 * c)
+        y = np.where(np.abs(c) < eps,
+                     a/Balv,                                                # rectangular cross-section
+                     (-Balv + np.sqrt(Balv**2 + 4 * a * c)) / (2 * c))    # triangular or trapezoidal cross-section
 
         return y
 
