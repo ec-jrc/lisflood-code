@@ -45,7 +45,8 @@ class routing(HydroModule):
                                 'ChanSdXdY', 'TotalCrossSectionAreaInitValue', 'PrevDischarge'],
                         'SplitRouting': ['CrossSection2AreaInitValue', 'PrevSideflowInitValue', 'CalChanMan2'],
                         'dynamicWave': ['ChannelsDynamic'],
-                        'MCTRouting': ['ChannelsMCT']}
+                        'MCTRouting': ['ChannelsMCT','PrevQMCTinInitValue','PrevQMCToutInitValue','PrevCmMCTInitValue',
+                                       'PrevDmMCTInitValue']}
     module_name = 'Routing'
 
     def __init__(self, routing_variable):
@@ -441,75 +442,103 @@ class routing(HydroModule):
                                           int(binding["numCPUs_parallelKinematicWave"]), alpha_floodplains=self.var.ChannelAlpha2)
 
 
-        if option['InitLisflood'] and option['repMBTs']:          
-            self.var.StorageStepINIT= self.var.ChanM3Kin 
-            self.var.DischargeM3StructuresIni = maskinfo.in_zero()     
-            if option['simulateReservoirs']:             
-               self.var.StorageStepINIT += self.var.ReservoirStorageIniM3  
-            if option['simulateLakes']:  
-               self.var.StorageStepINIT += self.var.LakeStorageIniM3 
-            self.var.StorageStepINIT = np.take(np.bincount(self.var.Catchments, weights=self.var.StorageStepINIT), self.var.Catchments) 
-                
-        if not option['InitLisflood'] and option['repMBTs']:  
-           DisStructure = np.where(self.var.IsUpsOfStructureKinematicC, self.var.ChanQ * self.var.DtRouting, 0) 
-           if not(option['SplitRouting']): 
-            self.var.StorageStepINIT = self.var.ChanM3Kin      
-            if option['simulateReservoirs']:                        
-               self.var.StorageStepINIT += self.var.ReservoirStorageIniM3  
-               DisStructure = np.where(self.var.IsUpsOfStructureKinematicC, self.var.ChanQ * self.var.DtRouting, 0)  
-            if option['simulateLakes']:  
-               self.var.StorageStepINIT += self.var.LakeStorageIniM3 
-               DisStructure += np.where(compressArray(self.var.IsUpsOfStructureLake), 0.5 * self.var.ChanQ * self.var.DtRouting, 0) 
-            self.var.DischargeM3StructuresIni = np.take(np.bincount(self.var.Catchments, weights=DisStructure), self.var.Catchments)      
-           else:                             
-            self.var.StorageStepINIT= self.var.ChanM3Kin+self.var.Chan2M3Kin-self.var.Chan2M3Start                       
-            if option['simulateReservoirs']: 
-               self.var.StorageStepINIT += self.var.ReservoirStorageIniM3
-            if option['simulateLakes']:   
-               self.var.StorageStepINIT += self.var.LakeStorageIniM3
-            self.var.StorageStepINIT = np.take(np.bincount(self.var.Catchments, weights=self.var.StorageStepINIT), self.var.Catchments)    
+        # if option['InitLisflood'] and option['repMBTs']:
+        #     self.var.StorageStepINIT= self.var.ChanM3Kin
+        #     self.var.DischargeM3StructuresIni = maskinfo.in_zero()
+        #     if option['simulateReservoirs']:
+        #        self.var.StorageStepINIT += self.var.ReservoirStorageIniM3
+        #     if option['simulateLakes']:
+        #        self.var.StorageStepINIT += self.var.LakeStorageIniM3
+        #     self.var.StorageStepINIT = np.take(np.bincount(self.var.Catchments, weights=self.var.StorageStepINIT), self.var.Catchments)
+        #
+        # if not option['InitLisflood'] and option['repMBTs']:
+        #    DisStructure = np.where(self.var.IsUpsOfStructureKinematicC, self.var.ChanQ * self.var.DtRouting, 0)
+        #    if not(option['SplitRouting']):
+        #     self.var.StorageStepINIT = self.var.ChanM3Kin
+        #     if option['simulateReservoirs']:
+        #        self.var.StorageStepINIT += self.var.ReservoirStorageIniM3
+        #        DisStructure = np.where(self.var.IsUpsOfStructureKinematicC, self.var.ChanQ * self.var.DtRouting, 0)
+        #     if option['simulateLakes']:
+        #        self.var.StorageStepINIT += self.var.LakeStorageIniM3
+        #        DisStructure += np.where(compressArray(self.var.IsUpsOfStructureLake), 0.5 * self.var.ChanQ * self.var.DtRouting, 0)
+        #     self.var.DischargeM3StructuresIni = np.take(np.bincount(self.var.Catchments, weights=DisStructure), self.var.Catchments)
+        #    else:
+        #     self.var.StorageStepINIT= self.var.ChanM3Kin+self.var.Chan2M3Kin-self.var.Chan2M3Start
+        #     if option['simulateReservoirs']:
+        #        self.var.StorageStepINIT += self.var.ReservoirStorageIniM3
+        #     if option['simulateLakes']:
+        #        self.var.StorageStepINIT += self.var.LakeStorageIniM3
+        #     self.var.StorageStepINIT = np.take(np.bincount(self.var.Catchments, weights=self.var.StorageStepINIT), self.var.Catchments)
 
 
- #    def initialMCT(self):
- #        """ initial part of the Muskingum-Kunge-Todini routing module
- #        """
- #        settings = LisSettings.instance()
- #        option = settings.options
- #        binding = settings.binding
- #
- #        self.var.ChannelAlpha2 = None  # default value, if split-routing is not active and water is routed only in the main channel
- #        # ************************************************************
- #        # ***** CHANNEL INITIAL SPLIT UP IN SECOND CHANNEL************
- #        # ************************************************************
- #        if option['MCTRouting']:
- #
- #        # ************************************************************
- #        # ***** CHANNEL INITIAL SPLIT UP IN SECOND CHANNEL************
- #        # ************************************************************
- #        if option['MCTRouting'] and option['SplitRouting']:
- #            print('initialMCT')
- #            ChanMan2 = (self.var.ChanMan / self.var.CalChanMan) * loadmap('CalChanMan2')
- #            AlpTermChan2 = (ChanMan2 / (np.sqrt(self.var.ChanGrad))) ** self.var.Beta
- #            self.var.ChannelAlpha2 = (AlpTermChan2 * (self.var.ChanWettedPerimeterAlpha ** self.var.AlpPow)).astype(float)
- #            self.var.InvChannelAlpha2 = 1 / self.var.ChannelAlpha2
- #            # calculating second Alpha for second (virtual) channel
- #
- #            if not(option['InitLisflood']):
- #
- #                # use loadmap_base function as we don't want to cache avgdis it in the calibration
- #                self.var.QLimit = loadmap_base('AvgDis') * loadmap('QSplitMult')
- #                # Over bankful discharge starts at QLimit
- #                # set to mutiple of average discharge (map from prerun)
- #                # QSplitMult =2 is around 90 to 95% of Q
- #
- #                self.var.M3Limit = self.var.ChannelAlpha * self.var.ChanLength * (self.var.QLimit ** self.var.Beta)
- #                # Water volume in bankful when over bankful discharge starts
- #
- #                #self.var.ChanM3Kin = ...
- #
- #                #self.var.ChanQKin = ...
- #
- # #       maskinfo = MaskInfo.instance()
+    def initialMCT(self):
+        """ initial part of the Muskingum-Kunge-Todini routing module
+        """
+        settings = LisSettings.instance()
+        option = settings.options
+        binding = settings.binding
+
+        self.var.ChannelAlpha2 = None  # default value, if split-routing is not active and water is routed only in the main channel
+        # ************************************************************
+        # ***** CHANNEL INITIAL SPLIT UP IN SECOND CHANNEL************
+        # ************************************************************
+        if option['MCTRouting']:
+            # initialisation for MCT routing
+            PrevQMCTin = loadmap('PrevQMCTinInitValue')     # instant input discharge for MCT
+            self.var.PrevQMCTin = np.where(PrevQMCTin == -9999, 0., PrevQMCTin) #np
+            PrevQMCTout = loadmap('PrevQMCToutInitValue')     # instant output discharge for MCT
+            self.var.PrevQMCTout = np.where(PrevQMCTout == -9999, 0., PrevQMCTout) #np
+
+            PrevCmMCT = loadmap('PrevCmMCTInitValue')     # Cm for MCT
+            self.var.PrevCm0 = np.where(PrevCmMCT == -9999, 1., PrevCmMCT) #np
+            PrevDmMCT = loadmap('PrevDmMCTInitValue')     # Dm for MCT
+            self.var.PrevDm0 = np.where(PrevDmMCT == -9999, 0., PrevDmMCT) #np
+
+
+
+
+         #    def initialMCT(self):
+         #        """ initial part of the Muskingum-Kunge-Todini routing module
+         #        """
+         #        settings = LisSettings.instance()
+         #        option = settings.options
+         #        binding = settings.binding
+         #
+         #        self.var.ChannelAlpha2 = None  # default value, if split-routing is not active and water is routed only in the main channel
+         #        # ************************************************************
+         #        # ***** CHANNEL INITIAL SPLIT UP IN SECOND CHANNEL************
+         #        # ************************************************************
+         #        if option['MCTRouting']:
+         #
+         #        # ************************************************************
+         #        # ***** CHANNEL INITIAL SPLIT UP IN SECOND CHANNEL************
+         #        # ************************************************************
+         #        if option['MCTRouting'] and option['SplitRouting']:
+         #            print('initialMCT')
+         #            ChanMan2 = (self.var.ChanMan / self.var.CalChanMan) * loadmap('CalChanMan2')
+         #            AlpTermChan2 = (ChanMan2 / (np.sqrt(self.var.ChanGrad))) ** self.var.Beta
+         #            self.var.ChannelAlpha2 = (AlpTermChan2 * (self.var.ChanWettedPerimeterAlpha ** self.var.AlpPow)).astype(float)
+         #            self.var.InvChannelAlpha2 = 1 / self.var.ChannelAlpha2
+         #            # calculating second Alpha for second (virtual) channel
+         #
+         #            if not(option['InitLisflood']):
+         #
+         #                # use loadmap_base function as we don't want to cache avgdis it in the calibration
+         #                self.var.QLimit = loadmap_base('AvgDis') * loadmap('QSplitMult')
+         #                # Over bankful discharge starts at QLimit
+         #                # set to mutiple of average discharge (map from prerun)
+         #                # QSplitMult =2 is around 90 to 95% of Q
+         #
+         #                self.var.M3Limit = self.var.ChannelAlpha * self.var.ChanLength * (self.var.QLimit ** self.var.Beta)
+         #                # Water volume in bankful when over bankful discharge starts
+         #
+         #                #self.var.ChanM3Kin = ...
+         #
+         #                #self.var.ChanQKin = ...
+         #
+         # #       maskinfo = MaskInfo.instance()
+
+
 
 
 # --------------------------------------------------------------------------
@@ -865,37 +894,122 @@ class routing(HydroModule):
     #     return ChanQMCT,ChanQQMCT,ChanM3MCT
 
     def MCTRouting(self,ChanQMCT,SideflowChanMCT):
+        """This function implements Muskingum-Cunge-Todini routing method
+        References:
+            Todini, E. (2007). A mass conservative and water storage consistent variable parameter Muskingum-Cunge approach. Hydrol. Earth Syst. Sci.
+            (Chapter 5)
+            Reggiani, P., Todini, E., & Meißner, D. (2016). On mass and momentum conservation in the variable-parameter Muskingum method. Journal of Hydrology, 543, 562–576. https://doi.org/10.1016/j.jhydrol.2016.10.030
+            (Appendix B)
+        """
+
         ChanQMCTPcr=decompress(ChanQMCT)    #pcr
         ChanQMCTUp=compressArray(upstream(self.var.LddChan,ChanQMCTPcr))
         # calc contribution from upstream pixels (dim=all pixels)
         # LddChan is necessary to include Kin pixels contributing to MCT pixels
 
-        x = np.ma.masked_where(self.var.IsChannelKinematic,ChanQMCTUp)
-        y = x.compressed()
-        # only include upstream contributions for MCT pixels (dim=MCTpix)
+        # channel geometry
+        xpix = self.get_mct_pix(self.var.ChanLength)          # dimension along the flow direction  [m]
+        slp = self.get_mct_pix(self.var.ChanGrad)             # river bed slope (tan B)
+        dt = self.var.DtSecChannel          # computation timestep for channel [s]
+        eps = 1e-06
 
-        xside = np.ma.masked_where(self.var.IsChannelKinematic,SideflowChanMCT)
-        yside = xside.compressed()
-        # calc side contributions for MCT pixels only (dim=MCTpix)
+        # MCT Courant and Reynolds numbers from previous step
+        Cm0 = self.get_mct_pix(self.var.PrevCm0)
+        Dm0 = self.get_mct_pix(self.var.PrevDm0)
 
-        z = y + yside
-        # calc routing for MCT pixels only (dim=MCTpix)
+        dx = xpix
 
-        ################################################
-        q = self.qdy(1.)
+        # instant discharge at channel input (I x=0) and channel output (O x=1)
+        # at the end of previous step I(t) and Q(t) and
+        # at the end of current step I(t+1) and Q(t+1)
+        # O(t)
+        q10 = self.get_mct_pix(self.var.PrevQMCTout)
+        # I(t+dt)
+        q01 = self.get_mct_pix(ChanQMCTUp) + self.get_mct_pix(SideflowChanMCT)
+        # I(t)
+        q00 = self.get_mct_pix(self.var.PrevQMCTin)
 
-        ################################################
+        # Calc O' first guess for the outflow at time t+dt
+        # O'(t+dt)=O(t)+(I(t+dt)-I(t))
+        q11 = q10 + (q01 - q00)
+        if q11 < 0: q11 = 0.
+
+        # calc reference discharge at time t
+        # qm0 = (I(t)+O(t))/2
+        # qm0 = (q00 + q10) / 2.
+
+        # Calc O(t+dt)=q11 at time t+dt using MCT equations
+        for i in range(2):  # repeat 2 times for accuracy
+
+            # reference I discharge at x=0
+            qmx0 = (q00 + q01) / 2.
+            if qmx0 == 0: qmx0 = eps
+            hmx0 = self.scalax(qmx0)
+
+            # reference O discharge at x=1
+            qmx1 = (q10 + q11) / 2.
+            if qmx1 == 0: qmx1 = eps
+            hmx1 = self.scalax(qmx1)
+
+            # # reference discharge at time t+dt
+            # # qmm = (I(t+dt)+O(t+dt))/2
+            # qmm = (q01 + q11) / 2
+            # if qmm == 0: qmm = eps
+            # hmm = self.scalax(qmm)
+            # dummy, Amm,Bmm,Pmm, cmm = self.qdy(hmm)
+            # dummy, Amx0,Bmx0,Pmx0, cmx0 = self.qdy(hmx0)
+            # dummy, Amx1,Bmx1,Pmx1, cmx1 = self.qdy(hmx1)
+
+            # Calc riverbed slope correction factor
+            cor = 1 - (1 / slp * (hmx1 - hmx0) / xpix)
+            sfx = slp * cor
+            if sfx < (0.8 * slp): sfx = 0.8 * slp   # Nel caso di oscillazioni aumentare 0.5 a 0.8
+
+            # Calc reference discharge time t+dt
+            # Q(t+dt)=(I(t+dt)+O'(t+dt))/2
+            qm1 = (q01 + q11) / 2.
+            hm1 = self.scalax(qm1)
+            dummy, Ax1,Bx1,Px1,ck1 = self.qdy(hm1)
+            if (ck1 <= eps): ck1 = eps
+
+            # Calc correcting factor Beta at time t+dt
+            Beta1 = ck1 / (qm1 / Ax1)
+            # calc corrected cell Reynolds number at time t+dt
+            Dm1 = qm1 / (sfx * ck1 * Bx1 * dx) / Beta1
+            # corrected Courant number at time t+dt
+            Cm1 = ck1 * dt / dx / Beta1
+
+            # Calc MCT parameters
+            den = 1 + Cm1 + Dm1
+            c1 = (-1 + Cm1 + Dm1) / den
+            c2 = (1 + Cm0 - Dm0) / den * (Cm1 / Cm0)
+            c3 = (1 - Cm0 + Dm0) / den * (Cm1 / Cm0)
+            c4 = (2 * Cm1) / den
+
+            # Calc flow at time t+1
+            q11 =c1 * q01 + c2 * q00 + c3 * q10
+
+            if (q11 < 0.): q11=0.
+            # end of loop
+
+        k1 = dt / Cm1
+        x1 = (1. - Dm1) / 2.
+
+        # Calc the corrected mass-conservative expression for the reach segment storage at time t+dt
+        V11 = (1-Dm1)*dt/(2*Cm1)*q01 + (1+Dm1)*dt/(2*Cm1)*q11
+        # V0 = k1 * (x1 * q01 + (1. - x1) * q11)
+        if (V11 < 0): V11=0.
+
+        # save Courant and Reynolds numbers at t+1 for state files
+        Cm0 = Cm1
+        Dm0 = Dm1
+
+    ################################################
 
 
-        x[~x.mask] = z
-        # explode results the the MCT pixels mask (dim=all)
-        ChanQMCT = x.data
-        # update results in vector (dim=all)
+        ChanQMCT = self.put_mct_pix(q11,ChanQMCT)
 
-        ChanQQMCT = ChanQMCT.copy()
-        ChanM3MCT = self.var.ChanM3Kin.copy()
-
-        return ChanQMCT,ChanQQMCT,ChanM3MCT
+        return ChanQMCT
 
 
 
@@ -908,7 +1022,8 @@ class routing(HydroModule):
         Px: cross-section wet contour [m]
         cel: wave celerity [m/s]
 
-        Reference: Reggiani, P., Todini, E., & Meißner, D. (2016). On mass and momentum conservation in the variable-parameter Muskingum method. Journal of Hydrology, 543, 562–576. https://doi.org/10.1016/j.jhydrol.2016.10.030
+        Reference:
+        Reggiani, P., Todini, E., & Meißner, D. (2016). On mass and momentum conservation in the variable-parameter Muskingum method. Journal of Hydrology, 543, 562–576. https://doi.org/10.1016/j.jhydrol.2016.10.030
 
         :return:
         y,Ax,Bx,cel
@@ -918,45 +1033,56 @@ class routing(HydroModule):
         xpix = self.get_mct_pix(self.var.ChanLength)         # dimension along the flow direction  [m]
         s0 = self.get_mct_pix(self.var.ChanGrad)             # river bed slope (tan B)
         alpha = 5./3.                                        # exponent (5/3)
-        dt = self.var.DtSecChannel                           # computation timestep for channel [s]
+        dt = self.get_mct_pix(self.var.DtSecChannel)                          # computation timestep for channel [s]
         Balv = self.get_mct_pix(self.var.ChanBottomWidth)    # width of the riverbed [m]
         ANalv = self.get_mct_pix(self.var.ChanSdXdY)         # angle of the riverbed side [rad]
         Nalv = self.get_mct_pix(self.var.ChanMan)            # channel mannings coefficient n for the riverbed [s/m1/3]
 
-        pim = 1.57079632679    # pi/2
         eps = 1.e-06
         max_tries = 1000
 
-        rs0 = s0 ** .5
+        rs0 = np.sqrt(s0)
         usalpha = 1. / alpha
 
-        # np.where(ANalv < pim, triang. or trapeiz., rectangular)
-        # cotangent(angle of the riverbed side - dXdY)
-        c = np.where(ANalv < pim,
-                     # triangular or trapezoid cross-section
-                     self.cotan(ANalv),
-                     # rectangular corss-section
-                     0.)
+        # # np.where(ANalv < np.pi/2, triang. or trapeiz., rectangular)
+        # # cotangent(angle of the riverbed side - dXdY)
+        # c = np.where(ANalv < np.pi/2,
+        #              # triangular or trapezoid cross-section
+        #              self.cotan(ANalv),
+        #              # rectangular corss-section
+        #              0.)
+        #
+        # # sin(angle of the riverbed side - dXdY)
+        # s = np.where(ANalv < np.pi/2,
+        #              # triangular or trapezoid cross-section
+        #              np.sin(ANalv),
+        #              # rectangular corss-section
+        #              1.)
+        #
+        # # water depth first approximation y0 based on steady state q
+        # y = np.where(Balv == 0,
+        #              # triangular cross-section
+        #              (Nalv * q / rs0)**(3. / 8.) * (2 / s)**.25 / c**(5. / 8.),
+        #              # rectangular cross-section and first approx for trapezoidal cross-section
+        #              (Nalv * q / (rs0 * Balv))**usalpha
+        #              )
+        #
+        # y = np.where(Balv != 0 & ANalv < np.pi/2,
+        #              # trapezoid cross-section
+        #              (Nalv * q / rs0)**usalpha * (Balv + 2. * y / s)**.4 / (Balv + c * y),
+        #              )
 
-        # sin(angle of the riverbed side - dXdY)
-        s = np.where(ANalv < pim,
-                     # triangular or trapezoid cross-section
-                     np.sin(ANalv),
-                     # rectangular corss-section
-                     1.)
+        if Balv == 0:
+            c = 1 / np.tan(ANalv)
+            s = np.sin(ANalv)
+            y = (Nalv * q / rs0)**(3 / 8) * (2 / s)**0.25 / c**(5 / 8)
+        else:
+            y = (Nalv * q / (rs0 * Balv))**usalpha
+            if ANalv < np.pi/2:
+                c = 1 / np.tan(ANalv)
+                s = np.sin(ANalv)
+                y = (Nalv * q / rs0)**usalpha * (Balv + 2 * y / s)**0.4 / (Balv + c * y)
 
-        # water depth first approximation y0 based on steady state q
-        y = np.where(Balv == 0,
-                     # triangular cross-section
-                     (Nalv * q / rs0) ** (3. / 8.) * (2 / s) ** .25 / c ** (5. / 8.),
-                     # rectangular cross-section and first approx for trapezoidal cross-section
-                     (Nalv * q / (rs0 * Balv)) ** usalpha
-                     )
-
-        y = np.where(Balv != 0 & ANalv < pim,
-                     # trapezoid cross-section
-                     (Nalv * q / rs0) ** usalpha * (Balv + 2. * y / s) ** .4 / (Balv + c * y),
-                     )
 
         for tries in range(1,max_tries):
             # calc Q(y) for the different tries of y
@@ -970,7 +1096,7 @@ class routing(HydroModule):
             # update yt+1=yt-f'(yt)/f(yt)
             y = y - dy
             # stop loop if correction becomes too small
-            if abs(dy) < eps: break
+            if np.abs(dy) < eps: break
 
         return y
 
@@ -995,38 +1121,37 @@ class routing(HydroModule):
         Balv = self.get_mct_pix(self.var.ChanBottomWidth)    # width of the riverbed [m]
         ANalv = self.get_mct_pix(self.var.ChanSdXdY)         # angle of the riverbed side [rad]
         Nalv = self.get_mct_pix(self.var.ChanMan)            # channel mannings coefficient n for the riverbed [s/m1/3]
-        pim = 1.57079632679                                  # pi/2
 
-        rs0 = s0 ** .5
+        rs0 = np.sqrt(s0)
         alpham = alpha - 1.
 
-        # np.where(ANalv < pim, triang. or trapeiz., rectangular)
-        # cotangent(angle of the riverbed side - dXdY)
-        c = np.where(ANalv < pim,
-                     # triangular or trapezoid cross-section
-                     self.cotan(ANalv),
-                     # rectangular corss-section
-                     0.)
-        # sin(angle of the riverbed side - dXdY)
-        s = np.where(ANalv < pim,
-                     # triangular or trapezoid cross-section
-                     np.sin(ANalv),
-                     # rectangular corss-section
-                     1.)
+        # # np.where(ANalv < np.pi/2, triang. or trapeiz., rectangular)
+        # # cotangent(angle of the riverbed side - dXdY)
+        # c = np.where(ANalv < np.pi/2,
+        #              # triangular or trapezoid cross-section
+        #              self.cotan(ANalv),
+        #              # rectangular corss-section
+        #              0.)
+        # # sin(angle of the riverbed side - dXdY)
+        # s = np.where(ANalv < np.pi/2,
+        #              # triangular or trapezoid cross-section
+        #              np.sin(ANalv),
+        #              # rectangular corss-section
+        #              1.)
 
-        # if ANalv.lt.pim:
-        #     Triangular or trapezoidal cross-section
-        #     c = self.cotan(ANalv)
-        #     s = np.sin(ANalv)
-        # else:
-        #     Rectangular cross-section
-        #     c = 0.
-        #     s = 1.
+        if ANalv < np.pi/2:
+            # triangular or trapezoid cross-section
+            c = 1 / np.tan(ANalv)
+            s = np.sin(ANalv)
+        else:
+            # rectangular corss-section
+            c = 0
+            s = 1
 
         a = (Balv + y * c) * y  # wet area [m2]
         b = Balv + 2. * y * c   # cross-section width at water surface [m]
         p = Balv + 2. * y / s   # cross-section wet contour [m]
-        q = rs0 / Nalv * a ** alpha / p ** alpham       # steady-state discharge [m3/s]
+        q = rs0 / Nalv * a**alpha / p**alpham       # steady-state discharge [m3/s]
         cel = (q / 3.) * (5. / a - 4. / (p * b * s))    # wave celerity [m/s]
 
         return q,a,b,p,cel
@@ -1045,18 +1170,25 @@ class routing(HydroModule):
         xpix = self.get_mct_pix(self.var.ChanLength)         # dimension along the flow direction  [m]
         Balv = self.get_mct_pix(self.var.ChanBottomWidth)    # width of the riverbed [m]
         ANalv = self.get_mct_pix(self.var.ChanSdXdY)         # angle of the riverbed side [rad]
-        pim = 1.57079632679                                  # pi/2
+        eps = 1e-6
 
-        c = np.where(ANalv < pim,           # angle of the riverbed side dXdY [rad]
+        c = np.where(ANalv < np.pi/2,           # angle of the riverbed side dXdY [rad]
                      self.cotan(ANalv),     # triangular or trapezoidal cross-section
                      0.)                    # rectangular cross-section
 
         a = V / xpix    # wet area [m2]
 
         # np.where(c < 1.d-6, rectangular, triangular or trapezoidal)
-        y = np.where(c < 1e-6,
-                     a/Balv,                                            # rectangular cross-section
-                     (- Balv + ( Balv**2 + 4. * a * c)**.5)/(2. * c))   # triangular or trapezoidal cross-section
+        # y = np.where(np.abs(c) < eps,
+        #              a/Balv,                                                # rectangular cross-section
+        #              (-Balv + np.sqrt(Balv**2 + 4 * a * c)) / (2 * c))    # triangular or trapezoidal cross-section
+
+        if np.abs(c) < eps:
+            # rectangular section
+            y = a / Balv
+        else:
+            # triangular or trapezoidal cross-section
+            y = (-Balv + np.sqrt(Balv**2 + 4 * a * c)) / (2 * c)
 
         return y
 
@@ -1078,5 +1210,25 @@ class routing(HydroModule):
         return y
 
 
+    def put_mct_pix(self,z,var):
+        """For any array (x) with MCT pixels, it puts the MCT pixels back and explodes
+        the dimension of the array.
+        :return:
+        z: same as input array (var) but only all pixels
+        """
+        x = np.ma.masked_where(self.var.IsChannelKinematic, var)
+        x[~x.mask] = z
+        # explode results the the MCT pixels mask (dim=all)
+        y = x.data
+        # update results in vector (dim=all)
+        return y
+
+    def qdv(self,V):
+        """ Given a generic river cross-section (rectangular, triangular and trapezoidal)
+        and a water volume (V [m3]), it uses Manning’s formula to calculate the corresponding discharge (q [m3/s]).
+        """
+        y = self.hdv(V)
+        q, a, b, p, cel = self.qdy(y)
+        return q
 
 
