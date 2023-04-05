@@ -643,8 +643,12 @@ class routing(HydroModule):
                 #ChanM3KinNp = self.var.ChanM3Kin.copy()
                 ChanQKinOut,ChanQOut,ChanM3KinOut = self.KinematicRouting(ChanQKinIn,SideflowChan)
 
+                # updating variables for next step
+                # instant Q at end of calc step
                 self.var.ChanQKin = ChanQKinOut
+                # volume V at end of calc step
                 self.var.ChanM3Kin = ChanM3KinOut
+                # instant Q at end of calc step
                 self.var.ChanQ = ChanQOut
 
                 self.var.sumDisDay += self.var.ChanQ
@@ -666,12 +670,19 @@ class routing(HydroModule):
 
                 # MCT routing
                 ChanQMCTIn = self.var.ChanQKin.copy()
-                ChanQMCTOut,ChanQQMCTOut,ChanM3MCTOut = self.MCTRouting(ChanQMCTIn,SideflowChanMCT)
+                ChanQMCTout,ChanM3MCTout, Cmout, Dmout = self.MCTRouting(ChanQMCTIn,SideflowChanMCT)
+                self.var.PrevQMCTin = ChanQMCTIn
+                self.var.PrevQMCTout = ChanQMCTout
+                self.var.PrevCm0 = Cmout
+                self.var.prevDm0 = Dmout
 
                 # combine results
-                self.var.ChanQKin = np.where(self.var.IsChannelKinematic, ChanQKinOut, ChanQMCTOut)
-                self.var.ChanM3Kin = np.where(self.var.IsChannelKinematic, ChanM3KinOut, ChanM3MCTOut)
-                self.var.ChanQ = np.where(self.var.IsChannelKinematic, ChanQOut, ChanQQMCTOut)
+                # instant Q at end of calc step
+                self.var.ChanQKin = np.where(self.var.IsChannelKinematic, ChanQKinOut, ChanQMCTout)
+                # volume V at end of calc step
+                self.var.ChanM3Kin = np.where(self.var.IsChannelKinematic, ChanM3KinOut, ChanM3MCTout)
+                # instant Q at end of calc step
+                self.var.ChanQ = np.where(self.var.IsChannelKinematic, ChanQOut, ChanQMCTout)
 
                 self.var.sumDisDay += self.var.ChanQ
 
@@ -913,7 +924,7 @@ class routing(HydroModule):
         dt = self.var.DtSecChannel          # computation timestep for channel [s]
         eps = 1e-06
 
-        # MCT Courant and Reynolds numbers from previous step
+        # MCT Courant and Reynolds numbers from previous step (MCT pixels)
         Cm0 = self.get_mct_pix(self.var.PrevCm0)
         Dm0 = self.get_mct_pix(self.var.PrevDm0)
 
@@ -934,7 +945,7 @@ class routing(HydroModule):
         q11 = q10 + (q01 - q00)
         #if q11 < 0: q11 = 0.
         # check for negative discharge values
-        q11 = [0 if i < 0 else i for i in q11]
+        q11 = np.maximum(q11, 0)
 
         # calc reference discharge at time t
         # qm0 = (I(t)+O(t))/2
@@ -946,13 +957,13 @@ class routing(HydroModule):
             # reference I discharge at x=0
             qmx0 = (q00 + q01) / 2.
             # if qmx0 == 0: qmx0 = eps
-            qmx0 = [0 if i < 0 else i for i in qmx0]
+            qmx0 = np.maximum(qmx0, 0)
             hmx0 = self.scalax(qmx0)
 
             # reference O discharge at x=1
             qmx1 = (q10 + q11) / 2.
             # if qmx1 == 0: qmx1 = eps
-            qmx1 = [0 if i < 0 else i for i in qmx1]
+            qmx1 = np.maximum(qmx1, 0)
             hmx1 = self.scalax(qmx1)
 
             # # reference discharge at time t+dt
@@ -969,7 +980,7 @@ class routing(HydroModule):
             cor = 1 - (1 / slp * (hmx1 - hmx0) / xpix)
             sfx = slp * cor
             # if sfx < (0.8 * slp): sfx = 0.8 * slp   # Nel caso di oscillazioni aumentare 0.5 a 0.8
-            sfx = [0.8 * slp if i < (0.8 * slp) else i for i in sfx]
+            sfx = np.where(sfx < (0.8 * slp), 0.8 * slp, sfx)
 
             # Calc reference discharge time t+dt
             # Q(t+dt)=(I(t+dt)+O'(t+dt))/2
@@ -977,7 +988,7 @@ class routing(HydroModule):
             hm1 = self.scalax(qm1)
             dummy, Ax1,Bx1,Px1,ck1 = self.qdy(hm1)
             # if (ck1 <= eps): ck1 = eps
-            ck1 = [eps if i < eps else i for i in ck1]
+            ck1 = np.where(ck1 < eps, eps, ck1)
 
             # Calc correcting factor Beta at time t+dt
             Beta1 = ck1 / (qm1 / Ax1)
@@ -997,7 +1008,7 @@ class routing(HydroModule):
             q11 =c1 * q01 + c2 * q00 + c3 * q10
 
             # if (q11 < 0.): q11=0.
-            q11 = [0 if i < 0 else i for i in q11]
+            q11 = np.maximum(q11, 0)
             # end of loop
 
         k1 = dt / Cm1
@@ -1005,9 +1016,9 @@ class routing(HydroModule):
 
         # Calc the corrected mass-conservative expression for the reach segment storage at time t+dt
         V11 = (1-Dm1)*dt/(2*Cm1)*q01 + (1+Dm1)*dt/(2*Cm1)*q11
-        # V0 = k1 * (x1 * q01 + (1. - x1) * q11)
+        # V0 = k1 * (x1 * q01 + (1. - x1) * q11)  # MUST be the same!
         # if (V11 < 0): V11=0.
-        V11 = [0 if i < 0 else i for i in V11]
+        V11 = np.maximum(V11, 0)
 
         # save Courant and Reynolds numbers at t+1 for state files
         Cm0 = Cm1
@@ -1016,9 +1027,13 @@ class routing(HydroModule):
     ################################################
 
 
-        ChanQMCT = self.put_mct_pix(q11,ChanQMCT)
+        ChanQMCTout = self.put_mct_pix(q11)
+        Cmout = self.put_mct_pix(Cm0)
+        Dmout = self.put_mct_pix(Dm0)
+        ChanM3MCTout = self.put_mct_pix(V11)
 
-        return ChanQMCT
+
+        return ChanQMCTout,ChanM3MCTout, Cmout, Dmout
 
 
 
@@ -1092,7 +1107,7 @@ class routing(HydroModule):
             y = y - dy
             # stop loop if correction becomes too small
             # if np.abs(dy) < eps: break
-            if all(i < eps for i in dy): break
+            if all(abs(i) < eps for i in dy): break
 
         return y
 
@@ -1152,7 +1167,6 @@ class routing(HydroModule):
         :return:
         y
         """
-
         # Characteristics of the channel cross-section
         xpix = self.get_mct_pix(self.var.ChanLength)         # dimension along the flow direction  [m]
         Balv = self.get_mct_pix(self.var.ChanBottomWidth)    # width of the riverbed [m]
@@ -1190,18 +1204,22 @@ class routing(HydroModule):
         return y
 
 
-    def put_mct_pix(self,z,var):
-        """For any array (x) with MCT pixels, it puts the MCT pixels back and explodes
-        the dimension of the array.
+    def put_mct_pix(self,var):
+        """For any array (var) with MCT pixels only, explodes dimension to all pixels and puts values from array var
+        in the corresponting MCT pixels.
+        Uses self.var.IsChannelKinematic to define MCT pixels
+        Uses self.var.ChanGrad as a dummy array of dimension all pixels
         :return:
-        z: same as input array (var) but only all pixels
+        y: same as input array (var) but only all pixels
         """
-        x = np.ma.masked_where(self.var.IsChannelKinematic, var)
-        x[~x.mask] = z
+        zeros_array = np.zeros(self.var.IsChannelKinematic.shape)
+        x = np.ma.masked_where(self.var.IsChannelKinematic, zeros_array)
+        x[~x.mask] = var
         # explode results the the MCT pixels mask (dim=all)
         y = x.data
         # update results in vector (dim=all)
         return y
+
 
     def qdv(self,V):
         """ Given a generic river cross-section (rectangular, triangular and trapezoidal)
