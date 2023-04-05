@@ -228,6 +228,18 @@ class routing(HydroModule):
         ChanDepthThreshold = loadmap('ChanDepthThreshold')
         ChanSdXdY = loadmap('ChanSdXdY')
         self.var.ChanSdXdY = loadmap('ChanSdXdY')
+
+
+
+
+        # #cm
+        # self.var.ChanSdXdY = self.var.ChanSdXdY * 0               # sezione rettangolare
+        # self.var.ChanBottomWidth = self.var.ChanBottomWidth * 0   # sezione tringolare
+        # #cm
+
+
+
+
         self.var.ChanUpperWidth = self.var.ChanBottomWidth + 2 * ChanSdXdY * ChanDepthThreshold
         # Channel upper width [m]
         self.var.TotalCrossSectionAreaBankFull = 0.5 * \
@@ -261,7 +273,9 @@ class routing(HydroModule):
         # Following calculations are needed to calculate Alpha parameter in kinematic
         # wave. Alpha currently fixed at half of bankful depth (this may change in
         # future versions!)
-
+        # Manning's steady state flow equations
+        # from Ven The Chow - Applied Hydrology - page 283
+        # https: // wecivilengineers.files.wordpress.com / 2017 / 10 / applied - hydrology - ven - te - chow.pdf
         ChanWaterDepthAlpha = np.where(self.var.IsChannel, 0.5 * ChanDepthThreshold, 0.0)
         # Reference water depth for calculation of Alpha: half of bankfull
         self.var.ChanWettedPerimeterAlpha = self.var.ChanBottomWidth + 2 * \
@@ -670,7 +684,7 @@ class routing(HydroModule):
 
                 # MCT routing
                 ChanQMCTIn = self.var.ChanQKin.copy()
-                ChanQMCTout,ChanM3MCTout, Cmout, Dmout = self.MCTRouting(ChanQMCTIn,SideflowChanMCT)
+                ChanQMCTout,ChanM3MCTout,ChanQMCTave, Cmout, Dmout = self.MCTRouting(ChanQMCTIn,SideflowChanMCT)
                 self.var.PrevQMCTin = ChanQMCTIn
                 self.var.PrevQMCTout = ChanQMCTout
                 self.var.PrevCm0 = Cmout
@@ -681,8 +695,8 @@ class routing(HydroModule):
                 self.var.ChanQKin = np.where(self.var.IsChannelKinematic, ChanQKinOut, ChanQMCTout)
                 # volume V at end of calc step
                 self.var.ChanM3Kin = np.where(self.var.IsChannelKinematic, ChanM3KinOut, ChanM3MCTout)
-                # instant Q at end of calc step
-                self.var.ChanQ = np.where(self.var.IsChannelKinematic, ChanQOut, ChanQMCTout)
+                # average Q for the calc step
+                self.var.ChanQ = np.where(self.var.IsChannelKinematic, ChanQMCTave, ChanQMCTout)
 
                 self.var.sumDisDay += self.var.ChanQ
 
@@ -790,6 +804,28 @@ class routing(HydroModule):
 
 
     def KinematicRouting(self,ChanQKin,SideflowChan):
+        """Based on pcraster functions kinwavestate, kinwaveflux. New flows are determined based on flows in the previous timestep.
+        The interface of kinwave accepts a state as input parameter (amount of water in the cell at the beginning of the timestep) and calculates
+        a state (amount of water in the cell at the end of the timestep) and a flux (flow integrated over the entire timestep)
+        and thus corresponds to the state-flux framework of the mentioned pcraster functions.
+        (https://svn.oss.deltares.nl/repos/openearthtools/trunk/programs/DRIHM/HBV/bin/hbv/openstreams_2013/software/pcraster/pcraster-4.0.0-beta-20131030_x86-64_lsbcc-4/doc/manual/op_kinwave.html)
+        self.river_router.kinematicWaveRouting is a wrapper for kinwaveflux.
+        Given the average flow at the end of the computation step, the corresponding amount of water in the cell (at the end of the timestep)
+        is calculated using Manning's equation for steady state flow (Chow):
+        A = alpha * Q**beta
+        V = chanlength * alpha * Q**beta
+        Given a volume of water in the channel, the corresponding (average) discharge is calculated using Manning's equation for steady state flow (Chow):
+        ChanQKin = (ChanM3Kin * self.var.InvChanLength * self.var.InvChannelAlpha) ** (self.var.InvBeta)
+        Q = (V / chanlength /alpha)**(1/beta)
+        Takes:
+        ChanQKin = average flow (over the previous step as input, at the end of current step as output) [m3/sec]
+        SideflowChan = lateral inflow into the channel segment (cell) [m3/channellength/sec]
+        :returns
+        ChanQKin = flow integrated over the entire timestep (average)
+        ChanQ = ChanQKin
+        ChanM3Kin = amount of water in the cell at the end of the timestep (instant)
+        """
+
         #  ---- Single Routing ---------------
         # No split routing
         # side flow consists of runoff (incl. groundwater), inflow from reservoirs (optional) and external inflow hydrographs (optional)
@@ -797,16 +833,19 @@ class routing(HydroModule):
 
         #self.river_router.kinematicWaveRouting(self.var.ChanQKin, SideflowChan, "main_channel")
         self.river_router.kinematicWaveRouting(ChanQKin, SideflowChan, "main_channel")
+        # ChanQKin is outflow integrated over the entire timestep (average)
 
         #self.var.ChanM3Kin = self.var.ChanLength * self.var.ChannelAlpha * self.var.ChanQKin**self.var.Beta
         ChanM3Kin = self.var.ChanLength * self.var.ChannelAlpha * ChanQKin**self.var.Beta
-        # Volume in channel at end of computation step
+        # ChanM3Kin is the Volume in channel at end of computation step (instant)
 
         #self.var.ChanM3Kin = np.maximum(self.var.ChanM3Kin, 0.0)
         ChanM3Kin = np.maximum(ChanM3Kin, 0.0)
         # Check for negative volumes at the end of computation step
+
         #self.var.ChanQKin = (self.var.ChanM3Kin * self.var.InvChanLength * self.var.InvChannelAlpha) ** (self.var.InvBeta)
         ChanQKin = (ChanM3Kin * self.var.InvChanLength * self.var.InvChannelAlpha) ** (self.var.InvBeta)
+        # Update outflow (average) after removing negative volumes.
         # Correct negative discharge at the end of computation step
 
         # self.var.ChanQ = self.var.ChanQKin.copy()
@@ -904,7 +943,7 @@ class routing(HydroModule):
     #
     #     return ChanQMCT,ChanQQMCT,ChanM3MCT
 
-    def MCTRouting(self,ChanQMCT,SideflowChanMCT):
+    def MCTRouting(self,ChanQMCT,SideflowChanMCT,ChanM3):
         """This function implements Muskingum-Cunge-Todini routing method
         References:
             Todini, E. (2007). A mass conservative and water storage consistent variable parameter Muskingum-Cunge approach. Hydrol. Earth Syst. Sci.
@@ -912,6 +951,14 @@ class routing(HydroModule):
             Reggiani, P., Todini, E., & Meißner, D. (2016). On mass and momentum conservation in the variable-parameter Muskingum method. Journal of Hydrology, 543, 562–576. https://doi.org/10.1016/j.jhydrol.2016.10.030
             (Appendix B)
         """
+
+        # #cm
+        # ChanSdXdY = self.get_mct_pix(self.var.ChanSdXdY)
+        # ChanM3 = self.get_mct_pix(self.var.ChanM3)
+        # h = self.hdv(ChanM3)
+        # q_h, a, b, p, cel = self.qdy(h)
+        # q_V = self.qdv(ChanM3)
+        # #cm
 
         ChanQMCTPcr=decompress(ChanQMCT)    #pcr
         ChanQMCTUp=compressArray(upstream(self.var.LddChan,ChanQMCTPcr))
@@ -929,6 +976,9 @@ class routing(HydroModule):
         Dm0 = self.get_mct_pix(self.var.PrevDm0)
 
         dx = xpix
+
+        # channel storage at the beginning of the computation step (t)
+        ChanM300 = self.get_mct_pix(self.var.ChanM3)
 
         # instant discharge at channel input (I x=0) and channel output (O x=1)
         # at the end of previous step I(t) and Q(t) and
@@ -1026,14 +1076,21 @@ class routing(HydroModule):
 
     ################################################
 
+        # Calc the average Qout for calc step
+        qout_ave = q01 - (V11 - ChanM300)/dt
+        # Check for negative discharge
+        qout_ave = np.where(qout_ave < 0, 0, qout_ave)
+        # Update volume when negative discharge is set =0
+        V11 = ChanM300 + (q01 - qout_ave) * dt
+
 
         ChanQMCTout = self.put_mct_pix(q11)
         Cmout = self.put_mct_pix(Cm0)
         Dmout = self.put_mct_pix(Dm0)
         ChanM3MCTout = self.put_mct_pix(V11)
+        ChanQMCTave = self.put_mct_pix(qout_ave)
 
-
-        return ChanQMCTout,ChanM3MCTout, Cmout, Dmout
+        return ChanQMCTout,ChanM3MCTout,ChanQMCTave, Cmout, Dmout
 
 
 
@@ -1058,7 +1115,8 @@ class routing(HydroModule):
         s0 = self.get_mct_pix(self.var.ChanGrad)             # river bed slope (tan B)
         alpha = 5./3.                                        # exponent (5/3)
         Balv = self.get_mct_pix(self.var.ChanBottomWidth)    # width of the riverbed [m]
-        ANalv = self.get_mct_pix(self.var.ChanSdXdY)         # angle of the riverbed side [rad]
+        ChanSdXdY = self.get_mct_pix(self.var.ChanSdXdY)     # slope dx/dy of riverbed side
+        ANalv = np.arctan(1 / ChanSdXdY)                     # angle of the riverbed side [rad]
         Nalv = self.get_mct_pix(self.var.ChanMan)            # channel mannings coefficient n for the riverbed [s/m1/3]
 
         eps = 1.e-06
@@ -1107,7 +1165,8 @@ class routing(HydroModule):
             y = y - dy
             # stop loop if correction becomes too small
             # if np.abs(dy) < eps: break
-            if all(abs(i) < eps for i in dy): break
+            if all(abs(i) < eps for i in dy):
+                break
 
         return y
 
@@ -1130,7 +1189,8 @@ class routing(HydroModule):
         s0 = self.get_mct_pix(self.var.ChanGrad)             # river bed slope (tan B)
         alpha = 5./3.                                        # exponent (5/3)
         Balv = self.get_mct_pix(self.var.ChanBottomWidth)    # width of the riverbed [m]
-        ANalv = self.get_mct_pix(self.var.ChanSdXdY)         # angle of the riverbed side [rad]
+        ChanSdXdY = self.get_mct_pix(self.var.ChanSdXdY)     # slope dx/dy of riverbed side
+        ANalv = np.arctan(1 / ChanSdXdY)                     # angle of the riverbed side [rad]
         Nalv = self.get_mct_pix(self.var.ChanMan)            # channel mannings coefficient n for the riverbed [s/m1/3]
 
         rs0 = np.sqrt(s0)
@@ -1141,7 +1201,7 @@ class routing(HydroModule):
         c = np.where(ANalv < np.pi/2,
                      # triangular or trapezoid cross-section
                      self.cotan(ANalv),
-                     # rectangular corss-section
+                     # rectangular cross-section
                      0.)
         # sin(angle of the riverbed side - dXdY)
         s = np.where(ANalv < np.pi/2,
@@ -1170,10 +1230,11 @@ class routing(HydroModule):
         # Characteristics of the channel cross-section
         xpix = self.get_mct_pix(self.var.ChanLength)         # dimension along the flow direction  [m]
         Balv = self.get_mct_pix(self.var.ChanBottomWidth)    # width of the riverbed [m]
-        ANalv = self.get_mct_pix(self.var.ChanSdXdY)         # angle of the riverbed side [rad]
+        ChanSdXdY = self.get_mct_pix(self.var.ChanSdXdY)     # slope dx/dy of riverbed side
+        ANalv = np.arctan(1 / ChanSdXdY)                     # angle of the riverbed side [rad]
         eps = 1e-6
 
-        c = np.where(ANalv < np.pi/2,           # angle of the riverbed side dXdY [rad]
+        c = np.where(ANalv < np.pi/2,       # angle of the riverbed side dXdY [rad]
                      self.cotan(ANalv),     # triangular or trapezoidal cross-section
                      0.)                    # rectangular cross-section
 
@@ -1228,5 +1289,10 @@ class routing(HydroModule):
         y = self.hdv(V)
         q, a, b, p, cel = self.qdy(y)
         return q
+
+    def rad_from_dxdy(self,dxdy):
+        rad = np.arctan(1 / dxdy)
+        angle = np.rad2deg(rad)
+        return rad
 
 
