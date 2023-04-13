@@ -2842,6 +2842,49 @@ Reported loss from lower zone [mm]
 </group>
 
 
+<!-- LATICE ET-MIP maps -->
+<group>
+    <textvar name="SurfaceRunoffForest" value="$(PathOut)/SurfaceRunoffForest"/>
+    <textvar name="SurfaceRunoffRainf" value="$(PathOut)/SurfaceRunoffRainf"/>
+    <textvar name="SurfaceRunoffIrrig" value="$(PathOut)/SurfaceRunoffIrrig"/>
+    <textvar name="SurfaceRunoffImpervious" value="$(PathOut)/SurfaceRunoffImpervious"/>
+    <textvar name="SurfaceRunoffWater" value="$(PathOut)/SurfaceRunoffWater"/>
+    <textvar name="EvapIntForest" value="$(PathOut)/EvapIntForest"/>
+    <textvar name="EvapIntRainf" value="$(PathOut)/EvapIntRainf"/>
+    <textvar name="EvapIntIrrig" value="$(PathOut)/EvapIntIrrig"/>
+    <textvar name="TranspForest" value="$(PathOut)/TranspForest"/>
+    <textvar name="TranspRainf" value="$(PathOut)/TranspRainf"/>
+    <textvar name="TranspIrrig" value="$(PathOut)/TranspIrrig"/>
+    <textvar name="EvapSoilForest" value="$(PathOut)/EvapSoilForest"/>
+    <textvar name="EvapSoilRainf" value="$(PathOut)/EvapSoilRainf"/>
+    <textvar name="EvapSoilIrrig" value="$(PathOut)/EvapSoilIrrig"/>
+    <textvar name="EvapImper" value="$(PathOut)/EvapImper"/>
+    <textvar name="EvapWater" value="$(PathOut)/EvapWater"/>
+    <textvar name="GWFastForest" value="$(PathOut)/GWFastForest"/>
+    <textvar name="GWFastRainf" value="$(PathOut)/GWFastRainf"/>
+    <textvar name="GWFastIrrig" value="$(PathOut)/GWFastIrrig"/>
+    <textvar name="InterflowForest" value="$(PathOut)/InterflowForest"/>
+    <textvar name="InterflowRainf" value="$(PathOut)/InterflowRainf"/>
+    <textvar name="InterflowIrrig" value="$(PathOut)/InterflowIrrig"/>
+    <textvar name="SMForest_0" value="$(PathOut)/SMForest_0"/>
+    <textvar name="SMRainf_0" value="$(PathOut)/SMRainf_0"/>
+    <textvar name="SMIrrig_0" value="$(PathOut)/SMIrrig_0"/>
+    <textvar name="SMForest_1" value="$(PathOut)/SMForest_1"/>
+    <textvar name="SMRainf_1" value="$(PathOut)/SMRainf_1"/>
+    <textvar name="SMIrrig_1" value="$(PathOut)/SMIrrig_1"/>
+    <textvar name="SMForest_2" value="$(PathOut)/SMForest_2"/>
+    <textvar name="SMRainf_2" value="$(PathOut)/SMRainf_2"/>
+    <textvar name="SMIrrig_2" value="$(PathOut)/SMIrrig_2"/>
+    <textvar name="Snowfall" value="$(PathOut)/Snowfall"/>
+    <textvar name="Rainfall" value="$(PathOut)/Rainfall"/>
+    <textvar name="SWE" value="$(PathOut)/SWE"/>
+    <textvar name="GWSlow" value="$(PathOut)/GWSlow"/>
+    <textvar name="Baseflow" value="$(PathOut)/Baseflow"/>
+    <textvar name="ETActMaps" value="$(PathOut)/ETActMaps"/>
+    <textvar name="TotalRunoffMaps" value="$(PathOut)/TotalRunoffMaps"/>
+</group>
+
+
 <group>
 <comment>
 MISCELLANEOUS OUTPUT MAPS AND TIME SERIES

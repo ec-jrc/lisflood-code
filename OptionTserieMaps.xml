@@ -103,6 +103,7 @@
 <setoption   default="0"  name="repLZWB"/>
 <setoption   default="0"  name="repEvapPix"/>
 <setoption   default="0"  name="repWaterUse"/>
+<setoption   default="0"  name="repLATICE"/>
 
 </lfoptions>
 
@@ -435,6 +436,46 @@
 <setmap name="FlowVelocityMSecMaps"   outputVar="FlowVelocity"  unit="m/s"   end=""  steps=""       all="repSurfaceRunoffMaps"     restrictoption="nonInit" />
 <setmap name="TravelDistanceMMaps"    outputVar="TravelDistance"  unit="m"   end=""  steps=""       all="repSurfaceRunoffMaps"     restrictoption="nonInit" />
 
+<!-- LATICE ET-MIP maps (sub-grid maps: mm over each tile)-->
+<setmap name="SurfaceRunoffForest" outputVar="SurfaceRunSoil.loc['Forest'] / self.var.SoilFraction.loc['Forest_prescribed']" unit="mm" end="" steps="" all="repLATICE" restrictoption="nonInit" />
+<setmap name="SurfaceRunoffRainf" outputVar="SurfaceRunSoil.loc['Rainfed'] / self.var.SoilFraction.loc['Rainfed_prescribed']" unit="mm" end="" steps="" all="repLATICE" restrictoption="nonInit" />
+<setmap name="SurfaceRunoffIrrig" outputVar="SurfaceRunSoil.loc['Irrigated'] / self.var.SoilFraction.loc['Irrigated_prescribed']" unit="mm" end="" steps="" all="repLATICE" restrictoption="nonInit" />
+<setmap name="SurfaceRunoffImpervious" outputVar="RainSnowmelt - self.var.InterSealed" unit="mm" end="" steps="" all="repLATICE" restrictoption="nonInit" />
+<setmap name="SurfaceRunoffWater" outputVar="RainSnowmelt - self.var.EWaterAct" unit="mm" end="" steps="" all="repLATICE" restrictoption="nonInit" />
+<setmap name="EvapIntForest" outputVar="TaInterception[1]" unit="mm" end="" steps="" all="repLATICE" restrictoption="nonInit" />
+<setmap name="EvapIntRainf" outputVar="TaInterception[0]" unit="mm" end="" steps="" all="repLATICE" restrictoption="nonInit" />
+<setmap name="EvapIntIrrig" outputVar="TaInterception[2]" unit="mm" end="" steps="" all="repLATICE" restrictoption="nonInit" />
+<setmap name="TranspForest" outputVar="Ta[1]" unit="mm" end="" steps="" all="repLATICE" restrictoption="nonInit" />
+<setmap name="TranspRainf" outputVar="Ta[0]" unit="mm" end="" steps="" all="repLATICE" restrictoption="nonInit" />
+<setmap name="TranspIrrig" outputVar="Ta[2]" unit="mm" end="" steps="" all="repLATICE" restrictoption="nonInit" />
+<setmap name="EvapSoilForest" outputVar="ESAct[1]" unit="mm" end="" steps="" all="repLATICE" restrictoption="nonInit" />
+<setmap name="EvapSoilRainf" outputVar="ESAct[0]" unit="mm" end="" steps="" all="repLATICE" restrictoption="nonInit" />
+<setmap name="EvapSoilIrrig" outputVar="ESAct[2]" unit="mm" end="" steps="" all="repLATICE" restrictoption="nonInit" />
+<setmap name="EvapImper" outputVar="TASealed" unit="mm" end="" steps="" all="repLATICE" restrictoption="nonInit" />
+<setmap name="EvapWater" outputVar="EWaterAct" unit="mm" end="" steps="" all="repLATICE" restrictoption="nonInit" />
+<setmap name="GWFastForest" outputVar="UZ.loc['Forest_prescribed']" unit="mm" end="" steps="" all="repLATICE" restrictoption="nonInit" />
+<setmap name="GWFastRainf" outputVar="UZ.loc['Rainfed_prescribed']" unit="mm" end="" steps="" all="repLATICE" restrictoption="nonInit" />
+<setmap name="GWFastIrrig" outputVar="UZ.loc['Irrigated_prescribed']" unit="mm" end="" steps="" all="repLATICE" restrictoption="nonInit" />
+<setmap name="InterflowForest" outputVar="UZOutflow.loc['Forest_prescribed']" unit="mm" end="" steps="" all="repLATICE" restrictoption="nonInit" />
+<setmap name="InterflowRainf" outputVar="UZOutflow.loc['Rainfed_prescribed']" unit="mm" end="" steps="" all="repLATICE" restrictoption="nonInit" />
+<setmap name="InterflowIrrig" outputVar="UZOutflow.loc['Irrigated_prescribed']" unit="mm" end="" steps="" all="repLATICE" restrictoption="nonInit" />
+<setmap name="SMForest_0" outputVar="Theta1a.loc['Forest_prescribed']" unit="volumetric fraction (0-1)" end="" steps="" all="repLATICE" restrictoption="nonInit" />
+<setmap name="SMRainf_0" outputVar="Theta1a.loc['Rainfed_prescribed']" unit="volumetric fraction (0-1)" end="" steps="" all="repLATICE" restrictoption="nonInit" />
+<setmap name="SMIrrig_0" outputVar="Theta1a.loc['Irrigated_prescribed']" unit="volumetric fraction (0-1)" end="" steps="" all="repLATICE" restrictoption="nonInit" />
+<setmap name="SMForest_1" outputVar="Theta1b.loc['Forest_prescribed']" unit="volumetric fraction (0-1)" end="" steps="" all="repLATICE" restrictoption="nonInit" />
+<setmap name="SMRainf_1" outputVar="Theta1b.loc['Rainfed_prescribed']" unit="volumetric fraction (0-1)" end="" steps="" all="repLATICE" restrictoption="nonInit" />
+<setmap name="SMIrrig_1" outputVar="Theta1b.loc['Irrigated_prescribed']" unit="volumetric fraction (0-1)" end="" steps="" all="repLATICE" restrictoption="nonInit" />
+<setmap name="SMForest_2" outputVar="Theta2.loc['Forest_prescribed']" unit="volumetric fraction (0-1)" end="" steps="" all="repLATICE" restrictoption="nonInit" />
+<setmap name="SMRainf_2" outputVar="Theta2.loc['Rainfed_prescribed']" unit="volumetric fraction (0-1)" end="" steps="" all="repLATICE" restrictoption="nonInit" />
+<setmap name="SMIrrig_2" outputVar="Theta2.loc['Irrigated_prescribed']" unit="volumetric fraction (0-1)" end="" steps="" all="repLATICE" restrictoption="nonInit" />
+<!-- LATICE ET-MIP maps (pixel-averaged maps) -->
+<setmap name="Snowfall" outputVar="Snow" unit="mm" end="" steps="" all="repLATICE" restrictoption="nonInit" />
+<setmap name="Rainfall" outputVar="Rain" unit="mm" end="" steps="" all="repLATICE" restrictoption="nonInit" />
+<setmap name="SWE" outputVar="SnowCover" unit="mm" end="" steps="" all="repLATICE" restrictoption="nonInit" />
+<setmap name="GWSlow" outputVar="LZ" unit="mm" end="" steps="" all="repLATICE" restrictoption="nonInit" />
+<setmap name="Baseflow" outputVar="LZOutflow" unit="mm" end="" steps="" all="repLATICE" restrictoption="nonInit" />
+<setmap name="ETActMaps" outputVar="ESActPixel+self.var.TaPixel+self.var.TaInterceptionAll" unit="mm" end="" steps="" all="repLATICE" restrictoption="nonInit" />
+<setmap name="TotalRunoffMaps" outputVar="TotalRunoff" unit="mm" end="" steps="" all="repLATICE" restrictoption="nonInit" />
 
 
 # These options report pF and vegetation stress due to low soil moisture
