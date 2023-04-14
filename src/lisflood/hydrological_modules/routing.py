@@ -379,6 +379,7 @@ class routing(HydroModule):
             self.var.ChanQ = np.where(PrevDischarge == -9999, self.var.ChanQKin, PrevDischarge) #np
             # initialise channel discharge: cold start: equal to ChanQKin
             # [m3/s]
+            # outflow at the end of previous time step (instant)
 
         # Initialising cumulative output variables
         # These are all needed to compute the cumulative mass balance error
@@ -500,9 +501,10 @@ class routing(HydroModule):
             # initialisation for MCT routing
             PrevQMCTin = loadmap('PrevQMCTinInitValue')     # instant input discharge for MCT
             self.var.PrevQMCTin = np.where(PrevQMCTin == -9999, self.var.ChanQKin * 0, PrevQMCTin) #np
+            # MCT inflow at time t0
             PrevQMCTout = loadmap('PrevQMCToutInitValue')     # instant output discharge for MCT
             self.var.PrevQMCTout = np.where(PrevQMCTout == -9999, self.var.ChanQKin * 0, PrevQMCTout) #np
-
+            # MCT outflow at time t0
             PrevCmMCT = loadmap('PrevCmMCTInitValue')     # Cm for MCT
             self.var.PrevCm0 = np.where(PrevCmMCT == -9999, self.var.ChanQKin/self.var.ChanQKin, PrevCmMCT) #np
             PrevDmMCT = loadmap('PrevDmMCTInitValue')     # Dm for MCT
@@ -638,11 +640,16 @@ class routing(HydroModule):
            
             SideflowChan = np.where(self.var.IsChannelKinematic, SideflowChanM3 * self.var.InvChanLength * self.var.InvDtRouting,0)
             # Sideflow expressed in [cu m /s / m channel length]
+
+            # Calc sideflow for MCT cells
             if option['MCTRouting']:
                 SideflowChanMCT = np.where(self.var.IsChannelMCT, SideflowChanM3 * self.var.InvChanLength * self.var.InvDtRouting,0)
             else:
                 SideflowChanMCT = 0
-                # Sideflow for MCT cells
+
+            # cm
+            SideflowChanMCT = 0
+            # cm
 
 
             # ************************************************************
@@ -653,19 +660,26 @@ class routing(HydroModule):
             # KINEMATIC ROUTING ONLY - InitLisflood
             if option['InitLisflood'] or (not(option['SplitRouting']) and (not(option['MCTRouting']))):
                 # Kinematic routing
-                ChanQKinIn = self.var.ChanQKin.copy()
-                #ChanM3KinNp = self.var.ChanM3Kin.copy()
-                ChanQKinOut,ChanQOut,ChanM3KinOut = self.KinematicRouting(ChanQKinIn,SideflowChan)
+                ChanQKinOutStart = self.var.ChanQKin.copy()
+                # Outflow at time t (instant)
+                # ChanM3KinStart = self.var.ChanM3Kin.copy()
+                # Channel storage at time t (instant)
+                ChanQKinOut,ChanQKinOutAve,ChanM3KinOut = self.KinematicRouting(ChanQKinOutStart,SideflowChan)
 
                 # updating variables for next step
-                # instant Q at end of calc step
-                self.var.ChanQKin = ChanQKinOut
-                # volume V at end of calc step
-                self.var.ChanM3Kin = ChanM3KinOut
-                # instant Q at end of calc step
-                self.var.ChanQ = ChanQOut
+                self.var.ChanQKin = ChanQKinOut.copy()
+                # Outflow Q at time t+1 (end of calc step) (instant)
+                self.var.ChanM3Kin = ChanM3KinOut.copy()
+                # Channel storage V at time t+1 (end of calc step) (instant)
 
-                self.var.sumDisDay += self.var.ChanQ
+                # same as ChanQKinOut for Kinematic routing
+                # Outflow at the end of computation step (instant)
+                self.var.ChanQ = ChanQKinOut.copy()
+
+                #self.var.sumDisDay += self.var.ChanQ
+                self.var.sumDisDay += self.var.ChanQKinOutAve.copy()       #cm
+                # using average discharge on computation step
+                # sum of outflow on model step
 
 
             # SPLIT ROUTING - no InitLisfllod
@@ -678,25 +692,30 @@ class routing(HydroModule):
             if not option['InitLisflood'] and (not(option['SplitRouting']) and (option['MCTRouting'])):
                 # Kinematic routing
 
-                ChanQKinIn = self.var.ChanQKin.copy()
-                #ChanM3KinNp = self.var.ChanM3Kin.copy()
-                ChanQKinOut,ChanQOut,ChanM3KinOut = self.KinematicRouting(ChanQKinIn,SideflowChan)
+                ChanQKinOutStart = self.var.ChanQKin.copy()
+                # Outflow at time t (instant)
+                # ChanM3KinIn = self.var.ChanM3Kin.copy()
+                # Channel storage at time t (instant)
+                ChanQKinOut,ChanQKinOutAve,ChanM3KinOut = self.KinematicRouting(ChanQKinOutStart,SideflowChan)
 
                 # MCT routing
-                ChanQMCTIn = self.var.ChanQKin.copy()
-                ChanQMCTout,ChanM3MCTout,ChanQMCTave, Cmout, Dmout = self.MCTRouting(ChanQMCTIn,SideflowChanMCT)
+                ChanQMCTOutStart = self.var.ChanQKin.copy()
+                # Outflow at time t
+                ChanM3Start = self.var.ChanM3.copy()
+                # Channel storage at time t
+                ChanQMCTOut,ChanQMCTOutAve,ChanM3MCTOut,Cmout, Dmout = self.MCTRouting(ChanQMCTOutStart,SideflowChanMCT,ChanM3Start)
                 self.var.PrevQMCTin = ChanQMCTIn
-                self.var.PrevQMCTout = ChanQMCTout
+                self.var.PrevQMCTout = ChanQMCTOut
                 self.var.PrevCm0 = Cmout
                 self.var.prevDm0 = Dmout
 
                 # combine results
                 # instant Q at end of calc step
-                self.var.ChanQKin = np.where(self.var.IsChannelKinematic, ChanQKinOut, ChanQMCTout)
+                self.var.ChanQKin = np.where(self.var.IsChannelKinematic, ChanQKinOut, ChanQMCTOut)
                 # volume V at end of calc step
-                self.var.ChanM3Kin = np.where(self.var.IsChannelKinematic, ChanM3KinOut, ChanM3MCTout)
+                self.var.ChanM3Kin = np.where(self.var.IsChannelKinematic, ChanM3KinOut, ChanM3MCTOut)
                 # average Q for the calc step
-                self.var.ChanQ = np.where(self.var.IsChannelKinematic, ChanQMCTave, ChanQMCTout)
+                self.var.ChanQ = np.where(self.var.IsChannelKinematic, ChanQOut, ChanQMCTOutAve)
 
                 self.var.sumDisDay += self.var.ChanQ
 
@@ -707,6 +726,7 @@ class routing(HydroModule):
             
             # ---- Uncomment lines 603-635 in order to compute the mass balance error within the routing module for the options (i) initial run or (ii) split routing off ----
             '''
+            option['repMBTs']=True
             if option['repMBTs']:  
              if option['InitLisflood'] or (not(option['SplitRouting'])):              
                 if NoRoutingExecuted == (self.var.NoRoutSteps-1):
@@ -741,6 +761,9 @@ class routing(HydroModule):
                   # Total Mass Balance Error in m3 per catchment for Initial Run OR Split Routing OFF
                   MB =- np.sum(StorageStep)+np.sum(self.var.StorageStepINIT) - OutStep[0]  -DischargeM3StructuresR[0] +self.var.AddedTRUN                     
                   self.var.StorageStepINIT= np.sum(StorageStep) + DischargeM3StructuresR[0]                  
+            '''
+
+            # ---- Uncomment lines in order to compute the mass balance error within the routing module for the options split routing  ----
             '''
             if option['repMBTs']:  
              if (not(option['InitLisflood'])) and (option['SplitRouting']):
@@ -788,8 +811,9 @@ class routing(HydroModule):
                   QoutCorrection[self.var.AtLastPointC == 0] = 0
                   self.var.OutletDischargeErrorSplitRouting = np.take(np.bincount(self.var.Catchments,weights=QoutCorrection),self.var.Catchments)                  
 
-                  self.var.StorageStepINIT= StorageStep1.copy()+DischargeM3StructuresR 
- 
+                  self.var.StorageStepINIT= StorageStep1.copy()+DischargeM3StructuresR
+             '''
+
 
             self.var.FlowVelocity = np.minimum(self.var.ChanQKin/TotalCrossSectionArea, 0.36*self.var.ChanQKin**0.24)
             # Channel velocity (m/s); dividing Q (m3/s) by CrossSectionArea (m2)
@@ -804,26 +828,21 @@ class routing(HydroModule):
 
 
     def KinematicRouting(self,ChanQKin,SideflowChan):
-        """Based on pcraster functions kinwavestate, kinwaveflux. New flows are determined based on flows in the previous timestep.
-        The interface of kinwave accepts a state as input parameter (amount of water in the cell at the beginning of the timestep) and calculates
-        a state (amount of water in the cell at the end of the timestep) and a flux (flow integrated over the entire timestep)
-        and thus corresponds to the state-flux framework of the mentioned pcraster functions.
-        (https://svn.oss.deltares.nl/repos/openearthtools/trunk/programs/DRIHM/HBV/bin/hbv/openstreams_2013/software/pcraster/pcraster-4.0.0-beta-20131030_x86-64_lsbcc-4/doc/manual/op_kinwave.html)
-        self.river_router.kinematicWaveRouting is a wrapper for kinwaveflux.
-        Given the average flow at the end of the computation step, the corresponding amount of water in the cell (at the end of the timestep)
-        is calculated using Manning's equation for steady state flow (Chow):
+        """Based on a 4-point implicit finite-difference solution of the kinematic wave equations.
+        Given the instantaneous flow rate (discharge), the corresponding amount of water stored in the channel
+        is calculated using Manning equation for steady state flow where Alpha is currently fixed
+        at half of bankful depth.
+        See: Te Chow, V. and Maidment, D.R. and Mays, L.W. (1988). Applied Hydrology. McGraw-Hill. (Sec. 9.6)
+        https://ponce.sdsu.edu/Applied_Hydrology_Chow_1988.pdf
         A = alpha * Q**beta
         V = chanlength * alpha * Q**beta
-        Given a volume of water in the channel, the corresponding (average) discharge is calculated using Manning's equation for steady state flow (Chow):
-        ChanQKin = (ChanM3Kin * self.var.InvChanLength * self.var.InvChannelAlpha) ** (self.var.InvBeta)
-        Q = (V / chanlength /alpha)**(1/beta)
         Takes:
-        ChanQKin = average flow (over the previous step as input, at the end of current step as output) [m3/sec]
+        ChanQKin = inflow from upstream channels [m3/sec] (instant)
         SideflowChan = lateral inflow into the channel segment (cell) [m3/channellength/sec]
         :returns
-        ChanQKin = flow integrated over the entire timestep (average)
-        ChanQ = ChanQKin
-        ChanM3Kin = amount of water in the cell at the end of the timestep (instant)
+        ChanQKin = outflow at time t+dt (instant) [m3/s]
+        ChanQ = average outflow for calc step dt (average) [m3/s]
+        ChanM3Kin = amount of water stored in the channel at time t+dt (instant) [m3]
         """
 
         #  ---- Single Routing ---------------
@@ -831,31 +850,45 @@ class routing(HydroModule):
         # side flow consists of runoff (incl. groundwater), inflow from reservoirs (optional) and external inflow hydrographs (optional)
         SideflowChan[np.isnan(SideflowChan)] = 0 # TEMPORARY FIX - SEE DEBUG ABOVE!
 
+        #cm
+        # SideflowChan = 0
+        #cm
+
+        ChanM3KinStart = self.var.ChanLength * self.var.ChannelAlpha * ChanQKin ** self.var.Beta
+        # Volume in channel at beginning of computation step (at t) (instant)
+        ChanQKinOutStart = ChanQKin.copy()
+        # Outflow at time t
+        ChanQKinPcr=decompress(ChanQKin)    #pcr
+        ChanQKinInStart=compressArray(upstream(self.var.LddChan,ChanQKinPcr))
+        # Inflow at time t
+
         #self.river_router.kinematicWaveRouting(self.var.ChanQKin, SideflowChan, "main_channel")
         self.river_router.kinematicWaveRouting(ChanQKin, SideflowChan, "main_channel")
-        # ChanQKin is outflow integrated over the entire timestep (average)
+        # ChanQKin is outflow (at x+dx) at time t+dt (instant)
 
         #self.var.ChanM3Kin = self.var.ChanLength * self.var.ChannelAlpha * self.var.ChanQKin**self.var.Beta
         ChanM3Kin = self.var.ChanLength * self.var.ChannelAlpha * ChanQKin**self.var.Beta
-        # ChanM3Kin is the Volume in channel at end of computation step (instant)
+        # ChanM3Kin is the Volume in channel at end of computation step (at t+dt) (instant)
 
         #self.var.ChanM3Kin = np.maximum(self.var.ChanM3Kin, 0.0)
         ChanM3Kin = np.maximum(ChanM3Kin, 0.0)
         # Check for negative volumes at the end of computation step
+        # Volume at time t+1
 
         #self.var.ChanQKin = (self.var.ChanM3Kin * self.var.InvChanLength * self.var.InvChannelAlpha) ** (self.var.InvBeta)
         ChanQKin = (ChanM3Kin * self.var.InvChanLength * self.var.InvChannelAlpha) ** (self.var.InvBeta)
-        # Update outflow (average) after removing negative volumes.
-        # Correct negative discharge at the end of computation step
+        # Update instant outflow after removing negative volumes.
+        # Correct negative discharge at the end of computation step (instant)
+        # Outflow at time t+1
 
-        # self.var.ChanQ = self.var.ChanQKin.copy()
-        ChanQ = ChanQKin.copy()
-        # at single kin. ChanQ is the same
-        #
-        # self.var.sumDisDay += self.var.ChanQ
-        # # Total channel storage [cu m], equal to ChanM3Kin
+        ChanQKinPcr=decompress(ChanQKin)    #pcr
+        ChanQKinInEnd=compressArray(upstream(self.var.LddChan,ChanQKinPcr))
+        # Inflow at time t+1
 
-        return ChanQKin,ChanQ,ChanM3Kin
+        # Calc average outflow for calc step
+        ChanQKinOutAvg = (ChanQKinInEnd+ChanQKinInStart)/2 + SideflowChan * self.var.ChanLength - (ChanM3Kin-ChanM3KinStart)/self.var.DtSecChannel
+
+        return ChanQKin,ChanQKinOutAvg,ChanM3Kin
 
 
     def SplitRouting(self, SideflowChan):
@@ -943,7 +976,7 @@ class routing(HydroModule):
     #
     #     return ChanQMCT,ChanQQMCT,ChanM3MCT
 
-    def MCTRouting(self,ChanQMCT,SideflowChanMCT,ChanM3):
+    def MCTRouting(self,ChanQMCT,SideflowChanMCT,ChanM3MCTStart):
         """This function implements Muskingum-Cunge-Todini routing method
         References:
             Todini, E. (2007). A mass conservative and water storage consistent variable parameter Muskingum-Cunge approach. Hydrol. Earth Syst. Sci.
@@ -958,12 +991,12 @@ class routing(HydroModule):
         # h = self.hdv(ChanM3)
         # q_h, a, b, p, cel = self.qdy(h)
         # q_V = self.qdv(ChanM3)
-        # #cm
+
 
         ChanQMCTPcr=decompress(ChanQMCT)    #pcr
         ChanQMCTUp=compressArray(upstream(self.var.LddChan,ChanQMCTPcr))
         # calc contribution from upstream pixels (dim=all pixels)
-        # LddChan is necessary to include Kin pixels contributing to MCT pixels
+        # Inflow at time t+1
 
         # channel geometry
         xpix = self.get_mct_pix(self.var.ChanLength)          # dimension along the flow direction  [m]
@@ -978,7 +1011,7 @@ class routing(HydroModule):
         dx = xpix
 
         # channel storage at the beginning of the computation step (t)
-        ChanM300 = self.get_mct_pix(self.var.ChanM3)
+        ChanM300 = self.get_mct_pix(ChanM3MCTStart)
 
         # instant discharge at channel input (I x=0) and channel output (O x=1)
         # at the end of previous step I(t) and Q(t) and
@@ -986,7 +1019,7 @@ class routing(HydroModule):
         # O(t)
         q10 = self.get_mct_pix(self.var.PrevQMCTout)
         # I(t+dt)
-        q01 = self.get_mct_pix(ChanQMCTUp) + self.get_mct_pix(SideflowChanMCT)
+        q01 = self.get_mct_pix(ChanQMCTUp)  #+ self.get_mct_pix(SideflowChanMCT)
         # I(t)
         q00 = self.get_mct_pix(self.var.PrevQMCTin)
 
@@ -1076,21 +1109,26 @@ class routing(HydroModule):
 
     ################################################
 
-        # Calc the average Qout for calc step
-        qout_ave = q01 - (V11 - ChanM300)/dt
+        # # Calc the average Qout for calc step
+        # qout_ave = q01 - (V11 - ChanM300)/dt
+
+        # Calc average outflow for calc step
+        #ChanQMCTOutAvg = (q01+q00)/2 + SideflowChan * self.var.ChanLength - (V11-ChanM300)/dt
+        qout_ave = (q01 + q00) / 2 - (V11 - ChanM300) / dt
+
         # Check for negative discharge
         qout_ave = np.where(qout_ave < 0, 0, qout_ave)
         # Update volume when negative discharge is set =0
-        V11 = ChanM300 + (q01 - qout_ave) * dt
+        V11 = ChanM300 + ((q01 + q00) / 2 - qout_ave) * dt
 
 
-        ChanQMCTout = self.put_mct_pix(q11)
+        ChanQMCTOut = self.put_mct_pix(q11)
         Cmout = self.put_mct_pix(Cm0)
         Dmout = self.put_mct_pix(Dm0)
-        ChanM3MCTout = self.put_mct_pix(V11)
-        ChanQMCTave = self.put_mct_pix(qout_ave)
+        ChanM3MCTOut = self.put_mct_pix(V11)
+        ChanQMCTOutAve = self.put_mct_pix(qout_ave)
 
-        return ChanQMCTout,ChanM3MCTout,ChanQMCTave, Cmout, Dmout
+        return ChanQMCTOut, ChanQMCTOutAve, ChanM3MCTOut, Cmout, Dmout
 
 
 
