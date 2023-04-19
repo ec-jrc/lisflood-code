@@ -988,9 +988,9 @@ class routing(HydroModule):
         # #cm
         # ChanSdXdY = self.get_mct_pix(self.var.ChanSdXdY)
         # ChanM3 = self.get_mct_pix(self.var.ChanM3)
-        # h = self.hdv(ChanM3)
-        # q_h, a, b, p, cel = self.qdy(h)
-        # q_V = self.qdv(ChanM3)
+        # h = self.hoV(ChanM3)
+        # q_h, a, b, p, cel = self.qoh(h)
+        # q_V = self.qoV(ChanM3)
 
 
         ChanQMCTPcr=decompress(ChanQMCT)    #pcr
@@ -1055,9 +1055,9 @@ class routing(HydroModule):
             # if qmm == 0: qmm = eps
             # qmm = [0 if i < 0 else i for i in qmm]
             # hmm = self.scalax(qmm)
-            # dummy, Amm,Bmm,Pmm, cmm = self.qdy(hmm)
-            # dummy, Amx0,Bmx0,Pmx0, cmx0 = self.qdy(hmx0)
-            # dummy, Amx1,Bmx1,Pmx1, cmx1 = self.qdy(hmx1)
+            # dummy, Amm,Bmm,Pmm, cmm = self.qoh(hmm)
+            # dummy, Amx0,Bmx0,Pmx0, cmx0 = self.qoh(hmx0)
+            # dummy, Amx1,Bmx1,Pmx1, cmx1 = self.qoh(hmx1)
 
             # Calc riverbed slope correction factor
             cor = 1 - (1 / slp * (hmx1 - hmx0) / xpix)
@@ -1069,7 +1069,7 @@ class routing(HydroModule):
             # Q(t+dt)=(I(t+dt)+O'(t+dt))/2
             qm1 = (q01 + q11) / 2.
             hm1 = self.scalax(qm1)
-            dummy, Ax1,Bx1,Px1,ck1 = self.qdy(hm1)
+            dummy, Ax1,Bx1,Px1,ck1 = self.qoh(hm1)
             # if (ck1 <= eps): ck1 = eps
             ck1 = np.where(ck1 < eps, eps, ck1)
 
@@ -1134,8 +1134,9 @@ class routing(HydroModule):
 
     def scalax(self,q):
         """Given a generic section (rectangular, triangular or trapezoidal) and a steady-state discharge q=Q*, it computes
-        water depth (y), wet contour (Bx), wat area (Ax) and wave celerity (cel) using Newton-Raphson method.
+        water depth (y), wet contour (Bx), wet area (Ax) and wave celerity (cel) using Newton-Raphson method.
         q: steady-state discharge river discharge [m3/s]
+        y: water depth referred to the bottom of the riverbed [m]
         Ax: wet area [m2]
         Bx: cross-section width at water surface [m]
         Px: cross-section wet contour [m]
@@ -1192,7 +1193,7 @@ class routing(HydroModule):
 
         for tries in range(1,max_tries):
             # calc Q(y) for the different tries of y
-            q0,Ax,Bx,Px,cel = self.qdy(y)
+            q0,Ax,Bx,Px,cel = self.qoh(y)
             # this is the function we want to find the 0 for f(y)=Q(y)-Q*
             fy = q0 - q
             # calc first derivative of f(y)  f'(y)=Bx(y)*cel(y)
@@ -1209,7 +1210,7 @@ class routing(HydroModule):
         return y
 
 
-    def qdy(self,y):
+    def qoh(self,y):
         """ Given a generic river cross-section (rectangular, triangular and trapezoidal)
         and a water depth (y [m]) referred to the bottom of the riverbed, it uses Manning’s formula to calculate:
         q: steady-state discharge river discharge [m3/s]
@@ -1257,7 +1258,7 @@ class routing(HydroModule):
         return q,a,b,p,cel
 
 
-    def hdv(self,V):
+    def hoV(self,V):
         """ Given a generic river cross-section (rectangular, triangular and trapezoidal) and and a volume V,
         it calculates the water depth referred to the bottom of the riverbed [m] (y).
 
@@ -1320,13 +1321,14 @@ class routing(HydroModule):
         return y
 
 
-    def qdv(self,V):
+    def qoV(self,V):
         """ Given a generic river cross-section (rectangular, triangular and trapezoidal)
         and a water volume (V [m3]), it uses Manning’s formula to calculate the corresponding discharge (q [m3/s]).
         """
-        y = self.hdv(V)
-        q, a, b, p, cel = self.qdy(y)
+        y = self.hoV(V)
+        q, a, b, p, cel = self.qoh(y)
         return q
+
 
     def rad_from_dxdy(self,dxdy):
         rad = np.arctan(1 / dxdy)
