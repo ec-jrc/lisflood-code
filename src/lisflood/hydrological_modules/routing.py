@@ -1075,20 +1075,20 @@ class routing(HydroModule):
             qmx0 = (q00 + q01) / 2.
             # if qmx0 == 0: qmx0 = eps
             qmx0 = np.maximum(qmx0, 0)
-            hmx0 = self.scalax(qmx0)
+            hmx0 = self.hoq(qmx0)
 
             # reference O discharge at x=1
             qmx1 = (q10 + q11) / 2.
             # if qmx1 == 0: qmx1 = eps
             qmx1 = np.maximum(qmx1, 0)
-            hmx1 = self.scalax(qmx1)
+            hmx1 = self.hoq(qmx1)
 
             # # reference discharge at time t+dt
             # # qmm = (I(t+dt)+O(t+dt))/2
             # qmm = (q01 + q11) / 2
             # if qmm == 0: qmm = eps
             # qmm = [0 if i < 0 else i for i in qmm]
-            # hmm = self.scalax(qmm)
+            # hmm = self.hoq(qmm)
             # dummy, Amm,Bmm,Pmm, cmm = self.qoh(hmm)
             # dummy, Amx0,Bmx0,Pmx0, cmx0 = self.qoh(hmx0)
             # dummy, Amx1,Bmx1,Pmx1, cmx1 = self.qoh(hmx1)
@@ -1102,7 +1102,7 @@ class routing(HydroModule):
             # Calc reference discharge time t+dt
             # Q(t+dt)=(I(t+dt)+O'(t+dt))/2
             qm1 = (q01 + q11) / 2.
-            hm1 = self.scalax(qm1)
+            hm1 = self.hoq(qm1)
             dummy, Ax1,Bx1,Px1,ck1 = self.qoh(hm1)
             # if (ck1 <= eps): ck1 = eps
             ck1 = np.where(ck1 < eps, eps, ck1)
@@ -1166,7 +1166,7 @@ class routing(HydroModule):
 
 
 
-    def scalax(self,q):
+    def hoq(self,q):
         """Given a generic section (rectangular, triangular or trapezoidal) and a steady-state discharge q=Q*, it computes
         water depth (y), wet contour (Bx), wet area (Ax) and wave celerity (cel) using Newton-Raphson method.
         q: steady-state discharge river discharge [m3/s]
