@@ -661,25 +661,29 @@ class routing(HydroModule):
             if option['InitLisflood'] or (not(option['SplitRouting']) and (not(option['MCTRouting']))):
                 # Kinematic routing
                 ChanQKinOutStart = self.var.ChanQKin.copy()
-                # Outflow at time t (instant)
+                # Outflow at time t beginning of calculation step (instant)
                 # ChanM3KinStart = self.var.ChanM3Kin.copy()
-                # Channel storage at time t (instant)
+                # Channel storage at time t beginning of calculation step (instant)
 
-                ChanQKinOut,ChanQKinOutAvg,ChanM3KinOut = self.KinematicRouting(ChanQKinOutStart,SideflowChan)
+                ChanQKinOutEnd,ChanQKinOutAvg,ChanM3KinEnd = self.KinematicRouting(ChanQKinOutStart,SideflowChan)
 
                 # updating variables for next step
-                self.var.ChanQKin = ChanQKinOut.copy()
+                self.var.ChanQKin = ChanQKinOutEnd.copy()
                 # Outflow Q at time t+1 (end of calc step) (instant)
-                self.var.ChanM3Kin = ChanM3KinOut.copy()
+                self.var.ChanM3Kin = ChanM3KinEnd.copy()
                 # Channel storage V at time t+1 (end of calc step) (instant)
 
-                # same as ChanQKinOut for Kinematic routing
-                # Outflow at the end of computation step (instant)
-                self.var.ChanQ = ChanQKinOut.copy()
+                self.var.ChanQ = ChanQKinOutEnd.copy()
+                # Outflow Q at the end of computation step t+1 for full section (instant)
+                # same as ChanQKinOutEnd for Kinematic routing
+                self.var.ChanM3 = ChanM3KinEnd.copy()
+                # Channel storage V at the end of computation step t+1 for full section (instant)
+                # same as ChanM3KinEnd for Kinematic routing
 
-                self.var.sumDisDay += self.var.ChanQ
-
-                #self.var.sumDisDay += ChanQKinOutAvg       #cm
+                # self.var.sumDisDay += self.var.ChanQ
+                #cm
+                self.var.sumDisDay += ChanQKinOutAvg
+                #cm
                 # using average discharge on computation step
                 # sum of outflow on model step
 
@@ -696,13 +700,12 @@ class routing(HydroModule):
                 # Kinematic routing
 
                 ChanQKinOutStart = self.var.ChanQ.copy()
-                # Outflow at time t (instant)
+                # Outflow Q at time t beginning of calculation step (instant)
 
-                # ChanM3KinIn = self.var.ChanM3Kin.copy()
+                # ChanM3KinStart = self.var.ChanM3.copy()
                 # Channel storage at time t (instant)
 
-                ChanQKinOut,ChanQKinOutAvg,ChanM3KinOut = self.KinematicRouting(ChanQKinOutStart,SideflowChan)
-
+                ChanQKinOutEnd,ChanQKinOutAvg,ChanM3KinEnd = self.KinematicRouting(ChanQKinOutStart,SideflowChan)
 
                 ####
                 # MCT routing
@@ -715,29 +718,27 @@ class routing(HydroModule):
 
                 ChanQMCTInStart = self.var.PrevQMCTin.copy()
 
-                ChanQMCTOut,ChanQMCTOutAvg,ChanM3MCTOut,Cmout, Dmout = self.MCTRouting(ChanQMCTOutStart,ChanQMCTInStart,ChanQKinOut,SideflowChanMCT,ChanM3Start)
+                ChanQMCTOutEnd,ChanQMCTOutAvg,ChanM3MCTEnd,Cmend, Dmend = self.MCTRouting(ChanQMCTOutStart,ChanQMCTInStart,ChanQKinOutEnd,SideflowChanMCT,ChanM3Start)
 
                 # update input Q at t for next step
                 ChanQMCTStartPcr = decompress(ChanQMCTOutStart)  # pcr
                 self.var.PrevQMCTin = compressArray(upstream(self.var.LddChan, ChanQMCTStartPcr))
 
-                self.var.PrevCm0 = Cmout
-                self.var.prevDm0 = Dmout
+                self.var.PrevCm0 = Cmend
+                self.var.prevDm0 = Dmend
 
-                # combine results
-                # instant Q at end of calc step
-                self.var.ChanQKin = np.where(self.var.IsChannelKinematic, ChanQKinOut, ChanQMCTOut)
-                # volume V at end of calc step
-                self.var.ChanM3Kin = np.where(self.var.IsChannelKinematic, ChanM3KinOut, ChanM3MCTOut)
-                # average Q for the calc step
+                # combine results from Kin and MCT pixels
+                self.var.ChanQ = np.where(self.var.IsChannelKinematic, ChanQKinOutEnd, ChanQMCTOutEnd)
+                # Outflow Q at the end of computation step t+1 for full section (instant)
+                self.var.ChanM3 = np.where(self.var.IsChannelKinematic, ChanM3KinEnd, ChanM3MCTEnd)
+                # Channel storage V at the end of computation step t+1 for full section (instant)
                 ChanQOutAvg = np.where(self.var.IsChannelKinematic, ChanQKinOutAvg, ChanQMCTOutAvg)
+                # Average outflow Q over the calculation step (average)
 
-                self.var.ChanQ = np.where(self.var.IsChannelKinematic, ChanQKinOut, ChanQMCTOut)
-
-
-                self.var.sumDisDay += self.var.ChanQ
-
-                # self.var.sumDisDay += ChanQOutAvg       #cm
+                # cm
+                # self.var.sumDisDay += self.var.ChanQ
+                self.var.sumDisDay += ChanQOutAvg
+                # cm
                 # using average discharge on computation step
                 # sum of outflow on model step
 
@@ -871,10 +872,6 @@ class routing(HydroModule):
         # No split routing
         # side flow consists of runoff (incl. groundwater), inflow from reservoirs (optional) and external inflow hydrographs (optional)
         SideflowChan[np.isnan(SideflowChan)] = 0 # TEMPORARY FIX - SEE DEBUG ABOVE!
-
-        #cm
-        # SideflowChan = 0
-        #cm
 
         ChanM3KinStart = self.var.ChanLength * self.var.ChannelAlpha * ChanQKin ** self.var.Beta
         # Volume in channel at beginning of computation step (at t) (instant)
