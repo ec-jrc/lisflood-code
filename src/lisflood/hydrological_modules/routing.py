@@ -17,7 +17,7 @@ See the Licence for the specific language governing permissions and limitations 
 from __future__ import print_function, absolute_import
 
 from pcraster import lddmask, accuflux, boolean, downstream, pit, path, lddrepair, ifthenelse, cover, nominal, uniqueid, \
-    catchment, upstream
+    catchment, upstream, pcr2numpy
 
 import numpy as np
 
@@ -158,6 +158,7 @@ class routing(HydroModule):
             self.var.IsChannelMCTPcr = boolean(loadmap('ChannelsMCT', pcr=True))    #pcr
             self.var.IsChannelMCT = np.bool8(compressArray(self.var.IsChannelMCTPcr))   #bool
             # Identify channel pixels where Muskingum-Cunge-Todini is used
+            self.var.mctmask = np.bool8(pcr2numpy(self.var.IsChannelMCTPcr,0))
 
             self.var.IsChannelKinematicPcr = (self.var.IsChannelPcr == 1) & (self.var.IsChannelMCTPcr == 0)  #pcr
             self.var.IsChannelKinematic = np.bool8(compressArray(self.var.IsChannelKinematicPcr))   #np
@@ -456,7 +457,6 @@ class routing(HydroModule):
                                           self.var.Beta, self.var.ChanLength, self.var.DtRouting,
                                           int(binding["numCPUs_parallelKinematicWave"]), alpha_floodplains=self.var.ChannelAlpha2)
 
-
         # if option['InitLisflood'] and option['repMBTs']:
         #     self.var.StorageStepINIT= self.var.ChanM3Kin
         #     self.var.DischargeM3StructuresIni = maskinfo.in_zero()
@@ -485,7 +485,6 @@ class routing(HydroModule):
         #        self.var.StorageStepINIT += self.var.LakeStorageIniM3
         #     self.var.StorageStepINIT = np.take(np.bincount(self.var.Catchments, weights=self.var.StorageStepINIT), self.var.Catchments)
 
-
     def initialMCT(self):
         """ initial part of the Muskingum-Kunge-Todini routing module
         """
@@ -512,6 +511,9 @@ class routing(HydroModule):
 
             self.var.ChanQ = np.where(self.var.IsChannelKinematic, self.var.ChanQ, self.var.PrevQMCTout)
 
+            # Initialise mct wave router
+            # self.mct_river_router = mctWave(compressArray(self.var.LddMCT), ~maskinfo.info.mask)
+            self.mct_river_router = mctWave(self.get_mct_pix(compressArray(self.var.LddMCT)), self.var.mctmask)
 
          #    def initialMCT(self):
          #        """ initial part of the Muskingum-Kunge-Todini routing module
@@ -665,7 +667,7 @@ class routing(HydroModule):
                 # ChanM3KinStart = self.var.ChanM3Kin.copy()
                 # Channel storage at time t beginning of calculation step (instant)
 
-                ChanQKinOutEnd,ChanQKinOutAvg,ChanM3KinEnd = self.KinematicRouting(ChanQKinOutStart,SideflowChan)
+                ChanQKinOutEnd,ChanQKinOutAvg,ChanM3KinEnd = self.KINRouting(ChanQKinOutStart,SideflowChan)
 
                 # updating variables for next step
                 self.var.ChanQKin = ChanQKinOutEnd.copy()
@@ -705,7 +707,7 @@ class routing(HydroModule):
                 # ChanM3KinStart = self.var.ChanM3.copy()
                 # Channel storage at time t (instant)
 
-                ChanQKinOutEnd,ChanQKinOutAvg,ChanM3KinEnd = self.KinematicRouting(ChanQKinOutStart,SideflowChan)
+                ChanQKinOutEnd,ChanQKinOutAvg,ChanM3KinEnd = self.KINRouting(ChanQKinOutStart,SideflowChan)
 
                 ####
                 # MCT routing
@@ -850,7 +852,7 @@ class routing(HydroModule):
             # maximum set to 30km/day for 5km cell, is at DtSec/Traveltime=6, is at Traveltime<DtSec/6
 
 
-    def KinematicRouting(self,ChanQKin,SideflowChan):
+    def KINRouting(self,ChanQKin,SideflowChan):
         """Based on a 4-point implicit finite-difference solution of the kinematic wave equations.
         Given the instantaneous flow rate (discharge), the corresponding amount of water stored in the channel
         is calculated using Manning equation for steady state flow where Alpha is currently fixed
@@ -881,9 +883,11 @@ class routing(HydroModule):
         ChanQKinInStart=compressArray(upstream(self.var.LddChan,ChanQKinPcr))
         # Inflow at time t
 
+        ####################################################################################################
         #self.river_router.kinematicWaveRouting(self.var.ChanQKin, SideflowChan, "main_channel")
         self.river_router.kinematicWaveRouting(ChanQKin, SideflowChan, "main_channel")
         # ChanQKin is outflow (at x+dx) at time t+dt (instant)
+        ####################################################################################################
 
         #self.var.ChanM3Kin = self.var.ChanLength * self.var.ChannelAlpha * self.var.ChanQKin**self.var.Beta
         ChanM3Kin = self.var.ChanLength * self.var.ChannelAlpha * ChanQKin**self.var.Beta
@@ -1367,3 +1371,42 @@ class routing(HydroModule):
         return rad
 
 
+
+from .kinematic_wave_parallel import rebuildFlowMatrix, decodeFlowMatrix, streamLookups, topoDistFromSea
+import pandas as pd
+class mctWave:
+    """Build pixels loop for MCT channels"""
+
+    def __init__(self, compressed_encoded_ldd, land_mask):
+        """"""
+        # Parameters for the solution of the discretised Kinematic wave continuity equation
+
+        # Process flow direction matrix: downstream and upstream lookups, and routing orders
+        flow_dir = decodeFlowMatrix(rebuildFlowMatrix(compressed_encoded_ldd, land_mask))
+        self.downstream_lookup, self.upstream_lookup = streamLookups(flow_dir, land_mask)
+        self.num_upstream_pixels = (self.upstream_lookup != -1).sum(1).astype(int) # astype for cython import in windows (to avoid 'long long' buffer dtype mismatch)
+        # Routing order: decompose domain into batches; within each batch, pixels can be routed in parallel
+        self._setMCTRoutingOrders()
+
+    def _setMCTRoutingOrders(self):
+        """Compute the MCT wave routing order. Pixels are grouped in sets with the same order.
+        Pixels in the same se are independent and can be routed in parallel. Sets must be processed in series, starting from order 0.
+        Pixels are ordered topologically starting from the outlets, as in:
+        Liu et al. (2014), A layered approach to parallel computing for spatially distributed hydrological modeling,
+        Environmental Modelling & Software 51, 221-227.
+        Order MAX is given to pixels with no downstream relations (outlets); order MAX-1 is given to
+        pixels whose downstream pixels are all of order MAX; and so on."""
+        ocean_topo_distance = topoDistFromSea(self.downstream_lookup, self.upstream_lookup)
+        routing_order = ocean_topo_distance.max() - ocean_topo_distance
+        self.pixels_ordered = pd.DataFrame({"pixels": np.arange(routing_order.size), "order": routing_order})
+        try:
+            self.pixels_ordered = self.pixels_ordered.sort_values(["order", "pixels"]).set_index("order").squeeze()
+            if not isinstance(self.pixels_ordered, pd.DataFrame):
+                self.pixels_ordered = pd.DataFrame({'order': [0], 'pixel': self.pixels_ordered})
+                self.pixels_ordered.set_index('order', inplace=True)
+        except: # FOR COMPATIBILITY WITH OLDER PANDAS VERSIONS
+            self.pixels_ordered = self.pixels_ordered.sort(["order", "pixels"]).set_index("order").squeeze()
+        order_counts = self.pixels_ordered.groupby(self.pixels_ordered.index).count()
+        stop = order_counts.cumsum()
+        self.order_start_stop = np.column_stack((np.append(0, stop[:-1]), stop)).astype(int) # astype for cython import in windows (see above)
+        self.pixels_ordered = self.pixels_ordered.values.astype(int) # astype for cython import in windows (see above)
