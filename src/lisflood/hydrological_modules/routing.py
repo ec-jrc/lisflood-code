@@ -1027,37 +1027,43 @@ class routing(HydroModule):
 
         dx = xpix
 
+        # instant discharge at channel input (I x=0) and channel output (O x=1)
+        # at the end of previous calculation step I(t) and O(t) and
+        # at the end of current calculation step I(t+1) and O(t+1)
 
-        # ChanQMCTStartPcr=decompress(ChanQMCTOutStart)    #pcr
-        # ChanQMCTUp0=compressArray(upstream(self.var.LddChan,ChanQMCTStartPcr))
-        # # calc contribution from upstream pixels (dim=all pixels)
-        # # Inflow at time t
-        # # I(t)
-        # q00 = self.get_mct_pix(ChanQMCTUp0)
-
+        # Inflow at time t
+        # I(t)
+        # calc contribution from upstream pixels at time t (dim=all pixels)
         q00 = self.get_mct_pix(ChanQMCTInStart)
-
         # channel storage at the beginning of the computation step (t)
         ChanM3MCT0 = self.get_mct_pix(ChanM3Start)
 
-        ChanQMCTPcr=decompress(ChanQKinOut)    #pcr
-        ChanQMCTUp1=compressArray(upstream(self.var.LddChan,ChanQMCTPcr))
-        # calc contribution from upstream pixels (dim=all pixels)
-        # Inflow at time t+1
-        # I(t+dt)
-        q01 = self.get_mct_pix(ChanQMCTUp1)  #+ self.get_mct_pix(SideflowChanMCT) * xpix
-
-
-
-        # instant discharge at channel input (I x=0) and channel output (O x=1)
-        # at the end of previous step I(t) and Q(t) and
-        # at the end of current step I(t+1) and Q(t+1)
+        # Outflow at time t
         # O(t)
+        # dim=mct pixels
         q10 = self.get_mct_pix(ChanQMCTOutStart)
 
 
+        # calc contribution from upstream pixels at time t+1 (dim=all pixels)
+        ChanQMCTPcr=decompress(ChanQKinOut)    #pcr
+        ChanQMCTUp1=compressArray(upstream(self.var.LddChan,ChanQMCTPcr))
+        # Inflow at time t+1
+        # I(t+dt)
+        # dim=mct pixels
+        q01 = self.get_mct_pix(ChanQMCTUp1)  #+ self.get_mct_pix(SideflowChanMCT) * xpix
 
 
+        ### start pixels loop ###
+        num_orders = self.mct_river_router.order_start_stop.shape[0]
+        for order in range(num_orders):
+            first = self.mct_river_router.order_start_stop[order, 0]
+            last = self.mct_river_router.order_start_stop[order, 1]
+            for index in range(first, last):
+                idpix = self.mct_river_router.pixels_ordered[index]
+
+
+        #############################################################################
+        ######### to pixels routing loop ############################################
         # Calc O' first guess for the outflow at time t+dt
         # O'(t+dt)=O(t)+(I(t+dt)-I(t))
         q11 = q10 + (q01 - q00)
@@ -1113,7 +1119,7 @@ class routing(HydroModule):
             # calc corrected cell Reynolds number at time t+dt
             Dm1 = qm1 / (sfx * ck1 * Bx1 * dx) / Beta1
             # corrected Courant number at time t+dt
-            Cm1 = ck1 * dt / dx / Beta1
+            Cm1: object = ck1 * dt / dx / Beta1
 
             # Calc MCT parameters
             den = 1 + Cm1 + Dm1
@@ -1142,10 +1148,6 @@ class routing(HydroModule):
         Cm0 = Cm1
         Dm0 = Dm1
 
-    ################################################
-
-        # # Calc the average Qout for calc step
-        # qout_ave = q01 - (V11 - ChanM300)/dt
 
         # Calc average outflow for calc step
         #ChanQMCTOutAvg = (q01+q00)/2 + SideflowChan * self.var.ChanLength - (V11-ChanM300)/dt
@@ -1156,6 +1158,8 @@ class routing(HydroModule):
         # Update volume when negative discharge is set =0
         V11 = ChanM3MCT0 + ((q01 + q00) / 2 - qout_ave) * dt
 
+        #############################################################################
+        ######### end pixels routing loop ############################################
 
         ChanQMCTOut = self.put_mct_pix(q11)
         Cmout = self.put_mct_pix(Cm0)
@@ -1379,7 +1383,6 @@ class mctWave:
 
     def __init__(self, compressed_encoded_ldd, land_mask):
         """"""
-        # Parameters for the solution of the discretised Kinematic wave continuity equation
 
         # Process flow direction matrix: downstream and upstream lookups, and routing orders
         flow_dir = decodeFlowMatrix(rebuildFlowMatrix(compressed_encoded_ldd, land_mask))
@@ -1390,7 +1393,8 @@ class mctWave:
 
     def _setMCTRoutingOrders(self):
         """Compute the MCT wave routing order. Pixels are grouped in sets with the same order.
-        Pixels in the same se are independent and can be routed in parallel. Sets must be processed in series, starting from order 0.
+        Pixels in the same setM4zze^^i
+         are independent and can be routed in parallel. Sets must be processed in series, starting from order 0.
         Pixels are ordered topologically starting from the outlets, as in:
         Liu et al. (2014), A layered approach to parallel computing for spatially distributed hydrological modeling,
         Environmental Modelling & Software 51, 221-227.
@@ -1401,12 +1405,16 @@ class mctWave:
         self.pixels_ordered = pd.DataFrame({"pixels": np.arange(routing_order.size), "order": routing_order})
         try:
             self.pixels_ordered = self.pixels_ordered.sort_values(["order", "pixels"]).set_index("order").squeeze()
-            if not isinstance(self.pixels_ordered, pd.DataFrame):
-                self.pixels_ordered = pd.DataFrame({'order': [0], 'pixel': self.pixels_ordered})
-                self.pixels_ordered.set_index('order', inplace=True)
         except: # FOR COMPATIBILITY WITH OLDER PANDAS VERSIONS
             self.pixels_ordered = self.pixels_ordered.sort(["order", "pixels"]).set_index("order").squeeze()
+        # Output of pd.DataFrame.squeeze() is not a DataFrame and not a Series.
+        if not isinstance(self.pixels_ordered, pd.Series):
+            # self.pixels_ordered = pd.DataFrame({'order': [0], 'pixel': self.pixels_ordered})
+            # self.pixels_ordered.set_index('order', inplace=True)
+            self.pixels_ordered = pd.Series(self.pixels_ordered)
+            self.pixels_ordered.rename_axis("order")
         order_counts = self.pixels_ordered.groupby(self.pixels_ordered.index).count()
         stop = order_counts.cumsum()
         self.order_start_stop = np.column_stack((np.append(0, stop[:-1]), stop)).astype(int) # astype for cython import in windows (see above)
         self.pixels_ordered = self.pixels_ordered.values.astype(int) # astype for cython import in windows (see above)
+
