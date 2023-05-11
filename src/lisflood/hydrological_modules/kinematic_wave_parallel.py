@@ -114,6 +114,8 @@ def streamLookups(flow_dir, land_mask):
     '''
     flow_dir[~land_mask] = 8 # exceeds number of rows of IX_ADDS
     num_pixs = land_mask.sum()
+    # Create 2D array of indices of land pixels (each index is unique)
+    # The IDs are numbered from 0 to num_pixs-1
     land_points = -np.ones(land_mask.shape, int)
     land_points[land_mask] = np.arange(num_pixs, dtype=int)
     downstream_lookup, upstream_lookup = kwpt.upDownLookups(flow_dir, np.ascontiguousarray(land_mask).astype(np.uint8), land_points, num_pixs, IX_ADDS)
@@ -169,7 +171,7 @@ class kinematicWave:
 
     def _setRoutingOrders(self):
         """Compute the kinematic wave routing order. Pixels are grouped in sets with the same order.
-        Pixels in the same se are independent and can be routed in parallel. Sets must be processed in series, starting from order 0.
+        Pixels in the same set are independent and can be routed in parallel. Sets must be processed in series, starting from order 0.
         Pixels are ordered topologically starting from the outlets, as in:
         Liu et al. (2014), A layered approach to parallel computing for spatially distributed hydrological modeling,
         Environmental Modelling & Software 51, 221-227.
