@@ -454,8 +454,9 @@ class routing(HydroModule):
         # Initialise parallel kinematic wave router: main channel-only routing if self.var.ChannelAlpha2 is None; else split-routing(main channel + floodplains)
         maskinfo = MaskInfo.instance()
         self.river_router = kinematicWave(compressArray(self.var.LddKinematic), ~maskinfo.info.mask, self.var.ChannelAlpha,
-                                          self.var.Beta, self.var.ChanLength, self.var.DtRouting,
-                                          int(binding["numCPUs_parallelKinematicWave"]), alpha_floodplains=self.var.ChannelAlpha2)
+                                           self.var.Beta, self.var.ChanLength, self.var.DtRouting,
+                                           int(binding["numCPUs_parallelKinematicWave"]), alpha_floodplains=self.var.ChannelAlpha2)
+
 
         # if option['InitLisflood'] and option['repMBTs']:
         #     self.var.StorageStepINIT= self.var.ChanM3Kin
@@ -513,8 +514,8 @@ class routing(HydroModule):
 
             # Initialise mct wave router
             # self.mct_river_router = mctWave(compressArray(self.var.LddMCT), ~maskinfo.info.mask)
-            self.mct_river_router = mctWave(self.get_mct_pix(compressArray(self.var.LddMCT)), self.var.mctmask)
 
+            self.mct_river_router = mctWave(self.get_mct_pix(compressArray(self.var.LddMCT)), self.var.mctmask)
 
         #    def initialMCT(self):
          #        """ initial part of the Muskingum-Kunge-Todini routing module
@@ -646,14 +647,9 @@ class routing(HydroModule):
 
             # Calc sideflow for MCT cells
             if option['MCTRouting']:
-                SideflowChanMCT = np.where(self.var.IsChannelMCT, SideflowChanM3 * self.var.InvChanLength * self.var.InvDtRouting,0)
+                SideflowChanMCT = np.where(self.var.IsChannelMCT, SideflowChanM3 * self.var.InvDtRouting,0)     #Ql
             else:
                 SideflowChanMCT = 0
-
-            # cm
-            SideflowChanMCT = 0
-            # cm
-
 
             # ************************************************************
             # ***** ROUTING                               ****************
@@ -1017,7 +1013,7 @@ class routing(HydroModule):
         Balv = self.get_mct_pix(self.var.ChanBottomWidth)    # width of the riverbed [m]
         ChanSdXdY = self.get_mct_pix(self.var.ChanSdXdY)     # slope dx/dy of riverbed side
         Nalv = self.get_mct_pix(self.var.ChanMan)            # channel mannings coefficient n for the riverbed [s/m1/3]
-        ANalv = np.arctan(1 / ChanSdXdY)                     # angle of the riverbed side [rad]
+        ANalv = np.arctan(1/ChanSdXdY)                     # angle of the riverbed side [rad]
 
         dt = self.var.DtSecChannel                           # computation time step for channel [s]
 
@@ -1047,7 +1043,7 @@ class routing(HydroModule):
         # Inflow at time t+1
         # I(t+dt)
         # dim=mct pixels
-        q01 = self.get_mct_pix(ChanQMCTUp1)  #+ self.get_mct_pix(SideflowChanMCT) * xpix
+        q01 = self.get_mct_pix(ChanQMCTUp1)
 
         # Outflow at time t+1
         # O(t+dt)
@@ -1056,6 +1052,12 @@ class routing(HydroModule):
         q11 = np.zeros_like(q01)
         qout_ave = np.zeros_like(q01)
         V11 = np.zeros_like(q01)
+
+        # Lateral flow Ql (average) during interval dt [m3/s]
+        # Ql(t)
+        # calc contribution from sideflow
+        ql = self.get_mct_pix(SideflowChanMCT)
+
 
         ### start pixels loop ###
         # Pixels in the same order are independent and can be routed in parallel.
@@ -1071,7 +1073,7 @@ class routing(HydroModule):
                 idpix = self.mct_river_router.pixels_ordered[index]
 
                 ### this is where MCT function for single cell will go
-                q11[idpix], qout_ave[idpix], V11[idpix], Cm0[idpix], Dm0[idpix] = self.MCTRouting_single(q10[idpix], q01[idpix], q00[idpix], ChanM3MCT0[idpix], Cm0[idpix], Dm0[idpix],
+                q11[idpix], qout_ave[idpix], V11[idpix], Cm0[idpix], Dm0[idpix] = self.MCTRouting_single(q10[idpix], q01[idpix], q00[idpix], ql[idpix], ChanM3MCT0[idpix], Cm0[idpix], Dm0[idpix],
                                                                                                          dt, xpix[idpix], s0[idpix], Balv[idpix], ANalv[idpix], Nalv[idpix])
 
                 #q11[idpix] = q01[idpix]00000
@@ -1102,7 +1104,7 @@ class routing(HydroModule):
         return ChanQMCTOut, ChanQMCTOutAve, ChanM3MCTOut, Cmout, Dmout
 
 
-    def MCTRouting_single(self, q10, q01, q00, ChanM3MCT0, Cm0, Dm0, dt, xpix, s0, Balv, ANalv, Nalv):
+    def MCTRouting_single(self, q10, q01, q00, ql, ChanM3MCT0, Cm0, Dm0, dt, xpix, s0, Balv, ANalv, Nalv):
         '''
         This function implements Muskingum-Cunge-Todini routing method for a single channel pixel.
         References:
@@ -1114,6 +1116,7 @@ class routing(HydroModule):
         :param q10: O(t) - outflow at time t
         :param q01: I(t+dt) - inflow at time t+dt
         :param q00: I(t) - inflow at time t
+        :param ql: lateral flow over time dt [m3/s]
         :param ChanM3MCT0: V(t) - channel storage volume at time t
         :param Cm0: Courant number at time t
         :param Dm0: Reynolds number at time t
@@ -1192,7 +1195,10 @@ class routing(HydroModule):
             c4 = (2 * Cm1) / den
 
             # Calc outflow q11 at time t+1
-            q11 = c1 * q01 + c2 * q00 + c3 * q10
+            # Mass balance equation without lateral flow
+            # q11 = c1 * q01 + c2 * q00 + c3 * q10
+            # Mass balance equation that takes into consideration the lateral flow
+            q11 = c1 * q01 + c2 * q00 + c3 * q10 + c4 * ql
 
             if q11 < 0.:
                 q11=0.
@@ -1203,21 +1209,27 @@ class routing(HydroModule):
         x1 = (1. - Dm1) / 2.
 
         # Calc the corrected mass-conservative expression for the reach segment storage at time t+dt
+        # The lateral inflow ql is only explicitly accounted for in the mass balance equation, while it is not in the equation expressing
+        # the storage as a weighted average of inflow and outflow.The rationale of this approach lies in the fact that the outflow
+        # of the reach implicitly takes the  effect of the lateral inflow into account.
         V11 = (1-Dm1)*dt/(2*Cm1)*q01 + (1+Dm1)*dt/(2*Cm1)*q11
-        # V0 = k1 * (x1 * q01 + (1. - x1) * q11)  # MUST be the same!
+        # V0 = k1 * (x1 * q01 + (1. - x1) * q11)  # MUST be the same as above!
         if (V11 < 0):
             V11=0.
 
         # Calc average outflow for calc step
-        #ChanQMCTOutAvg = (q01+q00)/2 + SideflowChan * self.var.ChanLength - (V11-ChanM300)/dt
-        qout_ave = (q01 + q00) / 2 - (V11 - ChanM3MCT0) / dt
+        # qout_ave = (q01 + q00) / 2 - (V11 - ChanM3MCT0) / dt
+        # Calc average outflow for calc step considerinbg lateral flow
+        qout_ave = (q01 + q00) / 2 + ql - (V11 - ChanM3MCT0) / dt
 
         # Check for negative discharge
         if qout_ave < 0:
             qout_ave = 0.
 
         # Update volume when negative discharge is set =0
-        V11 = ChanM3MCT0 + ((q01 + q00) / 2 - qout_ave) * dt
+        # V11 = ChanM3MCT0 + ((q01 + q00) / 2 - qout_ave) * dt
+        # Update volume when negative discharge is set =0 with lateral flow
+        V11 = ChanM3MCT0 + ((q01 + q00) / 2 + ql - qout_ave) * dt
 
         # Outflow at O(t+dt), average outflow in time dt, water volume at t+dt, Courant and Reynolds numbers at t+1 for state files
         return q11, qout_ave, V11, Cm1, Dm1
