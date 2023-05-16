@@ -706,11 +706,16 @@ class routing(HydroModule):
 
                 ChanQKinOutEnd,ChanQKinOutAvg,ChanM3KinEnd = self.KINRouting(ChanQKinOutStart,SideflowChan)
 
+
                 ####################
                 # MCT routing
 
                 ChanQMCTOutStart = self.var.ChanQ.copy()
                 # Outflow at time t  q10
+
+                ######cm
+                # ChanQKinOutEnd[ChanQKinOutEnd != 0] = 0     # metto a 1 la portata in arrivo dalle celle Kinematic
+                ######cm
 
                 ChanM3Start = self.var.ChanM3.copy()
                 # Channel storage at time t V0
@@ -1075,8 +1080,7 @@ class routing(HydroModule):
                 ### this is where MCT function for single cell will go
                 q11[idpix], qout_ave[idpix], V11[idpix], Cm0[idpix], Dm0[idpix] = self.MCTRouting_single(q10[idpix], q01[idpix], q00[idpix], ql[idpix], ChanM3MCT0[idpix], Cm0[idpix], Dm0[idpix],
                                                                                                          dt, xpix[idpix], s0[idpix], Balv[idpix], ANalv[idpix], Nalv[idpix])
-
-                #q11[idpix] = q01[idpix]00000
+                # q11[idpix] = q01[idpix]     # tanto entra tanto esce nelle celle mct
 
             # Update contribution from upstream pixels at time t+1 (dim=all pixels) using the newly calculated q11
             # I want to update q01 (inflow at t+1) for cells downstream of idpix using the newly calculated q11
@@ -1090,7 +1094,7 @@ class routing(HydroModule):
             # Inflow at time t+1
             # I(t+dt)
             # dim=mct pixels
-            q01 = self.get_mct_pix(Qup01)  #+ self.get_mct_pix(SideflowChanMCT) * xpix
+            q01 = self.get_mct_pix(Qup01)
 
         ### end pixels loop ###
 
@@ -1201,7 +1205,7 @@ class routing(HydroModule):
             q11 = c1 * q01 + c2 * q00 + c3 * q10 + c4 * ql
 
             if q11 < 0.:
-                q11=0.
+                q11 = eps
 
             #### end of for loop
 
