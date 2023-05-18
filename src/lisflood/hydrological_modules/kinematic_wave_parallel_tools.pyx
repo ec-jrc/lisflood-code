@@ -71,7 +71,9 @@ def kinematicRouting(double[::1] discharge, double[::1] lateral_inflow, double[:
 cdef void solve1Pixel(long pix, double[::1] discharge, double[::1] lateral_inflow, double[::1] constant,\
                       long[:,::1] upstream_lookup, long[::1] num_upstream_pixels, double[::1] a_dx_div_dt,\
                       double[::1] b_a_dx_div_dt, double beta, double inv_beta, double b_minus_1) nogil:
-    """"""
+    """
+    Te Chow et al. 1988 - Applied Hydrology - Chapter 9.6
+    """
     cdef:
         long ups_ix, count = 0
         double error, const_plus_ups_infl, a_cpui_pow_b_m_1, secant_bound, other_bound, previous_estimate = -1., upstream_inflow = 0.

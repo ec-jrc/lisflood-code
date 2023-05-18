@@ -869,7 +869,7 @@ class routing(HydroModule):
         SideflowChan = lateral inflow into the channel segment (cell) [m3/channellength/sec]
         :returns
         ChanQKin = outflow at time t+dt (instant) [m3/s]
-        ChanQ = average outflow for calc step dt (average) [m3/s]
+        ChanQKinOutAvg = average outflow for calc step dt (average) [m3/s]
         ChanM3Kin = amount of water stored in the channel at time t+dt (instant) [m3]
         """
 
@@ -880,16 +880,18 @@ class routing(HydroModule):
 
         ChanM3KinStart = self.var.ChanLength * self.var.ChannelAlpha * ChanQKin ** self.var.Beta
         # Volume in channel at beginning of computation step (at t) (instant)
+
         ChanQKinOutStart = ChanQKin.copy()
         # Outflow at time t
+
         ChanQKinPcr=decompress(ChanQKin)    #pcr
         ChanQKinInStart=compressArray(upstream(self.var.LddChan,ChanQKinPcr))
-        # Inflow at time t
+        # Inflow at time t (instant)
 
         ####################################################################################################
         #self.river_router.kinematicWaveRouting(self.var.ChanQKin, SideflowChan, "main_channel")
         self.river_router.kinematicWaveRouting(ChanQKin, SideflowChan, "main_channel")
-        # ChanQKin is outflow (at x+dx) at time t+dt (instant)
+        # ChanQKin is outflow (at x+dx) at time t in input and at time t+dt in output (instant)
         ####################################################################################################
 
         #self.var.ChanM3Kin = self.var.ChanLength * self.var.ChannelAlpha * self.var.ChanQKin**self.var.Beta
@@ -913,6 +915,10 @@ class routing(HydroModule):
 
         # Calc average outflow for calc step
         ChanQKinOutAvg = (ChanQKinInEnd+ChanQKinInStart)/2 + SideflowChan * self.var.ChanLength - (ChanM3Kin-ChanM3KinStart)/self.var.DtSecChannel
+        # Check for negative values in the average discharge
+        ChanQKinOutAvg = np.maximum(ChanQKinOutAvg, 0.0)
+        ChanM3Kin = ChanM3KinStart + ((ChanQKinInEnd+ChanQKinInStart)/2 + SideflowChan * self.var.ChanLength - ChanQKinOutAvg) * self.var.DtSecChannel
+        ChanQKin = (ChanM3Kin * self.var.InvChanLength * self.var.InvChannelAlpha) ** (self.var.InvBeta)
 
         return ChanQKin,ChanQKinOutAvg,ChanM3Kin
 
@@ -1239,186 +1245,6 @@ class routing(HydroModule):
         return q11, qout_ave, V11, Cm1, Dm1
 
 
-
-    def MCTRouting(self,ChanQMCTOutStart,ChanQMCTInStart,ChanQKinOut,SideflowChanMCT,ChanM3Start):
-        """This function implements Muskingum-Cunge-Todini routing method
-        References:
-            Todini, E. (2007). A mass conservative and water storage consistent variable parameter Muskingum-Cunge approach. Hydrol. Earth Syst. Sci.
-            (Chapter 5)
-            Reggiani, P., Todini, E., & Meißner, D. (2016). On mass and momentum conservation in the variable-parameter Muskingum method. Journal of Hydrology, 543, 562–576. https://doi.org/10.1016/j.jhydrol.2016.10.030
-            (Appendix B)
-        """
-
-        # #cm
-        # ChanSdXdY = self.get_mct_pix(self.var.ChanSdXdY)
-        # ChanM3 = self.get_mct_pix(self.var.ChanM3)
-        # h = self.hoV(ChanM3)
-        # q_h, a, b, p, cel = self.qoh(h)
-        # q_V = self.qoV(ChanM3)
-
-        # channel geometry - MCT pixels only
-        xpix = self.get_mct_pix(self.var.ChanLength)          # dimension along the flow direction  [m]
-        slp = self.get_mct_pix(self.var.ChanGrad)             # river bed slope (tan B)
-        s0 = self.get_mct_pix(self.var.ChanGrad)             # river bed slope (tan B)
-        Balv = self.get_mct_pix(self.var.ChanBottomWidth)    # width of the riverbed [m]
-        ChanSdXdY = self.get_mct_pix(self.var.ChanSdXdY)     # slope dx/dy of riverbed side
-        Nalv = self.get_mct_pix(self.var.ChanMan)            # channel mannings coefficient n for the riverbed [s/m1/3]
-        alpha = 5./3.                                        # exponent (5/3)
-        ANalv = np.arctan(1 / ChanSdXdY)                     # angle of the riverbed side [rad]
-
-        dt = self.var.DtSecChannel          # computation timestep for channel [s]
-        eps = 1e-06
-
-        # MCT Courant and Reynolds numbers from previous step (MCT pixels)
-        Cm0 = self.get_mct_pix(self.var.PrevCm0)
-        Dm0 = self.get_mct_pix(self.var.PrevDm0)
-
-        dx = xpix
-
-        # instant discharge at channel input (I x=0) and channel output (O x=1)
-        # at the end of previous calculation step I(t) and O(t) and
-        # at the end of current calculation step I(t+1) and O(t+1)
-
-        # Inflow at time t
-        # I(t)
-        # calc contribution from upstream pixels at time t (dim=all pixels)
-        q00 = self.get_mct_pix(ChanQMCTInStart)
-        # channel storage at the beginning of the computation step (t)
-        ChanM3MCT0 = self.get_mct_pix(ChanM3Start)
-
-        # Outflow at time t
-        # O(t)
-        # dim=mct pixels
-        q10 = self.get_mct_pix(ChanQMCTOutStart)
-
-
-        # calc contribution from upstream pixels at time t+1 (dim=all pixels)
-        ChanQMCTPcr=decompress(ChanQKinOut)    #pcr
-        ChanQMCTUp1=compressArray(upstream(self.var.LddChan,ChanQMCTPcr))
-        # Inflow at time t+1
-        # I(t+dt)
-        # dim=mct pixels
-        q01 = self.get_mct_pix(ChanQMCTUp1)  #+ self.get_mct_pix(SideflowChanMCT) * xpix
-
-
-        # ### start pixels loop ###
-        # num_orders = self.mct_river_router.order_start_stop.shape[0]
-        # for order in range(num_orders):
-        #     first = self.mct_river_router.order_start_stop[order, 0]
-        #     last = self.mct_river_router.order_start_stop[order, 1]
-        #     for index in range(first, last):
-        #         idpix = self.mct_river_router.pixels_ordered[index]
-
-
-        #############################################################################
-        ######### to pixels routing loop ############################################
-        # Calc O' first guess for the outflow at time t+dt
-        # O'(t+dt)=O(t)+(I(t+dt)-I(t))
-        q11 = q10 + (q01 - q00)
-        #if q11 < 0: q11 = 0.
-        # check for negative discharge values
-        q11 = np.maximum(q11, 0)
-
-        # calc reference discharge at time t
-        # qm0 = (I(t)+O(t))/2
-        # qm0 = (q00 + q10) / 2.
-
-        # Calc O(t+dt)=q11 at time t+dt using MCT equations
-        for i in range(2):  # repeat 2 times for accuracy
-
-            # reference I discharge at x=0
-            qmx0 = (q00 + q01) / 2.
-            # if qmx0 == 0: qmx0 = eps
-            qmx0 = np.maximum(qmx0, 0)
-            hmx0 = self.hoq(qmx0)
-
-            # reference O discharge at x=1
-            qmx1 = (q10 + q11) / 2.
-            # if qmx1 == 0: qmx1 = eps
-            qmx1 = np.maximum(qmx1, 0)
-            hmx1 = self.hoq(qmx1)
-
-            # # reference discharge at time t+dt
-            # # qmm = (I(t+dt)+O(t+dt))/2
-            # qmm = (q01 + q11) / 2
-            # if qmm == 0: qmm = eps
-            # qmm = [0 if i < 0 else i for i in qmm]
-            # hmm = self.hoq(qmm)
-            # dummy, Amm,Bmm,Pmm, cmm = self.qoh(hmm)
-            # dummy, Amx0,Bmx0,Pmx0, cmx0 = self.qoh(hmx0)
-            # dummy, Amx1,Bmx1,Pmx1, cmx1 = self.qoh(hmx1)
-
-            # Calc riverbed slope correction factor
-            cor = 1 - (1 / slp * (hmx1 - hmx0) / xpix)
-            sfx = slp * cor
-            # if sfx < (0.8 * slp): sfx = 0.8 * slp   # Nel caso di oscillazioni aumentare 0.5 a 0.8
-            sfx = np.where(sfx < (0.8 * slp), 0.8 * slp, sfx)
-
-            # Calc reference discharge time t+dt
-            # Q(t+dt)=(I(t+dt)+O'(t+dt))/2
-            qm1 = (q01 + q11) / 2.
-            hm1 = self.hoq(qm1)
-            dummy, Ax1,Bx1,Px1,ck1 = self.qoh(hm1)
-            # if (ck1 <= eps): ck1 = eps
-            ck1 = np.where(ck1 < eps, eps, ck1)
-
-            # Calc correcting factor Beta at time t+dt
-            Beta1 = ck1 / (qm1 / Ax1)
-            # calc corrected cell Reynolds number at time t+dt
-            Dm1 = qm1 / (sfx * ck1 * Bx1 * dx) / Beta1
-            # corrected Courant number at time t+dt
-            Cm1: object = ck1 * dt / dx / Beta1
-
-            # Calc MCT parameters
-            den = 1 + Cm1 + Dm1
-            c1 = (-1 + Cm1 + Dm1) / den
-            c2 = (1 + Cm0 - Dm0) / den * (Cm1 / Cm0)
-            c3 = (1 - Cm0 + Dm0) / den * (Cm1 / Cm0)
-            c4 = (2 * Cm1) / den
-
-            # Calc flow at time t+1
-            q11 =c1 * q01 + c2 * q00 + c3 * q10
-
-            # if (q11 < 0.): q11=0.
-            q11 = np.maximum(q11, 0)
-            # end of loop
-
-        k1 = dt / Cm1
-        x1 = (1. - Dm1) / 2.
-
-        # Calc the corrected mass-conservative expression for the reach segment storage at time t+dt
-        V11 = (1-Dm1)*dt/(2*Cm1)*q01 + (1+Dm1)*dt/(2*Cm1)*q11
-        # V0 = k1 * (x1 * q01 + (1. - x1) * q11)  # MUST be the same!
-        # if (V11 < 0): V11=0.
-        V11 = np.maximum(V11, 0)
-
-        # save Courant and Reynolds numbers at t+1 for state files
-        Cm0 = Cm1
-        Dm0 = Dm1
-
-
-        # Calc average outflow for calc step
-        #ChanQMCTOutAvg = (q01+q00)/2 + SideflowChan * self.var.ChanLength - (V11-ChanM300)/dt
-        qout_ave = (q01 + q00) / 2 - (V11 - ChanM3MCT0) / dt
-
-        # Check for negative discharge
-        qout_ave = np.where(qout_ave < 0, 0, qout_ave)
-        # Update volume when negative discharge is set =0
-        V11 = ChanM3MCT0 + ((q01 + q00) / 2 - qout_ave) * dt
-
-        #############################################################################
-        ######### end pixels routing loop ############################################
-
-        ChanQMCTOut = self.put_mct_pix(q11)
-        Cmout = self.put_mct_pix(Cm0)
-        Dmout = self.put_mct_pix(Dm0)
-        ChanM3MCTOut = self.put_mct_pix(V11)
-        ChanQMCTOutAve = self.put_mct_pix(qout_ave)
-
-        return ChanQMCTOut, ChanQMCTOutAve, ChanM3MCTOut, Cmout, Dmout
-
-
-
     def hoq(self,q,s0,Balv,ANalv,Nalv):
         """Given a generic section (rectangular, triangular or trapezoidal) and a steady-state discharge q=Q*, it computes
         water depth (y), wet contour (Bx), wet area (Ax) and wave celerity (cel) using Newton-Raphson method.
@@ -1622,167 +1448,6 @@ class routing(HydroModule):
         rad = np.arctan(1 / dxdy)
         angle = np.rad2deg(rad)
         return rad
-
-
-
-
-    def MCTRoutingSAVE(self, ChanQMCTOutStart, ChanQMCTInStart, ChanQKinOut, SideflowChanMCT, ChanM3Start):
-        """This function implements Muskingum-Cunge-Todini routing method
-        References:
-            Todini, E. (2007). A mass conservative and water storage consistent variable parameter Muskingum-Cunge approach. Hydrol. Earth Syst. Sci.
-            (Chapter 5)
-            Reggiani, P., Todini, E., & Meißner, D. (2016). On mass and momentum conservation in the variable-parameter Muskingum method. Journal of Hydrology, 543, 562–576. https://doi.org/10.1016/j.jhydrol.2016.10.030
-            (Appendix B)
-        """
-
-        # #cm
-        # ChanSdXdY = self.get_mct_pix(self.var.ChanSdXdY)
-        # ChanM3 = self.get_mct_pix(self.var.ChanM3)
-        # h = self.hoV(ChanM3)
-        # q_h, a, b, p, cel = self.qoh(h)
-        # q_V = self.qoV(ChanM3)
-
-        # channel geometry
-        xpix = self.get_mct_pix(self.var.ChanLength)  # dimension along the flow direction  [m]
-        slp = self.get_mct_pix(self.var.ChanGrad)  # river bed slope (tan B)
-        dt = self.var.DtSecChannel  # computation timestep for channel [s]
-        eps = 1e-06
-
-        # MCT Courant and Reynolds numbers from previous step (MCT pixels)
-        Cm0 = self.get_mct_pix(self.var.PrevCm0)
-        Dm0 = self.get_mct_pix(self.var.PrevDm0)
-
-        dx = xpix
-
-        # instant discharge at channel input (I x=0) and channel output (O x=1)
-        # at the end of previous calculation step I(t) and O(t) and
-        # at the end of current calculation step I(t+1) and O(t+1)
-
-        # Inflow at time t
-        # I(t)
-        # calc contribution from upstream pixels at time t (dim=all pixels)
-        q00 = self.get_mct_pix(ChanQMCTInStart)
-        # channel storage at the beginning of the computation step (t)
-        ChanM3MCT0 = self.get_mct_pix(ChanM3Start)
-
-        # Outflow at time t
-        # O(t)
-        # dim=mct pixels
-        q10 = self.get_mct_pix(ChanQMCTOutStart)
-
-        # calc contribution from upstream pixels at time t+1 (dim=all pixels)
-        ChanQMCTPcr = decompress(ChanQKinOut)  # pcr
-        ChanQMCTUp1 = compressArray(upstream(self.var.LddChan, ChanQMCTPcr))
-        # Inflow at time t+1
-        # I(t+dt)
-        # dim=mct pixels
-        q01 = self.get_mct_pix(ChanQMCTUp1)  # + self.get_mct_pix(SideflowChanMCT) * xpix
-
-        #############################################################################
-        ######### to pixels routing loop ############################################
-        # Calc O' first guess for the outflow at time t+dt
-        # O'(t+dt)=O(t)+(I(t+dt)-I(t))
-        q11 = q10 + (q01 - q00)
-        # if q11 < 0: q11 = 0.
-        # check for negative discharge values
-        q11 = np.maximum(q11, 0)
-
-        # calc reference discharge at time t
-        # qm0 = (I(t)+O(t))/2
-        # qm0 = (q00 + q10) / 2.
-
-        # Calc O(t+dt)=q11 at time t+dt using MCT equations
-        for i in range(2):  # repeat 2 times for accuracy
-
-            # reference I discharge at x=0
-            qmx0 = (q00 + q01) / 2.
-            # if qmx0 == 0: qmx0 = eps
-            qmx0 = np.maximum(qmx0, 0)
-            hmx0 = self.hoq(qmx0)
-
-            # reference O discharge at x=1
-            qmx1 = (q10 + q11) / 2.
-            # if qmx1 == 0: qmx1 = eps
-            qmx1 = np.maximum(qmx1, 0)
-            hmx1 = self.hoq(qmx1)
-
-            # # reference discharge at time t+dt
-            # # qmm = (I(t+dt)+O(t+dt))/2
-            # qmm = (q01 + q11) / 2
-            # if qmm == 0: qmm = eps
-            # qmm = [0 if i < 0 else i for i in qmm]
-            # hmm = self.hoq(qmm)
-            # dummy, Amm,Bmm,Pmm, cmm = self.qoh(hmm)
-            # dummy, Amx0,Bmx0,Pmx0, cmx0 = self.qoh(hmx0)
-            # dummy, Amx1,Bmx1,Pmx1, cmx1 = self.qoh(hmx1)
-
-            # Calc riverbed slope correction factor
-            cor = 1 - (1 / slp * (hmx1 - hmx0) / xpix)
-            sfx = slp * cor
-            # if sfx < (0.8 * slp): sfx = 0.8 * slp   # Nel caso di oscillazioni aumentare 0.5 a 0.8
-            sfx = np.where(sfx < (0.8 * slp), 0.8 * slp, sfx)
-
-            # Calc reference discharge time t+dt
-            # Q(t+dt)=(I(t+dt)+O'(t+dt))/2
-            qm1 = (q01 + q11) / 2.
-            hm1 = self.hoq(qm1)
-            dummy, Ax1, Bx1, Px1, ck1 = self.qoh(hm1)
-            # if (ck1 <= eps): ck1 = eps
-            ck1 = np.where(ck1 < eps, eps, ck1)
-
-            # Calc correcting factor Beta at time t+dt
-            Beta1 = ck1 / (qm1 / Ax1)
-            # calc corrected cell Reynolds number at time t+dt
-            Dm1 = qm1 / (sfx * ck1 * Bx1 * dx) / Beta1
-            # corrected Courant number at time t+dt
-            Cm1: object = ck1 * dt / dx / Beta1
-
-            # Calc MCT parameters
-            den = 1 + Cm1 + Dm1
-            c1 = (-1 + Cm1 + Dm1) / den
-            c2 = (1 + Cm0 - Dm0) / den * (Cm1 / Cm0)
-            c3 = (1 - Cm0 + Dm0) / den * (Cm1 / Cm0)
-            c4 = (2 * Cm1) / den
-
-            # Calc flow at time t+1
-            q11 = c1 * q01 + c2 * q00 + c3 * q10
-
-            # if (q11 < 0.): q11=0.
-            q11 = np.maximum(q11, 0)
-            # end of loop
-
-        k1 = dt / Cm1
-        x1 = (1. - Dm1) / 2.
-
-        # Calc the corrected mass-conservative expression for the reach segment storage at time t+dt
-        V11 = (1 - Dm1) * dt / (2 * Cm1) * q01 + (1 + Dm1) * dt / (2 * Cm1) * q11
-        # V0 = k1 * (x1 * q01 + (1. - x1) * q11)  # MUST be the same!
-        # if (V11 < 0): V11=0.
-        V11 = np.maximum(V11, 0)
-
-        # save Courant and Reynolds numbers at t+1 for state files
-        Cm0 = Cm1
-        Dm0 = Dm1
-
-        # Calc average outflow for calc step
-        # ChanQMCTOutAvg = (q01+q00)/2 + SideflowChan * self.var.ChanLength - (V11-ChanM300)/dt
-        qout_ave = (q01 + q00) / 2 - (V11 - ChanM3MCT0) / dt
-
-        # Check for negative discharge
-        qout_ave = np.where(qout_ave < 0, 0, qout_ave)
-        # Update volume when negative discharge is set =0
-        V11 = ChanM3MCT0 + ((q01 + q00) / 2 - qout_ave) * dt
-
-        #############################################################################
-        ######### end pixels routing loop ############################################
-
-        ChanQMCTOut = self.put_mct_pix(q11)
-        Cmout = self.put_mct_pix(Cm0)
-        Dmout = self.put_mct_pix(Dm0)
-        ChanM3MCTOut = self.put_mct_pix(V11)
-        ChanQMCTOutAve = self.put_mct_pix(qout_ave)
-
-        return ChanQMCTOut, ChanQMCTOutAve, ChanM3MCTOut, Cmout, Dmout
 
 
 
