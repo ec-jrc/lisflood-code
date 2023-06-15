@@ -247,7 +247,7 @@ class LisfloodModel_dyn(DynamicModel):
             ftemp1 = open(nomefile, 'w+')
             nelements = len(self.ChanM3)
             for i in range(0,nelements-1):
-                if  hasattr(self,'CrossSection2Area'):
+                if  hasattr(self,'CrossSection2Area') and not(option['InitLisflood']):
                     print(i, self.TotalCrossSectionArea[i], self.CrossSection2Area[i], self.ChanM3[i], \
                     self.Chan2M3Kin[i], file=ftemp1)
                 else:
