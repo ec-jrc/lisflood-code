@@ -195,8 +195,13 @@ class XarrayChunked():
         # in case the dataset contains valid_min and valid_max set, store here the scaled adn offset values of them
         scale_factor=da.encoding['scale_factor'] if 'scale_factor' in da.encoding else 1
         add_offset=da.encoding['add_offset'] if 'add_offset' in da.encoding else 0
-        valid_min_scaled = (da.attrs['valid_min']*scale_factor+add_offset) if 'valid_min' in da.attrs else None
-        valid_max_scaled = (da.attrs['valid_max']*scale_factor+add_offset) if 'valid_max' in da.attrs else None
+        valid_min_scaled = None
+        valid_max_scaled = None
+        settings = LisSettings.instance()
+        flags = settings.flags
+        if not flags['skipvalreplace']:
+            valid_min_scaled = (da.attrs['valid_min']*scale_factor+add_offset) if 'valid_min' in da.attrs else None
+            valid_max_scaled = (da.attrs['valid_max']*scale_factor+add_offset) if 'valid_max' in da.attrs else None
         self.dataset = compress_xarray(mask, crop, da, var_name, valid_min_scaled, valid_max_scaled) # final dataset to store
 
         # initialise class variables and load first chunk
@@ -236,7 +241,7 @@ class XarrayChunked():
 
         if local_index < 0:
             msg = 'local step cannot be negative! step: {}, chunk: {} - {}', local_index, self.chunk_index[self.ichunk], self.chunk_index[self.ichunk+1]
-            LisfloodError(msg)
+            raise LisfloodError(msg)
 
         data = self.dataset_chunk.values[local_index]
         if np.issubdtype(data.dtype, np.floating):
