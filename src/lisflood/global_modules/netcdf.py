@@ -1,5 +1,6 @@
 import os
 import glob
+import warnings
 import xarray as xr
 import numpy as np
 import datetime
@@ -16,15 +17,30 @@ from .decorators import Cache, cached
 from .zusatz import iterOpenNetcdf
 # from .add1 import *
 from .add1 import nanCheckMap, decompress
+from netCDF4 import default_fillvals
 
 
-def mask_array_np(data, mask, crop):
+def mask_array_np(data, mask, crop, name, valid_min, valid_max):
     data_cut = data[:, crop[2]:crop[3], crop[0]:crop[1]]
+    if (valid_min is not None):
+        if (data_cut < valid_min).sum() > 0:
+            warnings.warn(LisfloodWarning('Data in var "{}" contains values out of valid range (valid_min)'.format(name)))
+            if np.issubdtype(data.dtype, np.floating):
+                data_cut[(data_cut < valid_min)] = np.nan
+            else:
+                data_cut[(data_cut < valid_min)] = default_fillvals[data_cut.dtype.str[1:]]
+    if (valid_max is not None):
+        if (data_cut > valid_max).sum() > 0:
+            warnings.warn(LisfloodWarning('Data in var "{}" contains values out of valid range (valid_max)'.format(name)))
+            if np.issubdtype(data.dtype, np.floating):
+                data_cut[(data_cut > valid_max)] = np.nan
+            else:
+                data_cut[(data_cut > valid_max)] = default_fillvals[data_cut.dtype.str[1:]]
     return data_cut[:, mask]
 
 
 
-def mask_array(data, mask, crop, core_dims):
+def mask_array(data, mask, crop, core_dims, name, valid_min, valid_max):
     n_data = int(mask.sum())
     masked_data = xr.apply_ufunc(mask_array_np, data,
                                  dask='parallelized',
@@ -33,13 +49,13 @@ def mask_array(data, mask, crop, core_dims):
                                  output_dtypes=[data.dtype],
                                  output_core_dims=[['z']],
                                  dask_gufunc_kwargs = dict(output_sizes={'z': n_data}),
-                                 kwargs={'mask': mask, 'crop': crop})
+                                 kwargs={'mask': mask, 'crop': crop, 'name': name, 'valid_min': valid_min, 'valid_max': valid_max})
     return masked_data
 
 
-def compress_xarray(mask, crop, data):
+def compress_xarray(mask, crop, data, name, valid_min, valid_max):
     core_dims = get_core_dims(data.dims)
-    masked_data = mask_array(data, mask, crop, core_dims=core_dims)
+    masked_data = mask_array(data, mask, crop, core_dims=core_dims, name=name, valid_min=valid_min, valid_max=valid_max)
     return masked_data
 
 
@@ -154,7 +170,8 @@ class XarrayChunked():
         if time_chunk != 'auto' and time_chunk is not None:
             time_chunk = int(time_chunk)
         data_path = data_path + ".nc" if not data_path.endswith('.nc') else data_path
-        ds = xr.open_mfdataset(data_path, engine='netcdf4', chunks={'time': time_chunk}, combine='by_coords')
+        ds = xr.open_mfdataset(data_path, engine='netcdf4', chunks={'time': time_chunk}, combine='by_coords',
+                               mask_and_scale=True)
 
         # check calendar type
         check_dataset_calendar_type(ds, data_path)
@@ -174,7 +191,18 @@ class XarrayChunked():
         mask = np.logical_not(maskinfo.info.mask)
         cutmap = CutMap.instance()
         crop = cutmap.cuts
-        self.dataset = compress_xarray(mask, crop, da) # final dataset to store
+
+        # in case the dataset contains valid_min and valid_max set, store here the scaled adn offset values of them
+        scale_factor=da.encoding['scale_factor'] if 'scale_factor' in da.encoding else 1
+        add_offset=da.encoding['add_offset'] if 'add_offset' in da.encoding else 0
+        valid_min_scaled = None
+        valid_max_scaled = None
+        settings = LisSettings.instance()
+        flags = settings.flags
+        if not flags['skipvalreplace']:
+            valid_min_scaled = (da.attrs['valid_min']*scale_factor+add_offset) if 'valid_min' in da.attrs else None
+            valid_max_scaled = (da.attrs['valid_max']*scale_factor+add_offset) if 'valid_max' in da.attrs else None
+        self.dataset = compress_xarray(mask, crop, da, var_name, valid_min_scaled, valid_max_scaled) # final dataset to store
 
         # initialise class variables and load first chunk
         self.init_chunks(self.dataset, time_chunk)
@@ -213,9 +241,18 @@ class XarrayChunked():
 
         if local_index < 0:
             msg = 'local step cannot be negative! step: {}, chunk: {} - {}', local_index, self.chunk_index[self.ichunk], self.chunk_index[self.ichunk+1]
-            LisfloodError(msg)
+            raise LisfloodError(msg)
 
         data = self.dataset_chunk.values[local_index]
+        if np.issubdtype(data.dtype, np.floating):
+            if (np.isnan(data).any()):
+                #warnings.warn(LisfloodWarning('Data in var "{}" contains NaN values or values out of valid range inside mask map for step: {}'.format(self.dataset.name,local_index)))
+                raise LisfloodError('Data in var "{}" contains NaN values or values out of valid range inside mask map for step: {}'.format(self.dataset.name,local_index))
+        else:
+            if (data==default_fillvals[data.dtype.str[1:]]).any():
+                #warnings.warn(LisfloodWarning('Data in var "{}" contains NaN values or values out of valid range inside mask map for step: {}'.format(self.dataset.name,local_index)))
+                raise LisfloodError('Data in var "{}" contains missing values or values out of valid range inside mask map for step: {}'.format(self.dataset.name,local_index))
+
         return data
 
 
