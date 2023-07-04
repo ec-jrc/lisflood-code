@@ -20,8 +20,8 @@ from .add1 import nanCheckMap, decompress
 from netCDF4 import default_fillvals
 
 
-def mask_array_np(data, mask, crop, name, valid_min, valid_max):
-    data_cut = data[:, crop[2]:crop[3], crop[0]:crop[1]]
+def mask_array_np(data, mask, crop, name, valid_min, valid_max, func_x, func_y):
+    data_cut = func_x(func_y(data))[:, crop[2]:crop[3], crop[0]:crop[1]]
     if (valid_min is not None):
         if (data_cut < valid_min).sum() > 0:
             warnings.warn(LisfloodWarning('Data in var "{}" contains values out of valid range (valid_min)'.format(name)))
@@ -40,7 +40,7 @@ def mask_array_np(data, mask, crop, name, valid_min, valid_max):
 
 
 
-def mask_array(data, mask, crop, core_dims, name, valid_min, valid_max):
+def mask_array(data, mask, crop, core_dims, name, valid_min, valid_max, func_x, func_y):
     n_data = int(mask.sum())
     masked_data = xr.apply_ufunc(mask_array_np, data,
                                  dask='parallelized',
@@ -49,13 +49,17 @@ def mask_array(data, mask, crop, core_dims, name, valid_min, valid_max):
                                  output_dtypes=[data.dtype],
                                  output_core_dims=[['z']],
                                  dask_gufunc_kwargs = dict(output_sizes={'z': n_data}),
-                                 kwargs={'mask': mask, 'crop': crop, 'name': name, 'valid_min': valid_min, 'valid_max': valid_max})
+                                 kwargs={'mask': mask, 'crop': crop, 'name': name, 
+                                         'valid_min': valid_min, 'valid_max': valid_max,
+                                         'func_x': func_x, 'func_y':func_y})
     return masked_data
 
 
-def compress_xarray(mask, crop, data, name, valid_min, valid_max):
+def compress_xarray(mask, crop, data, name, valid_min, valid_max, func_x, func_y):
     core_dims = get_core_dims(data.dims)
-    masked_data = mask_array(data, mask, crop, core_dims=core_dims, name=name, valid_min=valid_min, valid_max=valid_max)
+    masked_data = mask_array(data, mask, crop, core_dims=core_dims, name=name, 
+                             valid_min=valid_min, valid_max=valid_max,
+                             func_x=func_x, func_y=func_y)
     return masked_data
 
 
@@ -186,6 +190,20 @@ class XarrayChunked():
             da = da.sel(time=date_range)
         self.index_map = map_dates_index(dates, da.time, indexer, climatology)
 
+        # read maps using always a standard x and y reference system using x in ascending and y in descending order
+        spatial_dims = ('x', 'y') if 'x' in ds.variables else ('lon', 'lat')
+        x_flipped = ds.variables[spatial_dims[0]][0]>ds.variables[spatial_dims[0]][-1] 
+        y_flipped = ds.variables[spatial_dims[1]][0]<ds.variables[spatial_dims[1]][-1] 
+        func_y = lambda y : y
+        func_x = lambda x : x
+        # read maps using always a standard x and y reference system using x in ascending and y in descending order
+        if (y_flipped):   # y in in ascending order
+            warnings.warn(LisfloodWarning("Warning: map {} (var_name: '{}') has y coordinates in ascending order and will be flipped vertically".format(data_path, var_name)))
+            func_y = lambda y : np.flipud(y).copy()
+        if (x_flipped):   # x in in descending order
+            warnings.warn(LisfloodWarning("Warning: map {} (var_name: '{}') has x coordinates in descending order and will be flipped horizontally".format(data_path, var_name)))
+            func_x = lambda x : np.fliplr(x).copy()
+
         # compress dataset (remove missing values and flatten the array)
         maskinfo = MaskInfo.instance()
         mask = np.logical_not(maskinfo.info.mask)
@@ -202,7 +220,7 @@ class XarrayChunked():
         if not flags['skipvalreplace']:
             valid_min_scaled = (da.attrs['valid_min']*scale_factor+add_offset) if 'valid_min' in da.attrs else None
             valid_max_scaled = (da.attrs['valid_max']*scale_factor+add_offset) if 'valid_max' in da.attrs else None
-        self.dataset = compress_xarray(mask, crop, da, var_name, valid_min_scaled, valid_max_scaled) # final dataset to store
+        self.dataset = compress_xarray(mask, crop, da, var_name, valid_min_scaled, valid_max_scaled, func_x, func_y) # final dataset to store
 
         # initialise class variables and load first chunk
         self.init_chunks(self.dataset, time_chunk)
@@ -324,6 +342,19 @@ def read_lat_from_template_cached(netcdf_template, proj4_params):
 def read_lat_from_template_base(netcdf_template, proj4_params):
     nc_template = netcdf_template + ".nc" if not netcdf_template.endswith('.nc') else netcdf_template
     with xr.open_dataset(nc_template) as nc:
+        # read maps using always a standard x and y reference system using x in ascending and y in descending order
+        spatial_dims = ('x', 'y') if 'x' in nc.dims else ('lon', 'lat')
+        x_flipped = nc.variables[spatial_dims[0]][0]>nc.variables[spatial_dims[0]][-1] 
+        y_flipped = nc.variables[spatial_dims[1]][0]<nc.variables[spatial_dims[1]][-1] 
+        func_y = lambda y : y
+        func_x = lambda x : x
+        # read maps using always a standard x and y reference system using x in ascending and y in descending order
+        if (y_flipped):   # y in in ascending order
+            warnings.warn(LisfloodWarning("Warning: map {} (binding: '{}') has y coordinates in ascending order and will be flipped vertically".format(nc_template,'netCDFtemplate')))
+            func_y = lambda y : np.flip(y).copy()
+        if (x_flipped):   # x in in descending order
+            warnings.warn(LisfloodWarning("Warning: map {} (binding: '{}') has x coordinates in descending order and will be flipped horizontally".format(nc_template, 'netCDFtemplate')))
+            func_x = lambda x : np.flip(x).copy()
         if all([co in nc.dims for co in ("x", "y")]):
             try:
                 # look for the projection variable
@@ -338,9 +369,10 @@ def read_lat_from_template_base(netcdf_template, proj4_params):
 
             # projection object obtained from the PROJ4 string
             projection = Proj(proj4_params)
-            _, lat_deg = projection(*coordinatesLand(nc.x.values, nc.y.values), inverse=True)  # latitude (degrees)
+            
+            _, lat_deg = projection(*coordinatesLand(func_x(nc.x.values), func_y(nc.y.values)), inverse=True)  # latitude (degrees)
         else:
-            _, lat_deg = coordinatesLand(nc.lon.values, nc.lat.values)  # latitude (degrees)
+            _, lat_deg = coordinatesLand(func_x(nc.lon.values), func_y(nc.lat.values))  # latitude (degrees)
 
     return lat_deg
 
@@ -417,7 +449,8 @@ def write_header(var_name, netfile, DtDay,
     nrow = np.abs(cutmap.cuts[3] - cutmap.cuts[2])
     ncol = np.abs(cutmap.cuts[1] - cutmap.cuts[0])
 
-    dim_lat_y, dim_lon_x = get_core_dims(meta_netcdf.data)
+    # since meta_netcdf is the in correct x and y reference system, variables will be correctly cut and written in the same order (x ascending and y descending)
+    dim_lat_y, dim_lon_x = get_core_dims(meta_netcdf.data)    
     latlon_coords = get_space_coords(meta_netcdf, dim_lat_y, dim_lon_x)
 
     if dim_lon_x in meta_netcdf.data:

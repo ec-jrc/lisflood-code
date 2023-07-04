@@ -217,8 +217,19 @@ class NetCDFMetadata(with_metaclass(Singleton)):
                 self.data[var] = {k: v for k, v in iteritems(nf1.variables[var].__dict__) if k != '_FillValue'}
             core_dims = get_core_dims(self.data)
             self.coords = {}
-            for dim in core_dims:
-                self.coords[dim] = nf1.variables[dim][:]
+            x_flipped = nf1.variables[core_dims[1]][0]>nf1.variables[core_dims[1]][-1] 
+            y_flipped = nf1.variables[core_dims[0]][0]<nf1.variables[core_dims[0]][-1] 
+            func_y = lambda y : y
+            func_x = lambda x : x
+            # write maps using always a standard x and y reference system using x in ascending and y in descending order
+            if (y_flipped):   # y in in ascending order
+                warnings.warn(LisfloodWarning("Warning: map {} (netCDFtemplate) has y coordinates in ascending order and will be flipped vertically".format(filename)))
+                func_y = lambda y : np.flipud(y).copy()
+            if (x_flipped):   # x in in descending order
+                warnings.warn(LisfloodWarning("Warning: map {} (netCDFtemplate) has x coordinates in descending order and will be flipped horizontally".format(filename)))
+                func_x = lambda x : np.fliplr(x).copy()
+            self.coords[core_dims[1]] = func_x(nf1.variables[core_dims[1]][:])
+            self.coords[core_dims[0]] = func_y(nf1.variables[core_dims[0]][:])
             nf1.close()
             return
         except (KeyError, IOError, IndexError, Exception):
