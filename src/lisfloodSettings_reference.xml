@@ -134,7 +134,6 @@ The option "NetCDFTimeChunks" may take the following values:
 <textvar name="NetCDFTimeChunks" value="-1"/>
 
 <comment>
-
 The option "MapsCaching" may take the following values:
     - "True"   : Cache maps during execution
     - "False"  : No caching
@@ -144,11 +143,17 @@ The option "MapsCaching" may take the following values:
 <comment>
 
 <comment>
-
 The option "OutputMapsChunks" may take the following values:
     - "[positive integer number]"  : Dump outputs to disk every X steps (default 1) 
 </comment>
 <textvar name="OutputMapsChunks" value="1"/>
+
+<comment>
+The option "OutputMapsDataType" sets the output data type and may take the following values:
+    - "float64"
+    - "float32"
+</comment>
+<textvar name="OutputMapsDataType" value="float64"/>
 
 <comment>
 **************************************************************

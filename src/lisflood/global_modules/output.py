@@ -97,7 +97,7 @@ class NetcdfWriter(Writer):
         if self.data is not None:
             print(f'Writing {self.map_path}')
             nf1 = write_netcdf_header(self.settings, self.map_name, self.map_path, self.var.DtDay,
-                                    self.map_key, self.map_value.output_var, self.map_value.unit, 'd', 
+                                    self.map_key, self.map_value.output_var, self.map_value.unit,
                                     start_date, rep_steps, self.frequency)
 
             map_np = uncompress_array(self.data)
@@ -155,7 +155,7 @@ class NetcdfStepsWriter(NetcdfWriter):
                 print(f'Writing {self.map_path}')
                 if self.step_range[0] == 0:
                     nf1 = write_netcdf_header(self.settings, self.map_name, self.map_path, self.var.DtDay,
-                                            self.map_key, self.map_value.output_var, self.map_value.unit, 'd', 
+                                            self.map_key, self.map_value.output_var, self.map_value.unit,
                                             start_date, rep_steps, self.frequency)
                 else:
                     nf1 = iterOpenNetcdf(self.map_path, "", 'a', format='NETCDF4')
@@ -249,7 +249,7 @@ class MapOutput():
                 if self.flag == 0:
                     self.writer = NetcdfWriter(self.var, self.map_key, self.map_value, self.map_path)
                 else:
-                    self.writer = NetcdfStepsWriter(self.var, self.map_key, self.map_value, self.map_path, self.frequency, self.flag, self.rep_steps[-1])
+                    self.writer = NetcdfStepsWriter(self.var, self.map_key, self.map_value, self.map_path, self.frequency, self.flag, self._rep_steps[-1])
             else:  # PCRaster
                 self.writer = PCRasterWriter(self.var, self.map_path)
     

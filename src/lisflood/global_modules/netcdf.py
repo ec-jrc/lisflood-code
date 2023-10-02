@@ -362,9 +362,10 @@ def write_netcdf_header(settings,
                         value_standard_name,
                         value_long_name,
                         value_unit,
-                        startdate,
+                        start_date,
                         rep_steps,
-                        frequency):
+                        frequency,
+                        ):
     
     """ Writes a netcdf header without the data inside
     
@@ -384,7 +385,7 @@ def write_netcdf_header(settings,
         long cf variable name
     value_unit: str
         cf unit
-    startdate: datetime.datetime object
+    start_date: datetime.datetime object
         start date of dataset
     rep_steps: 
         list of reporting steps
@@ -400,6 +401,7 @@ def write_netcdf_header(settings,
     nf1 = iterOpenNetcdf(netfile, "", 'w', format='NETCDF4')
 
     binding = settings.binding
+    dtype = binding['OutputMapsDataType']
 
     # general Attributes
     nf1.settingsfile = os.path.realpath(settings.settings_path)
@@ -455,7 +457,7 @@ def write_netcdf_header(settings,
         n_steps = len(rep_steps)
         #Get initial and final dates for data to be stored in nerCDF file
         # CM: Create time stamps for each step stored in netCDF file
-        all_dates = np.array([startdate + datetime.timedelta(days=(int(d)-1)*DtDay) for d in rep_steps])
+        all_dates = np.array([start_date + datetime.timedelta(days=(int(d)-1)*DtDay) for d in rep_steps])
         all_steps = np.array(rep_steps)
         if frequency == "all":
             steps = all_steps
@@ -483,18 +485,18 @@ def write_netcdf_header(settings,
         DtDay_in_sec = DtDay * 86400
         if DtDay_in_sec >= 86400:
             # Daily model time steps or larger
-            time.units = 'days since %s' % startdate.strftime("%Y-%m-%d %H:%M:%S.0")
+            time.units = 'days since %s' % start_date.strftime("%Y-%m-%d %H:%M:%S.0")
         elif DtDay_in_sec >= 3600 and DtDay_in_sec < 86400:
             # CM: hours to days model time steps
-            time.units = 'hours since %s' % startdate.strftime("%Y-%m-%d %H:%M:%S.0")
+            time.units = 'hours since %s' % start_date.strftime("%Y-%m-%d %H:%M:%S.0")
         elif DtDay_in_sec >= 60 and DtDay_in_sec <3600:
             # CM: minutes to hours model time step
-            time.units = 'minutes since %s' % startdate.strftime("%Y-%m-%d %H:%M:%S.0")
+            time.units = 'minutes since %s' % start_date.strftime("%Y-%m-%d %H:%M:%S.0")
         nf1.variables["time"][:] = date2num(time_stamps, time.units, time.calendar)
 
-        value = nf1.createVariable(var_name, 'd', ('time', dim_lat_y, dim_lon_x), zlib=True, fill_value=-9999, chunksizes=(1, nrow, ncol))
+        value = nf1.createVariable(var_name, dtype, ('time', dim_lat_y, dim_lon_x), zlib=True, fill_value=-9999, chunksizes=(1, nrow, ncol))
     else:
-        value = nf1.createVariable(var_name, 'd', (dim_lat_y, dim_lon_x), zlib=True, fill_value=-9999)
+        value = nf1.createVariable(var_name, dtype, (dim_lat_y, dim_lon_x), zlib=True, fill_value=-9999)
     
     # value attributes
     value.standard_name = value_standard_name
