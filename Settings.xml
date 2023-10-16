@@ -2847,7 +2847,7 @@ Reported loss from lower zone [mm]
     <textvar name="SurfaceRunoffForest" value="$(PathOut)/SurfaceRunoffForest"/>
     <textvar name="SurfaceRunoffRainf" value="$(PathOut)/SurfaceRunoffRainf"/>
     <textvar name="SurfaceRunoffIrrig" value="$(PathOut)/SurfaceRunoffIrrig"/>
-    <textvar name="SurfaceRunoffImpervious" value="$(PathOut)/SurfaceRunoffImpervious"/>
+    <textvar name="SurfaceRunoffImper" value="$(PathOut)/SurfaceRunoffImper"/>
     <textvar name="SurfaceRunoffWater" value="$(PathOut)/SurfaceRunoffWater"/>
     <textvar name="EvapIntForest" value="$(PathOut)/EvapIntForest"/>
     <textvar name="EvapIntRainf" value="$(PathOut)/EvapIntRainf"/>

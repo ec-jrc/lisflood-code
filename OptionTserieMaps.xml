@@ -440,7 +440,7 @@
 <setmap name="SurfaceRunoffForest" outputVar="SurfaceRunSoil.loc['Forest'] / self.var.SoilFraction.loc['Forest_prescribed']" unit="mm" end="" steps="" all="repLATICE" restrictoption="nonInit" />
 <setmap name="SurfaceRunoffRainf" outputVar="SurfaceRunSoil.loc['Rainfed'] / self.var.SoilFraction.loc['Rainfed_prescribed']" unit="mm" end="" steps="" all="repLATICE" restrictoption="nonInit" />
 <setmap name="SurfaceRunoffIrrig" outputVar="SurfaceRunSoil.loc['Irrigated'] / self.var.SoilFraction.loc['Irrigated_prescribed']" unit="mm" end="" steps="" all="repLATICE" restrictoption="nonInit" />
-<setmap name="SurfaceRunoffImpervious" outputVar="RainSnowmelt - self.var.InterSealed" unit="mm" end="" steps="" all="repLATICE" restrictoption="nonInit" />
+<setmap name="SurfaceRunoffImper" outputVar="RainSnowmelt - self.var.InterSealed" unit="mm" end="" steps="" all="repLATICE" restrictoption="nonInit" />
 <setmap name="SurfaceRunoffWater" outputVar="RainSnowmelt - self.var.EWaterAct" unit="mm" end="" steps="" all="repLATICE" restrictoption="nonInit" />
 <setmap name="EvapIntForest" outputVar="TaInterception[1]" unit="mm" end="" steps="" all="repLATICE" restrictoption="nonInit" />
 <setmap name="EvapIntRainf" outputVar="TaInterception[0]" unit="mm" end="" steps="" all="repLATICE" restrictoption="nonInit" />

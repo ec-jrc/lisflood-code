@@ -21,7 +21,7 @@ except ImportError:
     import cftime as netcdftime  # newer versions of netCDF4 don't include netcdftime
 
 from platform import system as operating_system
-from pandas._libs.tslibs.parsing import parse_time_string
+from pandas import to_datetime
 
 from pcraster import*
 from pcraster.framework import *
@@ -476,7 +476,7 @@ def Calendar(input):
     try:
         return float(input)
     except ValueError:
-        date = parse_time_string(input)[0]
+        date = to_datetime(input, dayfirst=True).to_pydatetime() # datetime.datetime type
         calendar_convention = binding['CalendarConvention']
         tmp_units = 'days since ' + date.strftime("%Y-%m-%d %H:%M:%S.0")
         step = date2num(date, tmp_units, calendar_convention)

@@ -184,7 +184,7 @@ def loadsetclone(name):
 
 def compressArray(map,pcr=True,name="None"):
         if pcr:
-            mapnp = pcr2numpy(map,np.nan).astype(np.float)
+            mapnp = pcr2numpy(map,np.nan).astype(np.float64)
             mapnp1 = np.ma.masked_array(mapnp,maskinfo['mask'])
         else:
             mapnp1 = np.ma.masked_array(map,maskinfo['mask'])
