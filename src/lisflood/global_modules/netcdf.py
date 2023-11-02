@@ -172,7 +172,10 @@ class XarrayChunked():
         if time_chunk != 'auto' and time_chunk is not None:
             time_chunk = int(time_chunk)
         data_path = data_path + ".nc" if not data_path.endswith('.nc') else data_path
-        ds = xr.open_mfdataset(data_path, engine='netcdf4', chunks={'time': time_chunk}, combine='by_coords')
+        try:
+            ds = xr.open_mfdataset(data_path, engine='netcdf4', chunks={'time': time_chunk}, combine='by_coords')
+        except OSError:
+            raise OSError(f"Could not open file {data_path}")
 
         # check calendar type
         check_dataset_calendar_type(ds, data_path)
@@ -182,9 +185,17 @@ class XarrayChunked():
         da = ds[var_name]
 
         # extract time range
-        if not climatology and dates[0] < da.time[-1].values:
-            date_range = dataset_date_range(dates, da, indexer)  # array of dates
-            da = da.sel(time=date_range)
+        try:
+            if not climatology and dates[0] < da.time[-1].values:
+                date_range = dataset_date_range(dates, da, indexer)  # array of dates
+                da = da.sel(time=date_range)
+        except KeyError:
+            print("Dataset:")
+            print(da)
+            print("Date range:")
+            print(date_range)
+            raise KeyError(f"not all values found in index 'time' for file {data_path} (see dataset above)")
+
         self.index_map = map_dates_index(dates, da.time, indexer, climatology)
 
         # compress dataset (remove missing values and flatten the array)
