@@ -1,9 +1,5 @@
 import os
 import glob
-<<<<<<< HEAD
-from re import L
-=======
->>>>>>> master
 import warnings
 import xarray as xr
 import numpy as np
@@ -15,11 +11,7 @@ from nine import range
 from pyproj import Proj
 
 from .settings import (calendar_inconsistency_warning, get_calendar_type, calendar, MaskAttrs, CutMap, NetCDFMetadata,
-<<<<<<< HEAD
-                       LisSettings, MaskInfo, CDFFlags, inttodate)
-=======
                        get_core_dims, LisSettings, MaskInfo)
->>>>>>> master
 from .errors import LisfloodWarning, LisfloodError
 from .decorators import Cache, cached
 from .zusatz import iterOpenNetcdf
@@ -183,15 +175,14 @@ class XarrayChunked():
         if time_chunk != 'auto' and time_chunk is not None:
             time_chunk = int(time_chunk)
         data_path = data_path + ".nc" if not data_path.endswith('.nc') else data_path
-<<<<<<< HEAD
         try:
-            ds = xr.open_mfdataset(data_path, engine='netcdf4', chunks={'time': time_chunk}, combine='by_coords')
+            ds = xr.open_mfdataset(
+                data_path, engine='netcdf4', 
+                chunks={'time': time_chunk}, combine='by_coords',
+                mask_and_scale=True
+            )
         except OSError:
             raise OSError(f"Could not open file {data_path}")
-=======
-        ds = xr.open_mfdataset(data_path, engine='netcdf4', chunks={'time': time_chunk}, combine='by_coords',
-                               mask_and_scale=True)
->>>>>>> master
 
         # check calendar type
         check_dataset_calendar_type(ds, data_path)

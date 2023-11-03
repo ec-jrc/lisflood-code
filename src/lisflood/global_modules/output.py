@@ -14,9 +14,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and limitations under the Licence.
 
 """
-from __future__ import print_function, absolute_import
-#from msilib.schema import Property
-
 import os
 import numpy as np
 from pcraster import ifthen, catchmenttotal, mapmaximum
@@ -95,7 +92,6 @@ class NetcdfWriter(Writer):
     
     def write(self, start_date, rep_steps):
         if self.data is not None:
-            print(f'Writing {self.map_path}')
             nf1 = write_netcdf_header(self.settings, self.map_name, self.map_path, self.var.DtDay,
                                     self.map_key, self.map_value.output_var, self.map_value.unit,
                                     start_date, rep_steps, self.frequency)
@@ -105,7 +101,6 @@ class NetcdfWriter(Writer):
             nf1.variables[self.map_name][:, :] = map_np
 
             nf1.close()
-            print(f'Done writing {self.map_path}')
         else:
             raise Exception('You need to stage the variable data before writing!')
 
@@ -152,7 +147,6 @@ class NetcdfStepsWriter(NetcdfWriter):
     def write(self, start_date, rep_steps):
         if self._checkpoint():
             if self.data_steps:
-                print(f'Writing {self.map_path}')
                 if self.step_range[0] == 0:
                     nf1 = write_netcdf_header(self.settings, self.map_name, self.map_path, self.var.DtDay,
                                             self.map_key, self.map_value.output_var, self.map_value.unit,
@@ -168,7 +162,6 @@ class NetcdfStepsWriter(NetcdfWriter):
                 # clear lists for next chunk
                 self.step_range.clear()
                 self.data_steps.clear()
-                print(f'Done writing {self.map_path}')
             else:
                 raise Exception('You need to stage data before writing!')
 
