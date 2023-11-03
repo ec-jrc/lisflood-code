@@ -202,6 +202,30 @@ class ETRS89TestCase(object):
                 'tss': None,
             },
         },
+        'mbError': {
+            'report_map': None,
+            'report_tss': 'WaterMassBalanceTSS',
+            '86400': {
+                'map': None,
+                'tss': os.path.join(ref_dir, 'output_reference_daily/mbError.tss'),
+            },
+            '21600': {
+                'map': None,
+                'tss': os.path.join(ref_dir, 'output_reference_6h/mbError.tss'),
+            },
+        },
+        'mbErrorSplitRoutingM3': {
+            'report_map': None,
+            'report_tss': 'MassBalanceErrorSplitRoutingTSS',
+            '86400': {
+                'map': None,
+                'tss': os.path.join(ref_dir, 'output_reference_daily/mbErrorSplitRoutingM3.tss'),
+            },
+            '21600': {
+                'map': None,
+                'tss': os.path.join(ref_dir, 'output_reference_6h/mbErrorSplitRoutingM3.tss'),
+            },
+        },
     }
 
     def teardown_method(self):

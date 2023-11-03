@@ -65,7 +65,8 @@ class waterbalance(object):
                 if option['simulatePolders']:
                     ChannelInitM3 += self.var.PolderStorageIniM3
 
-            Hill1 = (self.var.SoilFraction * (self.var.CumInterception + self.var.W1 + self.var.W2 + self.var.UZ)).sum("vegetation").values
+            ax_veg=self.var.SoilFraction.dims.index("vegetation")        
+            Hill1 = np.sum(self.var.SoilFraction * (self.var.CumInterception + self.var.W1 + self.var.W2 + self.var.UZ),ax_veg)
             Hill1 += self.var.LZ            
             
             OverlandInitM3 = self.var.OFM3Other + self.var.OFM3Forest + self.var.OFM3Direct
@@ -154,7 +155,8 @@ class waterbalance(object):
             # Water stored in channel network [m3] (including reservoirs,
             # lakes, polders)
  
-            Hill1 = self.var.LZ + (self.var.SoilFraction * (self.var.CumInterception + self.var.W1 + self.var.W2 + self.var.UZ)).sum("vegetation").values                                                 
+            ax_veg=self.var.SoilFraction.dims.index("vegetation")            
+            Hill1 = self.var.LZ + np.sum(self.var.SoilFraction * (self.var.CumInterception + self.var.W1 + self.var.W2 + self.var.UZ),ax_veg)                                                 
             HillslopeStoredM3 = (self.var.WaterDepth + self.var.SnowCover + Hill1 + self.var.DirectRunoffFraction * self.var.CumInterSealed) * self.var.MMtoM * self.var.PixelArea
             
             # Water stored at hillslope elements [m3]
