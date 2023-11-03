@@ -196,9 +196,11 @@ class LisfloodModel_dyn(DynamicModel):
         # sum of both lines
         # CrossSection2Area = pcraster.max(scalar(0.0), (self.Chan2M3Kin - self.Chan2M3Start) / self.ChanLength)
 
+        self.TotalCrossSectionArea = self.ChanM3 * self.InvChanLength
+
         self.sumDis += self.sumDisDay
         self.ChanQAvg = self.sumDisDay/self.NoRoutSteps
-        self.TotalCrossSectionArea = self.ChanM3 * self.InvChanLength
+
         # Total volume of water in channel per inv channel length
         # New cross section area (kinematic wave)
         # This is the value after the kinematic wave, so we use ChanM3Kin here
@@ -245,7 +247,7 @@ class LisfloodModel_dyn(DynamicModel):
             ftemp1 = open(nomefile, 'w+')
             nelements = len(self.ChanM3)
             for i in range(0,nelements-1):
-                if  hasattr(self,'CrossSection2Area'):
+                if  hasattr(self,'CrossSection2Area') and not(option['InitLisflood']):
                     print(i, self.TotalCrossSectionArea[i], self.CrossSection2Area[i], self.ChanM3[i], \
                     self.Chan2M3Kin[i], file=ftemp1)
                 else:

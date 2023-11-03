@@ -66,8 +66,8 @@
         <setoption choice="0" name="repStressDays"/>
 
         <setoption choice="1" name="readNetcdfStack"/>
-        <setoption choice="0" name="writeNetcdfStack"/>
-        <setoption choice="0" name="writeNetcdf"/>
+        <setoption choice="1" name="writeNetcdfStack"/>
+        <setoption choice="1" name="writeNetcdf"/>
 
         <setoption choice="0" name="MonteCarlo"/>
         <setoption choice="0" name="EnKF"/>
@@ -1429,7 +1429,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 **************************************************************
             </comment>
 
-            <textvar name="CalendarConvention" value="$(CalendarConvention)">
+            <textvar name="CalendarConvention" value="$(CalendarConvention)"/>
 
             <textvar name="CalendarDayStart" value="$(CalendarDayStart)">
                 <comment>
@@ -3038,45 +3038,24 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     SWITCHED ON (DEFAULT: ALL SWITCHED OFF)
                 </comment>
 
-                <textvar name="Theta1Maps" value="$(PathOut)/thtop">
+                <textvar name="Theta1Maps" value="$(PathOut)/tha">
                     <comment>
                         Reported volumetric soil moisture content for
                         soil layer 1 [V/V]
                     </comment>
                 </textvar>
 
-                <textvar name="Theta2Maps" value="$(PathOut)/thsub">
+                <textvar name="Theta2Maps" value="$(PathOut)/thb">
                     <comment>
                         Reported volumetric soil moisture content for
                         soil layer 2 [V/V]
                     </comment>
                 </textvar>
 
-                <textvar name="Theta3Maps" value="$(PathOut)/th3">
+                <textvar name="Theta3Maps" value="$(PathOut)/thc">
                     <comment>
                         Reported volumetric soil moisture content for
                         soil layer 3 [V/V]
-                    </comment>
-                </textvar>
-
-                <textvar name="Theta1ForestMaps" value="$(PathOut)/thf1">
-                    <comment>
-                        Reported volumetric soil moisture content for
-                        forest soil layer 1 [V/V]
-                    </comment>
-                </textvar>
-
-                <textvar name="Theta2ForestMaps" value="$(PathOut)/thf2">
-                    <comment>
-                        Reported volumetric soil moisture content for
-                        forest soil layer 2 [V/V]
-                    </comment>
-                </textvar>
-
-                <textvar name="Theta3ForestMaps" value="$(PathOut)/thf3">
-                    <comment>
-                        Reported volumetric soil moisture content for
-                        forest soil layer 3 [V/V]
                     </comment>
                 </textvar>
 
@@ -3173,17 +3152,24 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="Theta1ForestMaps" value="$(PathOut)/thFt">
+                <textvar name="Theta1ForestMaps" value="$(PathOut)/thfa">
                     <comment>
                         Reported volumetric soil moisture content for
                         soil layer 1 [V/V]
                     </comment>
                 </textvar>
 
-                <textvar name="Theta2ForestMaps" value="$(PathOut)/thFs">
+                <textvar name="Theta2ForestMaps" value="$(PathOut)/thfb">
                     <comment>
                         Reported volumetric soil moisture content for both
                         soil layer 2 [V/V]
+                    </comment>
+                </textvar>
+
+                <textvar name="Theta3ForestMaps" value="$(PathOut)/thfc">
+                    <comment>
+                        Reported volumetric soil moisture content for
+                        forest soil layer 3 [V/V]
                     </comment>
                 </textvar>
 

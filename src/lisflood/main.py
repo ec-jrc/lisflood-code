@@ -173,13 +173,15 @@ def usage():
     Arguments list:
     settings.xml     settings file
 
-    -q --quiet       output progression given as .
-    -v --veryquiet   no output progression is given
-    -l --loud        output progression given as time step, date and discharge
-    -c --check       input maps and stack maps are checked, output for each input map BUT no model run
-    -h --noheader    .tss file have no header and start immediately with the time series
-    -d --debug       debug outputs
-    -i --initonly    only run initialisation, not the dynamic loop
+    -q --quiet           output progression given as .
+    -v --veryquiet       no output progression is given
+    -l --loud            output progression given as time step, date and discharge
+    -c --checkfiles      input maps and stack maps are checked, output for each input map BUT no model run
+    -n --nancheck        check NaN values in output maps
+    -h --noheader        .tss file have no header and start immediately with the time series
+    -d --debug           debug outputs
+    -i --initonly        only run initialisation, not the dynamic loop
+    -s --skipvalreplace  skip replacement of invalid values in meteo input maps (ignore valid_min and valid_max)
     """)
     sys.exit(1)
 

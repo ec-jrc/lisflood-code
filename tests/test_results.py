@@ -113,12 +113,17 @@ class TestCatch(ETRS89TestCase):
                                            'StepEnd': '05/02/2016 06:00',
                                            'PathOut': output_dir})
         lisfloodexe(settings)
-        initcond_files = ('ch2cr.end.nc', 'chcro.end.nc', 'chside.end.nc', 'cseal.end.nc', 'cum.end.nc', 'cumf.end.nc',
-                          'cumi.end.nc', 'dis.end.nc', 'dslf.end.nc', 'dsli.end.nc', 'dslr.end.nc', 'frost.end.nc',
-                          'lz.end.nc',
-                          'rsfil.end.nc', 'scova.end.nc', 'scovb.end.nc', 'scovc.end.nc', 'tha.end.nc', 'thb.end.nc',
-                          'thc.end.nc', 'thfa.end.nc', 'thfb.end.nc', 'thfc.end.nc', 'thia.end.nc', 'thib.end.nc',
-                          'thic.end.nc', 'uz.end.nc', 'uzf.end.nc', 'uzi.end.nc', 'wdept.end.nc')
+        initcond_files = ('ch2cr.end.nc', 'chanq.end.nc', 'chcro.end.nc', 
+                        'chside.end.nc', 'cseal.end.nc', 'cum.end.nc', 
+                        'cumf.end.nc', 'cumi.end.nc', 'dslf.end.nc', 
+                        'dsli.end.nc', 'dslr.end.nc', 'frost.end.nc',
+                        'lakeh.end.nc', 'lz.end.nc', 'ofdir.end.nc',
+                        'offor.end.nc', 'ofoth.end.nc', 'rsfil.end.nc', 
+                        'scova.end.nc', 'scovb.end.nc', 'scovc.end.nc', 
+                        'tha.end.nc', 'thb.end.nc', 'thc.end.nc', 
+                        'thfa.end.nc', 'thfb.end.nc', 'thfc.end.nc', 
+                        'thia.end.nc', 'thib.end.nc', 'thic.end.nc', 
+                        'uz.end.nc', 'uzf.end.nc', 'uzi.end.nc')
         for f in initcond_files:
             assert os.path.exists(os.path.join(output_dir, f))
 
@@ -142,3 +147,31 @@ class TestCatch(ETRS89TestCase):
         self.run_init('21600', '31/12/2015 06:00', '06/01/2017 06:00')
         self.compare_reference('avgdis', check='map', step_length='21600')
         self.compare_reference('lzavin', check='map', step_length='21600')
+
+    def run_waterbalance(self, dt_sec, step_start, step_end):
+        # init files from .../LF_ETRS89_UseCase/maps/safe_init
+        # "AvgDis" value="$(PathRoot)/maps/safe_init/avgdis"
+        # "LZAvInflowMap" value="$(PathRoot)/maps/safe_init/lzavin"
+        output_dir = mk_path_out(os.path.join(self.case_dir, 'out/test_results{}'.format(dt_sec)))
+        opts_to_unset = (
+            'wateruse','riceIrrigation','groundwaterSmooth'
+        )
+        settings = setoptions(self.settings_files['base'],
+                              opts_to_set=('SplitRouting','repMBTs','openwaterevapo','drainedIrrigation','simulateLakes','simulateReservoirs'),
+                              opts_to_unset=opts_to_unset,
+                              vars_to_set={'StepStart': step_start,
+                                           'StepEnd': step_end,
+                                           'DtSec': dt_sec,
+                                           'PathOut': output_dir})
+        lisfloodexe(settings)
+
+    def test_waterbalance_daily(self):
+        self.run_waterbalance('86400', '02/01/2016 06:00', '02/07/2016 06:00')
+        self.compare_reference('mbError', check='tss', step_length='86400')
+        self.compare_reference('mbErrorSplitRoutingM3', check='tss', step_length='86400')
+
+    def test_waterbalance_6h(self):
+        self.run_waterbalance('21600', '02/01/2016 06:00', '02/07/2016 06:00')
+        self.compare_reference('mbError', check='tss', step_length='21600')
+        self.compare_reference('mbErrorSplitRoutingM3', check='tss', step_length='21600')
+

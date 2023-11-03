@@ -204,8 +204,9 @@ def loadsetclone(name):
             # try to read a netcdf file
             filename = os.path.splitext(binding[name])[0] + '.nc'
             nf1 = iterOpenNetcdf(filename, "", "r")
-            value = listitems(nf1.variables)[-1][0]  # get the last variable name
-            nr_rows, nr_cols = nf1.variables[value].shape  # just use shape to know rows and cols...
+            num_dims = 3 if 'time' in nf1.variables else 2
+            varname = [v for v in nf1.variables if len(nf1.variables[v].dimensions) == num_dims][0]
+            nr_rows, nr_cols = nf1.variables[varname].shape  # just use shape to know rows and cols...
             if 'x' in nf1.variables:
                 x1 = nf1.variables['x'][0]
                 x2 = nf1.variables['x'][-1]
@@ -218,7 +219,7 @@ def loadsetclone(name):
             cell_size = np.abs(x2 - x1)/(nr_cols - 1)
             x = x1 - cell_size / 2
             y = y1 + cell_size / 2
-            mapnp = np.array(nf1.variables[value][0:nr_rows, 0:nr_cols])
+            mapnp = np.array(nf1.variables[varname][0:nr_rows, 0:nr_cols])
             nf1.close()
             # setclone  row col cellsize xupleft yupleft
             setclone(nr_rows, nr_cols, cell_size, x, y)

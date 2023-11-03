@@ -508,23 +508,27 @@ class outputTssMap(object):
         flags = settings.flags
         binding = settings.binding
         report_time_serie_act = settings.report_timeseries
+        binding['Catchments'] = self.var.Catchments
         # output for single column eg mapmaximum
         self.var.Tss = {}
 
         for tss in report_time_serie_act:
             where = report_time_serie_act[tss].where
             outpoints = binding[where]
-            coord = binding[where].split()  # could be gauges, sites, lakeSites etc.
-            if len(coord) % 2 == 0:
-                outpoints = valuecell(self.var.MaskMap, coord, outpoints)
+            if where == "Catchments":
+                outpoints = decompress(outpoints)
             else:
-                try:
-                    outpoints = loadmap(where, pcr=True)
-                    outpoints = ifthen(outpoints != 0, outpoints)
-                      # this is necessary if netcdf maps are loaded !! otherwise strange dis.tss
-                except Exception as e:
-                    msg = "Setting output points\n {}".format(str(e))
-                    raise LisfloodFileError(outpoints, msg)
+                coord = binding[where].split()  # could be gauges, sites, lakeSites etc.
+                if len(coord) % 2 == 0:
+                    outpoints = valuecell(self.var.MaskMap, coord, outpoints)
+                else:
+                    try:
+                        outpoints = loadmap(where, pcr=True)
+                        outpoints = ifthen(outpoints != 0, outpoints)
+                        # this is necessary if netcdf maps are loaded !! otherwise strange dis.tss
+                    except Exception as e:
+                        msg = "Setting output points\n {}".format(str(e))
+                        raise LisfloodFileError(outpoints, msg)
 
             if option['MonteCarlo']:
                 if os.path.exists(os.path.split(binding[tss])[0]):
