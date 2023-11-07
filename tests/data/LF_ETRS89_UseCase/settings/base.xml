@@ -69,6 +69,34 @@
 <lfuser>
 
         <group>
+            <comment>
+            **************************************************************
+            netCDF parameters
+            **************************************************************
+
+            !-- Optimization of netCDF I/O through chunking and caching.
+
+            The option "NetCDFTimeChunks" may take the following values:
+                - "-1"                         : Load everything upfront
+                - "[positive integer number]"  : Chunk size defined by user
+                - "auto"                       : Let xarray to decide
+            </comment>
+            <textvar name="NetCDFTimeChunks" value="auto"/>
+
+            <comment>
+
+            The option "MapsCaching" may take the following values:
+                - "True"   : Cache maps during execution
+                - "False"  : No caching
+            </comment>
+            <textvar name="MapsCaching" value="False"/>
+
+            <comment>
+
+            The option "OutputMapsChunks" may take the following values:
+                - "[positive integer number]"  : Dump outputs to disk every X steps (default 1) 
+            </comment>
+            <textvar name="OutputMapsChunks" value="1"/>
 
             <!-- Parallelisation of the kinematic wave routing (via openMP multi-threading).
 The option "numberParallelThreadsKinematicWave" may take the following values:
@@ -2957,6 +2985,20 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
+                <textvar name="LakePrevInflowEnd" value="$(PathOut)/lakeprevinq.end">
+                    <comment>
+                        Reported lake inflow at previous routing sub-step (ChanQ(t-1)) [m3/s]
+                        -9999 sets initial value equal to PrevDischarge (ChanQ(t))
+                    </comment>
+                </textvar>
+
+                <textvar name="LakePrevOutflowEnd" value="$(PathOut)/lakeprevoutq.end">
+                    <comment>
+                        Reported lake outflow at previous routing sub-step (ChanQ(t-1)) [m3/s]
+                        -9999 sets initial value
+                    </comment>
+                </textvar>
+
                 <textvar name="LakeStorageM3" value="$(PathOut)/lakest.end">
                     <comment>
                         Reported lake storage
@@ -3642,6 +3684,24 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
+                <textvar name="Theta1AvUpsTS" value="$(PathOut)/th1aAvUps.tss">
+                    <comment>
+                        Soil moisture layer 1a [cu mm / cu mm]
+                    </comment>
+                </textvar>
+
+                <textvar name="Theta2AvUpsTS" value="$(PathOut)/th1bAvUps.tss">
+                    <comment>
+                        Soil moisture layer 1b [cu mm / cu mm]
+                    </comment>
+                </textvar>
+
+                <textvar name="Theta3AvUpsTS" value="$(PathOut)/th2AvUps.tss">
+                    <comment>
+                        Soil moisture layer 2 [cu mm / cu mm]
+                    </comment>
+                </textvar>
+
                 <textvar name="Theta1TS" value="$(PathOut)/th1a.tss">
                     <comment>
                         Soil moisture layer 1a [cu mm / cu mm]
@@ -3869,18 +3929,6 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 <textvar name="CumInterceptionAvUpsTS" value="$(PathOut)/cumInterceptionUps.tss">
                     <comment>
                         Water stored as interception [mm]
-                    </comment>
-                </textvar>
-
-                <textvar name="Theta1AvUpsTS" value="$(PathOut)/thTopUps.tss">
-                    <comment>
-                        Soil moisture upper layer [cu mm / cu mm]
-                    </comment>
-                </textvar>
-
-                <textvar name="Theta2AvUpsTS" value="$(PathOut)/thSubUps.tss">
-                    <comment>
-                        Soil moisture lower layer [cu mm / cu mm]
                     </comment>
                 </textvar>
 
@@ -4853,6 +4901,19 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 <textvar name="LakeLevelState" value="$(PathOut)/lakeh">
                     <comment>
                         Output map(s) with lake level [m]
+                    </comment>
+                </textvar>
+                <textvar name="LakePrevInflowState" value="$(PathOut)/lakeprevinq">
+                    <comment>
+                        Output map with lake inflow at previous routing sub-step (ChanQ(t-1)) [m3/s]
+                        -9999 sets initial value equal to PrevDischarge (ChanQ(t))
+                    </comment>
+                </textvar>
+
+                <textvar name="LakePrevOutflowState" value="$(PathOut)/lakeprevoutq">
+                    <comment>
+                        Output map with lake outflow at previous routing sub-step (ChanQ(t-1)) [m3/s]
+                        -9999 sets initial value
                     </comment>
                 </textvar>
 

@@ -65,6 +65,34 @@
 <lfuser>
 
         <group>
+            <comment>
+            **************************************************************
+            netCDF parameters
+            **************************************************************
+
+            !-- Optimization of netCDF I/O through chunking and caching.
+
+            The option "NetCDFTimeChunks" may take the following values:
+                - "-1"                         : Load everything upfront
+                - "[positive integer number]"  : Chunk size defined by user
+                - "auto"                       : Let xarray to decide
+            </comment>
+            <textvar name="NetCDFTimeChunks" value="auto"/>
+
+            <comment>
+
+            The option "MapsCaching" may take the following values:
+                - "True"   : Cache maps during execution
+                - "False"  : No caching
+            </comment>
+            <textvar name="MapsCaching" value="False"/>
+
+            <comment>
+
+            The option "OutputMapsChunks" may take the following values:
+                - "[positive integer number]"  : Dump outputs to disk every X steps (default 1) 
+            </comment>
+            <textvar name="OutputMapsChunks" value="1"/>
 
             <!-- Parallelisation of the kinematic wave routing (via openMP multi-threading).
 The option "numberParallelThreadsKinematicWave" may take the following values:
@@ -3638,6 +3666,24 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
+                <textvar name="Theta1AvUpsTS" value="$(PathOut)/th1aAvUps.tss">
+                    <comment>
+                        Soil moisture layer 1a [cu mm / cu mm]
+                    </comment>
+                </textvar>
+
+                <textvar name="Theta2AvUpsTS" value="$(PathOut)/th1bAvUps.tss">
+                    <comment>
+                        Soil moisture layer 1b [cu mm / cu mm]
+                    </comment>
+                </textvar>
+
+                <textvar name="Theta3AvUpsTS" value="$(PathOut)/th2AvUps.tss">
+                    <comment>
+                        Soil moisture layer 2 [cu mm / cu mm]
+                    </comment>
+                </textvar>
+
                 <textvar name="Theta1TS" value="$(PathOut)/th1a.tss">
                     <comment>
                         Soil moisture layer 1a [cu mm / cu mm]
@@ -3865,18 +3911,6 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 <textvar name="CumInterceptionAvUpsTS" value="$(PathOut)/cumInterceptionUps.tss">
                     <comment>
                         Water stored as interception [mm]
-                    </comment>
-                </textvar>
-
-                <textvar name="Theta1AvUpsTS" value="$(PathOut)/thTopUps.tss">
-                    <comment>
-                        Soil moisture upper layer [cu mm / cu mm]
-                    </comment>
-                </textvar>
-
-                <textvar name="Theta2AvUpsTS" value="$(PathOut)/thSubUps.tss">
-                    <comment>
-                        Soil moisture lower layer [cu mm / cu mm]
                     </comment>
                 </textvar>
 

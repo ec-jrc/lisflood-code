@@ -478,7 +478,6 @@ class OutputMapsFactoryThreads(OutputMapsFactory):
         if self.var.currentTimeStep() == self.var.nrTimeSteps() and self.thread_out is not None:
             self.thread_out.wait()
 
-
 # ------------------------------------------------------------------------
 # Output Module
 # ------------------------------------------------------------------------

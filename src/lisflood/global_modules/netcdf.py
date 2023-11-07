@@ -21,8 +21,6 @@ from netCDF4 import default_fillvals
 
 from .. import __authors__, __version__, __date__, __status__, __institution__
 
-
-
 def mask_array_np(data, mask, crop, name, valid_min, valid_max):
     data_cut = data[:, crop[2]:crop[3], crop[0]:crop[1]]
     if (valid_min is not None):
