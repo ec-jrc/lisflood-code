@@ -166,6 +166,8 @@ def map_dates_index(dates, time, indexer, climatology=False):
 
 
 class XarrayChunked():
+    """ Class that handles the reading of netcdf files with temporal chunks
+    """
 
     def __init__(self, data_path, time_chunk, dates, indexer=None, climatology=False):
 
@@ -173,8 +175,14 @@ class XarrayChunked():
         if time_chunk != 'auto' and time_chunk is not None:
             time_chunk = int(time_chunk)
         data_path = data_path + ".nc" if not data_path.endswith('.nc') else data_path
-        ds = xr.open_mfdataset(data_path, engine='netcdf4', chunks={'time': time_chunk}, combine='by_coords',
-                               mask_and_scale=True)
+        try:
+            ds = xr.open_mfdataset(
+                data_path, engine='netcdf4', 
+                chunks={'time': time_chunk}, combine='by_coords',
+                mask_and_scale=True
+            )
+        except OSError:
+            raise OSError(f"Could not open file {data_path}")
 
         # check calendar type
         check_dataset_calendar_type(ds, data_path)
@@ -184,9 +192,17 @@ class XarrayChunked():
         da = ds[var_name]
 
         # extract time range
-        if not climatology and dates[0] < da.time[-1].values:
-            date_range = dataset_date_range(dates, da, indexer)  # array of dates
-            da = da.sel(time=date_range)
+        try:
+            if not climatology and dates[0] < da.time[-1].values:
+                date_range = dataset_date_range(dates, da, indexer)  # array of dates
+                da = da.sel(time=date_range)
+        except KeyError:
+            print("Dataset:")
+            print(da)
+            print("Date range:")
+            print(date_range)
+            raise KeyError(f"not all values found in index 'time' for file {data_path} (see dataset above)")
+
         self.index_map = map_dates_index(dates, da.time, indexer, climatology)
 
         # compress dataset (remove missing values and flatten the array)
@@ -261,6 +277,8 @@ class XarrayChunked():
 
 @Cache
 class XarrayCached(XarrayChunked):
+    """ Class that extends the main XarrayChunked class to allow caching the full dataset in memory
+    """
 
     def __init__(self, data_path, dates, indexer=None, climatology=False):
         super().__init__(data_path, None, dates, indexer, climatology)
@@ -381,14 +399,53 @@ def get_space_coords_pcraster(nrow, ncol, dim_lat_y, dim_lon_x):
     return coordinates
 
 
-def write_netcdf_header(var_name, netfile, DtDay,
-                        value_standard_name, value_long_name, value_unit, data_format,
-                        startdate, rep_steps, frequency):
+def write_netcdf_header(settings, 
+                        var_name,
+                        netfile,
+                        DtDay,
+                        value_standard_name,
+                        value_long_name,
+                        value_unit,
+                        start_date,
+                        rep_steps,
+                        frequency,
+                        ):
+    
+    """ Writes a netcdf header without the data inside
+    
+    Parameters
+    ----------
+    settings: LisSettings() object
+        Lisflood setting object (passed here to allow parallelism in the future if needed)
+    var_name: str
+        lisflood variable name
+    netfile: str
+        path to netcdf file
+    DtDay: float
+        time step in number of days?
+    value_standard_name: str
+        standard cf variable name
+    value_long_name: str
+        long cf variable name
+    value_unit: str
+        cf unit
+    start_date: datetime.datetime object
+        start date of dataset
+    rep_steps: 
+        list of reporting steps
+    frequency:
+        output frequency (all, monthly or yearly)
+    
+    Returns
+    -------
+    object
+        netcdf handle without the data
+    """
 
     nf1 = iterOpenNetcdf(netfile, "", 'w', format='NETCDF4')
 
-    settings = LisSettings.instance()
     binding = settings.binding
+    dtype = binding['OutputMapsDataType']
 
     # general Attributes
     nf1.settingsfile = os.path.realpath(settings.settings_path)
@@ -444,7 +501,7 @@ def write_netcdf_header(var_name, netfile, DtDay,
         n_steps = len(rep_steps)
         #Get initial and final dates for data to be stored in nerCDF file
         # CM: Create time stamps for each step stored in netCDF file
-        all_dates = np.array([startdate + datetime.timedelta(days=(int(d)-1)*DtDay) for d in rep_steps])
+        all_dates = np.array([start_date + datetime.timedelta(days=(int(d)-1)*DtDay) for d in rep_steps])
         all_steps = np.array(rep_steps)
         if frequency == "all":
             steps = all_steps
@@ -472,18 +529,18 @@ def write_netcdf_header(var_name, netfile, DtDay,
         DtDay_in_sec = DtDay * 86400
         if DtDay_in_sec >= 86400:
             # Daily model time steps or larger
-            time.units = 'days since %s' % startdate.strftime("%Y-%m-%d %H:%M:%S.0")
+            time.units = 'days since %s' % start_date.strftime("%Y-%m-%d %H:%M:%S.0")
         elif DtDay_in_sec >= 3600 and DtDay_in_sec < 86400:
             # CM: hours to days model time steps
-            time.units = 'hours since %s' % startdate.strftime("%Y-%m-%d %H:%M:%S.0")
+            time.units = 'hours since %s' % start_date.strftime("%Y-%m-%d %H:%M:%S.0")
         elif DtDay_in_sec >= 60 and DtDay_in_sec <3600:
             # CM: minutes to hours model time step
-            time.units = 'minutes since %s' % startdate.strftime("%Y-%m-%d %H:%M:%S.0")
+            time.units = 'minutes since %s' % start_date.strftime("%Y-%m-%d %H:%M:%S.0")
         nf1.variables["time"][:] = date2num(time_stamps, time.units, time.calendar)
 
-        value = nf1.createVariable(var_name, 'd', ('time', dim_lat_y, dim_lon_x), zlib=True, fill_value=-9999, chunksizes=(1, nrow, ncol))
+        value = nf1.createVariable(var_name, dtype, ('time', dim_lat_y, dim_lon_x), zlib=True, fill_value=-9999, chunksizes=(1, nrow, ncol))
     else:
-        value = nf1.createVariable(var_name, 'd', (dim_lat_y, dim_lon_x), zlib=True, fill_value=-9999)
+        value = nf1.createVariable(var_name, dtype, (dim_lat_y, dim_lon_x), zlib=True, fill_value=-9999)
     
     # value attributes
     value.standard_name = value_standard_name
@@ -494,48 +551,3 @@ def write_netcdf_header(var_name, netfile, DtDay,
             value.esri_pe_string = meta_netcdf.data[var]['esri_pe_string']
 
     return nf1
-
-
-def writenet(flag, inputmap, netfile, DtDay,
-             value_standard_name, value_long_name, value_unit, data_format,
-             startdate, rep_steps, frequency=None):
-
-    """ Write a netcdf stack
-
-    :param flag: 0 -> one value map, 1-5 -> time serie (all steps, monthly, yearly, etc.)
-    :param inputmap: values to be written to NetCDF file
-    :param netfile: name of output file in NetCDF format
-    :param DtDay: model timestep (self.var.DtDay)
-    :param value_standard_name: variable name to be put into netCDF file
-    :param value_long_name: variable long name to be put into netCDF file
-    :param value_unit: variable unit to be put into netCDF file
-    :param data_format: data format
-    :param startdate: reference date to be used to get start date and end date for netCDF file from start step and end step
-    :param: repstepstart: first reporting step
-    :param: repstepend: final reporting step
-    :param frequency:[None,'all','monthly','yearly'] save to netCDF stack; None save to netCDF single
-    :return: 
-    """
-    # prefix = netfile.split('/')[-1].split('\\')[-1].split('.')[0]
-    flags = LisSettings.instance().flags
-    var_name = os.path.basename(netfile)
-    netfile += ".nc"
-    if flag == 0:
-        nf1 = write_netcdf_header(var_name, netfile, DtDay,
-                                  value_standard_name, value_long_name, value_unit, data_format,
-                                  startdate, rep_steps, frequency)
-    else:
-        nf1 = iterOpenNetcdf(netfile, "", 'a', format='NETCDF4')
-    if flags['nancheck']:
-        nanCheckMap(inputmap, netfile, value_standard_name)
-    
-    map_np = uncompress_array(inputmap)
-    if frequency is not None:
-        cdfflags = CDFFlags.instance()
-        step = cdfflags[flag]
-
-        nf1.variables[var_name][step, :, :] = map_np
-    else:
-        nf1.variables[var_name][:, :] = map_np
-
-    nf1.close()
