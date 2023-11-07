@@ -1405,6 +1405,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
         <textvar name="numCPUs_parallelNumba" value="$(numCPUs_parallelNumba)"/>
         
         <textvar name="OutputMapsChunks" value="1"/>
+        <textvar name="OutputMapsDataType" value="float64"/>
         <textvar name="NetCDFTimeChunks" value="auto"/>
         <textvar name="MapsCaching" value="False"/>
 
@@ -1428,7 +1429,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 **************************************************************
             </comment>
 
-            <textvar name="CalendarConvention" value="$(CalendarConvention)">
+            <textvar name="CalendarConvention" value="$(CalendarConvention)"/>
 
             <textvar name="CalendarDayStart" value="$(CalendarDayStart)">
                 <comment>
@@ -3135,6 +3136,13 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     <comment>
                         Reported volumetric soil moisture content for
                         forest soil layer 2 [V/V]
+                    </comment>
+                </textvar>
+
+                <textvar name="Theta3ForestMaps" value="$(PathOut)/thfc">
+                    <comment>
+                        Reported volumetric soil moisture content for
+                        forest soil layer 3 [V/V]
                     </comment>
                 </textvar>
 

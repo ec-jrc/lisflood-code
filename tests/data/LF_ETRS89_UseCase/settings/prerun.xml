@@ -1534,9 +1534,10 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
         <textvar name="numCPUs_parallelKinematicWave" value="$(numCPUs_parallelKinematicWave)"/>
         <textvar name="numCPUs_parallelNumba" value="$(numCPUs_parallelNumba)"/>
 
-        <textvar name="OutputMapsChunks" value="$(OutputMapsChunks)"/>
-        <textvar name="NetCDFTimeChunks" value="$(NetCDFTimeChunks)"/>
-        <textvar name="MapsCaching" value="$(MapsCaching)"/>
+        <textvar name="OutputMapsChunks" value="1"/>
+        <textvar name="OutputMapsDataType" value="float64"/>
+        <textvar name="NetCDFTimeChunks" value="auto"/>
+        <textvar name="MapsCaching" value="False"/>
 
         <textvar name="MaskMap" value="$(MaskMap)">
             <comment>

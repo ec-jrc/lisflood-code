@@ -2248,6 +2248,19 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 **************************************************************
 
 -->
+        <textvar name="numCPUs_parallelKinematicWave" value="1"/>
+        <textvar name="numCPUs_parallelNumba" value="1"/>
+
+        <textvar name="OutputMapsChunks" value="1"/>
+        <textvar name="OutputMapsDataType" value="float64"/>
+        <textvar name="NetCDFTimeChunks" value="auto"/>
+        <textvar name="MapsCaching" value="False"/>
+
+        <textvar name="ChanQState" value="$(PathOut)/chanq">
+            <comment>
+                Reported istantaneous discharge at end of computation step [cu m/s] ChanQ
+            </comment>
+        </textvar>
         <textvar name="OFDirectState" value="$(PathOut)/ofdir">
             <comment>
                 Reported water volume for direct fraction on catchment surface

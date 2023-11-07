@@ -22,6 +22,7 @@ from ..global_modules.add1 import loadmap, decompress, compressArray, readnetcdf
 from ..global_modules.settings import get_calendar_type, calendar_inconsistency_warning, LisSettings, MaskInfo
 from . import HydroModule
 from ..global_modules.netcdf import xarray_reader
+from ..global_modules.errors import LisfloodError
 
 
 class waterabstraction(HydroModule):
@@ -121,29 +122,23 @@ class waterabstraction(HydroModule):
             # If reading from NetCDF stack, get time step corresponding to model step.
             # Added management for sub-daily modelling time steps
             # Added possibility to use one single average year to be repeated during the simulation
-                        
-            if option['useWaterDemandAveYear']:
-                # CM: using one water demand average year throughout the model simulation
-                self.var.DomesticDemandMM = loadmap('DomesticDemandMaps', timestampflag='closest',
-                                                    averageyearflag=True) * self.var.DtDay
-                self.var.IndustrialDemandMM = loadmap('IndustrialDemandMaps', timestampflag='closest',
-                                                      averageyearflag=True) * self.var.DtDay
-                self.var.LivestockDemandMM = loadmap('LivestockDemandMaps', timestampflag='closest',
-                                                     averageyearflag=True) * self.var.DtDay
-                self.var.EnergyDemandMM = loadmap('EnergyDemandMaps', timestampflag='closest',
-                                                  averageyearflag=True) * self.var.DtDay
+          
+            # initialise xarray readers
+            if option['TransientWaterDemandChange']:
+                if option['readNetcdfStack']:
+                    self.forcings = {}
+                    for data in ['DomesticDemandMaps', 'IndustrialDemandMaps', 'LivestockDemandMaps', 'EnergyDemandMaps']:
+                        self.forcings[data] = xarray_reader(data, indexer='ffill', climatology=option['useWaterDemandAveYear'])
+                else:
+                    raise LisfloodError("PCRaster format not supported for the TransientWaterDemandChange option")
             else:
-                # CM: using information on water demand from NetCDF files
+                if option['useWaterDemandAveYear']:
+                    raise LisfloodError("TransientWaterDemandChange option must be turned on to use average year water demand (useWaterDemandAveYear)")
+                # CM: using information on water demand from NetCDF files, only loaded once in init, not in dynamic
                 self.var.DomesticDemandMM = loadmap('DomesticDemandMaps', timestampflag='closest') * self.var.DtDay
                 self.var.IndustrialDemandMM = loadmap('IndustrialDemandMaps', timestampflag='closest') * self.var.DtDay
                 self.var.LivestockDemandMM = loadmap('LivestockDemandMaps', timestampflag='closest') * self.var.DtDay
                 self.var.EnergyDemandMM = loadmap('EnergyDemandMaps', timestampflag='closest') * self.var.DtDay
-          
-            # initialise xarray readers
-            if option['TransientWaterDemandChange'] and option['readNetcdfStack']:
-                self.forcings = {}
-                for data in ['DomesticDemandMaps', 'IndustrialDemandMaps', 'LivestockDemandMaps', 'EnergyDemandMaps']:
-                    self.forcings[data] = xarray_reader(data, indexer='ffill', climatology=option['useWaterDemandAveYear'])
 
             if option['groundwaterSmooth']:
                 self.var.GroundwaterBodiesPcr = decompress(self.var.GroundwaterBodies)
@@ -268,29 +263,17 @@ class waterabstraction(HydroModule):
             # ***** READ WATER DEMAND DATA *****************************
             # ************************************************************
 
+            # if transient, get step from water demand forcings, else use value in init
             if option['TransientWaterDemandChange']:
                 if option['readNetcdfStack']:
                     # Read using xarray reader
-                    
                     step = self.var.currentTimeStep() - self.var.firstTimeStep()
-
                     self.var.DomesticDemandMM = self.forcings['DomesticDemandMaps'][step] * self.var.DtDay
                     self.var.IndustrialDemandMM = self.forcings['IndustrialDemandMaps'][step] * self.var.DtDay
                     self.var.LivestockDemandMM = self.forcings['LivestockDemandMaps'][step] * self.var.DtDay
                     self.var.EnergyDemandMM = self.forcings['EnergyDemandMaps'][step] * self.var.DtDay
-
                 else:
-                    # Read from stack of maps in Pcraster format
-                    self.var.DomesticDemandMM = readmapsparse(binding['DomesticDemandMaps'], self.var.currentTimeStep(),
-                                                              self.var.DomesticDemandMM) * self.var.DtDay
-                    self.var.IndustrialDemandMM = readmapsparse(binding['IndustrialDemandMaps'],
-                                                                self.var.currentTimeStep(),
-                                                                self.var.IndustrialDemandMM) * self.var.DtDay
-                    self.var.LivestockDemandMM = readmapsparse(binding['LivestockDemandMaps'],
-                                                               self.var.currentTimeStep(),
-                                                               self.var.LivestockDemandMM) * self.var.DtDay
-                    self.var.EnergyDemandMM = readmapsparse(binding['EnergyDemandMaps'], self.var.currentTimeStep(),
-                                                            self.var.EnergyDemandMM) * self.var.DtDay
+                    raise LisfloodError("PCRaster format not supported for the TransientWaterDemandChange option")
 
 
             # ************************************************************

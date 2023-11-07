@@ -36,12 +36,13 @@ import threading
 import xml.dom.minidom
 import pcraster
 from netCDF4 import Dataset, date2num, num2date
-from pandas.core.tools.datetimes import parsing
+from pandas import to_datetime
 import numpy as np
 
 from .errors import LisfloodError, LisfloodWarning, LisfloodFileError
 from .decorators import cached
 from .default_options import default_options
+
 
 project_dir = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../..'))
 
@@ -269,6 +270,17 @@ class MaskAreaInfo(with_metaclass(Singleton)):
         return iter(self.info)
 
 
+def get_core_dims(dims):
+    if 'x' in dims and 'y' in dims:
+        core_dims = ('y', 'x')
+    elif 'lat' in dims and 'lon' in dims:
+        core_dims = ('lat', 'lon')
+    else:
+        msg = 'Core dimension in netcdf file not recognised! Expecting (y, x) or (lat, lon), have '+str(dims)
+        raise LisfloodError(msg)
+    return core_dims
+
+
 @nine
 class NetCDFMetadata(with_metaclass(Singleton)):
     def __init__(self, uid):
@@ -283,6 +295,10 @@ class NetCDFMetadata(with_metaclass(Singleton)):
             nf1 = iterOpenNetcdf(filename, "Trying to get metadata from netcdf template \n", 'r')
             for var in nf1.variables:
                 self.data[var] = {k: v for k, v in iteritems(nf1.variables[var].__dict__) if k != '_FillValue'}
+            core_dims = get_core_dims(self.data)
+            self.coords = {}
+            for dim in core_dims:
+                self.coords[dim] = nf1.variables[dim][:]
             nf1.close()
             return
         except (KeyError, IOError, IndexError, Exception):
@@ -292,6 +308,10 @@ class NetCDFMetadata(with_metaclass(Singleton)):
         nf1 = iterOpenNetcdf(filename, "Trying to get metadata from E0 maps \n", 'r')
         for var in nf1.variables:
             self.data[var] = {k: v for k, v in iteritems(nf1.variables[var].__dict__) if k != '_FillValue'}
+        core_dims = get_core_dims(self.data)
+        self.coords = {}
+        for dim in core_dims:
+            self.coords[dim] = nf1.variables[dim]
         nf1.close()
 
 @nine
@@ -391,7 +411,7 @@ class LisSettings(with_metaclass(ThreadSingleton)):
             float(self.timestep_init)
         except ValueError:
             try:
-                parsing.parse_time_string(self.timestep_init, dayfirst=True)
+                to_datetime(self.timestep_init, dayfirst=True).to_pydatetime()
             except ValueError:
                 raise LisfloodError('Option timestepInit was not parsable. Must be integer or date string: {}'.format(self.timestep_init))
             else:
@@ -471,12 +491,13 @@ class LisSettings(with_metaclass(ThreadSingleton)):
     def _flags(sys_args):
         flags = OrderedDict([('quiet', False), ('veryquiet', False), ('loud', False),
                              ('checkfiles', False), ('noheader', False), ('printtime', False),
-                             ('debug', False), ('nancheck', False), ('initonly', False)])
+                             ('debug', False), ('nancheck', False), ('initonly', False),
+                             ('skipvalreplace', False)])
 
         @cached
         def _flags(argz):
             try:
-                opts, arguments = getopt.getopt(argz, 'qvlchtdni', list(flags.keys()))
+                opts, arguments = getopt.getopt(argz, 'qvlchtdnis', list(flags.keys()))
             except getopt.GetoptError:
                 from ..main import usage
                 usage()
@@ -486,7 +507,7 @@ class LisSettings(with_metaclass(ThreadSingleton)):
                                 ('-l', '--loud'), ('-c', '--checkfiles'),
                                 ('-h', '--noheader'), ('-t', '--printtime'),
                                 ('-d', '--debug'), ('-n', '--nancheck'),
-                                ('-i', '--initonly')):
+                                ('-i', '--initonly'), ('-s', '--skipvalreplace')):
                         if o in opt:
                             flags[opt[1].lstrip('--')] = True
                             break
@@ -684,7 +705,7 @@ def calendar(date_in, calendar_type='proleptic_gregorian'):
         # try reading a date in one of available formats
         try:
             _t_units = "hours since 1970-01-01 00:00:00"  # units used for date type conversion (datetime.datetime -> calendar-specific if needed)
-            date = parsing.parse_time_string(date_in, dayfirst=True)[0]  # datetime.datetime type
+            date = to_datetime(date_in, dayfirst=True).to_pydatetime() # datetime.datetime type
             step = date2num(date, _t_units, calendar_type)  # float type
             return num2date(step, _t_units, calendar_type)  # calendar-dependent type from netCDF4.netcdftime._netcdftime module
         except:
