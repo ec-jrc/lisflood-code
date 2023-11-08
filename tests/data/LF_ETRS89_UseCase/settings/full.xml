@@ -94,6 +94,13 @@
                 **************************************************************
             </comment>
 
+            <comment>
+            The option "OutputMapsDataType" sets the output data type and may take the following values:
+                - "float64"
+                - "float32"
+            </comment>
+            <textvar name="OutputMapsDataType" value="float64"/>
+
             <!-- Parallelisation of the kinematic wave routing (via openMP multi-threading).
             The option "numberParallelThreadsKinematicWave" may take the following values:
             - "0" : auto-detection of the machine/node's number of CPUs (all CPUs are used minus 1)
@@ -2251,10 +2258,10 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
         <textvar name="numCPUs_parallelKinematicWave" value="1"/>
         <textvar name="numCPUs_parallelNumba" value="1"/>
 
-        <textvar name="OutputMapsChunks" value="1"/>
-        <textvar name="OutputMapsDataType" value="float64"/>
-        <textvar name="NetCDFTimeChunks" value="auto"/>
-        <textvar name="MapsCaching" value="False"/>
+        <textvar name="OutputMapsChunks" value="$(OutputMapsChunks)"/>
+        <textvar name="OutputMapsDataType" value="$(OutputMapsDataType)"/>
+        <textvar name="NetCDFTimeChunks" value="$(NetCDFTimeChunks)"/>
+        <textvar name="MapsCaching" value="$(MapsCaching)"/>
 
         <textvar name="ChanQState" value="$(PathOut)/chanq">
             <comment>

@@ -1725,6 +1725,7 @@ This is necessary when using projected coordinates (x,y)
 </textvar>
 
 <textvar name="OutputMapsChunks" value="$(OutputMapsChunks)"/>
+<textvar name="OutputMapsDataType" value="$(OutputMapsDataType)"/>
 <textvar name="NetCDFTimeChunks" value="$(NetCDFTimeChunks)"/>
 <textvar name="MapsCaching" value="$(MapsCaching)"/>
 
