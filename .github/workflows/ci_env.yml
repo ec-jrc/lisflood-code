@@ -32,6 +32,14 @@ jobs:
       shell: bash -el {0}
       run: |
         pip install -r requirements.txt
+    - name: Compiling kinematic wave module
+      shell: bash -el {0}
+      run: |
+        cd src/lisflood/hydrological_modules/
+        python compile_kinematic_wave_parallel_tools.py build_ext --inplace
+    - name: Install lisflood-module
+      shell: bash -el {0}
+      run: |
         pip install .
     - name: Check installation
       shell: bash -el {0}
