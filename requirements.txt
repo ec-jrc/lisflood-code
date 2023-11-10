@@ -12,13 +12,13 @@ lisflood-utilities>=0.12.19
 llvmlite>=0.37.0
 lxml>=4.6.5
 more-itertools>=7.2.0
-netCDF4>=1.5.3
+netCDF4>=1.5.3,<=1.6.4
 nine>=1.0.0
 numba>=0.54.0
-numexpr>=2.7.0
+numexpr==2.8.1
 numpy>=1.21.0
 packaging>=19.2
-pandas>=1
+pandas>=1,<2
 pathlib2>=2.3.5
 pkginfo>=1.5.0.1
 pluggy>=0.13.0

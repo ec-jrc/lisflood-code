@@ -1,0 +1,46 @@
+name: Lisflood OS Unit Tests
+
+on: [push]
+
+jobs:
+  tests:
+    runs-on: ubuntu-20.04
+    strategy:
+      max-parallel: 5
+
+    steps:
+    - name: Checkout github repo
+      uses: actions/checkout@v3
+    - uses: conda-incubator/setup-miniconda@v2
+      with:
+        auto-update-conda: true
+        python-version: 3.7
+    - name: Conda info
+      shell: bash -el {0}
+      run: conda info
+    - name: Install python and gcc
+      shell: bash -el {0}
+      run: |
+        conda install -c conda-forge python=3.7
+        conda install -c conda-forge gcc=12.1.0
+    - name: Install gdal eccodes pcraster hdf5
+      shell: bash -el {0}
+      run: |
+        conda install -c conda-forge gdal==3.5.1 eccodes pcraster
+        conda install -c conda-forge hdf5
+    - name: Install dependencies
+      shell: bash -el {0}
+      run: |
+        pip install -r requirements.txt
+        pip install .
+    - name: Check installation
+      shell: bash -el {0}
+      run: |
+        gdal-config --version
+        python -c "from osgeo import gdal; print(gdal.__version__)"
+        conda list
+    - name: Test with pytest
+      shell: bash -el {0}
+      run: |
+        pip install pytest pytest-cov
+        pytest
