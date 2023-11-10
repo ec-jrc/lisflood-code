@@ -35,6 +35,8 @@ jobs:
     - name: Compiling kinematic wave module
       shell: bash -el {0}
       run: |
+        conda install gxx_linux-64
+        conda install cmake
         cd src/lisflood/hydrological_modules/
         python compile_kinematic_wave_parallel_tools.py build_ext --inplace
     - name: Install lisflood-module
