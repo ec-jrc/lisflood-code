@@ -57,186 +57,85 @@
 
     </lfoptions>
 
-
     <lfuser>
+
         <group>
             <comment>
+            **************************************************************
+            netCDF parameters
+            **************************************************************
 
+            !-- Optimization of netCDF I/O through chunking and caching.
+
+            The option "NetCDFTimeChunks" may take the following values:
+                - "-1"                         : Load everything upfront
+                - "[positive integer number]"  : Chunk size defined by user
+                - "auto"                       : Let xarray to decide
+            </comment>
+            <textvar name="NetCDFTimeChunks" value="auto"/>
+
+            <comment>
+
+            The option "MapsCaching" may take the following values:
+                - "True"   : Cache maps during execution
+                - "False"  : No caching
+            </comment>
+            <textvar name="MapsCaching" value="False"/>
+
+            <comment>
+
+            The option "OutputMapsChunks" may take the following values:
+                - "[positive integer number]"  : Dump outputs to disk every X steps (default 1) 
+            </comment>
+            <textvar name="OutputMapsChunks" value="1"/>
+            <comment>
                 **************************************************************
-
-                AREA AND OUTLETS
-
+                PARALLELIZED KINEMATIC ROUTING
                 **************************************************************
-
             </comment>
 
+            <comment>
+            The option "OutputMapsDataType" sets the output data type and may take the following values:
+                - "float64"
+                - "float32"
+            </comment>
+            <textvar name="OutputMapsDataType" value="float64"/>
+
+            <!-- Parallelisation of the kinematic wave routing (via openMP multi-threading).
+            The option "numberParallelThreadsKinematicWave" may take the following values:
+            - "0" : auto-detection of the machine/node's number of CPUs (all CPUs are used minus 1)
+            (do not set it if other simulations are running on the same machine/node)
+            - "1" : serial execution (not parallel)
+            - "2", "3", ... : manual setting of the number of parallel threads.
+            (if exceeding the number of CPUs, the option is set to "0") -->
+            <textvar name="numCPUs_parallelKinematicWave" value="1"/>
+            
+            <comment>
+                **************************************************************
+                PARALLELISATION WITH NUMBA (USED IN SOILLOOP)
+                **************************************************************
+            </comment>
+
+            <!-- Parallelisation of using Numba runtime compiled library .
+            The option "numCPUs_parallelNumba" may take the following values:
+            - "0"           : set to NUMBA_NUM_THREADS Environment Variable 
+                      (if NUMBA_NUM_THREADS is not set, will take the number of CPU cores determined by python's multiprocessing.cpu_count())
+            - "1"           : serial execution (not parallel)
+            - "2", "3", ... : manual setting of the number of parallel threads.
+                      (if exceeding NUMBA_NUM_THREADS, the value is set to NUMBA_NUM_THREADS) -->
+            <textvar name="numCPUs_parallelNumba" value="1"/>
+
+            <comment>
+                **************************************************************
+                AREA AND OUTLETS
+                **************************************************************
+            </comment>
 
             <textvar name="PathRoot" value="$(SettingsPath)/..">
-
                 <comment>
-
                     Root directory
-
                 </comment>
-
             </textvar>
-            <textvar name="PathOut" value="$(PathRoot)/out">
-
-                <comment>
-
-                    Output path (org=$(PathRoot)/out)
-
-                </comment>
-
-            </textvar>
-
-
-            <textvar name="PathInit" value="$(PathOut)/pathinit">
-
-                <comment>
-
-                    Path of the initial value maps e.g. lzavin.map (org=$(PathRoot)/outPo)
-
-                </comment>
-
-            </textvar>
-
-
-            <textvar name="PathMaps" value="$(PathRoot)/maps">
-
-                <comment>
-
-                    Maps path
-
-                </comment>
-
-            </textvar>
-
-
-            <textvar name="PathInflow" value="$(PathRoot)/inflow">
-
-                <comment>
-
-                    Inflow path
-
-                </comment>
-
-            </textvar>
-
-
-            <textvar name="PathParams" value="$(PathMaps)/parameters">
-
-                <comment>
-
-                    Calibration parameter path
-
-                </comment>
-
-            </textvar>
-
-
-            <textvar name="PathTables" value="$(PathRoot)/maps/tables">
-
-                <comment>
-
-                    Tables path
-
-                </comment>
-
-            </textvar>
-
-
-            <textvar name="PathMapsTables" value="$(PathMaps)/table2map">
-
-                <comment>
-
-                    Maps instead tables path
-
-                </comment>
-
-            </textvar>
-
-
-            <textvar name="PathSoilHyd" value="$(PathMaps)/soilhyd">
-
-                <comment>
-
-                    Maps instead tables for soil hydraulics path
-
-                </comment>
-
-            </textvar>
-
-
-            <textvar name="PathMapsLandUseChange" value="$(PathRoot)/landusechange">
-
-                <comment>
-
-                    Maps for transient land use changes every 5 years
-
-                </comment>
-
-            </textvar>
-
-
-            <textvar name="PathMapsLanduse" value="$(PathRoot)/maps/landuse2006">
-
-                <comment>
-
-                    Maps for land use fractions and related land use maps
-
-                </comment>
-
-            </textvar>
-
-
-            <textvar name="PathWaterUse" value="$(PathRoot)/maps/waterdemand">
-
-                <comment>
-
-                    Water use maps path
-
-                    $(PathMaps)/waterdemand19902014
-
-                </comment>
-
-            </textvar>
-
-
-            <textvar name="PathMeteo" value="$(PathRoot)/meteo">
-
-                <comment>
-
-                    ./meteoWatch
-
-                    Meteo path
-
-                </comment>
-
-            </textvar>
-
-
-            <textvar name="PathLAI" value="$(PathMaps)/lai">
-
-                <comment>
-
-                    Leaf Area Index maps path
-
-                </comment>
-
-            </textvar>
-
-
-            <textvar name="PathVarWaterfraction" value="$(PathRoot)/waterfraction">
-
-                <comment>
-
-                    variable water fraction maps path
-
-                </comment>
-
-            </textvar>
-
 
             <textvar name="MaskMap" value="$(PathRoot)/maps/mask.map">
             </textvar>
@@ -342,83 +241,52 @@
 
             </textvar>
 
-
             <textvar name="ReportSteps" value="6000..7000">
-
                 <comment>
-
                     Time steps at which to write model state maps (i.e. only
-
                     those maps that would be needed to define initial conditions
-
                     for succeeding model run)
 
-
                 </comment>
-
             </textvar>
-
 
         </group>
 
 
         <group>
-
             <comment>
-
                 **************************************************************
-
                 MONTE CARLO, KALMAN FILTER
-
                 **************************************************************
-
             </comment>
 
-
             <textvar name="EnsMembers" value="2">
-
                 <comment>
-
                     Number of sample to use in MonteCarlo simulations
-
                 </comment>
-
             </textvar>
-
 
             <textvar name="nrCores" value="2">
-
                 <comment>
-
                     Number of cores of the computer to use in MonteCarlo simulations
-
                     This only works with Linux, if set to 1 no forking will be used
-
                 </comment>
-
             </textvar>
 
-
             <textvar name="FilterSteps" value="10">
-
                 <comment>
 
-
-                    Time steps at which to write model state maps (i.e. only
-
+                   Time steps at which to write model state maps (i.e. only
                     those maps that would be needed to define initial conditions
-
                     for succeeding model run)
 
 
                 </comment>
-
             </textvar>
-
 
         </group>
 
-<group>
+        <group>
             <comment>
                 **************************************************************
                 CALIBRATION PARAMETERS
@@ -493,7 +361,6 @@
                     Multiplier applied to Channel Manning's n for second line of routing
                 </comment>
             </textvar>
-
 
             <textvar name="SnowMeltCoef" value="$(PathParams)/params_SnowMeltCoef.nc">
                 <comment>
@@ -573,26 +440,113 @@
                     Multiplier applied to ChanSdXdY
                 </comment>
             </textvar>
+        </group>
+
+        <group>
+            <comment>
+                **************************************************************
+                FILE PATHS
+                **************************************************************
+            </comment>
+
+            <textvar name="PathOut" value="$(PathRoot)/out">
+                <comment>
+                    Output path (org=$(PathRoot)/out)
+                </comment>
+            </textvar>
+
+            <textvar name="PathInit" value="$(PathOut)/pathinit">
+                <comment>
+                    Path of the initial value maps e.g. lzavin.map (org=$(PathRoot)/outPo)
+                </comment>
+
+            </textvar>
+
+            <textvar name="PathMaps" value="$(PathRoot)/maps">
+                <comment>
+                    Maps path
+                </comment>
+            </textvar>
+
+            <textvar name="PathInflow" value="$(PathRoot)/inflow">
+                <comment>
+                    Inflow path
+                </comment>
+            </textvar>
+
+            <textvar name="PathParams" value="$(PathMaps)/parameters">
+                <comment>
+                    Calibration parameter path
+                </comment>
+            </textvar>
+
+            <textvar name="PathTables" value="$(PathRoot)/maps/tables">
+                <comment>
+                    Tables path
+                </comment>
+            </textvar>
+
+            <textvar name="PathMapsTables" value="$(PathMaps)/table2map">
+                <comment>
+                    Maps instead tables path
+                </comment>
+            </textvar>
+
+            <textvar name="PathSoilHyd" value="$(PathMaps)/soilhyd">
+                <comment>
+                    Maps instead tables for soil hydraulics path
+                </comment>
+            </textvar>
+
+            <textvar name="PathMapsLandUseChange" value="$(PathRoot)/landusechange">
+                <comment>
+                    Maps for transient land use changes every 5 years
+                </comment>
+            </textvar>
+
+            <textvar name="PathMapsLanduse" value="$(PathRoot)/maps/landuse2006">
+                <comment>
+                    Maps for land use fractions and related land use maps
+                </comment>
+            </textvar>
+
+            <textvar name="PathWaterUse" value="$(PathRoot)/maps/waterdemand">
+                <comment>
+                    Water use maps path
+                    $(PathMaps)/waterdemand19902014
+                </comment>
+            </textvar>
+
+            <textvar name="PathMeteo" value="$(PathRoot)/meteo">
+                <comment>
+                    ./meteoWatch
+                    Meteo path
+               </comment>
+            </textvar>
+
+            <textvar name="PathLAI" value="$(PathMaps)/lai">
+                <comment>
+                    Leaf Area Index maps path
+                </comment>
+            </textvar>
+
+            <textvar name="PathVarWaterfraction" value="$(PathRoot)/waterfraction">
+                <comment>
+                    variable water fraction maps path
+                </comment>
+            </textvar>
 
         </group>
 
 
         <group>
 
-
             <comment>
-
                 **************************************************************
-
                 INITIAL CONDITIONS
-
                 (maps or single values)
-
                 **************************************************************
-
             </comment>
-
-
 
             <textvar name="timestepInit" value="1">
                 <comment>
@@ -620,35 +574,21 @@
                 </comment>
             </textvar>
             <textvar name="WaterDepthInitValue" value="0">
-
                 <comment>
-
                     initial overland flow water depth [mm]
-
                 </comment>
-
             </textvar>
-
 
             <textvar name="SnowCoverAInitValue" value="0">
-
                 <comment>
-
                     initial snow depth in snow zone A [mm]
-
                 </comment>
-
             </textvar>
 
-
             <textvar name="SnowCoverBInitValue" value="0">
-
                 <comment>
-
                     initial snow depth in snow zone B [mm]
-
                 </comment>
-
             </textvar>
 
 
@@ -850,7 +790,6 @@
 
         </group>
 
-
         <group>
 
             <comment>
@@ -936,7 +875,6 @@
                 </comment>
 
             </textvar>
-
 
         </group>
 
@@ -1031,7 +969,6 @@
 
         </group>
 
-
         <group>
 
 
@@ -1058,23 +995,15 @@
 
             </textvar>
 
-
         </group>
-
 
         <group>
 
-
             <comment>
-
                 **************************************************************
-
                 PREFIXES OF METEO AND VEGETATION RELATED VARIABLES
-
                 **************************************************************
-
             </comment>
-
 
             <textvar name="PrefixPrecipitation" value="pr">
 
@@ -1221,31 +1150,20 @@
 
         </group>
 
-
         <group>
 
-
             <comment>
-
                 **************************************************************
-
                 PARAMETERS RELATED TO EVAPO(TRANSPI)RATION AND Interception
-
                 **************************************************************
-
 
                 Suggested parameterisation strategy:
 
-
                 - leave all these parameters at their default values.
-
                 in some very special cases CalEvaporation may be set to some
-
                 value other than one
 
-
             </comment>
-
 
             <textvar name="PrScaling" value="1">
 
@@ -1305,34 +1223,23 @@
 
             </textvar>
 
-
         </group>
 
 
         <group>
 
-
             <comment>
-
                 **************************************************************
-
                 SNOW AND FROST RELATED PARAMETERS
-
                 **************************************************************
-
 
                 Suggested parameterisation strategy:
 
-
                 - estimate SnowFactor from prior data (if available), otherwise use 1
-
                 - use SnowMeltCoef as a calibration constant
-
                 - leave all other parameters at default
 
-
             </comment>
-
 
             <textvar name="SnowFactor" value="1">
 
@@ -2351,18 +2258,10 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
         <textvar name="numCPUs_parallelKinematicWave" value="1"/>
         <textvar name="numCPUs_parallelNumba" value="1"/>
 
-        <textvar name="NetCDFTimeChunks" value="auto"/>
-            <comment>
-                Chunking in time dimension used when reading NetCDF forcings (or other NetCDF temporal inputs).
-                Special values:
-                "auto": recommended, uses default XArray chunking (depends on the size and type of the array)
-                "-1": load the whole time series in memory (fastest option but memory consuming)
-            </comment>
-
-        <textvar name="MapsCaching" value="False"/>
-            <comment>
-                Option designed for the calibration. All the static maps and forcings will be stored in a cache so that they don't have to be loaded by each lisflood instance. This option sets the value of NetCDFTimeChunks to -1, meaning that the whole time series in the NetCDF inputs is loaded into memory.
-            </comment>
+        <textvar name="OutputMapsChunks" value="$(OutputMapsChunks)"/>
+        <textvar name="OutputMapsDataType" value="$(OutputMapsDataType)"/>
+        <textvar name="NetCDFTimeChunks" value="$(NetCDFTimeChunks)"/>
+        <textvar name="MapsCaching" value="$(MapsCaching)"/>
 
         <textvar name="ChanQState" value="$(PathOut)/chanq">
             <comment>
@@ -2418,6 +2317,13 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
             </comment>
         </textvar>
 
+        <textvar name="numCPUs_parallelKinematicWave" value="$(numCPUs_parallelKinematicWave)"/>
+        <textvar name="numCPUs_parallelNumba" value="$(numCPUs_parallelNumba)"/>
+
+        <textvar name="OutputMapsChunks" value="$(OutputMapsChunks)"/>
+        <textvar name="NetCDFTimeChunks" value="$(NetCDFTimeChunks)"/>
+        <textvar name="MapsCaching" value="$(MapsCaching)"/>
+
 
         <textvar name="MaskMap" value="$(MaskMap)">
 
@@ -2454,7 +2360,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
             </comment>
 
-            <textvar name="CalendarConvention" value="$(CalendarConvention)">
+            <textvar name="CalendarConvention" value="$(CalendarConvention)"/>
 
 
             <textvar name="CalendarDayStart" value="$(CalendarDayStart)">
@@ -4543,6 +4449,11 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
                 </textvar>
 
+                <textvar name="ChanQState" value="$(PathOut)/chanq">
+                    <comment>
+                        Reported istantaneous discharge at end of computation step [cu m/s] ChanQ
+                    </comment>
+                </textvar>
 
                 <textvar name="DSLRForestState" value="$(PathOut)/dslf">
 
@@ -6070,6 +5981,24 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
                 </textvar>
 
+                <textvar name="Theta1AvUpsTS" value="$(PathOut)/th1aAvUps.tss">
+                    <comment>
+                        Soil moisture layer 1a [cu mm / cu mm]
+                    </comment>
+                </textvar>
+
+                <textvar name="Theta2AvUpsTS" value="$(PathOut)/th1bAvUps.tss">
+                    <comment>
+                        Soil moisture layer 1b [cu mm / cu mm]
+                    </comment>
+                </textvar>
+
+                <textvar name="Theta3AvUpsTS" value="$(PathOut)/th2AvUps.tss">
+                    <comment>
+                        Soil moisture layer 2 [cu mm / cu mm]
+                    </comment>
+                </textvar>
+
                 <textvar name="Theta1TS" value="$(PathOut)/th1a.tss">
                     <comment>
                         Soil moisture layer 1a [cu mm / cu mm]
@@ -6467,28 +6396,6 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     <comment>
 
                         Water stored as interception [mm]
-
-                    </comment>
-
-                </textvar>
-
-
-                <textvar name="Theta1AvUpsTS" value="$(PathOut)/thTopUps.tss">
-
-                    <comment>
-
-                        Soil moisture upper layer [cu mm / cu mm]
-
-                    </comment>
-
-                </textvar>
-
-
-                <textvar name="Theta2AvUpsTS" value="$(PathOut)/thSubUps.tss">
-
-                    <comment>
-
-                        Soil moisture lower layer [cu mm / cu mm]
 
                     </comment>
 

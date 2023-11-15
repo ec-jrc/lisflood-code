@@ -127,6 +127,9 @@ class groundwater(HydroModule):
         self.var.GwLossLZ = maskinfo.in_zero()
         self.var.UZOutflow = self.var.allocateVariableAllVegetation()
         self.var.LZOutflow = maskinfo.in_zero()
+        self.var.LZAvInflow = maskinfo.in_zero()
+        self.var.GwPercUZLZPixel = maskinfo.in_zero()
+        self.var.GwLossPixel = maskinfo.in_zero()
         
     def dynamic(self):
         # outflow from LZ to channel stops when LZ is below its threshold.

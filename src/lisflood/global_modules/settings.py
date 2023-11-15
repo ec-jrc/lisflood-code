@@ -138,6 +138,32 @@ class CDFFlags(with_metaclass(Singleton)):
         # FIXME magic numbers. replace indexes with descriptive keys (end, steps, all, monthly (steps), etc.)
         self.flags = [0, 0, 0, 0, 0, 0, 0]
 
+    def get_flag(self, out_type, frequency):
+        if out_type == 'end':
+            flag = 0
+        elif out_type == 'steps':
+            if frequency == 'all':
+                flag = 1
+            elif frequency == 'monthly':
+                flag = 3
+            elif frequency == 'yearly':
+                flag = 4
+            else:
+                raise ValueError(f'Output frequency {frequency} not recognised! Valid values are: (all, monthly, yearly)')
+        elif out_type == 'all':
+            if frequency == 'all':
+                flag = 2
+            elif frequency == 'monthly':
+                flag = 5
+            elif frequency == 'yearly':
+                flag = 6
+            else:
+                raise ValueError(f'Output frequency {frequency} not recognised! Valid values are: (all, monthly, yearly)')
+        else:
+            raise ValueError(f'Output type {out_type} not recognised! Valid values are: (end, steps, all)')
+       
+        return flag
+
     def inc(self, idx):
         self.flags[idx] += 1
 
@@ -146,6 +172,41 @@ class CDFFlags(with_metaclass(Singleton)):
 
     def __getitem__(self, item):
         return self.flags[item]
+    
+    def update(self, var):
+        # set the falg to indicate if a netcdffile has to be created or is only appended
+        # if reportstep than increase the counter
+        if var.currentTimeStep() in var.ReportSteps:
+            # FIXME magic numbers. replace indexes with descriptive keys
+            self.inc(1)
+            # globals.cdfFlag[1] += 1
+            if var.monthend:
+                # globals.cdfFlag[3] += 1
+                self.inc(3)
+            if var.yearend:
+                # globals.cdfFlag[4] += 1
+                self.inc(4)
+
+        # increase the counter for report all maps
+        self.inc(2)
+        # globals.cdfFlag[2] += 1
+        if var.monthend:
+            # globals.cdfFlag[5] += 1
+            self.inc(5)
+        if var.yearend:
+            # globals.cdfFlag[6] += 1
+            self.inc(6)
+
+    def frequency_check(self, var, frequency):
+        if frequency == 'all':
+            check = True
+        elif frequency == 'monthly':
+            check = var.monthend
+        elif frequency == 'yearly':
+            check = var.yearend
+        else:
+            raise ValueError(f'Output frequency {frequency} not recognised! Valid values are: (all, monthly, yearly)')
+        return check
 
 
 @nine
@@ -172,6 +233,25 @@ class CutMap(with_metaclass(Singleton)):
 
 @nine
 class MaskInfo(with_metaclass(Singleton)):
+    Info = namedtuple('Info', 'mask, shape, maskflat, shapeflat, mapC, maskall')
+
+    def __init__(self, mask, maskmap):
+        self.flat = mask.ravel()
+        self.mask_compressed = np.ma.compressed(np.ma.masked_array(mask, mask))  # mapC
+        self.mask_all = np.ma.masked_all(self.flat.shape)
+        self.mask_all.mask = self.flat
+        self.info = self.Info(mask, mask.shape, self.flat, self.flat.shape, self.mask_compressed.shape, self.mask_all)
+        self._in_zero = np.zeros(self.mask_compressed.shape)
+        self.maskmap = maskmap
+
+    def in_zero(self):
+        return self._in_zero.copy()
+
+    def __iter__(self):
+        return iter(self.info)
+
+@nine
+class MaskAreaInfo(with_metaclass(Singleton)):
     Info = namedtuple('Info', 'mask, shape, maskflat, shapeflat, mapC, maskall')
 
     def __init__(self, mask, maskmap):
@@ -217,8 +297,19 @@ class NetCDFMetadata(with_metaclass(Singleton)):
                 self.data[var] = {k: v for k, v in iteritems(nf1.variables[var].__dict__) if k != '_FillValue'}
             core_dims = get_core_dims(self.data)
             self.coords = {}
-            for dim in core_dims:
-                self.coords[dim] = nf1.variables[dim][:]
+            x_flipped = nf1.variables[core_dims[1]][0]>nf1.variables[core_dims[1]][-1] 
+            y_flipped = nf1.variables[core_dims[0]][0]<nf1.variables[core_dims[0]][-1] 
+            func_y = lambda y : y
+            func_x = lambda x : x
+            # write maps using always a standard x and y reference system using x in ascending and y in descending order
+            if (y_flipped):   # y in in ascending order
+                warnings.warn(LisfloodWarning("Warning: map {} (netCDFtemplate) has y coordinates in ascending order and will be flipped vertically".format(filename)))
+                func_y = lambda y : np.flipud(y).copy()
+            if (x_flipped):   # x in in descending order
+                warnings.warn(LisfloodWarning("Warning: map {} (netCDFtemplate) has x coordinates in descending order and will be flipped horizontally".format(filename)))
+                func_x = lambda x : np.fliplr(x).copy()
+            self.coords[core_dims[1]] = func_x(nf1.variables[core_dims[1]][:])
+            self.coords[core_dims[0]] = func_y(nf1.variables[core_dims[0]][:])
             nf1.close()
             return
         except (KeyError, IOError, IndexError, Exception):
@@ -476,19 +567,27 @@ class LisSettings(with_metaclass(ThreadSingleton)):
     def _report_steps(user_settings, bindings):
 
         res = {}
-        repsteps = user_settings['ReportSteps'].split(',')
-        if repsteps[0] == 'starttime':
-            repsteps[0] = str(bindings['StepStartInt'])
-        if repsteps[-1] == 'endtime':
-            repsteps[-1] = str(bindings['StepEndInt'])
-        jjj = []
-        for i in repsteps:
-            if '..' in i:
-                j = list(map(int, i.split('..')))
-                jjj = list(range(j[0], j[1] + 1))
-            else:
-                jjj.append(i)
-        res['rep'] = list(map(int, jjj))
+        reportstepstring=str(user_settings['ReportSteps']) \
+            .replace('starttime',str(bindings['StepStartInt'])) \
+            .replace('endtime',str(bindings['StepEndInt']))
+        
+        try:
+            repsteps = reportstepstring.split(',')
+            listvalues = []
+            for i in repsteps:
+                if '..' in i:
+                    j = list(i.split('..'))
+                    if '+' in j[0]:
+                        jj = list(map(int, j[0].split('+')))
+                        listvalues = list(range(jj[0], int(j[1]) + 1, jj[1]))
+                    else:
+                        listvalues = list(range(int(j[0]),  int(j[1]) + 1))
+                else:
+                    listvalues.append(i)
+            res['rep'] = list(map(int, listvalues))
+        except:
+            raise Exception("ReportSteps must be either a value, a list of values, a range defined by the keyword '..' or a range with '+step' keyword (e.g. 10+5..endtime)\nPlease refer to the lisflood documentation user guide\n\nFound: {}".format(user_settings['ReportSteps']))
+
         if res['rep'][0] > bindings['StepEndInt'] or res['rep'][-1] < bindings['StepStartInt']:
             warnings.warn(LisfloodWarning('No maps are reported as report steps configuration is outside simulation time interval'))
         return res

@@ -109,9 +109,6 @@ class LisfloodModel_ini(DynamicModel):
         self.PRESCRIBED_VEGETATION = [fract + "_prescribed" for fract in self.SOIL_USES]
         self.PRESCRIBED_LAI = OrderedDict(zip(self.PRESCRIBED_VEGETATION[:], ['LAIOtherMaps', 'LAIForestMaps', 'LAIIrrigationMaps']))
         self.VEGETATION_LANDUSE = OrderedDict(zip(self.PRESCRIBED_VEGETATION[:], self.SOIL_USES[:]))
-        
-        
-        
         self.LANDUSE_VEGETATION = OrderedDict([(v, [k]) for k, v in self.VEGETATION_LANDUSE.items()])
         self.LANDUSE_INPUTMAP = OrderedDict(zip(self.LANDUSE_VEGETATION.keys(), ["OtherFraction", "ForestFraction", "IrrigationFraction"]))
 
@@ -179,13 +176,14 @@ class LisfloodModel_ini(DynamicModel):
         # include stateVar modules
         self.stateVar_module = stateVar(self)
 
-        # run intial misc to get all global variables
-        self.misc_module.initial()
 
         # include output of tss and maps
         self.output_module = outputTssMap(self)
 
         self.ReportSteps = report_steps['rep']
+
+        # run intial misc to get all global variables
+        self.misc_module.initial()
 
         self.landusechange_module.initial()
 
@@ -208,7 +206,6 @@ class LisfloodModel_ini(DynamicModel):
         self.polder_module.initial()
 
         self.transmission_module.initial()
-        self.output_module.initial()
 
         self.structures_module.initial()
         # Structures such as reservoirs and lakes are modelled by interrupting the channel flow paths
@@ -230,6 +227,13 @@ class LisfloodModel_ini(DynamicModel):
 
         if option.get('cropsEPIC'):
             self.crop_module.initial() # EPIC: agriculture simulator
+        
+        # initialise averaged discharge
+        maskinfo = MaskInfo.instance()
+        self.ChanQAvg = maskinfo.in_zero()
+
+        # initialise outputs once everything is set
+        self.output_module.initial()
 
         # debug start
         if flags['debug']:
