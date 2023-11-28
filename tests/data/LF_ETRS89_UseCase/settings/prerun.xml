@@ -101,15 +101,6 @@
             </comment>
             <textvar name="OutputMapsDataType" value="float64"/>
 
-            <!-- Parallelisation of the kinematic wave routing (via openMP multi-threading).
-The option "numberParallelThreadsKinematicWave" may take the following values:
-    - "0"           : auto-detection of the machine/node's number of CPUs
-                                (do not set it if other simulations are running on the same machine/node)
-    - "1"           : serial execution (not parallel)
-    - "2", "3", ... : manual setting of the number of parallel threads.
-                      (if exceeding the number of CPUs, the option is set to "0") -->
-            <textvar name="numCPUs_parallelKinematicWave" value="1"/>
-
             <!-- Parallelisation of using Numba runtime compiled library .
 The option "numCPUs_parallelNumba" may take the following values:
     - "0"           : set to NUMBA_NUM_THREADS Environment Variable 
@@ -1538,7 +1529,6 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 **************************************************************
 **************************************************************
 -->
-        <textvar name="numCPUs_parallelKinematicWave" value="$(numCPUs_parallelKinematicWave)"/>
         <textvar name="numCPUs_parallelNumba" value="$(numCPUs_parallelNumba)"/>
 
         <textvar name="OutputMapsChunks" value="$(OutputMapsChunks)"/>

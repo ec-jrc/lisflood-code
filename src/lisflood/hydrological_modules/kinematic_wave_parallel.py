@@ -15,8 +15,8 @@ See the Licence for the specific language governing permissions and limitations 
 
 Parallel implementation of the kinematic wave routing.
 This module provides tools to pre-process the flow direction matrix, and the kinematicWave class that
-solves the kinematic wave equation. Most functions and methods call functions in the Cython module
-kinematic_wave_parallel_tools.pyx, for performance reasons.
+solves the kinematic wave equation. Most functions and methods call functions in the Numba module
+kinematic_wave_parallel_tools.py, for performance reasons.
 Parallelisation is achieved by grouping the pixels in ordered sets. Within each set, provided that
 pixelsm in previous sets have already been routed, pixels can be routed independently of each other
 and thus in parallel. For further details, see the method kinematicWave._setRoutingOrders.
@@ -40,38 +40,7 @@ import numexpr as nx
 
 from ..global_modules.errors import LisfloodWarning
 
-# IMPORT THE PARALLELISE KINEMATIC WAVE RUTING MODULE: IF IT WAS NOT COMPILED ON THE CURRENT MACHINE,
-# ROUTING IS EXECUTED SERIALLY if the binary .so file does not exist or is not newer than the source .pyx,
-# then the Cython module is imported directly from the source.
-# For safety against binary files compiled on other machines and copied here,
-# the binary must be at least 10 seconds younger than the source (see line 13).
-# Importing directly from the source prevents using OpenMP multithreading.
-# In such case, the routing is executed serially.
-
-WINDOWS_OS = system() == "Windows"
-ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), "kinematic_wave_parallel_tools")
-SRC = '{}.pyx'.format(ROOT)
-BINS = '{}*.so'.format(ROOT) if not WINDOWS_OS else '{}*.pyd'.format(ROOT)
-
-bins = glob.glob(BINS)
-
-older = False
-for binary in bins:
-    if os.stat(binary).st_mtime < os.stat(SRC).st_mtime:
-        older = True
-        break
-
-if not bins or older:
-    # Activate the direct import from source of Cython modules.
-    import pyximport
-    setup_args = {"script_args": ["--compiler=mingw32"]} if WINDOWS_OS else None
-    # If this is executed, the binary .so file will be ignored and the routing is executed serially.
-    pyximport.install(setup_args=setup_args)
-    warnings.warn(LisfloodWarning("""The Cython module {} has not been compiled on the current machine (to compile, see instructions in the module's docstring).
-The kinematic wave routing is executed serially (not in parallel).""".format(SRC)))
-
 from . import kinematic_wave_parallel_tools as kwpt
-
 
 # -------------------------------------------------------------------------------------------------
 # CONSTANTS
@@ -118,7 +87,7 @@ def streamLookups(flow_dir, land_mask):
     land_points[land_mask] = np.arange(num_pixs, dtype=int)
     downstream_lookup, upstream_lookup = kwpt.upDownLookups(flow_dir, np.ascontiguousarray(land_mask).astype(np.uint8), land_points, num_pixs, IX_ADDS)
     max_num_ups_pixs = max(1, np.any(upstream_lookup != -1, 0).sum()) # maximum number of upstreams pixels
-    return downstream_lookup, np.ascontiguousarray(upstream_lookup[:,:max_num_ups_pixs]).astype(int) # astype for cython import in windows (see below)
+    return downstream_lookup, np.ascontiguousarray(upstream_lookup[:,:max_num_ups_pixs]).astype(int) 
 
 def topoDistFromSea(downstream_lookup, upstream_lookup):
     """"""
@@ -145,8 +114,11 @@ def topoDistFromSea(downstream_lookup, upstream_lookup):
 class kinematicWave:
     """"""
 
-    def __init__(self, compressed_encoded_ldd, land_mask, alpha_channel, beta, space_delta, time_delta, num_threads, alpha_floodplains=None):
+    def __init__(self, compressed_encoded_ldd, land_mask, alpha_channel, beta, space_delta, time_delta, alpha_floodplains=None, flagnancheck=False):
         """"""
+        # variable to avoid printing repeated warning messages
+        self.kinematic_wave_warning_printed=False
+        self.flagnancheck=flagnancheck
         # Parameters for the solution of the discretised Kinematic wave continuity equation
         self.space_delta = space_delta
         self.beta = beta
@@ -154,8 +126,6 @@ class kinematicWave:
         self.b_minus_1 = beta - 1
         self.a_dx_div_dt_channel = alpha_channel * space_delta / time_delta
         self.b_a_dx_div_dt_channel = beta * self.a_dx_div_dt_channel
-        # Set number of parallel threads (openMP)
-        self.num_threads = int(num_threads) if 0 < num_threads <= cpu_count() else cpu_count()
         # If split-routing (floodplains)
         if alpha_floodplains is not None:
             self.a_dx_div_dt_floodplains = alpha_floodplains * space_delta / time_delta
@@ -163,7 +133,7 @@ class kinematicWave:
         # Process flow direction matrix: downstream and upstream lookups, and routing orders
         flow_dir = decodeFlowMatrix(rebuildFlowMatrix(compressed_encoded_ldd, land_mask))
         self.downstream_lookup, self.upstream_lookup = streamLookups(flow_dir, land_mask)
-        self.num_upstream_pixels = (self.upstream_lookup != -1).sum(1).astype(int) # astype for cython import in windows (to avoid 'long long' buffer dtype mismatch)
+        self.num_upstream_pixels = (self.upstream_lookup != -1).sum(1).astype(int) 
         # Routing order: decompose domain into batches; within each batch, pixels can be routed in parallel
         self._setRoutingOrders()
 
@@ -184,8 +154,8 @@ class kinematicWave:
             self.pixels_ordered = self.pixels_ordered.sort(["order", "pixels"]).set_index("order").squeeze()
         order_counts = self.pixels_ordered.groupby(self.pixels_ordered.index).count()
         stop = order_counts.cumsum()
-        self.order_start_stop = np.column_stack((np.append(0, stop[:-1]), stop)).astype(int) # astype for cython import in windows (see above)
-        self.pixels_ordered = self.pixels_ordered.values.astype(int) # astype for cython import in windows (see above)
+        self.order_start_stop = np.column_stack((np.append(0, stop[:-1]), stop)).astype(int) 
+        self.pixels_ordered = self.pixels_ordered.values.astype(int) 
 
     def kinematicWaveRouting(self, discharge, specific_lateral_inflow, section="main_channel"):
         """Kinematic wave routing: wrapper around kinematic_wave_parallel_tools.kinematicWave"""
@@ -206,4 +176,9 @@ class kinematicWave:
         # Solve the Kinematic wave equation
         kwpt.kinematicRouting(discharge, lateral_inflow, constant, self.upstream_lookup,\
                               self.num_upstream_pixels, self.pixels_ordered, self.order_start_stop,\
-                              self.beta, self.inv_beta, self.b_minus_1, a_dx_div_dt, b_a_dx_div_dt, self.num_threads)
+                              self.beta, self.inv_beta, self.b_minus_1, a_dx_div_dt, b_a_dx_div_dt)
+        if self.flagnancheck:
+            if self.kinematic_wave_warning_printed==False:
+                if np.all(np.isfinite(discharge))==False:
+                    warnings.warn(LisfloodWarning("Warning: NaN or Inf values after kinematicRouting module. Suggestion: please check the input maps (e.g. channel geometry and ldd)"))
+                    self.kinematic_wave_warning_printed=True

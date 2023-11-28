@@ -56,11 +56,12 @@ class LisfloodModel_dyn(DynamicModel):
 
         self.TimeSinceStart = self.currentTimeStep() - self.firstTimeStep() + 1
         if flags['loud']:
-            print("%-6i %10s" % (self.currentTimeStep(), self.CalendarDate.strftime("%d/%m/%Y %H:%M")))
+            sys.stdout.write("%-6i %20s" % (self.currentTimeStep(), self.CalendarDate.strftime("%d/%m/%Y %H:%M")))
         else:
             if not flags['checkfiles']:
                 if flags['quiet'] and not flags['veryquiet']:
                     sys.stdout.write(".")
+                    sys.stdout.flush()
                 if not flags['quiet'] and not flags['veryquiet']:
                     # Print step number and date to console
                     sys.stdout.write("\r%d" % i), sys.stdout.write("%s" % " - "+self.CalendarDate.strftime("%d/%m/%Y %H:%M"))

@@ -85,31 +85,6 @@ def lisfloodexe(lissettings=None):
     for key in report_steps:
         report_steps[key] = [x for x in report_steps[key] if model_steps[0] <= x <= model_steps[1]]
 
-    if not flags['veryquiet']:
-        print("\nStart Step - End Step: ", model_steps[0], " - ", model_steps[1])
-        print("Start Date - End Date: ",
-            inttodate(model_steps[0] - 1, calendar(binding['CalendarDayStart'], binding['calendar_type'])),
-            " - ",
-            inttodate(model_steps[1] - 1, calendar(binding['CalendarDayStart'], binding['calendar_type'])))
-
-    if flags['loud']:
-        # print state file date
-        print("State file Date: ")
-        try:
-            print(inttodate(calendar(binding["timestepInit"], binding['calendar_type']),
-                            calendar(binding['CalendarDayStart'], binding['calendar_type'])))
-        except:
-            print(calendar(binding["timestepInit"], binding['calendar_type']))
-
-        # CM: print start step and end step for reporting model state maps
-        print("Start Rep Step  - End Rep Step: ", report_steps['rep'][0], " - ", report_steps['rep'][-1])
-        print("Start Rep Date  - End Rep Date: ",
-              inttodate(calendar(report_steps['rep'][0] - 1, binding['calendar_type']), calendar(binding['CalendarDayStart'], binding['calendar_type'])),
-              " - ",
-              inttodate(calendar(report_steps['rep'][-1] - 1), calendar(binding['CalendarDayStart'], binding['calendar_type'])))
-        # messages at model start
-        print("%-6s %10s %11s\n" % ("Step", "Date", "Discharge"))
-
     # Lisflood is an instance of the class LisfloodModel
     # LisfloodModel includes 2 methods : initial and dynamic (formulas applied at every timestep)
     Lisflood = LisfloodModel()
@@ -118,6 +93,7 @@ def lisfloodexe(lissettings=None):
     stLisflood = DynamicFramework(Lisflood, firstTimestep=model_steps[0], lastTimeStep=model_steps[1])
     stLisflood.rquiet = True
     stLisflood.rtrace = False
+
 
     if lissettings.mc_set:
         """
@@ -148,6 +124,32 @@ def lisfloodexe(lissettings=None):
     # print info about execution
     if not flags['veryquiet']:
         print(LisfloodRunInfo(model_to_run))
+
+    if not flags['veryquiet']:
+        print("\nStart Step - End Step: ", model_steps[0], " - ", model_steps[1])
+        print("Start Date - End Date: ",
+            inttodate(model_steps[0] - 1, calendar(binding['CalendarDayStart'], binding['calendar_type'])),
+            " - ",
+            inttodate(model_steps[1] - 1, calendar(binding['CalendarDayStart'], binding['calendar_type'])))
+
+    if flags['loud']:
+        # print state file date
+        print("State file Date: ")
+        try:
+            print(inttodate(calendar(binding["timestepInit"], binding['calendar_type']),
+                            calendar(binding['CalendarDayStart'], binding['calendar_type'])))
+        except:
+            print(calendar(binding["timestepInit"], binding['calendar_type']))
+
+        # CM: print start step and end step for reporting model state maps
+        print("Start Rep Step  - End Rep Step: ", report_steps['rep'][0], " - ", report_steps['rep'][-1])
+        print("Start Rep Date  - End Rep Date: ",
+              inttodate(calendar(report_steps['rep'][0] - 1, binding['calendar_type']), calendar(binding['CalendarDayStart'], binding['calendar_type'])),
+              " - ",
+              inttodate(calendar(report_steps['rep'][-1] - 1), calendar(binding['CalendarDayStart'], binding['calendar_type'])))
+        # messages at model start
+        print("%-6s %15s %18s" % ("Step", "Date", "Discharge"))
+
     # actual run of the model
     if flags['initonly']:
         print('initonly flag activated... Stopping now before entering time loop.')
@@ -177,7 +179,7 @@ def usage():
     -v --veryquiet       no output progression is given
     -l --loud            output progression given as time step, date and discharge
     -c --checkfiles      input maps and stack maps are checked, output for each input map BUT no model run
-    -n --nancheck        check NaN values in output maps
+    -n --nancheck        check input maps and routing output for any NaN value generated during model run
     -h --noheader        .tss file have no header and start immediately with the time series
     -d --debug           debug outputs
     -i --initonly        only run initialisation, not the dynamic loop

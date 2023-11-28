@@ -1,4 +1,3 @@
-include src/lisflood/hydrological_modules/kinematic_wave_parallel_tools.pyx
 include requirements.txt
 include *.xml
 include VERSION
