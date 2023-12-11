@@ -16,6 +16,9 @@ from .test_utils import setoptions, mk_path_out, ETRS89TestCase
 class TestCaching(ETRS89TestCase):
     case_dir = os.path.join(os.path.dirname(__file__), 'data', 'LF_ETRS89_UseCase')
     settings_file = os.path.join(case_dir, 'settings', 'full.xml')
+    path_out = os.path.join(case_dir, 'out') 
+    if not os.path.exists(path_out):
+        os.mkdir(path_out)
     out_dir_a = os.path.join(case_dir, 'out', 'a')
     out_dir_b = os.path.join(case_dir, 'out', 'b')
 
