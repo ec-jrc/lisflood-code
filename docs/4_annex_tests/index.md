@@ -31,19 +31,23 @@ Some tests use `array_equal` option in order to compare values using [`numpy.arr
 
 Tests that are using Comparator classes are:
 
-| Test name               |    File                | Usage and tolerences                                                              |
-|-------------------------|------------------------|-----------------------------------------------------------------------------------|
-| test_dates_steps_day    | test_dates_steps.py    | NetCDFComparator(array_equal=True)                                                |
-| test_dates_steps_6h     | test_dates_steps.py    | NetCDFComparator(array_equal=True)                                                |
-| test_end_state_reported | test_state_end_maps.py | NetCDFComparator(array_equal=True)                                                |
-| test_dis_daily          | test_results.py        | NetCDFComparator(atol=0.0001, rtol=0.001), TSSComparator(atol=0.0001, rtol=0.001) |
-| test_dis_6h             | test_results.py        | NetCDFComparator(atol=0.0001, rtol=0.001), TSSComparator(atol=0.0001, rtol=0.001) |
-| test_init_daily         | test_results.py        | NetCDFComparator(atol=0.0001, rtol=0.001), TSSComparator(atol=0.0001, rtol=0.001) |
-| test_init_6h            | test_results.py        | NetCDFComparator(atol=0.0001, rtol=0.001), TSSComparator(atol=0.0001, rtol=0.001) |
-| test_warmstart_daily    | test_warmstart.py      | NetCDFComparator(atol=0.0001, rtol=0.001), TSSComparator(array_equal=True)        |
-| test_warmstart_6h       | test_warmstart.py      | NetCDFComparator(atol=0.0001, rtol=0.001), TSSComparator(array_equal=True)        |
-| test_subcacthment_daily | test_subcatchments.py  | NetCDFComparator(array_equal=True)                                                |
-| test_subcacthment_6h    | test_subcatchments.py  | NetCDFComparator(array_equal=True)                                                |
+| Test name                |    File                  | Usage and tolerences                                                              |
+|--------------------------|--------------------------|-----------------------------------------------------------------------------------|
+| test_dates_steps_day     | test_dates_steps.py      | NetCDFComparator(array_equal=True)                                                |
+| test_dates_steps_6h      | test_dates_steps.py      | NetCDFComparator(array_equal=True)                                                |
+| test_end_state_reported  | test_state_end_maps.py   | NetCDFComparator(array_equal=True)                                                |
+| test_dis_daily           | test_results.py          | NetCDFComparator(atol=0.0001, rtol=0.001), TSSComparator(atol=0.0001, rtol=0.001) |
+| test_dis_6h              | test_results.py          | NetCDFComparator(atol=0.0001, rtol=0.001), TSSComparator(atol=0.0001, rtol=0.001) |
+| test_init_daily          | test_results.py          | NetCDFComparator(atol=0.0001, rtol=0.001), TSSComparator(atol=0.0001, rtol=0.001) |
+| test_init_6h             | test_results.py          | NetCDFComparator(atol=0.0001, rtol=0.001), TSSComparator(atol=0.0001, rtol=0.001) |
+| test_warmstart_daily     | test_warmstart.py        | NetCDFComparator(atol=0.0001, rtol=0.001), TSSComparator(array_equal=True)        |
+| test_warmstart_6h        | test_warmstart.py        | NetCDFComparator(atol=0.0001, rtol=0.001), TSSComparator(array_equal=True)        |
+| test_subcacthment_daily  | test_subcatchments.py    | NetCDFComparator(array_equal=True)                                                |
+| test_subcacthment_6h     | test_subcatchments.py    | NetCDFComparator(array_equal=True)                                                |
+| test_reported_steps      | test_reported_steps.py   | NetCDFComparator(array_equal=True)                                                |
+| test_waterabstraction_24h| test_water_abstraction.py| NetCDFComparator(array_equal=True)                                                |
+| test_waterabstraction_6h | test_water_abstraction.py| NetCDFComparator(array_equal=True)                                                |
+
 
 ## How to execute tests
 
@@ -316,6 +320,52 @@ def test_rep_dischargetss(self):
                            tss_to_check='disWin.tss')
 ```
 
+### Testing reporting steps 
+Make sure that OSLisflood prints state files following reporting steps formula in ReportSteps xml option.
+
+#### Implementation
+[test_reported_steps.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_reported_steps.py){:target="_blank"}
+
+In order to test that specific files are written when a step matches the ReportSteps formula, we use a test formula 'starttime+10..endtime'.
+Then we geterate specific outputs for the desired steps and compare the two output using NetCDFComparator(array_equal=True)
+
+**Example: test_reported_steps**
+
+```python
+    def test_reported_steps(self):
+
+        strReportStepA = 'starttime+10..endtime'
+        settings_a = setoptions(self.settings_file,
+                                vars_to_set={'StepStart': '01/07/2016 00:00', 'StepEnd': '01/08/2016 00:00',
+                                             'PathOut': '$(PathRoot)/out/a',
+                                             'ReportSteps': strReportStepA, 
+                                             })
+        mk_path_out(self.out_dir_a)
+        lisfloodexe(settings_a)
+
+        int_start, _ = datetoint(settings_a.binding['StepStart'], settings_a.binding)
+        int_end, _ = datetoint(settings_a.binding['StepEnd'], settings_a.binding)
+
+        strReportStepB = ''
+        for i in range(int_start,int_end,10):
+            if strReportStepB != '':
+                strReportStepB = strReportStepB + ',' 
+            strReportStepB = strReportStepB + str(i)
+
+        settings_b = setoptions(self.settings_file,
+                                vars_to_set={'StepStart': '01/07/2016 00:00', 'StepEnd': '01/08/2016 00:00',
+                                             'PathOut': '$(PathRoot)/out/b',
+                                             'ReportSteps': strReportStepB,
+                                             })
+        mk_path_out(self.out_dir_b)
+        lisfloodexe(settings_b)
+
+        comparator = NetCDFComparator(settings_a.maskpath, array_equal=True)
+        comparator.compare_dirs(self.out_dir_b, self.out_dir_a)
+        assert not comparator.errors
+```
+
+
 ### Testing Init run output maps
 Make sure OSLisflood can run an initial run to generate AVGDIS and LZAVIN maps with proper extension (.nc or .map)
 
@@ -380,6 +430,44 @@ def test_dates_steps_daily(self):
     out_a = settings_a.output_dir
     out_b = settings_b.output_dir
     comparator.compare_dirs(out_a, out_b)
+```
+
+### Testing Water Abstraction
+The test verifies the use of the correct (closest, antecedent timestamp, and closest, antecedent day of the year) water demand information, unsing the following options:
+TransientWaterDemandChange = this option allows to read water demand information from a netcdf stack which includes simulation start and end dates. The water demand information for the closest, antecedent timestamp (dd/mm/yyyy) to the modelled time step is used in the computations.
+UseWaterDemandAveYear = this option allows to read water demand information from a netcdf stack with a single year temporal coverage. The water demand information for the closest, antecedent day of the year (dd/mm) to the modelled time step is used in the computations.
+For more information please refer to [Water use - LISFLOOD (ec-jrc.github.io)](https://ec-jrc.github.io/lisflood-model/2_18_stdLISFLOOD_water-use/)
+
+#### Implementation
+[test_water_abstraction.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_water_abstraction.py){:target="_blank"}
+The test uses two datasets: waterdemand19902019, that includes daily data from 1990 to 2019, and waterdemand, that includes only one year used as reference for any year.
+Test asserts that output generated using TransientWaterDemandChange with useWaterDemandAveYear flag active using the reference dataset included into the waterdemand folder is the same of the one generated disabling useWaterDemandAveYear flag and using the waterdemand19902019 folder.
+ 
+
+```python
+    def run_lisflood_waterabstraction(self, dt_sec):
+        
+        settings_a = setoptions(self.settings_file,
+                                opts_to_set=('TransientWaterDemandChange', 'useWaterDemandAveYear'),
+                                vars_to_set={'StepStart': '30/07/2016 00:00', 'StepEnd': '01/08/2016 00:00',
+                                             'DtSec': dt_sec, 'PathOut': '$(PathRoot)/out/a',
+                                             'PathWaterUse': '$(PathRoot)/maps/waterdemand'
+                                             })
+        mk_path_out(self.out_dir_a)
+        lisfloodexe(settings_a)
+
+        settings_b = setoptions(self.settings_file,
+                                opts_to_set=('TransientWaterDemandChange'),
+                                opts_to_unset=('useWaterDemandAveYear'),
+                                vars_to_set={'StepStart': '30/07/2016 00:00', 'StepEnd': '01/08/2016 00:00',
+                                             'DtSec': dt_sec, 'PathOut': '$(PathRoot)/out/b',
+                                             'PathWaterUse': '$(PathRoot)/maps/waterdemand19902019'})
+        mk_path_out(self.out_dir_b)
+        lisfloodexe(settings_b)
+
+        comparator = NetCDFComparator(settings_a.maskpath, array_equal=True)
+        comparator.compare_dirs(self.out_dir_b, self.out_dir_a)
+
 ```
 
 ## Other LF tests included in repository
