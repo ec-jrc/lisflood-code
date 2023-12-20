@@ -85,6 +85,7 @@ Then in the settings file the option "numberParallelThreadsKinematicWave" may ta
 Now your environment should be set up to run lisflood. Try with a prepared settings file for one of the two test catchments:
 
 ```bash
+mkdir tests/data/LF_ETRS89_UseCase/out
 python src/lisf1.py tests/data/LF_ETRS89_UseCase/settings/cold.xml
 ```
 
