@@ -27,9 +27,6 @@ COPY src/lisfloodSettings_reference.xml /
 COPY LICENSE /
 COPY VERSION /
 
-# Compile kwpt
-RUN cd /lisflood/hydrological_modules && conda run -n lisflood python compile_kinematic_wave_parallel_tools.py build_ext --inplace
-
 # RUN Tests
 COPY tests/. /tests/
 COPY pytest.ini /tests

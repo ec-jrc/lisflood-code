@@ -17,6 +17,7 @@ See the Licence for the specific language governing permissions and limitations 
 import os
 import numpy as np
 from pcraster import ifthen, catchmenttotal, mapmaximum
+import sys
 
 from .zusatz import TimeoutputTimeseries
 from .add1 import decompress, valuecell, loadmap, compressArray
@@ -556,9 +557,10 @@ class outputTssMap(object):
             if flags['loud']:
                 # print the discharge of the first output map loc
                 try:
-                    print(" %10.2f" % self.var.Tss["DisTS"].firstout(decompress(self.var.ChanQAvg)))
+                    sys.stdout.write(" %10.2f" % self.var.Tss["DisTS"].firstout(decompress(self.var.ChanQAvg)))
                 except:
                     pass
+                sys.stdout.write("\n")
 
             for tss in report_time_serie_act:
                 # report time series

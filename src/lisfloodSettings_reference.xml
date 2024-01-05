@@ -108,7 +108,8 @@ You can use builtin path variables in this template and reference to other paths
     <setoption choice="1" name="repGwPercUZLZMaps"/>
     <setoption choice="1" name="repPercolationMaps"/>
     <setoption choice="1" name="repRWS"/>
-    <setoption choice="1"  name="repPFMaps"/>
+    <setoption choice="1" name="repPFMaps"/>
+    <setoption choice="1" name="repPFForestMaps"/>
 
     <setoption choice="1" name="repTotalAbs"/>
     <setoption choice="1" name="repTotalWUse"/>
@@ -156,22 +157,7 @@ The option "OutputMapsDataType" sets the output data type and may take the follo
 
 <comment>
 **************************************************************
-PARALLELIZED KINEMATIC ROUTING
-**************************************************************
-</comment>
-
-!-- Parallelisation of the kinematic wave routing (via openMP multi-threading).
-The option "numCPUs_parallelKinematicWave" may take the following values:
-    - "0"           : auto-detection of the machine/node's number of CPUs (all CPUs are used minus 1)
-		                (do not set it if other simulations are running on the same machine/node)
-    - "1"           : serial execution (not parallel)
-    - "2", "3", ... : manual setting of the number of parallel threads.
-                      (if exceeding the number of CPUs, the option is set to "0") -->
-<textvar name="numCPUs_parallelKinematicWave" value="30"/>
-
-<comment>
-**************************************************************
-PARALLELISATION WITH NUMBA (USED IN SOILLOOP)
+PARALLELISATION WITH NUMBA (USED IN ROUTING AND SOILLOOP)
 **************************************************************
 </comment>
 
@@ -1714,7 +1700,6 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 **************************************************************
 -->
 
-<textvar name="numCPUs_parallelKinematicWave" value="$(numCPUs_parallelKinematicWave)"/>
 <textvar name="numCPUs_parallelNumba" value="$(numCPUs_parallelNumba)"/>
 
 

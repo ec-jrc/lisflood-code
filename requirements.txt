@@ -2,7 +2,6 @@ attrs>=19.3.0
 beautifulsoup4>=4.8.1
 cftime>=1.0.4.2
 coverage>=6.0
-Cython>=0.29.14
 dask>=2021.10.0 
 future>=0.18.0
 GDAL>=3.2.0
@@ -15,7 +14,7 @@ more-itertools>=7.2.0
 netCDF4>=1.5.3,<=1.6.4
 nine>=1.0.0
 numba>=0.54.0
-numexpr==2.8.1
+numexpr>=2.7.0,<=2.8.4
 numpy>=1.21.0
 packaging>=19.2
 pandas>=1,<2

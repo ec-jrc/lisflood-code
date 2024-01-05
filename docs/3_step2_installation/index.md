@@ -95,32 +95,12 @@ If you don't use conda but a plain virtualenv, you need to install PCRaster and 
 For details, please follow instruction on [official docs](https://pcraster.geo.uu.nl/pcraster/4.3.1/documentation/pcraster_project/install.html).
     
 
-3. **Compile the cython module kinematic_wave_parallel_tool**
-   
-   To compile this Cython module to enable OpenMP multithreading (parallel kinematic wave):
-    
-     * Delete the files *.so (if any) in directory hydrological-modules  
-     * Inside the hydrological_modules folder, execute `python compile_kinematic_wave_parallel_tools.py build_ext --inplace`  
-
-   Important: the module has to be compiled on the machine where the model is run - the resulting binary is not portable.  
-  
-   Then in the settings file the option "numberParallelThreadsKinematicWave" may take the following values:
-  
-      * "0"           : auto-detection of the machine/node's number of CPUs (all CPUs are used minus 1) (do not set it if other simulations are running on the same machine/node)
-      * "1"           : serial execution (not parallel)
-      * "2", "3", ... : manual setting of the number of parallel threads.
-                        (if exceeding the number of CPUs, the option is set to "0")
-                        
-   ```xml
-   <textvar name="numCPUs_parallelKinematicWave" value="3"/>
-   ```
-  
-4. **Run a cold run for the test catchment**
+3. **Run a cold run for the test catchment**
 
     Now that your environment should be set up to run lisflood, you may try with a prepared settings file for test catchment included into the tests/data folder:
     
     ```bash
-    python src/lisf1.py tests/data/<TestCatchmentFolder>/settings/cold_day_base.xml
+    python src/lisf1.py tests/data/<TestCatchmentFolder>/settings/cold.xml
     ```
 4. **Run LISFLOOD unit tests**
 

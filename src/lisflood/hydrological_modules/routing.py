@@ -343,7 +343,8 @@ class routing(HydroModule):
         """
         settings = LisSettings.instance()
         option = settings.options
-        binding = settings.binding
+        flags = settings.flags
+
 
         self.var.ChannelAlpha2 = None  # default value, if split-routing is not active and only water is routed only in the main channel
         # ************************************************************
@@ -399,7 +400,7 @@ class routing(HydroModule):
         maskinfo = MaskInfo.instance()
         self.river_router = kinematicWave(compressArray(self.var.LddKinematic), ~maskinfo.info.mask, self.var.ChannelAlpha,
                                           self.var.Beta, self.var.ChanLength, self.var.DtRouting,
-                                          int(binding["numCPUs_parallelKinematicWave"]), alpha_floodplains=self.var.ChannelAlpha2)
+                                          alpha_floodplains=self.var.ChannelAlpha2, flagnancheck=flags['nancheck'])
         
         if option['InitLisflood'] and option['repMBTs']:          
             self.var.StorageStepINIT= self.var.ChanM3Kin 
@@ -436,7 +437,6 @@ class routing(HydroModule):
         """
         settings = LisSettings.instance()
         option = settings.options
-        binding = settings.binding
 
         if not(option['InitLisflood']):    # only with no InitLisflood
             self.lakes_module.dynamic_inloop(NoRoutingExecuted)
