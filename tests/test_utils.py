@@ -178,6 +178,18 @@ class ETRS89TestCase(object):
                 'tss': None,
             },
         },
+        'tws': {
+            'report_map': 'TotalWaterStorageMaps',
+            'report_tss': None,
+            '86400': {
+                'map': os.path.join(ref_dir, 'output_reference_daily/tws.nc'),
+                'tss': None,
+            },
+            '21600': {
+                'map': os.path.join(ref_dir, 'output_reference_6h/tws.nc'),
+                'tss': None,
+            },
+        },        
         'avgdis': {
             'report_map': 'AvgDis',
             'report_tss': None,

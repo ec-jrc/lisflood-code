@@ -3386,14 +3386,6 @@ soil layer 2 (lower layer) [V/V] [mm3/mm3]
 </comment>
 </textvar>
 
-<textvar name="ThetaMaps" value="$(PathOut)/th">
-<comment>
-Reported volumetric soil moisture content for  combined
-soil layer 1 and 2 [V/V] [mm3/mm3]
-</comment> 
-</textvar>
-
-
 <textvar name="UZMaps" value="$(PathOut)/uz">
 <comment>
 Reported storage in upper response box [mm]
@@ -3529,7 +3521,7 @@ soil layer 2 (lower layer) [V/V] [mm3/mm3]
 </comment>
 </textvar>
 
-<textvar name="UZForestMaps" value="$(PathOut)/uzF">
+<textvar name="UZForestMaps" value="$(PathOut)/uzf">
 <comment>
 Reported storage in upper response box [mm]
 </comment>
@@ -3803,6 +3795,12 @@ Reported seepage to groundwater[mm]
 </textvar>
 
 <textvar name="UZOutflowForestMaps" value="$(PathOut)/quzF">
+<comment>
+Reported upper zone outflow [mm]
+</comment>
+</textvar>
+
+<textvar name="UZOutflowIrrigationMaps" value="$(PathOut)/quzi">
 <comment>
 Reported upper zone outflow [mm]
 </comment>

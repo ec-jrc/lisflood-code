@@ -2987,14 +2987,6 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="ThetaMaps" value="$(PathOut)/th">
-                    <comment>
-                        Reported volumetric soil moisture content for combined
-                        soil layer 1 and 2 [V/V]
-                    </comment>
-                </textvar>
-
-
                 <textvar name="UZMaps" value="$(PathOut)/uz">
                     <comment>
                         Reported storage in upper response box [mm]
@@ -3108,7 +3100,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="UZForestMaps" value="$(PathOut)/uzF">
+                <textvar name="UZForestMaps" value="$(PathOut)/uzf">
                     <comment>
                         Reported storage in upper response box [mm]
                     </comment>
@@ -3342,6 +3334,11 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
+                <textvar name="UZOutflowIrrigationMaps" value="$(PathOut)/quzi">
+                    <comment>
+                        Reported upper zone outflow [mm]
+                    </comment>
+                </textvar>
 
                 <textvar name="GwPercUZLZForestMaps" value="$(PathOut)/uz2lzF">
                     <comment>
