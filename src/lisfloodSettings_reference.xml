@@ -109,6 +109,7 @@ You can use builtin path variables in this template and reference to other paths
     <setoption choice="1" name="repPercolationMaps"/>
     <setoption choice="1" name="repRWS"/>
     <setoption choice="1" name="repPFMaps"/>
+    <setoption choice="1" name="repTotalWaterStorageMaps"/>
     <setoption choice="1" name="repPFForestMaps"/>
 
     <setoption choice="1" name="repTotalAbs"/>
@@ -3385,14 +3386,6 @@ soil layer 2 (lower layer) [V/V] [mm3/mm3]
 </comment>
 </textvar>
 
-<textvar name="ThetaMaps" value="$(PathOut)/th">
-<comment>
-Reported volumetric soil moisture content for  combined
-soil layer 1 and 2 [V/V] [mm3/mm3]
-</comment> 
-</textvar>
-
-
 <textvar name="UZMaps" value="$(PathOut)/uz">
 <comment>
 Reported storage in upper response box [mm]
@@ -3426,6 +3419,12 @@ Reported storage in lower response box [mm]
 <textvar name="LZMaps3" value="$(PathOut)/lz3">
 <comment>
 Reported storage in lower response box [mm]
+</comment>
+</textvar>
+
+<textvar name="TotalWaterStorageMaps" value="$(PathOut)/tws">
+<comment>
+Reported total water storage [mm]
 </comment>
 </textvar>
 
@@ -3483,7 +3482,6 @@ Reported interception storage, other fraction [mm]
 </comment>
 </textvar>
 
-
 <textvar name="DSLRForestMaps" value="$(PathOut)/dslrf">
 <comment>
 Reported days since last rain
@@ -3493,6 +3491,12 @@ Reported days since last rain
 <textvar name="CumInterceptionForestMaps" value="$(PathOut)/cumf">
 <comment>
 Reported interception storage, forest fraction [mm]
+</comment>
+</textvar>
+
+<textvar name="CumInterceptionIrrigationMaps" value="$(PathOut)/cumi">
+<comment>
+Reported interception storage, irrigation fraction [mm]
 </comment>
 </textvar>
 
@@ -3517,9 +3521,15 @@ soil layer 2 (lower layer) [V/V] [mm3/mm3]
 </comment>
 </textvar>
 
-<textvar name="UZForestMaps" value="$(PathOut)/uzF">
+<textvar name="UZForestMaps" value="$(PathOut)/uzf">
 <comment>
 Reported storage in upper response box [mm]
+</comment>
+</textvar>
+
+<textvar name="CumIntSealedMaps" value="$(PathOut)/cums">
+<comment>
+Reported interception (depression) storage, direct runoff (impervious) fraction [mm]
 </comment>
 </textvar>
 </group>
@@ -3790,6 +3800,12 @@ Reported upper zone outflow [mm]
 </comment>
 </textvar>
 
+<textvar name="UZOutflowIrrigationMaps" value="$(PathOut)/quzi">
+<comment>
+Reported upper zone outflow [mm]
+</comment>
+</textvar>
+
 <textvar name="GwPercUZLZForestMaps" value="$(PathOut)/uz2lzF">
 <comment>
 Reported percolation from upper to lower zone [mm]
@@ -3826,6 +3842,12 @@ soil layer 1b [V/V] [mm3/mm3]
 <comment>
 Reported volumetric soil moisture content for both
 soil layer 2 [V/V] [mm3/mm3]
+</comment>
+</textvar>
+
+<textvar name="UZIrrigationMaps" value="$(PathOut)/uzi">
+<comment>
+Reported storage in upper response box [mm]
 </comment>
 </textvar>
 
