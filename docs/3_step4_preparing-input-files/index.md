@@ -6,7 +6,7 @@ In the current version of LISFLOOD, all the model inputs are provided as either 
 
 LISFLOOD requires that all maps must have *identical* location attributes (number of rows, columns, cellsize, upper x and y coordinates).
 
-The input maps can be classified according to two main cathegories:<br>
+The input maps can be classified according to two main categories:<br>
 + **meteorological forcings**. These maps provide time series of values for each pixel of the computational domain. More specifically, the meteorological forcings provide the values of precipitation, temperature, reference values of evaporation from water surfaces, reference values of evaporation from open water bodies, reference values of evapotranspiration for each pixel of the modelled area. For each meteorological forcing, one map is required for each computational time step. <br>
 + **static maps**. These maps provide information of morphological, physical, soil, and land use properties for each pixel of the computational domain. 
 
@@ -77,14 +77,14 @@ Calibrated parameters are optimised for a specific model set up. It is often req
 
 ### INPUT TABLES
 
-The geographical location of lakes and reservoirs is identified by the two maps described [here](../4_Static-Maps_reservoirs-lakes/). These maps provide the location of lakes and reservoirs. Each lake and each reservoir is identified by its ID (a in integer number). LISFLOOD requires additional information for the adequate modelling of [lakes](https://ec-jrc.github.io/lisflood-model/3_02_optLISFLOOD_lakes/) and [reservoirs](https://ec-jrc.github.io/lisflood-model/3_03_optLISFLOOD_reservoirs/). These additional pieces of information are supplied to the numerical code by using tables in *.txt* format. Each table has 2 colums: the first column is the ID of the lake or of the reservoir, the second column is the quantity required by LISFLOOD. The table below provides the list of the pieces of information which are required for the adequate modelling of lakes and reservoirs.
+The geographical location of lakes and reservoirs is identified by the two maps described [here](../4_Static-Maps_reservoirs-lakes/). These maps provide the location of lakes and reservoirs. Each lake and each reservoir is identified by its ID (an integer number). LISFLOOD requires additional information for the adequate modelling of [lakes](https://ec-jrc.github.io/lisflood-model/3_02_optLISFLOOD_lakes/) and [reservoirs](https://ec-jrc.github.io/lisflood-model/3_03_optLISFLOOD_reservoirs/). These additional pieces of information are supplied to the numerical code by using tables in *.txt* format. Each table has 2 columns: the first column is the ID of the lake or of the reservoir, the second column is the quantity required by LISFLOOD. The table below provides the list of the pieces of information which are required for the adequate modelling of lakes and reservoirs.
 ##### Table: LISFLOOD input tables
 
 | **Table**             | **Default name**      | **Description**       |
 |----------------------------|-----------------------|--------------------------|
-| Lake area   | Lakearea.txt          | Lake syrface area in m2 |
-| Lake alpha parameter   | lakea.txt          | Lake parameter alpha: a detailed descrpition can be found [here](https://ec-jrc.github.io/lisflood-model/3_02_optLISFLOOD_lakes/)  |
-| Lake average inflow   | lakeaverageinflow.txt          | Average inflow to the lake: a detailed descrpition can be found [here](https://ec-jrc.github.io/lisflood-model/3_02_optLISFLOOD_lakes/) |
+| Lake area   | Lakearea.txt          | Lake surface area in m2 |
+| Lake alpha parameter   | lakea.txt          | Lake parameter alpha: a detailed description can be found [here](https://ec-jrc.github.io/lisflood-model/3_02_optLISFLOOD_lakes/)  |
+| Lake average inflow   | lakeaverageinflow.txt          | Average inflow to the lake: a detailed description can be found [here](https://ec-jrc.github.io/lisflood-model/3_02_optLISFLOOD_lakes/) |
 | Reservoir storage   | rstor.txt          | Volume in m3, total reservoirs storage capacity |
 | Reservoir minimum outflow   | rminq.txt          | Discharge in m3/s.   |
 | Reservoir normal outflow   | rnormq.txt          | Discharge in m3/s.  |
