@@ -180,10 +180,14 @@ class MaskInfo(with_metaclass(Singleton)):
         self.mask_all.mask = self.flat
         self.info = self.Info(mask, mask.shape, self.flat, self.flat.shape, self.mask_compressed.shape, self.mask_all)
         self._in_zero = np.zeros(self.mask_compressed.shape)
+        self._in_one = np.ones(self.mask_compressed.shape)
         self.maskmap = maskmap
 
     def in_zero(self):
         return self._in_zero.copy()
+
+    def in_one(self):
+        return self._in_one.copy()
 
     def __iter__(self):
         return iter(self.info)

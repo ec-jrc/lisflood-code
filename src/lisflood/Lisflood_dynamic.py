@@ -184,27 +184,29 @@ class LisfloodModel_dyn(DynamicModel):
         # if option['simulatePolders']:
         # ChannelToPolderM3=ChannelToPolderM3Old;
 
+        # Calculate total water storage in river channel
         if option['InitLisflood'] or (not(option['SplitRouting'])):
             # kinematic routing
             self.ChanM3 = self.ChanM3Kin.copy()
-            # Total channel storage [cu m], equal to ChanM3Kin
+            # Total channel storage [m3], equal to ChanM3Kin fir kinematic routing only at t+dt
         else:
             # split routing
             self.ChanM3 = self.ChanM3Kin + self.Chan2M3Kin - self.Chan2M3Start
+            # Total channel storage [m3] = Volume in main channel (ChanM3Kin) + volume above bankfull (Chan2M3Kin - Chan2M3Start)
+            # at t+dt
 
         # Total channel storage [cu m], equal to ChanM3Kin
         # sum of both lines
         # CrossSection2Area = pcraster.max(scalar(0.0), (self.Chan2M3Kin - self.Chan2M3Start) / self.ChanLength)
 
         self.TotalCrossSectionArea = self.ChanM3 * self.InvChanLength
+        # Total river channel cross-section area at t+dt
 
+        # Calculate total river outflow at t+dt as average of routing sub-steps (average)
         self.sumDis += self.sumDisDay
         self.ChanQAvg = self.sumDisDay/self.NoRoutSteps
+        # Average outflow on the model computation step
 
-        # Total volume of water in channel per inv channel length
-        # New cross section area (kinematic wave)
-        # This is the value after the kinematic wave, so we use ChanM3Kin here
-        # (NOT ChanQKin, which is average discharge over whole step, we need state at the end of all iterations!)
 
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         if not(option['dynamicWave']):
