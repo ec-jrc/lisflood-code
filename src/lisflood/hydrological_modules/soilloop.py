@@ -187,11 +187,11 @@ def soilColumnsWaterBalance(index_landuse_all, is_irrigated, is_paddy_irrig, pad
             # ************************************************************
             # Domain: permeable fraction of pixel only
             # PrefFlowPixel valid for whole pixel
-            PrefFlow[veg,pix] = (RelSat1 ** PowerPrefFlow[pix]) * AvailableWaterForInfiltration[veg,pix]
+            # PrefFlow[veg,pix] = (RelSat1 ** PowerPrefFlow[pix]) * AvailableWaterForInfiltration[veg,pix]
             # Assumption: fraction of available water that bypasses the soil matrix
             # (added directly to Upper Zone) is power function of the
             # relative saturation of the topsoil
-            AvailableWaterForInfiltration[veg,pix] -= PrefFlow[veg,pix]
+            # AvailableWaterForInfiltration[veg,pix] -= PrefFlow[veg,pix]
             # Update water availabe for infiltration
             # ************************************************************
             # ***** ACTUAL INFILTRATION AND SURFACE RUNOFF ***************
