@@ -43,7 +43,11 @@ class structures(object):
     def initial(self):
         """ initial part of the structures module
         """
-        self.var.LddStructuresKinematic = self.var.LddKinematic
+        self.var.LddStructuresKinematic = self.var.LddKinematic #pcr
+        LddStructuresKinematicNp = compressArray(self.var.LddStructuresKinematic)
+        self.var.LddStructuresChan = self.var.LddChan   #pcr
+        LddStructuresChanNp = compressArray(self.var.LddStructuresChan)
+
         settings = LisSettings.instance()
         option = settings.options
         if not option['InitLisflood']:
@@ -52,10 +56,20 @@ class structures(object):
                 self.var.LddKinematic,
                 cover(boolean(decompress(self.var.IsStructureKinematic)), boolean(0))
             )
+            IsUpsOfStructureChan = downstream(
+                self.var.LddChan,
+                cover(boolean(decompress(self.var.IsStructureChan)), boolean(0))
+            )
+
             # Get all pixels just upstream of kinematic structure locations
-            self.var.IsUpsOfStructureKinematicC = compressArray(IsUpsOfStructureKinematic)
+            self.var.IsUpsOfStructureKinematicC = compressArray(IsUpsOfStructureKinematic)  #np
             # Unmodified version of LddKinematic is needed to connect inflow and outflow points
             # of each structure (called LddStructuresKinematic now)
+            self.var.IsUpsOfStructureChanC = compressArray(IsUpsOfStructureChan)    #np
+            # Unmodified version of LddChan is needed to connect inflow and outflow points
+            # of each structure (called LddStructuresChan now)
+
             self.var.LddKinematic = lddrepair(ifthenelse(IsUpsOfStructureKinematic, 5, self.var.LddKinematic))
-            # Cells just upstream of each structure are treated as pits in the kinematic wave
-            # channel routing
+            # Cells just upstream of each structure are treated as pits in the kinematic wave channel routing
+            self.var.LddChan = lddrepair(ifthenelse(IsUpsOfStructureChan, 5, self.var.LddChan))
+            # Cells just upstream of each structure are treated as pits in the kinematic wave channel routing
