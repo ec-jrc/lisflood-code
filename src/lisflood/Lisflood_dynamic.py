@@ -184,20 +184,18 @@ class LisfloodModel_dyn(DynamicModel):
         # if option['simulatePolders']:
         # ChannelToPolderM3=ChannelToPolderM3Old;
 
-        # Calculate total water storage in river channel
-        if option['InitLisflood'] or (not(option['SplitRouting'])):
-            # kinematic routing
-            self.ChanM3 = self.ChanM3Kin.copy()
-            # Total channel storage [m3], equal to ChanM3Kin fir kinematic routing only at t+dt
-        else:
-            # split routing
-            self.ChanM3 = self.ChanM3Kin + self.Chan2M3Kin - self.Chan2M3Start
-            # Total channel storage [m3] = Volume in main channel (ChanM3Kin) + volume above bankfull (Chan2M3Kin - Chan2M3Start)
-            # at t+dt
+        # # cmcheck moved to routing.py
+        # # Calculate total water storage in river channel
+        # if option['InitLisflood'] or (not(option['SplitRouting'])):
+        #     # kinematic routing
+        #     self.ChanM3 = self.ChanM3Kin.copy()
+        #     # Total channel storage [m3], equal to ChanM3Kin fir kinematic routing only at t+dt
+        # else:
+        #     # split routing
+        #     self.ChanM3 = self.ChanM3Kin + self.Chan2M3Kin - self.Chan2M3Start
+        #     # Total channel storage [m3] = Volume in main channel (ChanM3Kin) + volume above bankfull (Chan2M3Kin - Chan2M3Start)
+        #     # at t+dt
 
-        # Total channel storage [cu m], equal to ChanM3Kin
-        # sum of both lines
-        # CrossSection2Area = pcraster.max(scalar(0.0), (self.Chan2M3Kin - self.Chan2M3Start) / self.ChanLength)
 
         self.TotalCrossSectionArea = self.ChanM3 * self.InvChanLength
         # Total river channel cross-section area at t+dt
@@ -205,7 +203,8 @@ class LisfloodModel_dyn(DynamicModel):
         # Calculate total river outflow at t+dt as average of routing sub-steps (average)
         self.sumDis += self.sumDisDay
         self.ChanQAvg = self.sumDisDay/self.NoRoutSteps
-        # Average outflow on the model computation step
+        # Average channel outflow on the model computation step (average of instantaneous outflows at the end of routing sub-steps)
+        # Same as ChanQ if using only one routing sub-step
 
 
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -218,11 +217,13 @@ class LisfloodModel_dyn(DynamicModel):
 
         if option['InitLisflood'] or option['repAverageDis']:
             self.CumQ += self.ChanQ
+            #cmcheck we should use ChanQAvg here not ChanQ
             self.avgdis = self.CumQ/self.TimeSinceStart
-            # to calculate average discharge
+            # to calculate average discharge over the entire simulation
 
         self.DischargeM3Out += np.where(self.AtLastPointC ,self.ChanQ * self.DtSec,0)
-           # Cumulative outflow out of map
+        # Cumulative outflow out of map
+        # cmcheck we should use ChanQAvg here not ChanQ
 
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         # Calculate water level

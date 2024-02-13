@@ -267,7 +267,7 @@ class routing(HydroModule):
             # in_zero = maskinfo.in_zero()
             CrossSection2AreaInitValue = loadmap('CrossSection2AreaInitValue')
             self.var.CrossSection2Area = np.where(CrossSection2AreaInitValue == -9999, maskinfo.in_zero(), CrossSection2AreaInitValue)
-            # cross-sectional area [m2] for 2nd line of routing: if initial value in binding equals -9999 the value is set to 0
+            # cross-sectional area [m2] for 2nd line of routing (over bankfull only): if initial value in binding equals -9999 the value is set to 0
             # otherwise CrossSection2AreaInitValue (typically end map from previous simulation)
 
             PrevSideflowInitValue = loadmap('PrevSideflowInitValue')
@@ -680,6 +680,17 @@ class routing(HydroModule):
             # SPLIT ROUTING - no InitLisfllod
             if not option['InitLisflood'] and option['SplitRouting'] and not(option['MCTRouting']):
                 self.SplitRouting(SideflowChan)
+
+                # --- Combine the two lines of routing together ---
+                #cmcheck moved here from dynamic
+                self.var.ChanQ = np.maximum(self.var.ChanQKin + self.var.Chan2QKin - self.var.QLimit, 0)
+                # (real) total outflow (at x + dx) at time t + dt (instant)
+                # Superposition Kinematic
+                # Main channel routing and floodplains routing
+                self.var.ChanM3 = self.var.ChanM3Kin + self.var.Chan2M3Kin - self.var.Chan2M3Start
+                # Total channel storage [m3] = Volume in main channel (ChanM3Kin) + volume above bankfull (Chan2M3Kin - Chan2M3Start)
+                # at t+dt (instant)
+
                 self.var.sumDisDay += self.var.ChanQ
                 # sum of total river outflow on model sub-step
 
@@ -986,11 +997,11 @@ class routing(HydroModule):
         FldpQKin = self.var.Chan2QKin - self.var.QLimit
         # Outflow at t+dt from floodplains only (above bankfull)
 
-        # --- Combine the two lines of routing ---
-        self.var.ChanQ = np.maximum(self.var.ChanQKin + self.var.Chan2QKin - self.var.QLimit, 0)
-        # (real) total outflow (at x + dx) at time t + dt (instant)
-        # Superposition Kinematic
-        # Main channel routing and floodplains routing
+        # # --- Combine the two lines of routing ---
+        # self.var.ChanQ = np.maximum(self.var.ChanQKin + self.var.Chan2QKin - self.var.QLimit, 0)
+        # # (real) total outflow (at x + dx) at time t + dt (instant)
+        # # Superposition Kinematic
+        # # Main channel routing and floodplains routing
         # ----------End splitrouting-------------------------------------------------
         return
 
