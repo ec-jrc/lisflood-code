@@ -161,25 +161,25 @@ class routing(HydroModule):
             # are included, for which the mass balance cannot be calculated
             # properly)
 
-        elif option['MCTRouting']:
-            #print('MCTRouting setting LDD')
-            self.var.IsChannelMCTPcr = boolean(loadmap('ChannelsMCT', pcr=True))    #pcr
-            self.var.IsChannelMCT = np.bool8(compressArray(self.var.IsChannelMCTPcr))   #bool
-            # Identify channel pixels where Muskingum-Cunge-Todini is used
-
-            self.var.mctmask = np.bool8(pcr2numpy(self.var.IsChannelMCTPcr,0))
-            # mask with cells using MCT
-
-            self.var.IsChannelKinematicPcr = (self.var.IsChannelPcr == 1) & (self.var.IsChannelMCTPcr == 0)  #pcr
-            self.var.IsChannelKinematic = np.bool8(compressArray(self.var.IsChannelKinematicPcr))   #np
-            # Identify channel pixels where Kinematic wave is used
-
-            self.var.LddMCT = lddmask(self.var.LddChan, self.var.IsChannelMCTPcr)  #pcr
-            self.var.LddMCTNp = compressArray(self.var.LddMCT)    #np
-            # Ldd for MCT routing
-
-            self.var.LddKinematic = lddmask(self.var.LddChan, self.var.IsChannelKinematicPcr)    #pcr
-            # Ldd for kinematic routing
+        # elif option['MCTRouting']:
+        #     #print('MCTRouting setting LDD')
+        #     self.var.IsChannelMCTPcr = boolean(loadmap('ChannelsMCT', pcr=True))    #pcr
+        #     self.var.IsChannelMCT = np.bool8(compressArray(self.var.IsChannelMCTPcr))   #bool
+        #     # Identify channel pixels where Muskingum-Cunge-Todini is used
+        #
+        #     self.var.mctmask = np.bool8(pcr2numpy(self.var.IsChannelMCTPcr,0))
+        #     # mask with cells using MCT
+        #
+        #     self.var.IsChannelKinematicPcr = (self.var.IsChannelPcr == 1) & (self.var.IsChannelMCTPcr == 0)  #pcr
+        #     self.var.IsChannelKinematic = np.bool8(compressArray(self.var.IsChannelKinematicPcr))   #np
+        #     # Identify channel pixels where Kinematic wave is used
+        #
+        #     self.var.LddMCT = lddmask(self.var.LddChan, self.var.IsChannelMCTPcr)  #pcr
+        #     self.var.LddMCTNp = compressArray(self.var.LddMCT)    #np
+        #     # Ldd for MCT routing
+        #
+        #     self.var.LddKinematic = lddmask(self.var.LddChan, self.var.IsChannelKinematicPcr)    #pcr
+        #     # Ldd for kinematic routing
 
         else:
             self.var.LddKinematic = self.var.LddChan
@@ -227,13 +227,13 @@ class routing(HydroModule):
         self.var.ChanGrad = np.maximum(loadmap('ChanGrad'), loadmap('ChanGradMin'))
         # avoid calculation of Alpha using ChanGrad=0: this creates MV!
 
-        # cmcheck
-        if option['MCTRouting']:
-            # set channel slope for MCT pixels to max 0.001
-            # Check where IsChannelMCT is True and values in ChanGrad > 0.001
-            MCT_slope_mask = np.logical_and(self.var.IsChannelMCT, self.var.ChanGrad > 0.001)
-            # Update values in ChanGrad where the condition is met
-            self.var.ChanGrad[MCT_slope_mask] = 0.001
+        # # cmcheck
+        # if option['MCTRouting']:
+        #     # set channel slope for MCT pixels to max 0.001
+        #     # Check where IsChannelMCT is True and values in ChanGrad > 0.001
+        #     MCT_slope_mask = np.logical_and(self.var.IsChannelMCT, self.var.ChanGrad > 0.001)
+        #     # Update values in ChanGrad where the condition is met
+        #     self.var.ChanGrad[MCT_slope_mask] = 0.001
 
 
         self.var.CalChanMan = loadmap('CalChanMan')
@@ -529,6 +529,26 @@ class routing(HydroModule):
         # ***** INITIALISATION FOR MCT                    ************
         # ************************************************************
         if option['MCTRouting']:
+
+            #print('MCTRouting setting LDD')
+            self.var.IsChannelMCTPcr = boolean(loadmap('ChannelsMCT', pcr=True))    #pcr
+            self.var.IsChannelMCT = np.bool8(compressArray(self.var.IsChannelMCTPcr))   #bool
+            # Identify channel pixels where Muskingum-Cunge-Todini is used
+
+            self.var.mctmask = np.bool8(pcr2numpy(self.var.IsChannelMCTPcr,0))
+            # mask with cells using MCT
+
+            self.var.IsChannelKinematicPcr = (self.var.IsChannelPcr == 1) & (self.var.IsChannelMCTPcr == 0)  #pcr
+            self.var.IsChannelKinematic = np.bool8(compressArray(self.var.IsChannelKinematicPcr))   #np
+            # Identify channel pixels where Kinematic wave is used
+
+            self.var.LddMCT = lddmask(self.var.LddChan, self.var.IsChannelMCTPcr)  #pcr
+            self.var.LddMCTNp = compressArray(self.var.LddMCT)    #np
+            # Ldd for MCT routing
+
+            self.var.LddKinematic = lddmask(self.var.LddChan, self.var.IsChannelKinematicPcr)    #pcr
+            # Ldd for kinematic routing
+
             maskinfo = MaskInfo.instance()
             # initialisation for MCT routing
             PrevQMCTin = loadmap('PrevQMCTinInitValue')     # instant input discharge for MCT

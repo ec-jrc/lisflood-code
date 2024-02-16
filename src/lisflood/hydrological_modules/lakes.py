@@ -90,7 +90,8 @@ class lakes(HydroModule):
             LakeSitePcr = pcraster.ifthen((pcraster.defined(LakeSitePcr) & pcraster.boolean(decompress(self.var.IsChannel))), LakeSitePcr)
             IsStructureLake = pcraster.boolean(LakeSitePcr)
             # additional structure map only for lakes to calculate water balance
-            self.var.IsUpsOfStructureLake = pcraster.downstream(self.var.LddKinematic, pcraster.cover(IsStructureLake, 0))
+            # self.var.IsUpsOfStructureLake = pcraster.downstream(self.var.LddKinematic, pcraster.cover(IsStructureLake, 0))
+            self.var.IsUpsOfStructureLake = pcraster.downstream(self.var.LddChan, pcraster.cover(IsStructureLake, 0))
             # Get all pixels just upstream of lakes
             # -----------------------
 
