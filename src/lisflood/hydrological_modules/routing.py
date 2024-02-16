@@ -229,6 +229,16 @@ class routing(HydroModule):
 
         self.var.ChanGrad = np.maximum(loadmap('ChanGrad'), loadmap('ChanGradMin'))
         # avoid calculation of Alpha using ChanGrad=0: this creates MV!
+
+        # cmcheck
+        if option['MCTRouting']:
+            # set channel slope for MCT pixels to max 0.001
+            # Check where IsChannelMCT is True and values in ChanGrad > 0.001
+            MCT_slope_mask = np.logical_and(self.var.IsChannelMCT, self.var.ChanGrad > 0.001)
+            # Update values in ChanGrad where the condition is met
+            self.var.ChanGrad[MCT_slope_mask] = 0.001
+
+
         self.var.CalChanMan = loadmap('CalChanMan')
         self.var.ChanMan = self.var.CalChanMan * loadmap('ChanMan')
         # Manning's n is multiplied by ChanManCal
