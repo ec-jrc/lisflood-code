@@ -80,6 +80,9 @@ class lakes(HydroModule):
             self.var.IsStructureKinematic = np.where(LakeSitesC > 0, np.bool8(1), self.var.IsStructureKinematic)
             # Add lake locations to structures map (used to modify LddKinematic
             # and to calculate LddStructuresKinematic)
+            self.var.IsStructureChan = np.where(LakeSitesC > 0, np.bool8(1), self.var.IsStructureChan)
+            # Add lake locations to structures map (used to modify LddChan
+            # and to calculate LddStructuresChan)
 
             # PCRaster part
             # -----------------------

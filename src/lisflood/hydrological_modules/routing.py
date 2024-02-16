@@ -124,17 +124,17 @@ class routing(HydroModule):
         # kinematic wave channel routing. Set to (dummy) value of zero modified in reservoir and lake
         # routines (if those are used)
 
-
-        LddChan = lddmask(self.var.Ldd, self.var.IsChannelPcr)  #pcr
-        LddChanNp=compressArray(LddChan)    #np
+        self.var.LddChan = lddmask(self.var.Ldd, self.var.IsChannelPcr)  #pcr
+        self.var.LddChanNp=compressArray(self.var.LddChan)    #np
         # ldd for Channel network
+
         self.var.MaskMap = boolean(self.var.Ldd)    #pcr
         self.var.MaskMapNp=compressArray(self.var.MaskMap)  #np
         # Use boolean version of Ldd as calculation mask
         # (important for correct mass balance check any water generated outside of Ldd won't reach channel anyway)
         self.var.LddToChan = lddrepair(ifthenelse(self.var.IsChannelPcr, 5, self.var.Ldd)) #pcr
         self.var.LddToChanNp=compressArray(self.var.LddToChan)  #np
-        # Routing of runoff (incl. groundwater)
+        # Routing of runoff (incl. groundwater) to the river channel
         AtOutflow = boolean(pit(self.var.Ldd))  #pcr
         AtOutflowNp=compressArray(AtOutflow)    #np
         # find outlet points...
@@ -166,6 +166,7 @@ class routing(HydroModule):
             self.var.IsChannelMCTPcr = boolean(loadmap('ChannelsMCT', pcr=True))    #pcr
             self.var.IsChannelMCT = np.bool8(compressArray(self.var.IsChannelMCTPcr))   #bool
             # Identify channel pixels where Muskingum-Cunge-Todini is used
+
             self.var.mctmask = np.bool8(pcr2numpy(self.var.IsChannelMCTPcr,0))
             # mask with cells using MCT
 
@@ -173,21 +174,18 @@ class routing(HydroModule):
             self.var.IsChannelKinematic = np.bool8(compressArray(self.var.IsChannelKinematicPcr))   #np
             # Identify channel pixels where Kinematic wave is used
 
-            self.var.LddMCT = lddmask(self.var.Ldd, self.var.IsChannelMCTPcr)  #pcr
+            self.var.LddMCT = lddmask(self.var.LddChan, self.var.IsChannelMCTPcr)  #pcr
             self.var.LddMCTNp = compressArray(self.var.LddMCT)    #np
             # Ldd for MCT routing
 
-            self.var.LddKinematic = lddmask(self.var.Ldd, self.var.IsChannelKinematicPcr)    #pcr
+            self.var.LddKinematic = lddmask(self.var.LddChan, self.var.IsChannelKinematicPcr)    #pcr
             # Ldd for kinematic routing
 
         else:
-            self.var.LddKinematic = LddChan
+            self.var.LddKinematic = self.var.LddChan
             # No dynamic/MCT routing, so kinematic ldd equals channel ldd
 
         self.var.LddKinematicNp = compressArray(self.var.LddKinematic)    #np
-
-        self.var.LddChan = LddChan  #pcr
-        self.var.LddChanNp = compressArray(self.var.LddChan)    #np
 
         self.var.AtLastPoint = AtOutflow
         #AtOutflowNp=compressArray(AtOutflow)    #np
@@ -195,14 +193,13 @@ class routing(HydroModule):
         # assign unique identifier to each of the outlet points
 
         maskinfo = MaskInfo.instance()
-        #lddC = compressArray(self.var.LddKinematic)     #np
-        lddC = compressArray(LddChan)     #np
+        lddC = compressArray(self.var.LddChan)     #np
         inAr = decompress(np.arange(maskinfo.info.mapC[0], dtype="int32"))  #pcr
         inArNp=compressArray(inAr)  #np
         # giving a number to each non missing pixel as id
 
         #self.var.downstruct = (compressArray(downstream(self.var.LddKinematic, inAr))).astype("int32")  #np
-        self.var.downstruct = (compressArray(downstream(LddChan, inAr))).astype("int32")  #np
+        self.var.downstruct = (compressArray(downstream(self.var.LddChan, inAr))).astype("int32")  #np
         # each upstream pixel gets the id of the downstream pixel
         self.var.downstruct[lddC == 5] = maskinfo.info.mapC[0]  #np
         # all pits get a high number than any of the cells
