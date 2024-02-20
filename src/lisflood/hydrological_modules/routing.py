@@ -205,6 +205,13 @@ class routing(HydroModule):
         # River bed slope
         # Avoid calculation of Alpha using ChanGrad=0: this creates MV!
 
+        # if option['MCTRouting']:
+        #     # set channel slope for MCT pixels to max 0.001
+        #     # Check where IsChannelMCT is True and values in ChanGrad > 0.001
+        #     MCT_slope_mask = np.logical_and(self.var.IsChannelMCT, self.var.ChanGrad > 0.001)
+        #     # Update values in ChanGrad where the condition is met
+        #     self.var.ChanGrad[MCT_slope_mask] = 0.001
+
         self.var.CalChanMan = loadmap('CalChanMan')
         self.var.ChanMan = self.var.CalChanMan * loadmap('ChanMan')
         # Manning's rougthness coefficient n is multiplied by ChanManCal for calibration
@@ -532,6 +539,12 @@ class routing(HydroModule):
 
             self.var.LddKinematic = lddmask(self.var.LddChan, self.var.IsChannelKinematicPcr)    #pcr
             # Ldd for kinematic routing
+
+            # set channel slope for MCT pixels to max 0.001
+            # Check where IsChannelMCT is True and values in ChanGrad > 0.001
+            MCT_slope_mask = np.logical_and(self.var.IsChannelMCT, self.var.ChanGrad > 0.001)
+            # Update values in ChanGrad where the condition is met
+            self.var.ChanGrad[MCT_slope_mask] = 0.001
 
             maskinfo = MaskInfo.instance()
             # Initialisation for MCT routing
