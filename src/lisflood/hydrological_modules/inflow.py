@@ -121,6 +121,7 @@ class inflow(HydroModule):
             # Get inflow hydrograph at each inflow point [m3/s]
             QIn = compressArray(QIn)
             QIn[np.isnan(QIn)] = 0
+            #cmcheck
             self.var.QInM3 = QIn * self.var.DtSec
             # Convert to [m3] per time step
             self.var.TotalQInM3 += self.var.QInM3
@@ -140,7 +141,7 @@ class inflow(HydroModule):
         settings = LisSettings.instance()
         option = settings.options
         
-        if option['inflow']:
+        if option['inflow']: #cmcheck
 
             self.var.QInDt = (self.var.QInM3Old + (NoRoutingExecuted + 1) * self.var.QDelta) * self.var.InvNoRoutSteps
             # flow from inlets per sub step
