@@ -150,6 +150,13 @@ The option "OutputMapsChunks" may take the following values:
 <textvar name="OutputMapsChunks" value="1"/>
 
 <comment>
+The option "OutputMapsDataType" sets the output data type and may take the following values:
+    - "float64"
+    - "float32"
+</comment>
+<textvar name="OutputMapsDataType" value="float64"/>
+
+<comment>
 **************************************************************
 PARALLELISATION WITH NUMBA (USED IN ROUTING AND SOILLOOP)
 **************************************************************
@@ -1704,6 +1711,7 @@ This is necessary when using projected coordinates (x,y)
 </textvar>
 
 <textvar name="OutputMapsChunks" value="$(OutputMapsChunks)"/>
+<textvar name="OutputMapsDataType" value="$(OutputMapsDataType)"/>
 <textvar name="NetCDFTimeChunks" value="$(NetCDFTimeChunks)"/>
 <textvar name="MapsCaching" value="$(MapsCaching)"/>
 
@@ -3414,6 +3422,12 @@ Reported storage in lower response box [mm]
 </comment>
 </textvar>
 
+<textvar name="TotalWaterStorageMaps" value="$(PathOut)/tws">
+<comment>
+Reported total water storage [mm]
+</comment>
+</textvar>
+
 <textvar name="DSLRMaps" value="$(PathOut)/dslr">
 <comment>
 Reported days since last rain
@@ -3468,7 +3482,6 @@ Reported interception storage, other fraction [mm]
 </comment>
 </textvar>
 
-
 <textvar name="DSLRForestMaps" value="$(PathOut)/dslrf">
 <comment>
 Reported days since last rain
@@ -3478,6 +3491,12 @@ Reported days since last rain
 <textvar name="CumInterceptionForestMaps" value="$(PathOut)/cumf">
 <comment>
 Reported interception storage, forest fraction [mm]
+</comment>
+</textvar>
+
+<textvar name="CumInterceptionIrrigationMaps" value="$(PathOut)/cumi">
+<comment>
+Reported interception storage, irrigation fraction [mm]
 </comment>
 </textvar>
 
@@ -3505,6 +3524,12 @@ soil layer 2 (lower layer) [V/V] [mm3/mm3]
 <textvar name="UZForestMaps" value="$(PathOut)/uzf">
 <comment>
 Reported storage in upper response box [mm]
+</comment>
+</textvar>
+
+<textvar name="CumIntSealedMaps" value="$(PathOut)/cums">
+<comment>
+Reported interception (depression) storage, direct runoff (impervious) fraction [mm]
 </comment>
 </textvar>
 </group>
@@ -3820,6 +3845,12 @@ soil layer 2 [V/V] [mm3/mm3]
 </comment>
 </textvar>
 
+<textvar name="UZIrrigationMaps" value="$(PathOut)/uzi">
+<comment>
+Reported storage in upper response box [mm]
+</comment>
+</textvar>
+
 </group>
 
 
@@ -3946,12 +3977,6 @@ Soil moisture layer 1a [cu mm / cu mm]
 </textvar>
 
 <textvar name="Theta2TS" value="$(PathOut)/th1b.tss">
-<comment>
-Soil moisture lower layer [cu mm/cu mm]
-</comment>
-</textvar>
-
-<textvar name="Theta3TS" value="$(PathOut)/th2.tss">
 <comment>
 Soil moisture layer 1b [cu mm / cu mm]
 </comment>
