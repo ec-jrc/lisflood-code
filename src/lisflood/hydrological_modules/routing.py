@@ -111,6 +111,8 @@ class routing(HydroModule):
 
         self.var.IsChannelPcr = boolean(loadmap('Channels', pcr=True))  #pcr
         self.var.IsChannel = np.bool8(compressArray(self.var.IsChannelPcr))     #bool
+        self.var.IsChannelPcr = boolean(decompress(self.var.IsChannel)) #pcr
+
         # Identify grid cells containing a river channel
         self.var.IsStructureChan = np.bool8(maskinfo.in_zero())        #bool
         # Initialise map that identifies special inflow/outflow structures (reservoirs, lakes) within the
@@ -204,13 +206,6 @@ class routing(HydroModule):
         self.var.ChanGrad = np.maximum(loadmap('ChanGrad'), loadmap('ChanGradMin'))
         # River bed slope
         # Avoid calculation of Alpha using ChanGrad=0: this creates MV!
-
-        # if option['MCTRouting']:
-        #     # set channel slope for MCT pixels to max 0.001
-        #     # Check where IsChannelMCT is True and values in ChanGrad > 0.001
-        #     MCT_slope_mask = np.logical_and(self.var.IsChannelMCT, self.var.ChanGrad > 0.001)
-        #     # Update values in ChanGrad where the condition is met
-        #     self.var.ChanGrad[MCT_slope_mask] = 0.001
 
         self.var.CalChanMan = loadmap('CalChanMan')
         self.var.ChanMan = self.var.CalChanMan * loadmap('ChanMan')
@@ -522,8 +517,13 @@ class routing(HydroModule):
         # ************************************************************
         if option['MCTRouting']:
 
+            # maskinfo = MaskInfo.instance()
+            # mapnp.mask = maskinfo.info.mask
+
+
             self.var.IsChannelMCTPcr = boolean(loadmap('ChannelsMCT', pcr=True))    #pcr
             self.var.IsChannelMCT = np.bool8(compressArray(self.var.IsChannelMCTPcr))   #bool
+            self.var.IsChannelMCTPcr = boolean(decompress(self.var.IsChannelMCT)) # pcr
             # Identify channel pixels where Muskingum-Cunge-Todini is used
 
             self.var.mctmask = np.bool8(pcr2numpy(self.var.IsChannelMCTPcr,0))
@@ -657,7 +657,7 @@ class routing(HydroModule):
 
             if option['MCTRouting']:
                 SideflowChanMCT = np.where(self.var.IsChannelMCT, SideflowChanM3 * self.var.InvDtRouting,0)     #Ql
-                # Sideflow contribution to MCT grid cells expressed in [cu m /s / m channel length]
+                # Sideflow contribution to MCT grid cells expressed in [m3/s]
             else:
                 SideflowChanMCT = 0
 

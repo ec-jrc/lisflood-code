@@ -139,6 +139,7 @@ class evapowater(HydroModule):
             # amount of water in bankful (first line of routing)
             ChanLeft = ChanMIter * 0.1
             # 10% of the discharge must stay in the river
+            # cmcheck this is 10% of volume not discharge
             self.var.EvaAddM3 = MaskInfo.instance().in_zero()
             #   real water consumption is set to 0
 

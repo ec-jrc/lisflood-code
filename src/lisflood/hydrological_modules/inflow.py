@@ -47,7 +47,7 @@ class inflow(HydroModule):
 # --------------------------------------------------------------------------
 # --------------------------------------------------------------------------
     def initial(self):
-        """ initial part of the inflow module
+        """ Initialization part of the inflow module.
         """
         # ************************************************************
         # ***** INFLOW INIT
@@ -55,13 +55,16 @@ class inflow(HydroModule):
         settings = LisSettings.instance()
         option = settings.options
         if option['inflow']:
-            self.var.InflowPoints = loadmap('InflowPoints')
+            self.var.InflowPoints = loadmap('InflowPoints') #1D array size is pixels belonging to basin mask
+
             self.var.QInM3Old = np.where(self.var.InflowPoints > 0, self.var.ChanQ * self.var.DtSec, 0)
+            # inflow volume for model step
 
             # read inflow map
             inflowmapprc = loadmap('InflowPoints', pcr=True)
-            inflowmapnp = pcr2numpy(inflowmapprc, -9999)
+            inflowmapnp = pcr2numpy(inflowmapprc, -9999)    #2D array
             inflowmapnp = np.where(inflowmapnp > 0, inflowmapnp, 0)
+
 
             # get outlets ids from outlets map
             inflow_ids = np.unique(inflowmapnp)
@@ -84,19 +87,20 @@ class inflow(HydroModule):
                     warnings.warn(LisfloodWarning("Inflow point was removed ID: %d\n" % inf_id))
 
             # substitute indexes to id in map
-            self.var.InflowPointsMap = np.copy(inflowmapnp)
+            self.var.InflowPointsMap = np.copy(inflowmapnp) #np
             for k, v in iteritems(id_dict):
-                self.var.InflowPointsMap[inflowmapnp == k] = v
+                self.var.InflowPointsMap[inflowmapnp == k] = v  #np
 
             # convert map to pcraster format
-            self.var.InflowPointsMap = numpy2pcr(Nominal, self.var.InflowPointsMap, -9999)
+            self.var.InflowPointsMap = numpy2pcr(Nominal, self.var.InflowPointsMap, -9999) #pcr
+
             # Initialising cumulative output variables
             # These are all needed to compute the cumulative mass balance error
 
-        # inflow substep amount
+
 
     def dynamic_init(self):
-        """ dynamic part of the inflow module
+        """ Initialization of the dynamic part of the inflow module
             init inflow before sub step routing
         """
 
