@@ -13,7 +13,7 @@ The input maps can be classified according to two main categories:<br>
 
 ### Meteorological forcings
 
-The meteorological forcing variables are defined in *map stacks*. A *map stack* is simply a series of maps, where each map represents the value of a variable at an individual time step.<br>It is recommented to use the netcdf format. <br> The users that prefer to prepare the meteorological forcings maps in pcraster format, must name the files according to the following rules: the name of each map is made up of a total of 11 characters: 8 characters, a dot and a 3-character suffix. Each map name starts with a *prefix*, and ends with the time step number. All character positions in between are filled with zeros ("0"). <br>
+The meteorological forcing variables are defined in *map stacks*. A *map stack* is simply a series of maps, where each map represents the value of a variable at an individual time step.<br>It is recommented to use the netcdf format. <br> LISFLOOD is capable of reading meteorological forcings split into multiple files (e.g. yearly chuncks). To use this functionality, it is enough to add the symbol '\*' after the file name (e.g. ET0_\*) <br> The users that prefer to prepare the meteorological forcings maps in pcraster format, must name the files according to the following rules: the name of each map is made up of a total of 11 characters: 8 characters, a dot and a 3-character suffix. Each map name starts with a *prefix*, and ends with the time step number. All character positions in between are filled with zeros ("0"). <br>
 
 Generally used prefixes for the meteorological forcings maps are: <br>
 + tp : total precipitation; units: mm/day.<br>
