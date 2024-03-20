@@ -108,7 +108,9 @@ You can use builtin path variables in this template and reference to other paths
     <setoption choice="1" name="repGwPercUZLZMaps"/>
     <setoption choice="1" name="repPercolationMaps"/>
     <setoption choice="1" name="repRWS"/>
-    <setoption choice="1"  name="repPFMaps"/>
+    <setoption choice="1" name="repPFMaps"/>
+    <setoption choice="1" name="repTotalWaterStorageMaps"/>
+    <setoption choice="1" name="repPFForestMaps"/>
 
     <setoption choice="1" name="repTotalAbs"/>
     <setoption choice="1" name="repTotalWUse"/>
@@ -133,8 +135,7 @@ The option "NetCDFTimeChunks" may take the following values:
 </comment>
 <textvar name="NetCDFTimeChunks" value="-1"/>
 
-    <comment>
-
+<comment>
 The option "MapsCaching" may take the following values:
     - "True"   : Cache maps during execution
     - "False"  : No caching
@@ -142,23 +143,22 @@ The option "MapsCaching" may take the following values:
 <textvar name="MapsCaching" value="False"/>
 
 <comment>
-**************************************************************
-PARALLELIZED KINEMATIC ROUTING
-**************************************************************
-</comment>
 
-!-- Parallelisation of the kinematic wave routing (via openMP multi-threading).
-The option "numCPUs_parallelKinematicWave" may take the following values:
-    - "0"           : auto-detection of the machine/node's number of CPUs (all CPUs are used minus 1)
-		                (do not set it if other simulations are running on the same machine/node)
-    - "1"           : serial execution (not parallel)
-    - "2", "3", ... : manual setting of the number of parallel threads.
-                      (if exceeding the number of CPUs, the option is set to "0") -->
-<textvar name="numCPUs_parallelKinematicWave" value="30"/>
+The option "OutputMapsChunks" may take the following values:
+    - "[positive integer number]"  : Dump outputs to disk every X steps (default 1) 
+</comment>
+<textvar name="OutputMapsChunks" value="1"/>
+
+<comment>
+The option "OutputMapsDataType" sets the output data type and may take the following values:
+    - "float64"
+    - "float32"
+</comment>
+<textvar name="OutputMapsDataType" value="float64"/>
 
 <comment>
 **************************************************************
-PARALLELISATION WITH NUMBA (USED IN SOILLOOP)
+PARALLELISATION WITH NUMBA (USED IN ROUTING AND SOILLOOP)
 **************************************************************
 </comment>
 
@@ -529,7 +529,7 @@ Path of the initial value maps e.g. lzavin.map (org=$(PathRoot)/outPo)
 </comment>
 </textvar>
 
-<textvar name="PathMaps" value="/XXX/staticMaps/">
+<textvar name="PathMaps" value="/XXXX/staticMaps/">
 <comment>
     Static maps path
     /perm/mo/mocm/proj/efas/xdom/data/staticData/lisflood
@@ -1701,7 +1701,6 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 **************************************************************
 -->
 
-<textvar name="numCPUs_parallelKinematicWave" value="$(numCPUs_parallelKinematicWave)"/>
 <textvar name="numCPUs_parallelNumba" value="$(numCPUs_parallelNumba)"/>
 
 
@@ -1711,6 +1710,8 @@ This is necessary when using projected coordinates (x,y)
 </comment>
 </textvar>
 
+<textvar name="OutputMapsChunks" value="$(OutputMapsChunks)"/>
+<textvar name="OutputMapsDataType" value="$(OutputMapsDataType)"/>
 <textvar name="NetCDFTimeChunks" value="$(NetCDFTimeChunks)"/>
 <textvar name="MapsCaching" value="$(MapsCaching)"/>
 
@@ -3385,14 +3386,6 @@ soil layer 2 (lower layer) [V/V] [mm3/mm3]
 </comment>
 </textvar>
 
-<textvar name="ThetaMaps" value="$(PathOut)/th">
-<comment>
-Reported volumetric soil moisture content for  combined
-soil layer 1 and 2 [V/V] [mm3/mm3]
-</comment> 
-</textvar>
-
-
 <textvar name="UZMaps" value="$(PathOut)/uz">
 <comment>
 Reported storage in upper response box [mm]
@@ -3426,6 +3419,12 @@ Reported storage in lower response box [mm]
 <textvar name="LZMaps3" value="$(PathOut)/lz3">
 <comment>
 Reported storage in lower response box [mm]
+</comment>
+</textvar>
+
+<textvar name="TotalWaterStorageMaps" value="$(PathOut)/tws">
+<comment>
+Reported total water storage [mm]
 </comment>
 </textvar>
 
@@ -3483,7 +3482,6 @@ Reported interception storage, other fraction [mm]
 </comment>
 </textvar>
 
-
 <textvar name="DSLRForestMaps" value="$(PathOut)/dslrf">
 <comment>
 Reported days since last rain
@@ -3493,6 +3491,12 @@ Reported days since last rain
 <textvar name="CumInterceptionForestMaps" value="$(PathOut)/cumf">
 <comment>
 Reported interception storage, forest fraction [mm]
+</comment>
+</textvar>
+
+<textvar name="CumInterceptionIrrigationMaps" value="$(PathOut)/cumi">
+<comment>
+Reported interception storage, irrigation fraction [mm]
 </comment>
 </textvar>
 
@@ -3517,9 +3521,15 @@ soil layer 2 (lower layer) [V/V] [mm3/mm3]
 </comment>
 </textvar>
 
-<textvar name="UZForestMaps" value="$(PathOut)/uzF">
+<textvar name="UZForestMaps" value="$(PathOut)/uzf">
 <comment>
 Reported storage in upper response box [mm]
+</comment>
+</textvar>
+
+<textvar name="CumIntSealedMaps" value="$(PathOut)/cums">
+<comment>
+Reported interception (depression) storage, direct runoff (impervious) fraction [mm]
 </comment>
 </textvar>
 </group>
@@ -3790,6 +3800,12 @@ Reported upper zone outflow [mm]
 </comment>
 </textvar>
 
+<textvar name="UZOutflowIrrigationMaps" value="$(PathOut)/quzi">
+<comment>
+Reported upper zone outflow [mm]
+</comment>
+</textvar>
+
 <textvar name="GwPercUZLZForestMaps" value="$(PathOut)/uz2lzF">
 <comment>
 Reported percolation from upper to lower zone [mm]
@@ -3826,6 +3842,12 @@ soil layer 1b [V/V] [mm3/mm3]
 <comment>
 Reported volumetric soil moisture content for both
 soil layer 2 [V/V] [mm3/mm3]
+</comment>
+</textvar>
+
+<textvar name="UZIrrigationMaps" value="$(PathOut)/uzi">
+<comment>
+Reported storage in upper response box [mm]
 </comment>
 </textvar>
 
@@ -3928,6 +3950,24 @@ Depth of snow cover on soil surface [mm]
 <comment>
 Water stored as interception [mm]
 </comment>
+</textvar>
+
+<textvar name="Theta1AvUpsTS" value="$(PathOut)/th1aAvUps.tss">
+    <comment>
+        Soil moisture layer 1a [cu mm / cu mm]
+    </comment>
+</textvar>
+
+<textvar name="Theta2AvUpsTS" value="$(PathOut)/th1bAvUps.tss">
+    <comment>
+        Soil moisture layer 1b [cu mm / cu mm]
+    </comment>
+</textvar>
+
+<textvar name="Theta3AvUpsTS" value="$(PathOut)/th2AvUps.tss">
+    <comment>
+        Soil moisture layer 2 [cu mm / cu mm]
+    </comment>
 </textvar>
 
 <textvar name="Theta1TS" value="$(PathOut)/th1a.tss">
@@ -4157,18 +4197,6 @@ Depth of snow cover on soil surface [mm]
 <textvar name="CumInterceptionAvUpsTS" value="$(PathOut)/cumInterceptionUps.tss">
 <comment>
 Water stored as interception [mm]
-</comment>
-</textvar>
-
-<textvar name="Theta1AvUpsTS" value="$(PathOut)/thTopUps.tss">
-<comment>
-Soil moisture upper layer [mm3/mm3]
-</comment>
-</textvar>
-
-<textvar name="Theta2AvUpsTS" value="$(PathOut)/thSubUps.tss">
-<comment>
-Soil moisture lower layer [mm3/mm3]
 </comment>
 </textvar>
 

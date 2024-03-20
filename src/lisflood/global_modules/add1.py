@@ -39,7 +39,7 @@ import numpy as np
 
 from .zusatz import iterOpenNetcdf, iterReadPCRasterMap, iterSetClonePCR, checkmap
 from .settings import (calendar_inconsistency_warning, get_calendar_type, calendar, MaskAttrs, CutMap, NetCDFMetadata,
-                       LisSettings, MaskInfo)
+                       LisSettings, MaskInfo, MaskAreaInfo)
 from .errors import LisfloodWarning, LisfloodError
 from .decorators import Cache
 
@@ -141,6 +141,8 @@ def mapattrNetCDF(name):
     nf1 = iterOpenNetcdf(filename, "Checking netcdf map \n", 'r')
     spatial_dims = ('x', 'y') if 'x' in nf1.variables else ('lon', 'lat')
     x1, x2, y1, y2 = [nf1.variables[v][j] for v in spatial_dims for j in (0, 1)]
+    x_left = min(nf1.variables[spatial_dims[0]][0],nf1.variables[spatial_dims[0]][-1])
+    y_top = max(nf1.variables[spatial_dims[1]][0],nf1.variables[spatial_dims[1]][-1])
     nf1.close()
     maskattrs = MaskAttrs.instance()
 
@@ -154,8 +156,8 @@ def mapattrNetCDF(name):
             LisSettings.instance().binding['MaskMap'], filename)
         )
     half_cell = maskattrs['cell'] / 2.
-    x = x1 - half_cell  # |
-    y = y1 + half_cell  # | coordinates of the upper left corner of the input file upper left pixel
+    x = x_left - half_cell  # |
+    y = y_top + half_cell   # | coordinates of the upper left corner of the input file upper left pixel
     cut0 = int(np.abs(maskattrs['x'] - x) / cell_x)
     cut1 = cut0 + maskattrs['col']
     cut2 = int(np.abs(maskattrs['y'] - y) / cell_y)
@@ -204,42 +206,59 @@ def loadsetclone(name):
             # try to read a netcdf file
             filename = os.path.splitext(binding[name])[0] + '.nc'
             nf1 = iterOpenNetcdf(filename, "", "r")
-            value = listitems(nf1.variables)[-1][0]  # get the last variable name
-            nr_rows, nr_cols = nf1.variables[value].shape  # just use shape to know rows and cols...
+            num_dims = 3 if 'time' in nf1.variables else 2
+            varname = [v for v in nf1.variables if len(nf1.variables[v].dimensions) == num_dims][0]
+            nr_rows, nr_cols = nf1.variables[varname].shape  # just use shape to know rows and cols...            
             if 'x' in nf1.variables:
                 x1 = nf1.variables['x'][0]
                 x2 = nf1.variables['x'][-1]
                 y1 = nf1.variables['y'][0]
+                y2 = nf1.variables['y'][-1]
             else:
                 x1 = nf1.variables['lon'][0]
                 x2 = nf1.variables['lon'][-1]
                 y1 = nf1.variables['lat'][0]
+                y2 = nf1.variables['lat'][-1]
+            x_left = min(x1,x2)
+            y_top = max(y1,y2)
 
             cell_size = np.abs(x2 - x1)/(nr_cols - 1)
-            x = x1 - cell_size / 2
-            y = y1 + cell_size / 2
-            mapnp = np.array(nf1.variables[value][0:nr_rows, 0:nr_cols])
+            x = x_left - cell_size / 2
+            y = y_top + cell_size / 2
+            mapnp = np.array(nf1.variables[varname][0:nr_rows, 0:nr_cols])
+            # read maps using always a standard x and y reference system using x in ascending and y in descending order
+            if (y1 != y_top):   # y in in ascending order
+                warnings.warn(LisfloodWarning("Warning: map {} (binding: '{}') has y coordinates in ascending order and will be flipped vertically".format(filename, name)))
+                mapnp=np.flipud(mapnp).copy()
+            if (x1 != x_left):   # x in in descending order
+                warnings.warn(LisfloodWarning("Warning: map {} (binding: '{}') has x coordinates in descending order and will be flipped horizontally".format(filename, name)))
+                mapnp=np.fliplr(mapnp).copy()
             nf1.close()
             # setclone  row col cellsize xupleft yupleft
             setclone(nr_rows, nr_cols, cell_size, x, y)
             map_out = numpy2pcr(Boolean, mapnp, 0)
             flagmap = True
 
-        if flags['checkfiles']:
-            checkmap(name, filename, map_out, flagmap, 0)
     else:
         raise LisfloodError("Maskmap: {} is not a valid mask map nor valid coordinates".format(name))
     _ = MaskAttrs(uuid.uuid4())  # init maskattrs
+    # convert numpy map to 8bit
+    maskarea = np.bool8(mapnp)
+    #check ldd map by maskchkarea map
+    maskchkarea = np.logical_not(maskarea)
+    _ = MaskAreaInfo(maskchkarea, map_out)  # MaskAreaInfo init here
     # put in the ldd map
     # if there is no ldd at a cell, this cell should be excluded from modelling
     ldd = loadmap('Ldd', pcr=True)
     # convert ldd to numpy
     maskldd = pcr2numpy(ldd, np.nan)
-    # convert numpy map to 8bit
-    maskarea = np.bool8(mapnp)
+
     # compute mask (pixels in maskldd AND maskarea)
     mask = np.logical_not(np.logical_and(maskldd, maskarea))
     _ = MaskInfo(mask, map_out)  # MaskInfo init here
+
+    if flags['checkfiles'] and (len(coord) == 1):
+        checkmap(name, filename, map_out, flagmap, 0)
 
     if flags['nancheck']:
         nanCheckMap(ldd, binding['Ldd'], 'Ldd')
@@ -383,9 +402,24 @@ def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averagey
         # Only one variable must be present in netcdf files
         num_dims = 3 if 'time' in nf1.variables else 2
         varname = [v for v in nf1.variables if len(nf1.variables[v].dimensions) == num_dims][0]
+
+        # read maps using always a standard x and y reference system using x in ascending and y in descending order
+        spatial_dims = ('x', 'y') if 'x' in nf1.variables else ('lon', 'lat')
+        x_flipped = nf1.variables[spatial_dims[0]][0]>nf1.variables[spatial_dims[0]][-1] 
+        y_flipped = nf1.variables[spatial_dims[1]][0]<nf1.variables[spatial_dims[1]][-1] 
+        func_y = lambda y : y
+        func_x = lambda x : x
+        # read maps using always a standard x and y reference system using x in ascending and y in descending order
+        if (y_flipped):   # y in in ascending order
+            warnings.warn(LisfloodWarning("Warning: map {} (binding: '{}') has y coordinates in ascending order and will be flipped vertically".format(filename, name)))
+            func_y = lambda y : np.flipud(y).copy()
+        if (x_flipped):   # x in in descending order
+            warnings.warn(LisfloodWarning("Warning: map {} (binding: '{}') has x coordinates in descending order and will be flipped horizontally".format(filename, name)))
+            func_x = lambda x : np.fliplr(x).copy()
+
         if not settings.timestep_init:
             # if timestep_init is missing, read netcdf as single static map
-            mapnp = nf1.variables[varname][cut2:cut3, cut0:cut1]
+            mapnp = func_x(func_y(nf1.variables[varname]))[cut2:cut3, cut0:cut1]
         else:
             if 'time' in nf1.variables:
                 # read a netcdf  (stack) - state files
@@ -447,10 +481,10 @@ def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averagey
                         timestepI = timestepInew
 
                 itime = np.where(nf1.variables['time'][:] == timestepI)[0][0]
-                mapnp = nf1.variables[varname][itime, cut2:cut3, cut0:cut1]
+                mapnp = func_x(func_y(nf1.variables[varname][itime]))[cut2:cut3, cut0:cut1]
             else:
                 # read a netcdf (single one)
-                mapnp = nf1.variables[varname][cut2:cut3, cut0:cut1]
+                mapnp = func_x(func_y(nf1.variables[varname]))[cut2:cut3, cut0:cut1]
 
         # masking
         try:
@@ -485,13 +519,13 @@ def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averagey
         mapC = compressArray(map, name=filename)
 
     if flags['checkfiles']:
-        print(name, filename)
+        #print(name, filename)
         if flagmap == False:
             checkmap(name, filename, mapC, flagmap, 0)
         elif pcr:
             checkmap(name, filename, map, flagmap, 0)
         else:
-            print(name, mapC.size)
+            #print(name, mapC.size)
             if mapC.size > 0:
                 map= decompress(mapC)
                 checkmap(name, filename, map, flagmap, 0)
@@ -553,7 +587,21 @@ def loadLAI(value, pcrvalue, i, pcr=False):
         # Only one variable must be present in netcdf files
         num_dims = 3 if 'time' in nf1.variables else 2
         varname = [v for v in nf1.variables if len(nf1.variables[v].dimensions) == num_dims][0]
-        mapnp = nf1.variables[varname][i, cut2:cut3, cut0:cut1]
+
+        # read maps using always a standard x and y reference system using x in ascending and y in descending order
+        spatial_dims = ('x', 'y') if 'x' in nf1.variables else ('lon', 'lat')
+        x_flipped = nf1.variables[spatial_dims[0]][0]>nf1.variables[spatial_dims[0]][-1] 
+        y_flipped = nf1.variables[spatial_dims[1]][0]<nf1.variables[spatial_dims[1]][-1] 
+        func_y = lambda y : y
+        func_x = lambda x : x
+        # read maps using always a standard x and y reference system using x in ascending and y in descending order
+        if (y_flipped):   # y in in ascending order
+            warnings.warn(LisfloodWarning("Warning: map {} ({} maps) has y coordinates in ascending order and will be flipped vertically".format(filename, 'LAI')))
+            func_y = lambda y : np.flipud(y).copy()
+        if (x_flipped):   # x in in descending order
+            warnings.warn(LisfloodWarning("Warning: map {} ({} maps) has x coordinates in descending order and will be flipped horizontally".format(filename, 'LAI')))
+            func_x = lambda x : np.fliplr(x).copy()
+        mapnp = func_x(func_y(nf1.variables[varname][i]))[cut2:cut3, cut0:cut1]
         nf1.close()
         mapC = compressArray(mapnp, pcr=False, name=filename)
         # mapnp[np.isnan(mapnp)] = -9999
@@ -686,9 +734,23 @@ def readnetcdf(name, time, timestampflag='exact', averageyearflag=False):
     # get index of timestep in netCDF file corresponding to current simulation date
     current_ncdf_index = np.where(t_steps == current_ncdf_step)[0][0]
 
+    # read maps using always a standard x and y reference system using x in ascending and y in descending order
+    spatial_dims = ('x', 'y') if 'x' in nf1.variables else ('lon', 'lat')
+    x_flipped = nf1.variables[spatial_dims[0]][0]>nf1.variables[spatial_dims[0]][-1] 
+    y_flipped = nf1.variables[spatial_dims[1]][0]<nf1.variables[spatial_dims[1]][-1] 
+    func_y = lambda y : y
+    func_x = lambda x : x
+    # read maps using always a standard x and y reference system using x in ascending and y in descending order
+    if (y_flipped):   # y in in ascending order
+        warnings.warn(LisfloodWarning("Warning: map {} (binding: '{}') has y coordinates in ascending order and will be flipped vertically".format(filename, name)))
+        func_y = lambda y : np.flipud(y).copy()
+    if (x_flipped):   # x in in descending order
+        warnings.warn(LisfloodWarning("Warning: map {} (binding: '{}') has x coordinates in descending order and will be flipped horizontally".format(filename, name)))
+        func_x = lambda x : np.fliplr(x).copy()
+
     # crop map if subcatchment
     cutmap = CutMap.instance()
-    mapnp = nf1.variables[variable_name][current_ncdf_index, cutmap.cuts[2]:cutmap.cuts[3], cutmap.cuts[0]:cutmap.cuts[1]]
+    mapnp = func_x(func_y(nf1.variables[variable_name][current_ncdf_index]))[cutmap.cuts[2]:cutmap.cuts[3], cutmap.cuts[0]:cutmap.cuts[1]]
     nf1.close()
 
     mapC = compressArray(mapnp, pcr=False, name=filename)

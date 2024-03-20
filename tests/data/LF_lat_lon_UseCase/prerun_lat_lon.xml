@@ -86,15 +86,6 @@
 
         <group>
 
-            <!-- Parallelisation of the kinematic wave routing (via openMP multi-threading).
-The option "numberParallelThreadsKinematicWave" may take the following values:
-    - "0"           : auto-detection of the machine/node's number of CPUs
-		                (do not set it if other simulations are running on the same machine/node)
-    - "1"           : serial execution (not parallel)
-    - "2", "3", ... : manual setting of the number of parallel threads.
-                      (if exceeding the number of CPUs, the option is set to "0") -->
-            <textvar name="numCPUs_parallelKinematicWave" value="1"/>
-
             <!-- Parallelisation of using Numba runtime compiled library .
 The option "numCPUs_parallelNumba" may take the following values:
     - "0"           : set to NUMBA_NUM_THREADS Environment Variable 
@@ -1401,11 +1392,11 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 **************************************************************
 -->
 
-        <textvar name="numCPUs_parallelKinematicWave" value="$(numCPUs_parallelKinematicWave)"/>
         <textvar name="numCPUs_parallelNumba" value="$(numCPUs_parallelNumba)"/>
         
+        <textvar name="OutputMapsChunks" value="1"/>
+        <textvar name="OutputMapsDataType" value="float64"/>
         <textvar name="NetCDFTimeChunks" value="auto"/>
-
         <textvar name="MapsCaching" value="False"/>
 
         <textvar name="MaskMap" value="$(MaskMap)">
@@ -2546,12 +2537,6 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="Theta1ForestState" value="$(PathOut)/thf1"/>
-
-                <textvar name="Theta2ForestState" value="$(PathOut)/thf2"/>
-
-                <textvar name="Theta3ForestState" value="$(PathOut)/thf3"/>
-
                 <textvar name="UZState" value="$(PathOut)/uz">
                     <comment>
                         Reported storage in upper response box [mm]
@@ -2758,27 +2743,6 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
                 <textvar name="Theta3End" value="$(PathOut)/thc.end">
-                    <comment>
-                        Reported volumetric soil moisture content for both
-                        soil layer 2 [V/V]
-                    </comment>
-                </textvar>
-
-                <textvar name="Theta1ForestEnd" value="$(PathOut)/thf1.end">
-                    <comment>
-                        Reported volumetric soil moisture content for
-                        soil layer 1 [V/V]
-                    </comment>
-                </textvar>
-
-                <textvar name="Theta2ForestEnd" value="$(PathOut)/thf2.end">
-                    <comment>
-                        Reported volumetric soil moisture content for both
-                        soil layer 2 [V/V]
-                    </comment>
-                </textvar>
-
-                <textvar name="Theta3ForestEnd" value="$(PathOut)/thf3.end">
                     <comment>
                         Reported volumetric soil moisture content for both
                         soil layer 2 [V/V]
@@ -3058,14 +3022,6 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="ThetaMaps" value="$(PathOut)/th">
-                    <comment>
-                        Reported volumetric soil moisture content for combined
-                        soil layer 1 and 2 [V/V]
-                    </comment>
-                </textvar>
-
-
                 <textvar name="UZMaps" value="$(PathOut)/uz">
                     <comment>
                         Reported storage in upper response box [mm]
@@ -3154,14 +3110,14 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 <textvar name="Theta1ForestMaps" value="$(PathOut)/thfa">
                     <comment>
                         Reported volumetric soil moisture content for
-                        soil layer 1 [V/V]
+                        forest soil layer 1 [V/V]
                     </comment>
                 </textvar>
 
                 <textvar name="Theta2ForestMaps" value="$(PathOut)/thfb">
                     <comment>
-                        Reported volumetric soil moisture content for both
-                        soil layer 2 [V/V]
+                        Reported volumetric soil moisture content for
+                        forest soil layer 2 [V/V]
                     </comment>
                 </textvar>
 
@@ -3172,7 +3128,14 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="UZForestMaps" value="$(PathOut)/uzF">
+                <textvar name="Theta3ForestMaps" value="$(PathOut)/thfc">
+                    <comment>
+                        Reported volumetric soil moisture content for
+                        forest soil layer 3 [V/V]
+                    </comment>
+                </textvar>
+
+                <textvar name="UZForestMaps" value="$(PathOut)/uzf">
                     <comment>
                         Reported storage in upper response box [mm]
                     </comment>
@@ -3406,6 +3369,11 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
+                <textvar name="UZOutflowIrrigationMaps" value="$(PathOut)/quzi">
+                    <comment>
+                        Reported upper zone outflow [mm]
+                    </comment>
+                </textvar>
 
                 <textvar name="GwPercUZLZForestMaps" value="$(PathOut)/uz2lzF">
                     <comment>
@@ -3525,6 +3493,24 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 <textvar name="CumInterceptionTS" value="$(PathOut)/cumInt.tss">
                     <comment>
                         Water stored as interception [mm]
+                    </comment>
+                </textvar>
+
+                <textvar name="Theta1AvUpsTS" value="$(PathOut)/th1aAvUps.tss">
+                    <comment>
+                        Soil moisture layer 1a [cu mm / cu mm]
+                    </comment>
+                </textvar>
+
+                <textvar name="Theta2AvUpsTS" value="$(PathOut)/th1bAvUps.tss">
+                    <comment>
+                        Soil moisture layer 1b [cu mm / cu mm]
+                    </comment>
+                </textvar>
+
+                <textvar name="Theta3AvUpsTS" value="$(PathOut)/th2AvUps.tss">
+                    <comment>
+                        Soil moisture layer 2 [cu mm / cu mm]
                     </comment>
                 </textvar>
 
@@ -3755,18 +3741,6 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 <textvar name="CumInterceptionAvUpsTS" value="$(PathOut)/cumInterceptionUps.tss">
                     <comment>
                         Water stored as interception [mm]
-                    </comment>
-                </textvar>
-
-                <textvar name="Theta1AvUpsTS" value="$(PathOut)/thTopUps.tss">
-                    <comment>
-                        Soil moisture upper layer [cu mm / cu mm]
-                    </comment>
-                </textvar>
-
-                <textvar name="Theta2AvUpsTS" value="$(PathOut)/thSubUps.tss">
-                    <comment>
-                        Soil moisture lower layer [cu mm / cu mm]
                     </comment>
                 </textvar>
 

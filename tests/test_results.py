@@ -61,7 +61,8 @@ class TestCatch(ETRS89TestCase):
         settings = setoptions(self.settings_files['base'],
                               opts_to_set=('repDischargeTs', 'repDischargeMaps', 
                                             "repThetaMaps", "repThetaForestMaps",
-                                            "repThetaIrrigationMaps", "repE2O2") + self.modules_to_set,
+                                            "repThetaIrrigationMaps", "repE2O2",
+                                            "repTotalWaterStorageMaps") + self.modules_to_set,
                               opts_to_unset=opts_to_unset,
                               vars_to_set={'StepStart': step_start,
                                            'StepEnd': step_end,
@@ -81,6 +82,7 @@ class TestCatch(ETRS89TestCase):
         self.compare_reference('tha', check='map', step_length='86400')
         self.compare_reference('thc', check='map', step_length='86400')
         self.compare_reference('lz', check='map', step_length='86400')
+        self.compare_reference('tws', check='map', step_length='86400')
 
     def test_output_6h(self):
         self.run('21600', '02/01/2016 06:00', '02/07/2016 06:00')
@@ -94,6 +96,7 @@ class TestCatch(ETRS89TestCase):
         self.compare_reference('tha', check='map', step_length='21600')
         self.compare_reference('thc', check='map', step_length='21600')
         self.compare_reference('lz', check='map', step_length='21600')
+        self.compare_reference('tws', check='map', step_length='21600')
 
     def test_initvars(self):
         output_dir = mk_path_out(os.path.join(self.case_dir, 'out/test_results_initvars'))
@@ -117,7 +120,8 @@ class TestCatch(ETRS89TestCase):
                         'chside.end.nc', 'cseal.end.nc', 'cum.end.nc', 
                         'cumf.end.nc', 'cumi.end.nc', 'dslf.end.nc', 
                         'dsli.end.nc', 'dslr.end.nc', 'frost.end.nc',
-                        'lakeh.end.nc', 'lz.end.nc', 'ofdir.end.nc',
+                        'lakeh.end.nc', 'lakeprevinq.end.nc',  
+                        'lakeprevoutq.end.nc', 'lz.end.nc', 'ofdir.end.nc',
                         'offor.end.nc', 'ofoth.end.nc', 'rsfil.end.nc', 
                         'scova.end.nc', 'scovb.end.nc', 'scovc.end.nc', 
                         'tha.end.nc', 'thb.end.nc', 'thc.end.nc', 

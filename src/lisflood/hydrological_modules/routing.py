@@ -190,7 +190,7 @@ class routing(HydroModule):
         self.var.Catchments = (compressArray(catchment(self.var.Ldd, OutflowPoints))).astype(np.int32)  #np
         # assign outlet id to all pixel in its catchment
         # define catchment for each outflow point
-        
+
         CatchArea = np.bincount(self.var.Catchments, weights=self.var.PixelArea)[self.var.Catchments]   #np
         # Compute area of each catchment [m2]
         # Note: in earlier versions this was calculated using the "areaarea" function,
@@ -403,6 +403,8 @@ class routing(HydroModule):
         settings = LisSettings.instance()
         option = settings.options
         binding = settings.binding
+        flags = settings.flags
+
 
         self.var.ChannelAlpha2 = None
         # Default value, if split-routing is not active and water is routed only in the main channel
@@ -446,7 +448,7 @@ class routing(HydroModule):
                 # Total (virtual) volume of water in river channel when second routing line is active (= using increased Manning coeff 2)
                 self.var.ChanM3Kin = self.var.ChanM3 - self.var.Chan2M3Kin + self.var.Chan2M3Start
                 # (Real) Volume of water in main channel when second line of routing is active (= using riverbed Manning coeff)
-                
+
                 self.var.ChanM3Kin = np.where((self.var.ChanM3Kin < 0.0) & (self.var.ChanM3Kin > -0.0000001),0.0,self.var.ChanM3Kin)
                 # this line prevents the warm start from failing in case of small numerical imprecisions when writing and reading the maps
 
@@ -465,7 +467,7 @@ class routing(HydroModule):
         maskinfo = MaskInfo.instance()
         self.river_router = kinematicWave(compressArray(self.var.LddKinematic), ~maskinfo.info.mask, self.var.ChannelAlpha,
                                            self.var.Beta, self.var.ChanLength, self.var.DtRouting,
-                                           int(binding["numCPUs_parallelKinematicWave"]), alpha_floodplains=self.var.ChannelAlpha2)
+                                          alpha_floodplains=self.var.ChannelAlpha2, flagnancheck=flags['nancheck'])
 
 
         # ************************************************************
@@ -650,7 +652,7 @@ class routing(HydroModule):
                      self.var.AddedTRUN -= np.take(np.bincount(self.var.Catchments, weights=self.var.EvaAddM3Dt.copy()),self.var.Catchments)
                  if option['wateruse']:
                      self.var.AddedTRUN -= np.take(np.bincount(self.var.Catchments, weights=self.var.WUseAddM3Dt.copy()),self.var.Catchments)      
-                                     
+
 
             SideflowChan = np.where(self.var.IsChannelKinematic, SideflowChanM3 * self.var.InvChanLength * self.var.InvDtRouting,0)
             # Sideflow contribution to kinematic and split routing grid cells expressed in [cu m /s / m channel length]

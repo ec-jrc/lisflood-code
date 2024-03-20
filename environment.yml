@@ -149,7 +149,6 @@ dependencies:
     - cftime==1.6.0
     - cloudpickle==2.1.0
     - coverage==6.4.1
-    - cython==0.29.30
     - dask==2022.2.0
     - fsspec==2022.5.0
     - future==0.18.2

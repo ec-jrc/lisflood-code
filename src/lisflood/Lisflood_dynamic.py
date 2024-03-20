@@ -15,6 +15,7 @@ See the Licence for the specific language governing permissions and limitations 
 
 """
 from __future__ import print_function, absolute_import
+import warnings
 from nine import range
 
 import uuid
@@ -24,6 +25,9 @@ import gc
 
 from pcraster.framework import DynamicModel
 import numpy as np
+from lisflood.global_modules.errors import LisfloodWarning
+
+from lisflood.global_modules.zusatz import checkmap
 
 from .global_modules.settings import CDFFlags, LisSettings, MaskInfo
 
@@ -52,11 +56,12 @@ class LisfloodModel_dyn(DynamicModel):
 
         self.TimeSinceStart = self.currentTimeStep() - self.firstTimeStep() + 1
         if flags['loud']:
-            print("%-6i %10s" % (self.currentTimeStep(), self.CalendarDate.strftime("%d/%m/%Y %H:%M")))
+            sys.stdout.write("%-6i %20s" % (self.currentTimeStep(), self.CalendarDate.strftime("%d/%m/%Y %H:%M")))
         else:
             if not flags['checkfiles']:
                 if flags['quiet'] and not flags['veryquiet']:
                     sys.stdout.write(".")
+                    sys.stdout.flush()
                 if not flags['quiet'] and not flags['veryquiet']:
                     # Print step number and date to console
                     sys.stdout.write("\r%d" % i), sys.stdout.write("%s" % " - "+self.CalendarDate.strftime("%d/%m/%Y %H:%M"))
@@ -74,6 +79,8 @@ class LisfloodModel_dyn(DynamicModel):
         self.readmeteo_module.dynamic()                 
             
         if flags['checkfiles']:
+            if checkmap.errors>0:
+                warnings.warn(LisfloodWarning("WARNING! some maps have missing values."))
             return  # if check than finish here
 
         """ Here it starts with hydrological modules:
@@ -250,7 +257,7 @@ class LisfloodModel_dyn(DynamicModel):
             ftemp1 = open(nomefile, 'w+')
             nelements = len(self.ChanM3)
             for i in range(0,nelements-1):
-                if  hasattr(self,'CrossSection2Area'):
+                if  hasattr(self,'CrossSection2Area') and not(option['InitLisflood']):
                     print(i, self.TotalCrossSectionArea[i], self.CrossSection2Area[i], self.ChanM3[i], \
                     self.Chan2M3Kin[i], file=ftemp1)
                 else:

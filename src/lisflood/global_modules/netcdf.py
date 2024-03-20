@@ -1,5 +1,6 @@
 import os
 import glob
+import warnings
 import xarray as xr
 import numpy as np
 import datetime
@@ -10,32 +11,37 @@ from nine import range
 from pyproj import Proj
 
 from .settings import (calendar_inconsistency_warning, get_calendar_type, calendar, MaskAttrs, CutMap, NetCDFMetadata,
-                       LisSettings, MaskInfo)
+                       get_core_dims, LisSettings, MaskInfo)
 from .errors import LisfloodWarning, LisfloodError
 from .decorators import Cache, cached
 from .zusatz import iterOpenNetcdf
 # from .add1 import *
 from .add1 import nanCheckMap, decompress
+from netCDF4 import default_fillvals
 
+from .. import __authors__, __version__, __date__, __status__, __institution__
 
-def get_core_dims(dims):
-    if 'x' in dims and 'y' in dims:
-        core_dims = ('y', 'x')
-    elif 'lat' in dims and 'lon' in dims:
-        core_dims = ('lat', 'lon')
-    else:
-        msg = 'Core dimension in netcdf file not recognised! Expecting (y, x) or (lat, lon), have '+str(dims)
-        LisfloodError(msg)
-    return core_dims
-
-
-def mask_array_np(data, mask, crop):
-    data_cut = data[:, crop[2]:crop[3], crop[0]:crop[1]]
+def mask_array_np(data, mask, crop, name, valid_min, valid_max, func_x, func_y):
+    data_cut = func_x(func_y(data))[:, crop[2]:crop[3], crop[0]:crop[1]]
+    if (valid_min is not None):
+        if (data_cut < valid_min).sum() > 0:
+            warnings.warn(LisfloodWarning('Data in var "{}" contains values out of valid range (valid_min)'.format(name)))
+            if np.issubdtype(data.dtype, np.floating):
+                data_cut[(data_cut < valid_min)] = np.nan
+            else:
+                data_cut[(data_cut < valid_min)] = default_fillvals[data_cut.dtype.str[1:]]
+    if (valid_max is not None):
+        if (data_cut > valid_max).sum() > 0:
+            warnings.warn(LisfloodWarning('Data in var "{}" contains values out of valid range (valid_max)'.format(name)))
+            if np.issubdtype(data.dtype, np.floating):
+                data_cut[(data_cut > valid_max)] = np.nan
+            else:
+                data_cut[(data_cut > valid_max)] = default_fillvals[data_cut.dtype.str[1:]]
     return data_cut[:, mask]
 
 
 
-def mask_array(data, mask, crop, core_dims):
+def mask_array(data, mask, crop, core_dims, name, valid_min, valid_max, func_x, func_y):
     n_data = int(mask.sum())
     masked_data = xr.apply_ufunc(mask_array_np, data,
                                  dask='parallelized',
@@ -44,13 +50,17 @@ def mask_array(data, mask, crop, core_dims):
                                  output_dtypes=[data.dtype],
                                  output_core_dims=[['z']],
                                  dask_gufunc_kwargs = dict(output_sizes={'z': n_data}),
-                                 kwargs={'mask': mask, 'crop': crop})
+                                 kwargs={'mask': mask, 'crop': crop, 'name': name, 
+                                         'valid_min': valid_min, 'valid_max': valid_max,
+                                         'func_x': func_x, 'func_y':func_y})
     return masked_data
 
 
-def compress_xarray(mask, crop, data):
+def compress_xarray(mask, crop, data, name, valid_min, valid_max, func_x, func_y):
     core_dims = get_core_dims(data.dims)
-    masked_data = mask_array(data, mask, crop, core_dims=core_dims)
+    masked_data = mask_array(data, mask, crop, core_dims=core_dims, name=name, 
+                             valid_min=valid_min, valid_max=valid_max,
+                             func_x=func_x, func_y=func_y)
     return masked_data
 
 
@@ -158,6 +168,8 @@ def map_dates_index(dates, time, indexer, climatology=False):
 
 
 class XarrayChunked():
+    """ Class that handles the reading of netcdf files with temporal chunks
+    """
 
     def __init__(self, data_path, time_chunk, dates, indexer=None, climatology=False):
 
@@ -165,7 +177,14 @@ class XarrayChunked():
         if time_chunk != 'auto' and time_chunk is not None:
             time_chunk = int(time_chunk)
         data_path = data_path + ".nc" if not data_path.endswith('.nc') else data_path
-        ds = xr.open_mfdataset(data_path, engine='netcdf4', chunks={'time': time_chunk}, combine='by_coords')
+        try:
+            ds = xr.open_mfdataset(
+                data_path, engine='netcdf4', 
+                chunks={'time': time_chunk}, combine='by_coords',
+                mask_and_scale=True
+            )
+        except OSError:
+            raise OSError(f"Could not open file {data_path}")
 
         # check calendar type
         check_dataset_calendar_type(ds, data_path)
@@ -175,17 +194,50 @@ class XarrayChunked():
         da = ds[var_name]
 
         # extract time range
-        if not climatology and dates[0] < da.time[-1].values:
-            date_range = dataset_date_range(dates, da, indexer)  # array of dates
-            da = da.sel(time=date_range)
+        try:
+            if not climatology and dates[0] < da.time[-1].values:
+                date_range = dataset_date_range(dates, da, indexer)  # array of dates
+                da = da.sel(time=date_range)
+        except KeyError:
+            print("Dataset:")
+            print(da)
+            print("Date range:")
+            print(date_range)
+            raise KeyError(f"not all values found in index 'time' for file {data_path} (see dataset above)")
+
         self.index_map = map_dates_index(dates, da.time, indexer, climatology)
+
+        # read maps using always a standard x and y reference system using x in ascending and y in descending order
+        spatial_dims = ('x', 'y') if 'x' in ds.variables else ('lon', 'lat')
+        x_flipped = ds.variables[spatial_dims[0]][0]>ds.variables[spatial_dims[0]][-1] 
+        y_flipped = ds.variables[spatial_dims[1]][0]<ds.variables[spatial_dims[1]][-1] 
+        func_y = lambda y : y
+        func_x = lambda x : x
+        # read maps using always a standard x and y reference system using x in ascending and y in descending order
+        if (y_flipped):   # y in in ascending order
+            warnings.warn(LisfloodWarning("Warning: map {} (var_name: '{}') has y coordinates in ascending order and will be flipped vertically".format(data_path, var_name)))
+            func_y = lambda y : np.flipud(y).copy()
+        if (x_flipped):   # x in in descending order
+            warnings.warn(LisfloodWarning("Warning: map {} (var_name: '{}') has x coordinates in descending order and will be flipped horizontally".format(data_path, var_name)))
+            func_x = lambda x : np.fliplr(x).copy()
 
         # compress dataset (remove missing values and flatten the array)
         maskinfo = MaskInfo.instance()
         mask = np.logical_not(maskinfo.info.mask)
         cutmap = CutMap.instance()
         crop = cutmap.cuts
-        self.dataset = compress_xarray(mask, crop, da) # final dataset to store
+
+        # in case the dataset contains valid_min and valid_max set, store here the scaled adn offset values of them
+        scale_factor=da.encoding['scale_factor'] if 'scale_factor' in da.encoding else 1
+        add_offset=da.encoding['add_offset'] if 'add_offset' in da.encoding else 0
+        valid_min_scaled = None
+        valid_max_scaled = None
+        settings = LisSettings.instance()
+        flags = settings.flags
+        if not flags['skipvalreplace']:
+            valid_min_scaled = (da.attrs['valid_min']*scale_factor+add_offset) if 'valid_min' in da.attrs else None
+            valid_max_scaled = (da.attrs['valid_max']*scale_factor+add_offset) if 'valid_max' in da.attrs else None
+        self.dataset = compress_xarray(mask, crop, da, var_name, valid_min_scaled, valid_max_scaled, func_x, func_y) # final dataset to store
 
         # initialise class variables and load first chunk
         self.init_chunks(self.dataset, time_chunk)
@@ -224,14 +276,25 @@ class XarrayChunked():
 
         if local_index < 0:
             msg = 'local step cannot be negative! step: {}, chunk: {} - {}', local_index, self.chunk_index[self.ichunk], self.chunk_index[self.ichunk+1]
-            LisfloodError(msg)
+            raise LisfloodError(msg)
 
         data = self.dataset_chunk.values[local_index]
+        if np.issubdtype(data.dtype, np.floating):
+            if (np.isnan(data).any()):
+                #warnings.warn(LisfloodWarning('Data in var "{}" contains NaN values or values out of valid range inside mask map for step: {}'.format(self.dataset.name,local_index)))
+                raise LisfloodError('Data in var "{}" contains NaN values or values out of valid range inside mask map for step: {}'.format(self.dataset.name,local_index))
+        else:
+            if (data==default_fillvals[data.dtype.str[1:]]).any():
+                #warnings.warn(LisfloodWarning('Data in var "{}" contains NaN values or values out of valid range inside mask map for step: {}'.format(self.dataset.name,local_index)))
+                raise LisfloodError('Data in var "{}" contains missing values or values out of valid range inside mask map for step: {}'.format(self.dataset.name,local_index))
+
         return data
 
 
 @Cache
 class XarrayCached(XarrayChunked):
+    """ Class that extends the main XarrayChunked class to allow caching the full dataset in memory
+    """
 
     def __init__(self, data_path, dates, indexer=None, climatology=False):
         super().__init__(data_path, None, dates, indexer, climatology)
@@ -298,6 +361,19 @@ def read_lat_from_template_cached(netcdf_template, proj4_params):
 def read_lat_from_template_base(netcdf_template, proj4_params):
     nc_template = netcdf_template + ".nc" if not netcdf_template.endswith('.nc') else netcdf_template
     with xr.open_dataset(nc_template) as nc:
+        # read maps using always a standard x and y reference system using x in ascending and y in descending order
+        spatial_dims = ('x', 'y') if 'x' in nc.dims else ('lon', 'lat')
+        x_flipped = nc.variables[spatial_dims[0]][0]>nc.variables[spatial_dims[0]][-1] 
+        y_flipped = nc.variables[spatial_dims[1]][0]<nc.variables[spatial_dims[1]][-1] 
+        func_y = lambda y : y
+        func_x = lambda x : x
+        # read maps using always a standard x and y reference system using x in ascending and y in descending order
+        if (y_flipped):   # y in in ascending order
+            warnings.warn(LisfloodWarning("Warning: map {} (binding: '{}') has y coordinates in ascending order and will be flipped vertically".format(nc_template,'netCDFtemplate')))
+            func_y = lambda y : np.flip(y).copy()
+        if (x_flipped):   # x in in descending order
+            warnings.warn(LisfloodWarning("Warning: map {} (binding: '{}') has x coordinates in descending order and will be flipped horizontally".format(nc_template, 'netCDFtemplate')))
+            func_x = lambda x : np.flip(x).copy()
         if all([co in nc.dims for co in ("x", "y")]):
             try:
                 # look for the projection variable
@@ -312,9 +388,10 @@ def read_lat_from_template_base(netcdf_template, proj4_params):
 
             # projection object obtained from the PROJ4 string
             projection = Proj(proj4_params)
-            _, lat_deg = projection(*coordinatesLand(nc.x.values, nc.y.values), inverse=True)  # latitude (degrees)
+            
+            _, lat_deg = projection(*coordinatesLand(func_x(nc.x.values), func_y(nc.y.values)), inverse=True)  # latitude (degrees)
         else:
-            _, lat_deg = coordinatesLand(nc.lon.values, nc.lat.values)  # latitude (degrees)
+            _, lat_deg = coordinatesLand(func_x(nc.lon.values), func_y(nc.lat.values))  # latitude (degrees)
 
     return lat_deg
 
@@ -331,39 +408,85 @@ def read_lat_from_template(binding):
     return lat_deg
 
 
-def get_space_coords(nrow, ncol, dim_lat_y, dim_lon_x):
+def get_space_coords(template, dim_lat_y, dim_lon_x):
+    cutmap = CutMap.instance()
+    crop = cutmap.cuts
+    coordinates = {}
+    coordinates[dim_lat_y] = template.coords[dim_lat_y][crop[2]:crop[3]]
+    coordinates[dim_lon_x] = template.coords[dim_lon_x][crop[0]:crop[1]]
+    return coordinates
+
+
+def get_space_coords_pcraster(nrow, ncol, dim_lat_y, dim_lon_x):
     cell = pcraster.clone().cellSize()
     xl = pcraster.clone().west() + cell / 2
     xr = xl + ncol * cell
     yu = pcraster.clone().north() - cell / 2
     yd = yu - nrow * cell
-    #lats = np.arange(yu, yd, -cell)
-    #lons = np.arange(xl, xr, cell)
     coordinates = {}
     coordinates[dim_lat_y] = np.linspace(yu, yd, nrow, endpoint=False)
     coordinates[dim_lon_x] = np.linspace(xl, xr, ncol, endpoint=False)
-
     return coordinates
 
 
-def write_header(var_name, netfile, DtDay,
-                 value_standard_name, value_long_name, value_unit, data_format,
-                 startdate, repstepstart, repstepend, frequency):
+def write_netcdf_header(settings, 
+                        var_name,
+                        netfile,
+                        DtDay,
+                        value_standard_name,
+                        value_long_name,
+                        value_unit,
+                        start_date,
+                        rep_steps,
+                        frequency,
+                        ):
+    
+    """ Writes a netcdf header without the data inside
+    
+    Parameters
+    ----------
+    settings: LisSettings() object
+        Lisflood setting object (passed here to allow parallelism in the future if needed)
+    var_name: str
+        lisflood variable name
+    netfile: str
+        path to netcdf file
+    DtDay: float
+        time step in number of days?
+    value_standard_name: str
+        standard cf variable name
+    value_long_name: str
+        long cf variable name
+    value_unit: str
+        cf unit
+    start_date: datetime.datetime object
+        start date of dataset
+    rep_steps: 
+        list of reporting steps
+    frequency:
+        output frequency (all, monthly or yearly)
+    
+    Returns
+    -------
+    object
+        netcdf handle without the data
+    """
 
     nf1 = iterOpenNetcdf(netfile, "", 'w', format='NETCDF4')
 
-    settings = LisSettings.instance()
     binding = settings.binding
+    dtype = binding['OutputMapsDataType']
 
     # general Attributes
     nf1.settingsfile = os.path.realpath(settings.settings_path)
     nf1.date_created = xtime.ctime(xtime.time())
-    nf1.Source_Software = 'Lisflood Python'
-    nf1.institution = "European Commission DG Joint Research Centre (JRC) - E1, D2 Units"
-    nf1.creator_name = "Peter Burek, A de Roo, Johan van der Knijff"
+    nf1.Source_Software = 'Lisflood OS v' + __version__
+    nf1.institution = __institution__
+    nf1.creator_name = __authors__
     nf1.source = 'Lisflood output maps'
     nf1.keywords = "Lisflood, EFAS, GLOFAS"
     nf1.Conventions = 'CF-1.6'
+
     # Dimension
     not_valid_attrs = ('_FillValue', )
     meta_netcdf = NetCDFMetadata.instance()
@@ -380,16 +503,16 @@ def write_header(var_name, netfile, DtDay,
             setattr(proj, i, meta_netcdf.data['lambert_azimuthal_equal_area'][i])
 
     # Space coordinates
-
     cutmap = CutMap.instance()
     nrow = np.abs(cutmap.cuts[3] - cutmap.cuts[2])
     ncol = np.abs(cutmap.cuts[1] - cutmap.cuts[0])
 
-    dim_lat_y, dim_lon_x = get_core_dims(meta_netcdf.data)
-    latlon_coords = get_space_coords(nrow, ncol, dim_lat_y, dim_lon_x)
+    # since meta_netcdf is the in correct x and y reference system, variables will be correctly cut and written in the same order (x ascending and y descending)
+    dim_lat_y, dim_lon_x = get_core_dims(meta_netcdf.data)    
+    latlon_coords = get_space_coords(meta_netcdf, dim_lat_y, dim_lon_x)
 
     if dim_lon_x in meta_netcdf.data:
-        lon = nf1.createDimension(dim_lon_x, ncol)  # x 1000
+        nf1.createDimension(dim_lon_x, ncol)  # x 1000
         longitude = nf1.createVariable(dim_lon_x, 'f8', (dim_lon_x,))
         valid_attrs = [i for i in meta_netcdf.data[dim_lon_x] if i not in not_valid_attrs]
         for i in valid_attrs:
@@ -397,67 +520,60 @@ def write_header(var_name, netfile, DtDay,
     longitude[:] = latlon_coords[dim_lon_x]
 
     if dim_lat_y in meta_netcdf.data:
-        lat = nf1.createDimension(dim_lat_y, nrow)  # x 950
+        nf1.createDimension(dim_lat_y, nrow)  # x 950
         latitude = nf1.createVariable(dim_lat_y, 'f8', (dim_lat_y,))
         valid_attrs = [i for i in meta_netcdf.data[dim_lat_y] if i not in not_valid_attrs]
         for i in valid_attrs:
             setattr(latitude, i, meta_netcdf.data[dim_lat_y][i])
     latitude[:] = latlon_coords[dim_lat_y]
 
-
+    # time coordinates and associated values
     if frequency is not None:  # output file with "time" dimension
+        n_steps = len(rep_steps)
         #Get initial and final dates for data to be stored in nerCDF file
-        first_date, last_date = [startdate + datetime.timedelta(days=(int(k) - 1)*DtDay) for k in
-                                 (repstepstart, repstepend)]
         # CM: Create time stamps for each step stored in netCDF file
-        time_stamps = [first_date + datetime.timedelta(days=d*DtDay) for d in range(repstepend - repstepstart +1)]
-
-        units_time = 'days since %s' % startdate.strftime("%Y-%m-%d %H:%M:%S.0")
-        steps = (int(binding["DtSec"]) / 86400.) * np.arange(binding["StepStartInt"] - 1, binding["StepEndInt"])
-        if frequency != "all":
-            dates = num2date(steps-binding["StepStartInt"]+1, units_time, binding["calendar_type"])
-            next_date_times = np.array([j + datetime.timedelta(seconds=int(binding["DtSec"])) for j in dates])
-            if frequency == "monthly":
-                months_end = np.array([dates[j].month != next_date_times[j].month for j in range(repstepend - repstepstart +1)])
-                steps_monthly = steps[months_end]
-                time_stamps_monthly = dates[months_end==True]
-            elif frequency == "annual":
-                years_end = np.array([dates[j].year != next_date_times[j].year for j in range(steps.size)])
-                steps = steps[years_end]
+        all_dates = np.array([start_date + datetime.timedelta(days=(int(d)-1)*DtDay) for d in rep_steps])
+        all_steps = np.array(rep_steps)
         if frequency == "all":
-           nf1.createDimension('time', steps.size)
-           time = nf1.createVariable('time', float, ('time'))
-           time.standard_name = 'time'
-        if frequency == "monthly":
-           nf1.createDimension('time', steps_monthly.size)
-           time = nf1.createVariable('time', float, ('time'))
-           time.standard_name = 'time'           
-        # time.units ='days since 1990-01-01 00:00:00.0'
-        # time.units = 'hours since %s' % startdate.strftime("%Y-%m-%d %H:%M:%S.0")
+            steps = all_steps
+            time_stamps = all_dates
+        elif frequency == 'monthly':
+            # check next date (step+1) and see if we are still in the same month
+            next_date_times = np.array([j + datetime.timedelta(seconds=int(binding["DtSec"])) for j in all_dates])
+            months_end = np.array([all_dates[j].month != next_date_times[j].month for j in range(n_steps)])
+            steps = all_steps[months_end]
+            time_stamps= all_dates[months_end]
+        elif frequency == 'yearly':
+            # check next date (step+1) and see if we are still in the same month
+            next_date_times = np.array([j + datetime.timedelta(seconds=int(binding["DtSec"])) for j in all_dates])
+            years_end = np.array([all_dates[j].year != next_date_times[j].year for j in range(n_steps)])
+            steps = all_steps[years_end]
+            time_stamps= all_dates[years_end]
+        else:
+            raise ValueError(f'ERROR! Frequency {frequency} not supported! Value accepted: [all, monthly, yearly]')
+        
+        nf1.createDimension('time', steps.size)
+        time = nf1.createVariable('time', float, ('time'))
+        time.standard_name = 'time'
+        time.calendar = binding["calendar_type"]
         # CM: select the time unit according to model time step
         DtDay_in_sec = DtDay * 86400
         if DtDay_in_sec >= 86400:
             # Daily model time steps or larger
-            time.units = 'days since %s' % startdate.strftime("%Y-%m-%d %H:%M:%S.0")
+            time.units = 'days since %s' % start_date.strftime("%Y-%m-%d %H:%M:%S.0")
         elif DtDay_in_sec >= 3600 and DtDay_in_sec < 86400:
             # CM: hours to days model time steps
-            time.units = 'hours since %s' % startdate.strftime("%Y-%m-%d %H:%M:%S.0")
+            time.units = 'hours since %s' % start_date.strftime("%Y-%m-%d %H:%M:%S.0")
         elif DtDay_in_sec >= 60 and DtDay_in_sec <3600:
             # CM: minutes to hours model time step
-            time.units = 'minutes since %s' % startdate.strftime("%Y-%m-%d %H:%M:%S.0")
+            time.units = 'minutes since %s' % start_date.strftime("%Y-%m-%d %H:%M:%S.0")
+        nf1.variables["time"][:] = date2num(time_stamps, time.units, time.calendar)
 
-        time.calendar = binding["calendar_type"]
- 
-        if frequency == "all":
-           nf1.variables["time"][:] = date2num(time_stamps, time.units, time.calendar)
-        if frequency == "monthly":
-           nf1.variables["time"][:] = date2num(time_stamps_monthly, time.units, time.calendar)                  
-        # for i in metadataNCDF['time']: exec('%s="%s"') % ("time."+i, metadataNCDF['time'][i])
-        value = nf1.createVariable(var_name, 'd', ('time', dim_lat_y, dim_lon_x), zlib=True, fill_value=-9999, chunksizes=(1, nrow, ncol))
+        value = nf1.createVariable(var_name, dtype, ('time', dim_lat_y, dim_lon_x), zlib=True, fill_value=-9999, chunksizes=(1, nrow, ncol))
     else:
-        value = nf1.createVariable(var_name, 'd', (dim_lat_y, dim_lon_x), zlib=True, fill_value=-9999)
+        value = nf1.createVariable(var_name, dtype, (dim_lat_y, dim_lon_x), zlib=True, fill_value=-9999)
     
-
+    # value attributes
     value.standard_name = value_standard_name
     value.long_name = value_long_name
     value.units = value_unit
@@ -466,47 +582,3 @@ def write_header(var_name, netfile, DtDay,
             value.esri_pe_string = meta_netcdf.data[var]['esri_pe_string']
 
     return nf1
-
-
-def writenet(flag, inputmap, netfile, DtDay,
-             value_standard_name, value_long_name, value_unit, data_format,
-             startdate, repstepstart, repstepend, frequency=None):
-
-    """ Write a netcdf stack
-
-    :param flag: 0 netCDF file format; ?
-    :param inputmap: values to be written to NetCDF file
-    :param netfile: name of output file in NetCDF format
-    :param DtDay: model timestep (self.var.DtDay)
-    :param value_standard_name: variable name to be put into netCDF file
-    :param value_long_name: variable long name to be put into netCDF file
-    :param value_unit: variable unit to be put into netCDF file
-    :param data_format: data format
-    :param startdate: reference date to be used to get start date and end date for netCDF file from start step and end step
-    :param: repstepstart: first reporting step
-    :param: repstepend: final reporting step
-    :param frequency:[None,'all','monthly','annual'] save to netCDF stack; None save to netCDF single
-    :return: 
-    """
-    # prefix = netfile.split('/')[-1].split('\\')[-1].split('.')[0]
-    flags = LisSettings.instance().flags
-    var_name = os.path.basename(netfile)
-    netfile += ".nc"
-    if flag == 0:
-        nf1 = write_header(var_name, netfile, DtDay,
-                           value_standard_name, value_long_name, value_unit, data_format,
-                           startdate, repstepstart, repstepend, frequency)
-    else:
-        nf1 = iterOpenNetcdf(netfile, "", 'a', format='NETCDF4')
-    if flags['nancheck']:
-        nanCheckMap(inputmap, netfile, value_standard_name)
-    
-    map_np = uncompress_array(inputmap)
-    if frequency is not None:
-        nf1.variables[var_name][flag, :, :] = map_np
-        #value[flag,:,:]= mapnp
-    else:
-        # without timeflag
-        nf1.variables[var_name][:, :] = map_np
-
-    nf1.close()

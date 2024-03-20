@@ -108,6 +108,24 @@ class waterbalance(object):
             
             self.var.DischargeM3StructuresIni = np.take(np.bincount(self.var.Catchments, weights=DisStructure), self.var.Catchments)
 
+# --------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+
+    def storage_channel(self, option):
+        ChannelStoredM3 = self.var.ChanM3.copy()
+        if option['simulateLakes']:
+            ChannelStoredM3 += self.var.LakeStorageM3Balance
+        if option['simulateReservoirs']:
+            ChannelStoredM3 += self.var.ReservoirStorageM3
+        if option['simulatePolders']:
+            ChannelStoredM3 += self.var.PolderStorageM3
+        return ChannelStoredM3
+
+    def storage_hillslope(self):
+        ax_veg = self.var.SoilFraction.dims.index("vegetation")
+        Hill1 = self.var.LZ + np.sum(self.var.SoilFraction * (self.var.CumInterception + self.var.W1 + self.var.W2 + self.var.UZ), ax_veg)
+        HillslopeStoredMM = self.var.WaterDepth + self.var.SnowCover + Hill1 + self.var.DirectRunoffFraction * self.var.CumInterSealed
+        return HillslopeStoredMM * self.var.MMtoM3
 
 # --------------------------------------------------------------------------
 # -------------------------------------------------------------------------
@@ -118,6 +136,11 @@ class waterbalance(object):
         settings = LisSettings.instance()
         option = settings.options        
         maskinfo = MaskInfo.instance()
+
+        if (not(option['InitLisflood'])) and option['repTotalWaterStorageMaps']:
+            ChannelStoredM3 = self.storage_channel(option)
+            HillslopeStoredM3 = self.storage_hillslope()
+            self.var.TotalWaterStorageMM = (ChannelStoredM3 + HillslopeStoredM3) * self.var.M3toMM
         
         if (not(option['InitLisflood'])) and option['repMBTs']:
 
@@ -143,22 +166,12 @@ class waterbalance(object):
             # spatially variable
 
             # This is stored:
-            ChannelStoredM3 = self.var.ChanM3.copy()
-            if option['simulateLakes']:
-                ChannelStoredM3 += self.var.LakeStorageM3Balance
-            if option['simulateReservoirs']:
-                ChannelStoredM3 += self.var.ReservoirStorageM3
-            if option['simulatePolders']:
-                ChannelStoredM3 += self.var.PolderStorageM3
-
+            ChannelStoredM3 = self.storage_channel(option)
             # ChannelStoredM3=ChanM3 + ReservoirStorageM3 + LakeStorageM3 + PolderStorageM3;
             # Water stored in channel network [m3] (including reservoirs,
             # lakes, polders)
  
-            ax_veg=self.var.SoilFraction.dims.index("vegetation")            
-            Hill1 = self.var.LZ + np.sum(self.var.SoilFraction * (self.var.CumInterception + self.var.W1 + self.var.W2 + self.var.UZ),ax_veg)                                                 
-            HillslopeStoredM3 = (self.var.WaterDepth + self.var.SnowCover + Hill1 + self.var.DirectRunoffFraction * self.var.CumInterSealed) * self.var.MMtoM * self.var.PixelArea
-            
+            HillslopeStoredM3 = self.storage_hillslope()
             # Water stored at hillslope elements [m3]
             # Note that W1, W2 and TotalGroundWater are defined for the pixel's permeable fraction
             # only, which is why we need to multiply with PermeableFraction to get the volumes right (no soil moisture
@@ -184,8 +197,7 @@ class waterbalance(object):
                  if not option["cropsEPIC"]: # If EPIC is active, the rice fraction initialisation is handled by EPIC (setSoilFractions in EPIC_main.py)
                     self.var.SoilFraction.values[self.var.vegetation.index('Rainfed_prescribed')] += self.var.RiceFraction
 
-                 Hill1 = self.var.LZ + (self.var.SoilFraction * (self.var.CumInterception + self.var.W1 + self.var.W2 + self.var.UZ)).sum("vegetation").values
-                 HillslopeStoredM3 = (self.var.WaterDepth + self.var.SnowCover + Hill1 + self.var.DirectRunoffFraction * self.var.CumInterSealed) * self.var.MMtoM * self.var.PixelArea                
+                 HillslopeStoredM3 = self.storage_hillslope()
                  WaterStored_nextstep =np.take(np.bincount(self.var.Catchments,weights=ChannelStoredM3),self.var.Catchments)
                  WaterStored_nextstep += np.take(np.bincount(self.var.Catchments,weights=HillslopeStoredM3),self.var.Catchments)
 

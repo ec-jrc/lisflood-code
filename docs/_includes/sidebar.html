@@ -1,0 +1,26 @@
+{% if page.sidebar %}
+  <div class="sidebar sticky">
+    <nav class="nav__list">
+      <input id="ac-toc" name="accordion-toc" type="checkbox" />
+      <label for="ac-toc">Toggle menu</label>
+      <ul class="nav__items">
+        {% for s in page.sidebar %}
+        <li>
+           <span class="nav__sub-title">{{ s.section_title }}</span>
+           <ul>
+             {% assign pageUrl = page.url | replace: '/', '' %}
+             {% for i in s.items %}
+
+               {% if pageUrl == i.url %}
+               <li class="active">{{ i.title }}</li>
+               {% else %}
+               <li><a href="{{ i.url|relative_url }}">{{ i.title }}</a></li>
+               {% endif %}
+             {% endfor %}
+           </ul>
+        </li>
+        {% endfor %}
+      </ul>
+     </nav>
+  </div>
+{% endif %}

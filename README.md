@@ -26,7 +26,7 @@ You can use conda environment to easily install dependencies.
 ```bash
 conda create --name lisflood python=3.7 -c conda-forge
 conda activate lisflood
-conda install -c conda-forge pcraster
+conda install -c conda-forge pcraster gdal
 ```
 
 * Install lisflood-model pypi package
@@ -61,30 +61,12 @@ pip install -r requirements.txt
 If you don't use conda but a plain virtualenv, you need to install PCRaster and GDAL by your own and include its python interface in PYTHONPATH environment variable.
 For details, please follow instruction on [official docs](http://pcraster.geo.uu.nl).
 
-
-3. Compile the cython module kinematic_wave_parallel_tool
-
-To compile this Cython module to enable OpenMP multithreading (parallel kinematic wave):
-
-* Delete the files *.so (if any) in directory hydrological-modules  
-
-* Inside the hydrological_modules folder, execute "python compile_kinematic_wave_parallel_tools.py build_ext --inplace"  
-
-Important: the module has to be compiled on the machine where the model is run - the resulting binary is not portable.  
-
-Then in the settings file the option "numberParallelThreadsKinematicWave" may take the following values:
-    - "0"           : auto-detection of the machine/node's number of CPUs (all CPUs are used minus 1) (do not set it if other simulations are running on the same machine/node)
-    - "1"           : serial execution (not parallel)
-    - "2", "3", ... : manual setting of the number of parallel threads.
-                      (if exceeding the number of CPUs, the option is set to "0") -->  
-```xml
-<textvar name="numCPUs_parallelKinematicWave" value="3"/>
-```
-4. Run a cold run for the test catchment
+3. Run a cold run for the test catchment
 
 Now your environment should be set up to run lisflood. Try with a prepared settings file for one of the two test catchments:
 
 ```bash
+mkdir tests/data/LF_ETRS89_UseCase/out
 python src/lisf1.py tests/data/LF_ETRS89_UseCase/settings/cold.xml
 ```
 
