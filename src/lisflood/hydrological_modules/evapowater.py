@@ -133,15 +133,17 @@ class evapowater(HydroModule):
             UpstreamEva = self.var.EWRef * self.var.MMtoM3 * self.var.WaterFraction
             # evaporation for loop is amount of water per timestep [cu m]
             # Volume of potential evaporation from water surface  per time step (conversion to [m3])
+
             # cmcheck
-            ChanMIter = self.var.ChanM3Kin.copy()
+            # ChanMIter = self.var.ChanM3Kin.copy()
+            ChanMIter = self.var.ChanM3.copy()
             # for Iteration loop: First value is amount of water in the channel
-            # amount of water in bankful (first line of routing)
+
             ChanLeft = ChanMIter * 0.1
-            # 10% of the discharge must stay in the river
-            # cmcheck this is 10% of volume not discharge
+            # 10% of the volume must stay in the river
+
             self.var.EvaAddM3 = MaskInfo.instance().in_zero()
-            #   real water consumption is set to 0
+            # real water consumption is set to 0
 
             for NoEvaExe in range(self.var.maxNoEva):
                 ChanHelp = np.maximum(ChanMIter - UpstreamEva, ChanLeft)
