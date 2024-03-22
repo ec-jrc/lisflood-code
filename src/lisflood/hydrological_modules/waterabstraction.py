@@ -478,8 +478,13 @@ class waterabstraction(HydroModule):
             # 10.1 Withdrawal required from channels (CH)
             areatotal_withdrawal_CH_required_M3 = np.maximum(areatotal_withdrawal_SW_required - self.var.areatotal_withdrawal_LakRes_actual_M3, 0.)
             # 10.2 Max abstractable volumes from channels, accounting for e-flow constraint
+
+            # PixelAvailableWaterFromChannelsM3 = np.maximum(
+            #     self.var.ChanM3Kin - self.var.EFlowThreshold * self.var.DtSec, maskinfo.in_zero()) ### QUESTION! # * (1 - self.var.WUsePercRemain) THIS BIT IS COMMENTED FOR CONSISTENCY WITH EPIC, UNCOMMENT BEFORE THE FINAL MERGE
             PixelAvailableWaterFromChannelsM3 = np.maximum(
-                self.var.ChanM3Kin - self.var.EFlowThreshold * self.var.DtSec, maskinfo.in_zero()) ### QUESTION! # * (1 - self.var.WUsePercRemain) THIS BIT IS COMMENTED FOR CONSISTENCY WITH EPIC, UNCOMMENT BEFORE THE FINAL MERGE 
+                self.var.ChanM3 - self.var.EFlowThreshold * self.var.DtSec, maskinfo.in_zero()) ### QUESTION! # * (1 - self.var.WUsePercRemain) THIS BIT IS COMMENTED FOR CONSISTENCY WITH EPIC, UNCOMMENT BEFORE THE FINAL MERGE
+            # using total water storage in river channel
+
             self.var.AreaTotalAvailableWaterFromChannelsM3 = np.maximum(
                 np.take(np.bincount(self.var.WUseRegionC, weights=PixelAvailableWaterFromChannelsM3),
                         self.var.WUseRegionC),maskinfo.in_zero())
