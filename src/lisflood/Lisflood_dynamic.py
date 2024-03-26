@@ -191,7 +191,7 @@ class LisfloodModel_dyn(DynamicModel):
         # if option['simulatePolders']:
         # ChannelToPolderM3=ChannelToPolderM3Old;
 
-        # # cmcheck moved to routing.py
+        # # moved to routing.py
         # # Calculate total water storage in river channel
         # if option['InitLisflood'] or (not(option['SplitRouting'])):
         #     # kinematic routing
@@ -224,13 +224,13 @@ class LisfloodModel_dyn(DynamicModel):
 
         if option['InitLisflood'] or option['repAverageDis']:
             self.CumQ += self.ChanQ
-            #cmcheck we should use ChanQAvg here not ChanQ
+            #cmcheck - we should use ChanQAvg here not ChanQ
             self.avgdis = self.CumQ/self.TimeSinceStart
             # to calculate average discharge over the entire simulation
 
         self.DischargeM3Out += np.where(self.AtLastPointC ,self.ChanQ * self.DtSec,0)
         # Cumulative outflow out of map
-        # cmcheck we should use ChanQAvg here not ChanQ
+        # cmcheck - we should use ChanQAvg here not ChanQ
 
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         # Calculate water level

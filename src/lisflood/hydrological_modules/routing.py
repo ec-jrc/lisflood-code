@@ -109,19 +109,20 @@ class routing(HydroModule):
         # upstream of gauge locations
         # Calculate inverse, so we can multiply in dynamic (faster than divide)
 
-        self.var.IsChannelPcr = boolean(loadmap('Channels', pcr=True))  #pcr
+        self.var.IsChannelPcr = boolean(loadmap('Channels', pcr=True))  #pcr map
         self.var.IsChannel = np.bool8(compressArray(self.var.IsChannelPcr))     #bool
         self.var.IsChannelPcr = boolean(decompress(self.var.IsChannel)) #pcr
-
         # Identify grid cells containing a river channel
+
+        self.var.IsChannelKinematic = self.var.IsChannel.copy()     #bool
+        # Identify channel pixels using kinematic or split routing
+        # (identical to IsChannel, unless MCT wave is used, see below)
+
         self.var.IsStructureChan = np.bool8(maskinfo.in_zero())        #bool
         # Initialise map that identifies special inflow/outflow structures (reservoirs, lakes) within the
         # channel routing. Set to (dummy) value of zero modified in reservoir and lake
         # routines (if those are used)
 
-        self.var.IsChannelKinematic = self.var.IsChannel.copy()     #bool
-        # Identify kinematic wave channel pixels
-        # (identical to IsChannel, unless MCT wave is used, see below)
         self.var.IsStructureKinematic = np.bool8(maskinfo.in_zero())        #bool
         # Initialise map that identifies special inflow/outflow structures (reservoirs, lakes) within the
         # kinematic wave channel routing. Set to (dummy) value of zero modified in reservoir and lake
@@ -231,7 +232,7 @@ class routing(HydroModule):
         # Area (sq m) of bank full discharge cross section [m2]
         # (trapezoid area equation)
 
-        #cmcheck
+        #cmcheck - TotalCrossSectionAreaHalfBankFull is not 1/2 TotalCrossSectionAreaBankFull it's trapezoid
         # ChanUpperWidthHalfBankFull = self.var.ChanBottomWidth + 2 * self.var.ChanSdXdY * 0.5 * ChanDepthThreshold
         # TotalCrossSectionAreaHalfBankFull = 0.5 * \
         #     0.5 * ChanDepthThreshold * (ChanUpperWidthHalfBankFull + self.var.ChanBottomWidth)
@@ -394,7 +395,7 @@ class routing(HydroModule):
         # Cumulative inflow volume from inflow hydrographs [m3]
         self.var.sumDis = maskinfo.in_zero()
         self.var.sumIn = maskinfo.in_zero()
-        # cmcheck non so se sostituita da self.var.sumInWB
+        # cmcheck - non so se sostituita da self.var.sumInWB
         self.var.sumInWB = maskinfo.in_zero()
 
 
@@ -470,7 +471,6 @@ class routing(HydroModule):
                                            self.var.Beta, self.var.ChanLength, self.var.DtRouting,
                                           alpha_floodplains=self.var.ChannelAlpha2, flagnancheck=flags['nancheck'])
 
-        # cmcheck
         # ************************************************************
         # ***** WATER BALANCE                             ************
         # ************************************************************
@@ -488,15 +488,15 @@ class routing(HydroModule):
 
         if not option['InitLisflood'] and option['repMBTs']:
            self.var.StorageStepINIT = self.var.ChanM3
-           DisStructure = np.where(self.var.IsUpsOfStructureKinematicC, self.var.ChanQ * self.var.DtRouting, 0)
-           # cmchek to fix IsUpsOfStructureKinematicC for MCT
+           # DisStructure = np.where(self.var.IsUpsOfStructureKinematicC, self.var.ChanQ * self.var.DtRouting, 0)
+           DisStructure = np.where(self.var.IsUpsOfStructureChanC, self.var.ChanQ * self.var.DtRouting, 0)
            if not(option['SplitRouting']):
             # self.var.StorageStepINIT = self.var.ChanM3Kin
             # self.var.StorageStepINIT = self.var.ChanM3
             if option['simulateReservoirs']:
                self.var.StorageStepINIT += self.var.ReservoirStorageIniM3
-               DisStructure = np.where(self.var.IsUpsOfStructureKinematicC, self.var.ChanQ * self.var.DtRouting, 0)
-               # cmchek to fix IsUpsOfStructureKinematicC for MCT
+               # DisStructure = np.where(self.var.IsUpsOfStructureKinematicC, self.var.ChanQ * self.var.DtRouting, 0)
+               DisStructure = np.where(self.var.IsUpsOfStructureChanC, self.var.ChanQ * self.var.DtRouting, 0)
             if option['simulateLakes']:
                self.var.StorageStepINIT += self.var.LakeStorageIniM3
                DisStructure += np.where(compressArray(self.var.IsUpsOfStructureLake), 0.5 * self.var.ChanQ * self.var.DtRouting, 0)
@@ -815,9 +815,8 @@ class routing(HydroModule):
                        if option['simulateReservoirs']:
                          sum1 =self.var.ChanQ.copy()
                          StorageStep =  StorageStep + self.var.ReservoirStorageM3.copy()
-                         # cmcheck IsUpsOfStructureKinematicC
-                         DisStructureR = np.where(self.var.IsUpsOfStructureKinematicC, sum1 * self.var.DtRouting, 0)
-                         # cmchek to fix IsUpsOfStructureKinematicC for MCT
+                         # DisStructureR = np.where(self.var.IsUpsOfStructureKinematicC, sum1 * self.var.DtRouting, 0)
+                         DisStructureR = np.where(self.var.IsUpsOfStructureChanC, sum1 * self.var.DtRouting, 0)
                          DischargeM3StructuresR = np.take(np.bincount(self.var.Catchments, weights=DisStructureR), self.var.Catchments)
                          DischargeM3StructuresR -= self.var.DischargeM3StructuresIni
 
@@ -825,8 +824,8 @@ class routing(HydroModule):
                        if option['simulateLakes']:
                          sum1 =self.var.ChanQ.copy()
                          StorageStep =  StorageStep + self.var.LakeStorageM3Balance.copy()
-                         DisStructureR = np.where(self.var.IsUpsOfStructureKinematicC, sum1 * self.var.DtRouting, 0)
-                         # cmchek to fix IsUpsOfStructureKinematicC for MCT
+                         # DisStructureR = np.where(self.var.IsUpsOfStructureKinematicC, sum1 * self.var.DtRouting, 0)
+                         DisStructureR = np.where(self.var.IsUpsOfStructureChanC, sum1 * self.var.DtRouting, 0)
                          DischargeM3StructuresR = np.take(np.bincount(self.var.Catchments, weights=DisStructureR), self.var.Catchments)
                          maskinfo = MaskInfo.instance()
                          DisLake = maskinfo.in_zero()
@@ -864,16 +863,16 @@ class routing(HydroModule):
                          sum1=[]
                          sum1 =self.var.ChanQ.copy()
                          StorageStep =  StorageStep + self.var.ReservoirStorageM3.copy()
-                         DisStructureSR = np.where(self.var.IsUpsOfStructureKinematicC, sum1 * self.var.DtRouting, 0)
-                         # cmchek to fix IsUpsOfStructureKinematicC for MCT
+                         # DisStructureSR = np.where(self.var.IsUpsOfStructureKinematicC, sum1 * self.var.DtRouting, 0)
+                         DisStructureSR = np.where(self.var.IsUpsOfStructureChanC, sum1 * self.var.DtRouting, 0)
                          DischargeM3StructuresR = np.take(np.bincount(self.var.Catchments, weights=DisStructureSR), self.var.Catchments)
                          DischargeM3StructuresR -= self.var.DischargeM3StructuresIni
 
                       if option['simulateLakes']:
                          sum1 =self.var.ChanQ.copy()
                          StorageStep =  StorageStep + self.var.LakeStorageM3Balance.copy()
-                         DisStructureSR = np.where(self.var.IsUpsOfStructureKinematicC, sum1 * self.var.DtRouting, 0)
-                         # cmchek to fix IsUpsOfStructureKinematicC for MCT
+                         # DisStructureSR = np.where(self.var.IsUpsOfStructureKinematicC, sum1 * self.var.DtRouting, 0)
+                         DisStructureSR = np.where(self.var.IsUpsOfStructureChanC, sum1 * self.var.DtRouting, 0)
                          DischargeM3StructuresR = np.take(np.bincount(self.var.Catchments, weights=DisStructureSR), self.var.Catchments)
                          DisLake = maskinfo.in_zero()
                          np.put(DisLake, self.var.LakeIndex, 0.5 * self.var.LakeInflowCC * self.var.DtRouting)

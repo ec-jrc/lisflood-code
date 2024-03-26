@@ -60,8 +60,8 @@ class evapowater(HydroModule):
         maskinfo = MaskInfo.instance()
         if option['openwaterevapo']:
             LakeMask = loadmap('LakeMask', pcr=True)
-            # cmcheck
-            lmask = ifthenelse(LakeMask != 0, self.var.LddStructuresKinematic, 5)
+            # lmask = ifthenelse(LakeMask != 0, self.var.LddStructuresKinematic, 5)
+            lmask = ifthenelse(LakeMask != 0, self.var.LddStructuresChan, 5)
             LddEva = lddrepair(lmask)
             lddC = compressArray(LddEva)
             inAr = decompress(np.arange(maskinfo.info.mapC[0], dtype="int32"))
@@ -133,8 +133,6 @@ class evapowater(HydroModule):
             UpstreamEva = self.var.EWRef * self.var.MMtoM3 * self.var.WaterFraction
             # evaporation for loop is amount of water per timestep [cu m]
             # Volume of potential evaporation from water surface  per time step (conversion to [m3])
-
-            # cmcheck
             # ChanMIter = self.var.ChanM3Kin.copy()
             ChanMIter = self.var.ChanM3.copy()
             # for Iteration loop: First value is amount of water in the channel

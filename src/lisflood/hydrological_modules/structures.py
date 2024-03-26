@@ -43,33 +43,41 @@ class structures(object):
     def initial(self):
         """ initial part of the structures module
         """
-        self.var.LddStructuresKinematic = self.var.LddKinematic #pcr
+        self.var.LddStructuresKinematic = self.var.LddKinematic     #pcr map
         LddStructuresKinematicNp = compressArray(self.var.LddStructuresKinematic)
-        self.var.LddStructuresChan = self.var.LddChan   #pcr
+        # Unmodified version of LddKinematic is needed to connect inflow and outflow points
+        # of each structure (called LddStructuresKinematic now)
+
+        self.var.LddStructuresChan = self.var.LddChan   #pcr map
         LddStructuresChanNp = compressArray(self.var.LddStructuresChan)
+        # Unmodified version of LddChan is needed to connect inflow and outflow points
+        # of each structure (called LddStructuresChan now)
 
         settings = LisSettings.instance()
         option = settings.options
         if not option['InitLisflood']:
             # not done in Init Lisflood
-            IsUpsOfStructureKinematic = downstream(
+            IsUpsOfStructureKinematic = downstream(     #pcr map
                 self.var.LddKinematic,
                 cover(boolean(decompress(self.var.IsStructureKinematic)), boolean(0))
             )
-            IsUpsOfStructureChan = downstream(
+            # Downstream assigns to result the expression value of the neighbouring downstream cell
+            # Over is used to cover missing values on an expression with values taken from one or more different expression(s)
+            # Decompress is numpy2pcr
+            # Find location of pixels immediately upstream of a structure on the LddKinematic
+
+            IsUpsOfStructureChan = downstream(      #pcr map
                 self.var.LddChan,
                 cover(boolean(decompress(self.var.IsStructureChan)), boolean(0))
             )
+            # Find location of pixels immediately upstream of a structure on the LddChan
 
-            # Get all pixels just upstream of kinematic structure locations
-            self.var.IsUpsOfStructureKinematicC = compressArray(IsUpsOfStructureKinematic)  #np
-            # Unmodified version of LddKinematic is needed to connect inflow and outflow points
-            # of each structure (called LddStructuresKinematic now)
-            self.var.IsUpsOfStructureChanC = compressArray(IsUpsOfStructureChan)    #np
-            # Unmodified version of LddChan is needed to connect inflow and outflow points
-            # of each structure (called LddStructuresChan now)
+            self.var.IsUpsOfStructureKinematicC = compressArray(IsUpsOfStructureKinematic)  #np compressed array
+            # Location of pixels immediately upstream of a structure on the LddKinematic
+            self.var.IsUpsOfStructureChanC = compressArray(IsUpsOfStructureChan)    #np compressed array
+            # Location of pixels immediately upstream of a structure on the LddChan
 
-            self.var.LddKinematic = lddrepair(ifthenelse(IsUpsOfStructureKinematic, 5, self.var.LddKinematic))
-            # Cells just upstream of each structure are treated as pits in the kinematic wave channel routing
-            self.var.LddChan = lddrepair(ifthenelse(IsUpsOfStructureChan, 5, self.var.LddChan))
-            # Cells just upstream of each structure are treated as pits in the kinematic wave channel routing
+            self.var.LddKinematic = lddrepair(ifthenelse(IsUpsOfStructureKinematic, 5, self.var.LddKinematic))  #pcr map
+            # Update LddKinematic by adding a pit in the pixel immediately upstream of a structure
+            self.var.LddChan = lddrepair(ifthenelse(IsUpsOfStructureChan, 5, self.var.LddChan))     #pcr map
+            # Update LddChan by adding a pit in the pixel immediately upstream of a structure
