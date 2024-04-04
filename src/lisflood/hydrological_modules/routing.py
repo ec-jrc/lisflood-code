@@ -728,6 +728,8 @@ class routing(HydroModule):
 
             # KINEMATIC ROUTING AND MUSKINGUM-CUNGE-TODINI - no InitLisflood
             if not option['InitLisflood'] and (not(option['SplitRouting']) and (option['MCTRouting'])):
+                # To parallelise routing, pixels are grouped by orders. Pixels in the same order are independent and can be routed in parallel.
+                # Same order can have both Kin and MCT pixels
                 # Kinematic routing is solved first to generate input to MCT grid cells
                 # Kinematic routing is solved on all pixels (including MCT pixels) because we need input from upstream Kin pixels to MCT
                 # (this needs to be changed in future versions)
@@ -843,6 +845,7 @@ class routing(HydroModule):
             #'''
             if option['repMBTs']:
                  if (not(option['InitLisflood'])) and (option['SplitRouting']):
+                    # SplitRouting
                     # compute the mass balance at the last of the sub-routing steps in order to account for the contributions of lakes and reservoirs
                     if NoRoutingExecuted == (self.var.NoRoutSteps-1):
                       ChanQAvgSR = self.var.sumDisDay/self.var.NoRoutSteps  #self.var.ChanQ

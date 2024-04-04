@@ -57,6 +57,7 @@ class waterbalance(object):
             # not done in Init Lisflood
 
             ChannelInitM3 = self.var.ChanIniM3
+            # Initial total water volume in river channels [m3]
             if not(option['InitLisflood']):    # only with no InitLisflood
                 if option['simulateLakes']:
                     ChannelInitM3 += self.var.LakeStorageIniM3
