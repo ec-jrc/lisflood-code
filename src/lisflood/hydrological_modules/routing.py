@@ -517,8 +517,9 @@ class routing(HydroModule):
         option = settings.options
         binding = settings.binding
 
-        self.var.ChannelAlpha2 = None
-        # default value, if split-routing is not active and water is routed only in the riverbed channel
+        if not (option['SplitRouting']):
+            self.var.ChannelAlpha2 = None
+            # default value, if split-routing is not active and water is routed only in the riverbed channel
 
         # ************************************************************
         # ***** INITIALISATION FOR MCT ROUTING            ************
@@ -555,6 +556,7 @@ class routing(HydroModule):
             self.var.ChanGrad[MCT_slope_mask] = ChanGradMaxMCT
             # set max channel slope for MCT pixels
 
+            #cmcheck
             maskinfo = MaskInfo.instance()
             # Initialisation for MCT routing
             PrevQMCTin = loadmap('PrevQMCTinInitValue')     # instant input discharge for MCT
@@ -726,25 +728,44 @@ class routing(HydroModule):
                 # sum of total river outflow on model sub-step
 
 
-            # KINEMATIC ROUTING AND MUSKINGUM-CUNGE-TODINI - no InitLisflood
-            if not option['InitLisflood'] and (not(option['SplitRouting']) and (option['MCTRouting'])):
+            # KINEMATIC/SPLIT ROUTING AND MUSKINGUM-CUNGE-TODINI - no InitLisflood
+            # if not option['InitLisflood'] and (not(option['SplitRouting']) and (option['MCTRouting'])):
+            if not option['InitLisflood'] and option['MCTRouting']:
                 # To parallelise routing, pixels are grouped by orders. Pixels in the same order are independent and can be routed in parallel.
                 # Same order can have both Kin and MCT pixels
                 # Kinematic routing is solved first to generate input to MCT grid cells
                 # Kinematic routing is solved on all pixels (including MCT pixels) because we need input from upstream Kin pixels to MCT
                 # (this needs to be changed in future versions)
 
-                # Kinematic routing
+                if not (option['SplitRouting']):
+                    # Kinematic routing
 
-                ChanQKinOutStart = self.var.ChanQ.copy()
-                # Outflow (x+dx) Q at time t beginning of calculation step (instant)
+                    ChanQKinOutStart = self.var.ChanQ.copy()
+                    # Outflow (x+dx) Q at time t beginning of calculation step (instant)
 
-                # ChanM3KinStart = self.var.ChanM3.copy()
-                # Channel storage at time t (instant)
+                    # ChanM3KinStart = self.var.ChanM3.copy()
+                    # Channel storage at time t (instant)
 
-                ChanQKinOutEnd,ChanM3KinEnd = self.KINRouting(ChanQKinOutStart,SideflowChan)
-                # Outflow at time t+dt end of calculation step (instant)
-                # Channel storage at time t+dt end of calculation step (instant)
+                    ChanQKinOutEnd,ChanM3KinEnd = self.KINRouting(ChanQKinOutStart,SideflowChan)
+                    # Outflow at time t+dt end of calculation step (instant)
+                    # Channel storage at time t+dt end of calculation step (instant)
+
+                if (option['SplitRouting']):
+                    # Split routing
+
+                    self.SplitRouting(SideflowChan)
+
+                    # Combine the two lines of routing together
+
+                    # self.var.ChanQ = np.maximum(self.var.ChanQKin + self.var.Chan2QKin - self.var.QLimit, 0)
+                    ChanQKinOutEnd = np.maximum(self.var.ChanQKin + self.var.Chan2QKin - self.var.QLimit, 0)
+                    # (real) total outflow (at x + dx) at time t + dt (instant)
+                    # Main channel routing and above bankfull routing from second line of routing
+
+                    # self.var.ChanM3 = self.var.ChanM3Kin + self.var.Chan2M3Kin - self.var.Chan2M3Start
+                    ChanM3KinEnd = self.var.ChanM3Kin + self.var.Chan2M3Kin - self.var.Chan2M3Start
+                    # Total channel storage [m3] = Volume in main channel (ChanM3Kin) + volume above bankfull in second line (Chan2M3Kin - Chan2M3Start)
+                    # at t+dt (instant)
 
 
                 # MCT routing
