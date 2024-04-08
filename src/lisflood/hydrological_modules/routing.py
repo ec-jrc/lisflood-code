@@ -556,7 +556,6 @@ class routing(HydroModule):
             self.var.ChanGrad[MCT_slope_mask] = ChanGradMaxMCT
             # set max channel slope for MCT pixels
 
-            #cmcheck
             maskinfo = MaskInfo.instance()
             # Initialisation for MCT routing
             PrevQMCTin = loadmap('PrevQMCTinInitValue')     # instant input discharge for MCT
@@ -576,6 +575,12 @@ class routing(HydroModule):
 
             self.var.ChanQ = np.where(self.var.IsChannelKinematic, self.var.ChanQ, self.var.PrevQMCTout)
             # Initialise discharge for kinematic and MCT grid cells
+
+            # #cmcheck
+            # self.var.ChanM3 = np.where(self.var.IsChannelKinematic, self.var.ChanM3, self.var.PrevQMCTout)
+            # # Initialise storage volume for kinematic and MCT grid cells
+            # self.var.StorageStepINIT = self.var.ChanM3
+            # # Initial storage volume for kinematic and MCT grid cells
 
             # ************************************************************
             # ***** INITIALISE MUSKINGUM-CUNGE-TODINI WAVE ROUTER ********
@@ -780,7 +785,7 @@ class routing(HydroModule):
                 ChanM3Start = self.var.ChanM3.copy()
                 # Channel storage at time t V0
 
-                ChanQMCTInStart = self.var.PrevQMCTin.copy()
+                ChanQMCTInStart = self.var.PrevQMCTin.copy()   
                 # Inflow (x) at time t
                 # This is coming from upstream pixels
 
@@ -797,7 +802,7 @@ class routing(HydroModule):
 
                 # Storing MCT Courant and Reynolds numbers for state files
                 self.var.PrevCm0 = Cmend
-                self.var.prevDm0 = Dmend
+                self.var.PrevDm0 = Dmend
 
 
                 # combine results from Kinematic and MCT pixels at x+dx t+dt (instant)
@@ -1102,6 +1107,7 @@ class routing(HydroModule):
 
         # calc contribution from upstream pixels at time t+1 (dim=all pixels because we need to include both MCT and KIN pixels at the same time)
         ChanQMCTPcr=decompress(ChanQKinOut)    #pcr
+
         ChanQMCTUp1=compressArray(upstream(self.var.LddChan,ChanQMCTPcr))
         # Inflow at time t+1
         # I(t+dt)
@@ -1126,7 +1132,11 @@ class routing(HydroModule):
         # Pixels in the same order are independent and can be routed in parallel.
         # Orders must be processed in series, starting from order 0.
         # Outflow from MCT pixels can only go to a MCT pixel
+        # First order of mct pixels have inflow from kin pixels only
         ChanQOut = ChanQKinOut.copy()
+        # Initialise outflow (x+dx) at t+dt using outflow from kinematic pixels
+        # Then update outflow from mct pixels as different orders are calculated
+
         num_orders = self.mct_river_router.order_start_stop.shape[0]
         for order in range(num_orders):
             first = self.mct_river_router.order_start_stop[order, 0]
@@ -1144,12 +1154,16 @@ class routing(HydroModule):
 
             # Update contribution from upstream pixels at time t+1 (dim=all pixels) using the newly calculated q11
             # I want to update q01 (inflow at t+1) for cells downstream of idpix using the newly calculated q11
+            # It can be a mix of kinematic and mct pixels. I want to update the contribution from mct pixels
             Q11 = self.put_mct_pix(q11)
+            # explode mct pixels to all catchment pixels
 
-            # combine results in pixels of this order with results in pixels of upstream orders
+            # combine results in pixels from this order (mct pixels) with results in pixels from upstream orders (kin and mct)
+            # pixels that are not MCT get value zero in Q11 from put_mct_pix (see above)
             ChanQOut = np.where(Q11 == 0, ChanQOut, Q11)
 
             # for each pixel in the catchment, calc contribution from upstream pixels
+            # outflow (x+dx) at t+dt for both kin and mct upstream pixels is stored in ChanQOut
             QupPcr=decompress(ChanQOut)    #pcr
             Qup01=compressArray(upstream(self.var.LddChan,QupPcr))
 
@@ -1206,6 +1220,7 @@ class routing(HydroModule):
         # Calc O' first guess for the outflow at time t+dt
         # O'(t+dt)=O(t)+(I(t+dt)-I(t))
         q11 = q10 + (q01 - q00)
+
         # check for negative discharge values
         if q11 < 0:
             q11 = 0.
@@ -1272,6 +1287,13 @@ class routing(HydroModule):
 
             #### end of for loop
 
+
+        # cmcheck
+        calc_t = xpix / ck1
+        if calc_t < dt:
+            print('xpix/ck1 < dt')
+
+
         k1 = dt / Cm1
         x1 = (1. - Dm1) / 2.
 
@@ -1280,6 +1302,7 @@ class routing(HydroModule):
         # the storage as a weighted average of inflow and outflow.The rationale of this approach lies in the fact that the outflow
         # of the reach implicitly takes the  effect of the lateral inflow into account.
         V11 = (1-Dm1)*dt/(2*Cm1)*q01 + (1+Dm1)*dt/(2*Cm1)*q11
+        # V11 = k1 * (x1 * q01 + (1. - x1) * q11) # MUST be the same as above!
 
         if (V11 < 0):
             V11=0.
@@ -1481,6 +1504,7 @@ class routing(HydroModule):
         """Explode mct array.
         For any array (var) with MCT pixels only, it explodes the dimension to all catchment pixels and puts
         values from array var in the corresponting MCT pixels.
+        Pixels not belonging to MCT get value equal to zero.
         Uses self.var.IsChannelKinematic to define MCT pixels
         :return:
         y: same as input array (var) but only all pixels
