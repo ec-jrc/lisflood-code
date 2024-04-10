@@ -1148,9 +1148,16 @@ class routing(HydroModule):
                 ### calling MCT function for single cell
                 q11[idpix], V11[idpix], Cm0[idpix], Dm0[idpix] = self.MCTRouting_single(q10[idpix], q01[idpix], q00[idpix], ql[idpix], Cm0[idpix], Dm0[idpix],
                                                                                                          dt, xpix[idpix], s0[idpix], Balv[idpix], ANalv[idpix], Nalv[idpix])
-                # debug
-                # q11[idpix] = q01[idpix]
-                # Set outflow to be the same as inflow in MCT grid cells ('tanto entra tanto esce')
+
+                # # cmcheck - tanto entra tanto esce
+                # # debug
+                # q11[idpix] = q01[idpix] + ql[idpix]
+                # # Set outflow to be the same as inflow in MCT grid cells ('tanto entra tanto esce')
+                # V11[idpix] = ChanM3MCT0[idpix]
+                # # Set end volume to be the same as initial volume in MCT grid cells ('tanto entra tanto esce')
+
+
+
 
             # Update contribution from upstream pixels at time t+1 (dim=all pixels) using the newly calculated q11
             # I want to update q01 (inflow at t+1) for cells downstream of idpix using the newly calculated q11
@@ -1288,10 +1295,10 @@ class routing(HydroModule):
             #### end of for loop
 
 
-        # cmcheck
-        calc_t = xpix / ck1
-        if calc_t < dt:
-            print('xpix/ck1 < dt')
+        # # cmcheck
+        # calc_t = xpix / ck1
+        # if calc_t < dt:
+        #     print('xpix/ck1 < dt')
 
 
         k1 = dt / Cm1
@@ -1556,12 +1563,10 @@ class mctWave:
             self.pixels_ordered = self.pixels_ordered.sort_values(["order", "pixels"]).set_index("order").squeeze()
         except: # FOR COMPATIBILITY WITH OLDER PANDAS VERSIONS
             self.pixels_ordered = self.pixels_ordered.sort(["order", "pixels"]).set_index("order").squeeze()
-        # Output of pd.DataFrame.squeeze() is not a DataFrame and not a Series.
+        # Ensure output is always a Series, even if only one element
         if not isinstance(self.pixels_ordered, pd.Series):
-            # self.pixels_ordered = pd.DataFrame({'order': [0], 'pixel': self.pixels_ordered})
-            # self.pixels_ordered.set_index('order', inplace=True)
             self.pixels_ordered = pd.Series(self.pixels_ordered)
-            self.pixels_ordered.rename_axis("order")
+
         order_counts = self.pixels_ordered.groupby(self.pixels_ordered.index).count()
         stop = order_counts.cumsum()
         self.order_start_stop = np.column_stack((np.append(0, stop[:-1]), stop)).astype(int) # astype for cython import in windows (see above)

@@ -154,6 +154,10 @@ class kinematicWave:
             self.pixels_ordered = self.pixels_ordered.sort_values(["order", "pixels"]).set_index("order").squeeze()
         except: # FOR COMPATIBILITY WITH OLDER PANDAS VERSIONS
             self.pixels_ordered = self.pixels_ordered.sort(["order", "pixels"]).set_index("order").squeeze()
+        # Ensure output is always a Series, even if only one element
+        if not isinstance(self.pixels_ordered, pd.DataFrame):
+            self.pixels_ordered = pd.Series(self.pixels_ordered)
+
         order_counts = self.pixels_ordered.groupby(self.pixels_ordered.index).count()
         stop = order_counts.cumsum()
         self.order_start_stop = np.column_stack((np.append(0, stop[:-1]), stop)).astype(int) 
