@@ -204,6 +204,8 @@ class waterbalance(object):
                  WaterStored_nextstep += np.take(np.bincount(self.var.Catchments,weights=HillslopeStoredM3),self.var.Catchments)
 
             # Total water stored [m3]
+
+
             # This goes out:
             HillslopeOutM3 = (self.var.TaWB + self.var.TaInterceptionWB + self.var.ESActWB + self.var.GwLossWB) * self.var.MMtoM3
             # Water that goes out of the system at the hillslope level [m3]
@@ -213,6 +215,9 @@ class waterbalance(object):
             sum1 = self.var.ChanQAvg.copy()
             sum1[self.var.AtLastPointC == 0] = 0
             WaterOut = np.take(np.bincount(self.var.Catchments,weights=sum1 * self.var.DtSec),self.var.Catchments)
+            # Water that goes out of the system at the channels level [m3]
+            # (rivers flow)
+
             WaterOut += np.take(np.bincount(self.var.Catchments,weights=HillslopeOutM3),self.var.Catchments)
 
             #WaterOut = areatotal(cover(ifthen(
@@ -261,6 +266,8 @@ class waterbalance(object):
             # Discharge just upstream of structure locations (coded as pits) in [cu m / time step]
             # Needed for mass balance error calculations, because of double counting of structure
             # storage and water in the channel.
+
+
             # Mass balance:
             self.var.MBError = self.var.WaterInit + WaterIn - WaterStored - WaterOut - DischargeM3Structures
             # Totl mass balance error per catchment [cu m]. Mass balance error is computed for each computational time step.

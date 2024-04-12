@@ -557,14 +557,28 @@ class routing(HydroModule):
             # set max channel slope for MCT pixels
 
             maskinfo = MaskInfo.instance()
-            # Initialisation for MCT routing
-            PrevQMCTin = loadmap('PrevQMCTinInitValue')     # instant input discharge for MCT
-            self.var.PrevQMCTin = np.where(PrevQMCTin == -9999, maskinfo.in_zero(), PrevQMCTin)  # np
-            # MCT inflow (x) to MCT pixel at time t0
 
+            # cmcheck
+            # Initialisation for MCT routing
+            # PrevQMCTin = loadmap('PrevQMCTinInitValue')     # instant input discharge for MCT
+            # self.var.PrevQMCTin = np.where(PrevQMCTin == -9999, maskinfo.in_zero(), PrevQMCTin)  # np
+            # # MCT inflow (x) to MCT pixel at time t0
+            #
+            # PrevQMCTout = loadmap('PrevQMCToutInitValue')     # instant output discharge for MCT
+            # self.var.PrevQMCTout = np.where(PrevQMCTout == -9999, maskinfo.in_zero(), PrevQMCTout) #np
+            # # MCT outflow (x+dx) from MCT pixel at time t0
+
+            PrevQMCTin = loadmap('PrevQMCTinInitValue')     # instant input discharge for MCT
+            q00init = maskinfo.in_one() * 1e-06
+            self.var.PrevQMCTin = np.where(PrevQMCTin == -9999, q00init, PrevQMCTin)  # np
+            # MCT inflow (x) to MCT pixel at time t0 - sum of upstream inputs
+
+            q10init = maskinfo.in_one() * 1e-06
             PrevQMCTout = loadmap('PrevQMCToutInitValue')     # instant output discharge for MCT
-            self.var.PrevQMCTout = np.where(PrevQMCTout == -9999, maskinfo.in_zero(), PrevQMCTout) #np
+            self.var.PrevQMCTout = np.where(PrevQMCTout == -9999, q10init, PrevQMCTout) #np
             # MCT outflow (x+dx) from MCT pixel at time t0
+
+
 
             PrevCmMCT = loadmap('PrevCmMCTInitValue')
             self.var.PrevCm0 = np.where(PrevCmMCT == -9999, maskinfo.in_one(), PrevCmMCT) #np
@@ -576,11 +590,15 @@ class routing(HydroModule):
             self.var.ChanQ = np.where(self.var.IsChannelKinematic, self.var.ChanQ, self.var.PrevQMCTout)
             # Initialise discharge for kinematic and MCT grid cells
 
-            # #cmcheck
-            # self.var.ChanM3 = np.where(self.var.IsChannelKinematic, self.var.ChanM3, self.var.PrevQMCTout)
-            # # Initialise storage volume for kinematic and MCT grid cells
-            # self.var.StorageStepINIT = self.var.ChanM3
-            # # Initial storage volume for kinematic and MCT grid cells
+            #cmcheck
+            V00init = maskinfo.in_one() * 1e-06
+            self.var.ChanM3 = np.where(self.var.IsChannelKinematic, self.var.ChanM3, V00init)
+            # self.var.ChanM3 = np.where(self.var.IsChannelKinematic, self.var.ChanM3, maskinfo.in_zero())
+            # Initialise storage volume for kinematic and MCT grid cells
+            self.var.StorageStepINIT = self.var.ChanM3.copy()
+            # Initial storage volume for kinematic and MCT grid cells
+            self.var.ChanIniM3 = self.var.ChanM3.copy()
+            # Initial storage volume for kinematic and MCT grid cells
 
             # ************************************************************
             # ***** INITIALISE MUSKINGUM-CUNGE-TODINI WAVE ROUTER ********
@@ -671,6 +689,8 @@ class routing(HydroModule):
             SideflowChan = np.where(self.var.IsChannelKinematic, SideflowChanM3 * self.var.InvChanLength * self.var.InvDtRouting,0)
             # Sideflow contribution to kinematic and split routing grid cells expressed in [cu m /s / m channel length]
 
+            #cmcheck
+            # non c'e' bisogno di questo if?
             if option['MCTRouting']:
                 SideflowChanMCT = np.where(self.var.IsChannelMCT, SideflowChanM3 * self.var.InvDtRouting,0)     #Ql
                 # Sideflow contribution to MCT grid cells expressed in [m3/s]
@@ -1145,6 +1165,14 @@ class routing(HydroModule):
                 # get pixel ID
                 idpix = self.mct_river_router.pixels_ordered[index]
 
+                # cmcheck
+                eps = 1e-06
+                # check upstream inflow
+                # q01 cannot be zero
+                # This is a problem for head pixels
+                if q01[idpix] == 0:
+                    q01[idpix] = eps
+
                 ### calling MCT function for single cell
                 q11[idpix], V11[idpix], Cm0[idpix], Dm0[idpix] = self.MCTRouting_single(q10[idpix], q01[idpix], q00[idpix], ql[idpix], Cm0[idpix], Dm0[idpix],
                                                                                                          dt, xpix[idpix], s0[idpix], Balv[idpix], ANalv[idpix], Nalv[idpix])
@@ -1155,7 +1183,8 @@ class routing(HydroModule):
                 # # Set outflow to be the same as inflow in MCT grid cells ('tanto entra tanto esce')
                 # V11[idpix] = ChanM3MCT0[idpix]
                 # # Set end volume to be the same as initial volume in MCT grid cells ('tanto entra tanto esce')
-
+                # #cmcheck - aggiusto il bilancio
+                # V11[idpix] = ChanM3MCT0[idpix] + q01[idpix] + ql[idpix] - q11[idpix]
 
 
 
@@ -1241,14 +1270,14 @@ class routing(HydroModule):
 
             # reference I discharge at x=0
             qmx0 = (q00 + q01) / 2.
-            if qmx0 == 0:
-                qmx0 = eps
+            # if qmx0 == 0:
+            #     qmx0 = eps
             hmx0 = self.hoq(qmx0, s0, Balv, ANalv, Nalv)
 
             # reference O discharge at x=1
             qmx1 = (q10 + q11) / 2.
-            if qmx1 == 0:
-                qmx1 = eps
+            # if qmx1 == 0:
+            #     qmx1 = eps
             hmx1 = self.hoq(qmx1, s0,Balv,ANalv,Nalv)
 
             # Calc riverbed slope correction factor
@@ -1261,8 +1290,8 @@ class routing(HydroModule):
             # Q(t+dt)=(I(t+dt)+O'(t+dt))/2
             qm1 = (q01 + q11) / 2.
             #cm
-            if qm1 == 0:
-                qm1 = eps
+            # if qm1 == 0:
+            #     qm1 = eps
             #cm
             hm1 = self.hoq(qm1,s0,Balv,ANalv,Nalv)
             dummy, Ax1,Bx1,Px1,ck1 = self.qoh(hm1,s0,Balv,ANalv,Nalv)
@@ -1283,6 +1312,7 @@ class routing(HydroModule):
             c3 = (1 - Cm0 + Dm0) / den * (Cm1 / Cm0)
             c4 = (2 * Cm1) / den
 
+            # cmcheck
             # Calc outflow q11 at time t+1
             # Mass balance equation without lateral flow
             # q11 = c1 * q01 + c2 * q00 + c3 * q10
@@ -1290,7 +1320,7 @@ class routing(HydroModule):
             q11 = c1 * q01 + c2 * q00 + c3 * q10 + c4 * ql
 
             if q11 < 0.:
-                q11 = eps
+                q11 = 0
 
             #### end of for loop
 
