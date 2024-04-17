@@ -24,12 +24,17 @@ import datetime
 import gc
 
 from pcraster.framework import DynamicModel
+
 import numpy as np
 from lisflood.global_modules.errors import LisfloodWarning
 
 from lisflood.global_modules.zusatz import checkmap
 
 from .global_modules.settings import CDFFlags, LisSettings, MaskInfo
+
+from pcraster import upstream
+from lisflood.global_modules.add1 import decompress, compressArray
+
 
 class LisfloodModel_dyn(DynamicModel):
 
@@ -175,6 +180,7 @@ class LisfloodModel_dyn(DynamicModel):
         # ************************************************************
         maskinfo = MaskInfo.instance()
         self.sumDisDay = maskinfo.in_zero()
+
         # sums up discharge of the sub steps
         for NoRoutingExecuted in range(self.NoRoutSteps):
             self.routing_module.dynamic(NoRoutingExecuted)
@@ -207,11 +213,12 @@ class LisfloodModel_dyn(DynamicModel):
         self.TotalCrossSectionArea = self.ChanM3 * self.InvChanLength
         # Total river channel cross-section area at t+dt
 
-        # Calculate total river outflow at t+dt as average of routing sub-steps (average)
         self.sumDis += self.sumDisDay
+        # Accumulated average discharge over the entire simulation period
+
         self.ChanQAvg = self.sumDisDay/self.NoRoutSteps
-        # Average channel outflow on the model computation step (average of instantaneous outflows at the end of routing sub-steps)
-        # Same as ChanQ if using only one routing sub-step
+        # Average channel outflow over the model computation step
+        # NOT the same as ChanQ even when if using only one routing sub-step
 
 
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
