@@ -380,20 +380,19 @@ class routing(HydroModule):
             # Here it becomes Outflow (x+dx) Q at the beginning of the computation step (t) for full section (instant)
             # Used to calculated Inflow (x) from upstream pixels at the beginning of the computation step (t)
             self.var.ChanQ = np.where(PrevDischarge == -9999, self.var.ChanQKin, PrevDischarge) #np
-            # Initialise channel discharge: cold start: equal to ChanQKin [m3/s]
+            # Initialise instantaneous channel discharge: cold start: equal to ChanQKin [m3/s]
 
             # # cmcheck - deve diventare una variabile di stato
             # PrevAvgDischarge = loadmap('DischargeMaps')
-            # self.var.ChanQAvg = np.where(PrevAvgDischarge == -9999, maskinfo.in_zero(), PrevAvgDischarge) #np
+            # self.var.ChanQAvgDt = np.where(PrevAvgDischarge == -9999, maskinfo.in_zero(), PrevAvgDischarge) #np
             # cmcheck - per adesso
             self.var.ChanQAvgDt =  maskinfo.in_zero()
-
-            # Average channel outflow (x+dx) from channels during previous model computation step (dt)
+            # Initialise average channel outflow (x+dx) from channels during previous model computation step (dt)
 
             # cmcheck
             ChanQAvgDtPcr = decompress(self.var.ChanQAvgDt)  # pcr
             self.var.ChanQAvgInDt = compressArray(upstream(self.var.LddChan, ChanQAvgDtPcr))
-            # Average channel inflow (x) from channels for next model computation step (dt)
+            # Initialise average channel inflow (x) from channels for next model computation step (dt)
             # Using LddChan here because we need all pixels upstream, kin and mct
 
 
@@ -706,21 +705,23 @@ class routing(HydroModule):
                 # Outflow (x+dx) at time t beginning of calculation step (instant)
                 # This is used to calculate inflow from upstream cells
 
-                # ChanM3KinStart = self.var.ChanM3Kin.copy()
+                ChanM3KinStart = self.var.ChanM3Kin.copy()
                 # Channel storage at time t beginning of calculation step (instant)
 
                 ChanQKinOutEnd,ChanM3KinEnd = self.KINRouting(ChanQKinOutStart,SideflowChan)
                 # Outflow (x+dx) at time t+dt end of calculation step (instant)
                 # Channel storage at time t+dt end of calculation step (instant)
+                # This is in fact the same as the average outflow -> from some feature in kinematic routing function
 
                 # cmcheck
-                self.var.ChanQAvgDt = (self.var.ChanQAvgInDt * self.var.DtRouting + SideflowChanM3 - ChanM3KinEnd + self.var.ChanM3) * self.var.InvDtRouting
+                # Calculate average outflow using water balance for channel grid cell over sub-routing step
+                self.var.ChanQAvgDt = (self.var.ChanQAvgInDt * self.var.DtRouting + SideflowChanM3 - ChanM3KinEnd + ChanM3KinStart) * self.var.InvDtRouting
                 # if np.any(self.var.ChanQAvgDt < 0):
                 #     print("At least one value is less than 0.")
                 self.var.ChanQAvgDt[self.var.ChanQAvgDt < 0] = 0
                 # Average outflow (x+dx) QAvg during routing step (average)
-                # Qout_avg = Qin_avg -(Vend - Vini)
-
+                # Qout_avg = Qin_avg -(Vend - Vstart)/DtRouting
+                # Qin_avg = Qin_avg_channels + Qin_avg_sideflow
 
                 # updating variables for next routing step
                 self.var.ChanQKin = ChanQKinOutEnd.copy()
@@ -735,15 +736,16 @@ class routing(HydroModule):
                 # Channel storage V at the end of computation step t+dt for full section (instant)
                 # same as ChanM3KinEnd for Kinematic routing only
 
-                # Update average channel inflow (x) Qavg for next step
-                ChanQAvgInDt = decompress(self.var.ChanQAvgDt)  # pcr
-                self.var.ChanQAvgInDt = compressArray(upstream(self.var.LddChan, ChanQAvgInDt))
+                # Update average channel inflow (x) Qavg for next sub-routing step
+                ChanQAvgDtPcr = decompress(self.var.ChanQAvgDt)  # pcr
+                self.var.ChanQAvgInDt = compressArray(upstream(self.var.LddChan, ChanQAvgDtPcr))
 
                 # self.var.sumDisDay += self.var.ChanQ
                 # # sum of total river outflow on model sub-step
 
                 self.var.sumDisDay += self.var.ChanQAvgDt
-                # sum of average river outflow on model routing sub-step
+                # sum of average river outflow on routing sub-step
+                # used for calculating average discharge on model time step
 
 
             # SPLIT ROUTING - no InitLisfllod
@@ -775,29 +777,27 @@ class routing(HydroModule):
 
                 if not (option['SplitRouting']):
                     # Kinematic routing
+                    # This is calculated for every grid cell, including MCT grid cells
 
                     ChanQKinOutStart = self.var.ChanQ.copy()
                     # Outflow (x+dx) Q at time t beginning of calculation step (instant)
+                    # This is used to calculate inflow from upstream cells
 
                     ChanM3KinStart = self.var.ChanM3.copy()
-
-                    # ChanM3KinStart = self.var.ChanM3.copy()
-                    # Channel storage at time t (instant)
+                    # Channel storage at time t beginning of calculation step (instant)
 
                     ChanQKinOutEnd,ChanM3KinEnd = self.KINRouting(ChanQKinOutStart,SideflowChan)
                     # Outflow at time t+dt end of calculation step (instant)
                     # Channel storage at time t+dt end of calculation step (instant)
-
+                    # This is in fact the same as the average outflow -> from some feature in kinematic routing function
 
                     # cmcheck
-
-                    # cal average outflow discharge for channels during routing sub step dt
-
+                    # Calculate average outflow using water balance for channel grid cell
                     ChanQKinAvgDt = (self.var.ChanQAvgInDt * self.var.DtRouting + SideflowChanM3 - ChanM3KinEnd + ChanM3KinStart) * self.var.InvDtRouting
                     # if np.any(self.var.ChanQAvgDt < 0):
                     #     print("At least one value is less than 0.")
                     ChanQKinAvgDt[ChanQKinAvgDt < 0] = 0
-                    # Average outflow (x+dx) QAvg during routing step (average)
+                    # Average outflow (x+dx) QAvg during sub-routing step (average)
                     # Qout_avg = Qin_avg -(Vend - Vini)
 
 
@@ -822,7 +822,7 @@ class routing(HydroModule):
                 # MCT routing
 
                 ChanQMCTOutStart = self.var.ChanQ.copy()
-                # Outflow (x+dx) at time t  q10 (instant)
+                # Outflow (x+dx) at time t (instant)  q10
 
                 # debug
                 # ChanQKinOutEnd[ChanQKinOutEnd != 0] = 0
@@ -832,7 +832,7 @@ class routing(HydroModule):
                 # Channel storage at time t V00
 
                 ChanQMCTInStart = self.var.PrevQMCTin.copy()   
-                # Inflow (x) at time t instant (instant)
+                # Inflow (x) at time t instant (instant)  q00
                 # This is coming from upstream pixels
 
                 # calling MCT routing
@@ -842,10 +842,11 @@ class routing(HydroModule):
                 # Channel storage at time t+dt end of calculation step (instant)
 
 
-                # # update input (x) Q at t for next step (instant)
-                # ChanQMCTStartPcr = decompress(ChanQMCTOutStart)  # pcr
-                # self.var.PrevQMCTin = compressArray(upstream(self.var.LddChan, ChanQMCTStartPcr))
+                # # update input (x) Q at t for next step (instant)  q10 -> q00
+                # ChanQMCTOutStartPcr = decompress(ChanQMCTOutStart)  # pcr
+                # self.var.PrevQMCTin = compressArray(upstream(self.var.LddChan, ChanQMCTOutStartPcr))
                 # # using LddChan here because we need to input from upstream pixels to include kinematic pixels
+                # update input (x) Q at t for next step (instant)
 
 
                 # Storing MCT Courant and Reynolds numbers for state files
@@ -855,6 +856,7 @@ class routing(HydroModule):
                 # cmcheck
 
                 # calc average discharge outflow for MCT channels during routing sub step dt
+                # Calculate average outflow using water balance for MCT channel grid cell over sub-routing step
                 # ChanQMCTAvgDt = (self.var.ChanQAvgInDt * self.var.DtRouting + SideflowChanMCT * self.var.DtRouting - ChanM3MCTEnd + ChanM3MCTStart) * self.var.InvDtRouting
                 ChanQMCTAvgDt = np.where(self.var.IsChannelKinematic, 0., (
                             self.var.ChanQAvgInDt * self.var.DtRouting + SideflowChanMCT * self.var.DtRouting - ChanM3MCTEnd + ChanM3MCTStart) * self.var.InvDtRouting)
@@ -883,7 +885,6 @@ class routing(HydroModule):
                 ChanQMCTStartPcr = decompress(self.var.ChanQ)  # pcr
                 self.var.PrevQMCTin = compressArray(upstream(self.var.LddChan, ChanQMCTStartPcr))
                 # using LddChan here because we need to input from upstream pixels to include kinematic pixels
-
 
                 # Update average channel inflow (x) Qavg for next step
                 ChanQAvgInDtPcr = decompress(self.var.ChanQAvgDt)  # pcr

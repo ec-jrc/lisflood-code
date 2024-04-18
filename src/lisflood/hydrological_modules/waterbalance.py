@@ -213,6 +213,7 @@ class waterbalance(object):
 
             ##sum1 = self.var.sumDis.copy()
             sum1 = self.var.ChanQAvg.copy()
+            # averge outflow during model time step
             sum1[self.var.AtLastPointC == 0] = 0
             WaterOut = np.take(np.bincount(self.var.Catchments,weights=sum1 * self.var.DtSec),self.var.Catchments)
             # Water that goes out of the system at the channels level [m3]

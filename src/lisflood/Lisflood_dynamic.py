@@ -218,7 +218,6 @@ class LisfloodModel_dyn(DynamicModel):
 
         self.ChanQAvg = self.sumDisDay/self.NoRoutSteps
         # Average channel outflow over the model computation step
-        # NOT the same as ChanQ even when if using only one routing sub-step
 
 
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -230,12 +229,14 @@ class LisfloodModel_dyn(DynamicModel):
             # Set water level dynamic wave to dummy value (needed
 
         if option['InitLisflood'] or option['repAverageDis']:
-            self.CumQ += self.ChanQ
+            # self.CumQ += self.ChanQ
+            self.CumQ += self.ChanQAvg
             #cmcheck - we should use ChanQAvg here not ChanQ
             self.avgdis = self.CumQ/self.TimeSinceStart
             # to calculate average discharge over the entire simulation
 
-        self.DischargeM3Out += np.where(self.AtLastPointC ,self.ChanQ * self.DtSec,0)
+        #self.DischargeM3Out += np.where(self.AtLastPointC ,self.ChanQ * self.DtSec,0)
+        self.DischargeM3Out += np.where(self.AtLastPointC, self.ChanQAvg * self.DtSec, 0)
         # Cumulative outflow out of map
         # cmcheck - we should use ChanQAvg here not ChanQ
 

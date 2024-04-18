@@ -234,9 +234,7 @@ class LisfloodModel_ini(DynamicModel):
         
         # initialise averaged discharge
         maskinfo = MaskInfo.instance()
-
-        #cmcheck - now it's a state variable and it's initialised elsewhere
-        # self.ChanQAvg = maskinfo.in_zero()
+        self.ChanQAvg = maskinfo.in_zero()
 
         # initialise outputs once everything is set
         self.output_module.initial()
