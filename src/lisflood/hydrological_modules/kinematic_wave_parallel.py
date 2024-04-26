@@ -122,16 +122,21 @@ class kinematicWave:
         self.kinematic_wave_warning_printed=False
         self.flagnancheck=flagnancheck
         # Parameters for the solution of the discretised Kinematic wave continuity equation
+        self.alpha_channel = alpha_channel
         self.space_delta = space_delta
+        self.inv_time_delta = 1 / time_delta
         self.beta = beta
         self.inv_beta = 1 / beta
         self.b_minus_1 = beta - 1
         self.a_dx_div_dt_channel = alpha_channel * space_delta / time_delta
         self.b_a_dx_div_dt_channel = beta * self.a_dx_div_dt_channel
+        self.a_dx = alpha_channel * space_delta
         # If split-routing (floodplains)
         if alpha_floodplains is not None:
+            self.alpha_floodplains = alpha_floodplains
             self.a_dx_div_dt_floodplains = alpha_floodplains * space_delta / time_delta
             self.b_a_dx_div_dt_floodplains = beta * self.a_dx_div_dt_floodplains
+            self.a_dx_floodplains = alpha_floodplains * space_delta
         # Process flow direction matrix: downstream and upstream lookups, and routing orders
         flow_dir = decodeFlowMatrix(rebuildFlowMatrix(compressed_encoded_ldd, land_mask))
         self.downstream_lookup, self.upstream_lookup = streamLookups(flow_dir, land_mask)
@@ -163,7 +168,7 @@ class kinematicWave:
         self.order_start_stop = np.column_stack((np.append(0, stop[:-1]), stop)).astype(int) 
         self.pixels_ordered = self.pixels_ordered.values.astype(int) 
 
-    def kinematicWaveRouting(self, discharge, specific_lateral_inflow, section="main_channel"):
+    def kinematicWaveRouting(self, discharge_avg, discharge, specific_lateral_inflow, section="main_channel"):
         """Kinematic wave routing: wrapper around kinematic_wave_parallel_tools.kinematicWave"""
         # Lateral inflow (m3 s-1)
         lateral_inflow = nx.evaluate("q * dx", local_dict={"q": specific_lateral_inflow, "dx": self.space_delta})
@@ -171,18 +176,20 @@ class kinematicWave:
         if section == "main_channel":
             a_dx_div_dt = self.a_dx_div_dt_channel
             b_a_dx_div_dt = self.b_a_dx_div_dt_channel
+            a_dx = self.a_dx
         elif section == "floodplains":
             a_dx_div_dt = self.a_dx_div_dt_floodplains
             b_a_dx_div_dt = self.b_a_dx_div_dt_floodplains
+            a_dx = self.a_dx_floodplains
         else:
             raise Exception("The section parameter must be either 'main_channel' or 'floodplain'!")
         # Constant term in f(x) evaluation for Newton-Raphson method
         local_dict = {"a_dx_div_dt": a_dx_div_dt, "Qold": discharge, "b": self.beta, "lateral_inflow": lateral_inflow}
         constant = nx.evaluate("a_dx_div_dt * Qold ** b + lateral_inflow", local_dict=local_dict)
         # Solve the Kinematic wave equation
-        kwpt.kinematicRouting(discharge, lateral_inflow, constant, self.upstream_lookup,\
+        kwpt.kinematicRouting(discharge_avg, discharge, lateral_inflow, constant, self.upstream_lookup,\
                               self.num_upstream_pixels, self.pixels_ordered, self.order_start_stop,\
-                              self.beta, self.inv_beta, self.b_minus_1, a_dx_div_dt, b_a_dx_div_dt)
+                              self.inv_time_delta,self.beta, self.inv_beta, self.b_minus_1, a_dx_div_dt, b_a_dx_div_dt, a_dx)
         if self.flagnancheck:
             if self.kinematic_wave_warning_printed==False:
                 if np.all(np.isfinite(discharge))==False:

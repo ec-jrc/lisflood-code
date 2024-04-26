@@ -148,9 +148,13 @@ class surface_routing(HydroModule):
         SideflowOther = np.sum(self.var.SurfaceRunSoil.values[ilusevalues],self.var.SurfaceRunSoil.dims.index("landuse")) * self.var.MMtoM3 * self.var.InvPixelLength * self.var.InvDtSec
         SideflowForest = self.var.SurfaceRunSoil.values[self.var.epic_settings.soil_uses.index('Forest')] * self.var.MMtoM3 * self.var.InvPixelLength * self.var.InvDtSec
         # All surface runoff that is generated during current time step added as side flow [m3/s/m pixel-length]
-        self.direct_surface_router.kinematicWaveRouting(self.var.OFQDirect, SideflowDirect)
-        self.other_surface_router.kinematicWaveRouting(self.var.OFQOther, SideflowOther)
-        self.forest_surface_router.kinematicWaveRouting(self.var.OFQForest, SideflowForest)
+        # cmcheck
+        OFQDirect_avg = 0.
+        OFQOther_avg = 0.
+        OFQForest_avg = 0.
+        self.direct_surface_router.kinematicWaveRouting(OFQDirect_avg,self.var.OFQDirect, SideflowDirect)
+        self.other_surface_router.kinematicWaveRouting(OFQOther_avg, self.var.OFQOther, SideflowOther)
+        self.forest_surface_router.kinematicWaveRouting(OFQForest_avg, self.var.OFQForest, SideflowForest)
         
 # to PCRASTER
 
