@@ -386,7 +386,8 @@ class routing(HydroModule):
             # PrevAvgDischarge = loadmap('DischargeMaps')
             # self.var.ChanQAvgDt = np.where(PrevAvgDischarge == -9999, maskinfo.in_zero(), PrevAvgDischarge) #np
             # cmcheck - per adesso
-            self.var.ChanQAvgDt =  maskinfo.in_zero()
+            # self.var.ChanQAvgDt =  maskinfo.in_zero()
+            self.var.ChanQAvgDt = self.var.ChanQKin.copy()
             # Initialise average channel outflow (x+dx) from channels during previous model computation step (dt)
 
             # cmcheck
@@ -723,6 +724,18 @@ class routing(HydroModule):
                 # Qout_avg = Qin_avg -(Vend - Vstart)/DtRouting
                 # Qin_avg = Qin_avg_channels + Qin_avg_sideflow
 
+                # # checking water mass balance on the channel control volume
+                balance = np.abs((self.var.ChanQAvgInDt * self.var.DtRouting + SideflowChanM3 - ChanM3KinEnd + ChanM3KinStart) * self.var.InvDtRouting - ChanQKinOutEnd)
+                balance_avg = np.abs((self.var.ChanQAvgInDt * self.var.DtRouting + SideflowChanM3 - ChanM3KinEnd + ChanM3KinStart) * self.var.InvDtRouting - self.var.ChanQAvgDt)
+                # if balance > 1.e-9:
+                #     print('Balance')
+                #     print('QChan ', balance)
+                #     print('Qavg ', balance_avg)
+                # if balance_avg > 1.e-9:
+                #     print('Balance_avg')
+                #     print('QChan ', balance)
+                #     print('Qavg ', balance_avg)
+
                 # updating variables for next routing step
                 self.var.ChanQKin = ChanQKinOutEnd.copy()
                 # Outflow (x+dx) Q at time t+dt (end of calc step) (instant)
@@ -913,7 +926,7 @@ class routing(HydroModule):
                       # average (of instantaneous) outflow (x+dx) at t+dt end of routing step
                       sum1=ChanQAvgR.copy()
                       sum1[self.var.AtLastPointC == 0] = 0
-                      OutStep = np.take(np.bincount(self.var.Catchments,weights=sum1 * self.var.DtSec),self.var.Catchments)
+                      OutStepM3 = np.take(np.bincount(self.var.Catchments,weights=sum1 * self.var.DtSec),self.var.Catchments)
                       # average outflow volume (x+dx) volume at t+dt
 
                       maskinfo = MaskInfo.instance()
@@ -944,7 +957,13 @@ class routing(HydroModule):
                          DischargeM3StructuresR -= self.var.DischargeM3StructuresIni
 
                       # Total Mass Balance Error in m3 per catchment for Initial Run OR Kinematic routing (Split Routing OFF)
-                      MB =- np.sum(StorageStep)+np.sum(self.var.StorageStepINIT) - OutStep[0]  -DischargeM3StructuresR[0] +self.var.AddedTRUN
+                      MB =- np.sum(StorageStep)+np.sum(self.var.StorageStepINIT) - OutStepM3[0]  -DischargeM3StructuresR[0] +self.var.AddedTRUN
+                      #     final chan storage +  initial chan storage           - outflow      - lakes and res storage     + sideflow
+
+                      if MB > 1.e-9:
+                          print('Mass balance error', MB)
+
+
                       self.var.StorageStepINIT= np.sum(StorageStep) + DischargeM3StructuresR[0]
             #'''
 
