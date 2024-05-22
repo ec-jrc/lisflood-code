@@ -391,6 +391,7 @@ class routing(HydroModule):
             # Initialise average channel outflow (x+dx) from channels during previous model computation step (dt)
 
             # cmcheck
+            # THIS NEEDS TO BE MOVED TO INTERNAL LOOP
             ChanQAvgDtPcr = decompress(self.var.ChanQAvgDt)  # pcr
             self.var.ChanQAvgInDt = compressArray(upstream(self.var.LddChan, ChanQAvgDtPcr))
             # Initialise average channel inflow (x) from channels for next model computation step (dt)
@@ -716,6 +717,8 @@ class routing(HydroModule):
 
                 # cmcheck
                 # Calculate average outflow using water balance for channel grid cell over sub-routing step
+                # Integration on control volume
+                # THIS IS ONLY WORKING FOR HEAD GRID CELLS AND MUST BE MOVED TO INTERNAL LOOP
                 self.var.ChanQAvgDt = (self.var.ChanQAvgInDt * self.var.DtRouting + SideflowChanM3 - ChanM3KinEnd + ChanM3KinStart) * self.var.InvDtRouting
                 # if np.any(self.var.ChanQAvgDt < 0):
                 #     print("At least one value is less than 0.")
@@ -724,17 +727,27 @@ class routing(HydroModule):
                 # Qout_avg = Qin_avg -(Vend - Vstart)/DtRouting
                 # Qin_avg = Qin_avg_channels + Qin_avg_sideflow
 
+                # # cmcheck
                 # # checking water mass balance on the channel control volume
-                balance = np.abs((self.var.ChanQAvgInDt * self.var.DtRouting + SideflowChanM3 - ChanM3KinEnd + ChanM3KinStart) * self.var.InvDtRouting - ChanQKinOutEnd)
-                balance_avg = np.abs((self.var.ChanQAvgInDt * self.var.DtRouting + SideflowChanM3 - ChanM3KinEnd + ChanM3KinStart) * self.var.InvDtRouting - self.var.ChanQAvgDt)
-                # if balance > 1.e-9:
-                #     print('Balance')
-                #     print('QChan ', balance)
-                #     print('Qavg ', balance_avg)
-                # if balance_avg > 1.e-9:
-                #     print('Balance_avg')
-                #     print('QChan ', balance)
-                #     print('Qavg ', balance_avg)
+                # # THIS IS ONLY WORKING FOR HEAD GRID CELLS AND MUST BE MOVED TO INTERNAL LOOP
+                # balance = np.abs((self.var.ChanQAvgInDt * self.var.DtRouting + SideflowChanM3 - ChanM3KinEnd + ChanM3KinStart) * self.var.InvDtRouting - ChanQKinOutEnd)
+                # # YOU NEED TO REPLACE THIS self.var.ChanQAvgInDt WITH INSTANT INFLOW FROM UPSTREAM CELLS
+                # # IT WORKS FOR HEAD CELLS ONLY
+                #
+                # balance_avg = np.abs((self.var.ChanQAvgInDt * self.var.DtRouting + SideflowChanM3 - ChanM3KinEnd + ChanM3KinStart) * self.var.InvDtRouting - self.var.ChanQAvgDt)
+                # # IT WORKS FOR HEAD CELLS ONLY
+                #
+                # # if balance > 1.e-9:
+                # #     print('Balance')
+                # #     print('QChan ', balance)
+                # #     print('Qavg ', balance_avg)
+                # # if balance_avg > 1.e-9:
+                # #     print('Balance_avg')
+                # #     print('QChan ', balance)
+                # #     print('Qavg ', balance_avg)
+                # if abs(balance - balance_avg) > 1.e-12:
+                #     print(balance,balance_avg)
+
 
                 # updating variables for next routing step
                 self.var.ChanQKin = ChanQKinOutEnd.copy()
@@ -749,16 +762,20 @@ class routing(HydroModule):
                 # Channel storage V at the end of computation step t+dt for full section (instant)
                 # same as ChanM3KinEnd for Kinematic routing only
 
+                # cmcheck
+                # # IT WORKS FOR HEAD CELLS ONLY
                 # Update average channel inflow (x) Qavg for next sub-routing step
                 ChanQAvgDtPcr = decompress(self.var.ChanQAvgDt)  # pcr
                 self.var.ChanQAvgInDt = compressArray(upstream(self.var.LddChan, ChanQAvgDtPcr))
 
-                # self.var.sumDisDay += self.var.ChanQ
+                self.var.sumDisDay += self.var.ChanQ
                 # # sum of total river outflow on model sub-step
 
-                self.var.sumDisDay += self.var.ChanQAvgDt
-                # sum of average river outflow on routing sub-step
-                # used for calculating average discharge on model time step
+                # # cmcheck
+                # # # IT WORKS FOR HEAD CELLS ONLY
+                # self.var.sumDisDay += self.var.ChanQAvgDt
+                # # sum of average river outflow on routing sub-step
+                # # used for calculating average discharge on model time step
 
 
             # SPLIT ROUTING - no InitLisfllod
@@ -957,11 +974,10 @@ class routing(HydroModule):
                          DischargeM3StructuresR -= self.var.DischargeM3StructuresIni
 
                       # Total Mass Balance Error in m3 per catchment for Initial Run OR Kinematic routing (Split Routing OFF)
-                      MB =- np.sum(StorageStep)+np.sum(self.var.StorageStepINIT) - OutStepM3[0]  -DischargeM3StructuresR[0] +self.var.AddedTRUN
-                      #     final chan storage +  initial chan storage           - outflow      - lakes and res storage     + sideflow
+                      MB =-np.sum(StorageStep)+np.sum(self.var.StorageStepINIT) - OutStepM3[0]  -DischargeM3StructuresR[0] +self.var.AddedTRUN
 
                       if MB > 1.e-9:
-                          print('Mass balance error', MB)
+                          print('Mass balance error MB=', MB)
 
 
                       self.var.StorageStepINIT= np.sum(StorageStep) + DischargeM3StructuresR[0]
