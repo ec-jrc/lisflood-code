@@ -382,20 +382,25 @@ class routing(HydroModule):
             self.var.ChanQ = np.where(PrevDischarge == -9999, self.var.ChanQKin, PrevDischarge) #np
             # Initialise instantaneous channel discharge: cold start: equal to ChanQKin [m3/s]
 
-            # # cmcheck - deve diventare una variabile di stato
+            # # cmcheck - deve diventare una variabile di stato - NO NEED!!!
             # PrevAvgDischarge = loadmap('DischargeMaps')
             # self.var.ChanQAvgDt = np.where(PrevAvgDischarge == -9999, maskinfo.in_zero(), PrevAvgDischarge) #np
-            # cmcheck - per adesso
-            # self.var.ChanQAvgDt =  maskinfo.in_zero()
-            self.var.ChanQAvgDt = self.var.ChanQKin.copy()
+
+            # cmcheck
+            # initialising the variable
+            # should initialisation be moved somewhere else?
+            self.var.ChanQAvgDt =  maskinfo.in_zero()
+
+            #self.var.ChanQAvgDt = self.var.ChanQKin.copy()
             # Initialise average channel outflow (x+dx) from channels during previous model computation step (dt)
 
             # cmcheck
-            # THIS NEEDS TO BE MOVED TO INTERNAL LOOP
-            ChanQAvgDtPcr = decompress(self.var.ChanQAvgDt)  # pcr
-            self.var.ChanQAvgInDt = compressArray(upstream(self.var.LddChan, ChanQAvgDtPcr))
-            # Initialise average channel inflow (x) from channels for next model computation step (dt)
-            # Using LddChan here because we need all pixels upstream, kin and mct
+            # I do not need this.It would be necessary for pixels in order 0, but there is no upstream contribution for pixels in order 0.
+            # For pixels in order 1 and beyond, upstream contribution needs to be updated during the calculation step.
+            # ChanQAvgDtPcr = decompress(self.var.ChanQAvgDt)  # pcr
+            # self.var.ChanQAvgInDt = compressArray(upstream(self.var.LddChan, ChanQAvgDtPcr))
+            # # Initialise average channel inflow (x) from channels for next model computation step (dt)
+            # # Using LddChan here because we need all pixels upstream, kin and mct
 
 
 
@@ -724,7 +729,7 @@ class routing(HydroModule):
                 # Calculate average outflow using water balance for channel grid cell over sub-routing step
                 # Integration on control volume
                 # THIS IS ONLY WORKING FOR HEAD GRID CELLS AND MUST BE MOVED TO INTERNAL LOOP
-                self.var.ChanQAvgDt = (self.var.ChanQAvgInDt * self.var.DtRouting + SideflowChanM3 - ChanM3KinEnd + ChanM3KinStart) * self.var.InvDtRouting
+                self.var.ChanQAvgDt = ( SideflowChanM3 - ChanM3KinEnd + ChanM3KinStart) * self.var.InvDtRouting  # + self.var.ChanQAvgInDt
                 # if np.any(self.var.ChanQAvgDt < 0):
                 #     print("At least one value is less than 0.")
                 self.var.ChanQAvgDt[self.var.ChanQAvgDt < 0] = 0
@@ -735,11 +740,11 @@ class routing(HydroModule):
                 # # cmcheck
                 # # checking water mass balance on the channel control volume
                 # # THIS IS ONLY WORKING FOR HEAD GRID CELLS AND MUST BE MOVED TO INTERNAL LOOP
-                # balance = np.abs((self.var.ChanQAvgInDt * self.var.DtRouting + SideflowChanM3 - ChanM3KinEnd + ChanM3KinStart) * self.var.InvDtRouting - ChanQKinOutEnd)
+                # balance = np.abs((SideflowChanM3 - ChanM3KinEnd + ChanM3KinStart) * self.var.InvDtRouting - ChanQKinOutEnd)   # + self.var.ChanQAvgInDt
                 # # YOU NEED TO REPLACE THIS self.var.ChanQAvgInDt WITH INSTANT INFLOW FROM UPSTREAM CELLS
                 # # IT WORKS FOR HEAD CELLS ONLY
                 #
-                # balance_avg = np.abs((self.var.ChanQAvgInDt * self.var.DtRouting + SideflowChanM3 - ChanM3KinEnd + ChanM3KinStart) * self.var.InvDtRouting - self.var.ChanQAvgDt)
+                # balance_avg = np.abs((SideflowChanM3 - ChanM3KinEnd + ChanM3KinStart) * self.var.InvDtRouting - self.var.ChanQAvgDt)  # + self.var.ChanQAvgInDt
                 # # IT WORKS FOR HEAD CELLS ONLY
                 #
                 # # if balance > 1.e-9:
@@ -767,11 +772,11 @@ class routing(HydroModule):
                 # Channel storage V at the end of computation step t+dt for full section (instant)
                 # same as ChanM3KinEnd for Kinematic routing only
 
-                # cmcheck
-                # # IT WORKS FOR HEAD CELLS ONLY
-                # Update average channel inflow (x) Qavg for next sub-routing step
-                ChanQAvgDtPcr = decompress(self.var.ChanQAvgDt)  # pcr
-                self.var.ChanQAvgInDt = compressArray(upstream(self.var.LddChan, ChanQAvgDtPcr))
+                # # cmcheck
+                # # # IT WORKS FOR HEAD CELLS ONLY
+                # # Update average channel inflow (x) Qavg for next sub-routing step
+                # ChanQAvgDtPcr = decompress(self.var.ChanQAvgDt)  # pcr
+                # self.var.ChanQAvgInDt = compressArray(upstream(self.var.LddChan, ChanQAvgDtPcr))
 
                 self.var.sumDisDay += self.var.ChanQ
                 # # sum of total river outflow on model sub-step
@@ -830,7 +835,7 @@ class routing(HydroModule):
                     # Calculate average outflow using water balance for channel grid cell
                     # Integration on control volume
                     # THIS IS ONLY WORKING FOR HEAD GRID CELLS AND MUST BE MOVED TO INTERNAL LOOP
-                    ChanQKinOutAvgDt = (self.var.ChanQAvgInDt * self.var.DtRouting + SideflowChanM3 - ChanM3KinEnd + ChanM3KinStart) * self.var.InvDtRouting
+                    ChanQKinOutAvgDt = (SideflowChanM3 - ChanM3KinEnd + ChanM3KinStart) * self.var.InvDtRouting  # + self.var.ChanQAvgInDt
                     # if np.any(self.var.ChanQAvgDt < 0):
                     #     print("At least one value is less than 0.")
                     ChanQKinOutAvgDt[ChanQKinOutAvgDt < 0] = 0
