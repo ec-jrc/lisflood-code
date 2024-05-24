@@ -95,10 +95,11 @@ class surface_routing(HydroModule):
         self.var.OFQForest = ((self.var.OFM3Forest * self.var.InvPixelLength * self.var.InvOFAlpha.values[self.var.dim_runoff[1].index('Forest')])**(self.var.InvBeta)).astype(float)
 
         # cmcheck
+        # do I need to initialise from self.var.OFQDirect?
         # Initial average overland discharge [m3 s-1]
-        self.var.OFQDirect_avg = maskinfo.in_zero()
-        self.var.OFQOther_avg = maskinfo.in_zero()
-        self.var.OFQForest_avg = maskinfo.in_zero()
+        self.var.OFQDirectAvg = maskinfo.in_zero()
+        self.var.OFQOtherAvg = maskinfo.in_zero()
+        self.var.OFQForestAvg = maskinfo.in_zero()
 
     def initialSecond(self):
         """ 2nd initialisation part of the surface routing module:
@@ -155,9 +156,9 @@ class surface_routing(HydroModule):
         SideflowForest = self.var.SurfaceRunSoil.values[self.var.epic_settings.soil_uses.index('Forest')] * self.var.MMtoM3 * self.var.InvPixelLength * self.var.InvDtSec
         # All surface runoff that is generated during current time step added as side flow [m3/s/m pixel-length]
 
-        self.direct_surface_router.kinematicWaveRouting(self.var.OFQDirect_avg,self.var.OFQDirect, SideflowDirect)
-        self.other_surface_router.kinematicWaveRouting(self.var.OFQOther_avg, self.var.OFQOther, SideflowOther)
-        self.forest_surface_router.kinematicWaveRouting(self.var.OFQForest_avg, self.var.OFQForest, SideflowForest)
+        self.direct_surface_router.kinematicWaveRouting(self.var.OFQDirectAvg,self.var.OFQDirect, SideflowDirect)
+        self.other_surface_router.kinematicWaveRouting(self.var.OFQOtherAvg, self.var.OFQOther, SideflowOther)
+        self.forest_surface_router.kinematicWaveRouting(self.var.OFQForestAvg, self.var.OFQForest, SideflowForest)
         
 # to PCRASTER
 
@@ -198,14 +199,19 @@ class surface_routing(HydroModule):
         self.var.OFM3Direct = self.var.PixelLength * self.var.OFAlpha.values[self.var.dim_runoff[1].index('Direct')] * self.var.OFQDirect**self.var.Beta
         self.var.OFM3Other = self.var.PixelLength * self.var.OFAlpha.values[self.var.dim_runoff[1].index('Other')] * self.var.OFQOther**self.var.Beta
         self.var.OFM3Forest = self.var.PixelLength * self.var.OFAlpha.values[self.var.dim_runoff[1].index('Forest')] * self.var.OFQForest**self.var.Beta
+        # Overland flow storage for different components at the end of routing step [m3]
         
         self.var.Qall = self.var.OFQDirect + self.var.OFQOther + self.var.OFQForest
+        self.var.QallAvg = self.var.OFQDirectAvg + self.var.OFQOtherAvg + self.var.OFQForestAvg
         self.var.M3all = self.var.OFM3Direct + self.var.OFM3Other + self.var.OFM3Forest
-        # Overland flow storage [m3]
+        # Total overland flow storage [m3]
 
+        # cmcheck
+        # this should be calculated using the average flow
+        # self.var.OFToChanM3 = np.where(self.var.IsChannel, self.var.QallAvg * self.var.DtSec, 0)
         self.var.OFToChanM3 = np.where(self.var.IsChannel, self.var.Qall * self.var.DtSec, 0)
-
         # Overland flow in channel pixels (in [m3])is added to channel
+
 
         self.var.WaterDepth = self.var.M3all * self.var.M3toMM
         # Update water depth [mm]

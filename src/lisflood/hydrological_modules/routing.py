@@ -719,49 +719,28 @@ class routing(HydroModule):
 
                 # cmcheck
                 ChanQKinOutStart_avg = self.var.ChanQAvgDt.copy()
-                # Outflow (x+dx) at time t beginning of calculation step (instant)
+                # Average outflow (x+dx) at time t beginning of calculation step (average) - end of previous step
                 # This is used to calculate inflow from upstream cells
+
+                # Average channel inflow (x) at the beginning of calc step dt
+                ChanQKinOutStart_avgPcr = decompress(ChanQKinOutStart_avg)  # pcr
+                ChanQKinInStart_avg = compressArray(upstream(self.var.LddChan, ChanQKinOutStart_avgPcr))
 
                 ChanM3KinStart = self.var.ChanM3Kin.copy()
                 # Channel storage at time t beginning of calculation step (instant)
 
+
+
                 ChanQKinOutEnd_avg, ChanQKinOutEnd,ChanM3KinEnd = self.KINRouting(ChanQKinOutStart_avg,ChanQKinOutStart,SideflowChan)
+                # Average outflow (x+dx) during calculation step dt (average)
                 # Outflow (x+dx) at time t+dt end of calculation step (instant)
                 # Channel storage at time t+dt end of calculation step (instant)
-                # This is in fact the same as the average outflow -> from some feature in kinematic routing function
 
-                # cmcheck
-                # Calculate average outflow using water balance for channel grid cell over sub-routing step
-                # Integration on control volume
-                # THIS IS ONLY WORKING FOR HEAD GRID CELLS AND MUST BE MOVED TO INTERNAL LOOP
-                # self.var.ChanQAvgDt = ( SideflowChanM3 - ChanM3KinEnd + ChanM3KinStart) * self.var.InvDtRouting  # + self.var.ChanQAvgInDt
-                # if np.any(self.var.ChanQAvgDt < 0):
-                #     print("At least one value is less than 0.")
-                # self.var.ChanQAvgDt[self.var.ChanQAvgDt < 0] = 0
-                # Average outflow (x+dx) QAvg during routing step (average)
-                # Qout_avg = Qin_avg -(Vend - Vstart)/DtRouting
-                # Qin_avg = Qin_avg_channels + Qin_avg_sideflow
+                balance_avg = np.abs((SideflowChanM3 - ChanM3KinEnd + ChanM3KinStart) * self.var.InvDtRouting + ChanQKinInStart_avg - ChanQKinOutEnd_avg)
+                # mass balance for channel pixel
+                if balance_avg > 1.e-12:
+                    print('Error in kinematic routing channel mass balance: ', balance_avg)
 
-                # # cmcheck
-                # # checking water mass balance on the channel control volume
-                # # THIS IS ONLY WORKING FOR HEAD GRID CELLS AND MUST BE MOVED TO INTERNAL LOOP
-                # balance = np.abs((SideflowChanM3 - ChanM3KinEnd + ChanM3KinStart) * self.var.InvDtRouting - ChanQKinOutEnd)   # + self.var.ChanQAvgInDt
-                # # YOU NEED TO REPLACE THIS self.var.ChanQAvgInDt WITH INSTANT INFLOW FROM UPSTREAM CELLS
-                # # IT WORKS FOR HEAD CELLS ONLY
-                #
-                # balance_avg = np.abs((SideflowChanM3 - ChanM3KinEnd + ChanM3KinStart) * self.var.InvDtRouting - self.var.ChanQAvgDt)  # + self.var.ChanQAvgInDt
-                # # IT WORKS FOR HEAD CELLS ONLY
-                #
-                # # if balance > 1.e-9:
-                # #     print('Balance')
-                # #     print('QChan ', balance)
-                # #     print('Qavg ', balance_avg)
-                # # if balance_avg > 1.e-9:
-                # #     print('Balance_avg')
-                # #     print('QChan ', balance)
-                # #     print('Qavg ', balance_avg)
-                # if abs(balance - balance_avg) > 1.e-12:
-                #     print(balance,balance_avg)
 
 
                 # updating variables for next routing step
@@ -828,24 +807,25 @@ class routing(HydroModule):
                     # Outflow (x+dx) Q at time t beginning of calculation step (instant)
                     # This is used to calculate inflow from upstream cells
 
+                    # cmcheck
+                    ChanQKinOutStart_avg = self.var.ChanQAvgDt.copy()
+                    # Average outflow (x+dx) at time t beginning of calculation step (average) - end of previous step
+                    # This is used to calculate inflow from upstream cells
+
+                    ChanQKinOutStart_avgPcr = decompress(ChanQKinOutStart_avg)  # pcr
+                    ChanQKinInStart_avg = compressArray(upstream(self.var.LddChan, ChanQKinOutStart_avgPcr))
+                    # Average channel inflow (x) at the beginning of calc step dt
+
                     ChanM3KinStart = self.var.ChanM3.copy()
                     # Channel storage at time t beginning of calculation step (instant)
 
-                    ChanQKinOutEnd,ChanM3KinEnd = self.KINRouting(ChanQKinOutStart,SideflowChan)
-                    # Outflow at time t+dt end of calculation step (instant)
+                    ### calling kinematic routing
+                    ChanQKinOutAvgDt, ChanQKinOutEnd, ChanM3KinEnd = self.KINRouting(ChanQKinOutStart_avg,ChanQKinOutStart,SideflowChan)
+                    # Average outflow (x+dx) during calculation step dt (average)
+                    # Outflow (x+dx) at time t+dt end of calculation step (instant)
                     # Channel storage at time t+dt end of calculation step (instant)
-                    # This is in fact the same as the average outflow -> from some feature in kinematic routing function
 
-                    # cmcheck
-                    # Calculate average outflow using water balance for channel grid cell
-                    # Integration on control volume
-                    # THIS IS ONLY WORKING FOR HEAD GRID CELLS AND MUST BE MOVED TO INTERNAL LOOP
-                    ChanQKinOutAvgDt = (SideflowChanM3 - ChanM3KinEnd + ChanM3KinStart) * self.var.InvDtRouting  # + self.var.ChanQAvgInDt
-                    # if np.any(self.var.ChanQAvgDt < 0):
-                    #     print("At least one value is less than 0.")
-                    ChanQKinOutAvgDt[ChanQKinOutAvgDt < 0] = 0
-                    # Average outflow (x+dx) QAvg during sub-routing step (average)
-                    # Qout_avg = Qin_avg -(Vend - Vini)
+
 
 
                 if (option['SplitRouting']):
@@ -883,7 +863,7 @@ class routing(HydroModule):
                 # This is coming from upstream pixels
 
 
-                # calling MCT routing
+                #### calling MCT routing
                 # using ChanQKinOutEnd from Kinematic routing to have inflow from upstream kinematic pixels
                 # using ChanQKinOutAvgDt from kinematic routing to have average outflow from upstream kinematic pixels
                 # MCT pixels in order 0 can have inflow from kinematic pixels upstream
