@@ -717,10 +717,15 @@ class routing(HydroModule):
                 # Outflow (x+dx) at time t beginning of calculation step (instant)
                 # This is used to calculate inflow from upstream cells
 
+                # cmcheck
+                ChanQKinOutStart_avg = self.var.ChanQAvgDt.copy()
+                # Outflow (x+dx) at time t beginning of calculation step (instant)
+                # This is used to calculate inflow from upstream cells
+
                 ChanM3KinStart = self.var.ChanM3Kin.copy()
                 # Channel storage at time t beginning of calculation step (instant)
 
-                ChanQKinOutEnd,ChanM3KinEnd = self.KINRouting(ChanQKinOutStart,SideflowChan)
+                ChanQKinOutEnd_avg, ChanQKinOutEnd,ChanM3KinEnd = self.KINRouting(ChanQKinOutStart_avg,ChanQKinOutStart,SideflowChan)
                 # Outflow (x+dx) at time t+dt end of calculation step (instant)
                 # Channel storage at time t+dt end of calculation step (instant)
                 # This is in fact the same as the average outflow -> from some feature in kinematic routing function
@@ -729,10 +734,10 @@ class routing(HydroModule):
                 # Calculate average outflow using water balance for channel grid cell over sub-routing step
                 # Integration on control volume
                 # THIS IS ONLY WORKING FOR HEAD GRID CELLS AND MUST BE MOVED TO INTERNAL LOOP
-                self.var.ChanQAvgDt = ( SideflowChanM3 - ChanM3KinEnd + ChanM3KinStart) * self.var.InvDtRouting  # + self.var.ChanQAvgInDt
+                # self.var.ChanQAvgDt = ( SideflowChanM3 - ChanM3KinEnd + ChanM3KinStart) * self.var.InvDtRouting  # + self.var.ChanQAvgInDt
                 # if np.any(self.var.ChanQAvgDt < 0):
                 #     print("At least one value is less than 0.")
-                self.var.ChanQAvgDt[self.var.ChanQAvgDt < 0] = 0
+                # self.var.ChanQAvgDt[self.var.ChanQAvgDt < 0] = 0
                 # Average outflow (x+dx) QAvg during routing step (average)
                 # Qout_avg = Qin_avg -(Vend - Vstart)/DtRouting
                 # Qin_avg = Qin_avg_channels + Qin_avg_sideflow
@@ -772,20 +777,20 @@ class routing(HydroModule):
                 # Channel storage V at the end of computation step t+dt for full section (instant)
                 # same as ChanM3KinEnd for Kinematic routing only
 
-                # # cmcheck
-                # # # IT WORKS FOR HEAD CELLS ONLY
-                # # Update average channel inflow (x) Qavg for next sub-routing step
+                self.var.ChanQAvgDt = ChanQKinOutEnd_avg.copy()
+                # Average Outflow (x+dx) Q during computation step dt for full section (instant)
+                # same as ChanQKinOutEnd=self.var.ChanQKin for Kinematic routing only
+
+                # # Average channel inflow (x) Qavg for next sub-routing step
                 # ChanQAvgDtPcr = decompress(self.var.ChanQAvgDt)  # pcr
                 # self.var.ChanQAvgInDt = compressArray(upstream(self.var.LddChan, ChanQAvgDtPcr))
 
-                self.var.sumDisDay += self.var.ChanQ
+                # self.var.sumDisDay += self.var.ChanQ
                 # # sum of total river outflow on model sub-step
 
-                # # cmcheck
-                # # # IT WORKS FOR HEAD CELLS ONLY
-                # self.var.sumDisDay += self.var.ChanQAvgDt
-                # # sum of average river outflow on routing sub-step
-                # # used for calculating average discharge on model time step
+                self.var.sumDisDay += self.var.ChanQAvgDt
+                # sum of average river outflow on routing sub-step
+                # used for calculating average discharge on model time step
 
 
             # SPLIT ROUTING - no InitLisfllod
@@ -1042,7 +1047,7 @@ class routing(HydroModule):
             # maximum set to 30km/day for 5km cell, is at DtSec/Traveltime=6, is at Traveltime<DtSec/6
 
 
-    def KINRouting(self,ChanQKin,SideflowChan):
+    def KINRouting(self,ChanQKin_avg,ChanQKin,SideflowChan):
         """Based on a 4-point implicit finite-difference numerical solution of the kinematic wave equations.
         Given the instantaneous flow rate (discharge), the corresponding amount of water stored in the channel
         is calculated using Manning equation for steady state flow where Alpha is currently fixed
@@ -1073,7 +1078,7 @@ class routing(HydroModule):
 
         ####################################################################################################
         #self.river_router.kinematicWaveRouting(self.var.ChanQKin, SideflowChan, "main_channel")
-        self.river_router.kinematicWaveRouting(ChanQKin, SideflowChan, "main_channel")
+        self.river_router.kinematicWaveRouting(ChanQKin_avg,ChanQKin, SideflowChan, "main_channel")
         # ChanQKin is outflow (at x+dx) at time t in input and at time t+dt in output (instant)
         ####################################################################################################
 
@@ -1091,7 +1096,7 @@ class routing(HydroModule):
         # Correct for negative discharge at the end of computation step (instant)
         # Outflow (x+dx) at time t+dt
 
-        return ChanQKin, ChanM3Kin
+        return ChanQKin_avg, ChanQKin, ChanM3Kin
 
 
     def SplitRouting(self, SideflowChan):

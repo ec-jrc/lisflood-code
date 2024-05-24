@@ -94,6 +94,12 @@ class surface_routing(HydroModule):
         self.var.OFQOther = ((self.var.OFM3Other * self.var.InvPixelLength * self.var.InvOFAlpha.values[self.var.dim_runoff[1].index('Other')])**(self.var.InvBeta)).astype(float)
         self.var.OFQForest = ((self.var.OFM3Forest * self.var.InvPixelLength * self.var.InvOFAlpha.values[self.var.dim_runoff[1].index('Forest')])**(self.var.InvBeta)).astype(float)
 
+        # cmcheck
+        # Initial average overland discharge [m3 s-1]
+        self.var.OFQDirect_avg = maskinfo.in_zero()
+        self.var.OFQOther_avg = maskinfo.in_zero()
+        self.var.OFQForest_avg = maskinfo.in_zero()
+
     def initialSecond(self):
         """ 2nd initialisation part of the surface routing module:
             to be called after all needed parameters are set (PixelLength, LddToChan, Alpha...)
@@ -148,9 +154,10 @@ class surface_routing(HydroModule):
         SideflowOther = np.sum(self.var.SurfaceRunSoil.values[ilusevalues],self.var.SurfaceRunSoil.dims.index("landuse")) * self.var.MMtoM3 * self.var.InvPixelLength * self.var.InvDtSec
         SideflowForest = self.var.SurfaceRunSoil.values[self.var.epic_settings.soil_uses.index('Forest')] * self.var.MMtoM3 * self.var.InvPixelLength * self.var.InvDtSec
         # All surface runoff that is generated during current time step added as side flow [m3/s/m pixel-length]
-        self.direct_surface_router.kinematicWaveRouting(self.var.OFQDirect, SideflowDirect)
-        self.other_surface_router.kinematicWaveRouting(self.var.OFQOther, SideflowOther)
-        self.forest_surface_router.kinematicWaveRouting(self.var.OFQForest, SideflowForest)
+
+        self.direct_surface_router.kinematicWaveRouting(self.var.OFQDirect_avg,self.var.OFQDirect, SideflowDirect)
+        self.other_surface_router.kinematicWaveRouting(self.var.OFQOther_avg, self.var.OFQOther, SideflowOther)
+        self.forest_surface_router.kinematicWaveRouting(self.var.OFQForest_avg, self.var.OFQForest, SideflowForest)
         
 # to PCRASTER
 

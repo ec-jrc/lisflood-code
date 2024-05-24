@@ -32,9 +32,9 @@ MIN_DISCHARGE = 1e-30 # Minimum allowed discharge value to avoid numerical insta
 # ROUTING FUNCTIONS
 # -------------------------------------------------------------------------------------------------
 @njit(parallel=True, fastmath=False, cache=True)
-def kinematicRouting(discharge, lateral_inflow, constant, upstream_lookup,\
-                     num_upstream_pixels, ordered_pixels, start_stop, beta, inv_beta,\
-                     b_minus_1, a_dx_div_dt, b_a_dx_div_dt):
+def kinematicRouting(discharge_avg, discharge, lateral_inflow, constant, upstream_lookup,\
+                     num_upstream_pixels, ordered_pixels, start_stop, inv_time_delta, beta, inv_beta,\
+                     b_minus_1, a_dx_div_dt, b_a_dx_div_dt, a_dx):
     """
     This function performs the kinematic wave routing algorithm to simulate the movement of water through a network of interconnected channels.
     :param discharge:
@@ -49,6 +49,7 @@ def kinematicRouting(discharge, lateral_inflow, constant, upstream_lookup,\
     :param b_minus_1:
     :param a_dx_div_dt:
     :param b_a_dx_div_dt:
+    :param a_dx: ChannelAlpha * ChanLength
     :return:
     """
     num_orders = start_stop.shape[0]
@@ -59,34 +60,44 @@ def kinematicRouting(discharge, lateral_inflow, constant, upstream_lookup,\
         # Iterate through each pixel in the current order in parallel
         for index in prange(first, last):
             # Solve the kinematic wave for the current pixel
-            solve1Pixel(ordered_pixels[index], discharge, lateral_inflow, constant, upstream_lookup,\
-                        num_upstream_pixels, a_dx_div_dt, b_a_dx_div_dt, beta, inv_beta, b_minus_1)
+            solve1Pixel(ordered_pixels[index], discharge_avg, discharge, lateral_inflow, constant, upstream_lookup,\
+                        num_upstream_pixels, a_dx_div_dt, b_a_dx_div_dt, inv_time_delta, beta, inv_beta, b_minus_1, a_dx)
 
 @njit(nogil=True, fastmath=False, cache=True)
-def solve1Pixel(pix, discharge, lateral_inflow, constant,\
+def solve1Pixel(pix, discharge_avg, discharge, lateral_inflow, constant,\
                       upstream_lookup, num_upstream_pixels, a_dx_div_dt,\
-                      b_a_dx_div_dt, beta, inv_beta, b_minus_1):
+                      b_a_dx_div_dt, inv_time_delta, beta, inv_beta, b_minus_1, a_dx):
     """
     Te Chow et al. 1988 - Applied Hydrology - Chapter 9.6
     :param pix:
-    :param discharge:
+    :param discharge_avg: average outflow discharge
+    :param discharge: instantaneous outflow discharge
     :param lateral_inflow:
     :param constant:
     :param upstream_lookup:
     :param num_upstream_pixels:
     :param a_dx_div_dt:
     :param b_a_dx_div_dt:
+    :param inv_time_delta: 1/DtRouting
     :param beta:
     :param inv_beta:
     :param b_minus_1:
+    :param a_dx: ChannelAlpha * ChanLength
     :return:
     """
     count = 0
     previous_estimate = -1.0
     upstream_inflow = 0.0
+    upstream_inflow_avg = 0.0
+
+    # volume of water in channel at beginning of computation step
+    channel_volume_start = a_dx * discharge[pix]**beta
+
     # Inflow from upstream pixels
     for ups_ix in range(num_upstream_pixels[pix]):
         upstream_inflow += discharge[upstream_lookup[pix,ups_ix]]
+        upstream_inflow_avg += discharge_avg[upstream_lookup[pix, ups_ix]]
+
     const_plus_ups_infl = upstream_inflow + constant[pix] # upstream_inflow + alpha*dx/dt*Qold**beta + dx*specific_lateral_inflow
     # If old discharge, upstream inflow and lateral inflow are below accuracy: set discharge to 0 and exit
     if const_plus_ups_infl <= NEWTON_TOL:
@@ -111,6 +122,17 @@ def solve1Pixel(pix, discharge, lateral_inflow, constant,\
     # If iterations converge to NEWTON_TOL, set value to 0
     if discharge[pix] == NEWTON_TOL:
         discharge[pix] = 0
+
+    # volume of water in channel at end of computation step
+    channel_volume_end = a_dx * discharge[pix]**beta
+
+    # integration on control volume to calc average outflow (channel water mass balance)
+    discharge_avg[pix] = upstream_inflow_avg + lateral_inflow[pix] + (channel_volume_start[pix] - channel_volume_end[pix]) * inv_time_delta
+
+    # avoid negative average discharge
+    if discharge_avg[pix] < 0:
+        discharge_avg[pix] = 0
+
     # to simulate inf or nan: discharge[pix] = 1.0/0.0
     # with gil:
     #    got_valid_value = np.isfinite(discharge[pix])
