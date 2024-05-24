@@ -126,7 +126,7 @@ def solve1Pixel(pix, discharge_avg, discharge, lateral_inflow, constant,\
     # volume of water in channel at end of computation step
     channel_volume_end = a_dx * discharge[pix]**beta
 
-    # mass water balance to calc average outflow
+    # integration on control volume to calc average outflow (channel water mass balance)
     discharge_avg[pix] = upstream_inflow_avg + lateral_inflow[pix] + (channel_volume_start[pix] - channel_volume_end[pix]) * inv_time_delta
 
     # avoid negative average discharge
