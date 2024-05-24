@@ -97,6 +97,7 @@ def solve1Pixel(pix, discharge_avg, discharge, lateral_inflow, constant,\
     for ups_ix in range(num_upstream_pixels[pix]):
         upstream_inflow += discharge[upstream_lookup[pix,ups_ix]]
         upstream_inflow_avg += discharge_avg[upstream_lookup[pix, ups_ix]]
+
     const_plus_ups_infl = upstream_inflow + constant[pix] # upstream_inflow + alpha*dx/dt*Qold**beta + dx*specific_lateral_inflow
     # If old discharge, upstream inflow and lateral inflow are below accuracy: set discharge to 0 and exit
     if const_plus_ups_infl <= NEWTON_TOL:
@@ -122,15 +123,15 @@ def solve1Pixel(pix, discharge_avg, discharge, lateral_inflow, constant,\
     if discharge[pix] == NEWTON_TOL:
         discharge[pix] = 0
 
-    # cmcheck
-    # avoid negative discharge
-    if discharge[pix] < 0:
-        discharge[pix] = 0
     # volume of water in channel at end of computation step
     channel_volume_end = a_dx * discharge[pix]**beta
-    # mass water balance to calc average outflow
-    discharge_avg[pix] = upstream_inflow_avg + lateral_inflow + (channel_volume_start - channel_volume_end) * inv_time_delta
 
+    # mass water balance to calc average outflow
+    discharge_avg[pix] = upstream_inflow_avg + lateral_inflow[pix] + (channel_volume_start[pix] - channel_volume_end[pix]) * inv_time_delta
+
+    # avoid negative average discharge
+    if discharge_avg[pix] < 0:
+        discharge_avg[pix] = 0
 
     # to simulate inf or nan: discharge[pix] = 1.0/0.0
     # with gil:
