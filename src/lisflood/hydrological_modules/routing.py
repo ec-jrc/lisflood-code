@@ -1273,7 +1273,7 @@ class routing(HydroModule):
                 #     q01[idpix] = eps
 
                 ### calling MCT function for single cell
-                q11[idpix], V11[idpix], Cm0[idpix], Dm0[idpix] = self.MCTRouting_single(V00[idpix],q10[idpix], q01[idpix], q00[idpix], ql[idpix], Cm0[idpix], Dm0[idpix],
+                q11[idpix], V11[idpix],q1m[idpix], Cm0[idpix], Dm0[idpix] = self.MCTRouting_single(V00[idpix],q10[idpix], q01[idpix], q00[idpix], ql[idpix],q0m[idpix], Cm0[idpix], Dm0[idpix],
                                                                                                          dt, xpix[idpix], s0[idpix], Balv[idpix], ANalv[idpix], Nalv[idpix])
 
                 # # cmcheck - tanto entra tanto esce
@@ -1282,19 +1282,17 @@ class routing(HydroModule):
                 # # Set outflow to be the same as inflow in MCT grid cells ('tanto entra tanto esce')
                 # V11[idpix] = V00[idpix]
                 # # Set end volume to be the same as initial volume in MCT grid cells ('tanto entra tanto esce')
-                # V11[idpix] = V00[idpix] + q01[idpix] + ql[idpix] - q11[idpix]
 
 
-                ### calc integration on the control volume (pixel)
-                # calc average discharge outflow q1m for MCT channels during routing sub step dt
-                # Calculate average outflow using water balance for MCT channel grid cell over sub-routing step
-                q1m[idpix] = q0m[idpix] + ql[idpix] + (V00[idpix] - V11[idpix]) / dt
-                # cmcheck no valori di portata negativi
-                if q1m[idpix] < 0.:
-                    q1m[idpix] = eps
-                    V11[idpix] = V00[idpix] + (q0m[idpix] + ql[idpix] - q1m[idpix]) * dt
-
-
+                # ### calc integration on the control volume (pixel)
+                # moved to routing_single
+                # # calc average discharge outflow q1m for MCT channels during routing sub step dt
+                # # Calculate average outflow using water balance for MCT channel grid cell over sub-routing step
+                # q1m[idpix] = q0m[idpix] + ql[idpix] + (V00[idpix] - V11[idpix]) / dt
+                # # cmcheck no valori di portata negativi
+                # if q1m[idpix] < 0.:
+                #     q1m[idpix] = eps
+                #     V11[idpix] = V00[idpix] + (q0m[idpix] + ql[idpix] - q1m[idpix]) * dt
 
 
             # Update contribution from upstream pixels at time t+1 (dim=all pixels) using the newly calculated q11
@@ -1346,7 +1344,7 @@ class routing(HydroModule):
         return ChanQMCTOutAvg, ChanQMCTOut, ChanM3MCTOut, Cmout, Dmout
 
 
-    def MCTRouting_single(self, V00, q10, q01, q00, ql, Cm0, Dm0, dt, xpix, s0, Balv, ANalv, Nalv):
+    def MCTRouting_single(self, V00, q10, q01, q00, ql,q0mm, Cm0, Dm0, dt, xpix, s0, Balv, ANalv, Nalv):
         '''
         This function implements Muskingum-Cunge-Todini routing method for a single channel pixel.
         References:
@@ -1384,7 +1382,7 @@ class routing(HydroModule):
         # check for negative and zero discharge values
         # zero outflow is not allowed
         if q11 <= 0:
-            q11 = 0
+            q11 = eps
 
         # calc reference discharge at time t
         # qm0 = (I(t)+O(t))/2
@@ -1470,11 +1468,22 @@ class routing(HydroModule):
             # V11 = k1 * (x1 * q01 + (1. - x1) * q11) # MUST be the same as above!
 
 
-        if (V11 < 0):
-            V11 = 0.
+
+        ### calc integration on the control volume (pixel)
+        # calc average discharge outflow q1m for MCT channels during routing sub step dt
+        # Calculate average outflow using water balance for MCT channel grid cell over sub-routing step
+        q1mm = q0mm + ql + (V00 - V11) / dt
+
+        # cmcheck
+        # q1m cannot be too small or it will cause instability
+        if q1mm < eps:
+            q1mm = eps
+            V11 = V00 + (q0mm + ql - q1mm) * dt
+
+
 
         # Outflow at O(t+dt), average outflow in time dt, water volume at t+dt, Courant and Reynolds numbers at t+1 for state files
-        return q11, V11, Cm1, Dm1
+        return q11, V11, q1mm, Cm1, Dm1
 
 
     def hoq(self,q,s0,Balv,ANalv,Nalv):
