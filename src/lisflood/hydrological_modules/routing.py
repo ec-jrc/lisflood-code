@@ -736,10 +736,10 @@ class routing(HydroModule):
                 # Outflow (x+dx) at time t+dt end of calculation step (instant)
                 # Channel storage at time t+dt end of calculation step (instant)
 
-                balance_avg = np.abs((SideflowChanM3 - ChanM3KinEnd + ChanM3KinStart) * self.var.InvDtRouting + ChanQKinInStart_avg - ChanQKinOutEnd_avg)
-                # mass balance for channel pixel
-                if balance_avg > 1.e-12:
-                    print('Error in kinematic routing channel mass balance: ', balance_avg)
+                # balance_avg = np.abs((SideflowChanM3 - ChanM3KinEnd + ChanM3KinStart) * self.var.InvDtRouting + ChanQKinInStart_avg - ChanQKinOutEnd_avg)
+                # # mass balance for channel pixel
+                # if balance_avg.any() > 1.e-12:
+                #     print('Error in kinematic routing channel mass balance > 1.e-12')
 
 
 
@@ -947,11 +947,11 @@ class routing(HydroModule):
                          DischargeM3StructuresR -= self.var.DischargeM3StructuresIni
 
                       # Total Mass Balance Error in m3 per catchment for Initial Run OR Kinematic routing (Split Routing OFF)
-                      MB =-np.sum(StorageStep)+np.sum(self.var.StorageStepINIT) - OutStepM3[0]  -DischargeM3StructuresR[0] +self.var.AddedTRUN
+                      # MB =-np.sum(StorageStep)+np.sum(self.var.StorageStepINIT) - OutStepM3[0]  -DischargeM3StructuresR[0] +self.var.AddedTRUN
 
-                      # cmcheck
-                      if MB > 1.e-12:
-                          print('Mass balance error MB=', MB)
+                      # # cmcheck
+                      # if MB.any() > 1.e-12:
+                      #     print('Mass balance error MB > 1.e-12')
 
 
                       self.var.StorageStepINIT= np.sum(StorageStep) + DischargeM3StructuresR[0]
