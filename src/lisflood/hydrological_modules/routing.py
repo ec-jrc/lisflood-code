@@ -1289,6 +1289,12 @@ class routing(HydroModule):
                 # calc average discharge outflow q1m for MCT channels during routing sub step dt
                 # Calculate average outflow using water balance for MCT channel grid cell over sub-routing step
                 q1m[idpix] = q0m[idpix] + ql[idpix] + (V00[idpix] - V11[idpix]) / dt
+                # cmcheck no valori di portata negativi
+                if q1m[idpix] < 0.:
+                    q1m[idpix] = eps
+                    V11[idpix] = V00[idpix] + (q0m[idpix] + ql[idpix] - q1m[idpix]) * dt
+
+
 
 
             # Update contribution from upstream pixels at time t+1 (dim=all pixels) using the newly calculated q11
@@ -1378,7 +1384,7 @@ class routing(HydroModule):
         # check for negative and zero discharge values
         # zero outflow is not allowed
         if q11 <= 0:
-            q11 = eps
+            q11 = 0
 
         # calc reference discharge at time t
         # qm0 = (I(t)+O(t))/2
