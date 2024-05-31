@@ -1381,7 +1381,7 @@ class routing(HydroModule):
 
         # check for negative and zero discharge values
         # zero outflow is not allowed
-        if q11 <= 0:
+        if q11 < eps: # cmcheck <=0
             q11 = eps
 
         # calc reference discharge at time t
@@ -1393,13 +1393,13 @@ class routing(HydroModule):
 
             # reference I discharge at x=0
             qmx0 = (q00 + q01) / 2.
-            if qmx0 == 0:
+            if qmx0 < eps: # cmcheck ==0
                 qmx0 = eps
             hmx0 = self.hoq(qmx0, s0, Balv, ANalv, Nalv)
 
             # reference O discharge at x=1
             qmx1 = (q10 + q11) / 2.
-            if qmx1 == 0:
+            if qmx1 < eps: # cmcheck ==0
                 qmx1 = eps
             hmx1 = self.hoq(qmx1, s0,Balv,ANalv,Nalv)
 
@@ -1413,7 +1413,7 @@ class routing(HydroModule):
             # Q(t+dt)=(I(t+dt)+O'(t+dt))/2
             qm1 = (q01 + q11) / 2.
             #cm
-            if qm1 == 0:
+            if qm1 < eps: # cmcheck ==0
                 qm1 = eps
             #cm
             hm1 = self.hoq(qm1,s0,Balv,ANalv,Nalv)
@@ -1442,7 +1442,7 @@ class routing(HydroModule):
             # Mass balance equation that takes into consideration the lateral flow
             q11 = c1 * q01 + c2 * q00 + c3 * q10 + c4 * ql
 
-            if q11 <= 0.:
+            if q11 < eps: # cmcheck <=0
                 q11 = eps
 
             #### end of for loop
@@ -1475,7 +1475,7 @@ class routing(HydroModule):
         q1mm = q0mm + ql + (V00 - V11) / dt
 
         # cmcheck
-        # q1m cannot be too small or it will cause instability
+        # q1m cannot be smaller than eps or it will cause instability
         if q1mm < eps:
             q1mm = eps
             V11 = V00 + (q0mm + ql - q1mm) * dt
@@ -1484,6 +1484,7 @@ class routing(HydroModule):
 
         # Outflow at O(t+dt), average outflow in time dt, water volume at t+dt, Courant and Reynolds numbers at t+1 for state files
         return q11, V11, q1mm, Cm1, Dm1
+
 
 
     def hoq(self,q,s0,Balv,ANalv,Nalv):
