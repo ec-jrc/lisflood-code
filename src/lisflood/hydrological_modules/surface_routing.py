@@ -208,8 +208,8 @@ class surface_routing(HydroModule):
 
         # cmcheck
         # this should be calculated using the average flow
-        # self.var.OFToChanM3 = np.where(self.var.IsChannel, self.var.QallAvg * self.var.DtSec, 0)
-        self.var.OFToChanM3 = np.where(self.var.IsChannel, self.var.Qall * self.var.DtSec, 0)
+        self.var.OFToChanM3 = np.where(self.var.IsChannel, self.var.QallAvg * self.var.DtSec, 0)
+        # self.var.OFToChanM3 = np.where(self.var.IsChannel, self.var.Qall * self.var.DtSec, 0)
         # Overland flow in channel pixels (in [m3])is added to channel
 
 

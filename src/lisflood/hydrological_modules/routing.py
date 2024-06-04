@@ -1358,6 +1358,7 @@ class routing(HydroModule):
         :param q01: I(t+dt) - inflow (x) at time t+dt
         :param q00: I(t) - inflow (x) at time t
         :param ql: lateral flow over time dt [m3/s]
+        :param q0mm: I - average inflow during step dt
         :param Cm0: Courant number at time t
         :param Dm0: Reynolds number at time t
         :param dt: time interval step
