@@ -590,7 +590,7 @@ The option "numCPUs_parallelNumba" may take the following values:
                 </comment>
             </textvar>
 
-            <textvar name="UZInitValue" value="0">
+            <textvar name="UZInitValue" value="$(PathRoot)/maps/safe_init/uz.end.nc">
                 <comment>
                     water in upper store [mm]
                 </comment>
@@ -628,21 +628,21 @@ The option "numCPUs_parallelNumba" may take the following values:
                 </comment>
             </textvar>
 
-            <textvar name="ThetaInit1Value" value="-9999">
+            <textvar name="ThetaInit1Value" value="$(PathRoot)/maps/safe_init/tha.end.nc">
                 <comment>
                     initial soil moisture content layer 1
                     -9999: use field capacity values
                 </comment>
             </textvar>
 
-            <textvar name="ThetaInit2Value" value="-9999">
+            <textvar name="ThetaInit2Value" value="$(PathRoot)/maps/safe_init/thb.end.nc">
                 <comment>
                     initial soil moisture content layer 2
                     -9999: use field capacity values
                 </comment>
             </textvar>
 
-            <textvar name="ThetaInit3Value" value="-9999">
+            <textvar name="ThetaInit3Value" value="$(PathRoot)/maps/safe_init/thc.end.nc">
                 <comment>
                     initial soil moisture content layer 2
                     -9999: use field capacity values
@@ -709,7 +709,7 @@ The option "numCPUs_parallelNumba" may take the following values:
                 </comment>
             </textvar>
 
-            <textvar name="UZForestInitValue" value="0">
+            <textvar name="UZForestInitValue" value="$(PathRoot)/maps/safe_init/uzf.end.nc">
                 <comment>
                     water in upper store [mm]
                 </comment>
@@ -721,21 +721,21 @@ The option "numCPUs_parallelNumba" may take the following values:
                 </comment>
             </textvar>
 
-            <textvar name="ThetaForestInit1Value" value="-9999">
+            <textvar name="ThetaForestInit1Value" value="$(PathRoot)/maps/safe_init/thfa.end.nc">
                 <comment>
                     initial soil moisture content layer 1
                     -9999: use field capacity values
                 </comment>
             </textvar>
 
-            <textvar name="ThetaForestInit2Value" value="-9999">
+            <textvar name="ThetaForestInit2Value" value="$(PathRoot)/maps/safe_init/thfb.end.nc">
                 <comment>
                     initial soil moisture content layer 2
                     -9999: use field capacity values
                 </comment>
             </textvar>
 
-            <textvar name="ThetaForestInit3Value" value="-9999">
+            <textvar name="ThetaForestInit3Value" value="$(PathRoot)/maps/safe_init/thfc.end.nc">
                 <comment>
                     initial soil moisture content layer 2
                     -9999: use field capacity values
@@ -760,7 +760,7 @@ The option "numCPUs_parallelNumba" may take the following values:
                 </comment>
             </textvar>
 
-            <textvar name="UZIrrigationInitValue" value="0">
+            <textvar name="UZIrrigationInitValue" value="$(PathRoot)/maps/safe_init/uzi.end.nc">
                 <comment>
                     water in upper store [mm]
                 </comment>
@@ -772,21 +772,21 @@ The option "numCPUs_parallelNumba" may take the following values:
                 </comment>
             </textvar>
 
-            <textvar name="ThetaIrrigationInit1Value" value="-9999">
+            <textvar name="ThetaIrrigationInit1Value" value="$(PathRoot)/maps/safe_init/thia.end.nc">
                 <comment>
                     initial soil moisture content layer 1
                     -9999: use field capacity values
                 </comment>
             </textvar>
 
-            <textvar name="ThetaIrrigationInit2Value" value="-9999">
+            <textvar name="ThetaIrrigationInit2Value" value="$(PathRoot)/maps/safe_init/thib.end.nc">
                 <comment>
                     initial soil moisture content layer 2
                     -9999: use field capacity values
                 </comment>
             </textvar>
 
-            <textvar name="ThetaIrrigationInit3Value" value="-9999">
+            <textvar name="ThetaIrrigationInit3Value" value="$(PathRoot)/maps/safe_init/thic.end.nc">
                 <comment>
                     initial soil moisture content layer 2
                     -9999: use field capacity values
@@ -2042,6 +2042,24 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     Average discharge map [m3/s]
                 </comment>
             </textvar>
+            
+            <textvar name="SeepTopToSubBAverageOtherMap" value= "$(PathRoot)/maps/safe_init/SeepTopToSubBAverageOtherMap">
+                <comment>
+                     Reported infiltration from the soil layer 2 to soil layer 3, other land cover fraction, average flux over the simulation period [mm]
+            </comment>
+            </textvar>
+          
+            <textvar name="SeepTopToSubBAverageForestMap" value= "$(PathRoot)/maps/safe_init/SeepTopToSubBAverageForestMap">
+                 <comment>
+                        Reported infiltration from the soil layer 2 to soil layer 3, forest land cover fraction, average flux over the simulation period [mm]
+                 </comment>
+            </textvar>
+          
+            <textvar name="SeepTopToSubBAverageIrrigationMap" value= "$(PathRoot)/maps/safe_init/SeepTopToSubBAverageIrrigationMap">
+                 <comment>
+                         Reported infiltration from the soil layer 2 to soil layer 3, irrigated land cover fraction, average flux over the simulation period [mm]
+                  </comment>
+            </textvar>               
 
             <textvar name="timestepInit" value="$(timestepInit)">
                 <comment>
@@ -3405,7 +3423,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                         Reported seepage to groundwater[mm]
                     </comment>
                 </textvar>
-
+                               
                 <textvar name="AvailGWMaps" value="$(PathOut)/agw">
                     <comment>
                         Reported available groundwater LZ+ GWLoss [mm]

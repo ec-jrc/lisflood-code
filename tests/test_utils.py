@@ -214,6 +214,56 @@ class ETRS89TestCase(object):
                 'tss': None,
             },
         },
+        'SeepTopToSubBAverageOtherMap': {
+            'report_map': 'SeepTopToSubBAverageOtherMap',
+            'report_tss': None,
+            '86400': {
+                'map': os.path.join(ref_dir, 'init_daily/SeepTopToSubBAverageOtherMap.nc'),
+                'tss': None,
+            },
+            '21600': {
+                'map': os.path.join(ref_dir, 'init_6h/SeepTopToSubBAverageOtherMap.nc'),
+                'tss': None,
+            },
+        },
+         'SeepTopToSubBAverageForestMap': {
+            'report_map': 'SeepTopToSubBAverageForestMap',
+            'report_tss': None,
+            '86400': {
+                'map': os.path.join(ref_dir, 'init_daily/SeepTopToSubBAverageForestMap.nc'),
+                'tss': None,
+            },
+            '21600': {
+                'map': os.path.join(ref_dir, 'init_6h/SeepTopToSubBAverageForestMap.nc'),
+                'tss': None,
+            },
+        },    
+           
+        'SeepTopToSubBAverageIrrigationMap': {
+            'report_map': 'SeepTopToSubBAverageIrrigationMap',
+            'report_tss': None,
+            '86400': {
+                'map': os.path.join(ref_dir, 'init_daily/SeepTopToSubBAverageIrrigationMap.nc'),
+                'tss': None,
+            },
+            '21600': {
+                'map': os.path.join(ref_dir, 'init_6h/SeepTopToSubBAverageIrrigationMap.nc'),
+                'tss': None,
+            },
+        },        
+
+        'UZForestEnd': {
+            'report_map': 'UZForestEnd',
+            'report_tss': None,
+            '86400': {
+                'map': os.path.join(ref_dir, 'init_daily/uzf.end.nc'),
+                'tss': None,
+            },
+            '21600': {
+                'map': os.path.join(ref_dir, 'init_6h/uzf.end.nc'),
+                'tss': None,
+            },
+        },        
         'mbError': {
             'report_map': None,
             'report_tss': 'WaterMassBalanceTSS',
@@ -243,7 +293,7 @@ class ETRS89TestCase(object):
     def teardown_method(self):
         settings = LisSettings.instance()
         output_dir = settings.output_dir
-        shutil.rmtree(output_dir)
+        #shutil.rmtree(output_dir) # STEFANIA REMOVE BEFORE PUSH
 
     @classmethod
     def compare_reference(cls, variable='dis', check='map', step_length='86400'):

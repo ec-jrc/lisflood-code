@@ -3667,6 +3667,24 @@ Reported seepage to groundwater(from soil layer 2 to groundwater), weighted sum 
 </comment>
 </textvar>
 
+<textvar name="SeepTopToSubBAverageOtherMap" value= "$(PathOut)/SeepTopToSubBAverageOtherMap">
+<comment>
+Reported infiltration from the soil layer 2 to soil layer 3, other land cover fraction, average flux over the simulation period [mm]
+</comment>
+</textvar>
+
+<textvar name="SeepTopToSubBAverageForestMap" value= "$(PathOut)/SeepTopToSubBAverageForestMap">
+<comment>
+Reported infiltration from the soil layer 2 to soil layer 3, forest land cover fraction, average flux over the simulation period [mm]
+</comment>
+</textvar>
+
+<textvar name="SeepTopToSubBAverageIrrigationMap" value= "$(PathOut)/SeepTopToSubBAverageIrrigationMap">
+<comment>
+Reported infiltration from the soil layer 2 to soil layer 3, irrigated land cover fraction, average flux over the simulation period [mm]
+</comment>
+</textvar>
+
 <textvar name="AvailGWMaps" value="$(PathOut)/agw">
 <comment>
 Reported available groundwater LZ+ GWLoss [mm]

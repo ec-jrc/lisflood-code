@@ -1869,8 +1869,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 **************************************************************
             </comment>
 
-            <textvar name="LZAvInflowMap"
-                     value="$(PathOut)/lzavin.map">
+            <textvar name="LZAvInflowMap" value="$(PathOut)/lzavin">
                 <comment>
                     $(PathInit)/lzavin.map
                     Reported map of average percolation rate from upper to
@@ -1878,13 +1877,31 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
             </textvar>
 
-            <textvar name="AvgDis" value="$(PathOut)/avgdis.map">
+            <textvar name="AvgDis" value="$(PathOut)/avgdis">
                 <comment>
                     $(PathInit)/avgdis.map
                     CHANNEL split routing in two lines
                     Average discharge map [m3/s]
                 </comment>
             </textvar>
+            
+            <textvar name="SeepTopToSubBAverageOtherMap" value= "$(PathOut)/SeepTopToSubBAverageOtherMap">
+                <comment>
+                     Reported infiltration from the soil layer 2 to soil layer 3, other land cover fraction, average flux over the simulation period [mm]
+            </comment>
+            </textvar>
+          
+            <textvar name="SeepTopToSubBAverageForestMap" value= "$(PathOut)/SeepTopToSubBAverageForestMap">
+                 <comment>
+                        Reported infiltration from the soil layer 2 to soil layer 3, forest land cover fraction, average flux over the simulation period [mm]
+                 </comment>
+            </textvar>
+          
+            <textvar name="SeepTopToSubBAverageIrrigationMap" value= "$(PathOut)/SeepTopToSubBAverageIrrigationMap">
+                 <comment>
+                         Reported infiltration from the soil layer 2 to soil layer 3, irrigated land cover fraction, average flux over the simulation period [mm]
+                  </comment>
+            </textvar>                 
 
             <textvar name="timestepInit" value="$(timestepInit)">
                 <comment>

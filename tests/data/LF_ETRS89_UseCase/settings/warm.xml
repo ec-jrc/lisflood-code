@@ -2073,6 +2073,25 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     Average discharge map [m3/s]
                 </comment>
             </textvar>
+ 
+            <textvar name="SeepTopToSubBAverageOtherMap" value= "-9999">
+                <comment>
+                     Reported infiltration from the soil layer 2 to soil layer 3, other land cover fraction, average flux over the simulation period [mm]
+            </comment>
+            </textvar>
+          
+            <textvar name="SeepTopToSubBAverageForestMap" value= "-9999">
+                 <comment>
+                        Reported infiltration from the soil layer 2 to soil layer 3, forest land cover fraction, average flux over the simulation period [mm]
+                 </comment>
+            </textvar>
+          
+            <textvar name="SeepTopToSubBAverageIrrigationMap" value= "-9999">
+                 <comment>
+                         Reported infiltration from the soil layer 2 to soil layer 3, irrigated land cover fraction, average flux over the simulation period [mm]
+                  </comment>
+            </textvar>                
+            
 
             <textvar name="timestepInit" value="$(timestepInit)">
                 <comment>
@@ -3425,7 +3444,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     <comment>
                         Reported seepage to groundwater[mm]
                     </comment>
-                </textvar>
+                </textvar>               
 
                 <textvar name="AvailGWMaps" value="$(PathOut)/agw">
                     <comment>

@@ -1,4 +1,4 @@
-timeseries valuescale.scalar settingsfile: /BGFS/DISASTER/grimast/LF411/lisflood-code/tests/data/LF_lat_lon_UseCase/prerunnew.xml date: Thu Jul 28 16:41:58 2022
+timeseries valuescale.scalar settingsfile: /BGFS/DISASTER/grimast/LF_DEVELOP/lisflood-code/tests/data/LF_lat_lon_UseCase/prerun_lat_lon.xml date: Wed May 29 09:23:42 2024
 2
 timestep
 1

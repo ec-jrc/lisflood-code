@@ -32,6 +32,7 @@ class TestInflow():
                                            'InflowPoints': '$(PathRoot)/maps/inflow_point_1.nc',
                                            'QInTS': '$(PathRoot)/'+'reference/inflow_'+type+'/inflow.tss',
                                            'PathOut': out_path_run})
+        
         mk_path_out(out_path_run)
         lisfloodexe(settings)
 
@@ -39,7 +40,7 @@ class TestInflow():
         reference =  os.path.join(out_path_ref, 'dis.tss')
         output_tss =  os.path.join(out_path_run, 'dis.tss')
         comparator.compare_files(reference, output_tss)
-
+        
     def teardown_method(self):
         print('Cleaning directories')
         out_path = os.path.join(self.case_dir, self.run_type)

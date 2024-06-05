@@ -30,17 +30,17 @@ from .test_utils import setoptions, mk_path_out
 
 class TestRepMaps():
     settings_files = {'base': os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/base.xml')}
-
+    
     def teardown_method(self):
         shutil.rmtree(os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/testrep'), ignore_errors=True)
-
+    
     def test_no_reported(self):
         path_out = mk_path_out('data/LF_ETRS89_UseCase/out/testrep')
         settings = setoptions(self.settings_files['base'], vars_to_set={'PathOut': path_out})
         lisfloodexe(settings)
         files = [os.path.join(settings.output_dir, f) for f in os.listdir(settings.output_dir) if f.endswith('.nc') or f.endswith('.tss')]
         assert not files
-
+    
     def test_end_reported(self):
         path_out = mk_path_out('data/LF_ETRS89_UseCase/out/testrep')
         settings = setoptions(self.settings_files['base'], ['repEndMaps'], vars_to_set={'PathOut': path_out})
@@ -84,3 +84,4 @@ class TestRepMaps():
             # compare latest timestep in state map with unique timestep in end map
             comparator.compare_arrays(vara[-1][:, :], varb[:, :], varname=basename)
         assert not comparator.errors
+   
