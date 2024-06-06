@@ -1220,15 +1220,6 @@ $(PathMaps)/leakage.map
 </comment>
 </textvar>
 
-
-
-<textvar name="FirstDayOfMonth" value="$(PathTables)/firstdayofmonth.txt">
-<comment>
-table with days for each water use maps
-1st column: range of days; 2nd column: suffix of wuse map
-</comment>
-</textvar>
-
 <textvar name="MapIrrigationCropCoef" value="$(PathMapsTables)/cropcoef_i.map">
 <comment>
 Irrigation crop coefficient [-]
@@ -2528,13 +2519,6 @@ leaf area index [m2/m2]
 </comment>
 </textvar>
 
-<textvar name="LAIOfDay" value="$(PathTables)/laiofday.txt">
-<comment>
-table with days for each LAI maps
-1st column: range of days; 2nd column: suffix of LAI map
-</comment>
-</textvar>
-
 </group>
 
 <group>
@@ -2544,13 +2528,6 @@ table with days for each LAI maps
 INPUT WATER USE MAPS AND PARAMETERS
 **************************************************************
 </comment>
-
-<textvar name="FirstDayOfMonth" value="$(PathTables)/firstdayofmonth.txt">
-<comment>
-table with days for each water use maps
-1st column: range of days; 2nd column: suffix of wuse map
-</comment>
-</textvar>
 
 <textvar name="DomesticDemandMaps" value="$(PathWaterUse)/$(PrefixWaterUseDomestic)">
 <comment>
