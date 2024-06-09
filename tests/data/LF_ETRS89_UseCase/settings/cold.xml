@@ -44,6 +44,7 @@
 
         # option to initialize Lisflood
         <setoption choice="0" name="InitLisflood"/>
+        <setoption choice="0" name="WarmStart"/>
 
         # option to read/write NetCDF
         <setoption choice="1" name="readNetcdfStack"/>

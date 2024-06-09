@@ -18,6 +18,7 @@
         <setoption choice="0" name="simulatePF"/>
         <setoption choice="1" name="SplitRouting"/>
         <setoption choice="1" name="InitLisflood"/>
+        <setoption choice="0" name="WarmStart"/>
         <setoption choice="0" name="repEndMaps"/>
         <setoption choice="1" name="repStateMaps"/>
         <setoption choice="1" name="repDischargeTs"/>

@@ -293,7 +293,7 @@ class ETRS89TestCase(object):
     def teardown_method(self):
         settings = LisSettings.instance()
         output_dir = settings.output_dir
-        #shutil.rmtree(output_dir) # STEFANIA REMOVE BEFORE PUSH
+        shutil.rmtree(output_dir) 
 
     @classmethod
     def compare_reference(cls, variable='dis', check='map', step_length='86400'):

@@ -44,6 +44,7 @@
         <setoption choice="1" name="SplitRouting"/>
         <setoption choice="0" name="InitLisflood"/>
         <setoption choice="0" name="InitLisfloodwithoutSplit"/>
+        <setoption choice="0" name="WarmStart"/>
 
         <setoption choice="0" name="repEndMaps"/>
         <setoption choice="0" name="repTopSoilMoistureMaps"/>

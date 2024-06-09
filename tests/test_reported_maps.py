@@ -128,18 +128,11 @@ class TestReportedMaps():
     #             self._reported_map(self.settings_files['full'], map_to_check=[rep_map.output_var], mocker=mocker,
     #                             files_to_check=files_to_check)
 
-    ################2024##############def test_prerun(self, mocker):
-    ################2024##############    self._reported_map(self.settings_files['initrun'], map_to_check=['AvgDis', 'LZAvInflowMap'], mocker=mocker,
-    ################2024##############                       files_to_check=['avgdis.nc', 'lzavin.nc'])
-    
-    def test_prerun(self, mocker): ################2024##############
+   
+    def test_prerun(self, mocker): 
         self._reported_map(self.settings_files['initrun'], map_to_check=['AvgDis', 'LZAvInflowMap','SeepTopToSubBAverageOtherMap','SeepTopToSubBAverageForestMap','SeepTopToSubBAverageIrrigationMap','Theta1End','Theta2End','Theta3End','Theta1ForestEnd','Theta2ForestEnd','Theta3ForestEnd','Theta1IrrigationEnd','Theta2IrrigationEnd','Theta3IrrigationEnd','UZEnd','UZForestEnd','UZIrrigationEnd'], mocker=mocker, ######2024#######
-                           files_to_check=['avgdis.nc', 'lzavin.nc','SeepTopToSubBAverageOtherMap.nc','SeepTopToSubBAverageForestMap.nc','SeepTopToSubBAverageIrrigationMap.nc','tha.end','thb.end','thc.end','thfa.end','thfb.end','thfc.end','thia.end','thib.end','thic.end','uz.end','uzf.end','uzi.end']) ################2024##############
-    '''
-    def test_prerun(self, mocker): ################2024##############
-        self._reported_map(self.settings_files['initrun'], map_to_check=['AvgDis', 'LZAvInflowMap','SeepTopToSubBAverageOtherMap','SeepTopToSubBAverageForestMap','SeepTopToSubBAverageIrrigationMap'], mocker=mocker, ######2024#######
-                           files_to_check=['avgdis.nc', 'lzavin.nc','SeepTopToSubBAverageOtherMap.nc','SeepTopToSubBAverageForestMap.nc','SeepTopToSubBAverageIrrigationMap.nc']) ################2024##############
-    '''                      
+                           files_to_check=['avgdis.nc', 'lzavin.nc','SeepTopToSubBAverageOtherMap.nc','SeepTopToSubBAverageForestMap.nc','SeepTopToSubBAverageIrrigationMap.nc','tha.end','thb.end','thc.end','thfa.end','thfb.end','thfc.end','thia.end','thib.end','thic.end','uz.end','uzf.end','uzi.end']) 
+                     
     def test_rep_dischargemaps(self, mocker):
         """
         Test that

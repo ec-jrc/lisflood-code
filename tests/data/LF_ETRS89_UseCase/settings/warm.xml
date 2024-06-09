@@ -33,6 +33,7 @@
 
         # option to initialize Lisflood
         <setoption choice="0" name="InitLisflood"/>
+        <setoption choice="1" name="WarmStart"/>
 
         # option to read/write NetCDF
         <setoption choice="1" name="readNetcdfStack"/>
@@ -5220,7 +5221,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="PF2ForestTS" value="$(PathOut)/pFForestSub.tss">
+                <textvar name="PF2ForestTS" value="$(PathOut)/   <textvar name="PF2ForestTS" value="$(PathOut)/pFForestSub.tss">
                     <comment>
                         Reported pF lower soil layer [-]
                     </comment>

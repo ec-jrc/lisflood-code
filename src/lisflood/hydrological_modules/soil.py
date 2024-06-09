@@ -290,12 +290,14 @@ class soil(HydroModule):
             self.var.W2[iveg] = np.where(self.var.PoreSpaceNotZero2[iluse], ini_2, 0)
             
             
-            if not option['InitLisflood']: ##  2024
+            if not option['InitLisflood'] and not option['WarmStart']: ##  2024
                         
-             flag_coldstart = np.min( self.var.SeepTopToSubBAv[0] +  self.var.SeepTopToSubBAv[1] +  self.var.SeepTopToSubBAv[2])
+             check_var_coldstart = np.min(self.var.SeepTopToSubBAv[0]) ######################### TO BE CORRECTED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
              
-             if flag_coldstart > -9999.0:                            
-               SOLVED = ((ThetaInit2Value[iveg] * self.var.SoilDepth2[iluse])-self.var.WRes2[iluse])/(self.var.WS2[iluse]-self.var.WRes2[iluse]) #### for extra safety - stef
+             if check_var_coldstart < 0.0:   
+               warnings.warn(LisfloodWarning('WARNING: soil moisture end states OR average fluxes not provided/erroneous. Soil moisture states are initialized at field capacity')) 
+             else:                        
+               SOLVED = ((ThetaInit2Value[iveg] * self.var.SoilDepth2[iluse])-self.var.WRes2[iluse])/(self.var.WS2[iluse]-self.var.WRes2[iluse]) #### for extra safety - stef                           
                for ii in np.arange(len(ThetaInit2Value[iveg])):
                  data = []
                  analyticalcheckzero = []
@@ -550,3 +552,6 @@ class soil(HydroModule):
         self.var.Theta1aPixel = self.var.deffraction(self.var.Theta1a)
         self.var.Theta1bPixel = self.var.deffraction(self.var.Theta1b)
         self.var.Theta2Pixel = self.var.deffraction(self.var.Theta2)
+
+        # the variables below were added to report catchment-averaged groundwater upper zone water content
+        self.var.UZPixel = self.var.deffraction(self.var.UZ)
