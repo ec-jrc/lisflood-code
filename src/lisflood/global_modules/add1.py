@@ -271,6 +271,10 @@ def compressArray(map, pcr=True, name=None):
         mapnp = pcr2numpy(map,np.nan)
         mapnp1 = np.ma.masked_array(mapnp, maskinfo.info.mask)
     else:
+        if map.mask is not np.bool_(0):
+            if (map.mask[maskinfo.info.mask==False].any()==True):
+                # warning: fill values masking is different from the area mask map, and some values in the area mask map contains invalid fill values
+                warnings.warn(LisfloodWarning("Warning in compress array: map '{}' has fill values inside the area mask map!".format(name)))
         mapnp1 = np.ma.masked_array(map, maskinfo.info.mask)
     mapC = np.ma.compressed(mapnp1)
 
@@ -489,6 +493,10 @@ def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averagey
         # masking
         try:
             maskinfo = MaskInfo.instance()
+            if mapnp.mask is not np.bool_(0):
+                if (mapnp.mask[maskinfo.info.mask==False].any()==True):
+                    ## warning: fill values masking is different from the area mask map, and some values in the area mask map contains invalid fill values
+                    warnings.warn(LisfloodWarning("Warning: map {} (binding: '{}') has fill values inside the area mask map!".format(filename, name)))
             mapnp.mask = maskinfo.info.mask
         except (KeyError, AttributeError):
             pass
