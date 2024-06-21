@@ -58,6 +58,7 @@ You can use builtin path variables in this template and reference to other paths
     # option to initialize Lisflood
     <setoption choice="0" name="InitLisflood"/>
     <setoption choice="0" name="InitLisfloodwithoutsplit"/>
+    <setoption choice="0" name="WarmStart"/>
 
     # option to read/write NetCDF
     <setoption choice="1"  name="readNetcdfStack"/>
@@ -1220,15 +1221,6 @@ $(PathMaps)/leakage.map
 </comment>
 </textvar>
 
-
-
-<textvar name="FirstDayOfMonth" value="$(PathTables)/firstdayofmonth.txt">
-<comment>
-table with days for each water use maps
-1st column: range of days; 2nd column: suffix of wuse map
-</comment>
-</textvar>
-
 <textvar name="MapIrrigationCropCoef" value="$(PathMapsTables)/cropcoef_i.map">
 <comment>
 Irrigation crop coefficient [-]
@@ -2207,23 +2199,37 @@ INITIAL CONDITIONS FOR THE WATER BALANCE MODEL
 **************************************************************
 </comment>
 
-<textvar name="LZAvInflowMap" value="$(PathMaps)/lzavin.nc">
+<textvar name="LZAvInflowMap" value="$(PathInit)/lzavin.nc">
 <comment>
-$(PathMaps)/lzavin.map
-$(PathInit)/lzavin.map
 Reported map of average percolation rate from upper to
 lower groundwater zone (reported for end of simulation) [mm/day]
 </comment>
 </textvar>
 
-<textvar name="AvgDis" value="$(PathMaps)/avgdis.nc">
+<textvar name="AvgDis" value="$(PathInit)/avgdis.nc">
 <comment>
-$(PathMaps)/avgdis.map
-$(PathInit)/avgdis.map
 CHANNEL split routing in two lines
 Average discharge map [m3/s]
 </comment>
 </textvar>
+
+<textvar name="SeepTopToSubBAverageOtherMap" value= "$(PathInit)/SeepTopToSubBAverageOtherMap">
+<comment>
+Reported infiltration from the soil layer 2 to soil layer 3, other land cover fraction, average flux over the simulation period [mm]
+</comment>
+</textvar>
+
+<textvar name="SeepTopToSubBAverageForestMap" value= "$(PathInit)/SeepTopToSubBAverageForestMap">
+<comment>
+Reported infiltration from the soil layer 2 to soil layer 3, forest land cover fraction, average flux over the simulation period [mm]
+</comment>
+</textvar>
+
+<textvar name="SeepTopToSubBAverageIrrigationMap" value= "$(PathInit)/SeepTopToSubBAverageIrrigationMap">
+<comment>
+Reported infiltration from the soil layer 2 to soil layer 3, irrigated land cover fraction, average flux over the simulation period [mm]
+</comment>
+</textvar>   
 
 <textvar name="timestepInit" value="$(timestepInit)">
 <comment>
@@ -2804,7 +2810,7 @@ REPORTED OUTPUT MAPS
 
 <textvar name="DischargeMaps" value="$(PathOut)/dis">
 <comment>
-Reported discharge [cu m/s] (average over the model timesteps) (AvgDis)
+Reported discharge [cu m/s] (average over the model timesteps) 
 </comment>
 </textvar>
 
@@ -3232,7 +3238,7 @@ Reported istantaneous discharge at end of computation step [cu m/s] ChanQ
 
 <textvar name="DischargeEnd" value="$(PathOut)/dis.end">
 <comment>
-Reported discharge [cu m/s] (average over the model timesteps) (AvgDis)
+Reported discharge [cu m/s] (average over the model timesteps) 
 </comment>
 </textvar>
 

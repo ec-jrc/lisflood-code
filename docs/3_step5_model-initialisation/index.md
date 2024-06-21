@@ -19,9 +19,9 @@ In theory, this behaviour provides a convenient and simple way to initialise a m
 
 ## The theory of initialisation
 
-When setting up a model run that includes a warm-up period, most of the internal state variables can be simply set to 0 at the start of the run. This applies to the initial amount of water on the soil surface (*WaterDepthInitValue*), snow cover (*SnowCoverInitValue*), frost index (*FrostIndexInitValue*), interception storage (*CumIntInitValue*), and storage in the upper groundwater zone (*UZInitValue*). The initial value of the 'days since last rainfall event' (*DSLRInitValue*) is typically set to 1.
+When setting up a **model cold run**, most of the internal state variables can be simply set to 0 at the start of the run. For example, this applies to the initial snow cover (*SnowCoverInitValue*), frost index (*FrostIndexInitValue*), interception storage (*CumIntInitValue*). The initial value of the 'days since last rainfall event' (*DSLRInitValue*) is typically set to 1.
 
-For the remaining state variables, initialisation is somewhat less straightforward. The amount of water in the channel (defined by *TotalCrossSectionAreaInitValue*) is highly spatially variable (and limited by the channel geometry). The amount of water that can be stored in the upper and lower soil layers (*ThetaInit1Value*, *ThetaInit2Value*) is limited by the soil's porosity. The lower groundwater zone poses special problems because of its overall slow response (discussed in a separate section below). Because of this, LISFLOOD provides the possibility to initialise these variables internally, and these special initialisation methods can be activated by setting the initial values of each of these variables to a special 'bogus' value of *-9999*. The following Table summarises these special initialisation methods:
+For soil and groundwater state variables, initialisation is somewhat less straightforward. The amount of water that can be stored in the three soil layers (*ThetaInit1aValue*,*ThetaInit1bValue*, *ThetaInit2Value*) is limited by the soil's porosity. The lower groundwater zone poses special problems because of its overall slow response (discussed in a separate section below). Because of this, LISFLOOD provides the possibility to initialise these variables internally. The following Table summarises these special initialisation methods:
 
 **Table:** *LISFLOOD special initialisation methods*$^1$ 
 
@@ -37,14 +37,19 @@ $^1$ These special initialisation methods are activated by setting the value of 
 
 Note that the "-9999" 'bogus' value can *only* be used with the variables in the Table above; the use of the 'bogus' value for all the other variables will produce nonsense results! For this reason, the initialisation of the lower groundwater zone is necessary.<br>
 
-*WARNING!* In areas with arid climate and very thick (~10^2) soils, the use of initial soil water content equal to field capacity creates nonrealistic large discharge values in the channels. <br>
+*WARNING!* In some areas, the use of initial soil water content equal to field capacity leads to nonrealistic trends in soil moisture content and to fictitious discharge values in the channels. <br>
+The issue above can occur, for instance, in catchments with arid climate and very thick (~10^2) soil layers or in catchments in very cold area where frost conditions are frequent.
 
-To avoid nonrealistic results in such specific contexts, it is recommended to use the end states of the initialization run to initialize the soil and upper groundwater zone storages of the cold run. <br>
+To avoid nonrealistic results in such specific contexts, it is recommended to use the end states and the fluxes computed by the prerun to initialize soil moisture valus for the three soil layers, and upper groundwater zone storages. <br>
 
-The following end states can be used for the initialization of the run: upper groundwater zone water content; water content of soil layers 1,2,3 for the all the land use categories (other, forest, irrigation). <br>
+This optional, extensive initialization has been implemented in OS-LISFLOOD v4.X.X.
 
-In summary,  the initialization of the lower groundwater zone is always necessary (see paragraph below); the use of the end states to initialize the upper groundwater zone water content and the water content of soil layers 1,2,3 is optional. <br>
-This optional, extensive initialization has been implemented in OS-LISFLOOD v4.0.0. The interested users can then use the provided templates as an example to prepare their own [initialization run](../media/lisfloodSettings_reference_prerun_optional_init_v4.0.0.xml) and run with [cold start](../media/lisfloodSettings_reference_coldstart_optional_init_v4.0.0.xml). Please note that the content of this paragraph does not apply to the runs with warm start! <br>
+Initialization of the soil moisture content: the prerun provides in output end states and average fluxes. The end states are the volumetric soil moisture content for the three soil layers and the three land covers (9 maps). The average fluxes represent the averaege (over the simulation period) infiltration from the soil layer 2 to soil layer 3, for the three land cover fractions (3 maps). In the cold run, the end states  are used to initialize the volumetric soil moisture content of soil layers 1 and 2. The initilization of the volumetric soil moisture content of soil layer 3 makes use of the relevant end state and of the fluxes: following the same reasoning implemented for the lower groundwater zone (see below), the model tries to enable long term equilibrium conditions between average inflow and outflow fluxes in the third soil layer.
+
+Initialization of the upper groundwater zone water content: it is recommended to use the end state generated by the prerun. <br>
+
+*Please note that the content of this paragraph does not apply to the runs with warm start!* <br>
+
 
 **Initialisation of the lower groundwater zone**
 Even though the use of a sufficiently long warm-up period usually results in a correct initialisation, a complicating factor is that the time needed to initialise any storage component of the model is dependent on the average residence time of the water in it. For example, the moisture content of the upper soil layer tends to respond almost instantly to LISFLOOD's meteorological forcing variables (precipitation, evapo(transpi)ration). As a result, relatively short warm-up periods are sufficient to initialise this storage component. At the other extreme, the response of the lower groundwater zone is generally very slow (especially for large values of $T_{lz}$). Consequently, to avoid unrealistic trends in the simulations, very long warm-up periods may be needed. The Figure below shows a typical example for an 8-year simulation, in which a decreasing trend in the lower groundwater zone is visible throughout the whole simulation period. Because the amount of water in the lower zone is directly proportional to the baseflow in the channel, this will obviously lead to an unrealistic long-term simulation of baseflow. Assuming the long-term climatic input is more or less constant, the baseflow (and thus the storage in the lower zone) should be free of any long-term trends (although some seasonal variation is normal). In order to avoid the need for excessive warm-up periods, LISFLOOD is capable of calculating a 'steady-state' storage amount for the lower groundwater zone. This *steady state* storage is very effective for reducing the lower zone's warm-up time. The concept of *steady state* is explained in the [LISFLOOD model description](https://ec-jrc.github.io/lisflood-model/2_13_stdLISFLOOD_groundwater/), here we will show how it can be used to speed up the initialisation of a LISFLOOD run.
@@ -65,6 +70,7 @@ As an alternative to using the internal initialization (and hence the bogus valu
 ```xml
        <setoption choice="1" name="InitLisflood"/>
        <setoption choice="1" name="InitLisfloodwithoutsplit"/>
+       <setoption choice="0" name="WarmStart/>
 ```
   
 3) Activate reporting maps (in NetCDF format) in <lfoptions> section of Settings.XML file using:
@@ -78,18 +84,36 @@ As an alternative to using the internal initialization (and hence the bogus valu
        <setoption choice="0" name="SplitRouting"/>
 ```
 
-5) Set the name of the reporting map for average percolation rate from upper to lower groundwater zone in <lfuser> section of Settings.XML file using:
+5) Set the name of the reporting map for average percolation rate from second to third soil layer, and from upper to lower groundwater zone in <lfuser> section of Settings.XML file using:
 ```xml
     <textvar name="LZAvInflowMap" value="$(PathOut)/lzavin">
+    <textvar name="SeepTopToSubBAverageOtherMap" value= "$(PathOut)/SeepTopToSubBAverageOtherMap">
+    <textvar name="SeepTopToSubBAverageForestMap" value= "$(PathOut)/SeepTopToSubBAverageForestMap">
+    <textvar name="SeepTopToSubBAverageIrrigationMap" value= "$(PathOut)/SeepTopToSubBAverageIrrigationMap">
 ```
-
-6) Run the model for a longer period (if possible more than 3 years, best for the whole modelling period)
+Similarly, set the name of the reporting map for the end states in <lfuser> section of Settings.XML. Some examples are provided below:
+```xml
+    <textvar name="Theta1End" value="$(PathOut)/th1.end">
+    <textvar name="Theta2End" value="$(PathOut)/th2.end">
+    <textvar name="Theta3End" value="$(PathOut)/th3.end">
+    <textvar name="Theta1ForestEnd" value="$(PathOut)/thf1.end">
+    <textvar name="Theta2ForestEnd" value="$(PathOut)/thf2.end">
+    <textvar name="Theta3ForestEnd" value="$(PathOut)/thf3.end">
+    <textvar name="Theta1IrrigationEnd" value="$(PathOut)/thi1.end">
+    <textvar name="Theta2IrrigationEnd" value="$(PathOut)/thi2.end">
+    <textvar name="Theta3IrrigationEnd" value="$(PathOut)/thi3.end">
+    <textvar name="UZEnd" value="$(PathOut)/uz.end">
+    <textvar name="UZForestEnd" value="$(PathOut)/uzf.end">
+    <textvar name="UZIrrigationEnd" value="$(PathOut)/uzi.end">
+```
+6) Run the model for a long period (best for the whole modelling period)
 
 7) Go back to the LISFLOOD settings file, and set the InitLisfloodwithoutsplit to inactive, leaving all other switches as before:
 
 ```xml
     <setoption choice="0" name="InitLisfloodwithoutsplit"/>
     <setoption choice="0" name="InitLisflood"/>
+    <setoption choice="0" name="WarmStart/>
 ```
 
 ### If using Split routing:
@@ -100,6 +124,7 @@ As an alternative to using the internal initialization (and hence the bogus valu
 ```xml
     <setoption choice="0" name="InitLisfloodwithoutsplit"/>
     <setoption choice="1" name="InitLisflood"/>
+    <setoption choice="0" name="WarmStart/>
 ```
 
 3) Activate reporting maps (in NetCDF format) in <lfoptions> section of Settings.XML file using:
@@ -113,9 +138,27 @@ As an alternative to using the internal initialization (and hence the bogus valu
     <setoption choice="1" name="SplitRouting"/>
 ```
 
-5) Set the name of the reporting map for average percolation rate from upper to lower groundwater zone in <lfuser> section of Settings.XML file using:
+5) Set the name of the reporting map for average percolation rate from second to third soil layer, and from upper to lower groundwater zone in <lfuser> section of Settings.XML file using:
 ```xml
     <textvar name="LZAvInflowMap" value="$(PathOut)/lzavin">
+    <textvar name="SeepTopToSubBAverageOtherMap" value= "$(PathOut)/SeepTopToSubBAverageOtherMap">
+    <textvar name="SeepTopToSubBAverageForestMap" value= "$(PathOut)/SeepTopToSubBAverageForestMap">
+    <textvar name="SeepTopToSubBAverageIrrigationMap" value= "$(PathOut)/SeepTopToSubBAverageIrrigationMap">
+```
+Similarly, set the name of the reporting map for the end states in <lfuser> section of Settings.XML. Some examples are provided below:
+```xml
+    <textvar name="Theta1End" value="$(PathOut)/th1.end">
+    <textvar name="Theta2End" value="$(PathOut)/th2.end">
+    <textvar name="Theta3End" value="$(PathOut)/th3.end">
+    <textvar name="Theta1ForestEnd" value="$(PathOut)/thf1.end">
+    <textvar name="Theta2ForestEnd" value="$(PathOut)/thf2.end">
+    <textvar name="Theta3ForestEnd" value="$(PathOut)/thf3.end">
+    <textvar name="Theta1IrrigationEnd" value="$(PathOut)/thi1.end">
+    <textvar name="Theta2IrrigationEnd" value="$(PathOut)/thi2.end">
+    <textvar name="Theta3IrrigationEnd" value="$(PathOut)/thi3.end">
+    <textvar name="UZEnd" value="$(PathOut)/uz.end">
+    <textvar name="UZForestEnd" value="$(PathOut)/uzf.end">
+    <textvar name="UZIrrigationEnd" value="$(PathOut)/uzi.end">
 ```
 
 6) Set the name of the reporting map for average discharge map in <lfuser> section of Settings.XML file using:
@@ -130,6 +173,7 @@ As an alternative to using the internal initialization (and hence the bogus valu
 ```xml
     <setoption choice="0" name="InitLisfloodwithoutsplit"/>
     <setoption choice="0" name="InitLisflood"/>
+    <setoption choice="0" name="WarmStart/>
 ```
 
 ### What to do after the initialization run - Proceed with a LISFLOOD run
@@ -154,12 +198,16 @@ This tells the model to write the values of all state variables (averages, upstr
 
 
 
-ii) At the end of the initialization run one file (initialization without split routing) or two files (initialization with split routing) will be created in NetCDF format. Copy those files (found in folder "out", see the setting $(PathOut) above) into the folder "init" ($(PathInit))
+ii) The prerun will then created a number (from 1 to 17, depending on the .xml settings) of maps NetCDF format. Copy those maps (found in folder "out", see the setting $(PathOut) above) into the folder "init" ($(PathInit))
 
+Exmaples:
     lzavin.nc
     avgdis.nc
+    uzi.end.nc
+    thia.end.nc
+    SeepTopToSubBAverageOtherMap.nc
     
-Only the file lzavin.nc is required to run the Lisflood model without split routing.
+Please note that avgdis.nc is not required to run the Lisflood model without split routing.
 
 
 ```xml
@@ -184,6 +232,31 @@ CHANNEL split routing in two lines
 Average discharge map [m3/s]
 </comment>
 </textvar>
+
+<textvar name="SeepTopToSubBAverageOtherMap" value= "$(PathInit)/SeepTopToSubBAverageOtherMap">
+<textvar name="SeepTopToSubBAverageForestMap" value= "$(PathInit)/SeepTopToSubBAverageForestMap">
+<textvar name="SeepTopToSubBAverageIrrigationMap" value= "$(PathInit)/SeepTopToSubBAverageIrrigationMap">
+
+**************************************************************
+INITIAL CONDITIONS OTHER/FOREST/IRRIGATION
+(maps or single values)
+**************************************************************
+
+<textvar name="ThetaInit1Value" value="$(PathInit)/th1.end">
+<textvar name="ThetaInit2Value" value="$(PathInit)/th2.end">
+<textvar name="ThetaInit3Value" value="$(PathInit)/th3.end">
+
+<textvar name="ThetaForestInit1Value" value="$(PathInit)/thf1.end">
+<textvar name="ThetaForestInit2Value" value="$(PathInit)/thf2.end">
+<textvar name="ThetaForestInit3Value" value="$(PathInit)/thf3.end">
+
+<textvar name="ThetaIrrigationInit1Value" value="$(PathInit)/thi1.end">
+<textvar name="ThetaIrrigationInit2Value" value="$(PathInit)/thi2.end">
+<textvar name="ThetaIrrigationInit3Value" value="$(PathInit)/thi3.end">
+
+<textvar name="UZInitValue" value="$(PathInit)/uz.end">
+<textvar name="UZForestInitValue" value="$(PathInit)/uzf.end">
+<textvar name="UZIrrigationInitValue" value="$(PathInit)/uzi.end">
 ```
 
 iii) launch LISFLOOD
