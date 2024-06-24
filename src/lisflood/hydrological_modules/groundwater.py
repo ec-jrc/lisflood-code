@@ -135,8 +135,9 @@ class groundwater(HydroModule):
         # outflow from LZ to channel stops when LZ is below its threshold.
         # LZ can be below its threshold because of water abstractions
         self.var.LZOutflow = np.minimum(self.var.LowerZoneK * self.var.LZ, self.var.LZ - self.var.LZThreshold)
+        # Total UZ 
+        self.var.UZtotal = self.var.deffraction(self.var.UZ)
         # Outflow out of lower zone [mm per model timestep]
-
         self.var.LZOutflow = np.maximum(self.var.LZOutflow, 0)
         # No outflow if LZ is below threshold
         self.var.LZOutflowToChannel = self.var.LZOutflow
