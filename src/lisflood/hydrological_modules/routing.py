@@ -887,7 +887,8 @@ class routing(HydroModule):
                 # using ChanQKinOutEnd from Kinematic routing to have inflow from upstream kinematic pixels
                 # using ChanQKinOutAvgDt from kinematic routing to have average outflow from upstream kinematic pixels
                 # MCT pixels in order 0 can have inflow from kinematic pixels upstream
-                ChanQMCTOutAvgDt,ChanQMCTOutEnd,ChanM3MCTEnd,Cmend, Dmend = self.MCTRoutingLoop(ChanQMCTOutStart,ChanQMCTInStart,ChanQKinOutEnd,ChanQKinOutAvgDt,SideflowChanMCT,ChanM3MCTStart)
+                # ChanQMCTOutAvgDt,ChanQMCTOutEnd,ChanM3MCTEnd,Cmend, Dmend = self.MCTRoutingLoop(ChanQMCTOutStart,ChanQMCTInStart,ChanQKinOutEnd,ChanQKinOutAvgDt,SideflowChanMCT,ChanM3MCTStart)
+                ChanQMCTOutAvgDt,ChanQMCTOutEnd,ChanM3MCTEnd,Cmend, Dmend = self.MCTRoutingLoop(ChanQMCTOutStart,ChanQMCTInStart,self.var.ChanQKin,self.var.ChanQKinAvgDt,SideflowChanMCT,ChanM3MCTStart)
                 # Average outflow (x+dx) during time dt step (average) q1m
                 # Outflow (x+dx) at time t+dt end of calculation step (instant) q11
                 # Channel storage at time t+dt end of calculation step (instant) V11
@@ -898,13 +899,13 @@ class routing(HydroModule):
                 self.var.PrevDm0 = Dmend
 
                 # combine results from Kinematic and MCT pixels at x+dx t+dt (instant)
-                self.var.ChanQ = np.where(self.var.IsChannelKinematic, ChanQKinOutEnd, ChanQMCTOutEnd)
+                self.var.ChanQ = np.where(self.var.IsChannelKinematic, self.var.ChanQKin, ChanQMCTOutEnd)
                 # Outflow (x+dx) Q at the end of computation step t+dt (instant)
-                self.var.ChanM3 = np.where(self.var.IsChannelKinematic, ChanM3KinEnd, ChanM3MCTEnd)
+                self.var.ChanM3 = np.where(self.var.IsChannelKinematic, self.var.ChanM3Kin, ChanM3MCTEnd)
                 # Channel storage V at the end of computation step t+dt (instant)
 
                 # combine results from Kinematic and MCT pixels average outflow during routing sub-step dt (average)
-                self.var.ChanQAvgDt = np.where(self.var.IsChannelKinematic, ChanQKinOutAvgDt, ChanQMCTOutAvgDt)
+                self.var.ChanQAvgDt = np.where(self.var.IsChannelKinematic, self.var.ChanQKinAvgDt, ChanQMCTOutAvgDt)
                 # Average channel outflow (x+dx) QAvg during routing step (average)
 
                 # update input (x) Q at t for next step (instant)
