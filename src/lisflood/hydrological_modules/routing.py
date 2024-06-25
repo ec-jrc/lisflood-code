@@ -717,22 +717,22 @@ class routing(HydroModule):
                 # #cmcheck is this necessary?
 
                 # Kinematic routing
-                ChanQKinOutStart = self.var.ChanQKin.copy()
-                # Outflow (x+dx) at time t beginning of calculation step (instant)
-                # This is used to calculate inflow from upstream cells
-
-                # cmcheck
-                # ChanQKinOutStart_avg = self.var.ChanQAvgDt.copy()
-                ChanQKinOutStart_avg = self.var.ChanQKinAvgDt.copy()
-                # Average outflow (x+dx) at time t beginning of calculation step (average) - end of previous step
-                # This is used to calculate inflow from upstream cells
-
-                # Average channel inflow (x) at the beginning of calc step dt
-                ChanQKinOutStart_avgPcr = decompress(ChanQKinOutStart_avg)  # pcr
-                ChanQKinInStart_avg = compressArray(upstream(self.var.LddChan, ChanQKinOutStart_avgPcr))
-
-                ChanM3KinStart = self.var.ChanM3Kin.copy()
-                # Channel storage at time t beginning of calculation step (instant)
+                # ChanQKinOutStart = self.var.ChanQKin.copy()
+                # # Outflow (x+dx) at time t beginning of calculation step (instant)
+                # # This is used to calculate inflow from upstream cells
+                #
+                # # cmcheck
+                # # ChanQKinOutStart_avg = self.var.ChanQAvgDt.copy()
+                # ChanQKinOutStart_avg = self.var.ChanQKinAvgDt.copy()
+                # # Average outflow (x+dx) at time t beginning of calculation step (average) - end of previous step
+                # # This is used to calculate inflow from upstream cells
+                #
+                # # Average channel inflow (x) at the beginning of calc step dt
+                # ChanQKinOutStart_avgPcr = decompress(ChanQKinOutStart_avg)  # pcr
+                # ChanQKinInStart_avg = compressArray(upstream(self.var.LddChan, ChanQKinOutStart_avgPcr))
+                #
+                # ChanM3KinStart = self.var.ChanM3Kin.copy()
+                # # Channel storage at time t beginning of calculation step (instant)
 
                 self.KINRouting(SideflowChan)
                 # self.var.ChanQKin
@@ -817,24 +817,30 @@ class routing(HydroModule):
                     # Kinematic routing (+ MCT)
                     # This is calculated for every grid cell, including MCT grid cells
 
-                    ChanQKinOutStart = self.var.ChanQ.copy()
-                    # Outflow (x+dx) Q at time t beginning of calculation step (instant)
-                    # This is used to calculate inflow from upstream cells
-
-                    # cmcheck
-                    ChanQKinOutStart_avg = self.var.ChanQAvgDt.copy()
-                    # Average outflow (x+dx) at time t beginning of calculation step (average) - end of previous step
-                    # This is used to calculate inflow from upstream cells
-
-                    ChanQKinOutStart_avgPcr = decompress(ChanQKinOutStart_avg)  # pcr
-                    ChanQKinInStart_avg = compressArray(upstream(self.var.LddChan, ChanQKinOutStart_avgPcr))
-                    # Average channel inflow (x) at the beginning of calc step dt
-
-                    ChanM3KinStart = self.var.ChanM3.copy()
-                    # Channel storage at time t beginning of calculation step (instant)
+                    # ChanQKinOutStart = self.var.ChanQ.copy()
+                    # # Outflow (x+dx) Q at time t beginning of calculation step (instant)
+                    # # This is used to calculate inflow from upstream cells
+                    #
+                    # # cmcheck
+                    # ChanQKinOutStart_avg = self.var.ChanQAvgDt.copy()
+                    # # Average outflow (x+dx) at time t beginning of calculation step (average) - end of previous step
+                    # # This is used to calculate inflow from upstream cells
+                    #
+                    # ChanQKinOutStart_avgPcr = decompress(ChanQKinOutStart_avg)  # pcr
+                    # ChanQKinInStart_avg = compressArray(upstream(self.var.LddChan, ChanQKinOutStart_avgPcr))
+                    # # Average channel inflow (x) at the beginning of calc step dt
+                    #
+                    # ChanM3KinStart = self.var.ChanM3.copy()
+                    # # Channel storage at time t beginning of calculation step (instant)
 
                     ### calling kinematic routing
-                    ChanQKinOutAvgDt, ChanQKinOutEnd, ChanM3KinEnd = self.KINRouting(ChanQKinOutStart_avg,ChanQKinOutStart,SideflowChan)
+                    self.KINRouting(SideflowChan)
+                    # self.var.ChanQKin
+                    # self.var.ChanQKinAvgDt
+                    # self.var.ChanM3Kin
+
+                    # ChanQKinOutAvgDt, ChanQKinOutEnd, ChanM3KinEnd = self.KINRouting(ChanQKinOutStart_avg,ChanQKinOutStart,SideflowChan)
+
                     # Average outflow (x+dx) during calculation step dt (average)
                     # Outflow (x+dx) at time t+dt end of calculation step (instant)
                     # Channel storage at time t+dt end of calculation step (instant)
