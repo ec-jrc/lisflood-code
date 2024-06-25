@@ -709,9 +709,12 @@ class routing(HydroModule):
             if option['InitLisflood']: self.var.IsChannelKinematic = self.var.IsChannel.copy()
             # Use kinematic routing in all grid cells
 
-            # KINEMATIC ROUTING
+            # KINEMATIC ROUTING ONLY
             if option['InitLisflood'] or (not(option['SplitRouting']) and (not(option['MCTRouting']))):
                 # Using variables ChanQKinOutStart, ChanM3KinEnd and ChanQKinOutEnd for clarity
+                # Kin routing uses same variable for inputs and outputs. Values are updated during computation of pixels sets, upsttream to downstream.
+                # #cmcheck is this necessary?
+
                 # Kinematic routing
                 ChanQKinOutStart = self.var.ChanQKin.copy()
                 # Outflow (x+dx) at time t beginning of calculation step (instant)
@@ -730,17 +733,16 @@ class routing(HydroModule):
                 # Channel storage at time t beginning of calculation step (instant)
 
 
-
                 ChanQKinOutEnd_avg, ChanQKinOutEnd,ChanM3KinEnd = self.KINRouting(ChanQKinOutStart_avg,ChanQKinOutStart,SideflowChan)
                 # Average outflow (x+dx) during calculation step dt (average)
                 # Outflow (x+dx) at time t+dt end of calculation step (instant)
                 # Channel storage at time t+dt end of calculation step (instant)
 
+                # cmcheck
                 # balance_avg = np.abs((SideflowChanM3 - ChanM3KinEnd + ChanM3KinStart) * self.var.InvDtRouting + ChanQKinInStart_avg - ChanQKinOutEnd_avg)
                 # # mass balance for channel pixel
                 # if balance_avg.any() > 1.e-12:
                 #     print('Error in kinematic routing channel mass balance > 1.e-12')
-
 
 
                 # updating variables for next routing step
@@ -1108,9 +1110,16 @@ class routing(HydroModule):
         # a constant amount of water has to be added
         # -> add QLimit discharge
 
+        # cmcheck
+        # temporary fix to average discharge in kinematic routing
+        # creating dummy variables
+        ChanQKinOutStart_avg = self.var.ChanQKin.copy()
+        Chan2QKinOutStart_avg = self.var.Chan2QKin.copy()
+        ######
+
         # --- Main channel routing ---
 
-        self.river_router.kinematicWaveRouting(self.var.ChanQKin, self.var.Sideflow1Chan, "main_channel")
+        self.river_router.kinematicWaveRouting(ChanQKinOutStart_avg, self.var.ChanQKin, self.var.Sideflow1Chan, "main_channel")
         # sef.var.ChanQKin is outflow (x+dx) from main channel at time t in input and at time t+dt in output (instant)
         self.var.ChanM3Kin = self.var.ChanLength * self.var.ChannelAlpha * self.var.ChanQKin ** self.var.Beta
         # Volume in main channel at end of computation step (at t+dt) (instant)
@@ -1125,7 +1134,7 @@ class routing(HydroModule):
 
         # --- Second line channel routing (same channel geometry but increased Manning coeff) ---
 
-        self.river_router.kinematicWaveRouting(self.var.Chan2QKin, Sideflow2Chan, "floodplains")
+        self.river_router.kinematicWaveRouting(Chan2QKinOutStart_avg, self.var.Chan2QKin, Sideflow2Chan, "floodplains")
         # sef.var.Chan2QKin is (virtual) total outflow (x+dx) at time t in input and at time t+dt in output (instant)
         # (same channel geometry but using increased Manninig coeff)
         self.var.Chan2M3Kin = self.var.ChanLength * self.var.ChannelAlpha2 * self.var.Chan2QKin ** self.var.Beta
