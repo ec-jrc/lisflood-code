@@ -712,78 +712,28 @@ class routing(HydroModule):
 
             # KINEMATIC ROUTING ONLY
             if option['InitLisflood'] or (not(option['SplitRouting']) and (not(option['MCTRouting']))):
-                # Using variables ChanQKinOutStart, ChanM3KinEnd and ChanQKinOutEnd for clarity
-                # Kin routing uses same variable for inputs and outputs. Values are updated during computation of pixels sets, upsttream to downstream.
-                # #cmcheck is this necessary?
+                # Kinematic routing uses same variable for inputs and outputs. Values are updated during computation
+                # from upsttream to downstream.
 
-                # Kinematic routing
-                # ChanQKinOutStart = self.var.ChanQKin.copy()
-                # # Outflow (x+dx) at time t beginning of calculation step (instant)
-                # # This is used to calculate inflow from upstream cells
-                #
-                # # cmcheck
-                # # ChanQKinOutStart_avg = self.var.ChanQAvgDt.copy()
-                # ChanQKinOutStart_avg = self.var.ChanQKinAvgDt.copy()
-                # # Average outflow (x+dx) at time t beginning of calculation step (average) - end of previous step
-                # # This is used to calculate inflow from upstream cells
-                #
-                # # Average channel inflow (x) at the beginning of calc step dt
-                # ChanQKinOutStart_avgPcr = decompress(ChanQKinOutStart_avg)  # pcr
-                # ChanQKinInStart_avg = compressArray(upstream(self.var.LddChan, ChanQKinOutStart_avgPcr))
-                #
-                # ChanM3KinStart = self.var.ChanM3Kin.copy()
-                # # Channel storage at time t beginning of calculation step (instant)
+                self.KinRouting(SideflowChan)
 
-                self.KINRouting(SideflowChan)
-                # self.var.ChanQKin
-                # self.var.ChanQKinAvgDt
-                # self.var.ChanM3Kin
+                # Updating general variables for channels routing
 
-                # ChanQKinOutEnd_avg, ChanQKinOutEnd, ChanM3KinEnd = self.KINRouting(ChanQKinOutStart_avg,ChanQKinOutStart, SideflowChan)
-                # Average outflow (x+dx) during calculation step dt (average)
-                # Outflow (x+dx) at time t+dt end of calculation step (instant)
-                # Channel storage at time t+dt end of calculation step (instant)
-
-                # cmcheck
-                # balance_avg = np.abs((SideflowChanM3 - ChanM3KinEnd + ChanM3KinStart) * self.var.InvDtRouting + ChanQKinInStart_avg - ChanQKinOutEnd_avg)
-                # # mass balance for channel pixel
-                # if balance_avg.any() > 1.e-12:
-                #     print('Error in kinematic routing channel mass balance > 1.e-12')
-
-
-                # # updating variables for next routing step
-                # self.var.ChanQKin = ChanQKinOutEnd.copy()
-                # # Outflow (x+dx) Q at time t+dt (end of calc step) (instant)
-                # self.var.ChanM3Kin = ChanM3KinEnd.copy()
-                # # Channel storage V at time t+dt (end of calc step) (instant)
-                # self.var.ChanQKinAvgDt = ChanQKinOutEnd_avg.copy()
-                # # Average Outflow (x+dx) Q during computation step dt (average)
-
-                # self.var.ChanQ = ChanQKinOutEnd.copy()
                 self.var.ChanQ = self.var.ChanQKin.copy()
                 # Outflow (x+dx) Q at the end of computation step t+dt for full section (instant)
-                # same as ChanQKinOutEnd=self.var.ChanQKin for Kinematic routing only
-                # self.var.ChanM3 = ChanM3KinEnd.copy()
+
                 self.var.ChanM3 = self.var.ChanM3Kin.copy()
                 # Channel storage V at the end of computation step t+dt for full section (instant)
-                # same as ChanM3KinEnd for Kinematic routing only
-
-                # self.var.ChanQAvgDt = ChanQKinOutEnd_avg.copy()
 
                 self.var.ChanQAvgDt = self.var.ChanQKinAvgDt.copy()
                 # Average Outflow (x+dx) Q during computation step dt for full section (instant)
-                # same as ChanQKinOutEnd=self.var.ChanQKin for Kinematic routing only
-
-                # # Average channel inflow (x) Qavg for next sub-routing step
-                # ChanQAvgDtPcr = decompress(self.var.ChanQAvgDt)  # pcr
-                # self.var.ChanQAvgInDt = compressArray(upstream(self.var.LddChan, ChanQAvgDtPcr))
 
                 # self.var.sumDisDay += self.var.ChanQ
-                # # sum of total river outflow on model sub-step
+                # sum of river outflow on model sub-steps (instantaneous discharge)
 
                 self.var.sumDisDay += self.var.ChanQAvgDt
-                # sum of average river outflow on routing sub-step
-                # used for calculating average discharge on model time step
+                # sum of river outflow on model sub-steps (average discharge)
+                # This is used the average outflow discharge on the model time step
 
 
             # SPLIT ROUTING ONLY - no InitLisfllod
@@ -1048,9 +998,8 @@ class routing(HydroModule):
             # maximum set to 30km/day for 5km cell, is at DtSec/Traveltime=6, is at Traveltime<DtSec/6
 
 
-    def KINRouting(self,SideflowChan):
-    # def KINRouting(self, ChanQKin_avg, ChanQKin, SideflowChan):
-        """Based on a 4-point implicit finite-difference numerical solution of the kinematic wave equations.
+    def KinRouting(self,SideflowChan):
+        """Kinematic routing based on a 4-point implicit finite-difference numerical solution of the kinematic wave equations.
         Given the instantaneous flow rate (discharge), the corresponding amount of water stored in the channel
         is calculated using Manning equation for steady state flow where Alpha is currently fixed
         at half of bankfull depth.
@@ -1058,44 +1007,35 @@ class routing(HydroModule):
         https://ponce.sdsu.edu/Applied_Hydrology_Chow_1988.pdf
         A = alpha * Q**beta
         V = chanlength * alpha * Q**beta
+        Kinematic routing uses same variables for inputs and outputs. From upstream to downstream, input values are used
+        to calculate inflow from upstream cells, then routing is solved and discharge values are updated.
         Takes:
-        ChanQKin = inflow (at x) from upstream channels [m3/sec] (instant)
-        SideflowChan = lateral inflow into the channel segment (cell) [m3/channellength/sec]
+        self.var.ChanQKin = inflow (at x) from upstream channels at time t+dt [m3/sec] (instant)
+        self.var.ChanQKinAvgDt = average inflow (at x) from upstream channels at time t+dt [m3/sec] (average)
+        SideflowChan = lateral inflow into the channel segment (cell) during dt [m3/channellength/sec]
         :returns
-        ChanQKin = outflow (x+dx) at time t+dt (instant) [m3/s]
-        ChanM3Kin = amount of water stored in the channel at time t+dt (instant) [m3]
+        self.var.ChanQKin = outflow (x+dx) at time t+dt (instant) [m3/s]
+        self.var.ChanQKinAvgDt = average outflow (x+dx) at time t+dt (average) [m3/s]
+        self.var.ChanM3Kin = amount of water stored in the channel at time t+dt (instant) [m3]
         """
 
-        #  ---- Single Routing ---------------
-        # No split routing
-        # side flow consists of runoff (incl. groundwater), inflow from reservoirs (optional) and external inflow hydrographs (optional)
         SideflowChan[np.isnan(SideflowChan)] = 0 # TEMPORARY FIX - SEE DEBUG ABOVE!
+        # side flow contribution
+        # side flow consists of runoff (incl. groundwater), inflow from reservoirs (optional) and external inflow hydrographs (optional)
 
-        # ChanQKinInStartPcr = decompress(ChanQKin)  # pcr
-        # ChanQKinInStart = compressArray(upstream(self.var.LddKinematic, ChanQKinInStartPcr))
-        # # Inflow (at space x) at time t+dt beginning of calculation step (instant) from upstream cells
-        #
-        # ChanM3KinStart = self.var.ChanLength * self.var.ChannelAlpha * ChanQKin**self.var.Beta
-        # # ChanM3KinStart is the Volume in channel at time t beginning of computation step (instant)
-
-        ####################################################################################################
-        #self.river_router.kinematicWaveRouting(self.var.ChanQKin, SideflowChan, "main_channel")
+        #####
         self.river_router.kinematicWaveRouting(self.var.ChanQKinAvgDt,self.var.ChanQKin, SideflowChan, "main_channel")
-        # self.river_router.kinematicWaveRouting(ChanQKin_avg, ChanQKin, SideflowChan, "main_channel")
-        # ChanQKin is outflow (at x+dx) at time t in input and at time t+dt in output (instant)
-        ####################################################################################################
+        # Calling function to solve kinematic routing
+        #####
 
         self.var.ChanM3Kin = self.var.ChanLength * self.var.ChannelAlpha * self.var.ChanQKin**self.var.Beta
-        # ChanM3Kin = self.var.ChanLength * self.var.ChannelAlpha * ChanQKin**self.var.Beta
-        # ChanM3Kin is the Volume in channel at end of computation step (at t+dt) (instant)
+        # Water storage volume in the channel at end of computation step (at t+dt) (instant)
 
         self.var.ChanM3Kin = np.maximum(self.var.ChanM3Kin, 0.0)
-        # ChanM3Kin = np.maximum(ChanM3Kin, 0.0)
         # Check for negative volumes at the end of computation step
         # Volume at time t+dt
 
         self.var.ChanQKin = (self.var.ChanM3Kin * self.var.InvChanLength * self.var.InvChannelAlpha) ** (self.var.InvBeta)
-        # ChanQKin = (ChanM3Kin * self.var.InvChanLength * self.var.InvChannelAlpha) ** (self.var.InvBeta)
         # Correct for negative discharge at the end of computation step (instant)
         # Outflow (x+dx) at time t+dt
 
@@ -1106,7 +1046,6 @@ class routing(HydroModule):
 
         return
 
-        # return ChanQKin_avg, ChanQKin, ChanM3Kin
 
 
     def SplitRouting(self, SideflowChan):
