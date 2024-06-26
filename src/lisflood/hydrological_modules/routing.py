@@ -733,25 +733,30 @@ class routing(HydroModule):
 
                 self.var.sumDisDay += self.var.ChanQAvgDt
                 # sum of river outflow on model sub-steps (average discharge)
-                # This is used the average outflow discharge on the model time step
+                # This is used to calculate the average outflow discharge on the model time step
 
 
             # SPLIT ROUTING ONLY - no InitLisfllod
             if not option['InitLisflood'] and option['SplitRouting'] and not(option['MCTRouting']):
+                # Split routing uses same variable for inputs and outputs. Values are updated during computation
+                # from upsttream to downstream.
 
                 self.SplitRouting(SideflowChan)
 
                 # Combine the two lines of routing together
+                # Updating general variables for channels routing
 
                 self.var.ChanQ = np.maximum(self.var.ChanQKin + self.var.Chan2QKin - self.var.QLimit, 0)
-                # (real) total outflow (at x + dx) at time t + dt (instant)
+                # (real) total outflow (at x+dx) at time t+dt end of step for the full cross-section (instant)
                 # Main channel routing and above bankfull routing from second line of routing
+
                 self.var.ChanM3 = self.var.ChanM3Kin + self.var.Chan2M3Kin - self.var.Chan2M3Start
                 # Total channel storage [m3] = Volume in main channel (ChanM3Kin) + volume above bankfull in second line (Chan2M3Kin - Chan2M3Start)
-                # at t+dt (instant)
+                # Total channel storage V at the end of computation step t+dt for full section (instant)
 
                 self.var.sumDisDay += self.var.ChanQ
-                # sum of total river outflow on model sub-step
+                # sum of total river outflow on model sub-step (instantaneous discharge)
+                # This is used to calculate the average outflow discharge on the model time step
 
 
             # KINEMATIC/SPLIT ROUTING AND MUSKINGUM-CUNGE-TODINI - no InitLisflood
@@ -1013,7 +1018,9 @@ class routing(HydroModule):
         self.var.ChanQKin = inflow (at x) from upstream channels at time t+dt [m3/sec] (instant)
         self.var.ChanQKinAvgDt = average inflow (at x) from upstream channels at time t+dt [m3/sec] (average)
         SideflowChan = lateral inflow into the channel segment (cell) during dt [m3/channellength/sec]
-        :returns
+        :param SideflowChan: side flow contribution from runoff (incl. groundwater), inflow from reservoirs (optional)
+        and external inflow hydrographs (optional) [m3/s/m]
+        :return
         self.var.ChanQKin = outflow (x+dx) at time t+dt (instant) [m3/s]
         self.var.ChanQKinAvgDt = average outflow (x+dx) at time t+dt (average) [m3/s]
         self.var.ChanM3Kin = amount of water stored in the channel at time t+dt (instant) [m3]
@@ -1039,18 +1046,30 @@ class routing(HydroModule):
         # Correct for negative discharge at the end of computation step (instant)
         # Outflow (x+dx) at time t+dt
 
-        # This function is returning updated:
-        # self.var.ChanQKin
-        # self.var.ChanQKinAvgDt
-        # self.var.ChanM3Kin
-
         return
 
 
 
     def SplitRouting(self, SideflowChan):
-        # River routing is split in two channels: a main channel and a virtual channel representing floodplains (second
-        # line of routing)
+        """
+        Split routing is based on a 4-point implicit finite-difference numerical solution of the kinematic wave equations.
+        Split routing uses two lines of routing: a main channel and a virtual channel representing floodplains (second
+        line of routing). Discharge is routed using the main channel up to QLimit. The second line uses the same channel
+        geometry as the main channel but different riverbed roughness.
+        Max discharge in the main channel (QLimit) is used to initialise the second line of routing then it's subtracted
+        at the end of the computation.
+        Total river outflow is given by (Q main channel + Q second line - QLimit)
+
+        :param SideflowChan: side flow contribution from runoff (incl. groundwater), inflow from reservoirs (optional)
+        and external inflow hydrographs (optional) [m3/s/m]
+        :return:
+        self.var.ChanQKin: outflow (x+dx) at time t+dt from the main channel (instant) [m3/s]
+        self.var.ChanM3Kin: amount of water stored in the main channel at time t+dt (instant) [m3]
+        self.var.Chan2QKin: outflow (x+dx) at time t+dt from the second line channel (including QLimit) (instant) [m3/s]
+        self.var.Chan2M3Kin: amount of water stored in the second line channel at time t+dt (including self.var.Chan2M3Start) (instant) [m3]
+        self.var.CrossSection2Area: cross-section area above bankfull for second line of routing at time t+dt (instant) [m2]
+        """
+
 
         # --- Split sideflow between the two lines of routing ---
 
@@ -1061,7 +1080,7 @@ class routing(HydroModule):
 
         # self.var.Sideflow1Chan = np.where(self.var.ChanM3Kin > self.var.M3Limit, SideflowRatio*SideflowChan, SideflowChan)
         # This is creating instability because ChanM3Kin can be < M3Limit between two routing sub-steps
-        # TO BY REPLACED WITH THE FOLLOWING
+
         self.var.Sideflow1Chan = np.where(
             (self.var.ChanM3Kin + self.var.Chan2M3Kin - self.var.Chan2M3Start) > self.var.M3Limit,
             SideflowRatio * SideflowChan, SideflowChan)
@@ -1070,7 +1089,7 @@ class routing(HydroModule):
         self.var.Sideflow1Chan = np.where(np.abs(SideflowChan) < 1e-7, SideflowChan, self.var.Sideflow1Chan)
         # too small values are avoided
         Sideflow2Chan = SideflowChan - self.var.Sideflow1Chan
-        # sideflow to the 'floodplains' channel
+        # sideflow to the 'second line' channel
 
         Sideflow2Chan = Sideflow2Chan + self.var.Chan2QStart * self.var.InvChanLength
         # as kinematic wave gets slower with less water
@@ -1078,11 +1097,12 @@ class routing(HydroModule):
         # -> add QLimit discharge
 
         # cmcheck
-        # temporary fix to average discharge in kinematic routing
+        # temporary workaround for average discharge in kinematic routing
         # creating dummy variables
         ChanQKinOutStart_avg = self.var.ChanQKin.copy()
         Chan2QKinOutStart_avg = self.var.Chan2QKin.copy()
         ######
+
 
         # --- Main channel routing ---
 
@@ -1094,12 +1114,12 @@ class routing(HydroModule):
         self.var.ChanM3Kin = np.maximum(self.var.ChanM3Kin, 0.0)
         # Check for negative volumes at the end of computation step in main channel
         # Volume in main channel at t+dt
-        self.var.ChanQKin = (self.var.ChanM3Kin * self.var.InvChanLength * self.var.InvChannelAlpha) ** (
-            self.var.InvBeta)
+        self.var.ChanQKin = (self.var.ChanM3Kin * self.var.InvChanLength * self.var.InvChannelAlpha) ** (self.var.InvBeta)
         # Correct negative discharge in main channel at the end of computation step
         # Outflow (x+dx) at t+dt (instant)
 
-        # --- Second line channel routing (same channel geometry but increased Manning coeff) ---
+
+        # --- Second line channel routing (same channel geometry as main channel but increased Manning coeff) ---
 
         self.river_router.kinematicWaveRouting(Chan2QKinOutStart_avg, self.var.Chan2QKin, Sideflow2Chan, "floodplains")
         # sef.var.Chan2QKin is (virtual) total outflow (x+dx) at time t in input and at time t+dt in output (instant)
@@ -1108,9 +1128,9 @@ class routing(HydroModule):
         # Total (virtual) volume of water in river channel when second routing line is active
         # (same channel geometry but using increased Manninig coeff)
 
-        diffM3 = self.var.Chan2M3Kin - self.var.Chan2M3Start
+        FldpM3 = self.var.Chan2M3Kin - self.var.Chan2M3Start
         # Water volume over bankfull
-        self.var.Chan2M3Kin = np.where(diffM3 < 0.0, self.var.Chan2M3Start, self.var.Chan2M3Kin)
+        self.var.Chan2M3Kin = np.where(FldpM3 < 0.0, self.var.Chan2M3Start, self.var.Chan2M3Kin)
         # Check for negative volume over bankfull at the end of routing step for second line of routing
         # Total (virtual) volume for second line of routing cannot be smaller than the bankfull volume for the second line
         # of routing aka the bankfull volume calculated with increased Manning coeff (Chan2M3Start)
@@ -1118,8 +1138,7 @@ class routing(HydroModule):
         self.var.CrossSection2Area = (self.var.Chan2M3Kin - self.var.Chan2M3Start) * self.var.InvChanLength
         # Compute cross-section area above bankfull for second line of routing
 
-        self.var.Chan2QKin = (self.var.Chan2M3Kin * self.var.InvChanLength * self.var.InvChannelAlpha2) ** (
-            self.var.InvBeta)
+        self.var.Chan2QKin = (self.var.Chan2M3Kin * self.var.InvChanLength * self.var.InvChannelAlpha2) ** (self.var.InvBeta)
         # (virtual) total outflow (at x + dx) at time t + dt (instant) for second line of routing (using increased Manninig coeff)
         # Correct negative discharge at the end of computation step in second line
 
