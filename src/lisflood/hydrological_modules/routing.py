@@ -772,39 +772,29 @@ class routing(HydroModule):
                     # Kinematic routing (+ MCT)
                     # This is calculated for every grid cell, including MCT grid cells
 
-                    # ChanQKinOutStart = self.var.ChanQ.copy()
-                    # # Outflow (x+dx) Q at time t beginning of calculation step (instant)
-                    # # This is used to calculate inflow from upstream cells
-                    #
-                    # # cmcheck
-                    # ChanQKinOutStart_avg = self.var.ChanQAvgDt.copy()
-                    # # Average outflow (x+dx) at time t beginning of calculation step (average) - end of previous step
-                    # # This is used to calculate inflow from upstream cells
-                    #
-                    # ChanQKinOutStart_avgPcr = decompress(ChanQKinOutStart_avg)  # pcr
-                    # ChanQKinInStart_avg = compressArray(upstream(self.var.LddChan, ChanQKinOutStart_avgPcr))
-                    # # Average channel inflow (x) at the beginning of calc step dt
-                    #
-                    # ChanM3KinStart = self.var.ChanM3.copy()
-                    # # Channel storage at time t beginning of calculation step (instant)
-
                     ### calling kinematic routing
-                    self.KINRouting(SideflowChan)
+                    self.KinRouting(SideflowChan)
+
                     # self.var.ChanQKin
-                    # self.var.ChanQKinAvgDt
-                    # self.var.ChanM3Kin
-
-                    # ChanQKinOutAvgDt, ChanQKinOutEnd, ChanM3KinEnd = self.KINRouting(ChanQKinOutStart_avg,ChanQKinOutStart,SideflowChan)
-
-                    # Average outflow (x+dx) during calculation step dt (average)
                     # Outflow (x+dx) at time t+dt end of calculation step (instant)
+                    # self.var.ChanQKinAvgDt
+                    # Average outflow (x+dx) during calculation step dt (average)
+                    # self.var.ChanM3Kin
                     # Channel storage at time t+dt end of calculation step (instant)
 
+                    ChanQKinOutEnd = self.var.ChanQKin.copy()
+                    # Outflow (x+dx) Q at the end of computation step t+dt for full section (instant)
 
+                    ChanM3KinEnd = self.var.ChanM3Kin.copy()
+                    # Channel storage V at the end of computation step t+dt for full section (instant)
+
+                    ChanQKinOutAvgDtEnd = self.var.ChanQKinAvgDt.copy()
+                    # Average Outflow (x+dx) Q during computation step dt for full section (instant)
 
 
                 if (option['SplitRouting']):
                     # Split routing (+ MCT)
+                    # This is calculated for every grid cell, including MCT grid cells
 
                     self.SplitRouting(SideflowChan)
 
@@ -820,13 +810,17 @@ class routing(HydroModule):
                     # Total channel storage [m3] = Volume in main channel (ChanM3Kin) + volume above bankfull in second line (Chan2M3Kin - Chan2M3Start)
                     # at t+dt (instant)
 
+                    # cmcheck - workaround
+                    ChanQKinOutAvgDtEnd = ChanQKinOutEnd.copy()
+
 
                 # MCT routing
+                # This is calculated for MCT grid cell only
 
                 ChanQMCTOutStart = self.var.ChanQ.copy()
                 # Outflow (x+dx) at time t (instant)  q10
 
-                # debug
+                # cmcheck - debug
                 # ChanQKinOutEnd[ChanQKinOutEnd != 0] = 0
                 # Set inflow from kinematic pixels to 1
 
@@ -839,11 +833,11 @@ class routing(HydroModule):
 
 
                 #### calling MCT routing
-                # using ChanQKinOutEnd from Kinematic routing to have inflow from upstream kinematic pixels
-                # using ChanQKinOutAvgDt from kinematic routing to have average outflow from upstream kinematic pixels
+                # using self.var.ChanQKin from Kinematic routing to have inflow from upstream kinematic pixels contributing to MCT pixels
+                # using self.var.ChanQKinAvgDt from kinematic routing to have average outflow from upstream kinematic pixels contributing to MCT pixels
                 # MCT pixels in order 0 can have inflow from kinematic pixels upstream
-                # ChanQMCTOutAvgDt,ChanQMCTOutEnd,ChanM3MCTEnd,Cmend, Dmend = self.MCTRoutingLoop(ChanQMCTOutStart,ChanQMCTInStart,ChanQKinOutEnd,ChanQKinOutAvgDt,SideflowChanMCT,ChanM3MCTStart)
-                ChanQMCTOutAvgDt,ChanQMCTOutEnd,ChanM3MCTEnd,Cmend, Dmend = self.MCTRoutingLoop(ChanQMCTOutStart,ChanQMCTInStart,self.var.ChanQKin,self.var.ChanQKinAvgDt,SideflowChanMCT,ChanM3MCTStart)
+
+                ChanQMCTOutAvgDt,ChanQMCTOutEnd,ChanM3MCTEnd,Cmend, Dmend = self.MCTRoutingLoop(ChanQMCTOutStart,ChanQMCTInStart,ChanQKinOutEnd,ChanQKinOutAvgDtEnd,SideflowChanMCT,ChanM3MCTStart)
                 # Average outflow (x+dx) during time dt step (average) q1m
                 # Outflow (x+dx) at time t+dt end of calculation step (instant) q11
                 # Channel storage at time t+dt end of calculation step (instant) V11
@@ -1070,9 +1064,7 @@ class routing(HydroModule):
         self.var.CrossSection2Area: cross-section area above bankfull for second line of routing at time t+dt (instant) [m2]
         """
 
-
         # --- Split sideflow between the two lines of routing ---
-
         # Ad
         SideflowRatio = np.where((self.var.ChanM3Kin + self.var.Chan2M3Kin) > 0,
                                  self.var.ChanM3Kin / (self.var.ChanM3Kin + self.var.Chan2M3Kin), 0.0)
@@ -1149,7 +1141,6 @@ class routing(HydroModule):
 
 
     def MCTRoutingLoop(self,ChanQMCTOutStart,ChanQMCTInStart,ChanQKinOut,ChanQKinOutAvgDt,SideflowChanMCT,ChanM3Start):
-                        # (ChanQMCTOutStart,ChanQMCTInStart, ChanQKinOutEnd, ChanQKinOutAvgDt, SideflowChanMCT,ChanM3MCTStart)
         """This function implements Muskingum-Cunge-Todini routing method
         MCT routing is calculated on MCT pixels only but gets inflow from both KIN and MCT upstream pixels. This is the reason we need both ChanQKinOutEnd and ChanQKinOutAvgDt
         Function get_mct_pix is used to compress arrays with all river channel pixels to arrays containing MCT pixels only.
@@ -1160,11 +1151,11 @@ class routing(HydroModule):
             Reggiani, P., Todini, E., & Meißner, D. (2016). On mass and momentum conservation in the variable-parameter Muskingum method. Journal of Hydrology, 543, 562–576. https://doi.org/10.1016/j.jhydrol.2016.10.030
             (Appendix B)
 
-        :param ChanQMCTOutStart: outflow at time t (instant) - q10
-        :param ChanQMCTInStart: inflow at time t (instant) - q00
+        :param ChanQMCTOutStart: computation cell outflow at time t (instant) - q10
+        :param ChanQMCTInStart: computation cell inflow at time t (outflow of upstream cells) (instant) - q00
         :param ChanQKinOut: outflow from kinematic pixels at time t+dt (instant) -> q01
         :param ChanQKinOutAvgDt: average outflow from kinematic pixels during time dt (average) -> q0m
-        :param SideflowChanMCT: sideflow [m2/s]
+        :param SideflowChanMCT: sideflow contribution to the computation cell [m2/s]
         :param ChanM3Start: water volume in the channel at beginning of computation step (t)
         :return:
         ChanQMCTOutAvg:
@@ -1267,28 +1258,14 @@ class routing(HydroModule):
                 # if q01[idpix] == 0:
                 #     q01[idpix] = eps
 
-                ### calling MCT function for single cell
+                ### calling MCT function for single cell idpx
                 q11[idpix], V11[idpix],q1m[idpix], Cm0[idpix], Dm0[idpix] = self.MCTRouting_single(V00[idpix],q10[idpix], q01[idpix], q00[idpix], ql[idpix],q0m[idpix], Cm0[idpix], Dm0[idpix],
                                                                                                          dt, xpix[idpix], s0[idpix], Balv[idpix], ANalv[idpix], Nalv[idpix])
-
-                # # cmcheck - tanto entra tanto esce
-                # # debug
+                # # debug - cmcheck - tanto entra tanto esce
                 # q11[idpix] = q01[idpix] + ql[idpix]
                 # # Set outflow to be the same as inflow in MCT grid cells ('tanto entra tanto esce')
                 # V11[idpix] = V00[idpix]
                 # # Set end volume to be the same as initial volume in MCT grid cells ('tanto entra tanto esce')
-
-
-                # ### calc integration on the control volume (pixel)
-                # moved to routing_single
-                # # calc average discharge outflow q1m for MCT channels during routing sub step dt
-                # # Calculate average outflow using water balance for MCT channel grid cell over sub-routing step
-                # q1m[idpix] = q0m[idpix] + ql[idpix] + (V00[idpix] - V11[idpix]) / dt
-                # # cmcheck no valori di portata negativi
-                # if q1m[idpix] < 0.:
-                #     q1m[idpix] = eps
-                #     V11[idpix] = V00[idpix] + (q0m[idpix] + ql[idpix] - q1m[idpix]) * dt
-
 
             # Update contribution from upstream pixels at time t+1 (dim=all pixels) using the newly calculated q11
             # I want to update q01 (inflow at t+1) for cells downstream of idpix using the newly calculated q11
@@ -1340,7 +1317,7 @@ class routing(HydroModule):
 
 
     def MCTRouting_single(self, V00, q10, q01, q00, ql,q0mm, Cm0, Dm0, dt, xpix, s0, Balv, ANalv, Nalv):
-        '''
+        """
         This function implements Muskingum-Cunge-Todini routing method for a single channel pixel.
         References:
             Todini, E. (2007). A mass conservative and water storage consistent variable parameter Muskingum-Cunge approach. Hydrol. Earth Syst. Sci.
@@ -1367,7 +1344,7 @@ class routing(HydroModule):
         V11: channel storage volume at t+dt
         Cm1: Courant number at t+1 for state file
         Dm1: Reynolds number at t+1 for state file
-        '''
+        """
 
         eps = 1e-06
 
@@ -1443,12 +1420,10 @@ class routing(HydroModule):
 
             #### end of for loop
 
-
         # # cmcheck
         # calc_t = xpix / ck1
         # if calc_t < dt:
         #     print('xpix/ck1 < dt')
-
 
         k1 = dt / Cm1
         x1 = (1. - Dm1) / 2.
@@ -1463,8 +1438,6 @@ class routing(HydroModule):
             V11 = (1-Dm1)*dt/(2*Cm1)*q01 + (1+Dm1)*dt/(2*Cm1)*q11
             # V11 = k1 * (x1 * q01 + (1. - x1) * q11) # MUST be the same as above!
 
-
-
         ### calc integration on the control volume (pixel)
         # calc average discharge outflow q1m for MCT channels during routing sub step dt
         # Calculate average outflow using water balance for MCT channel grid cell over sub-routing step
@@ -1476,30 +1449,31 @@ class routing(HydroModule):
             q1mm = eps
             V11 = V00 + (q0mm + ql - q1mm) * dt
 
-
-
-        # Outflow at O(t+dt), average outflow in time dt, water volume at t+dt, Courant and Reynolds numbers at t+1 for state files
+        # q11 Outflow at O(t+dt)
+        # q1m average outflow in time dt
+        # V11 water volume at t+dt
+        # Cm1 Courant number at t+dt for state files
+        # Dm1 Reynolds numbers at t+dt for state files
         return q11, V11, q1mm, Cm1, Dm1
 
 
 
     def hoq(self,q,s0,Balv,ANalv,Nalv):
-        """Water depth from discharge.
+        """Water depth h from discharge q.
         Given a generic cross-section (rectangular, triangular or trapezoidal) and a steady-state discharge q=Q*, it computes
         water depth (y), wet contour (Bx), wet area (Ax) and wave celerity (cel) using Newton-Raphson method.
         Reference:
         Reggiani, P., Todini, E., & Meißner, D. (2016). On mass and momentum conservation in the variable-parameter Muskingum method.
         Journal of Hydrology, 543, 562–576. https://doi.org/10.1016/j.jhydrol.2016.10.030
 
-        Parameters:
-        q: steady-state discharge river discharge [m3/s]
-        s0: river bed slope (tan B)
-        Balv : width of the riverbed [m]
-        ChanSdXdY : slope dx/dy of riverbed side
-        ANalv : angle of the riverbed side [rad]
-        Nalv : channel mannings coefficient n for the riverbed [s/m1/3]
+        :param q: steady-state river discharge [m3/s]
+        :param s0: river bed slope (tan B)
+        :param Balv : width of the riverbed [m]
+        :param ChanSdXdY : slope dx/dy of riverbed side
+        :param ANalv : angle of the riverbed side [rad]
+        :param Nalv : channel mannings coefficient n for the riverbed [s/m1/3]
 
-        :returns
+        :return:
         y: water depth referred to the bottom of the riverbed [m]
         """
 
@@ -1561,7 +1535,7 @@ class routing(HydroModule):
 
 
     def qoh(self,y,s0,Balv,ANalv,Nalv):
-        """ Discharge from water depth.
+        """ Discharge q from water depth h.
         Given a generic river cross-section (rectangular, triangular and trapezoidal)
         and a water depth (y [m]) referred to the bottom of the riverbed, it uses Manning’s formula to calculate:
         q: steady-state discharge river discharge [m3/s]
@@ -1569,16 +1543,13 @@ class routing(HydroModule):
         b: cross-section width at water surface [m]
         p: cross-section wet contour [m]
         cel: wave celerity [m/s]
-
-        Parameters:
-        y: river water depth [m]
-        s0: river bed slope (tan B)
-        Balv : width of the riverbed [m]
-        ChanSdXdY : slope dx/dy of riverbed side
-        ANalv : angle of the riverbed side [rad]
-        Nalv : channel mannings coefficient n for the riverbed [s/m1/3]
-
         Reference: Reggiani, P., Todini, E., & Meißner, D. (2016). On mass and momentum conservation in the variable-parameter Muskingum method. Journal of Hydrology, 543, 562–576. https://doi.org/10.1016/j.jhydrol.2016.10.030
+
+        :param y: river water depth [m]
+        :param s0: river bed slope (tan B)
+        :param Balv : width of the riverbed [m]
+        :param ANalv : angle of the riverbed side [rad]
+        :param Nalv : channel mannings coefficient n for the riverbed [s/m1/3]
 
         :return:
         q,a,b,p,cel
@@ -1613,16 +1584,16 @@ class routing(HydroModule):
 
 
     def hoV(self,V,xpix,Balv,ANalv):
-        """Water depth from volume.
-        Given a generic river cross-section (rectangular, triangular and trapezoidal) and a volume V,
+        """Water depth h from volume V.
+        Given a generic river cross-section (rectangular, triangular and trapezoidal) and a river channel volume V,
         it calculates the water depth referred to the bottom of the riverbed [m] (y).
-        Takes:
-        V : volume of water in channel riverbed
-        xpix : dimension along the flow direction  [m]
-        Balv : width of the riverbed [m]
-        ANalv : angle of the riverbed side [rad]
-
         Reference: Reggiani, P., Todini, E., & Meißner, D. (2016). On mass and momentum conservation in the variable-parameter Muskingum method. Journal of Hydrology, 543, 562–576. https://doi.org/10.1016/j.jhydrol.2016.10.030
+
+        :param V : volume of water in channel riverbed
+        :param xpix : dimension along the flow direction  [m]
+        :param Balv : width of the riverbed [m]
+        :param ANalv : angle of the riverbed side [rad]
+
         :return:
         y : channel water depth [m]
         """
@@ -1645,9 +1616,20 @@ class routing(HydroModule):
 
 
     def qoV(self,V,xpix,s0,Balv,ANalv,Nalv):
-        """ Discharge from volume.
+        """ Discharge q from river channel volume V.
         Given a generic river cross-section (rectangular, triangular and trapezoidal)
         and a water volume (V [m3]), it uses Manning’s formula to calculate the corresponding discharge (q [m3/s]).
+        Reference: Reggiani, P., Todini, E., & Meißner, D. (2016). On mass and momentum conservation in the variable-parameter Muskingum method. Journal of Hydrology, 543, 562–576. https://doi.org/10.1016/j.jhydrol.2016.10.030
+
+        :param V : volume of water in channel riverbed
+        :param xpix : dimension along the flow direction  [m]
+        :param s0: river bed slope (tan B)
+        :param Balv : width of the riverbed [m]
+        :param ANalv : angle of the riverbed side [rad]
+        :param Nalv : channel mannings coefficient n for the riverbed [s/m1/3]
+
+        :return:
+        y : channel water depth [m]
         """
         y = self.hoV(V,xpix,Balv,ANalv)
         q, a, b, p, cel = self.qoh(y,s0,Balv,ANalv,Nalv)
@@ -1661,10 +1643,11 @@ class routing(HydroModule):
 
     def get_mct_pix(self,var):
         """Compress to mct array.
-        For any array (var) with all catchment pixels, it masks the MCT pixels (x) and
+        For any array (var) with all catchment pixels, it finds the MCT pixels (x) and
         reduces the dimension of the array (y).
+        :param var: array (dimension is the number of cells in the basin)
         :return:
-        y: same as input array (var) but only MCT pixels
+        y: same as input array (var) but with only MCT pixels
         """
         x = np.ma.masked_where(self.var.IsChannelKinematic,var)
         y = x.compressed()
@@ -1675,9 +1658,10 @@ class routing(HydroModule):
     def put_mct_pix(self,var):
         """Explode mct array.
         For any array (var) with MCT pixels only, it explodes the dimension to all catchment pixels and puts
-        values from array var in the corresponting MCT pixels.
+        values from array var in the corresponding MCT pixels.
         Pixels not belonging to MCT get value equal to zero.
-        Uses self.var.IsChannelKinematic to define MCT pixels
+        Uses self.var.IsChannelKinematic to define MCT pixels.
+        :param var: array (dimension is the number of MCT cells)
         :return:
         y: same as input array (var) but only all pixels
         """
