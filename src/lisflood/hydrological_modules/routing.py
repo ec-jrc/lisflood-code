@@ -848,13 +848,13 @@ class routing(HydroModule):
                 self.var.PrevDm0 = Dmend
 
                 # combine results from Kinematic and MCT pixels at x+dx t+dt (instant)
-                self.var.ChanQ = np.where(self.var.IsChannelKinematic, self.var.ChanQKin, ChanQMCTOutEnd)
+                self.var.ChanQ = np.where(self.var.IsChannelKinematic, ChanQKinOutEnd, ChanQMCTOutEnd)
                 # Outflow (x+dx) Q at the end of computation step t+dt (instant)
-                self.var.ChanM3 = np.where(self.var.IsChannelKinematic, self.var.ChanM3Kin, ChanM3MCTEnd)
+                self.var.ChanM3 = np.where(self.var.IsChannelKinematic, ChanM3KinEnd, ChanM3MCTEnd)
                 # Channel storage V at the end of computation step t+dt (instant)
 
                 # combine results from Kinematic and MCT pixels average outflow during routing sub-step dt (average)
-                self.var.ChanQAvgDt = np.where(self.var.IsChannelKinematic, self.var.ChanQKinAvgDt, ChanQMCTOutAvgDt)
+                self.var.ChanQAvgDt = np.where(self.var.IsChannelKinematic, ChanQKinOutAvgDtEnd, ChanQMCTOutAvgDt)
                 # Average channel outflow (x+dx) QAvg during routing step (average)
 
                 # update input (x) Q at t for next step (instant)
