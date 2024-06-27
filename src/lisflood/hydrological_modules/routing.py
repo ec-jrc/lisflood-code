@@ -379,6 +379,9 @@ class routing(HydroModule):
             self.var.ChanQAvgDt =  maskinfo.in_zero()
             self.var.ChanQKinAvgDt = maskinfo.in_zero()
 
+            # cmcheck
+            self.var.Chan2QKinAvgDt = maskinfo.in_zero()
+
             # I do not need a state file to initialise the average outflow discharge (ChanQAvgDt and ChanQKinAvgDt).
             # Initialisation would be necessary for pixels in order 0, but there is no upstream contribution for pixels in order 0.
             # For pixels in order 1 and beyond, upstream contribution is calculated during the calculation step.
@@ -728,7 +731,17 @@ class routing(HydroModule):
                 # Total channel storage [m3] = Volume in main channel (ChanM3Kin) + volume above bankfull in second line (Chan2M3Kin - Chan2M3Start)
                 # Total channel storage V at the end of computation step t+dt for full section (instant)
 
-                self.var.sumDisDay += self.var.ChanQ
+                # cmcheck
+                self.var.ChanQAvgDt = np.maximum(self.var.ChanQKinAvgDt + self.var.Chan2QKinAvgDt - self.var.QLimit, 0)
+                # (real) total outflow (at x+dx) at time t+dt end of step for the full cross-section (instant)
+                # Main channel routing and above bankfull routing from second line of routing
+
+                # cmcheck
+                # self.var.sumDisDay += self.var.ChanQ
+                # sum of total river outflow on model sub-step (instantaneous discharge)
+                # This is used to calculate the average outflow discharge on the model time step
+
+                self.var.sumDisDay += self.var.ChanQAvgDt
                 # sum of total river outflow on model sub-step (instantaneous discharge)
                 # This is used to calculate the average outflow discharge on the model time step
 
@@ -1069,7 +1082,10 @@ class routing(HydroModule):
 
         # --- Main channel routing ---
 
-        self.river_router.kinematicWaveRouting(ChanQKinOutStart_avg, self.var.ChanQKin, self.var.Sideflow1Chan, "main_channel")
+        # cmcheck
+        self.river_router.kinematicWaveRouting(self.var.ChanQKinAvgDt, self.var.ChanQKin, self.var.Sideflow1Chan, "main_channel")
+
+        # self.river_router.kinematicWaveRouting(ChanQKinOutStart_avg, self.var.ChanQKin, self.var.Sideflow1Chan, "main_channel")
         # sef.var.ChanQKin is outflow (x+dx) from main channel at time t in input and at time t+dt in output (instant)
         self.var.ChanM3Kin = self.var.ChanLength * self.var.ChannelAlpha * self.var.ChanQKin ** self.var.Beta
         # Volume in main channel at end of computation step (at t+dt) (instant)
@@ -1084,7 +1100,10 @@ class routing(HydroModule):
 
         # --- Second line channel routing (same channel geometry as main channel but increased Manning coeff) ---
 
-        self.river_router.kinematicWaveRouting(Chan2QKinOutStart_avg, self.var.Chan2QKin, Sideflow2Chan, "floodplains")
+        # cmcheck
+        self.river_router.kinematicWaveRouting(self.var.Chan2QKinAvgDt, self.var.Chan2QKin, Sideflow2Chan, "floodplains")
+
+        # self.river_router.kinematicWaveRouting(Chan2QKinOutStart_avg, self.var.Chan2QKin, Sideflow2Chan, "floodplains")
         # sef.var.Chan2QKin is (virtual) total outflow (x+dx) at time t in input and at time t+dt in output (instant)
         # (same channel geometry but using increased Manninig coeff)
         self.var.Chan2M3Kin = self.var.ChanLength * self.var.ChannelAlpha2 * self.var.Chan2QKin ** self.var.Beta
