@@ -299,6 +299,12 @@ Number of last time step in simulation
 </comment>
 </textvar>
 
+<textvar name="NumDaysSpinUp" value="1095">
+<comment>
+Recommended value > 730 (2 years)
+</comment>
+</textvar> 
+
 <textvar name="ReportSteps" value="1..999999">
 <comment>
     1..9999
@@ -1772,6 +1778,12 @@ Number of first time step in simulation
 Number of last time step in simulation
 </comment>
 </textvar>
+
+<textvar name="NumDaysSpinUp" value="$(NumDaysSpinUp)">
+<comment>
+Number of days used for internal spin-up (fluxes computations during prerun)
+</comment>
+</textvar>  
 
 </group>
 

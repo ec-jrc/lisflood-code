@@ -116,7 +116,7 @@ def soilColumnsWaterBalance(index_landuse_all, is_irrigated, is_paddy_irrig, pad
             sim_pixels = np.arange(num_pixs)
         landuse = index_landuse_all[veg]
         NoSubS = np.empty(sim_pixels.size, dtype=np.int_)
-        DtSub =  np.empty(sim_pixels.size)   ### merge 3 stef
+        DtSub =  np.empty(sim_pixels.size)   
         KUnSat1a, KUnSat1b, KUnSat2 = np.empty(sim_pixels.size), np.empty(sim_pixels.size), np.empty(sim_pixels.size)                         #| REMOVE BEFORE NEW
         AvailableWater1a, AvailableWater1b, AvailableWater2 = np.empty(sim_pixels.size), np.empty(sim_pixels.size), np.empty(sim_pixels.size) #| CALIBRATION
         CapacityLayer1, CapacityLayer2 = np.empty(sim_pixels.size), np.empty(sim_pixels.size)                                                 #| (SEE [*] BELOW)   Stef WHY??
@@ -275,8 +275,8 @@ def soilColumnsWaterBalance(index_landuse_all, is_irrigated, is_paddy_irrig, pad
             SeepSubToGW[veg,pix] = 0.
             # Initialize fluxes out of subsoil (accumulated value for all sub-steps)
             # Start iterating
-            DtSub[q] = DtDay / NoSubS[q] ###  merge 3 (NoSubSteps)  
-            for i in range(NoSubS[q]):  ### merge 3 (NoSubSteps)
+            DtSub[q] = DtDay / NoSubS[q]   
+            for i in range(NoSubS[q]):  
                 if i > 0:
                     KUnSat1a[q] = unsaturatedConductivity(WTemp1a, PoreSpaceNotZero1a[landuse,pix], WRes1a[landuse,pix], WS1a[landuse,pix],
                                                             KSat1a[landuse,pix], GenuInvM1a[landuse,pix], GenuM1a[landuse,pix])
@@ -319,10 +319,11 @@ def soilColumnsWaterBalance(index_landuse_all, is_irrigated, is_paddy_irrig, pad
             W1a[veg,pix] -= SeepTopToSubA[veg,pix]
             W1b[veg,pix] = W1b[veg,pix] + SeepTopToSubA[veg,pix] - SeepTopToSubB[veg,pix]
             W2[veg,pix] = W2[veg,pix] + SeepTopToSubB[veg,pix] - SeepSubToGW[veg,pix]
-            W1[veg,pix] = W1a[veg,pix] + W1b[veg,pix] # SHOULD THIS BE MOVED AFTER W1a ADJUSTMENT BELOW?
+            
             # Update soil moisture amounts in top- and sub soil
-            Infiltration[veg,pix] -= max(W1a[veg,pix] - WS1a[landuse,pix], 0.)
             W1a[veg,pix] = min(W1a[veg,pix], WS1a[landuse,pix])
+            Infiltration[veg,pix] -= max(W1a[veg,pix] - WS1a[landuse,pix], 0.)
+            W1[veg,pix] = W1a[veg,pix] + W1b[veg,pix] 
             # Compute the amount of water that could not infiltrate and add this water to the surface runoff
             # Remove the excess of water in the top layer
             # Calculate: volumetric soil moisture contents of top- and sub soil [V/V]; and saturation with respect to the WP and FC values

@@ -1,4 +1,4 @@
-timeseries valuescale.scalar settingsfile: /BGFS/DISASTER/grimast/LF_DEVELOP/lisflood-code/tests/data/LF_lat_lon_UseCase/prerun_lat_lon.xml date: Wed May 29 09:23:42 2024
+timeseries valuescale.scalar settingsfile: /BGFS/DISASTER/grimast/LF_DEVELOP_newflag/LF_DEVELOP/newflagwaterbalance/lisflood-code/tests/data/LF_lat_lon_UseCase/prerun_lat_lon.xml date: Thu Jun 27 12:38:10 2024
 2
 timestep
 1

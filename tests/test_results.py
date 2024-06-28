@@ -46,7 +46,7 @@ class TestCatch(ETRS89TestCase):
         'base': os.path.join(case_dir, 'settings/base.xml'),
         'prerun': os.path.join(case_dir, 'settings/prerun.xml')
     }
-   
+    
     def run(self, dt_sec, step_start, step_end):
         output_dir = mk_path_out(os.path.join(self.case_dir, 'out/test_results{}'.format(dt_sec)))
         opts_to_unset = (
@@ -143,9 +143,7 @@ class TestCatch(ETRS89TestCase):
         lisfloodexe(settings)
   
     def test_init_daily(self):
-        print('PRERUN START') 
         self.run_init('86400', '31/12/2015 06:00', '06/01/2017 06:00')
-        print('RUN COMPLETED')
         self.compare_reference('avgdis', check='map', step_length='86400')
         self.compare_reference('lzavin', check='map', step_length='86400')
         self.compare_reference('SeepTopToSubBAverageOtherMap', check='map', step_length='86400')
@@ -162,7 +160,7 @@ class TestCatch(ETRS89TestCase):
         self.compare_reference('SeepTopToSubBAverageIrrigationMap', check='map', step_length='21600')
         self.compare_reference('UZForestEnd', check='map', step_length='21600')
         
-  
+    
     def run_waterbalance(self, dt_sec, step_start, step_end):
         # init files from .../LF_ETRS89_UseCase/maps/safe_init
         # "AvgDis" value="$(PathRoot)/maps/safe_init/avgdis"
@@ -189,4 +187,4 @@ class TestCatch(ETRS89TestCase):
         self.run_waterbalance('21600', '02/01/2016 06:00', '02/07/2016 06:00')
         self.compare_reference('mbError', check='tss', step_length='21600')
         self.compare_reference('mbErrorSplitRoutingM3', check='tss', step_length='21600')
- 
+    

@@ -18,20 +18,23 @@ See the Licence for the specific language governing permissions and limitations 
 from __future__ import absolute_import, print_function
 
 import numpy as np
+import warnings
+import xarray as xr
+import numpy as np 
+import scipy 
 
 from ..global_modules.settings import MaskInfo, LisSettings
 from ..global_modules.add1 import loadmap, defsoil
 from . import HydroModule
+from ..global_modules.errors import LisfloodWarning, LisfloodError
 from collections import OrderedDict
 #from global_modules.add1 import *
-import xarray as xr
-import numpy as np ##### 2024
-import scipy ##### 2024
-from scipy.optimize import least_squares ##### 2024
 
-def function_estimate(satdegrthetastart,*data):   ##### 2024     
-        SeepTopToSubBPixelAv, KSat2,GenuInvM2, GenuM2 = data
-        return SeepTopToSubBPixelAv - KSat2 * np.sqrt(satdegrthetastart) * (1. - (1. - satdegrthetastart ** GenuInvM2) ** GenuM2) ** 2
+from scipy.optimize import least_squares 
+
+def function_estimate(satdegrthetastart,*data):       
+        SeepTopToSubBAv, KSat2,GenuInvM2, GenuM2 = data
+        return SeepTopToSubBAv - KSat2 * np.sqrt(satdegrthetastart) * (1. - (1. - satdegrthetastart ** GenuInvM2) ** GenuM2) ** 2
 
 def pressure2SoilMoistureFun(residual_sm, sat_sm, GenuA, GenuN, GenuM):
     """Generate a function to compute soil moisture values corresponding to characteristic pressure head levels [cm].
@@ -78,8 +81,8 @@ class soil(HydroModule):
         """ initial part of the soil module
         """
         maskinfo = MaskInfo.instance()
-        self.var.cumSeepTopToSubBAv = self.var.allocateVariableAllVegetation()  #######2024
-        self.var.SeepTopToSubBAv = self.var.allocateVariableAllVegetation()     #######2024       
+        self.var.cumSeepTopToSubBAv = self.var.allocateVariableAllVegetation()  
+        self.var.SeepTopToSubBAv = self.var.allocateVariableAllVegetation()           
         
         def splitlanduse(array1, array2=None, array3=None):
             """ splits maps into the 3 different land use types - other , forest, irrigation
@@ -273,7 +276,7 @@ class soil(HydroModule):
         # Set to zero if soil depth is zero.
         # IMPORTANT: WInit1 and WInit2 represent the soil moisture in the *permeable* fraction of the pixel *only*
         # (since all soil moisture-related calculations are done for permeable fraction only!).
-        if not option['InitLisflood']:  
+        if not option['InitLisflood'] and not option['WarmStart']:  
              self.var.SeepTopToSubBAv[0] = loadmap('SeepTopToSubBAverageOtherMap')
              self.var.SeepTopToSubBAv[1] = loadmap('SeepTopToSubBAverageForestMap')
              self.var.SeepTopToSubBAv[2] = loadmap('SeepTopToSubBAverageIrrigationMap')
@@ -290,19 +293,20 @@ class soil(HydroModule):
             self.var.W2[iveg] = np.where(self.var.PoreSpaceNotZero2[iluse], ini_2, 0)
             
             
-            if not option['InitLisflood'] and not option['WarmStart']: ##  2024
-                        
-             check_var_coldstart = np.min(self.var.SeepTopToSubBAv[0]) ######################### TO BE CORRECTED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-             
-             if check_var_coldstart < 0.0:   
-               warnings.warn(LisfloodWarning('WARNING: soil moisture end states OR average fluxes not provided/erroneous. Soil moisture states are initialized at field capacity')) 
+            if not option['InitLisflood'] and not option['WarmStart']:                   
+             check_prerun_results1 = np.min(ThetaInit2Value[iveg])
+             check_prerun_results2 = np.min(self.var.SeepTopToSubBAv[iluse])
+             check_prerun_results =  np.min([check_prerun_results1,check_prerun_results2]) 
+ 
+             if check_prerun_results < 0.0:   
+               warnings.warn(LisfloodWarning('WARNING: soil moisture end state for bottom layer OR average fluxes not provided/erroneous. Soil moisture states are initialized at field capacity')) 
              else:                        
-               SOLVED = ((ThetaInit2Value[iveg] * self.var.SoilDepth2[iluse])-self.var.WRes2[iluse])/(self.var.WS2[iluse]-self.var.WRes2[iluse]) #### for extra safety - stef                           
+               SOLVED = ((ThetaInit2Value[iveg] * self.var.SoilDepth2[iluse])-self.var.WRes2[iluse])/(self.var.WS2[iluse]-self.var.WRes2[iluse])                          
                for ii in np.arange(len(ThetaInit2Value[iveg])):
                  data = []
                  analyticalcheckzero = []
                  data=(self.var.SeepTopToSubBAv[iluse][ii], self.var.KSat2[iluse][ii], self.var.GenuInvM2[iluse][ii], self.var.GenuM2[iluse][ii])           
-                 analyticalcheckzero = least_squares(function_estimate,((ThetaInit2Value[iveg][ii] * self.var.SoilDepth2[iluse][ii])-self.var.WRes2[iluse][ii])/(self.var.WS2[iluse][ii]-self.var.WRes2[iluse][ii]),bounds=(self.var.WFC2[iluse][ii]*0,self.var.WFC2[iluse][ii]*0+1.0), args=data)
+                 analyticalcheckzero = least_squares(function_estimate,((ThetaInit2Value[iveg][ii] * self.var.SoilDepth2[iluse][ii])-self.var.WRes2[iluse][ii])/(self.var.WS2[iluse][ii]-self.var.WRes2[iluse][ii]),bounds=(self.var.WFC2[iluse][ii]*0,self.var.WFC2[iluse][ii]*0+1.0), gtol = 10e-12, args = data)
                  SOLVED[ii]=analyticalcheckzero.x
                ini_2 = SOLVED*(self.var.WS2[iluse]-self.var.WRes2[iluse])+self.var.WRes2[iluse]           
                self.var.W2[iveg] = np.where(self.var.PoreSpaceNotZero2[iluse], ini_2, 0)
@@ -504,6 +508,10 @@ class soil(HydroModule):
         """ dynamic part of the soil module
             Calculation per Pixel
         """
+        settings = LisSettings.instance()
+        option = settings.options
+        binding = settings.binding
+        
         self.var.TaInterceptionAll = self.var.deffraction(self.var.TaInterception) + self.var.DirectRunoffFraction * self.var.TASealed
         self.var.TaInterceptionCUM += self.var.TaInterceptionAll
         self.var.TaInterceptionWB = self.var.TaInterceptionAll
@@ -540,12 +548,15 @@ class soil(HydroModule):
         # Pixel-average seepage values in [mm] per timestep
         # (no seepage from direct runoff fraction)
         
-        self.var.cumSeepTopToSubBAv[0] += self.var.SeepTopToSubB[0] #### 2024
-        self.var.SeepTopToSubBAv[0] = (self.var.cumSeepTopToSubBAv[0] * self.var.InvDtDay) / (self.var.TimeSinceStart) #### 2024
-        self.var.cumSeepTopToSubBAv[1] += self.var.SeepTopToSubB[1] #### 2024
-        self.var.SeepTopToSubBAv[1] = (self.var.cumSeepTopToSubBAv[1] * self.var.InvDtDay) / (self.var.TimeSinceStart) #### 2024 
-        self.var.cumSeepTopToSubBAv[2] += self.var.SeepTopToSubB[2] #### 2024
-        self.var.SeepTopToSubBAv[2] = (self.var.cumSeepTopToSubBAv[2] * self.var.InvDtDay) / (self.var.TimeSinceStart) #### 2024                      
+        if option['InitLisflood']:
+          NumDaysSpinUp = float(binding['NumDaysSpinUp'])
+          if  (self.var.TimeSinceStart > np.round(NumDaysSpinUp/self.var.DtDay)) :
+              self.var.cumSeepTopToSubBAv[0] += self.var.SeepTopToSubB[0] 
+              self.var.SeepTopToSubBAv[0] = (self.var.cumSeepTopToSubBAv[0] * self.var.InvDtDay) / (self.var.TimeSinceStart - np.round(NumDaysSpinUp/self.var.DtDay)) 
+              self.var.cumSeepTopToSubBAv[1] += self.var.SeepTopToSubB[1] 
+              self.var.SeepTopToSubBAv[1] = (self.var.cumSeepTopToSubBAv[1] * self.var.InvDtDay) / (self.var.TimeSinceStart - np.round(NumDaysSpinUp/self.var.DtDay)) 
+              self.var.cumSeepTopToSubBAv[2] += self.var.SeepTopToSubB[2] 
+              self.var.SeepTopToSubBAv[2] = (self.var.cumSeepTopToSubBAv[2] * self.var.InvDtDay) / (self.var.TimeSinceStart - np.round(NumDaysSpinUp/self.var.DtDay))                    
     
         
         # the variables below were added to report catchment-averaged soil moisture profiles

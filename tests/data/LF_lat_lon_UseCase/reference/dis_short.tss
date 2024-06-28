@@ -1,4 +1,4 @@
-timeseries valuescale.scalar settingsfile: /BGFS/DISASTER/grimast/LF_DEVELOP/lisflood-code/tests/data/LF_lat_lon_UseCase/run_lat_lon.xml date: Wed May 29 12:21:46 2024
+timeseries valuescale.scalar settingsfile: /BGFS/DISASTER/grimast/LF_DEVELOP_newflag/LF_DEVELOP/newflagwaterbalance/lisflood-code/tests/data/LF_lat_lon_UseCase/run_lat_lon.xml date: Thu Jun 27 12:39:41 2024
 2
 timestep
 1
@@ -27,10 +27,10 @@ timestep
     10979        487.431
     10980        488.376
     10981        489.158
-    10982        489.549
+    10982         489.55
     10983        488.349
-    10984        485.965
-    10985        484.216
-    10986        486.442
-    10987        495.234
-    10988        517.058
+    10984        485.966
+    10985        484.217
+    10986        486.443
+    10987        495.236
+    10988        517.061

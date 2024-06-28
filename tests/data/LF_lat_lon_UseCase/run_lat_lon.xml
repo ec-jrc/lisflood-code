@@ -168,13 +168,19 @@ The option "numCPUs_parallelNumba" may take the following values:
                 </comment>
             </textvar>
 
-            <textvar name="StepStart" value="01/01/2016 00:00">
+            <textvar name="StepStart" value="02/01/1986 00:00">
                 <comment>
                     Date of first time step in simulation
                 </comment>
             </textvar>
-            <textvar name="StepEnd" value="01/02/2016 00:00"/>
+            <textvar name="StepEnd" value="01/01/2018 00:00"/>
 
+            <textvar name="NumDaysSpinUp" value="1095">
+                <comment>
+                     Recommended value > 730 (2 years)
+                </comment>
+            </textvar>
+            
             <textvar name="ReportSteps" value="99999">
                 <comment>
                     Time steps at which to write model state maps (i.e. only
@@ -1422,6 +1428,12 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
             </textvar>
 
+           <textvar name="NumDaysSpinUp" value="$(NumDaysSpinUp)">
+                <comment>
+                    Number of days used for internal spin-up (fluxes computations during prerun)
+                </comment>
+            </textvar>  
+            
             <textvar name="Latitude" value="$(Latitude)">
                 <comment>
                     latitude map to be used for snow/ice modelling

@@ -229,6 +229,12 @@ The option "numCPUs_parallelNumba" may take the following values:
                 </comment>
             </textvar>
 
+            <textvar name="NumDaysSpinUp" value="180">
+                <comment>
+                    low value for testing purposes
+              </comment>
+            </textvar>   
+
             <textvar name="ReportSteps" value="1..99999">
                 <comment>
                     Time steps at which to write model state maps (i.e. only
@@ -1594,7 +1600,13 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     Number of last time step in simulation
                 </comment>
             </textvar>
-
+            
+           <textvar name="NumDaysSpinUp" value="$(NumDaysSpinUp)">
+                <comment>
+                    Number of days used for internal spin-up (fluxes computations during prerun)
+                </comment>
+            </textvar>  
+            
         </group>
 
         <group>

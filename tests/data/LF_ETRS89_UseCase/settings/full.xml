@@ -228,6 +228,12 @@
 
             </textvar>
 
+            <textvar name="NumDaysSpinUp" value="180">
+                <comment>
+                    low value to limit testing time
+              </comment>
+            </textvar>   
+
             <textvar name="ReportSteps" value="6000..7000">
                 <comment>
                     Time steps at which to write model state maps (i.e. only
@@ -2413,6 +2419,11 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
             </textvar>
 
+           <textvar name="NumDaysSpinUp" value="$(NumDaysSpinUp)">
+                <comment>
+                    Number of days used for internal spin-up (fluxes computations during prerun)
+                </comment>
+            </textvar>  
 
         </group>
 
