@@ -563,6 +563,12 @@ class routing(HydroModule):
             # set max channel slope for MCT pixels
 
             # cmcheck
+            # This could become a calibration parameter if we want to use MCT+SplitRouting
+            self.var.ChanManMCT = (self.var.ChanMan / self.var.CalChanMan) * loadmap('CalChanMan2')
+            # Mannings coefficient for MCT pixels (same as second line of split routing)
+
+
+            # cmcheck
             # Initialisation for MCT routing
             PrevQMCTin = loadmap('PrevQMCTinInitValue')     # instant input discharge for MCT at previouse step
             self.var.PrevQMCTin = np.where(PrevQMCTin == -9999, maskinfo.in_zero(), PrevQMCTin)  # np
@@ -1160,7 +1166,8 @@ class routing(HydroModule):
         s0 = self.get_mct_pix(self.var.ChanGrad)             # river bed slope (tan B)
         Balv = self.get_mct_pix(self.var.ChanBottomWidth)    # width of the riverbed [m]
         ChanSdXdY = self.get_mct_pix(self.var.ChanSdXdY)     # slope dx/dy of riverbed side
-        Nalv = self.get_mct_pix(self.var.ChanMan)            # channel mannings coefficient n for the riverbed [s/m1/3]
+        # Nalv = self.get_mct_pix(self.var.ChanMan)            # channel mannings coefficient n for the riverbed [s/m1/3]
+        Nalv = self.get_mct_pix(self.var.ChanManMCT)         # channel mannings coefficient n for the riverbed [s/m1/3]
         ANalv = np.arctan(1/ChanSdXdY)                       # angle of the riverbed side [rad]
 
         dt = self.var.DtSecChannel                           # computation time step for channel [s]
