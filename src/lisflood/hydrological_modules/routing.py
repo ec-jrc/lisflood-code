@@ -803,7 +803,7 @@ class routing(HydroModule):
                     # line (Chan2M3Kin - Chan2M3Start)
 
                     # cmcheck
-                    self.var.ChanQAvgDt = np.maximum(self.var.ChanQKinAvgDt + self.var.Chan2QKinAvgDt - self.var.QLimit,0)
+                    ChanQKinOutAvgDtEnd = np.maximum(self.var.ChanQKinAvgDt + self.var.Chan2QKinAvgDt - self.var.QLimit,0)
                     # (real) total outflow (at x+dx) at time t+dt end of step for the full cross-section (instant)
                     # Main channel routing and above bankfull routing from second line of routing
 
