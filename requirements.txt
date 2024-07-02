@@ -37,3 +37,4 @@ tomli>=1.2.1
 toolz>=0.10.0
 xarray>=0.20.2
 zipp>=0.6.0
+scipy
