@@ -240,6 +240,60 @@ class ETRS89TestCase(object):
         },
     }
 
+class MCTTestCase(object):
+    case_dir = os.path.join(os.path.dirname(__file__), 'data', 'LF_MCT_UseCase')
+    ref_dir = os.path.join(case_dir, 'reference')
+    reference_files = {
+        'dis': {
+            'report_map': 'DischargeMaps',
+            'report_tss': 'DisTS',
+            '86400-3600': {
+                'map': os.path.join(ref_dir, 'output_reference_daily/dis.nc'),
+                'tss': os.path.join(ref_dir, 'output_reference_daily/disX.tss'),
+            },
+            '21600-21600': {
+                'map': os.path.join(ref_dir, 'output_reference_6h_6h/dis.nc'),
+                'tss': os.path.join(ref_dir, 'output_reference_6h_6h/disX.tss'),
+            },
+            '21600-3600': {
+                'map': os.path.join(ref_dir, 'output_reference_6h_1h/dis.nc'),
+                'tss': os.path.join(ref_dir, 'output_reference_6h_1h/disX.tss'),
+            },
+        },
+        'chanq': {
+            'report_map': None,
+            'report_tss': 'ChanqTS',
+            '86400-3600': {
+                'map': None,
+                'tss': os.path.join(ref_dir, 'output_reference_daily/chanqX.tss'),
+            },
+            '21600-21600': {
+                'map': None,
+                'tss': os.path.join(ref_dir, 'output_reference_6h_6h/chanqX.tss'),
+            },
+            '21600-3600': {
+                'map': None,
+                'tss': os.path.join(ref_dir, 'output_reference_6h_1h/chanqX.tss'),
+            },
+        },
+        'mbError': {
+            'report_map': None,
+            'report_tss': 'WaterMassBalanceTSS',
+            '86400-3600': {
+                'map': None,
+                'tss': os.path.join(ref_dir, 'output_reference_daily/mbError.tss'),
+            },
+            '21600-21600': {
+                'map': None,
+                'tss': os.path.join(ref_dir, 'output_reference_6h_6h/mbError.tss'),
+            },
+            '21600-3600': {
+                'map': None,
+                'tss': os.path.join(ref_dir, 'output_reference_6h_1h/mbError.tss'),
+            },
+        },
+    }
+
     def teardown_method(self):
         settings = LisSettings.instance()
         output_dir = settings.output_dir

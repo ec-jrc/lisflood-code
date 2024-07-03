@@ -225,10 +225,11 @@ You can use builtin path variables in this template and reference to other paths
 				**************************************************************
 			</comment>
 
-			<textvar name="PathRoot" value= "$(SettingsPath)/..">
+			<textvar name="PathRoot" value= "/perm/mocm/proj/MUSKINGUM/src/lisflood-code/tests/data/LF_MCT_UseCase/">
                 <comment>
 					MAPSDIR
 					Root directory (tables and parameters)
+					$(SettingsPath)/..
                 </comment>
             </textvar>
 
