@@ -298,7 +298,7 @@ You can use builtin path variables in this template and reference to other paths
                 </comment>
             </textvar>
 
-            <textvar name="CalendarDayStart" value="01/01/2016 06:00">
+            <textvar name="CalendarDayStart" value="02/01/2016 06:00">
                 <comment>
 					Reference day and time
                     02/01/1990 06:00

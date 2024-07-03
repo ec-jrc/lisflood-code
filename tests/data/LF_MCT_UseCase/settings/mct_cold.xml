@@ -304,7 +304,7 @@ You can use builtin path variables in this template and reference to other paths
                 </comment>
             </textvar>
 
-            <textvar name="DtSec" value="21600">
+            <textvar name="DtSec" value="86400">
                 <comment>
                     timestep [seconds]
                 </comment>
