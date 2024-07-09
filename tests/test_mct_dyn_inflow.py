@@ -107,10 +107,13 @@ class TestInflowShort(TestInflow):
 
     def test_inflow_6h(self):
         self.run("01/03/2016 06:00", "30/03/2016 06:00", 21600,'6h')
+    def cleaning(self):
+        self.teardown_method()
 
     def test_inflow_daily(self):
          self.run("02/01/2016 06:00", "30/01/2016 06:00", 86400,'daily')
-
+    def cleaning(self):
+        self.teardown_method()
 
 # @pytest.mark.slow
 # class TestInflowLong(TestInflow):
