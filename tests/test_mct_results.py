@@ -189,10 +189,10 @@ class TestTSSResults():
         output_tss =  os.path.join(self.out_path_run, 'OutletDischargeErrorSplitRoutingM3S.tss')
         comparator.compare_files(reference, output_tss)
 
-    def teardown_method(self):
-        print('Cleaning directories')
-        out_path = os.path.join(self.case_dir, self.out_path_run)
-        shutil.rmtree(out_path, ignore_errors=True)
+    # def teardown_method(self):
+    #     print('Cleaning directories')
+    #     out_path = os.path.join(self.case_dir, self.out_path_run)
+    #     shutil.rmtree(out_path, ignore_errors=True)
 
 
 class TestMCTResults(TestTSSResults):
@@ -252,8 +252,8 @@ class TestMCTResults(TestTSSResults):
         self.run_split("02/01/2016 06:00", "02/07/2016 06:00", 86400, 3600, 'daily_1h')
 
 
-    def cleaning(self):
-        self.teardown_method()
+    # def cleaning(self):
+    #     self.teardown_method()
 
 
 # @pytest.mark.slow
