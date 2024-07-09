@@ -47,7 +47,7 @@ You can use builtin path variables in this template and reference to other paths
         <setoption choice="0" name="simulateLakes"/>
         <setoption choice="0" name="simulateReservoirs"/>
 
-        <setoption choice="0" name="SplitRouting"/>
+        <setoption choice="1" name="SplitRouting"/>
         <setoption choice="1" name="MCTRouting"/>
 
 

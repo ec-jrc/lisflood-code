@@ -72,16 +72,12 @@ class TestMCTResults(TestTSSResults):
     # test results of MCT+KIN routing
     def test_MCT_6h(self):
         self.run("02/01/2016 06:00", "02/07/2016 06:00", 21600, 21600,'6h')
-
     def test_MCT_6h_1h(self):
         self.run("02/01/2016 06:00", "02/07/2016 06:00", 21600, 3600,'6h_1h')
-
     def test_MCT_daily(self):
          self.run("02/01/2016 06:00", "02/07/2016 06:00", 86400, 86400,'daily')
-
     def test_MCT_daily_6h(self):
          self.run("02/01/2016 06:00", "02/07/2016 06:00", 86400, 21600,'daily_6h')
-
     def test_MCT_daily_1h(self):
          self.run("02/01/2016 06:00", "02/07/2016 06:00", 86400, 3600, 'daily_1h')
 
