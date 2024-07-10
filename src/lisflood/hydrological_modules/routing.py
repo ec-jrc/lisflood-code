@@ -776,7 +776,6 @@ class routing(HydroModule):
                     ChanQAvgDt_0,
                     ChanM3_0,
                     ChanQ_1,
-                    ChanQAvgDt_1,
                     SideflowChanMCT
                 )
 
@@ -1114,15 +1113,15 @@ class routing(HydroModule):
             for index in range(first, last):
                 # get pixel ID
                 mctpix = self.mct_river_router.pixels_ordered[index]
-                kinpix = self.river_router.pixels[mapping_mct[mctpix]]
-                upstream_lookup = self.river_router.upstream_lookup
+                kinpix = self.river_router.pixels_ordered[mapping_mct[mctpix]]
+                upstream_pixels = self.river_router.upstream_lookup[kinpix]
+                num_upstream_pixels = self.river_router.num_upstream_pixels[kinpix]
 
                 # get upstream inflow values from current and previous steps
                 q00 = 0.0
                 q0m = 0.0
                 q01 = 0.0
-                upstream_pixels = upstream_lookup[kinpix]
-                for ups_ix in range(upstream_pixels):
+                for ups_ix in range(num_upstream_pixels):
                     ups_pix = upstream_pixels[ups_ix]
                     q00 += ChanQ_0[ups_pix]
                     q0m += ChanQAvgDt_0[ups_pix]
