@@ -1102,8 +1102,9 @@ class routing(HydroModule):
 
         num_orders = self.mct_river_router.order_start_stop.shape[0]
 
-        index_kin = range(len(self.var.ChanQ))
-        mapping_mct = self.compress_mct(index_kin)
+        idpix_kin = range(len(self.var.ChanQ))
+        mapping_mct = self.compress_mct(idpix_kin)
+
 
         # loop on orders
         for order in range(num_orders):
@@ -1111,9 +1112,12 @@ class routing(HydroModule):
             last = self.mct_river_router.order_start_stop[order, 1]
             # loop on pixels in the order
             for index in range(first, last):
-                # get pixel ID
+                # get MCT pixel ID
                 mctpix = self.mct_river_router.pixels_ordered[index]
-                kinpix = self.river_router.pixels_ordered[mapping_mct[mctpix]]
+                # Find the corresponding Kin pixel ID
+                # kinpix = self.river_router.pixels_ordered[mapping_mct[mctpix]] #no
+                kinpix = mapping_mct[mctpix] # with this I do not change kinematic cells
+
                 upstream_pixels = self.river_router.upstream_lookup[kinpix]
                 num_upstream_pixels = self.river_router.num_upstream_pixels[kinpix]
 
