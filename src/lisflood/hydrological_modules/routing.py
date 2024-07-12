@@ -757,13 +757,17 @@ class routing(HydroModule):
                 # routing pixels that are contributing to MCT pixels
                 
                 # Grab current state
-                ChanQ_0 = self.var.ChanQ.copy()
-                ChanQAvgDt_0 = self.var.ChanQAvgDt.copy()
-                ChanM3_0 = self.var.ChanM3.copy()
+                ChanQ_0 = self.var.ChanQ.copy()     # Outflow (x+dx) at time t (instant)  q10
+                # ChanQAvgDt_0 = self.var.ChanQAvgDt.copy() # Not necessary
+                ChanM3_0 = self.var.ChanM3.copy()   # Channel storage at time t V00
+
+                ChanQ_00 = self.var.PrevQMCTin.copy()
+                # Inflow (x) at time t instant (instant)  q00
+                # This is coming from upstream pixels
                 
                 # Grab next state, but incomplete (only Kinematic/Split points)
-                ChanQ_1 = ChanQ
-                ChanQAvgDt_1 = ChanQAvgDt
+                ChanQ_1 = ChanQ  # Outflow (x+dx) at time t+1 (instant) for kinematic pixels only -> used to calc q01 inflow (x) at time t+1 (instant) for MCT pixels
+                ChanQAvgDt_1 = ChanQAvgDt  # Outflow (x+dx) at time t+1 (average) for kinematic pixels only -> used to calc q0m inflow (x) at time t+1 (average) for MCT pixels
 
                 # put results of Kinematic/Split routing into MCT points   
                 self.var.ChanQ = ChanQ
@@ -772,10 +776,11 @@ class routing(HydroModule):
 
                 # Update current state at MCT points
                 self.MCTRoutingLoop(
-                    ChanQ_0,
-                    ChanQAvgDt_0,
-                    ChanM3_0,
-                    ChanQ_1,
+                    ChanQ_0,        # q10
+                    ChanQ_00,       # q00
+                    ChanM3_0,       # V00
+                    ChanQ_1,        # ->q01
+                    ChanQAvgDt_1,   # ->q0m
                     SideflowChanMCT
                 )
 
@@ -787,6 +792,11 @@ class routing(HydroModule):
             
             # sum of average outflow Q on model sub-steps to give accumulated total outflow volume
             self.var.sumDisDay += self.var.ChanQAvgDt
+
+            # update input (x) Q at t for next step (instant)
+            ChanQMCTStartPcr = decompress(self.var.ChanQ)  # pcr
+            self.var.PrevQMCTin = compressArray(upstream(self.var.LddChan, ChanQMCTStartPcr))
+            # using LddChan here because we need to include the input from upstream kinematic pixels
             ### end of river routing calculation
 
             # ---- Uncomment lines 603-635 in order to compute the mass balance error within the routing module for the options (i) initial run or (ii) split routing off ----
@@ -1068,10 +1078,11 @@ class routing(HydroModule):
 
     def MCTRoutingLoop(
         self,
-        ChanQ_0,
-        ChanQAvgDt_0,
-        ChanM3_0,
-        ChanQ_1,
+        ChanQ_0,  # q10
+        ChanQ_00,  # q00
+        ChanM3_0,  # V00
+        ChanQ_1,  # ->q01
+        ChanQAvgDt_1,  # ->q0m
         SideflowChanMCT
     ):
         """This function implements Muskingum-Cunge-Todini routing method
@@ -1127,11 +1138,12 @@ class routing(HydroModule):
                 q01 = 0.0
                 for ups_ix in range(num_upstream_pixels):
                     ups_pix = upstream_pixels[ups_ix]
-                    q00 += ChanQ_0[ups_pix]
-                    q0m += ChanQAvgDt_0[ups_pix]
-                    q01 += ChanQ_1[ups_pix]
+                    # q00 += ChanQ_0[ups_pix] # This is not correct
+                    q0m += ChanQAvgDt_1[ups_pix]    # needs to be updated as we solve from up to downstream
+                    q01 += ChanQ_1[ups_pix]         # needs to be updated as we solve from up to downstream
 
                 # get outflow from previous step
+                q00 = ChanQ_00[kinpix]
                 q10 = ChanQ_0[kinpix]
                 V00 = ChanM3_0[kinpix]
                 ql = SideflowChanMCT[kinpix]
@@ -1149,12 +1161,20 @@ class routing(HydroModule):
                 q11, q1m, V11, Cm1, Dm1 = MCTRouting_single(
                     V00, q10, q01, q00, ql, q0m, Cm0, Dm0,
                     dt, xpix, s0, Balv, ANalv, Nalv)
-                
+
                 self.var.ChanQ[kinpix] = q11
                 self.var.ChanQAvgDt[kinpix] = q1m
                 self.var.ChanM3[kinpix] = V11
                 self.var.PrevCm0[kinpix] = Cm1
                 self.var.PrevDm0[kinpix] = Dm1
+
+                # update upstream inflow as we solve from upstream to downstream
+                q0m = 0.0
+                q01 = 0.0
+                for ups_ix in range(num_upstream_pixels):
+                    ups_pix = upstream_pixels[ups_ix]
+                    q0m += self.var.ChanQAvgDt[ups_pix]    # needs to be updated as we solve from up to downstream
+                    q01 += self.var.ChanQ[ups_pix]         # needs to be updated as we solve from up to downstream
 
     def compress_mct(self, var):
         """Compress to mct array.
