@@ -102,8 +102,6 @@ def mct_routing(
             PrevCm0[kinpix] = Cm1
             PrevDm0[kinpix] = Dm1
 
-    return ChanQ, ChanQAvgDt, ChanM3, PrevCm0, PrevDm0
-
 
 @njit(nogil=True, fastmath=False, cache=True)
 def MCTRouting_single(

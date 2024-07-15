@@ -948,7 +948,7 @@ class routing(HydroModule):
         # side flow consists of runoff (incl. groundwater), inflow from reservoirs (optional) and external inflow hydrographs (optional)
 
         #####
-        self.river_router.kinematicWaveRouting(self.var.ChanQKinAvgDt,self.var.ChanQKin, SideflowChan, "main_channel")
+        self.river_router.kinematicWaveRouting(self.var.ChanQKinAvgDt, self.var.ChanQKin, SideflowChan, "main_channel")
         # Calling function to solve kinematic routing
         #####
 
