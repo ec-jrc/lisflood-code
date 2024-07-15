@@ -27,7 +27,7 @@ from .polder import polder
 from .inflow import inflow
 from .transmission import transmission
 from .kinematic_wave_parallel import kinematicWave, kwpt
-from .mct import MCT
+from .mct import mct_routing
 
 from ..global_modules.settings import LisSettings, MaskInfo
 from ..global_modules.add1 import loadmap, loadmap_base, compressArray, decompress
@@ -576,19 +576,8 @@ class routing(HydroModule):
             self.mct_river_router = mctWave(self.compress_mct(compressArray(self.var.LddMCT)), self.var.mctmask)
 
             idpix_kin = range(len(self.var.ChanQ))
-            mapping_mct = self.compress_mct(idpix_kin)
+            self.mapping_mct = self.compress_mct(idpix_kin)
 
-            self.mct = MCT(
-                self.var.ChanLength,
-                self.var.ChanGrad,
-                self.var.ChanBottomWidth,
-                self.var.ChanManMCT,
-                self.var.ChanSdXdY,
-                self.var.DtRouting,
-                self.mct_river_router,
-                self.river_router,
-                mapping_mct
-            )
 # --------------------------------------------------------------------------
 # --------------------------------------------------------------------------
 
@@ -763,7 +752,16 @@ class routing(HydroModule):
                 self.var.ChanQAvgDt = ChanQAvgDt
 
                 # Update current state at MCT points
-                ChanQ, ChanQAvgDt, ChanM3, PrevCm0, PrevDm0 = self.mct.routing(
+                ChanQ, ChanQAvgDt, ChanM3, PrevCm0, PrevDm0 = mct_routing(
+                    self.var.ChanLength,
+                    self.var.ChanGrad,
+                    self.var.ChanBottomWidth,
+                    self.var.ChanManMCT,
+                    self.var.ChanSdXdY,
+                    self.var.DtRouting,
+                    self.mct_river_router,
+                    self.river_router,
+                    self.mapping_mct,
                     ChanQ_0,        # q10
                     ChanM3_0,       # V00
                     SideflowChanMCT,
