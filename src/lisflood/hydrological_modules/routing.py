@@ -46,8 +46,7 @@ class routing(HydroModule):
                                 'ChanSdXdY', 'TotalCrossSectionAreaInitValue', 'PrevDischarge'],
                         'SplitRouting': ['CrossSection2AreaInitValue', 'PrevSideflowInitValue', 'CalChanMan2'],
                         'dynamicWave': ['ChannelsDynamic'],
-                        'MCTRouting': ['ChannelsMCT','ChanGradMaxMCT','PrevQMCTinInitValue','PrevQMCToutInitValue','PrevCmMCTInitValue',
-                                       'PrevDmMCTInitValue']}
+                        'MCTRouting': ['ChannelsMCT', 'ChanGradMaxMCT', 'PrevCmMCTInitValue', 'PrevDmMCTInitValue']}
     module_name = 'Routing'
 
     def __init__(self, routing_variable):
@@ -563,22 +562,6 @@ class routing(HydroModule):
             self.var.ChanManMCT = (self.var.ChanMan / self.var.CalChanMan) * loadmap('CalChanMan2')
             # Mannings coefficient for MCT pixels (same as second line of split routing)
 
-
-            # cmcheck
-            # Initialisation for MCT routing
-            PrevQMCTin = loadmap('PrevQMCTinInitValue')     # instant input discharge for MCT at previouse step
-            self.var.PrevQMCTin = np.where(PrevQMCTin == -9999, maskinfo.in_zero(), PrevQMCTin)  # np
-            # MCT inflow (x) to MCT pixel at time t0
-
-            #cmcheck
-            # this is probably not necessary, I can use ChanQ
-            PrevQMCTout = loadmap('PrevQMCToutInitValue')     # instant output discharge for MCT at previous step
-            self.var.PrevQMCTout = np.where(PrevQMCTout == -9999, maskinfo.in_zero(), PrevQMCTout) #np
-            # MCT outflow (x+dx) from MCT pixel at time t0
-
-            self.var.ChanQ = np.where(self.var.IsChannelKinematic, self.var.ChanQ, self.var.PrevQMCTout)
-            # Initialise instantaneous outflow for kinematic and MCT grid cells at previous time step t0 (q10)
-
             PrevCmMCT = loadmap('PrevCmMCTInitValue')
             self.var.PrevCm0 = np.where(PrevCmMCT == -9999, maskinfo.in_one(), PrevCmMCT) #np
             # Courant numnber (Cm) for MCT at previous time step t0
@@ -758,18 +741,9 @@ class routing(HydroModule):
                 
                 # Grab current state
                 ChanQ_0 = self.var.ChanQ.copy()     # Outflow (x+dx) at time t (instant)  q10
-                # ChanQAvgDt_0 = self.var.ChanQAvgDt.copy() # Not necessary
                 ChanM3_0 = self.var.ChanM3.copy()   # Channel storage at time t V00
-
-                ChanQ_00 = self.var.PrevQMCTin.copy()
-                # Inflow (x) at time t instant (instant)  q00
-                # This is coming from upstream pixels
                 
-                # Grab next state, but incomplete (only Kinematic/Split points)
-                ChanQ_1 = ChanQ.copy()  # Outflow (x+dx) at time t+1 (instant) for kinematic pixels only -> used to calc q01 inflow (x) at time t+1 (instant) for MCT pixels
-                ChanQAvgDt_1 = ChanQAvgDt.copy()  # Outflow (x+dx) at time t+1 (average) for kinematic pixels only -> used to calc q0m inflow (x) at time t+1 (average) for MCT pixels
-
-                # put results of Kinematic/Split routing into MCT points   
+                # put results of Kinematic/Split routing into MCT points
                 self.var.ChanQ = ChanQ
                 self.var.ChanM3 = ChanM3
                 self.var.ChanQAvgDt = ChanQAvgDt
@@ -777,10 +751,7 @@ class routing(HydroModule):
                 # Update current state at MCT points
                 self.MCTRoutingLoop(
                     ChanQ_0,        # q10
-                    ChanQ_00,       # q00
                     ChanM3_0,       # V00
-                    ChanQ_1,        # ->q01
-                    ChanQAvgDt_1,   # ->q0m
                     SideflowChanMCT
                 )
 
@@ -793,10 +764,6 @@ class routing(HydroModule):
             # sum of average outflow Q on model sub-steps to give accumulated total outflow volume
             self.var.sumDisDay += self.var.ChanQAvgDt
 
-            # update input (x) Q at t for next step (instant)
-            ChanQMCTStartPcr = decompress(self.var.ChanQ)  # pcr
-            self.var.PrevQMCTin = compressArray(upstream(self.var.LddChan, ChanQMCTStartPcr))
-            # using LddChan here because we need to include the input from upstream kinematic pixels
             ### end of river routing calculation
 
             # ---- Uncomment lines 603-635 in order to compute the mass balance error within the routing module for the options (i) initial run or (ii) split routing off ----
@@ -1079,10 +1046,7 @@ class routing(HydroModule):
     def MCTRoutingLoop(
         self,
         ChanQ_0,  # q10
-        ChanQ_00,  # q00
         ChanM3_0,  # V00
-        ChanQ_1,  # ->q01
-        ChanQAvgDt_1,  # ->q0m
         SideflowChanMCT
     ):
         """This function implements Muskingum-Cunge-Todini routing method
@@ -1116,7 +1080,6 @@ class routing(HydroModule):
         idpix_kin = range(len(self.var.ChanQ))
         mapping_mct = self.compress_mct(idpix_kin)
 
-
         # loop on orders
         for order in range(num_orders):
             first = self.mct_river_router.order_start_stop[order, 0]
@@ -1138,12 +1101,11 @@ class routing(HydroModule):
                 q01 = 0.0
                 for ups_ix in range(num_upstream_pixels):
                     ups_pix = upstream_pixels[ups_ix]
-                    # q00 += ChanQ_0[ups_pix] # This is not correct
-                    q0m += ChanQAvgDt_1[ups_pix]    # needs to be updated as we solve from up to downstream
-                    q01 += ChanQ_1[ups_pix]         # needs to be updated as we solve from up to downstream
+                    q00 += ChanQ_0[ups_pix] # This is not correct
+                    q0m += self.var.ChanQAvgDt[ups_pix]    # needs to be updated as we solve from up to downstream
+                    q01 += self.var.ChanQ[ups_pix]         # needs to be updated as we solve from up to downstream
 
                 # get outflow from previous step
-                q00 = ChanQ_00[kinpix]
                 q10 = ChanQ_0[kinpix]
                 V00 = ChanM3_0[kinpix]
                 ql = SideflowChanMCT[kinpix]
