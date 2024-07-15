@@ -58,7 +58,7 @@ def kinematicRouting(discharge_avg, discharge, lateral_inflow, constant, upstrea
         first = start_stop[order,0]
         last = start_stop[order,1]
         # Iterate through each pixel in the current order in parallel
-        for index in prange(first, last):
+        for index in prange(first, last):  # this is a parallel loop
             # Solve the kinematic wave for the current pixel
             solve1Pixel(ordered_pixels[index], discharge_avg, discharge, lateral_inflow, constant, upstream_lookup,\
                         num_upstream_pixels, a_dx_div_dt, b_a_dx_div_dt, inv_time_delta, beta, inv_beta, b_minus_1, a_dx)

@@ -1,6 +1,126 @@
 import numpy as np
+from numba import njit, prange
 
 
+class MCT:
+    def __init__(
+        self,
+        ChanLength,
+        ChanGrad,
+        ChanBottomWidth,
+        ChanManMCT,
+        ChanSdXdY,
+        dt,
+        mct_river_router,
+        river_router,
+        mapping_mct,
+    ):
+
+        self.ChanLength = ChanLength
+        self.ChanGrad = ChanGrad
+        self.ChanBottomWidth = ChanBottomWidth
+        self.ChanManMCT = ChanManMCT
+        self.ChanSdXdY = ChanSdXdY
+        self.dt = dt
+
+        self.mct_river_router = mct_river_router
+        self.river_router = river_router
+        self.mapping_mct = mapping_mct
+
+    @njit(parallel=True, fastmath=False, cache=True)
+    def routing(
+        self,
+        ChanQ_0,  # q10
+        ChanM3_0,  # V00
+        SideflowChanMCT,
+        ChanQ,  # q01 as input, q11 as output
+        ChanQAvgDt,  # q0m as input, q1m as output
+        PrevCm0,
+        PrevDm0,
+        ChanM3,  # V11 as output
+    ):
+        """This function implements Muskingum-Cunge-Todini routing method
+        MCT routing is calculated on MCT pixels only but gets inflow from both KIN and MCT upstream pixels. This is the
+        reason we need both ChanQKinOutEnd and ChanQKinOutAvgDt as inputs.
+        Function compress_mct is used to compress arrays with all river channel pixels to arrays containing MCT pixels only.
+        References:
+            Todini, E. (2007). A mass conservative and water storage consistent variable parameter Muskingum-Cunge approach. Hydrol. Earth Syst. Sci.
+            (Chapter 5)
+            Reggiani, P., Todini, E., & Meißner, D. (2016). On mass and momentum conservation in the variable-parameter Muskingum method. Journal of Hydrology, 543, 562–576. https://doi.org/10.1016/j.jhydrol.2016.10.030
+            (Appendix B)
+
+        :param ChanQMCTOutStart: computation cell outflow at time t (instant) - q10
+        :param ChanQMCTInStart: computation cell inflow at time t (outflow of upstream cells) (instant) - q00
+        :param ChanQKinOut: outflow from kinematic pixels at time t+dt (instant) -> q01
+        :param ChanQKinOutAvgDt: average outflow from kinematic pixels during time dt (average) -> q0m
+        :param SideflowChanMCT: sideflow contribution to the computation cell [m2/s]
+        :param ChanM3Start: water volume in the channel at beginning of computation step (t)
+        :return:
+        ChanQMCTOutAvg:
+        ChanQMCTOut: outflow at time t+dt (instant) - q11
+        ChanM3MCTOut: average outflow from mct pixels during time dt (average) - q1m
+        Cmout: Courant number at time t+dt
+        Dmout: Reynolds number at time t+dt
+        """
+
+        dt = self.dt  # computation time step for channel [s]
+
+        num_orders = self.mct_river_router.order_start_stop.shape[0]
+
+        # loop on orders
+        for order in range(num_orders):
+            first = self.mct_river_router.order_start_stop[order, 0]
+            last = self.mct_river_router.order_start_stop[order, 1]
+            # loop on pixels in the order
+            for index in prange(first, last):  # this is a parallel loop
+                # get MCT pixel ID
+                mctpix = self.mct_river_router.pixels_ordered[index]
+                # Find the corresponding Kin pixel ID
+                # kinpix = self.river_router.pixels_ordered[mapping_mct[mctpix]] #no
+                kinpix = self.mapping_mct[mctpix] # with this I do not change kinematic cells
+
+                upstream_pixels = self.river_router.upstream_lookup[kinpix]
+                num_upstream_pixels = self.river_router.num_upstream_pixels[kinpix]
+
+                # get upstream inflow values from current and previous steps
+                q00 = 0.0
+                q0m = 0.0
+                q01 = 0.0
+                for ups_ix in range(num_upstream_pixels):
+                    ups_pix = upstream_pixels[ups_ix]
+                    q00 += ChanQ_0[ups_pix] # This is not correct
+                    q0m += ChanQAvgDt[ups_pix]    # needs to be updated as we solve from up to downstream
+                    q01 += ChanQ[ups_pix]         # needs to be updated as we solve from up to downstream
+
+                # get outflow from previous step
+                q10 = ChanQ_0[kinpix]
+                V00 = ChanM3_0[kinpix]
+                ql = SideflowChanMCT[kinpix]
+                Cm0 = PrevCm0[kinpix]
+                Dm0 = PrevDm0[kinpix]
+
+                # static data
+                xpix = self.ChanLength[kinpix]
+                s0 = self.ChanGrad[kinpix]
+                Balv = self.ChanBottomWidth[kinpix]
+                Nalv = self.ChanManMCT[kinpix]
+                ANalv = np.arctan(1 / self.ChanSdXdY[kinpix])
+
+                # calling MCT function for single cell idpx
+                q11, q1m, V11, Cm1, Dm1 = MCTRouting_single(
+                    V00, q10, q01, q00, ql, q0m, Cm0, Dm0,
+                    dt, xpix, s0, Balv, ANalv, Nalv)
+
+                ChanQ[kinpix] = q11
+                ChanQAvgDt[kinpix] = q1m
+                ChanM3[kinpix] = V11
+                PrevCm0[kinpix] = Cm1
+                PrevDm0[kinpix] = Dm1
+
+        return ChanQ, ChanQAvgDt, ChanM3, PrevCm0, PrevDm0
+
+
+@njit(nogil=True, fastmath=False, cache=True)
 def MCTRouting_single(
     V00, q10, q01, q00, ql, q0mm, Cm0, Dm0, dt, xpix, s0, Balv, ANalv, Nalv
 ):
