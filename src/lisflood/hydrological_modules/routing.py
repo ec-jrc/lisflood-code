@@ -753,7 +753,8 @@ class routing(HydroModule):
                 self.var.ChanQAvgDt = ChanQAvgDt
 
                 # Update current state at MCT points
-                ChanQ, ChanQAvgDt, ChanM3, PrevCm0, PrevDm0 = mct_routing(
+                # ChanQ, ChanQAvgDt, ChanM3, PrevCm0, PrevDm0 = mct_routing(
+                mct_routing(
                     self.var.ChanLength,
                     self.var.ChanGrad,
                     self.var.ChanBottomWidth,
@@ -775,11 +776,11 @@ class routing(HydroModule):
                     self.var.ChanM3
                 )
 
-                self.var.ChanQ = ChanQ
-                self.var.ChanQAvgDt = ChanQAvgDt
-                self.var.ChanM3 = ChanM3
-                self.var.PrevCm0 = PrevCm0
-                self.var.PrevDm0 = PrevDm0
+                # self.var.ChanQ = ChanQ
+                # self.var.ChanQAvgDt = ChanQAvgDt
+                # self.var.ChanM3 = ChanM3
+                # self.var.PrevCm0 = PrevCm0
+                # self.var.PrevDm0 = PrevDm0
 
             else:
                 # put results of Kinematic/Split routing into MCT points   
