@@ -578,7 +578,7 @@ class routing(HydroModule):
             idpix_kin = range(len(self.var.ChanQ))
             mapping_mct = self.compress_mct(idpix_kin)
 
-            self.mct_routing = MCT(
+            self.mct = MCT(
                 self.var.ChanLength,
                 self.var.ChanGrad,
                 self.var.ChanBottomWidth,
@@ -763,7 +763,7 @@ class routing(HydroModule):
                 self.var.ChanQAvgDt = ChanQAvgDt
 
                 # Update current state at MCT points
-                ChanQ, ChanQAvgDt, ChanM3, PrevCm0, PrevDm0 = self.MCT.routing(
+                ChanQ, ChanQAvgDt, ChanM3, PrevCm0, PrevDm0 = self.mct.routing(
                     ChanQ_0,        # q10
                     ChanM3_0,       # V00
                     SideflowChanMCT,
