@@ -65,13 +65,12 @@ def mct_routing(
             kinpix = mapping_mct[mctpix] # with this I do not change kinematic cells
 
             upstream_pixels = upstream_lookup[kinpix]
-            num_upstream_pixels = num_upstream_pixels[kinpix]
 
             # get upstream inflow values from current and previous steps
             q00 = 0.0
             q0m = 0.0
             q01 = 0.0
-            for ups_ix in range(num_upstream_pixels):
+            for ups_ix in range(num_upstream_pixels[kinpix]):
                 ups_pix = upstream_pixels[ups_ix]
                 q00 += ChanQ_0[ups_pix] # This is not correct
                 q0m += ChanQAvgDt[ups_pix]    # needs to be updated as we solve from up to downstream
