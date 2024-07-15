@@ -575,6 +575,7 @@ class routing(HydroModule):
             # ************************************************************
             self.mct_river_router = mctWave(self.compress_mct(compressArray(self.var.LddMCT)), self.var.mctmask)
 
+            # create mapping from global domain pixels index to MCT pixels index
             idpix_kin = range(len(self.var.ChanQ))
             self.mapping_mct = self.compress_mct(idpix_kin)
 
