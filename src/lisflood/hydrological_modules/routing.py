@@ -766,8 +766,8 @@ class routing(HydroModule):
                 # This is coming from upstream pixels
                 
                 # Grab next state, but incomplete (only Kinematic/Split points)
-                ChanQ_1 = ChanQ  # Outflow (x+dx) at time t+1 (instant) for kinematic pixels only -> used to calc q01 inflow (x) at time t+1 (instant) for MCT pixels
-                ChanQAvgDt_1 = ChanQAvgDt  # Outflow (x+dx) at time t+1 (average) for kinematic pixels only -> used to calc q0m inflow (x) at time t+1 (average) for MCT pixels
+                # ChanQ_1 = ChanQ  # Outflow (x+dx) at time t+1 (instant) for kinematic pixels only -> used to calc q01 inflow (x) at time t+1 (instant) for MCT pixels
+                # ChanQAvgDt_1 = ChanQAvgDt  # Outflow (x+dx) at time t+1 (average) for kinematic pixels only -> used to calc q0m inflow (x) at time t+1 (average) for MCT pixels
 
                 # put results of Kinematic/Split routing into MCT points   
                 self.var.ChanQ = ChanQ
@@ -779,8 +779,8 @@ class routing(HydroModule):
                     ChanQ_0,        # q10
                     ChanQ_00,       # q00
                     ChanM3_0,       # V00
-                    ChanQ_1,        # ->q01
-                    ChanQAvgDt_1,   # ->q0m
+                    # ChanQ_1,        # ->q01
+                    # ChanQAvgDt_1,   # ->q0m
                     SideflowChanMCT
                 )
 
@@ -1081,8 +1081,8 @@ class routing(HydroModule):
         ChanQ_0,  # q10
         ChanQ_00,  # q00
         ChanM3_0,  # V00
-        ChanQ_1,  # ->q01
-        ChanQAvgDt_1,  # ->q0m
+        # ChanQ_1,  # ->q01
+        # ChanQAvgDt_1,  # ->q0m
         SideflowChanMCT
     ):
         """This function implements Muskingum-Cunge-Todini routing method
@@ -1116,7 +1116,6 @@ class routing(HydroModule):
         idpix_kin = range(len(self.var.ChanQ))
         mapping_mct = self.compress_mct(idpix_kin)
 
-
         # loop on orders
         for order in range(num_orders):
             first = self.mct_river_router.order_start_stop[order, 0]
@@ -1139,8 +1138,8 @@ class routing(HydroModule):
                 for ups_ix in range(num_upstream_pixels):
                     ups_pix = upstream_pixels[ups_ix]
                     # q00 += ChanQ_0[ups_pix] # This is not correct
-                    q0m += ChanQAvgDt_1[ups_pix]    # needs to be updated as we solve from up to downstream
-                    q01 += ChanQ_1[ups_pix]         # needs to be updated as we solve from up to downstream
+                    q0m += self.var.ChanQAvgDt[ups_pix]    # needs to be updated as we solve from up to downstream
+                    q01 += self.var.ChanQ[ups_pix]         # needs to be updated as we solve from up to downstream
 
                 # get outflow from previous step
                 q00 = ChanQ_00[kinpix]
