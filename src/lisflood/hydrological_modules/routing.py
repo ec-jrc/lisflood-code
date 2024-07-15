@@ -769,18 +769,13 @@ class routing(HydroModule):
                     ChanQ_0,        # q10
                     ChanM3_0,       # V00
                     SideflowChanMCT,
+                    # THESE ARE BOTH INPUTS AND OUTPUTS
                     self.var.ChanQ,
                     self.var.ChanQAvgDt,
                     self.var.PrevCm0,
                     self.var.PrevDm0,
                     self.var.ChanM3
                 )
-
-                # self.var.ChanQ = ChanQ
-                # self.var.ChanQAvgDt = ChanQAvgDt
-                # self.var.ChanM3 = ChanM3
-                # self.var.PrevCm0 = PrevCm0
-                # self.var.PrevDm0 = PrevDm0
 
             else:
                 # put results of Kinematic/Split routing into MCT points   

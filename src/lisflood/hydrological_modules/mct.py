@@ -20,6 +20,7 @@ def mct_routing(
     ChanQ_0,  # q10
     ChanM3_0,  # V00
     SideflowChanMCT,
+    # THESE ARE USED AS INPUTS AND OUTPUTS
     ChanQ,  # q01 as input, q11 as output
     ChanQAvgDt,  # q0m as input, q1m as output
     PrevCm0,
