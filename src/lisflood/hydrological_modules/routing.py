@@ -766,8 +766,8 @@ class routing(HydroModule):
                 # This is coming from upstream pixels
                 
                 # Grab next state, but incomplete (only Kinematic/Split points)
-                ChanQ_1 = ChanQ  # Outflow (x+dx) at time t+1 (instant) for kinematic pixels only -> used to calc q01 inflow (x) at time t+1 (instant) for MCT pixels
-                ChanQAvgDt_1 = ChanQAvgDt  # Outflow (x+dx) at time t+1 (average) for kinematic pixels only -> used to calc q0m inflow (x) at time t+1 (average) for MCT pixels
+                ChanQ_1 = ChanQ.copy()  # Outflow (x+dx) at time t+1 (instant) for kinematic pixels only -> used to calc q01 inflow (x) at time t+1 (instant) for MCT pixels
+                ChanQAvgDt_1 = ChanQAvgDt.copy()  # Outflow (x+dx) at time t+1 (average) for kinematic pixels only -> used to calc q0m inflow (x) at time t+1 (average) for MCT pixels
 
                 # put results of Kinematic/Split routing into MCT points   
                 self.var.ChanQ = ChanQ
@@ -1168,13 +1168,6 @@ class routing(HydroModule):
                 self.var.PrevCm0[kinpix] = Cm1
                 self.var.PrevDm0[kinpix] = Dm1
 
-                # update upstream inflow as we solve from upstream to downstream
-                q0m = 0.0
-                q01 = 0.0
-                for ups_ix in range(num_upstream_pixels):
-                    ups_pix = upstream_pixels[ups_ix]
-                    q0m += self.var.ChanQAvgDt[ups_pix]    # needs to be updated as we solve from up to downstream
-                    q01 += self.var.ChanQ[ups_pix]         # needs to be updated as we solve from up to downstream
 
     def compress_mct(self, var):
         """Compress to mct array.
