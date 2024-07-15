@@ -760,8 +760,10 @@ class routing(HydroModule):
                     self.var.ChanManMCT,
                     self.var.ChanSdXdY,
                     self.var.DtRouting,
-                    self.mct_river_router,
-                    self.river_router,
+                    self.mct_river_router.order_start_stop,
+                    self.mct_river_router.pixels_ordered,
+                    self.river_router.upstream_lookup,
+                    self.river_router.num_upstream_pixels,
                     self.mapping_mct,
                     ChanQ_0,        # q10
                     ChanM3_0,       # V00

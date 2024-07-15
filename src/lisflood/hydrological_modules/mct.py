@@ -11,8 +11,10 @@ def mct_routing(
     ChanManMCT,
     ChanSdXdY,
     dt,  # computation time step for channel [s]
-    mct_river_router,
-    river_router,
+    mct_order_start_stop,
+    mct_pixels_ordered,
+    upstream_lookup,
+    num_upstream_pixels,
     mapping_mct,
     # dynamic inputs
     ChanQ_0,  # q10
@@ -48,22 +50,22 @@ def mct_routing(
     Dmout: Reynolds number at time t+dt
     """
 
-    num_orders = mct_river_router.order_start_stop.shape[0]
+    num_orders = mct_order_start_stop.shape[0]
 
     # loop on orders
     for order in range(num_orders):
-        first = mct_river_router.order_start_stop[order, 0]
-        last = mct_river_router.order_start_stop[order, 1]
+        first = mct_order_start_stop[order, 0]
+        last = mct_order_start_stop[order, 1]
         # loop on pixels in the order
         for index in prange(first, last):  # this is a parallel loop
             # get MCT pixel ID
-            mctpix = mct_river_router.pixels_ordered[index]
+            mctpix = mct_pixels_ordered[index]
             # Find the corresponding Kin pixel ID
             # kinpix = self.river_router.pixels_ordered[mapping_mct[mctpix]] #no
             kinpix = mapping_mct[mctpix] # with this I do not change kinematic cells
 
-            upstream_pixels = river_router.upstream_lookup[kinpix]
-            num_upstream_pixels = river_router.num_upstream_pixels[kinpix]
+            upstream_pixels = upstream_lookup[kinpix]
+            num_upstream_pixels = num_upstream_pixels[kinpix]
 
             # get upstream inflow values from current and previous steps
             q00 = 0.0
