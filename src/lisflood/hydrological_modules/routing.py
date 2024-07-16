@@ -552,7 +552,7 @@ class routing(HydroModule):
             ChanGradMaxMCT = loadmap('ChanGradMaxMCT')
             # Maximum riverbed slope for MCT rivers
             # Check where IsChannelMCT is True and values in ChanGrad > ChanGradMaxMCT
-            MCT_slope_mask = np.logical_and(self.var.IsChannelMCT, self.var.ChanGrad > ChanGradMaxMCT)
+            MCT_slope_mask = np.logical_and(self.var.IsChannel MCT, self.var.ChanGrad > ChanGradMaxMCT)
             # Update values in ChanGrad where the condition is met
             self.var.ChanGrad[MCT_slope_mask] = ChanGradMaxMCT
             # set max channel slope for MCT pixels
