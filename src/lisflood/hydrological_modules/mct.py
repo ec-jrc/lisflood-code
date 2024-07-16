@@ -1,5 +1,105 @@
 import numpy as np
+import pandas as pd
 from numba import njit, prange
+
+from .kinematic_wave_parallel import rebuildFlowMatrix, decodeFlowMatrix, streamLookups, topoDistFromSea
+
+
+class MCTWave:
+    """Build pixels loop for MCT channels"""
+
+    def __init__(
+            self,
+            compressed_encoded_ldd,
+            land_mask,
+            ChanLength,
+            ChanGrad,
+            ChanBottomWidth,
+            ChanManMCT,
+            ChanSdXdY,
+            dt,  # computation time step for channel [s]
+            river_router,
+        ):
+        """"""
+        # Process flow direction matrix: downstream and upstream lookups, and routing orders
+        flow_dir = decodeFlowMatrix(rebuildFlowMatrix(compressed_encoded_ldd, land_mask))
+        self.downstream_lookup, self.upstream_lookup = streamLookups(flow_dir, land_mask)
+        self.num_upstream_pixels = (self.upstream_lookup != -1).sum(1).astype(int) # astype for cython import in windows (to avoid 'long long' buffer dtype mismatch)
+        # Routing order: decompose domain into batches; within each batch, pixels can be routed in parallel
+        self._setMCTRoutingOrders()
+
+        self.ChanLength = ChanLength
+        self.ChanGrad = ChanGrad
+        self.ChanBottomWidth = ChanBottomWidth
+        self.ChanManMCT = ChanManMCT
+        self.ChanSdXdY = ChanSdXdY
+        self.dt = dt
+        self.river_router = river_router
+
+        # create mapping from global domain pixels index to MCT pixels index
+        idpix_kin = range(len(self.ChanLength))
+        self.mapping_mct = self.compress_mct(idpix_kin)
+
+    def _setMCTRoutingOrders(self):
+        """Compute the MCT wave routing order. Pixels are grouped in sets with the same order.
+        Pixels in the same set are independent and can be routed in parallel. Sets must be processed in series, starting from order 0.
+        Pixels are ordered topologically starting from the outlets, as in:
+        Liu et al. (2014), A layered approach to parallel computing for spatially distributed hydrological modeling,
+        Environmental Modelling & Software 51, 221-227.
+        Order MAX is given to pixels with no downstream relations (outlets); order MAX-1 is given to
+        pixels whose downstream pixels are all of order MAX; and so on."""
+
+        ocean_topo_distance = topoDistFromSea(self.downstream_lookup, self.upstream_lookup)
+        routing_order = ocean_topo_distance.max() - ocean_topo_distance
+        self.pixels_ordered = pd.DataFrame({"pixels": np.arange(routing_order.size), "order": routing_order})
+        try:
+            self.pixels_ordered = self.pixels_ordered.sort_values(["order", "pixels"]).set_index("order").squeeze()
+        except: # FOR COMPATIBILITY WITH OLDER PANDAS VERSIONS
+            self.pixels_ordered = self.pixels_ordered.sort(["order", "pixels"]).set_index("order").squeeze()
+        # Ensure output is always a Series, even if only one element
+        if not isinstance(self.pixels_ordered, pd.Series):
+            self.pixels_ordered = pd.Series(self.pixels_ordered)
+
+        order_counts = self.pixels_ordered.groupby(self.pixels_ordered.index).count()
+        stop = order_counts.cumsum()
+        self.order_start_stop = np.column_stack((np.append(0, stop[:-1]), stop)).astype(int) # astype for cython import in windows (see above)
+        self.pixels_ordered = self.pixels_ordered.values.astype(int) # astype for cython import in windows (see above)
+
+    def routing(
+            self,
+            ChanQ_0,  # q10
+            ChanM3_0,  # V00
+            SideflowChanMCT,
+            # THESE ARE USED AS INPUTS AND OUTPUTS
+            ChanQ,  # q01 as input, q11 as output
+            ChanQAvgDt,  # q0m as input, q1m as output
+            PrevCm0,
+            PrevDm0,
+            ChanM3,  # V11 as output
+        ):
+
+        mct_routing(
+            self.ChanLength,
+            self.ChanGrad,
+            self.ChanBottomWidth,
+            self.ChanManMCT,
+            self.ChanSdXdY,
+            self.dt,
+            self.order_start_stop,
+            self.pixels_ordered,
+            self.river_router.upstream_lookup,
+            self.river_router.num_upstream_pixels,
+            self.mapping_mct,
+            ChanQ_0,  # q10
+            ChanM3_0,  # V00
+            SideflowChanMCT,
+            # THESE ARE USED AS INPUTS AND OUTPUTS
+            ChanQ,  # q01 as input, q11 as output
+            ChanQAvgDt,  # q0m as input, q1m as output
+            PrevCm0,
+            PrevDm0,
+            ChanM3,  # V11 as output
+        )
 
 
 @njit(parallel=True, fastmath=False, cache=True)
