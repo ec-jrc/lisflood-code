@@ -35,7 +35,7 @@ class TestTSSResults():
         mk_path_out(self.out_path_run)
         lisfloodexe(settings)
 
-        # set precisioon for the test
+        # set precision for the test
         atol = 0.00001
         rtol = 0.0001
         comparator = TSSComparator(atol,rtol)
@@ -50,10 +50,10 @@ class TestTSSResults():
         output_tss =  os.path.join(self.out_path_run, 'chanqX.tss')
         comparator.compare_files(reference, output_tss)
 
-        # # compare mass balance error
-        # reference =  os.path.join(out_path_ref, 'mbError.tss')
-        # output_tss =  os.path.join(self.out_path_run, 'mbError.tss')
-        # comparator.compare_files(reference, output_tss)
+        # compare mass balance error
+        reference =  os.path.join(out_path_ref, 'mbError.tss')
+        output_tss =  os.path.join(self.out_path_run, 'mbError.tss')
+        comparator.compare_files(reference, output_tss)
 
     def run_mcts(self, date_start, date_end, dtsec, dtsec_chan, type):
         # generate lisflood results
@@ -88,20 +88,20 @@ class TestTSSResults():
         output_tss =  os.path.join(self.out_path_run, 'chanqX.tss')
         comparator.compare_files(reference, output_tss)
 
-        # # compare mass balance error
-        # reference =  os.path.join(out_path_ref, 'mbError.tss')
-        # output_tss =  os.path.join(self.out_path_run, 'mbError.tss')
-        # comparator.compare_files(reference, output_tss)
-        #
-        # # compare split routing mass balance error
-        # reference =  os.path.join(out_path_ref, 'mbErrorSplitRoutingM3.tss')
-        # output_tss =  os.path.join(self.out_path_run, 'mbErrorSplitRoutingM3.tss')
-        # comparator.compare_files(reference, output_tss)
-        #
-        # # compare split routing outlet mass balance error
-        # reference =  os.path.join(out_path_ref, 'OutletDischargeErrorSplitRoutingM3S.tss')
-        # output_tss =  os.path.join(self.out_path_run, 'OutletDischargeErrorSplitRoutingM3S.tss')
-        # comparator.compare_files(reference, output_tss)
+        # compare mass balance error
+        reference =  os.path.join(out_path_ref, 'mbError.tss')
+        output_tss =  os.path.join(self.out_path_run, 'mbError.tss')
+        comparator.compare_files(reference, output_tss)
+
+        # compare split routing mass balance error
+        reference =  os.path.join(out_path_ref, 'mbErrorSplitRoutingM3.tss')
+        output_tss =  os.path.join(self.out_path_run, 'mbErrorSplitRoutingM3.tss')
+        comparator.compare_files(reference, output_tss)
+
+        # compare split routing outlet mass balance error
+        reference =  os.path.join(out_path_ref, 'OutletDischargeErrorSplitRoutingM3S.tss')
+        output_tss =  os.path.join(self.out_path_run, 'OutletDischargeErrorSplitRoutingM3S.tss')
+        comparator.compare_files(reference, output_tss)
 
     def run_kin(self, date_start, date_end, dtsec, dtsec_chan, type):
         # generate lisflood results
