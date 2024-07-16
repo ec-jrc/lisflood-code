@@ -552,7 +552,7 @@ class routing(HydroModule):
             ChanGradMaxMCT = loadmap('ChanGradMaxMCT')
             # Maximum riverbed slope for MCT rivers
             # Check where IsChannelMCT is True and values in ChanGrad > ChanGradMaxMCT
-            MCT_slope_mask = np.logical_and(self.var.IsChannel MCT, self.var.ChanGrad > ChanGradMaxMCT)
+            MCT_slope_mask = np.logical_and(self.var.IsChannelMCT, self.var.ChanGrad > ChanGradMaxMCT)
             # Update values in ChanGrad where the condition is met
             self.var.ChanGrad[MCT_slope_mask] = ChanGradMaxMCT
             # set max channel slope for MCT pixels
@@ -574,6 +574,8 @@ class routing(HydroModule):
             # ***** INITIALISE MUSKINGUM-CUNGE-TODINI WAVE ROUTER ********
             # ************************************************************
             mct_ldd = self.compress_mct(compressArray(self.var.LddMCT))
+            # create mapping from global domain pixels index to MCT pixels index
+            mapping_mct = self.compress_mct(range(len(self.var.ChanLength)))
             self.mct_river_router = MCTWave(
                 mct_ldd,
                 self.var.mctmask,
@@ -583,7 +585,8 @@ class routing(HydroModule):
                 self.var.ChanManMCT,
                 self.var.ChanSdXdY,
                 self.var.DtRouting,
-                self.river_router
+                self.river_router,
+                mapping_mct
             )
 
 

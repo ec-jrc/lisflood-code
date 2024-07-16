@@ -19,6 +19,7 @@ class MCTWave:
             ChanSdXdY,
             dt,  # computation time step for channel [s]
             river_router,
+            mapping_mct,
         ):
         """"""
         # Process flow direction matrix: downstream and upstream lookups, and routing orders
@@ -35,10 +36,8 @@ class MCTWave:
         self.ChanSdXdY = ChanSdXdY
         self.dt = dt
         self.river_router = river_router
+        self.mapping_mct = mapping_mct
 
-        # create mapping from global domain pixels index to MCT pixels index
-        idpix_kin = range(len(self.ChanLength))
-        self.mapping_mct = self.compress_mct(idpix_kin)
 
     def _setMCTRoutingOrders(self):
         """Compute the MCT wave routing order. Pixels are grouped in sets with the same order.
