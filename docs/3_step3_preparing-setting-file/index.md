@@ -680,6 +680,7 @@ Within the 'lfoptions' element of the settings file, each option is defined usin
 + **NetCDFTimeChunks**: chunking size in the time dimension. Recommended value is “auto" but chunking size can be specified manually or set to “-1" to load the whole time series into memory (very fast but expensive in terms of memory). 
 + **MapsCaching** (True or False): option designed for the lisflood calibration. If set to True, all the static maps and forcings will be stored in a cache so that they don't have to be loaded by each lisflood instance. This option sets the value of NetCDFTimeChunks to "-1", meaning that the whole time series in the NetCDF inputs is loaded into memory. 
 + **OutputMapsChunks**: this option is used to dump outputs to disk every X steps (default 1).  
++ **OutputMapsDataType**: this option sets the output data type and may take the following values: "float64" or "float32" (default float64)
 
 ### Reference settings file
 In order to facilitate the preparation of the settings file, a complete example is provided [here](../3_step3_preparing-setting-file/lisfloodSettings_reference.xml). The user is encouraged to update the paths, the names of the maps and of the tables in the provided template.

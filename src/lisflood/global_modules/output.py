@@ -173,8 +173,9 @@ class PCRasterWriter(Writer):
         Writing outputs in temporal chunks not supported for PCRaster
     """
 
-    def __init__(self, var, map_path):
+    def __init__(self, var, map_value, map_path):
         self.var = var
+        self.map_value = map_value
         self.map_path = map_path
         self.data = None
 
@@ -245,7 +246,7 @@ class MapOutput():
                 else:
                     self.writer = NetcdfStepsWriter(self.var, self.map_key, self.map_value, self.map_path, self.frequency, self.flag, self._rep_steps[-1])
             else:  # PCRaster
-                self.writer = PCRasterWriter(self.var, self.map_path)
+                self.writer = PCRasterWriter(self.var, self.map_value, self.map_path)
     
     def _extract_path(self):
         """ Extracts output path from settings

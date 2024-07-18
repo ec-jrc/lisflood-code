@@ -116,19 +116,5 @@ To this end a dedicated pre-processing application has been developed (LISVAP), 
 
 
 
-## Tables
-
-In the previous version of LISFLOOD a number of model parameters are read through tables that are linked to the classes on the land use and soil (texture) maps. 
-Those tables are replaced by maps (e.g. soil hydraulic property maps) in order to include the sub-grid variability of each parameter. 
-
-Therefore only one default table is used in the standard LISFLOOD setting. The following table gives an overview:
-
-***Table:*** *LISFLOOD input tables.*                      
-
-| Table                  | Default name | Description                              |
-| ---------------------- | ------------ | ---------------------------------------- |
-| **LAND USE**           |              |                                          |
-| Day of the year -> LAI | LaiOfDay.txt | Lookup table: Day of the year -> LAI map |
-
 [🔝](#top)
 

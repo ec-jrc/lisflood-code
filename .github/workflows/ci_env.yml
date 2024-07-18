@@ -1,6 +1,11 @@
 name: Lisflood OS Unit Tests
 
-on: [push]
+# Controls when the workflow will run
+on:
+  push:
+    branches: [ "master", "development" ]
+  pull_request:
+    branches: [ "master", "development" ]
 
 jobs:
   tests:

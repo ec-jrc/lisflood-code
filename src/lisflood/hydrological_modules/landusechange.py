@@ -76,14 +76,13 @@ class landusechange(HydroModule):
                 self.var.RiceFraction = readnetcdf(binding['RiceFractionMaps'],  model_steps[0] , timestampflag='closest')
                 self.var.OtherFraction = readnetcdf(binding['OtherFractionMaps'],  model_steps[0] , timestampflag='closest')     
                 
-        epic_settings = EPICSettings.instance()    
-
-        # Soil fraction split into: "Rainfed" (previously "Other"), "Forest", "Irrigated".           
-        soil = OrderedDict([(name, loadmap(epic_settings.landuse_inputmap[epic_settings.vegetation_landuse[name]])) for name in self.var.prescribed_vegetation])
         if option.get('cropsEPIC'):
+            epic_settings = EPICSettings.instance()    
+            # Soil fraction split into: "Rainfed" (previously "Other"), "Forest", "Irrigated".           
+            soil = OrderedDict([(name, loadmap(epic_settings.landuse_inputmap[epic_settings.vegetation_landuse[name]], timestampflag='closest')) for name in self.var.prescribed_vegetation])
             self.var.SoilFraction = xr.DataArray(pd.DataFrame(soil).T, coords=self.var.coord_prescribed_vegetation, dims=self.var.coord_prescribed_vegetation.keys())
         else:
-            self.var.SoilFraction = NumpyModified(pd.DataFrame(soil).T.values, dims=self.var.coord_prescribed_vegetation.keys())
+            self.var.SoilFraction = self.var.allocateVariableAllVegetation()
         self.var.SoilFraction[0] =  self.var.OtherFraction
         self.var.SoilFraction[1] =  self.var.ForestFraction 
         self.var.SoilFraction[2] =  self.var.IrrigationFraction     
@@ -96,7 +95,6 @@ class landusechange(HydroModule):
         settings = LisSettings.instance()
         option = settings.options
         binding = settings.binding
-        epic_settings = EPICSettings.instance()
 
         if option['TransientLandUseChange'] and option['readNetcdfStack']:
         
@@ -126,11 +124,14 @@ class landusechange(HydroModule):
                  self.var.OtherFraction_nextstep = readnetcdf(binding['OtherFractionMaps'], self.var.currentTimeStep()+1, timestampflag='closest')                     
                  self.var.DynamicLandCoverDelta = np.sum(np.abs(self.var.ForestFraction_nextstep-self.var.ForestFraction)+np.abs(self.var.DirectRunoffFraction_nextstep-self.var.DirectRunoffFraction)+np.abs(self.var.WaterFraction_nextstep-self.var.WaterFraction)+np.abs(self.var.IrrigationFraction_nextstep-self.var.IrrigationFraction)+np.abs(self.var.RiceFraction_nextstep-self.var.RiceFraction)+np.abs(self.var.OtherFraction_nextstep-self.var.OtherFraction))
  
-            soil = OrderedDict([(name, loadmap(epic_settings.landuse_inputmap[epic_settings.vegetation_landuse[name]])) for name in self.var.prescribed_vegetation])
             if option.get('cropsEPIC'):
+                epic_settings = EPICSettings.instance()
+                # Soil fraction split into: "Rainfed" (previously "Other"), "Forest", "Irrigated".           
+                soil = OrderedDict([(name, loadmap(epic_settings.landuse_inputmap[epic_settings.vegetation_landuse[name]], timestampflag='closest')) for name in self.var.prescribed_vegetation])
                 self.var.SoilFraction = xr.DataArray(pd.DataFrame(soil).T, coords=self.var.coord_prescribed_vegetation, dims=self.var.coord_prescribed_vegetation.keys())
             else:
-                self.var.SoilFraction = NumpyModified(pd.DataFrame(soil).T.values, dims=self.var.coord_prescribed_vegetation.keys())
+                self.var.SoilFraction = self.var.allocateVariableAllVegetation()
+
             self.var.SoilFraction[0] =  self.var.OtherFraction
             self.var.SoilFraction[1] =  self.var.ForestFraction 
             self.var.SoilFraction[2] =  self.var.IrrigationFraction      

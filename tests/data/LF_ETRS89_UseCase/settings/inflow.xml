@@ -1132,14 +1132,6 @@ The option "numCPUs_parallelNumba" may take the following values:
                 </comment>
             </textvar>
 
-
-            <textvar name="FirstDayOfMonth" value="$(PathTables)/firstdayofmonth.txt">
-                <comment>
-                    table with days for each water use maps
-                    1st column: range of days; 2nd column: suffix of wuse map
-                </comment>
-            </textvar>
-
             <textvar name="MapIrrigationCropCoef" value="$(PathMapsTables)/cropcoef_i">
                 <comment>
                     Irrigation crop coefficient
@@ -2343,13 +2335,6 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
             </textvar>
 
-            <textvar name="LAIOfDay" value="$(PathTables)/laiofday.txt">
-                <comment>
-                    table with days for each LAI maps
-                    1st column: range of days; 2nd column: suffix of LAI map
-                </comment>
-            </textvar>
-
         </group>
 
         <group>
@@ -2359,13 +2344,6 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 INPUT WATER USE MAPS AND PARAMETERS
                 **************************************************************
             </comment>
-
-            <textvar name="FirstDayOfMonth" value="$(PathTables)/firstdayofmonth.txt">
-                <comment>
-                    table with days for each water use maps
-                    1st column: range of days; 2nd column: suffix of wuse map
-                </comment>
-            </textvar>
 
             <textvar name="DomesticDemandMaps" value="$(PathWaterUse)/$(PrefixWaterUseDomestic)">
                 <comment>
