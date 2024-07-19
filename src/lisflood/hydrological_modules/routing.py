@@ -373,17 +373,16 @@ class routing(HydroModule):
             self.var.ChanQ = np.where(PrevDischarge == -9999, self.var.ChanQKin, PrevDischarge) #np
             # Initialise instantaneous channel discharge: cold start: equal to ChanQKin [m3/s]
 
-            # cmcheck
-            # initialising the variable
-            # should initialisation be moved somewhere else?
+            # initialising average outflow for all routing options (kinematic, split and MCT)
             self.var.ChanQAvgDt = maskinfo.in_zero()
             self.var.ChanQKinAvgDt = maskinfo.in_zero()
+            # Outflow (x+dx) Q over the computation step for full cross-section (average)
 
-            # cmcheck
             self.var.Chan2QKinAvgDt = maskinfo.in_zero()
+            # Outflow (x+dx) Q over the computation step for second line of split routing (average)
 
-            # I do not need a state file to initialise the average outflow discharge (ChanQAvgDt and ChanQKinAvgDt).
-            # Initialisation would be necessary for pixels in order 0, but there is no upstream contribution for pixels in order 0.
+            # We do not need a state file to initialise the average outflow discharge (ChanQAvgDt and ChanQKinAvgDt).
+            # Initialisation would be necessary for pixels in order 0 (aka head pixels), but there is no upstream contribution for pixels in order 0.
             # For pixels in order 1 and beyond, upstream contribution is calculated during the calculation step.
 
 
@@ -569,24 +568,26 @@ class routing(HydroModule):
             self.var.PrevDm0 = np.where(PrevDmMCT == -9999, maskinfo.in_zero(), PrevDmMCT) #np
             # Reynolds number (Dm) for MCT at previous time step t0
 
-
             # ************************************************************
             # ***** INITIALISE MUSKINGUM-CUNGE-TODINI WAVE ROUTER ********
             # ************************************************************
             mct_ldd = self.compress_mct(compressArray(self.var.LddMCT))
-            # create mapping from global domain pixels index to MCT pixels index
+            # Compress LddMCT to array with MCT pixels only
+
             mapping_mct = self.compress_mct(range(len(self.var.ChanLength)))
+            # create mapping from global domain pixels index to MCT pixels index
+
             self.mct_river_router = MCTWave(
-                mct_ldd,
-                self.var.mctmask,
-                self.var.ChanLength,
-                self.var.ChanGrad,
-                self.var.ChanBottomWidth,
-                self.var.ChanManMCT,
-                self.var.ChanSdXdY,
-                self.var.DtRouting,
-                self.river_router,
-                mapping_mct
+                mct_ldd,                    # MCT Ldd
+                self.var.mctmask,           # MCT mask
+                self.var.ChanLength,        # Channel length
+                self.var.ChanGrad,          # Channel riverbed slope
+                self.var.ChanBottomWidth,   # Riverbed bottom width
+                self.var.ChanManMCT,        # MCT pixels Mannings' coefficient
+                self.var.ChanSdXdY,         # Riverbed side slope
+                self.var.DtRouting,         # computation time step for routing [s]
+                self.river_router,          # class
+                mapping_mct                 # MCT pixels mapping
             )
 
 
@@ -678,15 +679,22 @@ class routing(HydroModule):
             # Use kinematic routing in all grid cells
 
             # only run kinematic for InitLisflood option
+            # either kinematic or split routing always runs for all pixels when using MCT routing
 
-            # KINEMATIC ROUTING ONLY
+            # KINEMATIC ROUTING
             if option['InitLisflood'] or not (option['SplitRouting']):
-                # Kinematic routing uses the same variables for inputs and outputs. Values are updated during computation
-                # from upstream to downstream.
+                # Kinematic routing uses the same variables for inputs and outputs. From upstream to downstream, input
+                # values are used to calculate inflow from upstream pixels, then routing is solved and discharge values
+                # are updated.
 
                 self.KinRouting(SideflowChan)
+                # Takes:
+                # self.var.ChanQKin = outflow (at x+dx) from pixel channels at time t in input, at time t+dt in output [m3/sec] (instant)
+                # self.var.ChanQKinAvgDt = average outflow (at x+dx) from pixel channels at time t in input, at time t+dt in output [m3/sec] (average)
+                # self.var.ChanM3Kin = amount of water stored in the channel at time t in input, at time t+dt in output [m3/sec] (instant) [m3]
+                # SideflowChan = lateral inflow into the channel segment (cell) during dt [m3/channellength/sec]
 
-                # Store results to general variables for channels routing
+                # Store results of kinematic routing
 
                 ChanQ = self.var.ChanQKin.copy()
                 # Outflow (x+dx) Q at the end of computation step t+dt for full section (instant)
@@ -697,15 +705,21 @@ class routing(HydroModule):
                 ChanQAvgDt = self.var.ChanQKinAvgDt.copy()
                 # Average Outflow (x+dx) Q during computation step dt for full section (instant)
 
-            # SPLIT ROUTING ONLY
+            # SPLIT ROUTING - no InitLisflood
             else:
-                # Split routing uses the same variables for inputs and outputs. Values are updated during computation
-                # from upstream to downstream.
+                # Split routing uses the same variables for inputs and outputs. From upstream to downstream, input
+                # values are used to calculate inflow from upstream pixels, then routing is solved and discharge values
+                # are updated.
 
                 self.SplitRouting(SideflowChan)
+                # self.var.ChanQKin: outflow (x+dx) from the main channel at time t in input, at time t+dt in output (instant) [m3/s]
+                # self.var.ChanM3Kin: amount of water stored in the main channel at time t in input, at time t+dt in output (instant) [m3]
+                # self.var.Chan2QKin: outflow (x+dx) from the second line channel (including QLimit) at time t in input, at time t+dt in output (instant) [m3/s]
+                # self.var.Chan2M3Kin: amount of water stored in the second line channel at time t in input, at time t+dt in output (including self.var.Chan2M3Start) (instant) [m3]
+                # self.var.CrossSection2Area: cross-section area above bankfull for second line of routing at time t in input, at time t+dt in output (instant) [m2]
 
                 # Combine the two lines of routing together
-                # Store results to general variables for channels routing
+                # Store results of split routing
 
                 ChanQ = np.maximum(self.var.ChanQKin + self.var.Chan2QKin - self.var.QLimit, 0)
                 # (real) total outflow (at x+dx) at time t+dt end of step for the full cross-section (instant)
@@ -720,63 +734,41 @@ class routing(HydroModule):
                 # (real) total outflow (at x+dx) at time t+dt end of step for the full cross-section (instant)
                 # Main channel routing and above bankfull routing from second line of routing
 
-            # KINEMATIC/SPLIT ROUTING AND MUSKINGUM-CUNGE-TODINI - no InitLisflood
+            # MUSKINGUM-CUNGE-TODINI ROUTING - no InitLisflood
             if option['MCTRouting']:
-                # To parallelise the routing, pixels are grouped by orders. Pixels in the same order are independent and
-                # routing can be solved in parallel.
-                # The same order can have both Kin and MCT pixels.
-                # First, Kinematic routing is solved on all pixels (including MCT pixels) to generate the inputs to the
-                # MCT grid cells downstream (MCT needs input from upstream kinematic pixels).
-                # (this needs to be changed in future versions)
+                # MCT routing
+                # This is calculated for MCT grid cell only but takes the output of kinematic or split routing.
+                # First, Kinematic/Split routing is solved on all pixels (including MCT pixels) then results are updated
+                # for the MCT pixels.
                 
                 # Sideflow contribution to MCT grid cells expressed in [m3/s]
                 SideflowChanMCT = np.where(self.var.IsChannelMCT, SideflowChanM3 * self.var.InvDtRouting, 0)  #Ql
 
-                # MCT routing
-                # This is calculated for MCT grid cell only but takes the output of kinematic or split routing
+                # Grab outflow at the end of the previous routing step t for all pixels) - current state of the MCT pixel
+                ChanQ_0 = self.var.ChanQ.copy()     # Outflow (x+dx) at time t (end of previous routing step) (instant)  -> used to calc q00
+                ChanM3_0 = self.var.ChanM3.copy()   # Channel storage at time t (end of previous routing step) (instant) V00
 
-                # ChanQMCTOutStart = self.var.ChanQ.copy()
-                # Outflow (x+dx) at time t (instant)  q10
-
-                # cmcheck - debug
-                # ChanQKinOutEnd[ChanQKinOutEnd != 0] = 0
-                # Set inflow from kinematic pixels to 1
-
-                # ChanM3MCTStart = self.var.ChanM3.copy()
-                # Channel storage at time t V00
-
-                # ChanQMCTInStart = self.var.PrevQMCTin.copy()   
-                # Inflow (x) at time t instant (instant)  q00
-                # This is coming from upstream pixels
-
-                #### calling MCT routing
-                # Using ChanQKinOutEnd and ChanQKinOutAvgDtEnd as inputs to receive inflow from upstream kinematic/split
-                # routing pixels that are contributing to MCT pixels
-                
-                # Grab current state
-                ChanQ_0 = self.var.ChanQ.copy()     # Outflow (x+dx) at time t (instant)  q10
-                ChanM3_0 = self.var.ChanM3.copy()   # Channel storage at time t V00
-                
-                # put results of Kinematic/Split routing into MCT points
-                self.var.ChanQ = ChanQ
+                # Grab outflow at the end of step t+dt for Kinematic/Split (all pixels) -> this is used to calc contribution from kin/split pixels to MCT pixels
+                # Put results of Kinematic/Split routing at the end of the routing step dt into MCT points
+                self.var.ChanQ = ChanQ              # -> used to calc q01
                 self.var.ChanM3 = ChanM3
-                self.var.ChanQAvgDt = ChanQAvgDt
+                self.var.ChanQAvgDt = ChanQAvgDt    # -> used to calc q0m
 
-                # Update current state at MCT points
+                # Solve MCT routing and update current state at MCT pixels
                 self.mct_river_router.routing(
-                    ChanQ_0,        # q10
-                    ChanM3_0,       # V00
-                    SideflowChanMCT,
+                    ChanQ_0,                # -> used to calc q00
+                    ChanM3_0,               # V00
+                    SideflowChanMCT,        # sideflow for MCT pixels [m3/s]
                     # THESE ARE BOTH INPUTS AND OUTPUTS
-                    self.var.ChanQ,
-                    self.var.ChanQAvgDt,
-                    self.var.PrevCm0,
-                    self.var.PrevDm0,
-                    self.var.ChanM3
+                    self.var.ChanQ,         # -> in input: used to calc q01; in output: q11 outflow (x+dx) at time t+dt (instant)
+                    self.var.ChanQAvgDt,    # -> in input: used to calculate q0m; in output: q1m outflow (x+dx) at time t+dt (average)
+                    self.var.PrevCm0,       # Courant number in input: at time t; in output: at time t+dt
+                    self.var.PrevDm0,       # Reynolds number in input: at time t; in output: at time t+dt
+                    self.var.ChanM3         # Channel storage volume. In input: at time t V00; in output: at time t+dt V11
                 )
 
             else:
-                # put results of Kinematic/Split routing into MCT points   
+                # Store results of kinematic/split routing in the general variables
                 self.var.ChanQ = ChanQ
                 self.var.ChanM3 = ChanM3
                 self.var.ChanQAvgDt = ChanQAvgDt
@@ -925,8 +917,9 @@ class routing(HydroModule):
         Kinematic routing uses same variables for inputs and outputs. From upstream to downstream, input values are used
         to calculate inflow from upstream cells, then routing is solved and discharge values are updated.
         Takes:
-        self.var.ChanQKin = inflow (at x) from upstream channels at time t+dt [m3/sec] (instant)
-        self.var.ChanQKinAvgDt = average inflow (at x) from upstream channels at time t+dt [m3/sec] (average)
+        self.var.ChanQKin = outflow (at x+dx) from pixel channels at time t in input, at time t+dt in output [m3/sec] (instant)
+        self.var.ChanQKinAvgDt = average outflow (at x+dx) from pixel channels at time t in input, at time t+dt in output [m3/sec] (average)
+        self.var.ChanM3Kin = amount of water stored in the channel at time t in input, at time t+dt in output [m3/sec] (instant) [m3]
         SideflowChan = lateral inflow into the channel segment (cell) during dt [m3/channellength/sec]
 
         :param SideflowChan: side flow contribution from runoff (incl. groundwater), inflow from reservoirs (optional)
@@ -934,7 +927,7 @@ class routing(HydroModule):
         :return
         self.var.ChanQKin = outflow (x+dx) at time t+dt (instant) [m3/s]
         self.var.ChanQKinAvgDt = average outflow (x+dx) at time t+dt (average) [m3/s]
-        self.var.ChanM3Kin = amount of water stored in the channel at time t+dt (instant) [m3]
+        # self.var.ChanM3Kin = amount of water stored in the channel at time t+dt (instant) [m3]
         """
 
         SideflowChan[np.isnan(SideflowChan)] = 0 # TEMPORARY FIX - SEE DEBUG ABOVE!
@@ -1004,17 +997,8 @@ class routing(HydroModule):
         # as kinematic wave gets slower with less water a constant amount of water has to be added
         # -> add QLimit discharge
 
-        # cmcheck
-        # temporary workaround for average discharge in kinematic routing
-        # creating dummy variables
-        # ChanQKinOutStart_avg = self.var.ChanQKin.copy()
-        # Chan2QKinOutStart_avg = self.var.Chan2QKin.copy()
-        ######
-
-
         # --- Main channel routing ---
 
-        # cmcheck
         self.river_router.kinematicWaveRouting(self.var.ChanQKinAvgDt, self.var.ChanQKin, self.var.Sideflow1Chan, "main_channel")
         # sef.var.ChanQKin is outflow (x+dx) from main channel at time t in input and at time t+dt in output (instant)
         # sef.var.ChanQKinAvgDt is average outflow (x+dx) from main channel during time dt (average)
@@ -1028,10 +1012,8 @@ class routing(HydroModule):
         # Correct negative discharge in main channel at the end of computation step
         # Outflow (x+dx) at t+dt (instant)
 
-
         # --- Second line channel routing (same channel geometry as main channel but increased Manning coeff) ---
 
-        # cmcheck
         self.river_router.kinematicWaveRouting(self.var.Chan2QKinAvgDt, self.var.Chan2QKin, Sideflow2Chan, "floodplains")
         # sef.var.Chan2QKin is (virtual) total outflow (x+dx) at time t in input and at time t+dt in output (instant)
         # (same channel geometry but using increased Manninig coeff)

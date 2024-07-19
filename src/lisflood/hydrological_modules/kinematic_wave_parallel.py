@@ -164,9 +164,12 @@ class kinematicWave:
             self.pixels_ordered = pd.Series(self.pixels_ordered)
 
         order_counts = self.pixels_ordered.groupby(self.pixels_ordered.index).count()
+        # calc number of sets (orders)
         stop = order_counts.cumsum()
-        self.order_start_stop = np.column_stack((np.append(0, stop[:-1]), stop)).astype(int) 
-        self.pixels_ordered = self.pixels_ordered.values.astype(int) 
+        self.order_start_stop = np.column_stack((np.append(0, stop[:-1]), stop)).astype(int)
+        # find start and end pixel in each order
+        self.pixels_ordered = self.pixels_ordered.values.astype(int)
+        # array containing all pixels organised by computation order
 
     def kinematicWaveRouting(self, discharge_avg, discharge, specific_lateral_inflow, section="main_channel"):
         """Kinematic wave routing: wrapper around kinematic_wave_parallel_tools.kinematicWave"""

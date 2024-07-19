@@ -10,18 +10,18 @@ class MCTWave:
 
     def __init__(
             self,
-            compressed_encoded_ldd,
-            land_mask,
-            ChanLength,
-            ChanGrad,
-            ChanBottomWidth,
-            ChanManMCT,
-            ChanSdXdY,
-            dt,  # computation time step for channel [s]
-            river_router,
-            mapping_mct,
+            compressed_encoded_ldd,     # MCT Ldd
+            land_mask,                  # MCT mask
+            ChanLength,                 # Channel length
+            ChanGrad,                   # Channel riverbed slope
+            ChanBottomWidth,            # Riverbed bottom width
+            ChanManMCT,                 # MCT pixels Mannings' coefficient
+            ChanSdXdY,                  # Riverbed side slope
+            dt,                         # computation time step for routing [s]
+            river_router,               # class
+            mapping_mct,                # MCT pixels mapping
         ):
-        """"""
+
         # Process flow direction matrix: downstream and upstream lookups, and routing orders
         flow_dir = decodeFlowMatrix(rebuildFlowMatrix(compressed_encoded_ldd, land_mask))
         self.downstream_lookup, self.upstream_lookup = streamLookups(flow_dir, land_mask)
@@ -42,6 +42,7 @@ class MCTWave:
     def _setMCTRoutingOrders(self):
         """Compute the MCT wave routing order. Pixels are grouped in sets with the same order.
         Pixels in the same set are independent and can be routed in parallel. Sets must be processed in series, starting from order 0.
+        Sets contain MCT pixels only, but pixels can receive contribution from upstream kinematic pixels.
         Pixels are ordered topologically starting from the outlets, as in:
         Liu et al. (2014), A layered approach to parallel computing for spatially distributed hydrological modeling,
         Environmental Modelling & Software 51, 221-227.
@@ -60,75 +61,78 @@ class MCTWave:
             self.pixels_ordered = pd.Series(self.pixels_ordered)
 
         order_counts = self.pixels_ordered.groupby(self.pixels_ordered.index).count()
+        # calc number of sets (orders)
         stop = order_counts.cumsum()
         self.order_start_stop = np.column_stack((np.append(0, stop[:-1]), stop)).astype(int) # astype for cython import in windows (see above)
+        # find start and end pixel in each order
         self.pixels_ordered = self.pixels_ordered.values.astype(int) # astype for cython import in windows (see above)
+        # array containing all pixels organised by computation order
 
     def routing(
             self,
-            ChanQ_0,  # q10
-            ChanM3_0,  # V00
-            SideflowChanMCT,
+            ChanQ_0,            # -> used to calc q00
+            ChanM3_0,           # V00
+            SideflowChanMCT,    # sideflow for MCT pixels [m3/s]
             # THESE ARE USED AS INPUTS AND OUTPUTS
-            ChanQ,  # q01 as input, q11 as output
-            ChanQAvgDt,  # q0m as input, q1m as output
-            PrevCm0,
-            PrevDm0,
-            ChanM3,  # V11 as output
+            ChanQ,              # -> in input: used to calc q01; in output: q11 outflow (x+dx) at time t+dt (instant)
+            ChanQAvgDt,         # -> in input: used to calculate q0m; in output: q1m outflow (x+dx) at time t+dt (average)
+            PrevCm0,            # Courant number at the end of previous routing step t
+            PrevDm0,            # Reynolds number at the end of previous routing step t
+            ChanM3,             # Channel storage volume. In input: at time t V00; in output: at time t+dt V11
         ):
 
+
         mct_routing(
-            self.ChanLength,
-            self.ChanGrad,
-            self.ChanBottomWidth,
-            self.ChanManMCT,
-            self.ChanSdXdY,
-            self.dt,
-            self.order_start_stop,
-            self.pixels_ordered,
-            self.river_router.upstream_lookup,
-            self.river_router.num_upstream_pixels,
-            self.mapping_mct,
-            ChanQ_0,  # q10
-            ChanM3_0,  # V00
-            SideflowChanMCT,
+            self.ChanLength,        # Channel length
+            self.ChanGrad,          # Channel riverbed slope
+            self.ChanBottomWidth,   # Riverbed bottom width
+            self.ChanManMCT,        # MCT pixels Mannings' coefficient
+            self.ChanSdXdY,         # Riverbed side slope
+            self.dt,                # computation time step for routing [s]
+            self.order_start_stop,  # index of first and last pixel in the set
+            self.pixels_ordered,    # list of pixel indexes in order of routing
+            self.river_router.upstream_lookup,      # indexes of upstream contributing pixels
+            self.river_router.num_upstream_pixels,  # number of upstream contributing pixels
+            self.mapping_mct,   # MCT pixels mapping
+            ChanQ_0,            # -> used to calc q00
+            ChanM3_0,           # V00
+            SideflowChanMCT,    # sideflow for MCT pixels [m3/s]
             # THESE ARE USED AS INPUTS AND OUTPUTS
-            ChanQ,  # q01 as input, q11 as output
-            ChanQAvgDt,  # q0m as input, q1m as output
-            PrevCm0,
-            PrevDm0,
-            ChanM3,  # V11 as output
+            ChanQ,              # -> in input: used to calc q01; in output: q11 outflow (x+dx) at time t+dt (instant)
+            ChanQAvgDt,         # -> in input: used to calculate q0m; in output: q1m outflow (x+dx) at time t+dt (average)
+            PrevCm0,            # Courant number in input: at time t; in output: at time t+dt
+            PrevDm0,            # Reynolds number in input: at time t; in output: at time t+dt
+            ChanM3,             # V11 as output
         )
 
 
 @njit(parallel=True, fastmath=False, cache=True)
 def mct_routing(
-    # static inputs
-    ChanLength,
-    ChanGrad,
-    ChanBottomWidth,
-    ChanManMCT,
-    ChanSdXdY,
-    dt,  # computation time step for channel [s]
-    mct_order_start_stop,
-    mct_pixels_ordered,
-    upstream_lookup,
-    num_upstream_pixels,
-    mapping_mct,
+    # static inputs (not changing between time steps)
+    ChanLength,             # Channel length
+    ChanGrad,               # Channel riverbed slope
+    ChanBottomWidth,        # Riverbed bottom width
+    ChanManMCT,             # MCT pixels Mannings' coefficient
+    ChanSdXdY,              # Riverbed side slope
+    dt,                     # computation time step for channel [s]
+    mct_order_start_stop,   # index of first and last pixel in the set
+    mct_pixels_ordered,     # list of pixel indexes in order of routing
+    upstream_lookup,        # indexes of upstream contributing pixels
+    num_upstream_pixels,    # number of upstream contributing pixels
+    mapping_mct,            # MCT pixels mapping
     # dynamic inputs
-    ChanQ_0,  # q10
-    ChanM3_0,  # V00
-    SideflowChanMCT,
+    ChanQ_0,                # -> used to calc q00
+    ChanM3_0,               # V00
+    SideflowChanMCT,        # sideflow for MCT pixels [m3/s]
     # THESE ARE USED AS INPUTS AND OUTPUTS
-    ChanQ,  # q01 as input, q11 as output
-    ChanQAvgDt,  # q0m as input, q1m as output
-    PrevCm0,
-    PrevDm0,
-    ChanM3,  # V11 as output
+    ChanQ,          # -> in input: used to calc q01; in output: q11 outflow (x+dx) at time t+dt (instant)
+    ChanQAvgDt,     # -> in input: used to calculate q0m; in output: q1m outflow (x+dx) at time t+dt (average)
+    PrevCm0,        # Courant number in input: at time t; in output: at time t+dt
+    PrevDm0,        # Reynolds number in input: at time t; in output: at time t+dt
+    ChanM3,         # V11 as output
 ):
     """This function implements Muskingum-Cunge-Todini routing method
-    MCT routing is calculated on MCT pixels only but gets inflow from both KIN and MCT upstream pixels. This is the
-    reason we need both ChanQKinOutEnd and ChanQKinOutAvgDt as inputs.
+    MCT routing is calculated on MCT pixels only but gets inflow from both Kinematic/Split and MCT upstream pixels.
     Function compress_mct is used to compress arrays with all river channel pixels to arrays containing MCT pixels only.
     References:
         Todini, E. (2007). A mass conservative and water storage consistent variable parameter Muskingum-Cunge approach. Hydrol. Earth Syst. Sci.
@@ -136,18 +140,12 @@ def mct_routing(
         Reggiani, P., Todini, E., & Meißner, D. (2016). On mass and momentum conservation in the variable-parameter Muskingum method. Journal of Hydrology, 543, 562–576. https://doi.org/10.1016/j.jhydrol.2016.10.030
         (Appendix B)
 
-    :param ChanQMCTOutStart: computation cell outflow at time t (instant) - q10
-    :param ChanQMCTInStart: computation cell inflow at time t (outflow of upstream cells) (instant) - q00
-    :param ChanQKinOut: outflow from kinematic pixels at time t+dt (instant) -> q01
-    :param ChanQKinOutAvgDt: average outflow from kinematic pixels during time dt (average) -> q0m
-    :param SideflowChanMCT: sideflow contribution to the computation cell [m2/s]
-    :param ChanM3Start: water volume in the channel at beginning of computation step (t)
     :return:
-    ChanQMCTOutAvg:
-    ChanQMCTOut: outflow at time t+dt (instant) - q11
-    ChanM3MCTOut: average outflow from mct pixels during time dt (average) - q1m
-    Cmout: Courant number at time t+dt
-    Dmout: Reynolds number at time t+dt
+    ChanQ,          # q11 outflow (x+dx) at time t+dt (instant)
+    ChanQAvgDt,     # q1m outflow (x+dx) at time t+dt (average)
+    PrevCm0,        # Courant number at time t+dt
+    PrevDm0,        # Reynolds number at time t+dt
+    ChanM3,         # V11 channel storage volume at t+dt (instant)
     """
 
     num_orders = mct_order_start_stop.shape[0]
@@ -158,48 +156,50 @@ def mct_routing(
         last = mct_order_start_stop[order, 1]
         # loop on pixels in the order
         for index in prange(first, last):  # this is a parallel loop
-            # get MCT pixel ID
+            # get MCT pixel id in the MCT LDD
             mctpix = mct_pixels_ordered[index]
-            # Find the corresponding Kin pixel ID
-            # kinpix = self.river_router.pixels_ordered[mapping_mct[mctpix]] #no
-            kinpix = mapping_mct[mctpix] # with this I do not change kinematic cells
-
+            # Find the corresponding pixel id in the full LDD
+            kinpix = mapping_mct[mctpix]
+            # Find id of upstream contributing pixels (from full LDD)
             upstream_pixels = upstream_lookup[kinpix]
 
-            # get upstream inflow values from current and previous steps
+            # get inflow from upstream pixels for current (t+dt) and previous steps (t) for the MCT pixel
             q00 = 0.0
             q0m = 0.0
             q01 = 0.0
             for ups_ix in range(num_upstream_pixels[kinpix]):
-                ups_pix = upstream_pixels[ups_ix]
-                q00 += ChanQ_0[ups_pix] # This is not correct
-                q0m += ChanQAvgDt[ups_pix]    # needs to be updated as we solve from up to downstream
-                q01 += ChanQ[ups_pix]         # needs to be updated as we solve from up to downstream
+                ups_pix = upstream_pixels[ups_ix]   # upstream pixel id
+                q00 += ChanQ_0[ups_pix]     # Inflow (x) to the pixel at previous step t (instant)
+                q0m += ChanQAvgDt[ups_pix]  # Average inflow (x) to the pixel at previous step t (average)
+                q01 += ChanQ[ups_pix]       # Inflow (x) at current step t+dt (instant)
 
-            # get outflow from previous step
-            q10 = ChanQ_0[kinpix]
-            V00 = ChanM3_0[kinpix]
-            ql = SideflowChanMCT[kinpix]
-            Cm0 = PrevCm0[kinpix]
-            Dm0 = PrevDm0[kinpix]
+            # get outflow from the pixel at previous step t
+            q10 = ChanQ_0[kinpix]   # Outflow (x+dx) from the pixel at previous step t (instant)
+
+            V00 = ChanM3_0[kinpix]  # Channel storage volume at the end of previous step t (instant)
+
+            Cm0 = PrevCm0[kinpix]   # Courant number at the end of previous step t
+            Dm0 = PrevDm0[kinpix]   # Reynolds number at the end of previous step t
+
+            ql = SideflowChanMCT[kinpix]    # Sideflow during step dt
 
             # static data
-            xpix = ChanLength[kinpix]
-            s0 = ChanGrad[kinpix]
-            Balv = ChanBottomWidth[kinpix]
-            Nalv = ChanManMCT[kinpix]
-            ANalv = np.arctan(1 / ChanSdXdY[kinpix])
+            xpix = ChanLength[kinpix]                   # Channel length
+            s0 = ChanGrad[kinpix]                       # Channel riverbed slope
+            Balv = ChanBottomWidth[kinpix]              # Riverbed bottom width
+            Nalv = ChanManMCT[kinpix]                   # MCT pixels Mannings' coefficient
+            ANalv = np.arctan(1 / ChanSdXdY[kinpix])    # angle of the riverbed side [rad]
 
             # calling MCT function for single cell idpx
             q11, q1m, V11, Cm1, Dm1 = MCTRouting_single(
                 V00, q10, q01, q00, ql, q0m, Cm0, Dm0,
                 dt, xpix, s0, Balv, ANalv, Nalv)
 
-            ChanQ[kinpix] = q11
-            ChanQAvgDt[kinpix] = q1m
-            ChanM3[kinpix] = V11
-            PrevCm0[kinpix] = Cm1
-            PrevDm0[kinpix] = Dm1
+            ChanQ[kinpix] = q11         # Outflow (x+dx) at the end of routing step t+dt (instant)
+            ChanQAvgDt[kinpix] = q1m    # Average outflow (x+dx) at the end of routing step t+dt (average)
+            ChanM3[kinpix] = V11        # Channel storage at the end of routing step t+dt (instant)
+            PrevCm0[kinpix] = Cm1       # Courant number at the end of routing step t+dt (instant)
+            PrevDm0[kinpix] = Dm1       # Reynolds number at the end of routing step t+dt (instant)
 
 
 @njit(nogil=True, fastmath=False, cache=True)
@@ -216,7 +216,7 @@ def MCTRouting_single(
 
     :param V00: channel storage volume at t (beginning of computation step)
     :param q10: O(t) - outflow (x+dx) at time t
-    :param q01: I(t+dt) - inflow (x) at time t+dt
+    :param q01: I(t+dt) - inflow (x) at time t+dt (end of computation step)
     :param q00: I(t) - inflow (x) at time t
     :param ql: lateral flow over time dt [m3/s]
     :param q0mm: I - average inflow during step dt
