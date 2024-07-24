@@ -95,8 +95,9 @@ class TestInflow():
 
     def teardown_method(self):
         print('Cleaning directories')
-        ref_path = os.path.join(self.case_dir, 'reference_dyn', 'inflow_'+ str(type))
+        ref_path = os.path.join(self.case_dir, 'reference_dyn')
         shutil.rmtree(ref_path, ignore_errors=True)
+
         out_path = os.path.join(self.case_dir, self.run_type)
         shutil.rmtree(out_path, ignore_errors=True)
 
@@ -111,6 +112,9 @@ class TestInflowShort(TestInflow):
     def test_inflow_daily(self):
          self.run("02/01/2016 06:00", "30/01/2016 06:00", 86400,'daily')
 
+    # cleaning folders
+    def cleaning(self,):
+        self.teardown_method()
 
 # @pytest.mark.slow
 # class TestInflowLong(TestInflow):
