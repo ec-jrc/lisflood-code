@@ -189,10 +189,19 @@ class TestTSSResults():
         output_tss =  os.path.join(self.out_path_run, 'OutletDischargeErrorSplitRoutingM3S.tss')
         comparator.compare_files(reference, output_tss)
 
-    # def teardown_method(self):
-    #     print('Cleaning directories')
-    #     out_path = os.path.join(self.case_dir, self.out_path_run)
-    #     shutil.rmtree(out_path, ignore_errors=True)
+    def teardown_method(self):
+        print('Cleaning directories')
+        out_path = os.path.join(self.case_dir, 'out')
+        if os.path.exists(out_path) and os.path.isdir(out_path):
+            shutil.rmtree(out_path, ignore_errors=True)
+
+        # for item in os.listdir(out_path):
+        #     item_path = os.path.join(out_path, item)
+        #     if os.path.isfile(item_path) or os.path.islink(item_path):
+        #         os.unlink(item_path)  # Remove the file or link
+        #     elif os.path.isdir(item_path):
+        #         shutil.rmtree(item_path)  # Remove the directory and its contents
+
 
 
 class TestMCTResults(TestTSSResults):
@@ -206,11 +215,11 @@ class TestMCTResults(TestTSSResults):
     def test_MCT_6h_1h(self):
         self.run_mct("02/01/2016 06:00", "02/07/2016 06:00", 21600, 3600,'6h_1h')
     def test_MCT_daily(self):
-         self.run_mct("02/01/2016 06:00", "02/07/2016 06:00", 86400, 86400,'daily')
+        self.run_mct("02/01/2016 06:00", "02/07/2016 06:00", 86400, 86400,'daily')
     def test_MCT_daily_6h(self):
-         self.run_mct("02/01/2016 06:00", "02/07/2016 06:00", 86400, 21600,'daily_6h')
+        self.run_mct("02/01/2016 06:00", "02/07/2016 06:00", 86400, 21600,'daily_6h')
     def test_MCT_daily_1h(self):
-         self.run_mct("02/01/2016 06:00", "02/07/2016 06:00", 86400, 3600, 'daily_1h')
+        self.run_mct("02/01/2016 06:00", "02/07/2016 06:00", 86400, 3600, 'daily_1h')
 
     ###########################################
     # test results of MCT+SPLIT routing
@@ -219,11 +228,11 @@ class TestMCTResults(TestTSSResults):
     def test_MCTS_6h_1h(self):
         self.run_mcts("02/01/2016 06:00", "02/07/2016 06:00", 21600, 3600,'6h_1h')
     def test_MCTS_daily(self):
-         self.run_mcts("02/01/2016 06:00", "02/07/2016 06:00", 86400, 86400,'daily')
+        self.run_mcts("02/01/2016 06:00", "02/07/2016 06:00", 86400, 86400,'daily')
     def test_MCTS_daily_6h(self):
-         self.run_mcts("02/01/2016 06:00", "02/07/2016 06:00", 86400, 21600,'daily_6h')
+        self.run_mcts("02/01/2016 06:00", "02/07/2016 06:00", 86400, 21600,'daily_6h')
     def test_MCTS_daily_1h(self):
-         self.run_mcts("02/01/2016 06:00", "02/07/2016 06:00", 86400, 3600, 'daily_1h')
+        self.run_mcts("02/01/2016 06:00", "02/07/2016 06:00", 86400, 3600, 'daily_1h')
 
     # #########################################
     # test results of Kinemating routing
@@ -232,11 +241,11 @@ class TestMCTResults(TestTSSResults):
     def test_KIN_6h_1h(self):
         self.run_kin("02/01/2016 06:00", "02/07/2016 06:00", 21600, 3600,'6h_1h')
     def test_KIN_daily(self):
-         self.run_kin("02/01/2016 06:00", "02/07/2016 06:00", 86400, 86400,'daily')
+        self.run_kin("02/01/2016 06:00", "02/07/2016 06:00", 86400, 86400,'daily')
     def test_KIN_daily_6h(self):
-         self.run_kin("02/01/2016 06:00", "02/07/2016 06:00", 86400, 21600,'daily_6h')
+        self.run_kin("02/01/2016 06:00", "02/07/2016 06:00", 86400, 21600,'daily_6h')
     def test_KIN_daily_1h(self):
-         self.run_kin("02/01/2016 06:00", "02/07/2016 06:00", 86400, 3600, 'daily_1h')
+        self.run_kin("02/01/2016 06:00", "02/07/2016 06:00", 86400, 3600, 'daily_1h')
 
     # #########################################
     # test results of Split routing
@@ -251,9 +260,10 @@ class TestMCTResults(TestTSSResults):
     def test_SPLIT_daily_1h(self):
         self.run_split("02/01/2016 06:00", "02/07/2016 06:00", 86400, 3600, 'daily_1h')
 
-
-    # def cleaning(self):
-    #     self.teardown_method()
+    # #########################################
+    # cleaning out/ folder
+    def cleaning(self,):
+        self.teardown_method()
 
 
 # @pytest.mark.slow

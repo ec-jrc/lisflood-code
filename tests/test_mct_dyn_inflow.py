@@ -93,12 +93,16 @@ class TestInflow():
 
         comparator.compare_files(reference, output_tss)
 
-    def teardown_method(self):
+    def teardown_method(self, type):
         print('Cleaning directories')
-        ref_path = os.path.join(self.case_dir, 'reference_mct_dyn', 'inflow_'+ str(type))
-        shutil.rmtree(ref_path, ignore_errors=True)
+
+        ref_path = os.path.join(self.case_dir, 'reference_mct_dyn')
+        if os.path.exists(ref_path) and os.path.isdir(ref_path):
+            shutil.rmtree(ref_path, ignore_errors=True)
+
         out_path = os.path.join(self.case_dir, self.run_type)
-        shutil.rmtree(out_path, ignore_errors=True)
+        if os.path.exists(out_path) and os.path.isdir(out_path):
+            shutil.rmtree(out_path, ignore_errors=True)
 
 
 class TestInflowShort(TestInflow):
@@ -107,12 +111,12 @@ class TestInflowShort(TestInflow):
 
     def test_inflow_6h(self):
         self.run("01/03/2016 06:00", "30/03/2016 06:00", 21600,'6h')
-    def cleaning(self):
-        self.teardown_method()
 
     def test_inflow_daily(self):
          self.run("02/01/2016 06:00", "30/01/2016 06:00", 86400,'daily')
-    def cleaning(self):
+
+    # cleaning folders
+    def cleaning(self,):
         self.teardown_method()
 
 # @pytest.mark.slow
