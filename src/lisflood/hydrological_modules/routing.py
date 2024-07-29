@@ -19,6 +19,8 @@ from __future__ import print_function, absolute_import
 from pcraster import lddmask, accuflux, boolean, downstream, pit, path, lddrepair, ifthenelse, cover, nominal, uniqueid, \
     catchment, upstream, pcr2numpy
 
+import warnings
+
 import numpy as np
 
 from .lakes import lakes
@@ -30,6 +32,7 @@ from .kinematic_wave_parallel import kinematicWave, kwpt
 from .mct import MCTWave
 
 from ..global_modules.settings import LisSettings, MaskInfo
+from ..global_modules.errors import LisfloodWarning
 from ..global_modules.add1 import loadmap, loadmap_base, compressArray, decompress
 from . import HydroModule
 
@@ -527,11 +530,18 @@ class routing(HydroModule):
         # ************************************************************
         # ***** INITIALISATION FOR MCT ROUTING            ************
         # ************************************************************
+        
+        # even if MCT is active, it should be deactivated if there is no MCT cell in the domain
+        if option['MCTRouting']:
+            self.var.IsChannelMCTPcr = boolean(loadmap('ChannelsMCT', pcr=True))   #pcr
+            self.var.IsChannelMCT = np.bool8(compressArray(self.var.IsChannelMCTPcr))   #bool
+            if self.var.IsChannelMCT.sum()==0:
+                warnings.warn(LisfloodWarning('There are no MCT grid cell. MCT routing is deactivated'))
+                option['MCTRouting'] = False
+        
         if option['MCTRouting']:
             maskinfo = MaskInfo.instance()
 
-            self.var.IsChannelMCTPcr = boolean(loadmap('ChannelsMCT', pcr=True))   #pcr
-            self.var.IsChannelMCT = np.bool8(compressArray(self.var.IsChannelMCTPcr))   #bool
             self.var.IsChannelMCTPcr = boolean(decompress(self.var.IsChannelMCT))       # pcr
             # Identify channel pixels where Muskingum-Cunge-Todini is used
 
