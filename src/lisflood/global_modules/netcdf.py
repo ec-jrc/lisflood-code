@@ -216,10 +216,10 @@ class XarrayChunked():
         # read maps using always a standard x and y reference system using x in ascending and y in descending order
         if (y_flipped):   # y in in ascending order
             warnings.warn(LisfloodWarning("Warning: map {} (var_name: '{}') has y coordinates in ascending order and will be flipped vertically".format(data_path, var_name)))
-            func_y = lambda y : np.flipud(y).copy()
+            func_y = lambda y : np.flip(y, axis=1).copy()   # y axis is the number 1, as zero is the time axis
         if (x_flipped):   # x in in descending order
             warnings.warn(LisfloodWarning("Warning: map {} (var_name: '{}') has x coordinates in descending order and will be flipped horizontally".format(data_path, var_name)))
-            func_x = lambda x : np.fliplr(x).copy()
+            func_x = lambda x : np.flip(x, axis=2).copy()  # y axis is the number 2, as zero is the time axis
 
         # compress dataset (remove missing values and flatten the array)
         maskinfo = MaskInfo.instance()
