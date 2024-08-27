@@ -530,7 +530,7 @@ class waterabstraction(HydroModule):
             # 12.4 Bookkeeping for over-all water balance, and repwateruseGauges and repwateruseSites
             self.var.cumulated_CH_withdrawal += self.var.withdrawal_CH_actual_M3 # bookkeeping for over-all water balance
             if (option['repwateruseGauges']) or (option['repwateruseSites']):
-                self.var.WUseSumM3 = accuflux(self.var.Ldd, decompress(self.var.withdrawal_CH_actual_M3)*self.var.InvDtSec)
+                self.var.WUseSumM3 = compressArray(accuflux(self.var.Ldd, decompress(self.var.withdrawal_CH_actual_M3)*self.var.InvDtSec))
                 
             # ********************************************************************************************
             # 13. Actual surface water abstractions (except prescribed paddy rice)
