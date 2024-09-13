@@ -49,7 +49,7 @@ class routing(HydroModule):
                                 'ChanSdXdY', 'TotalCrossSectionAreaInitValue', 'PrevDischarge'],
                         'SplitRouting': ['CrossSection2AreaInitValue', 'PrevSideflowInitValue', 'CalChanMan2'],
                         'dynamicWave': ['ChannelsDynamic'],
-                        'MCTRouting': ['ChannelsMCT', 'ChanGradMaxMCT', 'PrevCmMCTInitValue', 'PrevDmMCTInitValue']}
+                        'MCTRouting': ['ChannelsMCT', 'ChanGradMaxMCT', 'PrevCmMCTInitValue', 'PrevDmMCTInitValue','CalChanMan3']}
     module_name = 'Routing'
 
     def __init__(self, routing_variable):
@@ -568,7 +568,7 @@ class routing(HydroModule):
 
             # cmcheck
             # This could become a calibration parameter if we want to use MCT+SplitRouting
-            self.var.ChanManMCT = (self.var.ChanMan / self.var.CalChanMan) * loadmap('CalChanMan2')
+            self.var.ChanManMCT = (self.var.ChanMan / self.var.CalChanMan) * loadmap('CalChanMan3')
             # Mannings coefficient for MCT pixels (same as second line of split routing)
 
             PrevCmMCT = loadmap('PrevCmMCTInitValue')

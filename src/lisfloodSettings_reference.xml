@@ -439,6 +439,13 @@ Multiplier [-] applied to Channel Manning's n for second line of routing
 </comment>
 </textvar>
 
+<textvar name="CalChanMan3" value="$(PathParams)/params_CalChanMan3">
+<comment>
+default: 3.0 [-]
+Multiplier [-] applied to Channel Manning's n for MCT routing
+</comment>
+</textvar>
+
 <textvar name="LakeMultiplier" value="$(PathParams)/params_LakeMultiplier">
 <comment>
 default: 1.0 [-]
@@ -1446,7 +1453,7 @@ Minimum slope gradient [-] (for kin. wave: slope cannot be 0)
 </comment>
 </textvar>
 
-<textvar name="ChanGradMin" value="0.0001">
+<textvar name="ChanGradMin" value="0.00001">
 <comment>
 Minimum channel gradient [-] (for kin. wave: slope cannot be 0)
 </comment>
@@ -2127,6 +2134,12 @@ Multiplier applied to Channel Manning's n
 <textvar name="CalChanMan2" value="$(CalChanMan2)">
 <comment>
 Multiplier applied to Channel Manning's n for second routing line
+</comment>
+</textvar>
+
+<textvar name="CalChanMan3" value="$(CalChanMan3)">
+<comment>
+Multiplier applied to Channel Manning's n for MCT routing
 </comment>
 </textvar>
 
