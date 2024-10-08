@@ -47,7 +47,7 @@ from .hydrological_modules.soil import soil
 from .hydrological_modules.routing import routing
 from .hydrological_modules.groundwater import groundwater
 from .hydrological_modules.surface_routing import surface_routing
-from .hydrological_modules.reservoir import reservoir
+from .hydrological_modules.reservoir import Hanazaki, Burek
 from .hydrological_modules.lakes import lakes
 from .hydrological_modules.polder import polder
 from .hydrological_modules.waterabstraction import waterabstraction
@@ -136,7 +136,7 @@ class LisfloodModel_ini(DynamicModel):
         self.routing_module = routing(self)
         self.groundwater_module = groundwater(self)
         self.surface_routing_module = surface_routing(self)
-        self.reservoir_module = reservoir(self)
+        self.reservoir_module = Hanazaki(self) # Burek(self)
         self.lakes_module = lakes(self)
         self.polder_module = polder(self)
         self.waterabstraction_module = waterabstraction(self)
