@@ -190,7 +190,7 @@ from . import HydroModule
             
 #             # RESERVOIR MODEL PARAMETERS
             
-#             # adjuste normal storage limit
+#             # adjusted normal storage limit
 #             adjust_Normal_Flood = loadmap('adjust_Normal_Flood')
 #             adjust_Normal_FloodC = makenumpy(adjust_Normal_Flood)
 #             adjust_Normal_FloodCC = np.compress(self.var.ReservoirSitesC > 0, adjust_Normal_FloodC)
@@ -384,9 +384,9 @@ class Reservoir(HydroModule):
     
     input_files_keys = {'simulateReservoirs': [
         'ReservoirSites', 'TabTotStorage', 'TabCatchmentArea', # reservoir characteristics
-        'TabFloodStorageLimit', # storage limits
+        # 'TabFloodStorageLimit', # storage limits
         'TabMinOutflow', 'TabNormalOutflow', 'TabFloodOutflow', # release attributes
-        # calibration parameters
+        'ReservoirFloodStorage', 'ReservoirFloodOutflowFactor', # calibration parameters
         'ReservoirInitialFillValue', # initial conditions
     ]}
     
@@ -459,40 +459,53 @@ class Reservoir(HydroModule):
             catchment_area = compressArray(catchment_area)
             self.var.CatchmentAreaM2CC = np.compress(self.var.ReservoirSitesC > 0, catchment_area)
             
+            # MODEL PARAMETERS
+
+            # flood storage limit (fraction of total storage [-])
+            flood_storage = loadmap('ReservoirFloodStorage')
+            flood_storage = makenumpy(flood_storage)
+            self.var.FloodStorageLimit = np.compress(self.var.ReservoirSitesC > 0, flood_storage)
+
+            # factor of the flood outflow
+            factor_outflow = loadmap('ReservoirFloodOutflowFactor')
+            factor_outflow = makenumpy(factor_outflow)
+            factor_outflow = np.compress(self.var.ReservoirSitesC > 0, factor_outflow)
+
             # STORAGE LIMITS
             
-            # flood storage limit (fraction of total storage [-])
-            flood_storage = lookupscalar(str(binding['TabFloodStorageLimit']), reservoirs_pcr)
-            flood_storage = compressArray(flood_storage)
-            self.var.FloodStorageLimitCC = np.compress(self.var.ReservoirSitesC > 0, flood_storage)
+            # # flood storage limit (fraction of total storage [-])
+            # flood_storage = lookupscalar(str(binding['TabFloodStorageLimit']), reservoirs_pcr)
+            # flood_storage = compressArray(flood_storage)
+            # self.var.FloodStorageLimit = np.compress(self.var.ReservoirSitesC > 0, flood_storage)
             
             # emergency storage limit (fraction of total storage [-])
             # the upper 20% of the flood storage capacicty
-            self.var.EmergencyStorageLimitCC = 0.8 + 0.2 * self.var.FloodStorageLimitCC 
+            self.var.EmergencyStorageLimit = 0.8 + 0.2 * self.var.FloodStorageLimit 
             
             # emergency storage limit (fraction of total storage [-])
             # 50% of the water use capacity
-            self.var.ConservativeStorageLimitCC = 0.5 * self.var.FloodStorageLimitCC 
+            self.var.ConservativeStorageLimit = 0.5 * self.var.FloodStorageLimit 
             
             # RELEASE ATTRIBUTES
             
             # minimum reservoir outflow [m3/s]
             MinReservoirOutflow = lookupscalar(str(binding['TabMinOutflow']), reservoirs_pcr)
             MinReservoirOutflowC = compressArray(MinReservoirOutflow)
-            self.var.MinReservoirOutflowCC = np.compress(self.var.ReservoirSitesC > 0, MinReservoirOutflowC)
+            self.var.MinReservoirOutflow = np.compress(self.var.ReservoirSitesC > 0, MinReservoirOutflowC)
             
             # normal outflow [m3/s]
             normal_outflow = lookupscalar(str(binding['TabNormalOutflow']), reservoirs_pcr)
             normal_outflow = compressArray(normal_outflow)
-            self.var.NormalReservoirOutflowCC = np.compress(self.var.ReservoirSitesC > 0, normal_outflow)
+            self.var.NormalReservoirOutflow = np.compress(self.var.ReservoirSitesC > 0, normal_outflow)
             
             # flood-control outflow [m3/s]
             flood_outflow = lookupscalar(str(binding['TabFloodOutflow']), reservoirs_pcr)
             flood_outflow = compressArray(flood_outflow)
-            self.var.FloodReservoirOutflowCC = np.compress(self.var.ReservoirSitesC > 0, flood_outflow)
+            flood_outflow = np.compress(self.var.ReservoirSitesC > 0, flood_outflow)
+            self.var.FloodReservoirOutflow = factor_outflow * flood_outflow
             
             # release coefficient
-            self.var.k = np.maximum(1 - 5 * self.var.TotalReservoirStorageM3CC * (1 - self.var.FloodStorageLimitCC) / self.var.CatchmentAreaM2CC, 0)
+            self.var.k = np.maximum(1 - 5 * self.var.TotalReservoirStorageM3CC * (1 - self.var.FloodStorageLimit) / self.var.CatchmentAreaM2CC, 0)
             
             # INITIAL CONDITIONS
             
@@ -500,7 +513,7 @@ class Reservoir(HydroModule):
             # -9999: assume reservoirs are filled to 80% of the flood storage limit
             initial_fill = loadmap('ReservoirInitialFillValue')
             if np.max(initial_fill) == -9999:
-                initial_fill = 0.8 * self.var.FloodStorageLimitCC,
+                initial_fill = 0.8 * self.var.FloodStorageLimit,
             else:
                 initial_fill = np.compress(self.var.ReservoirSitesC > 0, initial_fill)
             self.var.ReservoirFillCC = initial_fill
@@ -538,15 +551,15 @@ class Reservoir(HydroModule):
             # InvDtSecDay = self.var.InvDtSec
             
             # storage limits
-            conservative_fill = self.var.ConservativeStorageLimitCC
-            flood_fill = self.var.FloodStorageLimitCC
-            emergency_fill = self.var.EmergencyStorageLimitCC
+            conservative_fill = self.var.ConservativeStorageLimit
+            flood_fill = self.var.FloodStorageLimit
+            emergency_fill = self.var.EmergencyStorageLimit
 
             # representative outflows
-            min_outflow = self.var.MinReservoirOutflowCC
-            normal_outflow = self.var.NormalReservoirOutflowCC
+            min_outflow = self.var.MinReservoirOutflow
+            normal_outflow = self.var.NormalReservoirOutflow
             conservative_outflow = normal_outflow * conservative_fill / flood_fill
-            flood_outflow = self.var.FloodReservoirOutflowCC
+            flood_outflow = self.var.FloodReservoirOutflow
             
             # reservoir inflow in [m3/s]
             # (LddStructuresKinematic equals LddKinematic, but without the pits/sinks upstream of the structure
