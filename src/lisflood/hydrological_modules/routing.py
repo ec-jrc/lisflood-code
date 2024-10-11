@@ -46,7 +46,8 @@ class routing(HydroModule):
     """
     input_files_keys = {'all': ['beta', 'ChanLength', 'Ldd', 'Channels', 'ChanGrad', 'ChanGradMin',
                                 'CalChanMan', 'ChanMan', 'ChanBottomWidth', 'ChanDepthThreshold',
-                                'ChanSdXdY', 'TotalCrossSectionAreaInitValue', 'PrevDischarge'],
+                                'ChanSdXdY', 'TotalCrossSectionAreaInitValue', 'PrevDischarge',
+                                'ChanBottomWMult', 'ChanDepthTMult', 'ChanSMult'],
                         'SplitRouting': ['CrossSection2AreaInitValue', 'PrevSideflowInitValue', 'CalChanMan2'],
                         'dynamicWave': ['ChannelsDynamic'],
                         'MCTRouting': ['ChannelsMCT', 'ChanGradMaxMCT', 'PrevCmMCTInitValue', 'PrevDmMCTInitValue','CalChanMan3']}
@@ -214,11 +215,16 @@ class routing(HydroModule):
         self.var.ChanMan = self.var.CalChanMan * loadmap('ChanMan')
         # Manning's roughtness coefficient n is multiplied by ChanManCal for calibration
 
-        self.var.ChanBottomWidth = loadmap('ChanBottomWidth')
+        self.var.CalChanBottomWidth = loadmap('ChanBottomWMult')
+        self.var.ChanBottomWidth = self.var.CalChanBottomWidth * loadmap('ChanFFBottomWidth')
         # Riverbed width [m]
-        ChanDepthThreshold = loadmap('ChanDepthThreshold')
+
+        self.var.CalChanDepthThreshold = loadmap('ChanDepthTMult')
+        ChanDepthThreshold = self.var.CalChanDepthThreshold * loadmap('ChanDepthThreshold')
         # Bankfull river depth [m]
-        self.var.ChanSdXdY = loadmap('ChanSdXdY')
+
+        self.var.CalChanSdXdY= loadmap('ChanSMult')
+        self.var.ChanSdXdY = self.var.CalChanSdXdY * loadmap('ChanSdXdY')
         # Riverbed sides slope
 
         # self.var.ChanSdXdY = maskinfo.in_zero()         # rectangular cross-section

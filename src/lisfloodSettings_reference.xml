@@ -484,20 +484,20 @@ Multiplier applied to average Q to split into a second line of routing
 </comment>
 </textvar>
 
-<textvar name="ChanBottomWMult" value="1.0">
+<textvar name="ChanBottomWMult" value="$(PathParams)/params_ChanBottomWMult">
 <comment>
 PBchange
 Multiplier applied to ChanBottomWidth
 </comment>
 </textvar>
 
-<textvar name="ChanDepthTMult" value="1.0">
+<textvar name="ChanDepthTMult" value="$(PathParams)/params_ChanDepthTMult">
 <comment>
 Multiplier [] applied to ChanDepthThreshold
 </comment>
 </textvar>
 
-<textvar name="ChanSMult" value="1.0">
+<textvar name="ChanSMult" value="$(PathParams)/params_ChanSMult">
 <comment>
 Multiplier []  applied to ChanSdXdY
 </comment>
