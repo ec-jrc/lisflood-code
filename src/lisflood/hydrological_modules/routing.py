@@ -216,7 +216,7 @@ class routing(HydroModule):
         # Manning's roughtness coefficient n is multiplied by ChanManCal for calibration
 
         self.var.CalChanBottomWidth = loadmap('ChanBottomWMult')
-        self.var.ChanBottomWidth = self.var.CalChanBottomWidth * loadmap('ChanFFBottomWidth')
+        self.var.ChanBottomWidth = self.var.CalChanBottomWidth * loadmap('ChanBottomWidth')
         # Riverbed width [m]
 
         self.var.CalChanDepthThreshold = loadmap('ChanDepthTMult')
