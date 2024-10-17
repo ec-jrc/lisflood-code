@@ -37,6 +37,7 @@ def kinematicRouting(discharge_avg, discharge, lateral_inflow, constant, upstrea
                      b_minus_1, a_dx_div_dt, b_a_dx_div_dt, a_dx):
     """
     This function performs the kinematic wave routing algorithm to simulate the movement of water through a network of interconnected channels.
+    :param discharge_avg:
     :param discharge:
     :param lateral_inflow:
     :param constant:
@@ -44,6 +45,7 @@ def kinematicRouting(discharge_avg, discharge, lateral_inflow, constant, upstrea
     :param num_upstream_pixels:
     :param ordered_pixels:
     :param start_stop:
+    :param inv_time_delta: 1/DtRouting
     :param beta:
     :param inv_beta:
     :param b_minus_1:
@@ -60,90 +62,111 @@ def kinematicRouting(discharge_avg, discharge, lateral_inflow, constant, upstrea
         # Iterate through each pixel in the current order in parallel
         for index in prange(first, last):  # this is a parallel loop
             # Solve the kinematic wave for the current pixel
-            solve1Pixel(ordered_pixels[index], discharge_avg, discharge, lateral_inflow, constant, upstream_lookup,\
-                        num_upstream_pixels, a_dx_div_dt, b_a_dx_div_dt, inv_time_delta, beta, inv_beta, b_minus_1, a_dx)
+            pix = ordered_pixels[index]
+            discharge_before = discharge[pix]
+            if solve1Pixel(pix, discharge, constant[pix], upstream_lookup,\
+                        num_upstream_pixels, a_dx_div_dt[pix], b_a_dx_div_dt[pix], beta, inv_beta, b_minus_1):                        
+                solve1PixelAvg(pix, discharge_avg, discharge_before, discharge[pix], lateral_inflow[pix], upstream_lookup,\
+                            num_upstream_pixels, inv_time_delta, beta, a_dx[pix])
+
 
 @njit(nogil=True, fastmath=False, cache=True)
-def solve1Pixel(pix, discharge_avg, discharge, lateral_inflow, constant,\
-                      upstream_lookup, num_upstream_pixels, a_dx_div_dt,\
-                      b_a_dx_div_dt, inv_time_delta, beta, inv_beta, b_minus_1, a_dx):
+def solve1Pixel(
+    pix, discharge, constant,
+    upstream_lookup, num_upstream_pixels, a_dx_div_dt,
+    b_a_dx_div_dt, beta, inv_beta, b_minus_1):
     """
     Te Chow et al. 1988 - Applied Hydrology - Chapter 9.6
     :param pix:
-    :param discharge_avg: average outflow discharge
     :param discharge: instantaneous outflow discharge
-    :param lateral_inflow:
     :param constant:
     :param upstream_lookup:
     :param num_upstream_pixels:
     :param a_dx_div_dt:
     :param b_a_dx_div_dt:
-    :param inv_time_delta: 1/DtRouting
     :param beta:
     :param inv_beta:
     :param b_minus_1:
+    :return:
+    """
+
+    # Inflow from upstream pixels
+    upstream_inflow = constant  # upstream_inflow + alpha*dx/dt*Qold**beta + dx*specific_lateral_inflow
+    for ups_ix in range(num_upstream_pixels[pix]):
+        upstream_inflow += discharge[upstream_lookup[pix,ups_ix]]
+
+    # If old discharge, upstream inflow and lateral inflow are below accuracy: set discharge to 0 and exit
+    if upstream_inflow <= NEWTON_TOL:
+        discharge[pix] = 0
+        return False
+        
+    # Initial discharge guess using analytically derived boundary values
+    a_cpui_pow_b_m_1 = b_a_dx_div_dt * upstream_inflow**b_minus_1
+    if a_cpui_pow_b_m_1 <= 1:
+        secant_bound = upstream_inflow / (1 + a_cpui_pow_b_m_1)
+    else:
+        secant_bound = upstream_inflow / (1 + a_cpui_pow_b_m_1**inv_beta)
+    other_bound = ((upstream_inflow - secant_bound) / a_dx_div_dt)**inv_beta
+    dis = (secant_bound + other_bound) / 2
+    error = dis + a_dx_div_dt * dis**beta - upstream_inflow
+
+    # Iterations
+    count = 0
+    previous_estimate = -1.0
+    while count < MAX_ITERS:
+        if fabs(error) <= NEWTON_TOL or dis == previous_estimate:
+            break
+        previous_estimate = dis
+        factor = (1 + b_a_dx_div_dt * dis**b_minus_1)
+        dis = max(dis - error / factor, NEWTON_TOL)
+        error = dis + a_dx_div_dt * dis**beta - upstream_inflow
+        count += 1
+
+    # If iterations converge to NEWTON_TOL, set value to 0
+    if dis == NEWTON_TOL:
+        discharge[pix] = 0
+        return False
+
+    discharge[pix] = dis
+    return True    
+
+
+@njit(nogil=True, fastmath=False, cache=True)
+def solve1PixelAvg(
+    pix, discharge_avg, discharge_before, discharge_after, lateral_inflow,
+    upstream_lookup, num_upstream_pixels,
+    inv_time_delta, beta, a_dx):
+    """
+    :param pix:
+    :param discharge_avg: average outflow discharge
+    :param discharge_before: instantaneous outflow discharge before solve1Pixel computation
+    :param discharge_after: instantaneous outflow discharge after solve1Pixel computation
+    :param lateral_inflow:
+    :param upstream_lookup:
+    :param num_upstream_pixels:
+    :param inv_time_delta: 1/DtRouting
+    :param beta:
     :param a_dx: ChannelAlpha * ChanLength
     :return:
     """
-    count = 0
-    previous_estimate = -1.0
-    upstream_inflow = 0.0
     upstream_inflow_avg = 0.0
-
-    # volume of water in channel at beginning of computation step
-    channel_volume_start = a_dx * discharge[pix]**beta
 
     # Inflow from upstream pixels
     for ups_ix in range(num_upstream_pixels[pix]):
-        upstream_inflow += discharge[upstream_lookup[pix,ups_ix]]
         upstream_inflow_avg += discharge_avg[upstream_lookup[pix, ups_ix]]
 
-    const_plus_ups_infl = upstream_inflow + constant[pix] # upstream_inflow + alpha*dx/dt*Qold**beta + dx*specific_lateral_inflow
-    # If old discharge, upstream inflow and lateral inflow are below accuracy: set discharge to 0 and exit
-    if const_plus_ups_infl <= NEWTON_TOL:
-        discharge[pix] = 0
-        return
-    # Initial discharge guess using analytically derived boundary values
-    a_cpui_pow_b_m_1 = b_a_dx_div_dt[pix] * const_plus_ups_infl**b_minus_1
-    if a_cpui_pow_b_m_1 <= 1:
-        secant_bound = const_plus_ups_infl / (1 + a_cpui_pow_b_m_1)
-    else:
-        secant_bound = const_plus_ups_infl / (1 + a_cpui_pow_b_m_1**inv_beta)
-    other_bound = ((const_plus_ups_infl - secant_bound) / a_dx_div_dt[pix])**inv_beta
-    discharge[pix] = (secant_bound + other_bound) / 2
-    error = closureError(discharge[pix], const_plus_ups_infl, a_dx_div_dt[pix], beta)
-    # Iterations
-    while fabs(error) > NEWTON_TOL and discharge[pix] != previous_estimate and count < MAX_ITERS: # is previous_estimate useful?
-        previous_estimate = discharge[pix]
-        discharge[pix] -= error / (1 + b_a_dx_div_dt[pix] * discharge[pix]**b_minus_1)
-        discharge[pix] = max(discharge[pix], NEWTON_TOL)
-        error = closureError(discharge[pix], const_plus_ups_infl, a_dx_div_dt[pix], beta)
-        count += 1
-    # If iterations converge to NEWTON_TOL, set value to 0
-    if discharge[pix] == NEWTON_TOL:
-        discharge[pix] = 0
+    # volume of water in channel at beginning of computation step
+    channel_volume_start = discharge_before**beta
 
     # volume of water in channel at end of computation step
-    channel_volume_end = a_dx * discharge[pix]**beta
+    channel_volume_end = discharge_after**beta
 
     # integration on control volume to calc average outflow (channel water mass balance)
-    discharge_avg[pix] = upstream_inflow_avg + lateral_inflow[pix] + (channel_volume_start[pix] - channel_volume_end[pix]) * inv_time_delta
+    discharge_avg[pix] = upstream_inflow_avg + lateral_inflow + a_dx*(channel_volume_start - channel_volume_end) * inv_time_delta
 
     # avoid negative average discharge
     if discharge_avg[pix] < 0:
         discharge_avg[pix] = 0
-
-    # to simulate inf or nan: discharge[pix] = 1.0/0.0
-    # with gil:
-    #    got_valid_value = np.isfinite(discharge[pix])
-    #    if got_valid_value==False:
-    #          print(str(discharge[pix]) + ' found at pix:' + str(pix))
-
-@njit(nogil=True, fastmath=False, cache=True)
-def closureError(discharge, upper_bound, a_dx_div_dt, beta):
-    """"""
-    return discharge + a_dx_div_dt * discharge**beta - upper_bound
-
 
 
 # -------------------------------------------------------------------------------------------------
@@ -189,6 +212,7 @@ def updateUpstreamRouted(pixels_routed, downstream_lookup,\
                 ups_index += 1
             # Mark the upstream pixel as routed
             upstream_routed[downs_pix,ups_index] = True
+
 
 @njit(nogil=True, fastmath=False, cache=True)
 def upDownLookups(flow_d8, land_mask, land_points, num_pixs, ix_adds):
@@ -260,7 +284,6 @@ def upDownLookups(flow_d8, land_mask, land_points, num_pixs, ix_adds):
     return np.asarray(downstream_lookup), np.asarray(upstream_lookup)
 
 
-
 # -------------------------------------------------------------------------------------------------
 # MISCELLANOUS TOOLS
 # -------------------------------------------------------------------------------------------------
@@ -300,4 +323,3 @@ def immediateUpstreamInflow(discharge, upstream_lookup, num_upstream_pixels):
 
     # Return the inflow array as a NumPy array
     return np.asarray(inflow)
-
