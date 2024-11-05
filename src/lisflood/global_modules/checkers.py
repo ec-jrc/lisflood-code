@@ -21,12 +21,29 @@ import os
 import inspect
 import warnings
 
+import numpy as np
+
 from .errors import LisfloodError, LisfloodWarning
+from .add1 import loadmap, loadsetclone
 from ..hydrological_modules import HydroModule
 from ..hydrological_modules import (surface_routing, evapowater, snow, routing, leafarea, inflow, waterlevel,
                                     waterbalance, wateruse, waterabstraction, lakes, riceirrigation, indicatorcalc,
                                     landusechange, frost, groundwater, miscInitial, soilloop, soil,
                                     reservoir, transmission)
+
+
+def lakes_present(lake_type):
+    """Check whether there are any lakes/reservoirs."""
+    present = True
+    sites_dict = {'lakes': 'LakeSites', 'reservoir': 'ReservoirSites'}
+    MaskMap = loadsetclone('MaskMap')  # need to define mask map to use loadmap
+    LakeSitesC = loadmap(sites_dict[lake_type])
+    LakeSitesC[LakeSitesC < 1] = 0
+    LakeSitesCC = np.compress(LakeSitesC > 0, LakeSitesC)
+    if LakeSitesCC.size == 0:
+        present = False
+
+    return present
 
 
 class ModulesInputs:
@@ -82,6 +99,12 @@ class ModulesInputs:
                          and obj is not HydroModule and str(obj.__module__) == hydro_module.__name__]
                 total_checks += len(clzzs)
                 for clz in clzzs:
+                    if clz.__name__ in ['lakes', 'reservoir']:
+                        if not lakes_present(clz.__name__):
+                            # No lakes/reservoirs so skip the check for these input files.
+                            successful_checks += 1
+                            continue
+
                     errors = clz.check_input_files(option)
                     successful_checks += int(bool(not errors))
                     all_errors += errors
