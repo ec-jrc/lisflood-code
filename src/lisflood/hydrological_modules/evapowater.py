@@ -133,9 +133,8 @@ class evapowater(HydroModule):
             UpstreamEva = self.var.EWRef * self.var.MMtoM3 * self.var.WaterFraction
             # evaporation for loop is amount of water per timestep [cu m]
             # Volume of potential evaporation from water surface  per time step (conversion to [m3])
-            # ChanMIter = self.var.ChanM3Kin.copy()
-            ChanMIter = self.var.ChanM3.copy()
-            # for Iteration loop: First value is amount of water in the channel
+            ChanMIter = self.var.ChanM3Kin.copy()
+            # for Iteration loop: First value is amount of water in the channel for kinematic routing
 
             ChanLeft = ChanMIter * 0.1
             # 10% of the volume must stay in the river
