@@ -98,7 +98,7 @@ def solve1Pixel(
     # If old discharge, upstream inflow and lateral inflow are below accuracy: set discharge to 0 and exit
     if upstream_inflow <= NEWTON_TOL:
         discharge[pix] = 0
-        return False
+        return True
         
     # Initial discharge guess using analytically derived boundary values
     a_cpui_pow_b_m_1 = b_a_dx_div_dt * upstream_inflow**b_minus_1
@@ -125,7 +125,7 @@ def solve1Pixel(
     # If iterations converge to NEWTON_TOL, set value to 0
     if dis == NEWTON_TOL:
         discharge[pix] = 0
-        return False
+        return True
 
     discharge[pix] = dis
     return True    
@@ -163,6 +163,7 @@ def solve1PixelAvg(
 
     # integration on control volume to calc average outflow (channel water mass balance)
     discharge_avg[pix] = upstream_inflow_avg + lateral_inflow + a_dx*(channel_volume_start - channel_volume_end) * inv_time_delta
+
 
     # avoid negative average discharge
     if discharge_avg[pix] < 0:
