@@ -41,7 +41,7 @@ class TestWarmStart():
         'warm': os.path.join(case_dir, 'settings', 'mct_warm.xml')
     }
 
-    def test_warmstart_daily(self):
+    def test_mct_warmstart_daily(self):
         calendar_day_start = '02/01/1990 06:00'
         step_start = '02/01/2016 06:00'
         step_end = '31/12/2016 06:00'
@@ -49,7 +49,7 @@ class TestWarmStart():
         report_steps = '9496..9861'
         self.run_warmstart_by_dtsec(dt_sec, step_end, step_start, calendar_day_start, report_steps=report_steps)
     
-    def test_warmstart_6h(self):
+    def test_mct_warmstart_6h(self):
         calendar_day_start = '02/01/1990 06:00'
         step_start = '01/03/2016 06:00'
         step_end = '31/07/2016 06:00'
@@ -66,15 +66,14 @@ class TestWarmStart():
         self.path_out_reference = os.path.join(self.case_dir, 'out', 'longrun_reference{}'.format(dt_sec))
 
         settings_longrun = setoptions(self.settings_files['cold'],
-                                    opts_to_set=['repStateMaps',
-                                                    'MCTRouting'],
-                                    opts_to_unset=['SplitRouting',
-                                                    'repMBTs'],
+                                    opts_to_set=['repStateMaps'],
+                                    opts_to_unset=['repMBTs'],
                                     vars_to_set={'StepStart': step_start,
                                                    'StepEnd': step_end,
                                                    'CalendarDayStart': calendar_day_start,
                                                    'PathOut': self.path_out_reference,
                                                    'ReportSteps': report_steps,
+                                                    # 'ReportSteps': '1..999999',
                                                    'DtSec': dt_sec})
         # ** execute
         mk_path_out(self.path_out_reference)
@@ -88,15 +87,14 @@ class TestWarmStart():
         self.path_out = os.path.join(self.case_dir, 'out', 'run{}_{}'.format(dt_sec, run_number))
 
         settings_coldstart = setoptions(self.settings_files['cold'],
-                                        opts_to_set=['repStateMaps',
-                                                        'MCTRouting'],
-                                        opts_to_unset=['SplitRouting',
-                                                       'repMBTs'],
+                                        opts_to_set=['repStateMaps'],
+                                        opts_to_unset=['repMBTs'],
                                         vars_to_set={'StepStart': step_start,
                                                         'StepEnd': cold_start_step_end,
                                                         'CalendarDayStart': calendar_day_start,
                                                         'PathOut': self.path_out,
                                                         'ReportSteps': report_steps,
+                                                        # 'ReportSteps': '1..999999',
                                                         'DtSec': dt_sec})
         # ** execute
         mk_path_out(self.path_out)
@@ -120,10 +118,8 @@ class TestWarmStart():
             self.path_out = (os.path.join(self.case_dir, 'out', 'run{}_{}'.format(dt_sec, run_number)))
 
             settings_warmstart = setoptions(self.settings_files['warm'],
-                                            opts_to_set=['repStateMaps',
-                                                            'MCTRouting'],
-                                            opts_to_unset=['SplitRouting',
-                                                           'repMBTs'],
+                                            opts_to_set=['repStateMaps'],
+                                            opts_to_unset=['repMBTs'],
                                             vars_to_set={'StepStart': warm_step_start.strftime('%d/%m/%Y %H:%M'),
                                                             'StepEnd': warm_step_end.strftime('%d/%m/%Y %H:%M'),
                                                             'CalendarDayStart': calendar_day_start,
@@ -151,8 +147,8 @@ class TestWarmStart():
             warm_step_end = warm_step_start
             timestep_init = prev_settings.step_end_dt.strftime('%d/%m/%Y %H:%M')
 
-    def teardown_method(self):
-        print('Cleaning directories')
-        out_path = os.path.join(self.case_dir, 'out')
-        if os.path.exists(out_path) and os.path.isdir(out_path):
-            shutil.rmtree(out_path, ignore_errors=True)
+    # def teardown_method(self):
+    #     print('Cleaning directories')
+    #     out_path = os.path.join(self.case_dir, 'out')
+    #     if os.path.exists(out_path) and os.path.isdir(out_path):
+    #         shutil.rmtree(out_path, ignore_errors=True)
