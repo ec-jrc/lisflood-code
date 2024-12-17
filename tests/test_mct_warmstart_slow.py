@@ -73,7 +73,7 @@ class TestWarmStart():
                                                    'CalendarDayStart': calendar_day_start,
                                                    'PathOut': self.path_out_reference,
                                                    'ReportSteps': report_steps,
-                                                    # 'ReportSteps': '1..999999',
+                                                   #  'ReportSteps': '1..999999',
                                                    'DtSec': dt_sec})
         # ** execute
         mk_path_out(self.path_out_reference)
@@ -119,7 +119,7 @@ class TestWarmStart():
 
             settings_warmstart = setoptions(self.settings_files['warm'],
                                             opts_to_set=['repStateMaps'],
-                                            opts_to_unset=['repMBTs'],
+                                            # opts_to_unset=['repMBTs'],
                                             vars_to_set={'StepStart': warm_step_start.strftime('%d/%m/%Y %H:%M'),
                                                             'StepEnd': warm_step_end.strftime('%d/%m/%Y %H:%M'),
                                                             'CalendarDayStart': calendar_day_start,
