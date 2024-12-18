@@ -216,24 +216,25 @@ class waterabstraction(HydroModule):
             self.var.ConveyanceEfficiency = loadmap('ConveyanceEfficiency')
             self.efficiency_irrigation = self.var.IrrigationEfficiency * self.var.ConveyanceEfficiency
 
-            self.var.GroundwaterRegionPixels = np.take(
-                np.bincount(self.var.WUseRegionC, weights=self.var.GroundwaterBodies),
-                self.var.WUseRegionC
-            )
-            self.var.AllRegionPixels = np.take(
-                np.bincount(self.var.WUseRegionC, weights=self.var.GroundwaterBodies * 0.0 + 1.0),
-                self.var.WUseRegionC
-            )
-            self.var.RatioGroundWaterUse = self.var.AllRegionPixels / (self.var.GroundwaterRegionPixels + 0.01)
-            self.var.FractionGroundwaterUsed = np.minimum(
-                self.var.FractionGroundwaterUsed * self.var.RatioGroundWaterUse,
-                1 - self.var.FractionNonConventionalWaterUsed
-            )
+            ### Lines 220-237 have been commented in Dec2024: the map FractionGroundwaterUsed is corrected offline to account for the non-Groundwaterbodies. The lines below would introduce a spurious double correction.
+            ###self.var.GroundwaterRegionPixels = np.take(
+            ####    np.bincount(self.var.WUseRegionC, weights=self.var.GroundwaterBodies),
+            ####    self.var.WUseRegionC
+            ####)
+            ####self.var.AllRegionPixels = np.take(
+            ####    np.bincount(self.var.WUseRegionC, weights=self.var.GroundwaterBodies * 0.0 + 1.0),
+            ####    self.var.WUseRegionC
+            ####)
+            ####self.var.RatioGroundWaterUse = self.var.AllRegionPixels / (self.var.GroundwaterRegionPixels + 0.01)
+            ####self.var.FractionGroundwaterUsed = np.minimum(
+            ####    self.var.FractionGroundwaterUsed * self.var.RatioGroundWaterUse,
+            ####    1 - self.var.FractionNonConventionalWaterUsed
+            ####)
                        
-            self.var.FractionGroundwaterUsed[self.var.GroundwaterBodies == 0] = 0 
-            # FractionGroundwaterUsed is a percentage given at national scale
-            # since the water needs to come from the GroundwaterBodies pixels,
-            # the fraction needs correction for the non-Groundwaterbodies; this is done here
+            ####self.var.FractionGroundwaterUsed[self.var.GroundwaterBodies == 0] = 0 
+            #### FractionGroundwaterUsed is a percentage given at national scale
+            #### since the water needs to come from the GroundwaterBodies pixels,
+            #### the fraction needs correction for the non-Groundwaterbodies; this is done here
             self.GWfed_fraction_irrigation = loadmap("irrigation_groundwater_fraction") if option['cropsEPIC'] else self.var.FractionGroundwaterUsed   
             self.GWfed_fraction_irrigation[self.var.GroundwaterBodies == 0] = 0  
             self.FractionSurfaceWaterUseDomLivInd = np.maximum(np.minimum(1 - self.var.FractionGroundwaterUsed - self.var.FractionNonConventionalWaterUsed, 1), 0)  
@@ -402,6 +403,8 @@ class waterabstraction(HydroModule):
             # 8. Groundwater (GW) abstraction
             # ***********************************************************************
             # 8.1 Actual abstraction
+            # Dec 2024: the current code does not allow horizontal flow in the groundwater domain, meaning that there is no replenishing from neighboring pixels. Furthermore, LZ can be inefinitely negative. These feature can lead to spurious values of return flow and to excessive depletion of some groundwater pixels. In order to diminish these issues, as a temporary solution, the line below impose the abstraction of the consumptive use only.
+            abstraction_GW_noReturn_M3 = consumption_GW_noReturn_M3
             self.var.abstraction_GW_actual_M3 = abstraction_GW_noReturn_M3 + abstraction_GW_actual_irrigation_M3  
             # 8.2 Groundwater lower zone mass balance update 
             self.var.LZ -= self.var.abstraction_GW_actual_M3 * self.var.M3toMM  
@@ -409,6 +412,7 @@ class waterabstraction(HydroModule):
             # Abstraction is taken from lower groundwater zone. For mass balance calculation also summed up in IrrilossCUM (in M3)
             # 8.3 Return flow to channel (per routing time step) from groundwater users not storing water (all except irrigation)
             self.var.returnflow_GwAbs2Channel_M3_routStep = (abstraction_GW_noReturn_M3 - consumption_GW_noReturn_M3) * self.var.InvNoRoutSteps 
+            self.var.returnflow_GwAbs2Channel_M3_routStep = np.where(self.var.returnflow_GwAbs2Channel_M3_routStep<1e-18,0.0,self.var.returnflow_GwAbs2Channel_M3_routStep) # this check avoids spurious numerical results. 
 
             # ***********************************************************************
             # ***** ABSTRACTION SUPPLIED BY NONCONVENTIONAL SOURCES (DESALINATION) **
