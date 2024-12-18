@@ -83,8 +83,8 @@ You can use builtin path variables in this template and reference to other paths
         <setoption choice="1" name="repMeteoUpsGauges"/>
 
         # report reservoirs and lakes
-        <setoption choice="0" name="repsimulateLakes"/>
-        <setoption choice="0" name="repsimulateReservoirs"/>
+        <setoption choice="0" name="repsimulateLakes"/>        
+        <setoption choice="0" name="repsimulateReservoirs"/>    
 
         # report mass balance
         <setoption choice="1" name="repMBTs"/>
