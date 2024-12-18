@@ -219,7 +219,7 @@ class TestMCTResults(TestTSSResults):
     def test_MCT_daily_1h(self):
         self.run_mct("02/01/2016 06:00", "02/07/2016 06:00", 86400, 3600, 'daily_1h')
 
-    ###########################################
+    ##########################################
     # test results of MCT+SPLIT routing
     def test_MCTS_6h(self):
         self.run_mcts("02/01/2016 06:00", "02/07/2016 06:00", 21600, 21600,'6h')
@@ -232,7 +232,7 @@ class TestMCTResults(TestTSSResults):
     def test_MCTS_daily_1h(self):
         self.run_mcts("02/01/2016 06:00", "02/07/2016 06:00", 86400, 3600, 'daily_1h')
 
-    # #########################################
+    #########################################
     # test results of Kinemating routing
     def test_KIN_6h(self):
         self.run_kin("02/01/2016 06:00", "02/07/2016 06:00", 21600, 21600,'6h')

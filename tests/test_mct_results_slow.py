@@ -25,7 +25,16 @@ class TestTSSResults():
         settings_file = os.path.join(self.case_dir, 'settings', 'mct_cold.xml')
         settings = setoptions(settings_file,
                               opts_to_set = ['MCTRouting'],
-                              opts_to_unset=['SplitRouting'],
+                              opts_to_unset=['SplitRouting',
+                                             'repStateUpsGauges',
+                                             'repRateUpsGauges',
+                                             'repMeteoUpsGauges',
+                                             'wateruse',
+                                             'drainedIrrigation',
+                                             'riceIrrigation',
+                                             'openwaterevapo',
+                                             'simulateLakes',
+                                             'simulateReservoirs'],
                               vars_to_set={'StepStart': date_start,
                                            'StepEnd': date_end,
                                            'CalendarDayStart': date_start,
@@ -65,6 +74,15 @@ class TestTSSResults():
         settings = setoptions(settings_file,
                               opts_to_set = ['MCTRouting',
                                              'SplitRouting'],
+                              opts_to_unset=['repStateUpsGauges',
+                                             'repRateUpsGauges',
+                                             'repMeteoUpsGauges',
+                                             'wateruse',
+                                             'drainedIrrigation',
+                                             'riceIrrigation',
+                                             'openwaterevapo',
+                                             'simulateLakes',
+                                             'simulateReservoirs'],
                               vars_to_set={'StepStart': date_start,
                                            'StepEnd': date_end,
                                            'CalendarDayStart': date_start,
@@ -113,7 +131,16 @@ class TestTSSResults():
         settings_file = os.path.join(self.case_dir, 'settings', 'mct_cold.xml')
         settings = setoptions(settings_file,
                               opts_to_unset=['MCTRouting',
-                                             'SplitRouting'],
+                                             'SplitRouting',
+                                             'repStateUpsGauges',
+                                             'repRateUpsGauges',
+                                             'repMeteoUpsGauges',
+                                             'wateruse',
+                                             'drainedIrrigation',
+                                             'riceIrrigation',
+                                             'openwaterevapo',
+                                             'simulateLakes',
+                                             'simulateReservoirs'],
                               vars_to_set={'StepStart': date_start,
                                            'StepEnd': date_end,
                                            'CalendarDayStart': date_start,
@@ -152,7 +179,16 @@ class TestTSSResults():
         settings_file = os.path.join(self.case_dir, 'settings', 'mct_cold.xml')
         settings = setoptions(settings_file,
                               opts_to_set = ['SplitRouting'],
-                              opts_to_unset=['MCTRouting'],
+                              opts_to_unset=['MCTRouting',
+                                             'repStateUpsGauges',
+                                             'repRateUpsGauges',
+                                             'repMeteoUpsGauges',
+                                             'wateruse',
+                                             'drainedIrrigation',
+                                             'riceIrrigation',
+                                             'openwaterevapo',
+                                             'simulateLakes',
+                                             'simulateReservoirs'],
                               vars_to_set={'StepStart': date_start,
                                            'StepEnd': date_end,
                                            'CalendarDayStart': date_start,
@@ -218,7 +254,7 @@ class TestMCTResults(TestTSSResults):
     def test_MCT_daily_1h(self):
         self.run_mct("02/01/2016 06:00", "31/12/2016 06:00", 86400, 3600, 'daily_1h')
 
-    ###########################################
+    ##########################################
     # test results of MCT+SPLIT routing
     def test_MCTS_6h(self):
         self.run_mcts("02/01/2016 06:00", "31/12/2016 06:00", 21600, 21600,'6h')
@@ -231,7 +267,7 @@ class TestMCTResults(TestTSSResults):
     def test_MCTS_daily_1h(self):
         self.run_mcts("02/01/2016 06:00", "31/12/2016 06:00", 86400, 3600, 'daily_1h')
 
-    # #########################################
+    ########################################
     # test results of Kinemating routing
     def test_KIN_6h(self):
         self.run_kin("02/01/2016 06:00", "31/12/2016 06:00", 21600, 21600,'6h')

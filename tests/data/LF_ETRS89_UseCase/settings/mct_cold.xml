@@ -35,17 +35,17 @@ You can use builtin path variables in this template and reference to other paths
         # options to turn hydrological modules on/off
         <setoption choice="0" name="groundwaterSmooth"/>
         
-        <setoption choice="0" name="wateruse"/>
+        <setoption choice="1" name="wateruse"/>
         <setoption choice="1" name="TransientWaterDemandChange"/>
         <setoption choice="0" name="useWaterDemandAveYear"/>
         <setoption choice="1" name="wateruseRegion"/>
 
 		<setoption choice="0" name="cropsEPIC"/>
-        <setoption choice="0" name="drainedIrrigation"/>
-        <setoption choice="0" name="riceIrrigation"/>
-        <setoption choice="0" name="openwaterevapo"/>
-        <setoption choice="0" name="simulateLakes"/>
-        <setoption choice="0" name="simulateReservoirs"/>
+        <setoption choice="1" name="drainedIrrigation"/>
+        <setoption choice="1" name="riceIrrigation"/>
+        <setoption choice="1" name="openwaterevapo"/>
+        <setoption choice="1" name="simulateLakes"/>
+        <setoption choice="1" name="simulateReservoirs"/>
 
         <setoption choice="0" name="SplitRouting"/>
         <setoption choice="1" name="MCTRouting"/>
@@ -72,16 +72,16 @@ You can use builtin path variables in this template and reference to other paths
         # report time series
         #-----------------------------------------------------------
         # report discharge TS
-        <setoption choice="1" name="repDischargeTs"/>         
+        <setoption choice="1" name="repDischargeTs"/>
 
         # report gauges and sites
 		# sites (pixel average)
         <setoption choice="0" name="repStateSites"/>
         <setoption choice="0" name="repRateSites"/>
 		# gauges (catchment average)
-        <setoption choice="0" name="repStateUpsGauges"/>
-        <setoption choice="0" name="repRateUpsGauges"/>
-        <setoption choice="0" name="repMeteoUpsGauges"/>
+        <setoption choice="1" name="repStateUpsGauges"/>
+        <setoption choice="1" name="repRateUpsGauges"/>
+        <setoption choice="1" name="repMeteoUpsGauges"/>
 
         # report reservoirs and lakes
         <setoption choice="0" name="repsimulateLakes"/>        
@@ -108,7 +108,7 @@ You can use builtin path variables in this template and reference to other paths
 		<setoption choice="0"  name="repEWRefMaps"/>
 	
 		# dicharge
-        <setoption choice="1" name="repDischargeMaps"/> 
+        <setoption choice="1" name="repDischargeMaps"/>
 
 		<setoption choice="0" name="repAverageDis"/>             
         <setoption choice="0" name="repLZAvInflow"/>
@@ -1021,25 +1021,25 @@ You can use builtin path variables in this template and reference to other paths
                 </comment>
             </textvar>
 
-            <textvar name="PrefixWaterUseDomestic" value="dom_2014">
+            <textvar name="PrefixWaterUseDomestic" value="dom">
                 <comment>
                     prefix domestic water use maps
                 </comment>
             </textvar>
 
-            <textvar name="PrefixWaterUseLivestock" value="liv_2014">
+            <textvar name="PrefixWaterUseLivestock" value="liv">
                 <comment>
                     prefix livestock water use maps
                 </comment>
             </textvar>
 
-            <textvar name="PrefixWaterUseEnergy" value="ene_2014">
+            <textvar name="PrefixWaterUseEnergy" value="ene">
                 <comment>
                     prefix energy water use maps
                 </comment>
             </textvar>
 
-            <textvar name="PrefixWaterUseIndustry" value="ind_2014">
+            <textvar name="PrefixWaterUseIndustry" value="ind">
                 <comment>
                     prefix industry water use maps
                 </comment>
