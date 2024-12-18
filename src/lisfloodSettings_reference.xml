@@ -4569,7 +4569,50 @@ You can use builtin path variables in this template and reference to other paths
       routine
       </comment>
       </textvar>
+      
+      <textvar name="abstractionGWactualTS" value="$(PathOut)/abstractionGWactualTS.tss">
+      <comment>
+      actual withdrawal from groundwater [mm]
+      </comment>      
+      </textvar>
+            
+      <textvar name="withdrawalSWactualTS" value="$(PathOut)/withdrawalSWactualTS.tss">
+      <comment>
+      actual withdrawal from surface water bodies [mm]
+      </comment>     
+      </textvar>       
 
+      <textvar name="withdrawalCHactualTS" value="$(PathOut)/withdrawalCHactualTS.tss">
+      <comment>
+      actual withdrawal from channels [mm]
+      </comment>      
+      </textvar>
+      
+      <textvar name="withdrawalReservoirsTS" value="$(PathOut)/withdrawalReservoirsTS.tss">
+      <comment>
+      actual withdrawal from each reservoir [mm]
+      </comment>      
+      </textvar>
+      
+      <textvar name="withdrawalLakesTS" value="$(PathOut)/withdrawalLakesTS.tss">
+      <comment>
+      actual withdrawal from each lake [mm]
+      </comment>      
+      </textvar>      
+      
+      <textvar name="returnflowGwAbs2ChannelTS" value="$(PathOut)/returnflowGwAbs2ChannelTS.tss">
+      <comment>
+      return flow to channels 
+      </comment>      
+      </textvar>  
+      
+      <textvar name="areatotalshortageSWTS" value="$(PathOut)/areatotalshortageSWTS.tss">
+      <comment>
+      total area water shortage (water demand larger than water availability)
+      </comment>      
+      </textvar>  
+          
+      
       </group>
 
       </group>
