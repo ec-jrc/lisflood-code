@@ -31,7 +31,7 @@ class groundwater(HydroModule):
     # ***** GROUNDWATER   *****************************************
     # ************************************************************
     """
-    input_files_keys = {'all': ['UpperZoneTimeConstant', 'LowerZoneTimeConstant', 'LZInitValue', 'LZInflowCUMInit','TimeSinceStartPrerunChunkInit',
+    input_files_keys = {'all': ['UpperZoneTimeConstant', 'LowerZoneTimeConstant', 'LZInitValue',
                                 'LZThreshold', 'UZInitValue', 'UZForestInitValue', 'UZIrrigationInitValue']}
     module_name = 'GroundWater'
 
@@ -95,8 +95,6 @@ class groundwater(HydroModule):
         self.var.LZ = np.where(LZInitValue == -9999, LZSteady, LZInitValue)
         # Initialise lower store with steady-state value
         # if LZInitValue is set to -9999
-        
-        self.var.LZInflowCUM = maskinfo.in_zero() ## Carlo, not sure whether we need this line
         
         if option['InitLisflood']:
             self.var.LZInflowCUM = loadmap('LZInflowCUMInit') 
@@ -196,7 +194,7 @@ class groundwater(HydroModule):
             # therefore this line is preventing LZInflowCUM getting negativ
             self.var.LZAvInflow = (self.var.LZInflowCUM * self.var.InvDtDay) / ( self.var.TimeSinceStart + self.var.TimeSinceStartPrerunChunkInit[0] - np.round(self.var.NumDaysSpinUp/self.var.DtDay))
             # Average inflow into lower zone over executed time steps [mm/day]
-            self.var.TimeSinceStartPrerunChunk = np.maximum(self.var.TimeSinceStartPrerunChunkInit + self.var.TimeSinceStart - np.round(self.var.NumDaysSpinUp/self.var.DtDay),0.0)
+            self.var.TimeSinceStartPrerunChunk = self.var.TimeSinceStartPrerunChunkInit + self.var.TimeSinceStart - np.round(self.var.NumDaysSpinUp/self.var.DtDay)
        
 
         self.var.LZOutflowToChannelPixel = self.var.LZOutflowToChannel

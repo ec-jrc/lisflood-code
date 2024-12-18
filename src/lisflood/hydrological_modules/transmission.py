@@ -95,7 +95,7 @@ class transmission(HydroModule):
             # transmission loss (equation: Rao and Maurer 1996, Water Resources
             # Bulletin Vol 32, No.6)
 
-            TransOut = np.where(self.var.TransSub>10e-12,TransOut,self.var.ChanQ) ## Carlo, could you please check this? TransOut is a calibraton parameter     
+            TransOut = np.where(self.var.TransSub>1e-6,TransOut,self.var.ChanQ) 
             self.var.TransLossM3Dt =  np.where((self.var.ChanQ - TransOut)>0.0, (self.var.ChanQ - TransOut) * self.var.DtRouting,0.0)
             #self.var.TransLossM3Dt = cover((self.var.ChanQ - TransOut) * self.var.DtRouting, scalar(0.0))
             # Loss is Q - transmission outflow

@@ -43,7 +43,7 @@ class routing(HydroModule):
     input_files_keys = {'all': ['beta', 'ChanLength', 'Ldd', 'Channels', 'ChanGrad', 'ChanGradMin',
                                 'CalChanMan', 'ChanMan', 'ChanBottomWidth', 'ChanDepthThreshold',
                                 'ChanSdXdY', 'TotalCrossSectionAreaInitValue', 'PrevDischarge'],
-                        'SplitRouting': ['CrossSection2AreaInitValue', 'PrevSideflowInitValue', 'CalChanMan2', 'CumQInit'], ## Carlo, the last entry is required only in specific conditions...keep here?
+                        'SplitRouting': ['CrossSection2AreaInitValue', 'PrevSideflowInitValue', 'CalChanMan2'],
                         'dynamicWave': ['ChannelsDynamic']}
     module_name = 'Routing'
 

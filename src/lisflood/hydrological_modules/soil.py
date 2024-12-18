@@ -66,8 +66,7 @@ class soil(HydroModule):
                                 'b_Xinanjiang', 'PowerPrefFlow',
                                 'DSLRInitValue', 'DSLRForestInitValue', 'DSLRIrrigationInitValue',
                                 'CumIntInitValue', 'CumIntForestInitValue', 'CumIntIrrigationInitValue',
-                                'CumIntSealedInitValue', 'SMaxSealed',
-                                'cumSeepTopToSubBOtherInit','cumSeepTopToSubBForestInit','cumSeepTopToSubBIrrigationInit','TimeSinceStartPrerunChunkInit'],  ## Carlo, these inputs are mandatory only in specific conditions...keep??  
+                                'CumIntSealedInitValue', 'SMaxSealed'],  
                         'drainedIrrigation': ['DrainedFraction'],
                         'simulatePF': ['HeadMax']}
     module_name = 'Soil'
