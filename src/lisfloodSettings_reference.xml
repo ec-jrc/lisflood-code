@@ -3844,11 +3844,17 @@ You can use builtin path variables in this template and reference to other paths
       </comment>
       </textvar>
 
-      <textvar name="GwLossMaps" value="$(PathOut)/gwl">
+      <textvar name="GwLossMaps" value="$(PathOut)/gwloss">
       <comment>
       Reported GWloss [mm]
       </comment>
       </textvar>
+
+      <textvar name="TransLossMaps" value="$(PathOut)/transloss">
+      <comment>
+      Reported Transloss [mm]
+      </comment>
+      </textvar>      
 
       <textvar name="TotalRunoffMaps" value="$(PathOut)/trun">
       <comment>
@@ -4612,7 +4618,18 @@ You can use builtin path variables in this template and reference to other paths
       </comment>      
       </textvar>  
           
+      <textvar name="TransLossQAvgTS" value="$(PathOut)/TransLossQAvgTS">
+      <comment>
+      trasmission loss in m3/s, for direct comparison with dis.tss
+      </comment>      
+      </textvar> 
       
+      <textvar name="TransLossTS" value="$(PathOut)/TransLossTS">
+      <comment>
+      transmission loss in mm, for direct comparison with gwloss.tss
+      </comment>        
+      </textvar> 
+                 
       </group>
 
       </group>

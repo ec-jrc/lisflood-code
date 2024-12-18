@@ -95,15 +95,24 @@ class transmission(HydroModule):
             # transmission loss (equation: Rao and Maurer 1996, Water Resources
             # Bulletin Vol 32, No.6)
 
-            TransOut = np.where(self.var.TransSub>1e-6,TransOut,self.var.ChanQ) 
+            TransOut = np.where(self.var.TransSub>1e-6,TransOut,self.var.ChanQ)     
             self.var.TransLossM3Dt =  np.where((self.var.ChanQ - TransOut)>0.0, (self.var.ChanQ - TransOut) * self.var.DtRouting,0.0)
             #self.var.TransLossM3Dt = cover((self.var.ChanQ - TransOut) * self.var.DtRouting, scalar(0.0))
             # Loss is Q - transmission outflow
             
             if NoRoutingExecuted == 0:
              self.var.TransLossWBM3 = maskinfo.in_zero() 
+             self.var.TransLossM3 = maskinfo.in_zero()  # only for reporting
+             self.var.TransLossQAvg = maskinfo.in_zero()  # only for reporting
+             self.var.TransLossQ  = maskinfo.in_zero()  # only for reporting
+             
             
             self.var.TransLossWBM3 += self.var.TransLossM3Dt 
             # for mass balance
             
             self.var.TransCum += self.var.TransLossM3Dt
+            
+            self.var.TransLossQ += self.var.TransLossM3Dt /  self.var.DtRouting       # only for reporting        
+            if NoRoutingExecuted == (self.var.NoRoutSteps-1): 
+             self.var.TransLossQAvg = self.var.TransLossQ/self.var.NoRoutSteps   # only for reporting
+             self.var.TransLossM3 = self.var.TransLossWBM3      # only for reporting 
