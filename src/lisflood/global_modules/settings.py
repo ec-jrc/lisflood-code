@@ -17,6 +17,7 @@ See the Licence for the specific language governing permissions and limitations 
 """
 from __future__ import (absolute_import, print_function, unicode_literals)
 
+
 from future.backports import OrderedDict
 from future.utils import with_metaclass
 from nine import (iteritems, str, range, map, nine)
@@ -42,6 +43,7 @@ import numpy as np
 from .errors import LisfloodError, LisfloodWarning, LisfloodFileError
 from .decorators import cached
 from .default_options import default_options
+##from .add1 import loadmap # Carlo, not sure....
 
 
 project_dir = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../..'))
@@ -390,6 +392,12 @@ class LisSettings(with_metaclass(ThreadSingleton)):
         self.step_start_dt = inttodate(self.step_start_int - 1, ref_date_start, binding=self.binding)
         self.step_end_dt = inttodate(self.step_end_int - 1, ref_date_start, binding=self.binding)
         self.maskpath = self.binding['MaskMap']
+        self.NumDaysSpinUp_d = self.binding['NumDaysSpinUp'] 
+        self.NumDaysSpinUp_d = int(self.NumDaysSpinUp_d)
+        DtSec_d1 = self.binding['DtSec']
+        DtSec_d = int(DtSec_d1)
+        self.DtDay_d = DtSec_d / 86400.
+
 
     def build_reportedmaps_dicts(self):
         self.report_timeseries = self._report_tss()
@@ -444,7 +452,8 @@ class LisSettings(with_metaclass(ThreadSingleton)):
 
         int_start, str_start = datetoint(self.binding['StepStart'], self.binding)
         int_end, str_end = datetoint(self.binding['StepEnd'], self.binding)
-
+        self.numsteps = int_end
+        print(self.numsteps)
         # test if start and end > begin
         if (int_start < 0) or (int_end < 0) or ((int_end - int_start) < 0):
             str_begin = begin.strftime("%d/%m/%Y %H:%M")

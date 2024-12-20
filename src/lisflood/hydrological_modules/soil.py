@@ -568,8 +568,7 @@ class soil(HydroModule):
         # (no seepage from direct runoff fraction)
         
         if option['InitLisflood']:
-          self.var.NumDaysSpinUp = float(binding['NumDaysSpinUp'])  ## Carlo, should we add this input where we read self.var.InvDtDay ... same for  self.var.TimeSinceStartPrerunChunkInit (A MAP!)
-          if  (self.var.TimeSinceStart > np.round(self.var.NumDaysSpinUp/self.var.DtDay)) : ## Carlo, in prerun we must always include at least (NumDaysSpinUp + 1) for LISFLOOD to work...
+          if  (self.var.TimeSinceStart > np.round(self.var.NumDaysSpinUp/self.var.DtDay)) : 
               self.var.cumSeepTopToSubBAv[0] += self.var.SeepTopToSubB[0] 
               self.var.SeepTopToSubBAv[0] = (self.var.cumSeepTopToSubBAv[0] * self.var.InvDtDay) / (self.var.TimeSinceStart + self.var.TimeSinceStartPrerunChunkInit[0] - np.round(self.var.NumDaysSpinUp/self.var.DtDay)) 
               self.var.cumSeepTopToSubBAv[1] += self.var.SeepTopToSubB[1] 

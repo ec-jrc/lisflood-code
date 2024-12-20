@@ -1,0 +1,10 @@
+timeseries valuescale.scalar settingsfile: /BGFS/DISASTER/grimast/LFbranchfeatureinit/GITHUB_latest/lisflood-code/tests/data/LF_ETRS89_UseCase/settings/full.xml_f597b298-6306-430d-89a0-bbffae7bc9e6.xml date: Fri Dec 20 13:18:21 2024
+6
+timestep
+641
+643
+645
+646
+647
+     6057       0.504705        1.11639        0.88807       0.650467       0.523266
+     6058        0.52123        1.09128       0.875924       0.621426       0.517713

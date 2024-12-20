@@ -93,7 +93,10 @@ def lisfloodexe(lissettings=None):
     stLisflood = DynamicFramework(Lisflood, firstTimestep=model_steps[0], lastTimeStep=model_steps[1])
     stLisflood.rquiet = True
     stLisflood.rtrace = False
-
+    if option['InitLisflood']:       
+        if (model_steps[1] - model_steps[0]) < (lissettings.NumDaysSpinUp_d/lissettings.DtDay_d):
+           msg = "The length of the model initialization (prerun) must be longer than NumDaysSpinUp."
+           raise LisfloodError(msg)
 
     if lissettings.mc_set:
         """
