@@ -72,7 +72,7 @@ class readmeteo(object):
             # average DAILY temperature (even if you are running the model on say an hourly time step) [degrees C]
             self.var.ETRef = readmapsparse(binding['ET0Maps'], self.var.currentTimeStep(), self.var.ETRef) * self.var.DtDay * self.var.CalEvaporation
             # daily reference evapotranspiration (conversion to [mm] per time step)
-            self.var.ESRef = readmapsparse(binding['ES0Maps'], self.var.currentTimeStep(), self.var.ETRef) * self.var.DtDay * self.var.CalEvaporation
+            self.var.ESRef = readmapsparse(binding['ES0Maps'], self.var.currentTimeStep(), self.var.ESRef) * self.var.DtDay * self.var.CalEvaporation
             # potential evaporation rate from a bare soil surface (conversion to [mm] per time step)
             self.var.EWRef = readmapsparse(binding['E0Maps'], self.var.currentTimeStep(), self.var.EWRef) * self.var.DtDay * self.var.CalEvaporation
             # potential evaporation rate from water surface (conversion to [mm] per time step)

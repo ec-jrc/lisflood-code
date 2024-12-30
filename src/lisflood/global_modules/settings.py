@@ -453,7 +453,6 @@ class LisSettings(with_metaclass(ThreadSingleton)):
         int_start, str_start = datetoint(self.binding['StepStart'], self.binding)
         int_end, str_end = datetoint(self.binding['StepEnd'], self.binding)
         self.numsteps = int_end
-        print(self.numsteps)
         # test if start and end > begin
         if (int_start < 0) or (int_end < 0) or ((int_end - int_start) < 0):
             str_begin = begin.strftime("%d/%m/%Y %H:%M")
