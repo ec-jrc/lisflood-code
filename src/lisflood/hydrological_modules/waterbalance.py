@@ -91,9 +91,8 @@ class waterbalance(object):
             #    self.var.IsUpsOfStructureKinematic, self.var.ChanQ * self.var.DtRouting), scalar(0.0))
 
             # DisStructure = np.where(self.var.IsUpsOfStructureKinematicC, self.var.ChanQ * self.var.DtRouting, 0)
-            DisStructure = np.where(self.var.IsUpsOfStructureChanC, self.var.ChanQ * self.var.DtRouting, 0)
-            
-            # Discharge upstream of structure locations (coded as pits) in [m3/time step]
+            DisStructure = np.where(self.var.IsUpsOfStructureChanC, self.var.ChanQAvgDt * self.var.DtRouting, 0)
+            # Average Discharge upstream of structure locations (coded as pits) in [m3/time step]
             # Needed for mass balance error calculations (see comment to calculation of WaterInit below)
             # Inclusion of DischargeM3Structures: adding this corrects a (relatively small) offset that occurs otherwise
             # if structures (reservoirs, lakes) are used.
@@ -159,9 +158,10 @@ class waterbalance(object):
             #    decompress(self.var.TotalPrecipitation) * self.var.MMtoM3, catch)
         
             self.var.sumInWB[np.isnan(self.var.sumInWB)] = 0
-            WaterIn = np.take(np.bincount(self.var.Catchments, weights=self.var.sumInWB),self.var.Catchments)
-            WaterIn += np.take(np.bincount(self.var.Catchments, weights=self.var.TotalPrecipitationWB*self.var.MMtoM3), self.var.Catchments)
-               # Accumulated incoming water [cu m]
+            WaterIn = np.take(np.bincount(self.var.Catchments, weights=self.var.sumInWB),self.var.Catchments)   # inflow
+
+            WaterIn += np.take(np.bincount(self.var.Catchments, weights=self.var.TotalPrecipitationWB*self.var.MMtoM3), self.var.Catchments) # same as self.var.Precipitation
+            # Accumulated incoming water [cu m]
             # NOTE: It is NOT possible to nest all terms into one areatotal statement because channel-related maps have MV for non-channel
             # pixels, resulting in MV creation when adding directly!!
             # MMtoM3 equals MMtoM*PixelArea, which may (or may not) be
@@ -209,6 +209,7 @@ class waterbalance(object):
             # This goes out:
             HillslopeOutM3 = (self.var.TaWB + self.var.TaInterceptionWB + self.var.ESActWB + self.var.GwLossWB) * self.var.MMtoM3
             # Water that goes out of the system at the hillslope level [m3]
+            # self.var.TaWB transpiration same as self.var.TaPixel
             # (evaporation and groundwater loss)
 
             ##sum1 = self.var.sumDis.copy()
@@ -217,7 +218,7 @@ class waterbalance(object):
             sum1[self.var.AtLastPointC == 0] = 0
             WaterOut = np.take(np.bincount(self.var.Catchments,weights=sum1 * self.var.DtSec),self.var.Catchments)
             # Water that goes out of the system at the channels level [m3]
-            # (rivers flow)
+            # (average rivers flow)
 
             WaterOut += np.take(np.bincount(self.var.Catchments,weights=HillslopeOutM3),self.var.Catchments)
 
@@ -240,8 +241,11 @@ class waterbalance(object):
             # for this double counting)
             # new 12.11.09 PB
             # added cumulative transmission loss
+
             # DisStru = np.where(self.var.IsUpsOfStructureKinematicC, self.var.ChanQ * self.var.DtRouting, 0)
-            DisStru = np.where(self.var.IsUpsOfStructureChanC, self.var.ChanQ * self.var.DtRouting, 0)
+            DisStru = np.where(self.var.IsUpsOfStructureChanC, self.var.ChanQAvgDt * self.var.DtRouting, 0)
+            # using average discharge
+
             DischargeM3Structures = np.take(np.bincount(self.var.Catchments, weights=DisStru), self.var.Catchments)
 
             # on the last time step lakes and reservoirs calculated with the previous routing results

@@ -185,12 +185,19 @@ class reservoir(HydroModule):
         option = settings.options
         maskinfo = MaskInfo.instance()
         if option['simulateReservoirs'] and not option['InitLisflood']:
+
+            ReservoirStorageM3CC_init = np.compress(self.var.ReservoirSitesC > 0, self.var.ReservoirStorageM3)
+            # Storage volume [m3] at the beginning of the sub-step (routing sub-step)
+
             InvDtSecDay = 1 / float(86400)
             # InvDtSecDay=self.var.InvDtSec
             # ReservoirInflow = cover(ifthen(defined(self.var.ReservoirSites), upstream(
             # self.var.LddStructuresKinematic, self.var.ChanQ)), scalar(0.0))
 
-            ReservoirInflowCC = np.bincount(self.var.downstruct, weights=self.var.ChanQ)[self.var.ReservoirIndex]
+            ReservoirInflowCC = np.bincount(self.var.downstruct, weights=self.var.ChanQAvgDt)[self.var.ReservoirIndex]
+            # ReservoirInflowCC = np.bincount(self.var.downstruct, weights=self.var.ChanQ)[self.var.ReservoirIndex]
+            # Reservoir inflow in [m3/s] per timestep (routing step) from average discharge
+
             # ReservoirInflow=cover(ifpcr(defined(self.var.ReservoirSites),upstream(self.var.LddStructuresKinematic,self.var.ChanQ)),null)
             # Reservoir inflow in [m3/s]
             # 20-2-2006: Replaced ChanQKin by ChanQ (if this results in problems change back to ChanQKin!)
@@ -199,13 +206,11 @@ class reservoir(HydroModule):
             # locations; note that using Ldd here instead would introduce MV!)
 
             QResInM3Dt = ReservoirInflowCC * self.var.DtRouting
-            # Reservoir inflow in [m3] per timestep (routing step)
-            
-            # print('RESERVOIRS MODULE IN')
-            # print(np.sum(self.var.ReservoirStorageM3))
+            # Reservoir inflow in [m3] per timestep (routing sub-step)
+
             if NoRoutingExecuted==0:
-                self.var.ReservoirStorageM3CC=np.compress(self.var.ReservoirSitesC > 0, self.var.ReservoirStorageM3)  ########################
-            # print(np.sum(self.var.ReservoirStorageM3CC))
+                self.var.ReservoirStorageM3CC=np.compress(self.var.ReservoirSitesC > 0, self.var.ReservoirStorageM3)
+            # Initial reservoir storage (at the beginning of the model step)
             
             self.var.ReservoirStorageM3CC += QResInM3Dt
             # New reservoir storage [m3] = plus inflow for this sub step
@@ -254,21 +259,28 @@ class reservoir(HydroModule):
                                         (self.var.ReservoirFillCC < self.var.FloodStorageLimitCC), temp, ReservoirOutflow)
 
             QResOutM3DtCC = ReservoirOutflow * self.var.DtRouting
-            # Reservoir outflow in [m3] per sub step
-            QResOutM3DtCC = np.minimum(QResOutM3DtCC, self.var.ReservoirStorageM3CC)
-            # Check to prevent outflow from becoming larger than storage +
-            # inflow
-            QResOutM3DtCC = np.maximum(QResOutM3DtCC, self.var.ReservoirStorageM3CC - self.var.TotalReservoirStorageM3CC)
+            # Reservoir outflow in [m3] per sub step (routing sub-step)
 
-            # NEW 24-9-2004: Check to prevent reservoir storage from exceeding total capacity
+            QResOutM3DtCC = np.minimum(QResOutM3DtCC, self.var.ReservoirStorageM3CC)
+            # Check to prevent outflow from becoming larger than storage + inflow
+
+            QResOutM3DtCC = np.maximum(QResOutM3DtCC, self.var.ReservoirStorageM3CC - self.var.TotalReservoirStorageM3CC)
+            # NEW 24-9-2004: Check to prevent reservoir storage from exceeding total capacity of reservoir (self.var.TotalReservoirStorageM3CC)
             # expression to the right of comma always negative unless capacity is exceeded
 
             self.var.ReservoirStorageM3CC -= QResOutM3DtCC
             # New reservoir storage [m3]
+
+            # Check ReservoirStorageM3CC for negative values and set them to zero, then update the outflow
+            if any(self.var.ReservoirStorageM3CC < 0):
+                self.var.ReservoirStorageM3CC[self.var.self.var.ReservoirStorageM3CC < 0] = 0
+                QResOutM3DtCC = ReservoirStorageM3CC_init + QResInM3Dt - self.var.ReservoirStorageM3CC
+
             self.var.ReservoirFillCC = self.var.ReservoirStorageM3CC / self.var.TotalReservoirStorageM3CC
             # New reservoir fill
 
-            # CM: Check ReservoirStorageM3CC for negative values and set them to zero
+            # Check ReservoirStorageM3CC for negative values and set them to zero
+            # CM This can be removed
             self.var.ReservoirFillCC[np.isnan(self.var.ReservoirFillCC)] = 0
             self.var.ReservoirFillCC[self.var.ReservoirFillCC < 0] = 0
 
