@@ -255,6 +255,7 @@ class waterbalance(object):
             if option['simulateLakes']:
                 DisLake = maskinfo.in_zero()
                 np.put(DisLake, self.var.LakeIndex, 0.5 * self.var.LakeInflowCC * self.var.DtRouting)
+
                 DischargeM3Lake = np.take(np.bincount(self.var.Catchments, weights=DisLake),self.var.Catchments)
                 #DischargeM3Lake = areatotal(cover(0.5 * self.var.LakeInflow * self.var.DtRouting, scalar(0.0)), catch)
                 # because Modified Puls Method is using QIn=(Qin1+Qin2)/2, we need a correction

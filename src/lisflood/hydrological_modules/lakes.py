@@ -95,7 +95,10 @@ class lakes(HydroModule):
             # Get all pixels just upstream of lakes
             # -----------------------
 
-            self.var.LakeInflowOldCC = np.bincount(self.var.downstruct, weights=self.var.ChanQ)[self.var.LakeIndex]
+            # CM
+            # Use average inflow
+            self.var.LakeInflowOldCC = np.bincount(self.var.downstruct, weights=self.var.ChanQAvgDt)[self.var.LakeIndex]
+            # self.var.LakeInflowOldCC = np.bincount(self.var.downstruct, weights=self.var.ChanQ)[self.var.LakeIndex]
             # for Modified Puls Method the Q(inflow)1 has to be used.
             # It is assumed that this is the same as Q(inflow)2 for the first timestep
             # has to be checked if this works in forecasting mode!
@@ -132,7 +135,10 @@ class lakes(HydroModule):
 
             LakePrevInflowValue  = loadmap('LakePrevInflowValue')
             if np.max(LakeInitialLevelValue) == -9999:
-                self.var.LakeInflowOldCC = np.bincount(self.var.downstruct, weights = self.var.ChanQ)[self.var.LakeIndex]
+                # CM
+                # Use average inflow
+                self.var.LakeInflowOldCC = np.bincount(self.var.downstruct, weights = self.var.ChanQAvgDt)[self.var.LakeIndex]
+                # self.var.LakeInflowOldCC = np.bincount(self.var.downstruct, weights=self.var.ChanQ)[self.var.LakeIndex]
             else:
                 self.var.LakeInflowOldCC = np.compress(LakeSitesC > 0, LakePrevInflowValue)
 
@@ -215,13 +221,27 @@ class lakes(HydroModule):
 
             if NoRoutingExecuted==0:
                 self.var.LakeStorageM3CC=np.compress(self.var.LakeSitesC2 > 0, self.var.LakeStorageM3)
-            
-            self.var.LakeInflowCC = np.bincount(self.var.downstruct, weights=self.var.ChanQ)[self.var.LakeIndex]
+
+            # CM
+            LakeStorageM3CC_Init = self.var.LakeStorageM3CC.copy()
+            # Lake water storage at the beginning of sub-routing step
+
+            # CM
+            # Use average inflow
+            self.var.LakeInflowCC = np.bincount(self.var.downstruct, weights=self.var.ChanQAvgDt)[self.var.LakeIndex]
+            # self.var.LakeInflowCC = np.bincount(self.var.downstruct, weights=self.var.ChanQ)[self.var.LakeIndex]
             # Lake inflow in [m3/s]
+
+            # CM
+            LakeInflowM3CC = self.var.LakeInflowCC * self.var.DtRouting
+            # inflow
+
 
             LakeIn = (self.var.LakeInflowCC + self.var.LakeInflowOldCC) * 0.5
             # for Modified Puls Method: (S2/dtime + Qout2/2) = (S1/dtime + Qout1/2) - Qout1 + (Qin1 + Qin2)/2
             #  here: (Qin1 + Qin2)/2
+            # CM
+            # Based on average flow
             self.var.LakeInflowOldCC = self.var.LakeInflowCC.copy()
             # Qin2 becomes Qin1 for the next time step
 
