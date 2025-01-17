@@ -43,7 +43,7 @@ You can use builtin path variables in this template and reference to other paths
 		<setoption choice="0" name="cropsEPIC"/>
         <setoption choice="1" name="drainedIrrigation"/>
         <setoption choice="1" name="riceIrrigation"/>
-        <setoption choice="1" name="openwaterevapo"/>
+        <setoption choice="0" name="openwaterevapo"/>
         <setoption choice="1" name="simulateLakes"/>
         <setoption choice="1" name="simulateReservoirs"/>
 
@@ -79,22 +79,22 @@ You can use builtin path variables in this template and reference to other paths
         <setoption choice="0" name="repStateSites"/>
         <setoption choice="0" name="repRateSites"/>
 		# gauges (catchment average)
-        <setoption choice="1" name="repStateUpsGauges"/>
-        <setoption choice="1" name="repRateUpsGauges"/>
-        <setoption choice="1" name="repMeteoUpsGauges"/>
+        <setoption choice="0" name="repStateUpsGauges"/>
+        <setoption choice="0" name="repRateUpsGauges"/>
+        <setoption choice="0" name="repMeteoUpsGauges"/>
 
         # report reservoirs and lakes
-        <setoption choice="0" name="repsimulateLakes"/>        
-        <setoption choice="0" name="repsimulateReservoirs"/>    
+        <setoption choice="1" name="repsimulateLakes"/>        
+        <setoption choice="1" name="repsimulateReservoirs"/>    
 
         # report mass balance
-        <setoption choice="1" name="repMBTs"/>
+        <setoption choice="0" name="repMBTs"/>
 
         #-----------------------------------------------------------
         # report maps
         #-----------------------------------------------------------
         # report state maps
-        <setoption choice="0" name="repStateMaps"/>     
+        <setoption choice="1" name="repStateMaps"/>
 
         # report end maps
         <setoption choice="0" name="repEndMaps"/>       
@@ -316,7 +316,7 @@ You can use builtin path variables in this template and reference to other paths
                 </comment>
             </textvar>
 
-            <textvar name="StepEnd" value="02/07/2016 06:00">
+            <textvar name="StepEnd" value="15/01/2016 06:00">
               <comment>
 					01/01/YEAR_END 06:00
 					Number of last time step in simulation
@@ -551,7 +551,7 @@ You can use builtin path variables in this template and reference to other paths
 				**************************************************************
 			</comment>
 
-            <textvar name="PathOut" value="$(PathRoot)/out">
+            <textvar name="PathOut" value="$(PathRoot)/init">
                 <comment>
 					RUNDIR					
 					Output path (org=$(PathRoot)/out)
@@ -815,6 +815,13 @@ You can use builtin path variables in this template and reference to other paths
 			<textvar name="PrevDischarge" value="-9999">
                 <comment>
 					Outflow discharge at the end of previous step (instantaneous) [m3/s] 
+					Cold start: -9999 sets initial value to 0
+                </comment>
+            </textvar>
+
+            <textvar name="PrevDischargeAvg" value="-9999">
+                <comment>
+					Outflow average discharge on previous routing sub-step (average) [m3/s]
 					Cold start: -9999 sets initial value to 0
                 </comment>
             </textvar>
@@ -2437,6 +2444,13 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
             </textvar>
 
+            <textvar name="PrevDischargeAvg" value="$(PrevDischargeAvg)">
+                <comment>
+					Outflow average discharge on previous routing sub-step (average) [m3/s]
+					Cold start: -9999 sets initial value to 0
+                </comment>
+            </textvar>
+
             <textvar name="PrevCmMCTInitValue" value="$(PrevCmMCTInitValue)">
                 <comment>
 					Courant number at previous step for MCT routing
@@ -3047,6 +3061,12 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
+                <textvar name="ChanQAvgDtState" value="$(PathOut)/chanqavgdt">
+                    <comment>
+                        Reported average discharge over last routing sub-step used to initialise lakes [cu m/s] ChanQAvgDt
+                    </comment>
+                </textvar>
+
                 <textvar name="PrevCmMCTState" value="$(PathOut)/prevcm">
                     <comment>
                         Courant number at previous step for MCT routing
@@ -3324,6 +3344,12 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 <textvar name="ChanQEnd" value="$(PathOut)/chanq.end">
                     <comment>
                         Reported istantaneous discharge at end of computation step [cu m/s] ChanQ
+                    </comment>
+                </textvar>
+
+                <textvar name="ChanQAvgDtEnd" value="$(PathOut)/chanqavgdt.end">
+                    <comment>
+                        Reported average discharge over last routing sub-step used to initialise lakes [cu m/s] ChanQAvgDt
                     </comment>
                 </textvar>
 

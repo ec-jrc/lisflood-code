@@ -35,7 +35,7 @@ class lakes(HydroModule):
     # ************************************************************
     """
     input_files_keys = {'simulateLakes': ['LakeSites', 'TabLakeArea', 'TabLakeA', 'LakeMultiplier',
-                                          'LakeInitialLevelValue', 'TabLakeAvNetInflowEstimate', 'PrevDischarge',
+                                          'LakeInitialLevelValue', 'TabLakeAvNetInflowEstimate', 'PrevDischarge', 'PrevDischargeAvg',
                                           'LakePrevInflowValue', 'LakePrevOutflowValue']}
     module_name = 'Lakes'
 
@@ -134,7 +134,7 @@ class lakes(HydroModule):
 
             # Qinflow1 at time t
             LakePrevInflowValue  = loadmap('LakePrevInflowValue')
-            if np.max(LakeInitialLevelValue) == -9999:
+            if np.max(LakePrevInflowValue) == -9999:
                 self.var.LakeInflowOldCC = np.bincount(self.var.downstruct, weights=self.var.ChanQ)[self.var.LakeIndex]
                 # Qin1 instantaneous inflow to the lake at the beginning of sub-routing step
                 # for Modified Puls Method the Q(inflow)1 (instant inflow at the beginning of the sub-routing step) needs to be defined.
@@ -142,6 +142,7 @@ class lakes(HydroModule):
             else:
                 self.var.LakeInflowOldCC = np.compress(LakeSitesC > 0, LakePrevInflowValue)
                 # Qin1 instantaneous inflow to the lake at t (beginning of sub-routing step)
+
 
             # Repeatedly used expressions in lake routine
 
@@ -246,7 +247,7 @@ class lakes(HydroModule):
             LakeIn = (self.var.LakeInflowCC + self.var.LakeInflowOldCC) * 0.5
             # (Qin1 + Qin2)/2 approx lake inflow
 
-            self.var.LakeInflowOldCC = self.var.LakeInflowCC.copy()
+            self.var.LakeInflowAvgOldCC = self.var.LakeInflowCC.copy()
             # Qin2 becomes Qin1 for the next time step
 
             LakeStorageIndicator = self.var.LakeStorageM3CC /self.var.DtRouting - 0.5 * self.var.LakeOutflowCC + LakeIn

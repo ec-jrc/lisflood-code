@@ -46,7 +46,7 @@ class routing(HydroModule):
     """
     input_files_keys = {'all': ['beta', 'ChanLength', 'Ldd', 'Channels', 'ChanGrad', 'ChanGradMin',
                                 'CalChanMan', 'ChanMan', 'ChanBottomWidth', 'ChanDepthThreshold',
-                                'ChanSdXdY', 'TotalCrossSectionAreaInitValue', 'PrevDischarge',
+                                'ChanSdXdY', 'TotalCrossSectionAreaInitValue', 'PrevDischarge', 'PrevDischargeAvg',
                                 'ChanBottomWMult', 'ChanDepthTMult', 'ChanSMult'],
                         'SplitRouting': ['CrossSection2AreaInitValue', 'PrevSideflowInitValue', 'CalChanMan2'],
                         'dynamicWave': ['ChannelsDynamic'],
@@ -395,6 +395,13 @@ class routing(HydroModule):
             # We do not need a state file to initialise the average outflow discharge (ChanQAvgDt and ChanQKinAvgDt).
             # Initialisation would be necessary for pixels in order 0 (aka head pixels), but there is no upstream contribution for pixels in order 0.
             # For pixels in order 1 and beyond, upstream contribution is calculated during the calculation step.
+
+            if option['simulateLakes'] and not option['InitLisflood']:
+                # Initialising average discharge for lakes
+                PrevDischargeAvg = loadmap('PrevDischargeAvg')
+                # Outflow (x+dx) Q during previous routing sub-step for full cross-section (average over last routing sub-step)
+                # Used to calculated average Inflow (x) to reservoirs
+                self.var.ChanQAvgDt = np.where(PrevDischargeAvg == -9999, self.var.ChanQAvgDt, PrevDischargeAvg)  # np
 
 
         # ************************************************************
