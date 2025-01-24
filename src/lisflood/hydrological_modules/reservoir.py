@@ -196,7 +196,7 @@ class reservoir(HydroModule):
 
             ReservoirInflowCC = np.bincount(self.var.downstruct, weights=self.var.ChanQAvgDt)[self.var.ReservoirIndex]
             # ReservoirInflowCC = np.bincount(self.var.downstruct, weights=self.var.ChanQ)[self.var.ReservoirIndex]
-            # Reservoir inflow in [m3/s] per timestep (routing step) from average discharge
+            # Reservoir inflow in [m3/s] per timestep (routing sub-step) (average)
 
             # ReservoirInflow=cover(ifpcr(defined(self.var.ReservoirSites),upstream(self.var.LddStructuresKinematic,self.var.ChanQ)),null)
             # Reservoir inflow in [m3/s]

@@ -61,7 +61,8 @@ class TestWarmStart():
         check_every = 13  # steps
         # init
         path_out_init = mk_path_out('data/LF_ETRS89_UseCase/out/init{}'.format(dt_sec))
-        settings_prerun = setoptions(self.settings_files['prerun'], opts_to_unset=modules_to_unset,
+        settings_prerun = setoptions(self.settings_files['prerun'],
+                                     opts_to_unset=modules_to_unset,
                                      vars_to_set={'DtSec': dt_sec,
                                                   'PathOut': path_out_init,
                                                   'StepStart': step_start,
@@ -75,7 +76,8 @@ class TestWarmStart():
         lzavin_path = settings_prerun.binding['LZAvInflowMap']
         avgdis_path = settings_prerun.binding['AvgDis']
         path_out_reference = mk_path_out('data/LF_ETRS89_UseCase/out/longrun_reference{}'.format(dt_sec))
-        settings_longrun = setoptions(self.settings_files['cold'], opts_to_unset=modules_to_unset,
+        settings_longrun = setoptions(self.settings_files['cold'],
+                                      opts_to_unset=modules_to_unset,
                                       vars_to_set={'StepStart': step_start,
                                                    'StepEnd': step_end,
                                                    'LZAvInflowMap': lzavin_path,
@@ -90,7 +92,8 @@ class TestWarmStart():
         run_number = 1
         cold_start_step_end = step_start
         path_out = mk_path_out('data/LF_ETRS89_UseCase/out/run{}_{}'.format(dt_sec, run_number))
-        settings_coldstart = setoptions(self.settings_files['cold'], opts_to_unset=modules_to_unset,
+        settings_coldstart = setoptions(self.settings_files['cold'],
+                                        opts_to_unset=modules_to_unset,
                                         vars_to_set={'StepStart': step_start,
                                                      'StepEnd': cold_start_step_end,
                                                      'LZAvInflowMap': lzavin_path,
@@ -118,7 +121,8 @@ class TestWarmStart():
             path_init = prev_settings.output_dir
             path_out = mk_path_out('data/LF_ETRS89_UseCase/out/run{}_{}'.format(dt_sec, run_number))
 
-            settings_warmstart = setoptions(self.settings_files['warm'], opts_to_unset=modules_to_unset,
+            settings_warmstart = setoptions(self.settings_files['warm'],
+                                            opts_to_unset=modules_to_unset,
                                             vars_to_set={'StepStart': warm_step_start.strftime('%d/%m/%Y %H:%M'),
                                                          'StepEnd': warm_step_end.strftime('%d/%m/%Y %H:%M'),
                                                          'LZAvInflowMap': lzavin_path,

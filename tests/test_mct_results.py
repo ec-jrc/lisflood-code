@@ -201,7 +201,8 @@ class TestTSSResults():
             shutil.rmtree(out_path, ignore_errors=True)
 
 
-
+# do_not_run
+# Update reference results
 class TestMCTResults(TestTSSResults):
 
     run_type = 'short'
@@ -263,11 +264,3 @@ class TestMCTResults(TestTSSResults):
     def cleaning(self,):
         self.teardown_method()
 
-
-# @pytest.mark.slow
-# class TestInflowLong(TestInflow):
-#
-#     run_type = 'long'
-#
-#     def test_inflow_short(self):
-#         self.run("02/01/1986 00:00", "01/01/2018 00:00")

@@ -100,14 +100,14 @@ class waterbalance(object):
             # (because it is not routed yet to the structure)
 
             # CM
-            # if option['simulateLakes']:
-            #     # DisStructure += np.where(compressArray(self.var.IsUpsOfStructureLake), 0.5 * self.var.ChanQ * self.var.DtRouting, 0)
-            #     DisStructure += np.where(compressArray(self.var.IsUpsOfStructureLake),
-            #                              self.var.ChanQAvgDt * self.var.DtRouting, 0)
-            #     # DisStructure += cover(ifthen(self.var.IsUpsOfStructureLake,
-            #     #  0.5 * self.var.ChanQ * self.var.DtRouting), scalar(0.0))
-            #     # because Modified Puls Method is use, some additional offset
-            #     # has to be added
+            if option['simulateLakes']:
+                # DisStructure += np.where(compressArray(self.var.IsUpsOfStructureLake), 0.5 * self.var.ChanQ * self.var.DtRouting, 0)
+                DisStructure += np.where(compressArray(self.var.IsUpsOfStructureLake), 0.5 * self.var.ChanQAvgDt * self.var.DtRouting, 0)
+
+                # DisStructure += cover(ifthen(self.var.IsUpsOfStructureLake,
+                #  0.5 * self.var.ChanQ * self.var.DtRouting), scalar(0.0))
+                # because Modified Puls Method is use, some additional offset
+                # has to be added
             
             self.var.DischargeM3StructuresIni = np.take(np.bincount(self.var.Catchments, weights=DisStructure), self.var.Catchments)
 
@@ -117,8 +117,7 @@ class waterbalance(object):
     def storage_channel(self, option):
         ChannelStoredM3 = self.var.ChanM3.copy()
         if option['simulateLakes']:
-            # ChannelStoredM3 += self.var.LakeStorageM3Balance # CM
-            ChannelStoredM3 += self.var.LakeStorageM3
+            ChannelStoredM3 += self.var.LakeStorageM3Balance
         if option['simulateReservoirs']:
             ChannelStoredM3 += self.var.ReservoirStorageM3
         if option['simulatePolders']:
@@ -255,20 +254,19 @@ class waterbalance(object):
             # so the last (now routed) discharge has to be added to the mass balance
             # (-> the calculation odf the structures is done before the routing)
 
-            # CM this is no longer necessary ?
-            # if option['simulateLakes']:
-            #     DisLake = maskinfo.in_zero()
-            #     np.put(DisLake, self.var.LakeIndex, 0.5 * self.var.LakeInflowCC * self.var.DtRouting)
-            #
-            #     DischargeM3Lake = np.take(np.bincount(self.var.Catchments, weights=DisLake),self.var.Catchments)
-            #     #DischargeM3Lake = areatotal(cover(0.5 * self.var.LakeInflow * self.var.DtRouting, scalar(0.0)), catch)
-            #     # because Modified Puls Method is using QIn=(Qin1+Qin2)/2, we need a correction
-            #     #  DisStr=Disstr+0.5*LakeInflow - 0.5 * LakeInit
-            #     #  0.5 * LakeInit: is already done in DischargeM3StructuresIni
-            #     DischargeM3Structures += DischargeM3Lake
-            #     # Discharge just upstream of structure locations (coded as pits) in [cu m / time step]
-            #     # Needed for mass balance error calculations, because of double counting of structure
-            #     # storage and water in the channel.
+            if option['simulateLakes']:
+                DisLake = maskinfo.in_zero()
+                np.put(DisLake, self.var.LakeIndex, 0.5 * self.var.LakeInflowCC * self.var.DtRouting)
+
+                DischargeM3Lake = np.take(np.bincount(self.var.Catchments, weights=DisLake),self.var.Catchments)
+                #DischargeM3Lake = areatotal(cover(0.5 * self.var.LakeInflow * self.var.DtRouting, scalar(0.0)), catch)
+                # because Modified Puls Method is using QIn=(Qin1+Qin2)/2, we need a correction
+                #  DisStr=Disstr+0.5*LakeInflow - 0.5 * LakeInit
+                #  0.5 * LakeInit: is already done in DischargeM3StructuresIni
+                DischargeM3Structures += DischargeM3Lake
+                # Discharge just upstream of structure locations (coded as pits) in [cu m / time step]
+                # Needed for mass balance error calculations, because of double counting of structure
+                # storage and water in the channel.
 
             DischargeM3Structures -= self.var.DischargeM3StructuresIni  
             # minus the initial DischargeStructure

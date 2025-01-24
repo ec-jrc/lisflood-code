@@ -636,7 +636,12 @@ The option "numCPUs_parallelNumba" may take the following values:
                 </comment>
             </textvar>
 
-
+            <textvar name="PrevDischargeAvg" value="-9999">
+                <comment>
+					Outflow average discharge on previous routing sub-step (average) [m3/s]
+					Cold start: -9999 sets initial value to 0
+                </comment>
+            </textvar>
         </group>
 
         <group>
@@ -2044,6 +2049,12 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
             </textvar>
 
+            <textvar name="PrevDischargeAvg" value="$(PrevDischargeAvg)">
+                <comment>
+					Outflow average discharge on previous routing sub-step (average) [m3/s]
+					Cold start: -9999 sets initial value to 0
+                </comment>
+            </textvar>
         </group>
 
 
@@ -2651,6 +2662,18 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
+                <textvar name="ChanQState" value="$(PathOut)/chanq">
+                    <comment>
+                        Reported discharge [cu m/s] ChanQ
+                    </comment>
+                </textvar>
+
+                <textvar name="ChanQAvgDtState" value="$(PathOut)/chanqavgdt">
+                    <comment>
+                        Reported average discharge over last routing sub-step used to initialise lakes [cu m/s] ChanQAvgDt
+                    </comment>
+                </textvar>
+
                 <textvar name="DSLRForestState" value="$(PathOut)/dslf">
                     <comment>
                         Reported days since last rain
@@ -2872,6 +2895,18 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 <textvar name="ChSideEnd" value="$(PathOut)/chside.end">
                     <comment>
                         Reported channel side flow
+                    </comment>
+                </textvar>
+
+                <textvar name="ChanQEnd" value="$(PathOut)/chanq.end">
+                    <comment>
+                        Reported discharge [cu m/s] ChanQ
+                    </comment>
+                </textvar>
+
+                <textvar name="ChanQAvgDtEnd" value="$(PathOut)/chanqavgdt.end">
+                    <comment>
+                        Reported average discharge over last routing sub-step used to initialise lakes [cu m/s] ChanQAvgDt
                     </comment>
                 </textvar>
 

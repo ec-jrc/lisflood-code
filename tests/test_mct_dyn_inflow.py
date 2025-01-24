@@ -48,7 +48,7 @@ class TestInflow():
                                            'CalendarDayStart': date_start,
                                            'DtSec' : dtsec,
                                            # 'DtSecChannel': dtsec,         # single routing step
-                                           'BankFullPerc': '0.5',
+                                           'BankFullPerc': '0.1',
                                            'MaskMap': '$(PathRoot)/maps/mask.nc',
                                            # 'Gauges': '4322500 2447500  4447500 2422500',    # inflow and outlet
                                            'Gauges': '4297500 2372500',                       # inflow point
@@ -118,13 +118,3 @@ class TestInflowShort(TestInflow):
     # cleaning folders
     def cleaning(self,):
         self.teardown_method()
-
-
-
-# @pytest.mark.slow
-# class TestInflowLong(TestInflow):
-#
-#     run_type = 'long'
-#
-#     def test_inflow_short(self):
-#         self.run("02/01/1986 00:00", "01/01/2018 00:00")

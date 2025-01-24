@@ -95,12 +95,6 @@ class lakes(HydroModule):
             # Get all pixels just upstream of lakes
             # -----------------------
 
-            # # Qin1 instantaneous inflow to the lake at the beginning of sub-routing step
-            # self.var.LakeInflowOldCC = np.bincount(self.var.downstruct, weights=self.var.ChanQ)[self.var.LakeIndex]  #CM posso toglierlo?
-            # # for Modified Puls Method the Q(inflow)1 has to be used.
-            # # It is assumed that this is the same as Q(inflow)2 for the first timestep
-            # # then it's read from state file.
-
             LakeArea = pcraster.lookupscalar(str(binding['TabLakeArea']), LakeSitePcr)
             LakeAreaC = compressArray(LakeArea)
             self.var.LakeAreaCC = np.compress(LakeSitesC > 0, LakeAreaC)
@@ -114,7 +108,7 @@ class lakes(HydroModule):
             # Lake parameter A (suggested  value equal to outflow width in [m])
             # multiplied with the calibration parameter LakeMultiplier
 
-            # S1 storage at time t
+            # S1 storage at time t-1
             LakeInitialLevelValue  = loadmap('LakeInitialLevelValue')
             if np.max(LakeInitialLevelValue) == -9999:
                 # 'cold' start
@@ -129,19 +123,19 @@ class lakes(HydroModule):
                 self.var.LakeLevelCC = np.compress(LakeSitesC > 0, LakeInitialLevelValue)
                 LakeStorageIniM3CC = self.var.LakeAreaCC * self.var.LakeLevelCC
                 # Initial lake storage [m3] S1 based on: S = LakeArea * H
-                self.var.LakeAvNetCC = np.compress(LakeSitesC > 0, loadmap('PrevDischarge'))
-                # Qout1 instant outflow at t
+                self.var.LakeAvNetCC = np.compress(LakeSitesC > 0, loadmap('PrevDischargeAvg'))
 
-            # Qinflow1 at time t
+            # Qinflow1 at time t-1
             LakePrevInflowValue  = loadmap('LakePrevInflowValue')
             if np.max(LakePrevInflowValue) == -9999:
-                self.var.LakeInflowOldCC = np.bincount(self.var.downstruct, weights=self.var.ChanQ)[self.var.LakeIndex]
+                # self.var.LakeInflowOldCC = np.bincount(self.var.downstruct, weights=self.var.ChanQ)[self.var.LakeIndex] #cm22-1
+                self.var.LakeInflowOldCC = np.bincount(self.var.downstruct, weights=self.var.ChanQAvgDt)[self.var.LakeIndex]
                 # Qin1 instantaneous inflow to the lake at the beginning of sub-routing step
-                # for Modified Puls Method the Q(inflow)1 (instant inflow at the beginning of the sub-routing step) needs to be defined.
+                # for Modified Puls Method the Q(inflow)1 (average inflow at (sub-routing) step t-1) needs to be defined.
                 # It is assumed that this is the same as Q(inflow)2 for the first timestep for 'cold' start
             else:
                 self.var.LakeInflowOldCC = np.compress(LakeSitesC > 0, LakePrevInflowValue)
-                # Qin1 instantaneous inflow to the lake at t (beginning of sub-routing step)
+                # Qin1 average inflow to the lake at (sub-routing) step t-1
 
 
             # Repeatedly used expressions in lake routine
@@ -226,63 +220,46 @@ class lakes(HydroModule):
             # S1
             if NoRoutingExecuted==0:
                 self.var.LakeStorageM3CC=np.compress(self.var.LakeSitesC2 > 0, self.var.LakeStorageM3)
-                # S1 lake storage at t (beginning of sub-routing step)
-
-            # CM
-            LakeStorageM3CC_Init = self.var.LakeStorageM3CC.copy()
-            # Lake water storage at the beginning of sub-routing step
+                # S1 lake storage at t-1
 
             # Qin2
-            self.var.LakeInflowCC = np.bincount(self.var.downstruct, weights=self.var.ChanQ)[self.var.LakeIndex]
-            # Qin2 instant lake inflow in [m3/s] at t+dt (end of routing-substep) - from upstream pixels
-            LakeInflowM3CC = self.var.LakeInflowCC * self.var.DtRouting
+            # self.var.LakeInflowCC = np.bincount(self.var.downstruct, weights=self.var.ChanQ)[self.var.LakeIndex]
+            self.var.LakeInflowCC = np.bincount(self.var.downstruct, weights=self.var.ChanQAvgDt)[self.var.LakeIndex]
+            # Qin2 lake average inflow in [m3/s] per timestep t (routing sub-step)
 
-            # QinAvg
-            LakeInflowCC_Avg = np.bincount(self.var.downstruct, weights=self.var.ChanQAvgDt)[self.var.LakeIndex]
-            # Average lake inflow in [m3/s] during dt - from upstream pixels
-            LakeInflowM3CC_Avg = LakeInflowCC_Avg * self.var.DtRouting
-
-            # Calculate instantneous lake outflow at t+dt using the modified Puls approach
-            # for Modified Puls Method: (S2/dtime + Qout2/2) = (S1/dtime - Qout1/2) + (Qin1 + Qin2)/2
             LakeIn = (self.var.LakeInflowCC + self.var.LakeInflowOldCC) * 0.5
-            # (Qin1 + Qin2)/2 approx lake inflow
+            # for Modified Puls Method: (S2/dtime + Qout2/2) = (S1/dtime - Qout1/2) + (Qin1 + Qin2)/2
+            # here: (Qin1 + Qin2)/2 approx lake inflow
 
-            self.var.LakeInflowAvgOldCC = self.var.LakeInflowCC.copy()
-            # Qin2 becomes Qin1 for the next time step
+            self.var.LakeInflowOldCC = self.var.LakeInflowCC.copy()
+            # Qin2 becomes Qin1 for the next routing time step
 
             LakeStorageIndicator = self.var.LakeStorageM3CC /self.var.DtRouting - 0.5 * self.var.LakeOutflowCC + LakeIn
             # SI = S1/dtime - Qout1/2 + (Qin1 + Qin2)/2 = S1/dtime - Qout1/2 + LakeIn
             # Right hand part of the Modified Puls Method equation above
 
-            # Qout2 outflow at t+dt
+            # Qout2
             self.var.LakeOutflowCC = np.square( -self.var.LakeFactor + np.sqrt(self.var.LakeFactorSqr + 2 * LakeStorageIndicator))
-            # Qout2 instant lake outflow in [m3/s] at t+dt (end of routing-substep) - from lake storage curve
+            # Qout2 average lake outflow in [m3/s] per timestep t (routing sub-step)
             # Flow out of lake:
             #  solving the equation  (S2/dtime + Qout2/2) = (S1/dtime + Qout1/2) + (Qin1 + Qin2)/2
-            #  (S2/dtime + Qout2/2) = SI = (A*H)/DtRouting + Q/2 = A/(DtRouting*sqrt(a)  * sqrt(Q) + Q/2
+            #  (S2/dtime + Qout2/2) = SI = (A*H)/DtRouting + Q/2 = A/(DtRouting*sqrt(a))  * sqrt(Q) + Q/2
             #  -> replacement: A/(DtRouting*sqrt(a)) = Lakefactor, Y = sqrt(Q)
             #  Y**2 + 2*Lakefactor*Y-2*SI=0
             # solution of this quadratic equation:
-            # Q=sqr(-LakeFactor+sqrt(sqr(LakeFactor)+2*SI));
-
-            # Check LakeOutflowCC (Qout2) for negative values and set them to zero
-            if any(np.isnan(self.var.LakeOutflowCC)):
-                msg = "NaN in lake instantaneous outflow set to 0. " \
-                      "Increase computation time step for routing (DtSecChannel) \n"
-                warnings.warn(LisfloodWarning(msg))
-                self.var.LakeOutflowCC[np.isnan(self.var.LakeOutflowCC)] = 0
+            # Q=sqr(-LakeFactor+sqrt(sqr(LakeFactor)+2*SI))
+            # Qout2 always >= 0
 
             # expanding the size to save Qout2 as state variable ('LakePrevOutflowValue')
             self.var.LakeOutflow = maskinfo.in_zero()
             np.put(self.var.LakeOutflow, self.var.LakeIndex, self.var.LakeOutflowCC)
 
-            # QLakeOutM3DtCC = self.var.LakeOutflowCC * self.var.DtRouting
-            # # Outflow in [m3] per timestep
-            # # Needed at every cell, hence cover statement
+            QLakeOutM3DtCC = self.var.LakeOutflowCC * self.var.DtRouting
+            # Lake outflow in [m3] per timestep t (sub-routing step)
 
             # S2
             self.var.LakeStorageM3CC = (LakeStorageIndicator - self.var.LakeOutflowCC* 0.5) * self.var.DtRouting
-            # S2 Lake storage at t+dt (end of sub-routing step) - from lake storage curve and rating curve
+            # Lake storage at t
 
             # self.var.LakeStorageM3CC < 0 leads to NaN in state files
             # Check LakeStorageM3CC for negative values and set them to zero
@@ -293,18 +270,9 @@ class lakes(HydroModule):
                 self.var.LakeStorageM3CC[self.var.LakeStorageM3CC < 0] = 0
                 self.var.LakeStorageM3CC[np.isnan(self.var.LakeStorageM3CC)] = 0
 
-            self.var.LakeLevelCC = self.var.LakeStorageM3CC / self.var.LakeAreaCC
-            # S2 storage water level at t+dt
-
-            # Calc average lake outflow during dt (to Sideflow)
-            QLakeOutM3DtCC = LakeStorageM3CC_Init - self.var.LakeStorageM3CC + LakeInflowCC_Avg * self.var.DtRouting
-            # Qout_Avg = (S1 - S2) * Dt + Qin_Avg
-
-
-            self.var.LakeStorageM3BalanceCC += LakeIn * self.var.DtRouting - self.var.LakeOutflowCC * self.var.DtRouting
+            self.var.LakeStorageM3BalanceCC += LakeIn * self.var.DtRouting - QLakeOutM3DtCC
             # for mass balance, the lake storage is calculated every time step
-            # CM what is this for??????
-
+            self.var.LakeLevelCC = self.var.LakeStorageM3CC / self.var.LakeAreaCC
 
             # expanding the size
             self.var.QLakeOutM3Dt = maskinfo.in_zero()
