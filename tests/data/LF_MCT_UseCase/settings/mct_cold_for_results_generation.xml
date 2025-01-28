@@ -36,9 +36,9 @@ You can use builtin path variables in this template and reference to other paths
         <setoption choice="0" name="groundwaterSmooth"/>
         
         <setoption choice="0" name="wateruse"/>
-        <setoption choice="1" name="TransientWaterDemandChange"/>
+        <setoption choice="0" name="TransientWaterDemandChange"/>
         <setoption choice="0" name="useWaterDemandAveYear"/>
-        <setoption choice="1" name="wateruseRegion"/>
+        <setoption choice="0" name="wateruseRegion"/>
 
 		<setoption choice="0" name="cropsEPIC"/>
         <setoption choice="0" name="drainedIrrigation"/>
@@ -48,7 +48,7 @@ You can use builtin path variables in this template and reference to other paths
         <setoption choice="0" name="simulateReservoirs"/>
 
         <setoption choice="0" name="SplitRouting"/>
-        <setoption choice="1" name="MCTRouting"/>
+        <setoption choice="0" name="MCTRouting"/>
 
 
         # use inflow data
@@ -84,7 +84,7 @@ You can use builtin path variables in this template and reference to other paths
         <setoption choice="0" name="repMeteoUpsGauges"/>
 
         # report reservoirs and lakes
-        <setoption choice="0" name="repsimulateLakes"/>        
+        <setoption choice="0" name="repsimulateLakes"/>
         <setoption choice="0" name="repsimulateReservoirs"/>    
 
         # report mass balance
@@ -108,7 +108,7 @@ You can use builtin path variables in this template and reference to other paths
 		<setoption choice="0"  name="repEWRefMaps"/>
 	
 		# dicharge
-        <setoption choice="1" name="repDischargeMaps"/> 
+        <setoption choice="0" name="repDischargeMaps"/>
 
 		<setoption choice="0" name="repAverageDis"/>             
         <setoption choice="0" name="repLZAvInflow"/>

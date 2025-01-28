@@ -35,17 +35,17 @@ You can use builtin path variables in this template and reference to other paths
         # options to turn hydrological modules on/off
         <setoption choice="0" name="groundwaterSmooth"/>
         
-        <setoption choice="0" name="wateruse"/>
+        <setoption choice="1" name="wateruse"/>
         <setoption choice="1" name="TransientWaterDemandChange"/>
         <setoption choice="0" name="useWaterDemandAveYear"/>
         <setoption choice="1" name="wateruseRegion"/>
 
 		<setoption choice="0" name="cropsEPIC"/>
-        <setoption choice="0" name="drainedIrrigation"/>
-        <setoption choice="0" name="riceIrrigation"/>
-        <setoption choice="0" name="openwaterevapo"/>
+        <setoption choice="1" name="drainedIrrigation"/>
+        <setoption choice="1" name="riceIrrigation"/>
+        <setoption choice="1" name="openwaterevapo"/>
         <setoption choice="1" name="simulateLakes"/>
-        <setoption choice="0" name="simulateReservoirs"/>
+        <setoption choice="1" name="simulateReservoirs"/>
 
         <setoption choice="0" name="SplitRouting"/>
         <setoption choice="1" name="MCTRouting"/>
@@ -88,7 +88,7 @@ You can use builtin path variables in this template and reference to other paths
         <setoption choice="1" name="repsimulateReservoirs"/>    
 
         # report mass balance
-        <setoption choice="1" name="repMBTs"/>
+        <setoption choice="0" name="repMBTs"/>
 
         #-----------------------------------------------------------
         # report maps
@@ -108,7 +108,7 @@ You can use builtin path variables in this template and reference to other paths
 		<setoption choice="0"  name="repEWRefMaps"/>
 	
 		# dicharge
-        <setoption choice="1" name="repDischargeMaps"/>
+        <setoption choice="0" name="repDischargeMaps"/>
 
 		<setoption choice="0" name="repAverageDis"/>             
         <setoption choice="0" name="repLZAvInflow"/>
