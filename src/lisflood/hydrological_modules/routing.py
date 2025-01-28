@@ -808,8 +808,8 @@ class routing(HydroModule):
             ### end of river routing calculation
 
             # ---- Uncomment lines 603-635 in order to compute the mass balance error within the routing module for the options (i) initial run or (ii) split routing off ----
-            # '''
-            # option['repMBTs']=True
+            '''
+            option['repMBTs']=True
             if option['repMBTs']:
                  if option['InitLisflood'] or (not(option['SplitRouting'])):
                     # Kinematic routing and MCT
@@ -832,18 +832,15 @@ class routing(HydroModule):
 
                       if not option['InitLisflood']:
                        if option['simulateReservoirs']:
-                         # sum1 =self.var.ChanQ.copy() #cm22-1
-                         sum1 =self.var.ChanQAvgDt.copy() #cm22-1
+                         sum1 =self.var.ChanQ.copy()
                          StorageStep =  StorageStep + self.var.ReservoirStorageM3.copy()
                          # DisStructureR = np.where(self.var.IsUpsOfStructureKinematicC, sum1 * self.var.DtRouting, 0)
                          DisStructureR = np.where(self.var.IsUpsOfStructureChanC, sum1 * self.var.DtRouting, 0)
                          DischargeM3StructuresR = np.take(np.bincount(self.var.Catchments, weights=DisStructureR), self.var.Catchments)
                          DischargeM3StructuresR -= self.var.DischargeM3StructuresIni
-
                       if not option['InitLisflood']:
                        if option['simulateLakes']:
-                         # sum1 =self.var.ChanQ.copy() #cm22-1
-                         sum1 =self.var.ChanQAvgDt.copy() #cm22-1
+                         sum1 =self.var.ChanQ.copy()
                          StorageStep =  StorageStep + self.var.LakeStorageM3Balance.copy()
                          # DisStructureR = np.where(self.var.IsUpsOfStructureKinematicC, sum1 * self.var.DtRouting, 0)
                          DisStructureR = np.where(self.var.IsUpsOfStructureChanC, sum1 * self.var.DtRouting, 0)
@@ -854,15 +851,8 @@ class routing(HydroModule):
                          DischargeM3Lake = np.take(np.bincount(self.var.Catchments, weights=DisLake),self.var.Catchments)
                          DischargeM3StructuresR += DischargeM3Lake
                          DischargeM3StructuresR -= self.var.DischargeM3StructuresIni
-
                       # Total Mass Balance Error in m3 per catchment for Initial Run OR Kinematic routing (Split Routing OFF)
-                      # MB =-np.sum(StorageStep)+np.sum(self.var.StorageStepINIT) - OutStepM3[0]  -DischargeM3StructuresR[0] +self.var.AddedTRUN
-
-                      # # cmcheck
-                      # if MB.any() > 1.e-12:
-                      #     print('Mass balance error MB > 1.e-12')
-
-
+                      MB =-np.sum(StorageStep)+np.sum(self.var.StorageStepINIT) - OutStepM3[0]  -DischargeM3StructuresR[0] +self.var.AddedTRUN
                       self.var.StorageStepINIT= np.sum(StorageStep) + DischargeM3StructuresR[0]
             #'''
 
@@ -873,7 +863,7 @@ class routing(HydroModule):
                     # SplitRouting
                     # compute the mass balance at the last of the sub-routing steps in order to account for the contributions of lakes and reservoirs
                     if NoRoutingExecuted == (self.var.NoRoutSteps-1):
-                      ChanQAvgSR = self.var.sumDisDay/self.var.NoRoutSteps  #self.var.ChanQ
+                      ChanQAvgSR = self.var.sumDisDay/self.var.NoRoutSteps
                       sum1=ChanQAvgSR.copy()
                       sum1[self.var.AtLastPointC == 0] = 0
                       OutStep = np.take(np.bincount(self.var.Catchments,weights=sum1 * self.var.DtSec),self.var.Catchments)
@@ -888,8 +878,7 @@ class routing(HydroModule):
 
                       if option['simulateReservoirs']:
                          sum1=[]
-                         # sum1 =self.var.ChanQ.copy() #cm22-1
-                         sum1 =self.var.ChanQAvgDt.copy() #cm22-1
+                         sum1 =self.var.ChanQ.copy()
                          StorageStep =  StorageStep + self.var.ReservoirStorageM3.copy()
                          # DisStructureSR = np.where(self.var.IsUpsOfStructureKinematicC, sum1 * self.var.DtRouting, 0)
                          DisStructureSR = np.where(self.var.IsUpsOfStructureChanC, sum1 * self.var.DtRouting, 0)
@@ -897,8 +886,7 @@ class routing(HydroModule):
                          DischargeM3StructuresR -= self.var.DischargeM3StructuresIni
 
                       if option['simulateLakes']:
-                         # sum1 =self.var.ChanQ.copy() #cm22-1
-                         sum1 =self.var.ChanQAvgDt.copy() #cm22-1
+                         sum1 =self.var.ChanQ.copy()
                          StorageStep =  StorageStep + self.var.LakeStorageM3Balance.copy()
                          # DisStructureSR = np.where(self.var.IsUpsOfStructureKinematicC, sum1 * self.var.DtRouting, 0)
                          DisStructureSR = np.where(self.var.IsUpsOfStructureChanC, sum1 * self.var.DtRouting, 0)

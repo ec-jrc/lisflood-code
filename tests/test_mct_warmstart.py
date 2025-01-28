@@ -44,73 +44,61 @@ class TestWarmStart():
         calendar_day_start = '02/01/1990 06:00'
         step_start = '02/01/2016 06:00'
         step_end = '31/03/2016 06:00'
-        # step_end = '31/12/2016 06:00'
         dt_sec = 86400
         dt_sec_channel = 86400
-        report_steps = '9496..9586'
-        # report_steps = '9496..9861'
+        report_steps = '9496..9861'
         self.run_warmstart_by_dtsec('mct', dt_sec, dt_sec_channel, step_end, step_start, calendar_day_start, report_steps=report_steps)
 
     def test_mct_and_reservoirs_warmstart_daily(self):
         calendar_day_start = '02/01/1990 06:00'
         step_start = '02/01/2016 06:00'
         step_end = '31/03/2016 06:00'
-        # step_end = '31/12/2016 06:00'
         dt_sec = 86400
         dt_sec_channel = 86400
-        report_steps = '9496..9586'
-        # report_steps = '9496..9861'
+        report_steps = '9496..9861'
         self.run_warmstart_by_dtsec('mct_reservoirs', dt_sec, dt_sec_channel, step_end, step_start, calendar_day_start, report_steps=report_steps)
 
     def test_mct_and_lakes_warmstart_daily(self):
         calendar_day_start = '02/01/1990 06:00'
         step_start = '02/01/2016 06:00'
         step_end = '31/03/2016 06:00'
-        # step_end = '31/12/2016 06:00'
         dt_sec = 86400
-        dt_sec_channel = 86400
-        report_steps = '9496..9586'
-        # report_steps = '9496..9861'
+        dt_sec_channel = 3600
+        report_steps = '9496..9861'
         self.run_warmstart_by_dtsec('mct_lakes', dt_sec, dt_sec_channel, step_end, step_start, calendar_day_start, report_steps=report_steps)
 
     def test_mct_only_warmstart_6h(self):
         calendar_day_start = '02/01/1990 06:00'
         step_start = '01/03/2016 06:00'
         step_end = '31/05/2016 06:00'
-        # step_end = '31/07/2016 06:00'
         dt_sec = 21600
         dt_sec_channel = 3600
-        report_steps = '38220..38320'
-        # report_steps = '38220..38830'
+        report_steps = '38220..38830'
         self.run_warmstart_by_dtsec('mct', dt_sec, dt_sec_channel, step_end, step_start, calendar_day_start, report_steps=report_steps)
 
     def test_mct_and_reservoirs_warmstart_6h(self):
         calendar_day_start = '02/01/1990 06:00'
         step_start = '01/03/2016 06:00'
         step_end = '31/05/2016 06:00'
-        # step_end = '31/07/2016 06:00'
         dt_sec = 21600
         dt_sec_channel = 3600
-        report_steps = '38220..38320'
-        # report_steps = '38220..38830'
+        report_steps = '38220..38830'
         self.run_warmstart_by_dtsec('mct_reservoirs', dt_sec, dt_sec_channel, step_end, step_start, calendar_day_start, report_steps=report_steps)
 
     def test_mct_and_lakes_warmstart_6h(self):
         calendar_day_start = '02/01/1990 06:00'
         step_start = '01/03/2016 06:00'
         step_end = '31/05/2016 06:00'
-        # step_end = '31/07/2016 06:00'
         dt_sec = 21600
         dt_sec_channel = 3600
-        report_steps = '38220..38320'
-        # report_steps = '38220..38830'
+        report_steps = '38220..38830'
         self.run_warmstart_by_dtsec('mct_lakes', dt_sec, dt_sec_channel, step_end, step_start, calendar_day_start, report_steps=report_steps)
 
     def run_warmstart_by_dtsec(self, mct_case, dt_sec, dt_sec_channel, step_end, step_start, calendar_day_start, report_steps='1..9999'):
 
         mk_path_out(os.path.join(self.case_dir, 'out'))
 
-        check_every = 9  # steps
+        check_every = 13  # steps
 
         self.path_out_reference = os.path.join(self.case_dir, 'out', 'longrun_reference{}'.format(dt_sec))
 
@@ -121,7 +109,7 @@ class TestWarmStart():
             opts_to_set = ['repStateMaps', 'simulateReservoirs']
             opts_to_unset = ['repMBTs', 'simulateLakes']
         elif mct_case == 'mct_lakes':
-            opts_to_set = ['repStateMaps', 'simulateLakes']
+            opts_to_set = ['repStateMaps', 'simulateLakes','openwaterevapo']
             opts_to_unset = ['repMBTs', 'simulateReservoirs']
 
         settings_longrun = setoptions(self.settings_files['cold'],
@@ -166,6 +154,8 @@ class TestWarmStart():
         timestep_init = prev_settings.step_end_dt.strftime('%d/%m/%Y %H:%M')
 
         # run only 5*13 steps to speed up computation
+        # checking 5 steps every 'check_every' steps
+        # need to run 5*check_every steps in total
         step_limit = warm_step_start + 5*check_every*timedelta(seconds=dt_sec)
         print('running until {}'.format(step_limit))
         
