@@ -35,20 +35,20 @@ You can use builtin path variables in this template and reference to other paths
         # options to turn hydrological modules on/off
         <setoption choice="0" name="groundwaterSmooth"/>
         
-        <setoption choice="1" name="wateruse"/>
-        <setoption choice="1" name="TransientWaterDemandChange"/>
+        <setoption choice="0" name="wateruse"/>
+        <setoption choice="0" name="TransientWaterDemandChange"/>
         <setoption choice="0" name="useWaterDemandAveYear"/>
-        <setoption choice="1" name="wateruseRegion"/>
+        <setoption choice="0" name="wateruseRegion"/>
 
 		<setoption choice="0" name="cropsEPIC"/>
-        <setoption choice="1" name="drainedIrrigation"/>
-        <setoption choice="1" name="riceIrrigation"/>
-        <setoption choice="1" name="openwaterevapo"/>
-        <setoption choice="1" name="simulateLakes"/>
-        <setoption choice="1" name="simulateReservoirs"/>
+        <setoption choice="0" name="drainedIrrigation"/>
+        <setoption choice="0" name="riceIrrigation"/>
+        <setoption choice="0" name="openwaterevapo"/>
+        <setoption choice="0" name="simulateLakes"/>
+        <setoption choice="0" name="simulateReservoirs"/>
 
         <setoption choice="0" name="SplitRouting"/>
-        <setoption choice="1" name="MCTRouting"/>
+        <setoption choice="0" name="MCTRouting"/>
 
 
         # use inflow data
@@ -88,7 +88,7 @@ You can use builtin path variables in this template and reference to other paths
         <setoption choice="1" name="repsimulateReservoirs"/>    
 
         # report mass balance
-        <setoption choice="0" name="repMBTs"/>
+        <setoption choice="1" name="repMBTs"/>
 
         #-----------------------------------------------------------
         # report maps
@@ -293,13 +293,13 @@ You can use builtin path variables in this template and reference to other paths
                 </comment>
             </textvar>
 
-            <textvar name="DtSec" value="21600">
+            <textvar name="DtSec" value="86400">
                 <comment>
                     timestep [seconds]
                 </comment>
             </textvar>
 
-            <textvar name="DtSecChannel" value="3600">
+            <textvar name="DtSecChannel" value="86400">
                 <comment>
                     17280 5 times subrouting
 					21600 6 hours
@@ -315,7 +315,7 @@ You can use builtin path variables in this template and reference to other paths
                 </comment>
             </textvar>
 
-            <textvar name="StepEnd" value="01/07/2016 06:00">
+            <textvar name="StepEnd" value="02/07/2016 06:00">
               <comment>
 					01/01/YEAR_END 06:00
 					Number of last time step in simulation
