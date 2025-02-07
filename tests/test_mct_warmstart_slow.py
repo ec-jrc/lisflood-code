@@ -86,10 +86,12 @@ class TestWarmStartLong():
         self.path_out_reference = os.path.join(self.case_dir, 'out', 'longrun_reference{}'.format(dt_sec))
 
         if mct_case == 'mct':
-            opts_to_set = ['repStateMaps']
+            opts_to_set = ['repDischargeMaps',
+                           'repStateMaps']
             opts_to_unset = ['repMBTs', 'simulateReservoirs', 'simulateLakes']
         elif mct_case == 'mct_all':
-            opts_to_set = ['repStateMaps',
+            opts_to_set = ['repDischargeMaps',
+                           'repStateMaps',
                            'wateruse',
                            'drainedIrrigation',
                            'riceIrrigation',
