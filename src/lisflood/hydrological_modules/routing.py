@@ -24,7 +24,7 @@ import warnings
 import numpy as np
 
 from .lakes import lakes
-from .reservoir import reservoir
+from .reservoir import Reservoir
 from .polder import polder
 from .inflow import inflow
 from .transmission import transmission
@@ -57,7 +57,7 @@ class routing(HydroModule):
         self.var = routing_variable
 
         self.lakes_module = lakes(self.var)
-        self.reservoir_module = reservoir(self.var)
+        self.reservoir_module = Reservoir(self.var)
         self.polder_module = polder(self.var)
         self.inflow_module = inflow(self.var)
         self.transmission_module = transmission(self.var)

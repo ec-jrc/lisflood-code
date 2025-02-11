@@ -1,13 +1,13 @@
 <!--
   ######################################################################
 
-  ##       ####  ######  ######## ##        #######   #######  ########  
-  ##        ##  ##    ## ##       ##       ##     ## ##     ## ##     ## 
-  ##        ##  ##       ##       ##       ##     ## ##     ## ##     ## 
-  ##        ##   ######  ######   ##       ##     ## ##     ## ##     ## 
-  ##        ##        ## ##       ##       ##     ## ##     ## ##     ## 
-  ##        ##  ##    ## ##       ##       ##     ## ##     ## ##     ## 
-  ######## ####  ######  ##       ########  #######   #######  ########  
+  ##       ####  ######  ######## ##        #######   #######  ########
+  ##        ##  ##    ## ##       ##       ##     ## ##     ## ##     ##
+  ##        ##  ##       ##       ##       ##     ## ##     ## ##     ##
+  ##        ##   ######  ######   ##       ##     ## ##     ## ##     ##
+  ##        ##        ## ##       ##       ##     ## ##     ## ##     ##
+  ##        ##  ##    ## ##       ##       ##     ## ##     ## ##     ##
+  ######## ####  ######  ##       ########  #######   #######  ########
 
   ######################################################################
 
@@ -88,7 +88,7 @@
 
             <!-- Parallelisation of using Numba runtime compiled library .
 The option "numCPUs_parallelNumba" may take the following values:
-    - "0"           : set to NUMBA_NUM_THREADS Environment Variable 
+    - "0"           : set to NUMBA_NUM_THREADS Environment Variable
                       (if NUMBA_NUM_THREADS is not set, will take the number of CPU cores determined by python's multiprocessing.cpu_count())
     - "1"           : serial execution (not parallel)
     - "2", "3", ... : manual setting of the number of parallel threads.
@@ -330,22 +330,25 @@ The option "numCPUs_parallelNumba" may take the following values:
                 </comment>
             </textvar>
 
-            <textvar name="adjust_Normal_Flood" value="0.8">
+            <textvar name="ReservoirFloodStorage" value="$(PathTables)/rflim_687_97th.txt">
                 <comment>
-                    default: 0.8
-                    $(PathParams)/params_adjust_Normal_Flood.nc
-                    adjusting the balance between normal and flood storage
-                    big values (= closer to 1.0 = close to flood) results in keeping the outflow longer at rnormq
-                    Range 0.01 - 0.99
+                    Fraction of the total reservoir storage above which the reservoir enters
+                    the flood control zone. It can be a map (NetCDF), a table (TXT) or a float
+                      Units: -
+                      Range: 0.2 - 0.99
+                      Default: 0.75
                 </comment>
             </textvar>
 
-            <textvar name="ReservoirRnormqMult" value="1">
+            <textvar name="ReservoirFloodOutflowFactor" value="0.3">
                 <comment>
-                    default: 1.0
-                    $(PathParams)/params_ReservoirRnormqMult.nc
-                    Reservoir rnormq (normal outflow)
-                    fraction of the value in table rnormq.txt range: 0.5 - 2
+                    Factor of the 100-year return inflow (`ReservoirFloodOutflow`) that defines the inflow
+                    value that switches, when exceeded, the reservoir routine to flood control mode.
+                    It can be a map (NetCDF), a table (TXT) or a float. The value -9999 will be replaced by
+                    the default value of 0.3
+                      Units: -
+                      Range: 0.1 - 0.5
+                      Default: 0.3
                 </comment>
             </textvar>
 
@@ -1009,18 +1012,18 @@ The option "numCPUs_parallelNumba" may take the following values:
                     More than the transpiration is added e.g to prevent salinisation
                 </comment>
             </textvar>
-            
-            <textvar name="IrrigationWaterReUseM3" value="0.0">           
-                <comment>           
-                  Annual amount (m3) of treated wastewater reused for irrigation                 
-                </comment>           
+
+            <textvar name="IrrigationWaterReUseM3" value="0.0">
+                <comment>
+                  Annual amount (m3) of treated wastewater reused for irrigation
+                </comment>
             </textvar>
-                       
-            <textvar name="IrrigationWaterReUseNumDays" value="143">          
-                <comment>           
-                  Number of days over which the annual amount of treated wastewater for irrigation is used                
-                </comment>           
-            </textvar>     
+
+            <textvar name="IrrigationWaterReUseNumDays" value="143">
+                <comment>
+                  Number of days over which the annual amount of treated wastewater for irrigation is used
+                </comment>
+            </textvar>
 
             <textvar name="LivestockConsumptiveUseFraction" value="0.15">
                 <comment>
@@ -1295,7 +1298,7 @@ The option "numCPUs_parallelNumba" may take the following values:
                     </comment>
                 </textvar>
 
-                <textvar name="ReservoirInitialFillValue" value="-9999">
+                <textvar name="ReservoirInitialFill" value="-9999">
                     <comment>
                         Initial reservoir fill fraction
                         -9999 sets initial fill to normal storage limit
@@ -1406,7 +1409,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 -->
 
         <textvar name="numCPUs_parallelNumba" value="$(numCPUs_parallelNumba)"/>
-        
+
         <textvar name="OutputMapsChunks" value="1"/>
         <textvar name="OutputMapsDataType" value="float64"/>
         <textvar name="NetCDFTimeChunks" value="auto"/>
@@ -2222,14 +2225,6 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
             </textvar>
 
-            <textvar name="LAIOfDay" value="$(PathTables)/laiofday.txt">
-                <comment>
-                    table with days for each LAI maps
-                    1st column: range of days; 2nd column: suffix of LAI map
-                </comment>
-            </textvar>
-
-
         </group>
 
         <group>
@@ -2238,13 +2233,6 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 INPUT WATER USE MAPS AND PARAMETERS
                 **************************************************************
             </comment>
-
-            <textvar name="FirstDayOfMonth" value="$(PathTables)/firstdayofmonth.txt">
-                <comment>
-                    table with days for each water use maps
-                    1st column: range of days; 2nd column: suffix of wuse map
-                </comment>
-            </textvar>
 
             <textvar name="DomesticDemandMaps" value="$(PathWaterUse)/$(PrefixWaterUseDomestic)">
                 <comment>
@@ -2359,18 +2347,18 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     More than the transpiration is added e.g to prevent salinisation
                 </comment>
             </textvar>
-            
-             <textvar name="IrrigationWaterReUseM3" value="$(IrrigationWaterReUseM3)">           
-                 <comment>           
-                  Annual amount (m3) of treated wastewater reused for irrigation                  
-                 </comment>    
-            </textvar>
-                       
-            <textvar name="IrrigationWaterReUseNumDays" value="$(IrrigationWaterReUseNumDays)">      
+
+             <textvar name="IrrigationWaterReUseM3" value="$(IrrigationWaterReUseM3)">
                  <comment>
-                  Number of days over which the annual amount of treated wastewater for irrigation is used                
-                 </comment>          
-            </textvar>            
+                  Annual amount (m3) of treated wastewater reused for irrigation
+                 </comment>
+            </textvar>
+
+            <textvar name="IrrigationWaterReUseNumDays" value="$(IrrigationWaterReUseNumDays)">
+                 <comment>
+                  Number of days over which the annual amount of treated wastewater for irrigation is used
+                 </comment>
+            </textvar>
 
             <textvar name="MapIrrigationCropCoef" value="$(PathRoot)/maps/cropcoef_i">
                 <comment>
@@ -4564,56 +4552,42 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="ReservoirInitialFillValue" value="$(ReservoirInitialFillValue)">
+                <textvar name="ReservoirInitialFill" value="$(ReservoirInitialFill)">
                     <comment>
                         Initial reservoir storage (fraction)
                     </comment>
                 </textvar>
 
-
                 <comment>
                     Input tables
                 </comment>
 
-                <textvar name="TabTotStorage" value="$(PathTables)/rstor_687.txt">
+                <textvar name="ReservoirTotalStorage" value="$(PathTables)/rstor_687.txt">
                     <comment>
                         Total reservoir storage capacity [cu m]
                     </comment>
                 </textvar>
 
-                <textvar name="TabConservativeStorageLimit" value="$(PathTables)/rclim_687.txt">
+                <textvar name="ReservoirFloodOutflow" value="$(PathTables)/rndq_687_97th.txt">
                     <comment>
-                        Conservative reservoir storage (fraction, typically 0.07)
+                        Reservoir inflow associated with the 100-year return period.
+                        It is modified by a calibration parameter (`ReservoirFloodOutflowFactor`) to
+                        define the inflow above which the reservoir switches to flood control mode
+                            Units: m³/s
                     </comment>
                 </textvar>
 
-                <textvar name="TabNormalStorageLimit" value="$(PathTables)/rnlim_687_67th.txt">
+                <textvar name="ReservoirNormalOutflow" value="$(PathTables)/rnormq_687_50th.txt">
                     <comment>
-                        Normal reservoir storage limit (fraction, typically 0.65)
+                        Reservoir average inflow used to define the normal reservoir release
+                            Units: m³/s
                     </comment>
                 </textvar>
 
-                <textvar name="TabFloodStorageLimit" value="$(PathTables)/rflim_687_97th.txt">
+                <textvar name="ReservoirMinOutflow" value="$(PathTables)/rminq_687_5th.txt">
                     <comment>
-                        Flood reservoir storage limit (fraction, typically 0.90)
-                    </comment>
-                </textvar>
-
-                <textvar name="TabNonDamagingOutflowQ" value="$(PathTables)/rndq_687_97th.txt">
-                    <comment>
-                        Non damaging reservoir outflow Q [cu m / s]
-                    </comment>
-                </textvar>
-
-                <textvar name="TabNormalOutflowQ" value="$(PathTables)/rnormq_687_50th.txt">
-                    <comment>
-                        Normal outflow Q [cu m / s]
-                    </comment>
-                </textvar>
-
-                <textvar name="TabMinOutflowQ" value="$(PathTables)/rminq_687_5th.txt">
-                    <comment>
-                        Minimum reservoir outflow Q [cu m / s]
+                        Minimum reservoir release:
+                            Units: m³/s
                     </comment>
                 </textvar>
 
@@ -4652,17 +4626,17 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="adjust_Normal_Flood" value="$(adjust_Normal_Flood)">
+                <textvar name="ReservoirFloodStorage" value="$(ReservoirFloodStorage)">
                     <comment>
-                        adjusting the balance between normal and flood storage
-                        big values (= closer to 1.0 = close to flood) results in keeping the outflow longer at rnormq
+                      Fraction of the total reservoir storage above which the reservoirs enters
+                      the flood control zone.
                     </comment>
                 </textvar>
 
-                <textvar name="ReservoirRnormqMult" value="$(ReservoirRnormqMult)">
+                <textvar name="ReservoirFloodOutflowFactor" value="$(ReservoirFloodOutflowFactor)">
                     <comment>
-                        Reservoir rnormq (normal outflow)
-                        fraction of the value in table rnormq.txt range: 0.5 - 2
+                      Factor of the 100-year return inflow that defines a flood event, i.e., the
+                      reservoir routine switches to flood control mode.
                     </comment>
                 </textvar>
 

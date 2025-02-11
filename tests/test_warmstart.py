@@ -38,6 +38,9 @@ class TestWarmStart():
         'cold': os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/cold.xml'),
         'warm': os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/warm.xml')
     }
+    case_dir = os.path.join(os.path.dirname(__file__), 'data', 'LF_ETRS89_UseCase')
+    out_dir = os.path.join(case_dir, 'out')
+    mk_path_out(out_dir)
     
     def test_warmstart_daily(self):
         step_start = '02/01/2016 06:00'
@@ -156,3 +159,4 @@ class TestWarmStart():
             glob.glob(os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/init*'))
         for folder in folders_list:
             shutil.rmtree(folder)
+        shutil.rmtree(self.out_dir)
