@@ -4789,7 +4789,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
                 <textvar name="ReservoirSites" value="$(PathRoot)/maps/ec_res">
                     <comment>
-                        Map with location of reservoirs (number]
+                        Map with location of reservoirs (number)
                     </comment>
                 </textvar>
 

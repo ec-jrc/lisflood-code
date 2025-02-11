@@ -38,9 +38,6 @@ class TestWarmStart():
         'cold': os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/cold.xml'),
         'warm': os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/settings/warm.xml')
     }
-    case_dir = os.path.join(os.path.dirname(__file__), 'data', 'LF_ETRS89_UseCase')
-    out_dir = os.path.join(case_dir, 'out')
-    mk_path_out(out_dir)
     
     def test_warmstart_daily(self):
         step_start = '02/01/2016 06:00'
@@ -62,8 +59,13 @@ class TestWarmStart():
             'repsimulateReservoirs',
         ]
         check_every = 13  # steps
+
+        case_dir = os.path.join(os.path.dirname(__file__), 'data', 'LF_ETRS89_UseCase')
+        out_dir = os.path.join(case_dir, 'out')
+        mk_path_out(out_dir)
+        
         # init
-        path_out_init = mk_path_out('data/LF_ETRS89_UseCase/out/init{}'.format(dt_sec))
+        path_out_init = mk_path_out(os.path.join(out_dir,'init{}'.format(dt_sec)))
         settings_prerun = setoptions(self.settings_files['prerun'],
                                      opts_to_unset=modules_to_unset,
                                      vars_to_set={'DtSec': dt_sec,
@@ -78,7 +80,7 @@ class TestWarmStart():
         # long run
         lzavin_path = settings_prerun.binding['LZAvInflowMap']
         avgdis_path = settings_prerun.binding['AvgDis']
-        path_out_reference = mk_path_out('data/LF_ETRS89_UseCase/out/longrun_reference{}'.format(dt_sec))
+        path_out_reference = mk_path_out(os.path.join(out_dir,'longrun_reference{}'.format(dt_sec)))
         settings_longrun = setoptions(self.settings_files['cold'],
                                       opts_to_unset=modules_to_unset,
                                       vars_to_set={'StepStart': step_start,
@@ -94,7 +96,7 @@ class TestWarmStart():
         # warm run (1. Cold start)
         run_number = 1
         cold_start_step_end = step_start
-        path_out = mk_path_out('data/LF_ETRS89_UseCase/out/run{}_{}'.format(dt_sec, run_number))
+        path_out = mk_path_out(os.path.join(out_dir,'run{}_{}'.format(dt_sec, run_number)))
         settings_coldstart = setoptions(self.settings_files['cold'],
                                         opts_to_unset=modules_to_unset,
                                         vars_to_set={'StepStart': step_start,
@@ -122,7 +124,7 @@ class TestWarmStart():
         while warm_step_start <= step_limit:
             run_number += 1
             path_init = prev_settings.output_dir
-            path_out = mk_path_out('data/LF_ETRS89_UseCase/out/run{}_{}'.format(dt_sec, run_number))
+            path_out = mk_path_out(os.path.join(out_dir,'run{}_{}'.format(dt_sec, run_number)))
 
             settings_warmstart = setoptions(self.settings_files['warm'],
                                             opts_to_unset=modules_to_unset,
@@ -159,4 +161,3 @@ class TestWarmStart():
             glob.glob(os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/init*'))
         for folder in folders_list:
             shutil.rmtree(folder)
-        shutil.rmtree(self.out_dir)

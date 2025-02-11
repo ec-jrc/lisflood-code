@@ -484,22 +484,22 @@ You can use builtin path variables in this template and reference to other paths
                 </comment>
             </textvar>
 
-            <textvar name="adjust_Normal_Flood" value="$(PathParams)/params_adjust_Normal_Flood">
+            <textvar name="ReservoirFloodStorage" value="$(PathTables)/rflim.txt">
                 <comment>
-					default: 0.8 [-]
-                    $(PathParams)/adjust_Normal_Flood
-                    adjusting the balance between normal and flood storage
-                    big values (= closer to 1.0 = close to flood) results in keeping the outflow longer at rnormq
-                    Range 0.01 - 0.99
+                  Fraction of the total reservoir storage above which the reservoirs enters
+                  the flood control zone.
                 </comment>
             </textvar>
 
-            <textvar name="ReservoirRnormqMult" value="$(PathParams)/params_ReservoirRnormqMult">
+            <textvar name="ReservoirFloodOutflowFactor" value="0.3">
                 <comment>
-					default: 1.0 [-]
-                    $(PathParams)/ReservoirRnormqMult
-                    Reservoir rnormq (normal outflow)
-                    fraction of the value in table rnormq.txt range: 0.5 - 2
+                    Factor of the 100-year return inflow (`ReservoirFloodOutflow`) that defines the inflow
+                    value that switches, when exceeded, the reservoir routine to flood control mode.
+                    It can be a map (NetCDF), a table (TXT) or a float. Negative values will be replaced by
+                    the default value of 0.3
+                      Units: -
+                      Range: 0.1 - 0.5
+                      Default: 0.3
                 </comment>
             </textvar>
 
@@ -1463,7 +1463,7 @@ You can use builtin path variables in this template and reference to other paths
                 </comment>
             </textvar>
 
-            <textvar name="UpAreaTrans" value="$(PathRoot)/maps/upArea">
+            <textvar name="UpAreaTrans" value="$(PathRoot)/maps/ec_upArea">
                 <comment>
                     upstream area
                 </comment>
@@ -1565,7 +1565,7 @@ You can use builtin path variables in this template and reference to other paths
                 </comment>
             </textvar>
 
-            <textvar name="ReservoirInitialFillValue" value="-9999">
+            <textvar name="ReservoirInitialFill" value="-9999">
                 <comment>
 					Initial reservoir fill fraction [-]
 					Cold start: -9999 sets initial fill to normal storage limit
@@ -5157,56 +5157,43 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="ReservoirInitialFillValue" value="$(ReservoirInitialFillValue)">
+                <textvar name="ReservoirInitialFill" value="$(ReservoirInitialFill)">
                     <comment>
                         Initial reservoir storage (fraction)
                     </comment>
                 </textvar>
 
-
                 <comment>
                     Input tables
                 </comment>
 
-				<textvar name="TabTotStorage" value="$(PathTables)/rtstor.txt">
+                <textvar name="ReservoirTotalStorage" value="$(PathTables)/rtstor.txt">
                     <comment>
-						Total reservoir storage capacity [m3]
+                      Total reservoir storage capacity
+                        Units: m³
                     </comment>
                 </textvar>
 
-				<textvar name="TabConservativeStorageLimit" value="$(PathTables)/rclim.txt">
+                <textvar name="ReservoirFloodOutflow" value="$(PathTables)/rndq.txt">
                     <comment>
-                        Conservative reservoir storage (fraction, typically 0.07)
+                      Reservoir inflow associated with the 100-year return period.
+                      It is modified by a calibration parameter (`ReservoirFloodOutflowFactor`) to
+                      define the inflow above which the reservoir switches to flood control mode
+                          Units: m³/s
                     </comment>
                 </textvar>
 
-				<textvar name="TabNormalStorageLimit" value="$(PathTables)/rnlim.txt">
+                <textvar name="ReservoirNormalOutflow" value="$(PathTables)/rnormq.txt">
                     <comment>
-                        Normal reservoir storage limit (fraction, typically 0.65)
+                      NReservoir average inflow used to define the normal reservoir release
+                            Units: m³/s
                     </comment>
                 </textvar>
 
-				<textvar name="TabFloodStorageLimit" value="$(PathTables)/rflim.txt">
+                <textvar name="ReservoirMinOutflow" value="$(PathTables)/rminq.txt">
                     <comment>
-                        Flood reservoir storage limit (fraction, typically 0.90)
-                    </comment>
-                </textvar>
-
-				<textvar name="TabNonDamagingOutflowQ" value="$(PathTables)/rndq.txt">
-                    <comment>
-						Non damaging reservoir outflow Q [m3 / s]
-                    </comment>
-                </textvar>
-
-				<textvar name="TabNormalOutflowQ" value="$(PathTables)/rnormq.txt">
-                    <comment>
-						Normal outflow Q [m3 / s]
-                    </comment>
-                </textvar>
-
-				<textvar name="TabMinOutflowQ" value="$(PathTables)/rminq.txt">
-                    <comment>
-						Minimum reservoir outflow Q [m3 / s]
+                      Minimum reservoir release:
+                          Units: m³/s
                     </comment>
                 </textvar>
 
@@ -5245,20 +5232,19 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="adjust_Normal_Flood" value="$(adjust_Normal_Flood)">
+                <textvar name="ReservoirFloodStorage" value="$(ReservoirFloodStorage)">
                     <comment>
-						adjusting the balance between normal and flood storage [-]
-                        big values (= closer to 1.0 = close to flood) results in keeping the outflow longer at rnormq
+                      Fraction of the total reservoir storage above which the reservoirs enters
+                      the flood control zone.
                     </comment>
                 </textvar>
 
-                <textvar name="ReservoirRnormqMult" value="$(ReservoirRnormqMult)">
+                <textvar name="ReservoirFloodOutflowFactor" value="$(ReservoirFloodOutflowFactor)">
                     <comment>
-						Multiplier [-] for rservoir rnormq (normal outflow)
-                        fraction of the value in table rnormq.txt range: 0.5 - 2
+                      Factor of the 100-year return inflow that defines a flood event, i.e., the
+                      reservoir routine switches to flood control mode.
                     </comment>
                 </textvar>
-
             </group>
 
 
