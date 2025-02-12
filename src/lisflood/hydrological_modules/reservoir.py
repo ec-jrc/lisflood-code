@@ -317,17 +317,11 @@ class Reservoir(HydroModule):
 
             # Check ReservoirStorageM3CC for negative values and set them to zero, then update the outflow
             if any(self.var.ReservoirStorageM3CC < 0):
+                warnings.warn(LisfloodWarning("WARNING! ReservoirStorageM3CC contains negative values."))
                 self.var.ReservoirStorageM3CC[self.var.ReservoirStorageM3CC < 0] = 0
                 outflow_m3 = ReservoirStorageM3CC_init + inflow_m3 - self.var.ReservoirStorageM3CC
 
             self.var.ReservoirFillCC = self.var.ReservoirStorageM3CC / self.var.TotalReservoirStorageM3CC
-
-
-
-            # CM: Check ReservoirStorageM3CC for negative values and set them to zero
-            # CM This can be removed
-            self.var.ReservoirFillCC[np.isnan(self.var.ReservoirFillCC)] = 0
-            self.var.ReservoirFillCC[self.var.ReservoirFillCC < 0] = 0
 
             # expanding the size as input for routing routine
             # this is released to the channel again at each sub timestep
