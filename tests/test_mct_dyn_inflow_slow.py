@@ -113,9 +113,9 @@ class TestInflow():
             shutil.rmtree(out_path, ignore_errors=True)
 
 
-class TestInflowShort(TestInflow):
+class TestInflowLong(TestInflow):
 
-    run_type = 'short'
+    run_type = 'long'
 
     def test_inflow_6h(self):
         self.run("02/01/2016 06:00", "30/12/2016 06:00", 21600,'6h')
@@ -127,13 +127,3 @@ class TestInflowShort(TestInflow):
     def cleaning(self,):
         self.teardown_method()
 
-
-
-
-# @pytest.mark.slow
-# class TestInflowLong(TestInflow):
-#
-#     run_type = 'long'
-#
-#     def test_inflow_short(self):
-#         self.run("02/01/1986 00:00", "01/01/2018 00:00")

@@ -35,7 +35,6 @@ class TestLatLon():
         out_path = os.path.join(self.case_dir, self.run_type)
         shutil.rmtree(out_path, ignore_errors=True)
 
-
 class TestLatLonShort(TestLatLon):
 
     run_type = 'short'

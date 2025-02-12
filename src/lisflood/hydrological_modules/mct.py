@@ -235,7 +235,7 @@ def MCTRouting_single(
     Dm1: Reynolds number at t+1 for state file
     """
 
-    eps = 1e-06
+    eps = 1e-12
 
     # Calc O' first guess for the outflow at time t+dt
     # O'(t+dt)=O(t)+(I(t+dt)-I(t))
@@ -336,6 +336,9 @@ def MCTRouting_single(
     # q1m cannot be smaller than eps or it will cause instability
     if q1mm < eps:
         q1mm = eps
+        if ql < 0: ql = 0
+        # prevent water abstraction or open water evaporation from drying out the channel and keep extracting water
+        # NOTE THIS GENERATES AN ERROR IN THE WATER BALANCE
         V11 = V00 + (q0mm + ql - q1mm) * dt
 
     # q11 Outflow at O(t+dt)

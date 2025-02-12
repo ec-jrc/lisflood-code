@@ -800,9 +800,15 @@ Multiplier []  applied to ChanSdXdY
 
       <textvar name="PrevDischarge" value="$(PathInit)/chanq">
         <comment>
-          initial discharge [m3/s] from previous run for lakes, reservoirs and transmission loss ChanQ
-          only needed for lakes reservoirs and transmission loss
-          -9999: use 0
+          Outflow discharge at the end of previous step (instantaneous) [m3/s] 
+          Cold start: -9999 sets initial value to 0
+        </comment>
+      </textvar>
+
+      <textvar name="PrevDischargeAvg" value="$(PathInit)/chanqavgdt">
+        <comment>
+          Outflow average discharge on previous routing sub-step (average) [m3/s]
+          Cold start: -9999 sets initial value to 0
         </comment>
       </textvar>
 
@@ -2384,11 +2390,19 @@ Multiplier []  applied to ChanSdXdY
       </textvar>
 
       <textvar name="PrevDischarge" value="$(PrevDischarge)">
-      <comment>
-      Outflow discharge at the end of previous step (instantaneous) [m3/s] 
-      -9999: use 0
-      </comment>
+        <comment>
+          Outflow discharge at the end of previous step (instantaneous) [m3/s] 
+          Cold start: -9999 sets initial value to 0
+        </comment>
       </textvar>
+
+      <textvar name="PrevDischargeAvg" value="$(PrevDischargeAvg)">
+        <comment>
+          Outflow average discharge on previous routing sub-step (average) [m3/s]
+          Cold start: -9999 sets initial value to 0
+        </comment>
+      </textvar>
+
 
       <textvar name="PrevCmMCTInitValue" value="$(PrevCmMCTInitValue)">
       <comment>
@@ -2977,9 +2991,15 @@ Multiplier []  applied to ChanSdXdY
       </textvar>
 
       <textvar name="ChanQState" value="$(PathOut)/chanq">
-      <comment>
-      Reported istantaneous discharge at end of computation step [cu m/s] ChanQ
-      </comment>
+        <comment>
+          Reported istantaneous discharge at end of computation step [cu m/s] ChanQ
+        </comment>
+      </textvar>
+
+      <textvar name="ChanQAvgDtState" value="$(PathOut)/chanqavgdt">
+        <comment>
+          Reported average discharge over last routing sub-step used to initialise lakes [cu m/s] ChanQAvgDt
+        </comment>
       </textvar>
 
       <textvar name="PrevCmMCTState" value="$(PathOut)/prevcm">
@@ -3254,9 +3274,15 @@ Multiplier []  applied to ChanSdXdY
       </textvar>
 
       <textvar name="ChanQEnd" value="$(PathOut)/chanq.end">
-      <comment>
-      Reported istantaneous discharge at end of computation step [cu m/s] ChanQ
-      </comment>
+        <comment>
+          Reported istantaneous discharge at end of computation step [cu m/s] ChanQ
+        </comment>
+      </textvar>
+
+      <textvar name="ChanQAvgDtEnd" value="$(PathOut)/chanqavgdt.end">
+        <comment>
+          Reported average discharge over last routing sub-step used to initialise lakes [cu m/s] ChanQAvgDt
+        </comment>
       </textvar>
 
       <textvar name="DischargeEnd" value="$(PathOut)/dis.end">

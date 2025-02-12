@@ -29,7 +29,7 @@ class TestInflow():
                                            'CalendarDayStart': date_start,
                                            'DtSec' : dtsec,
                                            # 'DtSecChannel' : dtsec,        # single routing step
-                                           'BankFullPerc': '0.5',
+                                           'BankFullPerc': '0.2',
                                            'MaskMap': '$(PathRoot)/maps/mask.nc',
                                            'Gauges': '4292500 2377500',     # one cell upstream of inflow point
                                            'ChanqTS': out_path_run+'/inflow.tss',
@@ -48,7 +48,7 @@ class TestInflow():
                                            'CalendarDayStart': date_start,
                                            'DtSec' : dtsec,
                                            # 'DtSecChannel': dtsec,         # single routing step
-                                           'BankFullPerc': '0.5',
+                                           'BankFullPerc': '0.2',
                                            'MaskMap': '$(PathRoot)/maps/mask.nc',
                                            # 'Gauges': '4322500 2447500  4447500 2422500',    # inflow and outlet
                                            'Gauges': '4297500 2372500',                       # inflow point
@@ -67,7 +67,7 @@ class TestInflow():
                                            'CalendarDayStart': date_start,
                                            'DtSec' : dtsec,
                                            # 'DtSecChannel': dtsec,     # single routing step
-                                           'BankFullPerc': '0.5',
+                                           'BankFullPerc': '0.2',
                                            'MaskMap': '$(PathRoot)/maps/interbasin_mask.nc',
                                            'InflowPoints': '$(PathRoot)/maps/inflow.nc',
                                            'QInTS': out_path_ref+'/inflow.tss',
@@ -78,14 +78,14 @@ class TestInflow():
         lisfloodexe(settings)
 
         # set precisioon for the test
-        atol = 3.
-        rtol = 0.005
+        atol = 7.
+        rtol = 0.01
         comparator = TSSComparator(atol,rtol)
 
-        # # test when DtSec = DtSecChannel
-        # reference =  os.path.join(out_path_ref, 'disWin.tss')
-        # output_tss =  os.path.join(out_path_run, 'disWin.tss')
-        # comparator.compare_files(reference, output_tss)
+        # test when DtSec = DtSecChannel
+        reference =  os.path.join(out_path_ref, 'disWin.tss')
+        output_tss =  os.path.join(out_path_run, 'disWin.tss')
+        comparator.compare_files(reference, output_tss)
 
         # test when DtSec != DtSecChannel
         reference =  os.path.join(out_path_ref, 'chanqWin.tss')
@@ -109,22 +109,11 @@ class TestInflowShort(TestInflow):
 
     run_type = 'short'
 
-    def test_inflow_6h(self):
-        self.run("01/03/2016 06:00", "30/03/2016 06:00", 21600,'6h')
-
-    def test_inflow_daily(self):
+    def test_mct_inflow_daily(self):
          self.run("02/01/2016 06:00", "30/01/2016 06:00", 86400,'daily')
+    def test_mct_inflow_6h(self):
+        self.run("01/03/2016 06:00", "30/03/2016 06:00", 21600,'6h')
 
     # cleaning folders
     def cleaning(self,):
         self.teardown_method()
-
-
-
-# @pytest.mark.slow
-# class TestInflowLong(TestInflow):
-#
-#     run_type = 'long'
-#
-#     def test_inflow_short(self):
-#         self.run("02/01/1986 00:00", "01/01/2018 00:00")

@@ -4959,7 +4959,7 @@ Map with location of reservoirs (number)
 </comment>
 </textvar>
 
-<textvar name="ReservoirInitialFillValue" value="$(ReservoirInitialFillValue)">
+<textvar name="ReservoirInitialFill" value="$(ReservoirInitialFill)">
 <comment>
 Initial reservoir storage (fraction)
 </comment>

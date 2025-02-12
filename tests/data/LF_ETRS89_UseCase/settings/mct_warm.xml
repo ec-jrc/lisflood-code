@@ -67,12 +67,11 @@ You can use builtin path variables in this template and reference to other paths
         <setoption choice="1" name="writeNetcdf"/>
 
 
-
         #-----------------------------------------------------------
         # report time series
         #-----------------------------------------------------------
         # report discharge TS
-        <setoption choice="1" name="repDischargeTs"/>         
+        <setoption choice="1" name="repDischargeTs"/>
 
         # report gauges and sites
 		# sites (pixel average)
@@ -84,11 +83,11 @@ You can use builtin path variables in this template and reference to other paths
         <setoption choice="0" name="repMeteoUpsGauges"/>
 
         # report reservoirs and lakes
-        <setoption choice="0" name="repsimulateLakes"/>
-        <setoption choice="0" name="repsimulateReservoirs"/>
+        <setoption choice="1" name="repsimulateLakes"/>        
+        <setoption choice="1" name="repsimulateReservoirs"/>    
 
         # report mass balance
-        <setoption choice="1" name="repMBTs"/>
+        <setoption choice="0" name="repMBTs"/>
 
         #-----------------------------------------------------------
         # report maps
@@ -309,14 +308,14 @@ You can use builtin path variables in this template and reference to other paths
                 </comment>
             </textvar>
 
-            <textvar name="StepStart" value="02/01/2016 06:00">
+            <textvar name="StepStart" value="03/01/2016 06:00">
                 <comment>
 					01/01/YEAR_START 12:00
                     Number of first time step in simulation
                 </comment>
             </textvar>
 
-            <textvar name="StepEnd" value="02/07/2016 06:00">
+            <textvar name="StepEnd" value="15/01/2016 06:00">
               <comment>
 					01/01/YEAR_END 06:00
 					Number of last time step in simulation
@@ -478,22 +477,22 @@ You can use builtin path variables in this template and reference to other paths
                 </comment>
             </textvar>
 
-            <textvar name="adjust_Normal_Flood" value="$(PathParams)/params_adjust_Normal_Flood">
+            <textvar name="ReservoirFloodStorage" value="$(PathTables)/rflim.txt">
                 <comment>
-					default: 0.8 [-]
-                    $(PathParams)/adjust_Normal_Flood
-                    adjusting the balance between normal and flood storage
-                    big values (= closer to 1.0 = close to flood) results in keeping the outflow longer at rnormq
-                    Range 0.01 - 0.99
+                  Fraction of the total reservoir storage above which the reservoirs enters
+                  the flood control zone.
                 </comment>
             </textvar>
 
-            <textvar name="ReservoirRnormqMult" value="$(PathParams)/params_ReservoirRnormqMult">
+            <textvar name="ReservoirFloodOutflowFactor" value="0.3">
                 <comment>
-					default: 1.0 [-]
-                    $(PathParams)/ReservoirRnormqMult
-                    Reservoir rnormq (normal outflow)
-                    fraction of the value in table rnormq.txt range: 0.5 - 2
+                    Factor of the 100-year return inflow (`ReservoirFloodOutflow`) that defines the inflow
+                    value that switches, when exceeded, the reservoir routine to flood control mode.
+                    It can be a map (NetCDF), a table (TXT) or a float. Negative values will be replaced by
+                    the default value of 0.3
+                      Units: -
+                      Range: 0.1 - 0.5
+                      Default: 0.3
                 </comment>
             </textvar>
 
@@ -551,7 +550,7 @@ You can use builtin path variables in this template and reference to other paths
                 </comment>
             </textvar>
 
-            <textvar name="PathInit" value="$(PathRoot)/out">
+            <textvar name="PathInit" value="$(PathRoot)/init">
                 <comment>
 					INITDIR					
 					Path of the initial value maps e.g. lzavin.map (org=$(PathRoot)/outPo)
@@ -641,7 +640,7 @@ You can use builtin path variables in this template and reference to other paths
                 **************************************************************
             </comment>
 
-            <textvar name="timestepInit" value="12/02/2016 00:00">
+            <textvar name="timestepInit" value="02/01/2016 06:00">
                 <comment>
                     if init. condition are stored as netCDF with different time steps
                     this variable indicates which time step to use
@@ -808,6 +807,13 @@ You can use builtin path variables in this template and reference to other paths
 			<textvar name="PrevDischarge" value="$(PathInit)/chanq">
                 <comment>
 					Outflow discharge at the end of previous step (instantaneous) [m3/s] 
+					Cold start: -9999 sets initial value to 0
+                </comment>
+            </textvar>
+
+            <textvar name="PrevDischargeAvg" value="$(PathInit)/chanqavgdt">
+                <comment>
+					Outflow average discharge on previous routing sub-step (average) [m3/s]
 					Cold start: -9999 sets initial value to 0
                 </comment>
             </textvar>
@@ -1012,25 +1018,25 @@ You can use builtin path variables in this template and reference to other paths
                 </comment>
             </textvar>
 
-            <textvar name="PrefixWaterUseDomestic" value="dom_2014">
+            <textvar name="PrefixWaterUseDomestic" value="dom">
                 <comment>
                     prefix domestic water use maps
                 </comment>
             </textvar>
 
-            <textvar name="PrefixWaterUseLivestock" value="liv_2014">
+            <textvar name="PrefixWaterUseLivestock" value="liv">
                 <comment>
                     prefix livestock water use maps
                 </comment>
             </textvar>
 
-            <textvar name="PrefixWaterUseEnergy" value="ene_2014">
+            <textvar name="PrefixWaterUseEnergy" value="ene">
                 <comment>
                     prefix energy water use maps
                 </comment>
             </textvar>
 
-            <textvar name="PrefixWaterUseIndustry" value="ind_2014">
+            <textvar name="PrefixWaterUseIndustry" value="ind">
                 <comment>
                     prefix industry water use maps
                 </comment>
@@ -1273,13 +1279,6 @@ You can use builtin path variables in this template and reference to other paths
                 </comment>
             </textvar>
 
-            <textvar name="FirstDayOfMonth" value="$(PathTables)/firstdayofmonth.txt">
-                <comment>
-                    table with days for each water use maps
-                    1st column: range of days; 2nd column: suffix of wuse map
-                </comment>
-            </textvar>
-
 			<textvar name="MapIrrigationCropCoef" value="$(PathMapsTables)/cropcoef_i">
                 <comment>
 					Irrigation crop coefficient [-]
@@ -1433,7 +1432,7 @@ You can use builtin path variables in this template and reference to other paths
                 </comment>
             </textvar>
 
-            <textvar name="UpAreaTrans" value="$(PathRoot)/maps/upArea">
+            <textvar name="UpAreaTrans" value="$(PathRoot)/maps/ec_upArea">
                 <comment>
                     upstream area
                 </comment>
@@ -1533,7 +1532,7 @@ You can use builtin path variables in this template and reference to other paths
                 </comment>
             </textvar>
 
-			<textvar name="ReservoirInitialFillValue" value="$(PathInit)/rsfil">
+			<textvar name="ReservoirInitialFill" value="$(PathInit)/rsfil">
                 <comment>
 					Initial reservoir fill fraction [-]
 					Cold start: -9999 sets initial fill to normal storage limit
@@ -2395,6 +2394,13 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
             </textvar>
 
+            <textvar name="PrevDischargeAvg" value="$(PrevDischargeAvg)">
+                <comment>
+					Outflow average discharge on previous routing sub-step (average) [m3/s]
+					Cold start: -9999 sets initial value to 0
+                </comment>
+            </textvar>
+
             <textvar name="PrevCmMCTInitValue" value="$(PrevCmMCTInitValue)">
                 <comment>
 					Courant number at previous step for MCT routing
@@ -2569,13 +2575,6 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     leaf area index [m2/m2]
                 </comment>
             </textvar>
-
-            <textvar name="LAIOfDay" value="$(PathTables)/laiofday.txt">
-                <comment>
-                    table with days for each LAI maps
-                    1st column: range of days; 2nd column: suffix of LAI map
-                </comment>
-            </textvar>
         </group>
 
 
@@ -2585,13 +2584,6 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 INPUT WATER USE MAPS AND PARAMETERS
                 **************************************************************
             </comment>
-
-            <textvar name="FirstDayOfMonth" value="$(PathTables)/firstdayofmonth.txt">
-                <comment>
-                    table with days for each water use maps
-                    1st column: range of days; 2nd column: suffix of wuse map
-                </comment>
-            </textvar>
 
             <textvar name="DomesticDemandMaps" value="$(PathWaterUse)/$(PrefixWaterUseDomestic)">
                 <comment>
@@ -3003,6 +2995,12 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
+                <textvar name="ChanQAvgDtState" value="$(PathOut)/chanqavgdt">
+                    <comment>
+                        Reported average discharge over last routing sub-step used to initialise lakes [cu m/s] ChanQAvgDt
+                    </comment>
+                </textvar>
+
                 <textvar name="PrevCmMCTState" value="$(PathOut)/prevcm">
                     <comment>
                         Courant number at previous step for MCT routing
@@ -3280,6 +3278,12 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 <textvar name="ChanQEnd" value="$(PathOut)/chanq.end">
                     <comment>
                         Reported istantaneous discharge at end of computation step [cu m/s] ChanQ
+                    </comment>
+                </textvar>
+
+                <textvar name="ChanQAvgDtEnd" value="$(PathOut)/chanqavgdt.end">
+                    <comment>
+                        Reported average discharge over last routing sub-step used to initialise lakes [cu m/s] ChanQAvgDt
                     </comment>
                 </textvar>
 
@@ -5080,56 +5084,43 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="ReservoirInitialFillValue" value="$(ReservoirInitialFillValue)">
+                <textvar name="ReservoirInitialFill" value="$(ReservoirInitialFill)">
                     <comment>
                         Initial reservoir storage (fraction)
                     </comment>
                 </textvar>
 
-
                 <comment>
                     Input tables
                 </comment>
 
-				<textvar name="TabTotStorage" value="$(PathTables)/rtstor.txt">
+                <textvar name="ReservoirTotalStorage" value="$(PathTables)/rtstor.txt">
                     <comment>
-						Total reservoir storage capacity [m3]
+                      Total reservoir storage capacity
+                        Units: m³
                     </comment>
                 </textvar>
 
-				<textvar name="TabConservativeStorageLimit" value="$(PathTables)/rclim.txt">
+                <textvar name="ReservoirFloodOutflow" value="$(PathTables)/rndq.txt">
                     <comment>
-                        Conservative reservoir storage (fraction, typically 0.07)
+                      Reservoir inflow associated with the 100-year return period.
+                      It is modified by a calibration parameter (`ReservoirFloodOutflowFactor`) to
+                      define the inflow above which the reservoir switches to flood control mode
+                          Units: m³/s
                     </comment>
                 </textvar>
 
-				<textvar name="TabNormalStorageLimit" value="$(PathTables)/rnlim.txt">
+                <textvar name="ReservoirNormalOutflow" value="$(PathTables)/rnormq.txt">
                     <comment>
-                        Normal reservoir storage limit (fraction, typically 0.65)
+                      NReservoir average inflow used to define the normal reservoir release
+                            Units: m³/s
                     </comment>
                 </textvar>
 
-				<textvar name="TabFloodStorageLimit" value="$(PathTables)/rflim.txt">
+                <textvar name="ReservoirMinOutflow" value="$(PathTables)/rminq.txt">
                     <comment>
-                        Flood reservoir storage limit (fraction, typically 0.90)
-                    </comment>
-                </textvar>
-
-				<textvar name="TabNonDamagingOutflowQ" value="$(PathTables)/rndq.txt">
-                    <comment>
-						Non damaging reservoir outflow Q [m3 / s]
-                    </comment>
-                </textvar>
-
-				<textvar name="TabNormalOutflowQ" value="$(PathTables)/rnormq.txt">
-                    <comment>
-						Normal outflow Q [m3 / s]
-                    </comment>
-                </textvar>
-
-				<textvar name="TabMinOutflowQ" value="$(PathTables)/rminq.txt">
-                    <comment>
-						Minimum reservoir outflow Q [m3 / s]
+                      Minimum reservoir release:
+                          Units: m³/s
                     </comment>
                 </textvar>
 
@@ -5168,17 +5159,17 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="adjust_Normal_Flood" value="$(adjust_Normal_Flood)">
+                <textvar name="ReservoirFloodStorage" value="$(ReservoirFloodStorage)">
                     <comment>
-						adjusting the balance between normal and flood storage [-]
-                        big values (= closer to 1.0 = close to flood) results in keeping the outflow longer at rnormq
+                      Fraction of the total reservoir storage above which the reservoirs enters
+                      the flood control zone.
                     </comment>
                 </textvar>
 
-                <textvar name="ReservoirRnormqMult" value="$(ReservoirRnormqMult)">
+                <textvar name="ReservoirFloodOutflowFactor" value="$(ReservoirFloodOutflowFactor)">
                     <comment>
-						Multiplier [-] for rservoir rnormq (normal outflow)
-                        fraction of the value in table rnormq.txt range: 0.5 - 2
+                      Factor of the 100-year return inflow that defines a flood event, i.e., the
+                      reservoir routine switches to flood control mode.
                     </comment>
                 </textvar>
             </group>

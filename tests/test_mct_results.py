@@ -201,7 +201,8 @@ class TestTSSResults():
             shutil.rmtree(out_path, ignore_errors=True)
 
 
-
+# do_not_run
+# Update reference results
 class TestMCTResults(TestTSSResults):
 
     run_type = 'short'
@@ -219,7 +220,7 @@ class TestMCTResults(TestTSSResults):
     def test_MCT_daily_1h(self):
         self.run_mct("02/01/2016 06:00", "02/07/2016 06:00", 86400, 3600, 'daily_1h')
 
-    ###########################################
+    ##########################################
     # test results of MCT+SPLIT routing
     def test_MCTS_6h(self):
         self.run_mcts("02/01/2016 06:00", "02/07/2016 06:00", 21600, 21600,'6h')
@@ -232,7 +233,7 @@ class TestMCTResults(TestTSSResults):
     def test_MCTS_daily_1h(self):
         self.run_mcts("02/01/2016 06:00", "02/07/2016 06:00", 86400, 3600, 'daily_1h')
 
-    # #########################################
+    #########################################
     # test results of Kinemating routing
     def test_KIN_6h(self):
         self.run_kin("02/01/2016 06:00", "02/07/2016 06:00", 21600, 21600,'6h')
@@ -263,11 +264,3 @@ class TestMCTResults(TestTSSResults):
     def cleaning(self,):
         self.teardown_method()
 
-
-# @pytest.mark.slow
-# class TestInflowLong(TestInflow):
-#
-#     run_type = 'long'
-#
-#     def test_inflow_short(self):
-#         self.run("02/01/1986 00:00", "01/01/2018 00:00")

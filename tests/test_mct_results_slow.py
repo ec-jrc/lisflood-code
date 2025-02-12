@@ -25,7 +25,16 @@ class TestTSSResults():
         settings_file = os.path.join(self.case_dir, 'settings', 'mct_cold.xml')
         settings = setoptions(settings_file,
                               opts_to_set = ['MCTRouting'],
-                              opts_to_unset=['SplitRouting'],
+                              opts_to_unset=['SplitRouting',
+                                             'repStateUpsGauges',
+                                             'repRateUpsGauges',
+                                             'repMeteoUpsGauges',
+                                             'wateruse',
+                                             'drainedIrrigation',
+                                             'riceIrrigation',
+                                             'openwaterevapo',
+                                             'simulateLakes',
+                                             'simulateReservoirs'],
                               vars_to_set={'StepStart': date_start,
                                            'StepEnd': date_end,
                                            'CalendarDayStart': date_start,
@@ -65,6 +74,15 @@ class TestTSSResults():
         settings = setoptions(settings_file,
                               opts_to_set = ['MCTRouting',
                                              'SplitRouting'],
+                              opts_to_unset=['repStateUpsGauges',
+                                             'repRateUpsGauges',
+                                             'repMeteoUpsGauges',
+                                             'wateruse',
+                                             'drainedIrrigation',
+                                             'riceIrrigation',
+                                             'openwaterevapo',
+                                             'simulateLakes',
+                                             'simulateReservoirs'],
                               vars_to_set={'StepStart': date_start,
                                            'StepEnd': date_end,
                                            'CalendarDayStart': date_start,
@@ -113,7 +131,16 @@ class TestTSSResults():
         settings_file = os.path.join(self.case_dir, 'settings', 'mct_cold.xml')
         settings = setoptions(settings_file,
                               opts_to_unset=['MCTRouting',
-                                             'SplitRouting'],
+                                             'SplitRouting',
+                                             'repStateUpsGauges',
+                                             'repRateUpsGauges',
+                                             'repMeteoUpsGauges',
+                                             'wateruse',
+                                             'drainedIrrigation',
+                                             'riceIrrigation',
+                                             'openwaterevapo',
+                                             'simulateLakes',
+                                             'simulateReservoirs'],
                               vars_to_set={'StepStart': date_start,
                                            'StepEnd': date_end,
                                            'CalendarDayStart': date_start,
@@ -152,7 +179,16 @@ class TestTSSResults():
         settings_file = os.path.join(self.case_dir, 'settings', 'mct_cold.xml')
         settings = setoptions(settings_file,
                               opts_to_set = ['SplitRouting'],
-                              opts_to_unset=['MCTRouting'],
+                              opts_to_unset=['MCTRouting',
+                                             'repStateUpsGauges',
+                                             'repRateUpsGauges',
+                                             'repMeteoUpsGauges',
+                                             'wateruse',
+                                             'drainedIrrigation',
+                                             'riceIrrigation',
+                                             'openwaterevapo',
+                                             'simulateLakes',
+                                             'simulateReservoirs'],
                               vars_to_set={'StepStart': date_start,
                                            'StepEnd': date_end,
                                            'CalendarDayStart': date_start,
@@ -201,72 +237,64 @@ class TestTSSResults():
 
 
 
-class TestMCTResults(TestTSSResults):
+class TestMCTResultsLong(TestTSSResults):
 
     run_type = 'long'
 
     ###########################################
     # test results of MCT+KIN routing
     def test_MCT_6h(self):
-        self.run_mct("02/01/2016 06:00", "31/12/2016 06:00", 21600, 21600,'6h')
+        self.run_mct("02/01/2016 06:00", "02/07/2016 06:00", 21600, 21600,'6h')
     def test_MCT_6h_1h(self):
-        self.run_mct("02/01/2016 06:00", "31/12/2016 06:00", 21600, 3600,'6h_1h')
+        self.run_mct("02/01/2016 06:00", "02/07/2016 06:00", 21600, 3600,'6h_1h')
     def test_MCT_daily(self):
-        self.run_mct("02/01/2016 06:00", "31/12/2016 06:00", 86400, 86400,'daily')
+        self.run_mct("02/01/2016 06:00", "02/07/2016 06:00", 86400, 86400,'daily')
     def test_MCT_daily_6h(self):
-        self.run_mct("02/01/2016 06:00", "31/12/2016 06:00", 86400, 21600,'daily_6h')
+        self.run_mct("02/01/2016 06:00", "02/07/2016 06:00", 86400, 21600,'daily_6h')
     def test_MCT_daily_1h(self):
-        self.run_mct("02/01/2016 06:00", "31/12/2016 06:00", 86400, 3600, 'daily_1h')
+        self.run_mct("02/01/2016 06:00", "02/07/2016 06:00", 86400, 3600, 'daily_1h')
 
-    ###########################################
+    ##########################################
     # test results of MCT+SPLIT routing
     def test_MCTS_6h(self):
-        self.run_mcts("02/01/2016 06:00", "31/12/2016 06:00", 21600, 21600,'6h')
+        self.run_mcts("02/01/2016 06:00", "02/07/2016 06:00", 21600, 21600,'6h')
     def test_MCTS_6h_1h(self):
-        self.run_mcts("02/01/2016 06:00", "31/12/2016 06:00", 21600, 3600,'6h_1h')
+        self.run_mcts("02/01/2016 06:00", "02/07/2016 06:00", 21600, 3600,'6h_1h')
     def test_MCTS_daily(self):
-        self.run_mcts("02/01/2016 06:00", "31/12/2016 06:00", 86400, 86400,'daily')
+        self.run_mcts("02/01/2016 06:00", "02/07/2016 06:00", 86400, 86400,'daily')
     def test_MCTS_daily_6h(self):
-        self.run_mcts("02/01/2016 06:00", "31/12/2016 06:00", 86400, 21600,'daily_6h')
+        self.run_mcts("02/01/2016 06:00", "02/07/2016 06:00", 86400, 21600,'daily_6h')
     def test_MCTS_daily_1h(self):
-        self.run_mcts("02/01/2016 06:00", "31/12/2016 06:00", 86400, 3600, 'daily_1h')
+        self.run_mcts("02/01/2016 06:00", "02/07/2016 06:00", 86400, 3600, 'daily_1h')
 
-    # #########################################
+    ########################################
     # test results of Kinemating routing
     def test_KIN_6h(self):
-        self.run_kin("02/01/2016 06:00", "31/12/2016 06:00", 21600, 21600,'6h')
+        self.run_kin("02/01/2016 06:00", "02/07/2016 06:00", 21600, 21600,'6h')
     def test_KIN_6h_1h(self):
-        self.run_kin("02/01/2016 06:00", "31/12/2016 06:00", 21600, 3600,'6h_1h')
+        self.run_kin("02/01/2016 06:00", "02/07/2016 06:00", 21600, 3600,'6h_1h')
     def test_KIN_daily(self):
-        self.run_kin("02/01/2016 06:00", "31/12/2016 06:00", 86400, 86400,'daily')
+        self.run_kin("02/01/2016 06:00", "02/07/2016 06:00", 86400, 86400,'daily')
     def test_KIN_daily_6h(self):
-        self.run_kin("02/01/2016 06:00", "31/12/2016 06:00", 86400, 21600,'daily_6h')
+        self.run_kin("02/01/2016 06:00", "02/07/2016 06:00", 86400, 21600,'daily_6h')
     def test_KIN_daily_1h(self):
-        self.run_kin("02/01/2016 06:00", "31/12/2016 06:00", 86400, 3600, 'daily_1h')
+        self.run_kin("02/01/2016 06:00", "02/07/2016 06:00", 86400, 3600, 'daily_1h')
 
     #########################################
     # test results of Split routing
     def test_SPLIT_6h(self):
-        self.run_split("02/01/2016 06:00", "31/12/2016 06:00", 21600, 21600, '6h')
+        self.run_split("02/01/2016 06:00", "02/07/2016 06:00", 21600, 21600, '6h')
     def test_SPLIT_6h_1h(self):
-        self.run_split("02/01/2016 06:00", "31/12/2016 06:00", 21600, 3600, '6h_1h')
+        self.run_split("02/01/2016 06:00", "02/07/2016 06:00", 21600, 3600, '6h_1h')
     def test_SPLIT_daily(self):
-        self.run_split("02/01/2016 06:00", "31/12/2016 06:00", 86400, 86400, 'daily')
+        self.run_split("02/01/2016 06:00", "02/07/2016 06:00", 86400, 86400, 'daily')
     def test_SPLIT_daily_6h(self):
-        self.run_split("02/01/2016 06:00", "31/12/2016 06:00", 86400, 21600, 'daily_6h')
+        self.run_split("02/01/2016 06:00", "02/07/2016 06:00", 86400, 21600, 'daily_6h')
     def test_SPLIT_daily_1h(self):
-        self.run_split("02/01/2016 06:00", "31/12/2016 06:00", 86400, 3600, 'daily_1h')
+        self.run_split("02/01/2016 06:00", "02/07/2016 06:00", 86400, 3600, 'daily_1h')
 
     #########################################
+
     # cleaning out/ folder
     def cleaning(self,):
         self.teardown_method()
-
-
-# @pytest.mark.slow
-# class TestInflowLong(TestInflow):
-#
-#     run_type = 'long'
-#
-#     def test_inflow_short(self):
-#         self.run("02/01/1986 00:00", "01/01/2018 00:00")

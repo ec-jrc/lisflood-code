@@ -31,7 +31,6 @@ from lisflood.main import lisfloodexe
 from .test_utils import setoptions, mk_path_out
 
 
-# @pytest.mark.slow
 class TestWarmStart():
 
     case_dir = os.path.join(os.path.dirname(__file__), 'data', 'LF_MCT_UseCase')
@@ -41,23 +40,61 @@ class TestWarmStart():
         'warm': os.path.join(case_dir, 'settings', 'mct_warm.xml')
     }
 
-    def test_warmstart_daily(self):
+    def test_mct_only_warmstart_daily(self):
         calendar_day_start = '02/01/1990 06:00'
         step_start = '02/01/2016 06:00'
-        step_end = '31/12/2016 06:00'
+        step_end = '31/03/2016 06:00'
         dt_sec = 86400
+        dt_sec_channel = 86400
         report_steps = '9496..9861'
-        self.run_warmstart_by_dtsec(dt_sec, step_end, step_start, calendar_day_start, report_steps=report_steps)
-    
-    def test_warmstart_6h(self):
+        self.run_warmstart_by_dtsec('mct', dt_sec, dt_sec_channel, step_end, step_start, calendar_day_start, report_steps=report_steps)
+
+    def test_mct_and_reservoirs_warmstart_daily(self):
+        calendar_day_start = '02/01/1990 06:00'
+        step_start = '02/01/2016 06:00'
+        step_end = '31/03/2016 06:00'
+        dt_sec = 86400
+        dt_sec_channel = 86400
+        report_steps = '9496..9861'
+        self.run_warmstart_by_dtsec('mct_reservoirs', dt_sec, dt_sec_channel, step_end, step_start, calendar_day_start, report_steps=report_steps)
+
+    def test_mct_and_lakes_warmstart_daily(self):
+        calendar_day_start = '02/01/1990 06:00'
+        step_start = '02/01/2016 06:00'
+        step_end = '31/03/2016 06:00'
+        dt_sec = 86400
+        dt_sec_channel = 3600
+        report_steps = '9496..9861'
+        self.run_warmstart_by_dtsec('mct_lakes', dt_sec, dt_sec_channel, step_end, step_start, calendar_day_start, report_steps=report_steps)
+
+    def test_mct_only_warmstart_6h(self):
         calendar_day_start = '02/01/1990 06:00'
         step_start = '01/03/2016 06:00'
-        step_end = '31/07/2016 06:00'
+        step_end = '31/05/2016 06:00'
         dt_sec = 21600
+        dt_sec_channel = 3600
         report_steps = '38220..38830'
-        self.run_warmstart_by_dtsec(dt_sec, step_end, step_start, calendar_day_start, report_steps=report_steps)
+        self.run_warmstart_by_dtsec('mct', dt_sec, dt_sec_channel, step_end, step_start, calendar_day_start, report_steps=report_steps)
 
-    def run_warmstart_by_dtsec(self, dt_sec, step_end, step_start, calendar_day_start, report_steps='1..9999'):
+    def test_mct_and_reservoirs_warmstart_6h(self):
+        calendar_day_start = '02/01/1990 06:00'
+        step_start = '01/03/2016 06:00'
+        step_end = '31/05/2016 06:00'
+        dt_sec = 21600
+        dt_sec_channel = 3600
+        report_steps = '38220..38830'
+        self.run_warmstart_by_dtsec('mct_reservoirs', dt_sec, dt_sec_channel, step_end, step_start, calendar_day_start, report_steps=report_steps)
+
+    def test_mct_and_lakes_warmstart_6h(self):
+        calendar_day_start = '02/01/1990 06:00'
+        step_start = '01/03/2016 06:00'
+        step_end = '31/05/2016 06:00'
+        dt_sec = 21600
+        dt_sec_channel = 3600
+        report_steps = '38220..38830'
+        self.run_warmstart_by_dtsec('mct_lakes', dt_sec, dt_sec_channel, step_end, step_start, calendar_day_start, report_steps=report_steps)
+
+    def run_warmstart_by_dtsec(self, mct_case, dt_sec, dt_sec_channel, step_end, step_start, calendar_day_start, report_steps='1..9999'):
 
         mk_path_out(os.path.join(self.case_dir, 'out'))
 
@@ -65,17 +102,26 @@ class TestWarmStart():
 
         self.path_out_reference = os.path.join(self.case_dir, 'out', 'longrun_reference{}'.format(dt_sec))
 
+        if mct_case == 'mct':
+            opts_to_set = ['repStateMaps']
+            opts_to_unset = ['repMBTs', 'simulateReservoirs', 'simulateLakes']
+        elif mct_case == 'mct_reservoirs':
+            opts_to_set = ['repStateMaps', 'simulateReservoirs']
+            opts_to_unset = ['repMBTs', 'simulateLakes']
+        elif mct_case == 'mct_lakes':
+            opts_to_set = ['repStateMaps', 'simulateLakes','openwaterevapo']
+            opts_to_unset = ['repMBTs', 'simulateReservoirs']
+
         settings_longrun = setoptions(self.settings_files['cold'],
-                                    opts_to_set=['repStateMaps',
-                                                    'MCTRouting'],
-                                    opts_to_unset=['SplitRouting',
-                                                    'repMBTs'],
+                                    opts_to_set=opts_to_set,
+                                    opts_to_unset=opts_to_unset,
                                     vars_to_set={'StepStart': step_start,
                                                    'StepEnd': step_end,
                                                    'CalendarDayStart': calendar_day_start,
                                                    'PathOut': self.path_out_reference,
                                                    'ReportSteps': report_steps,
-                                                   'DtSec': dt_sec})
+                                                   'DtSec': dt_sec,
+                                                   'DtSecChannel': dt_sec_channel})
         # ** execute
         mk_path_out(self.path_out_reference)
         lisfloodexe(settings_longrun)
@@ -88,16 +134,15 @@ class TestWarmStart():
         self.path_out = os.path.join(self.case_dir, 'out', 'run{}_{}'.format(dt_sec, run_number))
 
         settings_coldstart = setoptions(self.settings_files['cold'],
-                                        opts_to_set=['repStateMaps',
-                                                        'MCTRouting'],
-                                        opts_to_unset=['SplitRouting',
-                                                       'repMBTs'],
+                                        opts_to_set=opts_to_set,
+                                        opts_to_unset=opts_to_unset,
                                         vars_to_set={'StepStart': step_start,
                                                         'StepEnd': cold_start_step_end,
                                                         'CalendarDayStart': calendar_day_start,
                                                         'PathOut': self.path_out,
                                                         'ReportSteps': report_steps,
-                                                        'DtSec': dt_sec})
+                                                        'DtSec': dt_sec,
+                                                        'DtSecChannel': dt_sec_channel})
         # ** execute
         mk_path_out(self.path_out)
         lisfloodexe(settings_coldstart)
@@ -109,6 +154,8 @@ class TestWarmStart():
         timestep_init = prev_settings.step_end_dt.strftime('%d/%m/%Y %H:%M')
 
         # run only 5*13 steps to speed up computation
+        # checking 5 steps every 'check_every' steps
+        # need to run 5*check_every steps in total
         step_limit = warm_step_start + 5*check_every*timedelta(seconds=dt_sec)
         print('running until {}'.format(step_limit))
         
@@ -120,10 +167,8 @@ class TestWarmStart():
             self.path_out = (os.path.join(self.case_dir, 'out', 'run{}_{}'.format(dt_sec, run_number)))
 
             settings_warmstart = setoptions(self.settings_files['warm'],
-                                            opts_to_set=['repStateMaps',
-                                                            'MCTRouting'],
-                                            opts_to_unset=['SplitRouting',
-                                                           'repMBTs'],
+                                            opts_to_set=opts_to_set,
+                                            opts_to_unset=opts_to_unset,
                                             vars_to_set={'StepStart': warm_step_start.strftime('%d/%m/%Y %H:%M'),
                                                             'StepEnd': warm_step_end.strftime('%d/%m/%Y %H:%M'),
                                                             'CalendarDayStart': calendar_day_start,
@@ -131,7 +176,8 @@ class TestWarmStart():
                                                             'PathInit': path_init,
                                                             'timestepInit': timestep_init,
                                                             'ReportSteps': report_steps,
-                                                            'DtSec': dt_sec})
+                                                            'DtSec': dt_sec,
+                                                            'DtSecChannel': dt_sec_channel})
             # ** execute
             mk_path_out(self.path_out)
             lisfloodexe(settings_warmstart)

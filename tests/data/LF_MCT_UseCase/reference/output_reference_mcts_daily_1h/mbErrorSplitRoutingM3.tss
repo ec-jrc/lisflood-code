@@ -1,4 +1,4 @@
-timeseries valuescale.scalar settingsfile: /perm/mocm/proj/MUSKINGUM/src/lisflood-code/tests/data/MCT_UseCase/settings/mct_cold_for_results_generation.xml date: Tue Jul 16 17:03:09 2024
+timeseries valuescale.scalar settingsfile: /perm/mocm/prg/oslisflood/jrc/lisflood-code/tests/data/LF_MCT_UseCase/settings/mct_cold_for_results_generation.xml date: Tue Jan 28 16:58:52 2025
 2
 timestep
 1
@@ -60,7 +60,7 @@ timestep
        56    -0.00556932
        57    -0.00556932
        58    -0.00556932
-       59    -0.00556932
+       59    -0.00556933
        60    -0.00556932
        61    -0.00556932
        62    -0.00556932
