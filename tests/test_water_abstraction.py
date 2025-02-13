@@ -1,18 +1,14 @@
 from __future__ import absolute_import
 import os
-import datetime
-import shutil
-import pytest
 
 from lisfloodutilities.compare.nc import NetCDFComparator
 
 from lisflood.main import lisfloodexe
-from lisflood.global_modules.settings import LisSettings
 
 from .test_utils import setoptions, mk_path_out, ETRS89TestCase
 
 
-class TestCaching(ETRS89TestCase):
+class TestWaterAbstraction(ETRS89TestCase):
     def test_waterabstraction_24h(self):
       dt_sec = 86400
       self.run_lisflood_waterabstraction(dt_sec)
