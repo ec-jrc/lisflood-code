@@ -24,12 +24,17 @@ import datetime
 import gc
 
 from pcraster.framework import DynamicModel
+
 import numpy as np
 from lisflood.global_modules.errors import LisfloodWarning
 
 from lisflood.global_modules.zusatz import checkmap
 
 from .global_modules.settings import CDFFlags, LisSettings, MaskInfo
+
+from pcraster import upstream
+from lisflood.global_modules.add1 import decompress, compressArray
+
 
 class LisfloodModel_dyn(DynamicModel):
 
@@ -175,6 +180,7 @@ class LisfloodModel_dyn(DynamicModel):
         # ************************************************************
         maskinfo = MaskInfo.instance()
         self.sumDisDay = maskinfo.in_zero()
+
         # sums up discharge of the sub steps
         for NoRoutingExecuted in range(self.NoRoutSteps):
             self.routing_module.dynamic(NoRoutingExecuted)
@@ -191,27 +197,28 @@ class LisfloodModel_dyn(DynamicModel):
         # if option['simulatePolders']:
         # ChannelToPolderM3=ChannelToPolderM3Old;
 
-        if option['InitLisflood'] or (not(option['SplitRouting'])):
-            # kinematic routing
-            self.ChanM3 = self.ChanM3Kin.copy()
-            # Total channel storage [cu m], equal to ChanM3Kin
-        else:
-            # split routing
-            self.ChanM3 = self.ChanM3Kin + self.Chan2M3Kin - self.Chan2M3Start
+        # # moved to routing.py
+        # # Calculate total water storage in river channel
+        # if option['InitLisflood'] or (not(option['SplitRouting'])):
+        #     # kinematic routing
+        #     self.ChanM3 = self.ChanM3Kin.copy()
+        #     # Total channel storage [m3], equal to ChanM3Kin fir kinematic routing only at t+dt
+        # else:
+        #     # split routing
+        #     self.ChanM3 = self.ChanM3Kin + self.Chan2M3Kin - self.Chan2M3Start
+        #     # Total channel storage [m3] = Volume in main channel (ChanM3Kin) + volume above bankfull (Chan2M3Kin - Chan2M3Start)
+        #     # at t+dt
 
-        # Total channel storage [cu m], equal to ChanM3Kin
-        # sum of both lines
-        # CrossSection2Area = pcraster.max(scalar(0.0), (self.Chan2M3Kin - self.Chan2M3Start) / self.ChanLength)
 
         self.TotalCrossSectionArea = self.ChanM3 * self.InvChanLength
+        # Total river channel cross-section area at t+dt
 
         self.sumDis += self.sumDisDay
-        self.ChanQAvg = self.sumDisDay/self.NoRoutSteps
+        # Accumulated average discharge over the entire simulation period
 
-        # Total volume of water in channel per inv channel length
-        # New cross section area (kinematic wave)
-        # This is the value after the kinematic wave, so we use ChanM3Kin here
-        # (NOT ChanQKin, which is average discharge over whole step, we need state at the end of all iterations!)
+        self.ChanQAvg = self.sumDisDay/self.NoRoutSteps
+        # Average channel outflow over the model computation step
+
 
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         if not(option['dynamicWave']):
@@ -222,12 +229,16 @@ class LisfloodModel_dyn(DynamicModel):
             # Set water level dynamic wave to dummy value (needed
 
         if option['InitLisflood'] or option['repAverageDis']:
-            self.CumQ += self.ChanQ
+            # self.CumQ += self.ChanQ
+            self.CumQ += self.ChanQAvg
+            #cmcheck - we should use ChanQAvg here not ChanQ
             self.avgdis = self.CumQ/self.TimeSinceStart
-            # to calculate average discharge
+            # to calculate average discharge over the entire simulation
 
-        self.DischargeM3Out += np.where(self.AtLastPointC ,self.ChanQ * self.DtSec,0)
-           # Cumulative outflow out of map
+        #self.DischargeM3Out += np.where(self.AtLastPointC ,self.ChanQ * self.DtSec,0)
+        self.DischargeM3Out += np.where(self.AtLastPointC, self.ChanQAvg * self.DtSec, 0)
+        # Cumulative outflow out of map
+        # cmcheck - we should use ChanQAvg here not ChanQ
 
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         # Calculate water level

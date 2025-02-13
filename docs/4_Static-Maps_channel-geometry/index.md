@@ -2,6 +2,7 @@
 
 In the LISFLOOD model flow through the channel is simulated using the kinematic wave equations. Channel maps describe the sub grid information of the channel geometry, i.e. the length, slope, width and depth of the main channel inside a grid-cell.  <br/>
 + The **channel mask** map is the Boolean field with '1' for all grid-cells with channels and NoData for all grid-cells with no channels.  <br/>
++ The **MCT channel mask** map is the Boolean field with '1' for all river grid-cells using MCT wave routing and '0' for other channel grid cells.  <br/>
 + The **channel side slope** map (referred as 's' in Figure 41) defines the slope of the channel banks. <br/>
 + The **channel length** map is the length of the river in each grid-cell, and the value can exceed grid-size to account for meandering rivers. <br/>
 + The **channel gradient** (or channel slope) map is the average gradient of the main river inside a cell. <br/>
@@ -23,6 +24,7 @@ Channel characteristics, explained above, are shown in the Figure 41 below.  <br
 | Map name | File name;type | Units; range | Description |
 | :---| :--- | :--- | :--- |
 |Channel mask         | chan.nc; <br> Type: Boolean          | Units: -;<br> Range: NoData or 1         |Boolean map that identifies the channel grid-cells |
+|MCT Channel mask         | chanmct.nc; <br> Type: Boolean          | Units: -;<br> Range: [0-1]         |Boolean map that identifies the channel grid-cells using the MCT diffusive river routing |
 |Side slope        |chans.nc; <br> Type: Float32          | Units: m;<br> Range>0          |Channel side slope|
 |Channel length         |chanlength.nc; <br> Type: Float32          | Units: m;<br> Range>0         |Channel length (value can exceed grid size, to account for meandering rivers)|
 |Channel gradient         |changrad.nc; <br> Type: Float32           |Units: m/m;<br> Range: [0-1]          |Channel longitudinal gradient|
@@ -44,6 +46,9 @@ Channel characteristics, explained above, are shown in the Figure 41 below.  <br
 
 ### Channel mask (chan)
 The channel mask map is used to identify the cells that have channels. The grid-cells that have a channel length (see chanlength map creation below) above zero are assigned to the Boolean field '1', the grid-cells that have a channel length below or equal to zero are assigned with NoData.
+
+### MCT Channel mask (chanmct)
+The  MCT channel mask map is used to identify the cells using the Muskingum-Cunge-Todini diffusive wave routing. The grid-cells that have a riverbed slope < *ChanGradMaxMCT* (default value 0.001) and a set number of upstream grid cells also meeting the same condition are assigned to the mask. All downstream channel pixels of any of the pixels using MCT wave routing are also added to the mask.
 
 ### Side slope (chans)
 The channel side slope map is calculated by dividing the horizontal distance (referred as 'dx' in Figure 42) by vertical distance (referred as 'dy' in Figure 42); here ‘1’ was assigned to all the grid cells, which correspond to a 45° angle of the side slope.

@@ -48,6 +48,7 @@ You can use builtin path variables in this template and reference to other paths
       <setoption choice="1" name="simulateReservoirs"/>
 
       <setoption choice="1" name="SplitRouting"/>
+      <setoption choice="1" name="MCTRouting"/>
 
       # use inflow data
       <setoption choice="0" name="inflow"/>
@@ -72,8 +73,10 @@ You can use builtin path variables in this template and reference to other paths
       <setoption choice="1" name="repDischargeTs"/>
 
       # report gauges and sites
+  	  # sites (pixel average)
       <setoption choice="0" name="repStateSites"/>
       <setoption choice="0" name="repRateSites"/>
+  	  # gauges (catchment average)
       <setoption choice="1" name="repStateUpsGauges"/>
       <setoption choice="1" name="repRateUpsGauges"/>
       <setoption choice="1" name="repMeteoUpsGauges"/>
@@ -81,6 +84,9 @@ You can use builtin path variables in this template and reference to other paths
       # report reservoirs and lakes
       <setoption choice="1" name="repsimulateLakes"/>
       <setoption choice="1" name="repsimulateReservoirs"/>
+
+      # report mass balance
+      <setoption choice="1" name="repMBTs"/>
 
       #-----------------------------------------------------------
       # report maps
@@ -91,33 +97,69 @@ You can use builtin path variables in this template and reference to other paths
       # report end maps
       <setoption choice="0" name="repEndMaps"/>
 
-      # report maps
-      <setoption choice="1" name="repDischargeMaps"/>
-      <setoption choice="1" name="repSurfaceRunoffMaps"/>
-      <setoption choice="1" name="repTotalRunoffMaps"/>
-      <setoption choice="1" name="repPrefFlowMaps"/>
-      <setoption choice="1" name="repTaMaps"/>
-      <setoption choice="1" name="repRainMaps"/>
-      <setoption choice="1" name="repSnowMaps"/>
-      <setoption choice="1" name="repSnowCoverMaps"/>
-      <setoption choice="1" name="repSnowMeltMaps"/>
-      <setoption choice="1" name="repThetaMaps"/>
-      <setoption choice="1" name="repThetaForestMaps"/>
-      <setoption choice="1" name="repLZMaps"/>
-      <setoption choice="1" name="repUZMaps"/>
-      <setoption choice="1" name="repGwPercUZLZMaps"/>
-      <setoption choice="1" name="repPercolationMaps"/>
-      <setoption choice="1" name="repRWS"/>
-      <setoption choice="1" name="repPFMaps"/>
-      <setoption choice="1" name="repTotalWaterStorageMaps"/>
-      <setoption choice="1" name="repPFForestMaps"/>
+      # report output maps
+      # forcings
+      <setoption choice="0"  name="repPrecipitationMaps"/>
+      <setoption choice="0"  name="repTavgMaps"/>
+      <setoption choice="0"  name="repETRefMaps"/>
+      <setoption choice="0"  name="repESRefMaps"/>
+      <setoption choice="0"  name="repEWRefMaps"/>
 
-      <setoption choice="1" name="repTotalAbs"/>
-      <setoption choice="1" name="repTotalWUse"/>
-      <setoption choice="1" name="repWIndex"/>
+      # dicharge
+      <setoption choice="0" name="repDischargeMaps"/>
+
+      <setoption choice="0" name="repAverageDis"/>
+      <setoption choice="0" name="repLZAvInflow"/>
+
+      # variables
+      <setoption choice="0" name="repRainMaps"/>
+      <setoption choice="0" name="repSnowMaps"/>
+      <setoption choice="0" name="repSnowCoverMaps"/>
+      <setoption choice="0" name="repSnowMeltMaps"/>
+
+      <setoption choice="0" name="repTaMaps"/>
+      <setoption choice="0" name="repETActMaps"/>
+      <setoption choice="0" name="repESActMaps"/>
+
+      <setoption choice="0" name="repDSLRMaps"/>
+      <setoption choice="0" name="repCumInterCeptionMaps"/>
+      <setoption choice="0" name="repInterceptionMaps"/>
+      <setoption choice="0" name="repEWIntMaps"/>
+      <setoption choice="0" name="repLeafDrainageMaps"/>
+
+      <setoption choice="0" name="repSurfaceRunoffMaps"/>	#Surface runoff
+      <setoption choice="0" name="repFastRunoffMaps"/>	#Surface runoff +  UZ [mm]
+      <setoption choice="0" name="repTotalRunoffMaps"/>	#Surface runoff +  UZ [mm] + LZ
+      <setoption choice="0" name="repWaterDepthMaps"/>
+
+      <setoption choice="0" name="repThetaMaps"/>
+      <setoption choice="0" name="repThetaForestMaps"/>
+      <setoption choice="0" name="repThetaIrrigationMaps"/>
+      <setoption choice="0" name="repTopSoilMoistureMaps"/>
+      <setoption choice="0" name="repSurfaceSoilMoistureMaps"/>
+
+      <setoption choice="0" name="repUZMaps"/>
+      <setoption choice="0" name="repUZOutflowMaps"/>
+      <setoption choice="0" name="repLZMaps"/>
+      <setoption choice="0" name="repLZOutflowMaps"/>
+
+      <setoption choice="0" name="repInfiltrationMaps"/>
+      <setoption choice="0" name="repPrefFlowMaps"/>
+      <setoption choice="0" name="repPercolationMaps"/>
+      <setoption choice="0" name="repSeepSubToGWMaps"/>
+      <setoption choice="0" name="repGwPercUZLZMaps"/>
+      <setoption choice="0" name="repGwLossMaps"/>
+
+      <setoption choice="0" name="repRWS"/>
+      <setoption choice="0" name="repPFMaps"/>
+      <setoption choice="0" name="repPFForestMaps"/>
+      <setoption choice="0" name="repStressDays"/>
+      <setoption choice="0" name="repInternalCom"/>
+      <setoption choice="0" name="repTotalAbs"/>
+      <setoption choice="0" name="repTotalWUse"/>
+      <setoption choice="0" name="repWIndex"/>
 
   </lfoptions>
-
   <lfuser>
 
     <group>
@@ -188,56 +230,36 @@ You can use builtin path variables in this template and reference to other paths
             </comment>
         </textvar>
 
-        <textvar name="MaskMap" value="/XXXX/areawithdeadsea.map">
-            <comment>
-                    /perm/mo/mocm/proj/efas/hprot/staticMaps/areawithdeadsea.map
-                    /perm/mo/mocm/proj/efas/hprot/staticMaps/work/DrinaMask.map
-                    /sbsDrina/DrinaMask.map
-                    /perm/mo/mocm/proj/efas/xdom/data/staticData/lisflood/area
-                    /perm/mo/mocm/proj/efas/hprot/staticMaps/areawithdeadsea.map
-                    /perm/mo/mocm/proj/efas/hprot/sbs/pontelagoscuro_sbs.map
-                70 40 0.1 -8.6 43.3  # Douro
-                30 30 0.1 6.0 52.0
-                Clone map
-                col row cellsize xupleft yupleft
-                300 200 0.1 -15 25   -> Niger
-                3600 1500 0.1 -180 90 -> World
-                $(PathRoot)\areamaps\areaEurope.map
-                $(PathRoot)\areamaps\AreaPo.map
-                or  pcraster maps or netcdf maps
-                e.g.
-                Rhine areaLobith.map
-                Niger areaLokoja.map
-                Po areaPo.map
-                Danube areaDanube.map
-                Sava areaSava.map
-            </comment>
+        <textvar name="MaskMap" value="/XXXX/mask.nc">
+          <comment>
+            Clone map
+            col row cellsize xupleft yupleft
+            or pcraster maps or netcdf maps
+          </comment>
         </textvar>
 
-        <textvar name="Gauges" value="$(PathMaps)/outlets.nc">
+        <textvar name="Gauges" value="$(PathMaps)/outlets">
             <comment>
                 Nominal map with gauge locations (i.e cells for which simulated discharge
                 is written to file(1,2,3 etc)
                 lat lon (lat2 lon2 ...) or  pcraster maps or netcdf maps
                 Examples:
                     "6.15 51.85"
-                    "$(PathMaps)/outlets.nc"
+                    "$(PathMaps)/outlets"
             </comment>
         </textvar>
 
-        <textvar name="netCDFtemplate" value="$(PathMaps)/elvstd.nc">
+        <textvar name="netCDFtemplate" value="$(PathMaps)/elvstd">
             <comment>
               netcdf template used to copy metadata information for writing netcdf
-              $(PathEvapo)/$(PrefixE0)
             </comment>
         </textvar>
 
-        <textvar name="Latitude" value="$(PathMaps)/lat.map">
-        <comment>
-        latitude map to be used for snow/ice modelling
-        </comment>
+        <textvar name="Latitude" value="$(PathMaps)/lat">
+          <comment>
+            latitude map to be used for snow/ice modelling
+          </comment>
         </textvar>
-
 
         <comment>
         **************************************************************
@@ -264,24 +286,26 @@ You can use builtin path variables in this template and reference to other paths
         </textvar>
 
         <textvar name="DtSecChannel" value="3600">
-        <comment>
-        17280 5 times subrouting
-        21600 4 times
-        Sub time step used for kinematic wave channel routing [seconds]
-        Within the model,the smallest out of DtSecChannel and DtSec is used
-        </comment>
+          <comment>
+            17280 5 times subrouting
+            21600 6 hours
+            Sub time step used for kinematic and MCT wave channel routing [seconds]
+            Within the model,the smallest out of DtSecChannel and DtSec is used
+          </comment>
         </textvar>
 
         <textvar name="StepStart" value="01/01/1996 12:00">
-        <comment>
-        Number of first time step in simulation
-        </comment>
+          <comment>
+            01/01/YEAR_START 12:00
+            Number of first time step in simulation
+          </comment>
         </textvar>
 
         <textvar name="StepEnd" value="01/01/2001 06:00">
-        <comment>
-        Number of last time step in simulation
-        </comment>
+          <comment>
+            01/01/YEAR_END 06:00
+            Number of last time step in simulation
+          </comment>
         </textvar>
 
         <textvar name="ReportSteps" value="1..999999">
@@ -338,7 +362,7 @@ You can use builtin path variables in this template and reference to other paths
         <textvar name="UpperZoneTimeConstant" value="$(PathParams)/params_UpperZoneTimeConstant">
             <comment>
               default: 10
-              $(PathParams)/params_UpperZoneTimeConstant.nc
+              $(PathParams)/params_UpperZoneTimeConstant
               Time constant for water in upper zone [days]
               This is the average time a water 'particle' remains in the reservoir
               if we had a stationary system (average inflow=average outflow)
@@ -348,7 +372,7 @@ You can use builtin path variables in this template and reference to other paths
         <textvar name="LowerZoneTimeConstant" value="$(PathParams)/params_LowerZoneTimeConstant">
             <comment>
               default: 100
-              $(PathParams)/params_LowerZoneTimeConstant.nc
+              $(PathParams)/params_LowerZoneTimeConstant
               Time constant for water in lower zone [days]
               This is the average time a water 'particle' remains in the reservoir
               if we had a stationary system (average inflow=average outflow)
@@ -358,7 +382,7 @@ You can use builtin path variables in this template and reference to other paths
         <textvar name="GwPercValue" value="$(PathParams)/params_GwPercValue">
             <comment>
               default: 0.5
-              $(PathParams)/params_GwPercValue.nc
+              $(PathParams)/GwPercValue
               Maximum rate of percolation going from the Upper to the Lower
               response box [mm/day]
             </comment>
@@ -367,15 +391,17 @@ You can use builtin path variables in this template and reference to other paths
         <textvar name="GwLoss" value="$(PathParams)/params_GwLoss">
             <comment>
               default: 0.0
-              $(PathParams)/params_GwLoss.nc
+              $(PathParams)/GwLoss
               Maximum percolation rate from the lower groundwater zone [mm/days]. GWLoss
               it’s lost beyond the catchment boundaries or to deep groundwater systems.
               A value of 0 (closed lower boundary) is recommended as a starting value.
             </comment>
         </textvar>
 
-        <textvar name="LZThreshold" value="$(PathParams)/params_LZThreshold.nc">
+        <textvar name="LZThreshold" value="$(PathParams)/params_LZThreshold">
             <comment>
+              default: 10
+              $(PathParams)/params_LZThreshold
               threshold value [mm] of the water storage in the lower groundwater zone.
               If the water storage in the lower groundwater zone  decreases below LZThreshold,
               the flow from the lower zone to the nearby rivers (base-flow) stops.
@@ -385,7 +411,7 @@ You can use builtin path variables in this template and reference to other paths
         <textvar name="b_Xinanjiang" value="$(PathParams)/params_b_Xinanjiang">
             <comment>
               default: 0.7 [-]
-              $(PathParams)/params_b_Xinanjiang.nc
+              $(PathParams)/b_Xinanjiang
               Power in Xinanjiang distribution function [-]
             </comment>
         </textvar>
@@ -393,7 +419,7 @@ You can use builtin path variables in this template and reference to other paths
         <textvar name="PowerPrefFlow" value="$(PathParams)/params_PowerPrefFlow">
             <comment>
               default: 3.5 [-]
-              $(PathParams)/params_PowerPrefFlow.nc
+              $(PathParams)/params_PowerPrefFlow
               Power that controls increase of proportion of preferential
               flow with increased soil moisture storage [-]
             </comment>
@@ -402,7 +428,7 @@ You can use builtin path variables in this template and reference to other paths
         <textvar name="CalChanMan" value="$(PathParams)/params_CalChanMan1">
             <comment>
               default: 2.0 [-]
-              $(PathParams)/params_CalChanMan1.nc
+              $(PathParams)/params_CalChanMan1
               Multiplier [-] applied to Channel Manning's n
             </comment>
         </textvar>
@@ -410,7 +436,7 @@ You can use builtin path variables in this template and reference to other paths
         <textvar name="SnowMeltCoef" value="$(PathParams)/params_SnowMeltCoef">
             <comment>
               default: 4.0 [mm C-1 day-1]
-              $(PathParams)/params_SnowMeltCoef.nc
+              $(PathParams)/params_SnowMeltCoef
               SRM: 0.45 cm C-1 day-1 ( = 4.50 mm C-1 day-1), Kwadijk: 18 mm C-1 month-1 (= 0.59 mm C-1 day-1)
               See also Martinec et al., 1998.
             </comment>
@@ -419,15 +445,23 @@ You can use builtin path variables in this template and reference to other paths
         <textvar name="CalChanMan2" value="$(PathParams)/params_CalChanMan2">
             <comment>
               default: 3.0 [-]
-              $(PathParams)/params_CalChanMan2.nc
+              $(PathParams)/params_CalChanMan2
               Multiplier [-] applied to Channel Manning's n for second line of routing
+            </comment>
+        </textvar>
+
+        <textvar name="CalChanMan3" value="$(PathParams)/params_CalChanMan3">
+            <comment>
+              default: 3.0 [-]
+              $(PathParams)/params_CalChanMan3
+              Multiplier [-] applied to Channel Manning's n for MCT routing
             </comment>
         </textvar>
 
         <textvar name="LakeMultiplier" value="$(PathParams)/params_LakeMultiplier">
             <comment>
               default: 1.0 [-]
-              $(PathParams)/params_LakeMultiplier.nc
+              $(PathParams)/params_LakeMultiplier
               Multiplier applied to the lake parameter A
             </comment>
         </textvar>
@@ -464,28 +498,33 @@ You can use builtin path variables in this template and reference to other paths
 
         <textvar name="QSplitMult" value="$(PathParams)/params_QSplitMult">
             <comment>
-            PBchange
-            Multiplier applied to average Q to split into a second line of routing
-            THIS NEEDS TO BE AMENDED BY ADDING THE RIGHT PATH TO $(PathParams)
+              default: 2.0
+              $(PathParams)/params_QSplitMult
+              Multiplier applied to average Q to split into a second line of routing
             </comment>
         </textvar>
 
         <textvar name="ChanBottomWMult" value="1.0">
             <comment>
-            PBchange
-            Multiplier applied to ChanBottomWidth
+              default: 1.0
+              $(PathParams)/params_ChanBottomWMult
+              Multiplier applied to ChanBottomWidth
             </comment>
         </textvar>
 
         <textvar name="ChanDepthTMult" value="1.0">
             <comment>
-            Multiplier [] applied to ChanDepthThreshold
+              default: 1.0
+              $(PathParams)/params_ChanDepthTMult
+              Multiplier [] applied to ChanDepthThreshold
             </comment>
         </textvar>
 
         <textvar name="ChanSMult" value="1.0">
             <comment>
-            Multiplier []  applied to ChanSdXdY
+            default: 1.0
+$(PathParams)/params_ChanSMult
+Multiplier []  applied to ChanSdXdY
             </comment>
         </textvar>
     </group>
@@ -500,12 +539,14 @@ You can use builtin path variables in this template and reference to other paths
 
         <textvar name="PathOut" value="$(PathRoot)/outputs">
           <comment>
+            RUNDIR
             Output path (org=$(PathRoot)/out)
           </comment>
         </textvar>
 
         <textvar name="PathInit" value="$(PathRoot)/init">
           <comment>
+            INITDIR
             Path of the initial value maps e.g. lzavin.map
           </comment>
         </textvar>
@@ -561,12 +602,12 @@ You can use builtin path variables in this template and reference to other paths
         <textvar name="PathWaterUse" value="$(PathRoot)/waterdemand">
           <comment>
             Water use maps path
-            $(PathMaps)/waterdemand19902014
           </comment>
         </textvar>
 
         <textvar name="PathMeteo" value="$(PathRoot)/forcings">
           <comment>
+            FORCINGSDIR
             Meteo path
           </comment>
         </textvar>
@@ -582,12 +623,10 @@ You can use builtin path variables in this template and reference to other paths
             variable water fraction maps path
           </comment>
         </textvar>
-
     </group>
 
 
     <group>
-
       <comment>
         **************************************************************
         INITIAL CONDITIONS
@@ -605,61 +644,72 @@ You can use builtin path variables in this template and reference to other paths
 
       <textvar name="OFDirectInitValue" value="$(PathInit)/ofdir">
         <comment>
+          Cold start: 0
           Initial overland flow storage [m3], direct runoff fraction
         </comment>
       </textvar>
 
       <textvar name="OFOtherInitValue" value="$(PathInit)/ofoth">
         <comment>
-        Initial overland flow storage [m3], other fraction
+          Cold start: 0
+          Initial overland flow storage [m3], other fraction
         </comment>
       </textvar>
 
       <textvar name="OFForestInitValue" value="$(PathInit)/offor">
         <comment>
+          Cold start: 0
           Initial overland flow storage [m3], forest fraction
         </comment>
       </textvar>
 
       <textvar name="SnowCoverAInitValue" value="$(PathInit)/scova">
         <comment>
-        initial snow depth in snow zone A [mm]
+          Cold start: 0
+          initial snow depth in snow zone A [mm]
         </comment>
       </textvar>
 
       <textvar name="SnowCoverBInitValue" value="$(PathInit)/scovb">
         <comment>
+        Cold start: 0
         initial snow depth in snow zone B [mm]
         </comment>
       </textvar>
 
       <textvar name="SnowCoverCInitValue" value="$(PathInit)/scovc">
         <comment>
-        initial snow depth in snow zone C [mm]
+          Cold start: 0
+          initial snow depth in snow zone C [mm]
         </comment>
       </textvar>
 
       <textvar name="FrostIndexInitValue" value="$(PathInit)/frost">
         <comment>
+        Cold start: 0
         initial Frost Index value [degC/day]
         </comment>
       </textvar>
 
       <textvar name="CumIntInitValue" value="$(PathInit)/cum">
         <comment>
-        cumulative interception [mm]
+          Cold start: 0
+          cumulative interception [mm]
         </comment>
       </textvar>
 
       <textvar name="UZInitValue" value="$(PathInit)/uz">
         <comment>
-        water in upper store [mm]
+          Cold start: 0
+          PRERUNDIR/uz.end.nc	
+          water in upper store [mm]
         </comment>
       </textvar>
 
       <textvar name="DSLRInitValue" value="$(PathInit)/dslr">
         <comment>
-        days since last rainfall [days]
+          Cold start: 1
+          days since last rainfall [days]
         </comment>
       </textvar>
     </group>
@@ -676,82 +726,105 @@ You can use builtin path variables in this template and reference to other paths
 
       <textvar name="LZInitValue" value="$(PathInit)/lz">
         <comment>
-        water in lower store [mm]
-        -9999: use steady-state storage
+          PRERUNDIR/lz.end.nc
+          water in lower store [mm]
+          Cold start: -9999: use steady-state storage
         </comment>
       </textvar>
 
       <textvar name="TotalCrossSectionAreaInitValue" value="$(PathInit)/chcro">
         <comment>
-        initial cross-sectional area of flow in channel[m2]
-        -9999: use half bankfull
+          initial cross-sectional area of flow in channel[m2]
+          Cold start: -9999: use half bankfull
         </comment>
       </textvar>
 
       <textvar name="ThetaInit1Value" value="$(PathInit)/tha">
         <comment>
-        initial soil moisture content layer 1a (superficial soil layer) [mm3/mm3]
-        -9999: use field capacity values
+          PRERUNDIR/tha.end.nc
+          initial soil moisture content layer 1a (superficial soil layer) [mm3/mm3]
+          Cold start: -9999: use field capacity values
         </comment>
       </textvar>
 
       <textvar name="ThetaInit2Value" value="$(PathInit)/thb">
         <comment>
+        PRERUNDIR/thb.end.nc
         initial soil moisture content layer 1b (upper soil layer)  [mm3/mm3]
-        -9999: use field capacity values
+        Cold start: -9999: use field capacity values
         </comment>
       </textvar>
 
       <textvar name="ThetaInit3Value" value="$(PathInit)/thc">
         <comment>
-        initial soil moisture content layer 2 (lower soil layer)  [mm3/mm3]
-        -9999: use field capacity values
+          PRERUNDIR/thc.end.nc
+          initial soil moisture content layer 2 (lower soil layer)  [mm3/mm3]
+          Cold start: -9999: use field capacity values
         </comment>
       </textvar>
 
       <textvar name="CrossSection2AreaInitValue" value="$(PathInit)/ch2cr">
         <comment>
-        initial channel cross-section area [m2] for 2nd routing channel
-        -9999: use 0
+          initial channel cross-section area [m2] for 2nd routing channel
+          Cold start: -9999: use 0
         </comment>
       </textvar>
 
       <textvar name="PrevSideflowInitValue" value="$(PathInit)/chside">
         <comment>
-        initial lateral inflow for 1st line of routing [m2/s]
-        -9999: use 0
+          initial lateral inflow for 1st line of routing [m2/s]
+          Cold start: -9999: use 0
         </comment>
       </textvar>
 
       <textvar name="LakeInitialLevelValue" value="$(PathInit)/lakeh">
         <comment>
-        Initial lake level [m]
-        -9999 sets initial value to steady-state level
+          Initial lake level [m]
+          Cold start: -9999 sets initial value to steady-state level
         </comment>
       </textvar>
 
       <textvar name="LakePrevInflowValue" value="$(PathInit)/lakeprevinq">
         <comment>
-        Lake inflow at previous routing sub-step (ChanQ(t-1)) [m3/s]
-        -9999 sets initial value equal to PrevDischarge (ChanQ(t))
+          Lake inflow at previous routing sub-step (ChanQ(t-1)) [m3/s]
+          Cold start: -9999 sets initial value equal to PrevDischarge (ChanQ(t))
         </comment>
       </textvar>
 
       <textvar name="LakePrevOutflowValue" value="$(PathInit)/lakeprevoutq">
         <comment>
-        Lake outflow at previous routing sub-step (ChanQ(t-1)) [m3/s]
-        -9999 sets initial value
+          Lake outflow at previous routing sub-step (ChanQ(t-1)) [m3/s]
+          Cold start: -9999 sets initial value
         </comment>
       </textvar>
 
       <textvar name="PrevDischarge" value="$(PathInit)/chanq">
         <comment>
-        initial discharge [m3/s] from previous run for lakes, reservoirs and transmission loss ChanQ
-        only needed for lakes reservoirs and transmission loss
-        -9999: use 0
+          Outflow discharge at the end of previous step (instantaneous) [m3/s] 
+          Cold start: -9999 sets initial value to 0
         </comment>
       </textvar>
 
+      <textvar name="PrevDischargeAvg" value="$(PathInit)/chanqavgdt">
+        <comment>
+          Outflow average discharge on previous routing sub-step (average) [m3/s]
+          Cold start: -9999 sets initial value to 0
+        </comment>
+      </textvar>
+
+      <textvar name="PrevCmMCTInitValue" value="$(PathInit)/prevcm">
+        <comment>
+          Courant number at previous step for MCT routing
+          Cold start: -9999 sets initial value to 1
+        </comment>
+      </textvar>
+
+      <textvar name="PrevDmMCTInitValue" value="$(PathInit)/prevdm">
+        <comment>
+          Reynolds number at previous step for MCT routing
+          Cold start: -9999 sets initial value to 0
+        </comment>
+      </textvar>
     </group>
 
     <group>
@@ -764,48 +837,54 @@ You can use builtin path variables in this template and reference to other paths
     </comment>
 
     <textvar name="CumIntForestInitValue" value="$(PathInit)/cumf">
-    <comment>
-    cumulative interception [mm]
-    </comment>
+      <comment>
+        cumulative interception [mm]
+        Cold start: 0
+      </comment>
     </textvar>
 
     <textvar name="UZForestInitValue" value="$(PathInit)/uzf">
-    <comment>
-    water in upper groundwater store [mm]
-    </comment>
+      <comment>
+        PRERUNDIR/uzf.end.nc
+        water in upper groundwater store [mm]
+        Cold start: 0
+      </comment>
     </textvar>
 
     <textvar name="DSLRForestInitValue" value="$(PathInit)/dslrf">
-    <comment>
-    days since last rainfall
-    </comment>
+      <comment>
+        days since last rainfall
+        Cold start: 1
+      </comment>
     </textvar>
 
     <textvar name="ThetaForestInit1Value" value="$(PathInit)/thfa">
-    <comment>
-    initial soil moisture content [mm3/mm3] layer 1a (superficial soil layer)
-    -9999: use field capacity values
-    </comment>
+      <comment>
+        PRERUNDIR/thfa.end.nc
+        initial soil moisture content [mm3/mm3] layer 1a (superficial soil layer)
+        Cold start: -9999: use field capacity values
+      </comment>
     </textvar>
 
     <textvar name="ThetaForestInit2Value" value="$(PathInit)/thfb">
-    <comment>
-    initial soil moisture content [mm3/mm3] layer 1b (upper soil layer)
-    -9999: use field capacity values
-    </comment>
+      <comment>
+        PRERUNDIR/thfb.end.nc
+        initial soil moisture content [mm3/mm3] layer 1b (upper soil layer)
+        Cold start: -9999: use field capacity values
+      </comment>
     </textvar>
 
     <textvar name="ThetaForestInit3Value" value="$(PathInit)/thfc">
-    <comment>
-    initial soil moisture content [mm3/mm3] layer 2 (lower soil layer)
-    -9999: use field capacity values
-    </comment>
+      <comment>
+        PRERUNDIR/thfc.end.nc
+        initial soil moisture content [mm3/mm3] layer 2 (lower soil layer)
+        Cold start: -9999: use field capacity values
+      </comment>
     </textvar>
     </group>
 
 
     <group>
-
     <comment>
     **************************************************************
     INITIAL CONDITIONS IRRIGATION
@@ -814,44 +893,50 @@ You can use builtin path variables in this template and reference to other paths
     </comment>
 
     <textvar name="CumIntIrrigationInitValue" value="$(PathInit)/cumi">
-    <comment>
-    cumulative interception [mm]
-    </comment>
+      <comment>
+        cumulative interception [mm]
+        Cold start: 0
+      </comment>
     </textvar>
 
     <textvar name="UZIrrigationInitValue" value="$(PathInit)/uzi">
-    <comment>
-    water in groundwater upper store [mm]
-    </comment>
+      <comment>
+        PRERUNDIR/uzi.end.nc
+        water in groundwater upper store [mm]
+        Cold start: 0
+      </comment>
     </textvar>
 
     <textvar name="DSLRIrrigationInitValue" value="$(PathInit)/dslri">
-    <comment>
-    days since last rainfall
-    </comment>
+      <comment>
+        days since last rainfall
+        Cold start: 1
+      </comment>
     </textvar>
 
     <textvar name="ThetaIrrigationInit1Value" value="$(PathInit)/thia">
-    <comment>
-    initial soil moisture content [mm3/mm3] layer 1a (superficial soil layer)
-    -9999: use field capacity values
-    </comment>
+      <comment>
+        PRERUNDIR/thia.end.nc
+        initial soil moisture content [mm3/mm3] layer 1a (superficial soil layer)
+        Cold start: -9999: use field capacity values
+      </comment>
     </textvar>
 
     <textvar name="ThetaIrrigationInit2Value" value="$(PathInit)/thib">
-    <comment>
-    initial soil moisture content [mm3/mm3] layer 1b (upper soil layer)
-    -9999: use field capacity values
-    </comment>
+      <comment>
+        PRERUNDIR/thib.end.nc
+        initial soil moisture content [mm3/mm3] layer 1b (upper soil layer)
+        Cold start: -9999: use field capacity values
+      </comment>
     </textvar>
 
     <textvar name="ThetaIrrigationInit3Value" value="$(PathInit)/thic">
-    <comment>
-    initial soil moisture content [mm3/mm3] layer 2 (lower soil layer)
-    -9999: use field capacity values
-    </comment>
+      <comment>
+        PRERUNDIR/thic.end.nc
+        initial soil moisture content [mm3/mm3] layer 2 (lower soil layer)
+        Cold start: -9999: use field capacity values
+      </comment>
     </textvar>
-
     </group>
 
     <group>
@@ -864,9 +949,10 @@ You can use builtin path variables in this template and reference to other paths
     </comment>
 
     <textvar name="CumIntSealedInitValue" value="$(PathInit)/cseal">
-    <comment>
-    cumulative interception [mm]
-    </comment>
+      <comment>
+        cumulative interception [mm]
+        Cold start: 0
+      </comment>
     </textvar>
 
     </group>
@@ -952,14 +1038,10 @@ You can use builtin path variables in this template and reference to other paths
     </textvar>
 
     <textvar name="PrefixVarWaterFraction" value="varw">
-    <comment>
-    prefix variable water fraction
-    </comment>
+      <comment>
+        prefix variable water fraction
+      </comment>
     </textvar>
-
-
-
-
     </group>
 
     <group>
@@ -1094,9 +1176,9 @@ You can use builtin path variables in this template and reference to other paths
       **************************************************************
       </comment>
 
-      <textvar name="IrrigationEfficiency" value="$(PathMaps)/irrigation_efficiency_baseline.nc">
+      <textvar name="IrrigationEfficiency" value="$(PathMaps)/irrigation_efficiency_baseline">
         <comment>
-              0.75
+          default: 0.75
           Field application irrigation efficiency [-]: max 1, ~0.90 drip irrigation, ~0.75 sprinkling
         </comment>
       </textvar>
@@ -1144,7 +1226,7 @@ You can use builtin path variables in this template and reference to other paths
         </comment>
       </textvar>
 
-      <textvar name="EnergyConsumptiveUseFraction" value="$(PathMaps)/energyconsumptiveuse.nc">
+      <textvar name="EnergyConsumptiveUseFraction" value="$(PathMaps)/energyconsumptiveuse">
         <comment>
         	# Consumptive Use (1-Recycling ratio) for energy water use (0-1) [-]
         	# Source: Torcellini et al. (2003) "Consumptive Use for US Power Production"
@@ -1162,11 +1244,11 @@ You can use builtin path variables in this template and reference to other paths
         </comment>
       </textvar>
 
-      <textvar name="LeakageFraction" value="$(PathMaps)/leakage.nc">
+      <textvar name="LeakageFraction" value="$(PathMaps)/leakage">
         <comment>
-            0.2
-        $(PathMaps)/leakage.map
-           Fraction of leakage of public water supply (0=no leakage, 1=100% leakage)
+          Default : 0.2
+          $(PathRoot)/leakage
+          Fraction of leakage of public water supply (0=no leakage, 1=100% leakage)
         </comment>
       </textvar>
 
@@ -1196,13 +1278,13 @@ You can use builtin path variables in this template and reference to other paths
         </comment>
       </textvar>
 
-      <textvar name="MapIrrigationCropCoef" value="$(PathMapsTables)/cropcoef_i.map">
+      <textvar name="MapIrrigationCropCoef" value="$(PathMapsTables)/cropcoef_i">
         <comment>
         Irrigation crop coefficient [-]
         </comment>
       </textvar>
 
-      <textvar name="MapIrrigationCropGroupNumber" value="$(PathMapsTables)/cropgrpn_i.map">
+      <textvar name="MapIrrigationCropGroupNumber" value="$(PathMapsTables)/cropgrpn_i">
         <comment>
         Irrigation crop group number [-]
         </comment>
@@ -1220,7 +1302,7 @@ You can use builtin path variables in this template and reference to other paths
         </comment>
       </textvar>
 
-      <textvar name="LandUseMask" value="$(PathMaps)/lusemask.nc">
+      <textvar name="LandUseMask" value="$(PathMaps)/lusemask">
         <comment>
         Land Use Mask
         </comment>
@@ -1259,7 +1341,7 @@ You can use builtin path variables in this template and reference to other paths
         </comment>
       </textvar>
 
-      <textvar name="WUseRegion" value="$(PathMaps)/wregion.nc">
+      <textvar name="WUseRegion" value="$(PathMaps)/wregion">
         <comment>
         </comment>
       </textvar>
@@ -1283,29 +1365,18 @@ You can use builtin path variables in this template and reference to other paths
     - calibrate on  GwLossFraction if necessary
     </comment>
 
-    <!-- moved to calibration parameters section
-    <textvar name="LZThreshold" value="$(PathMaps)/lzthreshold.nc">
-    <comment>
-    threshold value below which there is no outflow to the channel
-    </comment>
-    </textvar>
-    -->
-
     <textvar name="LZSmoothRange" value="5">
     <comment>
     length of the window used to smooth the LZ zone [number of cell length]
     </comment>
     </textvar>
 
-    <textvar name="GroundwaterBodies" value="$(PathMaps)/gwbodies.nc">
+    <textvar name="GroundwaterBodies" value="$(PathMaps)/gwbodies">
     <comment>
-        $(PathMaps)/gwbodiesNew.map
-    map of aquifers (0/1), used to smoothen LZ near extraction areas
+        map of aquifers (0/1), used to smoothen LZ near extraction areas
     </comment>
     </textvar>
-
     </group>
-
 
 
     <group>
@@ -1313,28 +1384,23 @@ You can use builtin path variables in this template and reference to other paths
     **************************************************************
     EVAPORATION FROM OPEN WATER
     **************************************************************
-
     </comment>
 
-    <textvar name="FracMaxWater" value="$(PathMaps)/fracmaxwater.nc">
+    <textvar name="FracMaxWater" value="$(PathMaps)/fracmaxwater">
     <comment>
     Fraction of maximum extend of water
     </comment>
     </textvar>
 
-    <textvar name="LakeMask" value="$(PathMaps)/lakemask.nc">
+    <textvar name="LakeMask" value="$(PathMaps)/lakemask">
     <comment>
     Mask with Lakes from GLWD database
     </comment>
     </textvar>
-
     </group>
 
 
-
-
     <group>
-
     <comment>
     **************************************************************
     TRANSMISSION LOSS PARAMETERS
@@ -1343,12 +1409,12 @@ You can use builtin path variables in this template and reference to other paths
     Suggested parameterisation strategy:
 
     - Use TransSub as calibration constant leave all other parameters at default values
-
     </comment>
+    
     <textvar name="TransSub" value="0.3">
-    <comment>
-    Transmission loss function parameter
-    </comment>
+      <comment>
+        Transmission loss function parameter
+      </comment>
     </textvar>
 
     <textvar name="TransPower1" value="2.0">
@@ -1365,17 +1431,15 @@ You can use builtin path variables in this template and reference to other paths
     </comment>
     </textvar>
 
-    <textvar name="UpAreaTrans" value="$(PathMaps)/ec_upArea.nc">
+    <textvar name="UpAreaTrans" value="$(PathMaps)/ec_upArea">
     <comment>
     upstream area
     </comment>
     </textvar>
-
     </group>
 
 
     <group>
-
     <comment>
     **************************************************************
     ROUTING PARAMETERS
@@ -1385,7 +1449,6 @@ You can use builtin path variables in this template and reference to other paths
 
     - Use CalChanMan as calibration constant to fine-tune timing of
       channel routing, leave all other parameters at default values
-
     </comment>
 
     <textvar name="beta" value="0.6">
@@ -1401,27 +1464,25 @@ You can use builtin path variables in this template and reference to other paths
     </comment>
     </textvar>
 
+    <textvar name="BankFullPerc" value="0.5">
+      <comment>
+        Percentage [-] used to compute the TotalCrossSectionAreaHalfBankFull in the initialisation of the
+        total cross-sectional area
+        default: 0.5
+      </comment>
+    </textvar>
+
     <textvar name="GradMin" value="0.001">
-    <comment>
-    Minimum slope gradient [-] (for kin. wave: slope cannot be 0)
-    </comment>
+      <comment>
+        Minimum slope gradient [-] (for kin. wave: slope cannot be 0)
+      </comment>
     </textvar>
 
-    <textvar name="ChanGradMin" value="0.0001">
-    <comment>
-    Minimum channel gradient [-] (for kin. wave: slope cannot be 0)
-    </comment>
+    <textvar name="ChanGradMin" value="0.00001">
+      <comment>
+        Minimum channel gradient [-] (for kin. wave: slope cannot be 0)
+      </comment>
     </textvar>
-
-    <!-- moved to calibration parameters section
-    <textvar name="QSplitMult" value="2.0">
-    <comment>
-    PBchange
-    Multiplier applied to average Q to split into a second line of routing
-    </comment>
-    </textvar>
-    -->
-
     </group>
 
     <group>
@@ -1437,14 +1498,13 @@ You can use builtin path variables in this template and reference to other paths
     </comment>
 
     <textvar name="CourantCrit" value="0.4">
-    <comment>
-    Minimum value for Courant condition in soil moisture routine. Always less than or equal to 1.
-    Small values result in improved numerical accuracy, at the expense of increased
-    computing time (more sub-steps needed). If reported time series of soil moisture contain
-    large jumps, lowering CourantCrit should fix this
-    </comment>
+      <comment>
+        Minimum value for Courant condition in soil moisture routine. Always less than or equal to 1.
+        Small values result in improved numerical accuracy, at the expense of increased
+        computing time (more sub-steps needed). If reported time series of soil moisture contain
+        large jumps, lowering CourantCrit should fix this
+      </comment>
     </textvar>
-
     </group>
 
     <group>
@@ -1473,13 +1533,12 @@ You can use builtin path variables in this template and reference to other paths
     </textvar>
 
     <textvar name="ReservoirInitialFill" value="$(PathInit)/rsfil">
-    <comment>
-    Initial reservoir fill fraction [-]
-    -9999 sets initial fill to 80% of the flood limit
-    if you're not using the reservoir option, enter some bogus value
-    </comment>
+      <comment>
+        Initial reservoir fill fraction [-]
+        Cold start: -9999 sets initial fill to 80% of the flood limit
+        if you're not using the reservoir option, enter some bogus value
+      </comment>
     </textvar>
-
     </group>
 
     <group>
@@ -1491,18 +1550,17 @@ You can use builtin path variables in this template and reference to other paths
     </comment>
 
     <textvar name="TabLakeAvNetInflowEstimate" value="$(PathTables)/lakeavinflow.txt">
-    <comment>
-    Estimate of average net inflow into lake (=inflow - evaporation) [cu m / s]
-    Used to calculated steady-state lake level in case LakeInitialLevelValue
-    is set to -9999
-    </comment>
+      <comment>
+        Cold start: -9999
+        Estimate of average net inflow into lake (=inflow - evaporation) [cu m / s]
+        Used to calculated steady-state lake level in case LakeInitialLevelValue
+        is set to -9999
+      </comment>
     </textvar>
-
     </group>
 
 
     <group>
-
     <comment>
     **************************************************************
     POLDER OPTION
@@ -1516,11 +1574,10 @@ You can use builtin path variables in this template and reference to other paths
     </textvar>
 
     <textvar name="PolderInitialLevelValue" value="0">
-    <comment>
-    Initial water level in polder [m]
-    </comment>
+      <comment>
+        Initial water level in polder [m]
+      </comment>
     </textvar>
-
     </group>
 
 
@@ -1541,28 +1598,49 @@ You can use builtin path variables in this template and reference to other paths
     </textvar>
 
     <textvar name="DynWaveConstantHeadBoundary" value="0">
-    <comment>
-    Constant head [m] at most downstream pixel (relative to altitude
-    at most downstream pixel)
-    </comment>
+      <comment>
+        Constant head [m] at most downstream pixel (relative to altitude
+        at most downstream pixel)
+      </comment>
     </textvar>
-
     </group>
 
 
     <group>
+    <comment>
+    **************************************************************
+    MUSKINGUM-CUNGE-TODINI OPTION
+    **************************************************************
+    </comment>
 
+    <textvar name="ChannelsMCT" value="$(PathRoot)/maps/chanmct">
+      <comment>
+        Boolean map with value 1 at channel pixels where MCT is
+        used, and 0 at all other pixels
+      </comment>
+    </textvar>
+
+    <textvar name="ChanGradMaxMCT" value="0.001">
+      <comment>
+        Maximum channel gradient for channels using MCT routing [-] (for MCT wave: slope cannot be 0)
+        Default: 0.001
+      </comment>
+    </textvar>
+    </group>
+
+
+<group>
     <comment>
     **************************************************************
     INFLOW HYDROGRAPH (OPTIONAL)
     **************************************************************
     </comment>
 
-    <textvar name="InflowPoints" value="$(PathInflow)/inflowPoints.nc">
-    <comment>
-    OPTIONAL: nominal map with locations of (measured)
-    inflow hydrographs [cu m / s]
-    </comment>
+    <textvar name="InflowPoints" value="$(PathInflow)/inflowPoints">
+      <comment>
+        OPTIONAL: nominal map with locations of (measured)
+        inflow hydrographs [cu m / s]
+      </comment>
     </textvar>
 
     <textvar name="QInTS" value="$(PathInflow)/inflowHyd.tss">
@@ -1573,7 +1651,6 @@ You can use builtin path variables in this template and reference to other paths
     InflowPoints map (also optional)
     </comment>
     </textvar>
-
     </group>
 
     <group>
@@ -1650,12 +1727,12 @@ You can use builtin path variables in this template and reference to other paths
     </comment>
     </textvar>
 
-
-    </group>
-
     </group>
 
   </lfuser>
+
+
+
 
   <lfbinding>
       <!--
@@ -1665,9 +1742,8 @@ You can use builtin path variables in this template and reference to other paths
       **************************************************************
       **************************************************************
       -->
-
+      <group>
       <textvar name="numCPUs_parallelNumba" value="$(numCPUs_parallelNumba)"/>
-
 
       <textvar name="proj4_params" value="$(proj4_params)">
       <comment>
@@ -1697,6 +1773,7 @@ You can use builtin path variables in this template and reference to other paths
       latitude map to be used for snow/ice modelling
       </comment>
       </textvar>
+      </group>
 
       <group>
 
@@ -1745,7 +1822,6 @@ You can use builtin path variables in this template and reference to other paths
       Number of last time step in simulation
       </comment>
       </textvar>
-
       </group>
 
       <group>
@@ -1801,12 +1877,10 @@ You can use builtin path variables in this template and reference to other paths
       which is not immediatly causing surface runoff  [mm]
       </comment>
       </textvar>
-
       </group>
 
 
       <group>
-
       <comment>
       **************************************************************
       SNOW AND FROST RELATED PARAMETERS
@@ -1882,12 +1956,10 @@ You can use builtin path variables in this template and reference to other paths
       Molnau and Bissel found a value 56-85 for NW USA.
       </comment>
       </textvar>
-
       </group>
 
 
       <group>
-
       <comment>
       **************************************************************
       INFILTRATION PARAMETERS
@@ -1911,12 +1983,10 @@ You can use builtin path variables in this template and reference to other paths
       flow with increased soil moisture storage [-]
       </comment>
       </textvar>
-
       </group>
 
 
       <group>
-
       <comment>
       **************************************************************
       GROUNDWATER RELATED PARAMETERS
@@ -1958,10 +2028,7 @@ You can use builtin path variables in this template and reference to other paths
       A value of 0 (closed lower boundary) is recommended as a starting value.
       </comment>
       </textvar>
-
       </group>
-
-
 
 
       <group>
@@ -1970,7 +2037,6 @@ You can use builtin path variables in this template and reference to other paths
       EVAPORATION FROM OPEN WATER
       **************************************************************
       </comment>
-
 
       <textvar name="WFractionMaps" value="$(PathVarWaterfraction)/$(PrefixVarWaterFraction)">
       <comment>
@@ -2015,15 +2081,10 @@ You can use builtin path variables in this template and reference to other paths
       Time series of upstream water evaporation from open water at gauging stations
       </comment>
       </textvar>
-
-
       </group>
 
 
-
-
       <group>
-
       <comment>
       **************************************************************
       TRANSMISSION LOSS PARAMETERS
@@ -2061,7 +2122,6 @@ You can use builtin path variables in this template and reference to other paths
       upstream area
       </comment>
       </textvar>
-
       </group>
 
       <group>
@@ -2087,6 +2147,12 @@ You can use builtin path variables in this template and reference to other paths
       <textvar name="CalChanMan2" value="$(CalChanMan2)">
       <comment>
       Multiplier applied to Channel Manning's n for second routing line
+      </comment>
+      </textvar>
+
+      <textvar name="CalChanMan3" value="$(CalChanMan3)">
+      <comment>
+      Multiplier applied to Channel Manning's n for MCT routing
       </comment>
       </textvar>
 
@@ -2127,6 +2193,14 @@ You can use builtin path variables in this template and reference to other paths
       </comment>
       </textvar>
 
+      <textvar name="BankFullPerc" value="$(BankFullPerc)">
+      <comment>
+      Percentage [-] used to compute the TotalCrossSectionAreaHalfBankFull in the initialisation of the
+      total cross-sectional area
+      default: 0.5
+      </comment>
+      </textvar>
+
       <textvar name="GradMin" value="$(GradMin)">
       <comment>
       Minimum slope gradient (for kin. wave: slope cannot be 0)
@@ -2160,7 +2234,6 @@ You can use builtin path variables in this template and reference to other paths
       large jumps, lowering CourantCrit should fix this
       </comment>
       </textvar>
-
       </group>
 
       <group>
@@ -2174,8 +2247,7 @@ You can use builtin path variables in this template and reference to other paths
 
       <textvar name="LZAvInflowMap" value="$(PathMaps)/lzavin.nc">
       <comment>
-      $(PathMaps)/lzavin.map
-      $(PathInit)/lzavin.map
+      PRERUNDIR/lzavin
       Reported map of average percolation rate from upper to
       lower groundwater zone (reported for end of simulation) [mm/day]
       </comment>
@@ -2183,8 +2255,7 @@ You can use builtin path variables in this template and reference to other paths
 
       <textvar name="AvgDis" value="$(PathMaps)/avgdis.nc">
       <comment>
-      $(PathMaps)/avgdis.map
-      $(PathInit)/avgdis.map
+      PRERUNDIR/avgdis
       CHANNEL split routing in two lines
       Average discharge map [m3/s]
       </comment>
@@ -2257,8 +2328,8 @@ You can use builtin path variables in this template and reference to other paths
       days since last rainfall
       </comment>
       </textvar>
-
       </group>
+
 
       <group>
       <comment>
@@ -2319,18 +2390,37 @@ You can use builtin path variables in this template and reference to other paths
       </textvar>
 
       <textvar name="PrevDischarge" value="$(PrevDischarge)">
+        <comment>
+          Outflow discharge at the end of previous step (instantaneous) [m3/s] 
+          Cold start: -9999 sets initial value to 0
+        </comment>
+      </textvar>
+
+      <textvar name="PrevDischargeAvg" value="$(PrevDischargeAvg)">
+        <comment>
+          Outflow average discharge on previous routing sub-step (average) [m3/s]
+          Cold start: -9999 sets initial value to 0
+        </comment>
+      </textvar>
+
+
+      <textvar name="PrevCmMCTInitValue" value="$(PrevCmMCTInitValue)">
       <comment>
-      initial discharge [m3/s] from previous run for lakes, reservoirs and transmission loss
-      only needed for lakes reservoirs and transmission loss
-      -9999: use 0
+      Courant number at previous step for MCT routing
+      Cold start: -9999 sets initial value to 1
       </comment>
       </textvar>
 
+      <textvar name="PrevDmMCTInitValue" value="$(PrevDmMCTInitValue)">
+      <comment>
+      Reynolds number at previous step for MCT routing
+      Cold start: -9999 sets initial value to 0
+      </comment>
+      </textvar>
       </group>
 
 
       <group>
-
       <comment>
       **************************************************************
       INITIAL CONDITIONS FOREST
@@ -2386,7 +2476,6 @@ You can use builtin path variables in this template and reference to other paths
 
 
       <group>
-
       <comment>
       **************************************************************
       INITIAL CONDITIONS IRRIGATION
@@ -2432,10 +2521,7 @@ You can use builtin path variables in this template and reference to other paths
       -9999: use field capacity values
       </comment>
       </textvar>
-
       </group>
-
-
 
 
       <group>
@@ -2492,12 +2578,11 @@ You can use builtin path variables in this template and reference to other paths
       leaf area index [m2/m2]
       </comment>
       </textvar>
-
       </group>
+
 
       <group>
       <comment>
-
       **************************************************************
       INPUT WATER USE MAPS AND PARAMETERS
       **************************************************************
@@ -2588,7 +2673,6 @@ You can use builtin path variables in this template and reference to other paths
          scenruse.map
       </comment>
       </textvar>
-
 
       <textvar name="IrrigationEfficiency" value="$(IrrigationEfficiency)">
       <comment>
@@ -2694,7 +2778,6 @@ You can use builtin path variables in this template and reference to other paths
       <comment>
       </comment>
       </textvar>
-
       </group>
 
 
@@ -2704,7 +2787,6 @@ You can use builtin path variables in this template and reference to other paths
       RICE IRRIGATION
       **************************************************************
       </comment>
-
 
       <textvar name="RiceFlooding" value="10.0">
       <comment>
@@ -2719,30 +2801,29 @@ You can use builtin path variables in this template and reference to other paths
       </comment>
       </textvar>
 
-      <textvar name="RicePlantingDay1" value="$(PathMapsTables)/riceplantingday1.map">
+      <textvar name="RicePlantingDay1" value="$(PathMapsTables)/riceplantingday1">
       <comment>
       map with starting day of the year
       </comment>
       </textvar>
 
-      <textvar name="RiceHarvestDay1" value="$(PathMapsTables)/riceharvestday1.map">
+      <textvar name="RiceHarvestDay1" value="$(PathMapsTables)/riceharvestday1">
       <comment>
       map with starting day of the year
       </comment>
       </textvar>
 
-      <textvar name="RicePlantingDay2" value="$(PathMapsTables)/riceplantingday2.map">
+      <textvar name="RicePlantingDay2" value="$(PathMapsTables)/riceplantingday2">
       <comment>
       map with starting day of the year
       </comment>
       </textvar>
 
-      <textvar name="RiceHarvestDay2" value="$(PathMapsTables)/riceharvestday2.map">
+      <textvar name="RiceHarvestDay2" value="$(PathMapsTables)/riceharvestday2">
       <comment>
       map with starting day of the year
       </comment>
       </textvar>
-
       </group>
 
 
@@ -2788,6 +2869,8 @@ You can use builtin path variables in this template and reference to other paths
       Reported water level [m]  % False by default
       </comment>
       </textvar>
+      </group>
+
 
       <group>
       <comment>
@@ -2895,7 +2978,6 @@ You can use builtin path variables in this template and reference to other paths
       </comment>
       </textvar>
 
-
       <textvar name="CrossSection2State" value="$(PathOut)/ch2cr">
       <comment>
       Reported cross section area 2nd line of routing [m2]
@@ -2909,8 +2991,26 @@ You can use builtin path variables in this template and reference to other paths
       </textvar>
 
       <textvar name="ChanQState" value="$(PathOut)/chanq">
+        <comment>
+          Reported istantaneous discharge at end of computation step [cu m/s] ChanQ
+        </comment>
+      </textvar>
+
+      <textvar name="ChanQAvgDtState" value="$(PathOut)/chanqavgdt">
+        <comment>
+          Reported average discharge over last routing sub-step used to initialise lakes [cu m/s] ChanQAvgDt
+        </comment>
+      </textvar>
+
+      <textvar name="PrevCmMCTState" value="$(PathOut)/prevcm">
       <comment>
-      Reported istantaneous discharge at end of computation step [cu m/s] ChanQ
+      Courant number at previous step for MCT routing
+      </comment>
+      </textvar>
+
+      <textvar name="PrevDmMCTState" value="$(PathOut)/prevdm">
+      <comment>
+      Reynolds number at previous step for MCT routing
       </comment>
       </textvar>
 
@@ -3019,7 +3119,6 @@ You can use builtin path variables in this template and reference to other paths
       Reported transpiration maps, weighted sum over the fractions of each pixel [mm]
       </comment>
       </textvar>
-
       </group>
 
 
@@ -3150,12 +3249,11 @@ You can use builtin path variables in this template and reference to other paths
       </comment>
       </textvar>
 
-      <textvar name="LakeStorageM3" value="$(PathOut)/lakest">
+      <textvar name="LakeStorageM3" value="$(PathOut)/lakest.end">
       <comment>
       Reported lake storage [m3]
       </comment>
       </textvar>
-
 
       <textvar name="ReservoirFillEnd" value="$(PathOut)/rsfil.end">
       <comment>
@@ -3176,14 +3274,32 @@ You can use builtin path variables in this template and reference to other paths
       </textvar>
 
       <textvar name="ChanQEnd" value="$(PathOut)/chanq.end">
-      <comment>
-      Reported istantaneous discharge at end of computation step [cu m/s] ChanQ
-      </comment>
+        <comment>
+          Reported istantaneous discharge at end of computation step [cu m/s] ChanQ
+        </comment>
+      </textvar>
+
+      <textvar name="ChanQAvgDtEnd" value="$(PathOut)/chanqavgdt.end">
+        <comment>
+          Reported average discharge over last routing sub-step used to initialise lakes [cu m/s] ChanQAvgDt
+        </comment>
       </textvar>
 
       <textvar name="DischargeEnd" value="$(PathOut)/dis.end">
       <comment>
-      Reported discharge [cu m/s] (average over the model timesteps) (AvgDis)
+      Reported average discharge [cu m/s] (average over the model timesteps) (AvgDis)
+      </comment>
+      </textvar>
+
+      <textvar name="PrevCmMCTEnd" value="$(PathOut)/prevcm.end">
+      <comment>
+      Courant number at previous step for MCT routing
+      </comment>
+      </textvar>
+
+      <textvar name="PrevDmMCTEnd" value="$(PathOut)/prevdm.end">
+      <comment>
+      Reynolds number at previous step for MCT routing
       </comment>
       </textvar>
 
@@ -3192,23 +3308,27 @@ You can use builtin path variables in this template and reference to other paths
       Reported days since last rain
       </comment>
       </textvar>
+      
       <textvar name="CumInterceptionForestEnd" value="$(PathOut)/cumf.end">
       <comment>
       Reported interception storage [mm]
       </comment>
       </textvar>
+      
       <textvar name="Theta1ForestEnd" value="$(PathOut)/thfa.end">
       <comment>
       Reported volumetric soil moisture content for
       soil layer 1a (superficial layer) [V/V] [mm3/mm3]
       </comment>
       </textvar>
+      
       <textvar name="Theta2ForestEnd" value="$(PathOut)/thfb.end">
       <comment>
       Reported volumetric soil moisture content for both
       soil layer 1b (upper layer) [V/V] [mm3/mm3]
       </comment>
       </textvar>
+      
       <textvar name="Theta3ForestEnd" value="$(PathOut)/thfc.end">
       <comment>
       Reported volumetric soil moisture content for both
@@ -3228,23 +3348,25 @@ You can use builtin path variables in this template and reference to other paths
       </comment>
       </textvar>
 
-
       <textvar name="DSLRIrrigationEnd" value="$(PathOut)/dslri.end">
       <comment>
       Reported days since last rain
       </comment>
       </textvar>
+      
       <textvar name="CumInterceptionIrrigationEnd" value="$(PathOut)/cumi.end">
       <comment>
       Reported interception storage [mm]
       </comment>
       </textvar>
+      
       <textvar name="Theta1IrrigationEnd" value="$(PathOut)/thia.end">
       <comment>
       Reported volumetric soil moisture content for
       soil layer 1a (superficial layer) [V/V] [mm3/mm3]
       </comment>
       </textvar>
+      
       <textvar name="Theta2IrrigationEnd" value="$(PathOut)/thib.end">
       <comment>
       Reported volumetric soil moisture content for both
@@ -3264,7 +3386,6 @@ You can use builtin path variables in this template and reference to other paths
       Reported storage in upper response box [mm]
       </comment>
       </textvar>
-
 
       </group>
 
@@ -3306,8 +3427,8 @@ You can use builtin path variables in this template and reference to other paths
       Potential evaporation from open water surface [mm per time step]
       </comment>
       </textvar>
-
       </group>
+
 
       <group>
       <comment>
@@ -3690,7 +3811,6 @@ You can use builtin path variables in this template and reference to other paths
       </comment>
       </textvar>
 
-
       <textvar name="EWIntForestMaps" value="$(PathOut)/ewintF">
       <comment>
       Reported evaporation of intercepted water [mm]
@@ -3801,7 +3921,6 @@ You can use builtin path variables in this template and reference to other paths
       Reported storage in upper response box [mm]
       </comment>
       </textvar>
-
       </group>
 
 
@@ -3851,10 +3970,6 @@ You can use builtin path variables in this template and reference to other paths
       </textvar>
       </group>
 
-
-      </group>
-
-
       <group>
       <comment>
       **************************************************************
@@ -3864,13 +3979,13 @@ You can use builtin path variables in this template and reference to other paths
 
       <textvar name="DisTS" value="$(PathOut)/disWin.tss">
       <comment>
-      Reported discharge [cu m/s]
+      Reported average discharge over the model time step [cu m/s]
       </comment>
       </textvar>
 
       <textvar name="ChanqTS" value="$(PathOut)/chanqWin.tss">
       <comment>
-      Reported discharge over last routing sub-step [cu m/s]
+      Reported instantaneous discharge at the end of routing sub-step [cu m/s]
       </comment>
       </textvar>
 
@@ -3879,6 +3994,8 @@ You can use builtin path variables in this template and reference to other paths
       Reported water level [m]
       </comment>
       </textvar>
+      </group>
+
 
       <group>
       <comment>
@@ -3968,9 +4085,8 @@ You can use builtin path variables in this template and reference to other paths
       Days since last rain [days]
       </comment>
       </textvar>
-
-
       </group>
+
 
       <group>
       <comment>
@@ -4084,8 +4200,8 @@ You can use builtin path variables in this template and reference to other paths
       Reported loss from lower zone [mm]
       </comment>
       </textvar>
-
       </group>
+
 
       <group>
       <comment>
@@ -4124,7 +4240,13 @@ You can use builtin path variables in this template and reference to other paths
       </comment>
       </textvar>
 
+      <textvar name="actETPUpsTS" value="$(PathOut)/actETPUpsX.tss">
+      <comment>
+      ESActPixel+self.var.TaPixel+self.var.TaInterceptionAll+self.var.EvaAddM3*self.var.M3toMM
+      </comment>
+      </textvar>                               
       </group>
+
 
       <group>
       <comment>
@@ -4180,9 +4302,8 @@ You can use builtin path variables in this template and reference to other paths
       Days since last rain [days]
       </comment>
       </textvar>
-
-
       </group>
+
 
       <group>
       <comment>
@@ -4293,13 +4414,13 @@ You can use builtin path variables in this template and reference to other paths
       </comment>
       </textvar>
 
-      <textvar name="GwLossAvUpsTS" value="$(PathOut)/lossUps.tss">
+      <textvar name="GwLossAvUpsTS" value="$(PathOut)/gwLossUps.tss">
       <comment>
       Reported loss from lower zone [mm]
       </comment>
       </textvar>
-
       </group>
+
 
       <group>
       <comment>
@@ -4368,10 +4489,8 @@ You can use builtin path variables in this template and reference to other paths
       routine
       </comment>
       </textvar>
-
       </group>
 
-      </group>
 
       <group>
       <comment>
@@ -4387,20 +4506,20 @@ You can use builtin path variables in this template and reference to other paths
       **************************************************************
       </comment>
 
-      <textvar name="Ldd" value="$(PathMaps)/ec_ldd.nc">
+      <textvar name="Ldd" value="$(PathMaps)/ec_ldd">
       <comment>
       $(PathMaps)/ldd.map
       local drain direction map (1-9)
       </comment>
       </textvar>
 
-      <textvar name="Grad" value="$(PathMaps)/gradient.map">
+      <textvar name="Grad" value="$(PathMaps)/gradient">
       <comment>
       slope gradient [-] (0.50 -&gt; tangent=0.5, angle=26.5 degrees)
       </comment>
       </textvar>
 
-      <textvar name="ElevationStD" value="$(PathMaps)/elvstd.map">
+      <textvar name="ElevationStD" value="$(PathMaps)/elvstd">
       <comment>
       Elevation standard deviation [m], i.e. altitude difference elevation within pixel.
       Used for sub-pixel modelling of snow accumulation
@@ -4416,31 +4535,28 @@ You can use builtin path variables in this template and reference to other paths
       </comment>
       </textvar>
 
-      <textvar name="Sites" value="$(PathMaps)/sites.map">
+      <textvar name="Sites" value="$(PathMaps)/sites">
       <comment>
       map with monitoring sites (1,2,3 etc)
       </comment>
       </textvar>
 
-      <textvar name="PixelLengthUser" value="$(PathMaps)/pixleng.map">
+      <textvar name="PixelLengthUser" value="$(PathMaps)/pixleng">
       <comment>
       optional map with pixel length [m], only needed in case map attributes
       are not in [m] (e.g. lat / lon systems)
       </comment>
       </textvar>
 
-      <textvar name="PixelAreaUser" value="$(PathMaps)/pixarea.map">
+      <textvar name="PixelAreaUser" value="$(PathMaps)/pixarea">
       <comment>
       optional map with pixel area [m2], only needed in case map attributes
       are not in [m] (e.g. lat / lon systems)
       </comment>
       </textvar>
-
-
       </group>
 
       <group>
-
       <comment>
       **************************************************************
       SOIL PARAMETERS
@@ -4452,7 +4568,7 @@ You can use builtin path variables in this template and reference to other paths
 
       </comment>
 
-      <textvar name="SoilDepth1" value="$(PathMapsTables)/soildepth1_o.map">
+      <textvar name="SoilDepth1" value="$(PathMapsTables)/soildepth1_o">
       <comment>
       Soil depth for 1st layer: 1a (superficial layer)
       Minimum Soil Depth [mm] for superficial soil layer
@@ -4461,21 +4577,21 @@ You can use builtin path variables in this template and reference to other paths
       </comment>
       </textvar>
 
-      <textvar name="SoilDepth2" value="$(PathMapsTables)/soildepth2_o.map">
+      <textvar name="SoilDepth2" value="$(PathMapsTables)/soildepth2_o">
       <comment>
       Soil depth for 2nd layer: 1b (upper layer)
       Minimum Soil Depth [mm] for second soil layer
       </comment>
       </textvar>
 
-      <textvar name="SoilDepth3" value="$(PathMapsTables)/soildepth3_o.map">
+      <textvar name="SoilDepth3" value="$(PathMapsTables)/soildepth3_o">
       <comment>
       Soil depth for 2nd layer: 2 (lower layer)
       Minimum Soil Depth [mm] for second soil layer
       </comment>
       </textvar>
 
-      <textvar name="SoilDepth1Forest" value="$(PathMapsTables)/soildepth1_f.map">
+      <textvar name="SoilDepth1Forest" value="$(PathMapsTables)/soildepth1_f">
       <comment>
       Soil depth for 1st layer: 1a
       Minimum Soil Depth [mm] for upper soil layer
@@ -4484,20 +4600,19 @@ You can use builtin path variables in this template and reference to other paths
       </comment>
       </textvar>
 
-      <textvar name="SoilDepth2Forest" value="$(PathMapsTables)/soildepth2_f.map">
+      <textvar name="SoilDepth2Forest" value="$(PathMapsTables)/soildepth2_f">
       <comment>
       Soil depth for 2nd layer: 1b
       Minimum Soil Depth [mm] for lower soil layer
       </comment>
       </textvar>
 
-      <textvar name="SoilDepth3Forest" value="$(PathMapsTables)/soildepth3_f.map">
+      <textvar name="SoilDepth3Forest" value="$(PathMapsTables)/soildepth3_f">
       <comment>
       Soil depth for 2nd layer: 2
       Minimum Soil Depth [mm] for lower soil layer  300
       </comment>
       </textvar>
-
       </group>
 
 
@@ -4508,9 +4623,9 @@ You can use builtin path variables in this template and reference to other paths
       **************************************************************
       </comment>
 
-      <textvar name="DirectRunoffFraction" value="$(PathMapsLanduse)/fracsealed.map">
+      <textvar name="DirectRunoffFraction" value="$(PathMapsLanduse)/fracsealed">
       <comment>
-      $(PathMapsLanduse)/fracsealed.map
+      $(PathMapsLanduse)/fracsealed
       urban area (0-1)
       </comment>
       </textvar>
@@ -4521,9 +4636,9 @@ You can use builtin path variables in this template and reference to other paths
       </comment>
       </textvar>
 
-      <textvar name="ForestFraction" value="$(PathMapsLanduse)/fracforest.map">
+      <textvar name="ForestFraction" value="$(PathMapsLanduse)/fracforest">
       <comment>
-      $(PathMapsLanduse)/fracforest.map
+      $(PathMapsLanduse)/fracforest
       forest fraction of a pixel (0-1)
       </comment>
       </textvar>
@@ -4535,9 +4650,9 @@ You can use builtin path variables in this template and reference to other paths
       </comment>
       </textvar>
 
-      <textvar name="WaterFraction" value="$(PathMapsLanduse)/fracwater.map">
+      <textvar name="WaterFraction" value="$(PathMapsLanduse)/fracwater">
       <comment>
-      $(PathMapsLanduse)/fracwater.map
+      $(PathMapsLanduse)/fracwater
       forest fraction of a pixel (0-1)
       </comment>
       </textvar>
@@ -4549,9 +4664,9 @@ You can use builtin path variables in this template and reference to other paths
       </comment>
       </textvar>
 
-      <textvar name="OtherFraction" value="$(PathMapsLanduse)/fracother.map">
+      <textvar name="OtherFraction" value="$(PathMapsLanduse)/fracother">
       <comment>
-      $(PathMapsLanduse)/fracother.map
+      $(PathMapsLanduse)/fracother
       forest fraction of a pixel (0-1)
       </comment>
       </textvar>
@@ -4563,9 +4678,9 @@ You can use builtin path variables in this template and reference to other paths
       </comment>
       </textvar>
 
-      <textvar name="IrrigationFraction" value="$(PathMapsLanduse)/fracirrigated.map">
+      <textvar name="IrrigationFraction" value="$(PathMapsLanduse)/fracirrigated">
       <comment>
-      $(PathMapsLanduse)/fracirrigated.map
+      $(PathMapsLanduse)/fracirrigated
       irrigated area fraction of a pixel (0-1)
       </comment>
       </textvar>
@@ -4584,7 +4699,7 @@ You can use builtin path variables in this template and reference to other paths
       </comment>
       </textvar>
 
-      <textvar name="RiceFraction" value="$(PathMapsLanduse)/fracrice.map">
+      <textvar name="RiceFraction" value="$(PathMapsLanduse)/fracrice">
       <comment>
       rice fraction of a pixel (0-1)
       </comment>
@@ -4596,13 +4711,13 @@ You can use builtin path variables in this template and reference to other paths
       </comment>
       </textvar>
 
-      <textvar name="FractionGroundwaterUsed" value="$(PathMapsLanduse)/fracgwusedNew.map">
+      <textvar name="FractionGroundwaterUsed" value="$(PathMapsLanduse)/fracgwusedNew">
       <comment>
       groundwater used fraction of a pixel (0-1)
       </comment>
       </textvar>
 
-      <textvar name="FractionNonConventionalWaterUsed" value="$(PathMapsLanduse)/fracncused.map">
+      <textvar name="FractionNonConventionalWaterUsed" value="$(PathMapsLanduse)/fracncused">
       <comment>
       NonConventionalWaterUsed (0-1)
       </comment>
@@ -4614,58 +4729,56 @@ You can use builtin path variables in this template and reference to other paths
       </comment>
       </textvar>
 
-      <textvar name="EFlowThreshold" value="$(PathMaps)/ad_dis_nat_10.nc">
+      <textvar name="EFlowThreshold" value="$(PathMaps)/ad_dis_nat_10">
       <comment>
       $(PathMaps)/eflow.map
       EFlowThreshold is map with m3/s discharge, e.g. the 10th percentile discharge of the baseline run
       </comment>
       </textvar>
 
-      <textvar name="MapCropCoef" value="$(PathMapsTables)/cropcoef_o.map">
+      <textvar name="MapCropCoef" value="$(PathMapsTables)/cropcoef_o">
       <comment>
       table with crop coefficient for each land use; values ranging from 0.75 to 1.25;
       source: Supit, p.83 CFET
       </comment>
       </textvar>
 
-      <textvar name="MapCropGroupNumber" value="$(PathMapsTables)/cropgrpn_o.map">
+      <textvar name="MapCropGroupNumber" value="$(PathMapsTables)/cropgrpn_o">
       <comment>
       table with crop group number; table 6.1 and 6.2 in WOFOST 6.0, Supit, 1994: p. 86
       </comment>
       </textvar>
 
-      <textvar name="MapN" value="$(PathMapsTables)/mannings_o.map">
+      <textvar name="MapN" value="$(PathMapsTables)/mannings_o">
       <comment>
-      $(PathMapsTables)/manngs_2000_250m.map
+      $(PathMapsTables)/manngs_2000_250m
       table with Manning's roughness [m^(1/3) s^(-1)] for each CORINE landcover class
       </comment>
       </textvar>
 
-      <textvar name="MapForestCropCoef" value="$(PathMapsTables)/cropcoef_f.map">
+      <textvar name="MapForestCropCoef" value="$(PathMapsTables)/cropcoef_f">
       <comment>
       table with crop coefficient for each land use; values ranging from 0.75 to 1.25;
       source: Supit, p.83 CFET
       </comment>
       </textvar>
 
-      <textvar name="MapForestCropGroupNumber" value="$(PathMapsTables)/cropgrpn_f.map">
+      <textvar name="MapForestCropGroupNumber" value="$(PathMapsTables)/cropgrpn_f">
       <comment>
       table with crop group number; table 6.1 and 6.2 in WOFOST 6.0, Supit, 1994: p. 86
       </comment>
       </textvar>
 
-      <textvar name="MapForestN" value="$(PathMapsTables)/mannings_f.map">
+      <textvar name="MapForestN" value="$(PathMapsTables)/mannings_f">
       <comment>
-      $(PathMapsTables)/manngs_2000_250m.map
+      $(PathMapsTables)/manngs_2000_250m
       table with Manning's roughness [m^(1/3) s^(-1)] for each CORINE landcover class
       </comment>
       </textvar>
-
       </group>
 
 
       <group>
-
       <comment>
       **************************************************************
       Variable Channel NoSubStepChannel
@@ -4690,7 +4803,7 @@ You can use builtin path variables in this template and reference to other paths
       **************************************************************
       </comment>
 
-      <textvar name="Channels" value="$(PathMaps)/chan.map">
+      <textvar name="Channels" value="$(PathMaps)/chan">
       <comment>
       Boolean map with value 1 at channel pixels and 0 at
       all other pixels
@@ -4699,50 +4812,50 @@ You can use builtin path variables in this template and reference to other paths
       </comment>
       </textvar>
 
-      <textvar name="ChanGrad" value="$(PathMaps)/changrad.map">
+      <textvar name="ChanGrad" value="$(PathMaps)/changrad">
       <comment>
       Channel gradient (fraction, dy/dx)
       </comment>
       </textvar>
 
-      <textvar name="ChanMan" value="$(PathMaps)/ec_chanman.nc">
+      <textvar name="ChanMan" value="$(PathMaps)/ec_chanman">
       <comment>
       Channel Manning's n [m^(1/3) s^(-1)]
       </comment>
       </textvar>
 
-      <textvar name="ChanLength" value="$(PathMaps)/chanlength.map">
+      <textvar name="ChanLength" value="$(PathMaps)/chanlength">
       <comment>
       Channel length [m]
       </comment>
       </textvar>
 
-      <textvar name="ChanBottomWidth" value="$(PathMaps)/ec_chanbw.nc">
+      <textvar name="ChanBottomWidth" value="$(PathMaps)/ec_chanbw">
       <comment>
       Channel bottom width [m]
       </comment>
       </textvar>
 
-      <textvar name="ChanSdXdY" value="$(PathMaps)/chans.map">
+      <textvar name="ChanSdXdY" value="$(PathMaps)/chans">
       <comment>
       Channel side slope, expressed as gradient
       !! expressed as dx/dy !!! (NOT dy/dx, which would perhaps be more logical)
       </comment>
       </textvar>
 
-      <textvar name="FloodPlainWidth" value="$(PathMaps)/ec_chanflpn.nc">
+      <textvar name="FloodPlainWidth" value="$(PathMaps)/ec_chanflpn">
       <comment>
       Floodplain Width [m]
       </comment>
       </textvar>
 
-      <textvar name="ChanDepthThreshold" value="$(PathMaps)/ec_chanbnkf.nc">
+      <textvar name="ChanDepthThreshold" value="$(PathMaps)/ec_chanbnkf">
       <comment>
       Bankfull channel depth [m]
       </comment>
       </textvar>
-
       </group>
+
 
       <group>
       <comment>
@@ -4753,100 +4866,101 @@ You can use builtin path variables in this template and reference to other paths
       **************************************************************
       </comment>
 
-      <textvar name="MapThetaSat1" value="$(PathSoilHyd)/thetas1_o.map">
+      <textvar name="MapThetaSat1" value="$(PathSoilHyd)/thetas1_o">
       <comment>
       Soil moisture content at saturation [V/V] [mm3/mm3] for soil layer 1a (superficial soil layer)
       </comment>
       </textvar>
 
-      <textvar name="MapThetaSat2" value="$(PathSoilHyd)/thetas2_o.map">
+      <textvar name="MapThetaSat2" value="$(PathSoilHyd)/thetas2_o">
       <comment>
       Soil moisture content at saturation [V/V] [mm3/mm3] for soil layer 1b (upper soil layer)
       </comment>
       </textvar>
 
-      <textvar name="MapThetaSat3" value="$(PathSoilHyd)/thetas3.map">
+      <textvar name="MapThetaSat3" value="$(PathSoilHyd)/thetas3">
       <comment>
       Soil moisture content at saturation [V/V] [mm3/mm3] for soil layer 2 (lower soil layer)
       </comment>
       </textvar>
 
-      <textvar name="MapThetaRes1" value="$(PathSoilHyd)/thetar1.map">
+      <textvar name="MapThetaRes1" value="$(PathSoilHyd)/thetar1">
       <comment>
       Residual soil moisture content [V/V] [mm3/mm3]  for soil layer 1a (superficial soil layer)
       </comment>
       </textvar>
 
-      <textvar name="MapThetaRes2" value="$(PathSoilHyd)/thetar2.map">
+      <textvar name="MapThetaRes2" value="$(PathSoilHyd)/thetar2">
       <comment>
       Residual soil moisture content [V/V] [mm3/mm3] for soil layer 1b (upper soil layer)
       </comment>
       </textvar>
 
-      <textvar name="MapThetaRes3" value="$(PathSoilHyd)/thetar3.map">
+      <textvar name="MapThetaRes3" value="$(PathSoilHyd)/thetar3">
       <comment>
       Residual soil moisture content [V/V] [mm3/mm3] for soil layer 2 (lower soil layer)
       </comment>
       </textvar>
 
-      <textvar name="MapLambda1" value="$(PathSoilHyd)/lambda1_o.map">
+      <textvar name="MapLambda1" value="$(PathSoilHyd)/lambda1_o">
       <comment>
       Pore-size index (Van Genuchten m and n are calculated from this)
       Lambda is acually 1-n  [-]
       </comment>
       </textvar>
 
-      <textvar name="MapLambda2" value="$(PathSoilHyd)/lambda2_o.map">
+      <textvar name="MapLambda2" value="$(PathSoilHyd)/lambda2_o">
       <comment>
       Pore-size index (Van Genuchten m and n are calculated from this)
       Lambda is acually 1-n [-]
       </comment>
       </textvar>
 
-      <textvar name="MapLambda3" value="$(PathSoilHyd)/lambda3.map">
+      <textvar name="MapLambda3" value="$(PathSoilHyd)/lambda3">
       <comment>
       Pore-size index (Van Genuchten m and n are calculated from this)
       Lambda is acually 1-n  [-]
       </comment>
       </textvar>
 
-      <textvar name="MapGenuAlpha1" value="$(PathSoilHyd)/genua1_o.map">
+      <textvar name="MapGenuAlpha1" value="$(PathSoilHyd)/genua1_o">
       <comment>
       Van Genuchten parameter Alpha [1/cm]  for soil layer 1a (superficial soil layer)
       </comment>
       </textvar>
 
-      <textvar name="MapGenuAlpha2" value="$(PathSoilHyd)/genua2_o.map">
+      <textvar name="MapGenuAlpha2" value="$(PathSoilHyd)/genua2_o">
       <comment>
       Van Genuchten parameter Alpha [1/cm] for soil layer 1b (upper soil layer)
       </comment>
       </textvar>
 
-      <textvar name="MapGenuAlpha3" value="$(PathSoilHyd)/genua3.map">
+      <textvar name="MapGenuAlpha3" value="$(PathSoilHyd)/genua3">
       <comment>
       Van Genuchten parameter Alpha [1/cm] for soil layer 2 (lower soil layer)
       </comment>
       </textvar>
 
-      <textvar name="MapKSat1" value="$(PathSoilHyd)/ksat1_o.map">
+      <textvar name="MapKSat1" value="$(PathSoilHyd)/ksat1_o">
       <comment>
       Saturated conductivity [mm/day] for soil layer 1a (superficial soil layer)
       </comment>
       </textvar>
 
-      <textvar name="MapKSat2" value="$(PathSoilHyd)/ksat2_o.map">
+      <textvar name="MapKSat2" value="$(PathSoilHyd)/ksat2_o">
       <comment>
       Saturated conductivity [mm/day] for soil layer 1b (upper soil layer)
       </comment>
       </textvar>
 
-      <textvar name="MapKSat3" value="$(PathSoilHyd)/ksat3.map">
+      <textvar name="MapKSat3" value="$(PathSoilHyd)/ksat3">
       <comment>
       Saturated conductivity [mm/day] for soil layer 2 (lower soil layer)
       </comment>
       </textvar>
 
       </group>
+
 
       <group>
       <comment>
@@ -4857,63 +4971,63 @@ You can use builtin path variables in this template and reference to other paths
       **************************************************************
       </comment>
 
-      <textvar name="MapThetaSat1Forest" value="$(PathSoilHyd)/thetas1_f.map">
+      <textvar name="MapThetaSat1Forest" value="$(PathSoilHyd)/thetas1_f">
       <comment>
       Soil moisture content at saturation [V/V] [mm3/mm3] for soil layer 1a (superficial soil layer)
       </comment>
       </textvar>
 
-      <textvar name="MapThetaSat2Forest" value="$(PathSoilHyd)/thetas2_f.map">
+      <textvar name="MapThetaSat2Forest" value="$(PathSoilHyd)/thetas2_f">
       <comment>
       Soil moisture content at saturation [V/V] [mm3/mm3]
       </comment>
       </textvar>
 
-      <textvar name="MapThetaRes1Forest" value="$(PathSoilHyd)/thetar1.map">
+      <textvar name="MapThetaRes1Forest" value="$(PathSoilHyd)/thetar1">
       <comment>
       Residual soil moisture content [V/V] [mm3/mm3] for soil layer 1a (superficial soil layer)
       </comment>
       </textvar>
 
-      <textvar name="MapThetaRes2Forest" value="$(PathSoilHyd)/thetar2.map">
+      <textvar name="MapThetaRes2Forest" value="$(PathSoilHyd)/thetar2">
       <comment>
       Residual soil moisture content [V/V] [mm3/mm3] for soil layer 1b (upper soil layer)
       </comment>
       </textvar>
 
-      <textvar name="MapLambda1Forest" value="$(PathSoilHyd)/lambda1_f.map">
+      <textvar name="MapLambda1Forest" value="$(PathSoilHyd)/lambda1_f">
       <comment>
       Pore-size index (Van Genuchten m and n are calculated from this) for soil layer 1a (superficial soil layer)
       Lambda is acually 1-n [-] for soil layer 1b (upper soil layer)
       </comment>
       </textvar>
 
-      <textvar name="MapLambda2Forest" value="$(PathSoilHyd)/lambda2_f.map">
+      <textvar name="MapLambda2Forest" value="$(PathSoilHyd)/lambda2_f">
       <comment>
       Pore-size index (Van Genuchten m and n are calculated from this)
       Lambda is acually 1-n [-] for soil layer 1b (upper soil layer)
       </comment>
       </textvar>
 
-      <textvar name="MapGenuAlpha1Forest" value="$(PathSoilHyd)/genua1_f.map">
+      <textvar name="MapGenuAlpha1Forest" value="$(PathSoilHyd)/genua1_f">
       <comment>
       Van Genuchten parameter Alpha [1/cm] for soil layer 1a (superficial soil layer)
       </comment>
       </textvar>
 
-      <textvar name="MapGenuAlpha2Forest" value="$(PathSoilHyd)/genua2_f.map">
+      <textvar name="MapGenuAlpha2Forest" value="$(PathSoilHyd)/genua2_f">
       <comment>
       Van Genuchten parameter Alpha [1/cm] for soil layer 1b (upper soil layer)
       </comment>
       </textvar>
 
-      <textvar name="MapKSat1Forest" value="$(PathSoilHyd)/ksat1_f.map">
+      <textvar name="MapKSat1Forest" value="$(PathSoilHyd)/ksat1_f">
       <comment>
       Saturated conductivity [mm/day] for soil layer 1a (superficial soil layer)
       </comment>
       </textvar>
 
-      <textvar name="MapKSat2Forest" value="$(PathSoilHyd)/ksat2_f.map">
+      <textvar name="MapKSat2Forest" value="$(PathSoilHyd)/ksat2_f">
       <comment>
       Saturated conductivity [mm/day] for soil layer 1b (upper soil layer)
       </comment>
@@ -4937,7 +5051,7 @@ You can use builtin path variables in this template and reference to other paths
           </comment>
         </textvar>
 
-        <textvar name="ReservoirSites" value="$(PathMaps)/reservoirs.nc">
+        <textvar name="ReservoirSites" value="$(PathMaps)/reservoirs">
           <comment>
             Map with location of reservoirs (number)
           </comment>
@@ -5030,7 +5144,6 @@ You can use builtin path variables in this template and reference to other paths
               reservoir routine switches to flood control mode.
             </comment>
         </textvar>
-
       </group>
 
       <group>
@@ -5042,7 +5155,7 @@ You can use builtin path variables in this template and reference to other paths
           **************************************************************
         </comment>
 
-        <textvar name="LakeSites" value="$(PathMaps)/lakes.nc">
+        <textvar name="LakeSites" value="$(PathMaps)/lakes">
           <comment>
             Map with location of lakes
           </comment>
@@ -5140,12 +5253,10 @@ You can use builtin path variables in this template and reference to other paths
           -9999 sets initial value
           </comment>
         </textvar>
-
       </group>
 
 
       <group>
-
         <comment>
         **************************************************************
         POLDERS(if used)
@@ -5158,7 +5269,7 @@ You can use builtin path variables in this template and reference to other paths
           </comment>
         </textvar>
 
-        <textvar name="PolderSites" value="$(PathMaps)/polders.map">
+        <textvar name="PolderSites" value="$(PathMaps)/polders">
           <comment>
           Map with polder locations
           </comment>
@@ -5223,7 +5334,6 @@ You can use builtin path variables in this template and reference to other paths
           name of output map(s) with polder level
           </comment>
         </textvar>
-
       </group>
 
       <group>
@@ -5249,7 +5359,6 @@ You can use builtin path variables in this template and reference to other paths
           InflowPoints map (also optional)
           </comment>
         </textvar>
-
       </group>
 
       <group>
@@ -5274,20 +5383,20 @@ You can use builtin path variables in this template and reference to other paths
       </comment>
       </textvar>
 
-      <textvar name="ChannelsDynamic" value="$(PathMaps)/chandyn.map">
+      <textvar name="ChannelsDynamic" value="$(PathMaps)/chandyn">
       <comment>
       Boolean map with value 1 at channel pixels where dynamic wave is
       used, and 0 at all other pixels
       </comment>
       </textvar>
 
-      <textvar name="ChanBottomLevel" value="$(PathMaps)/chblevel.map">
+      <textvar name="ChanBottomLevel" value="$(PathMaps)/chblevel">
       <comment>
       Channel bottom level [m]
       </comment>
       </textvar>
 
-      <textvar name="ChanCrossSections" value="$(PathMaps)/chanxsect.map">
+      <textvar name="ChanCrossSections" value="$(PathMaps)/chanxsect">
       <comment>
       Nominal map with channel cross section IDs
       </comment>
@@ -5298,8 +5407,30 @@ You can use builtin path variables in this template and reference to other paths
       Table with cross section parameters (H,A,P)
       </comment>
       </textvar>
-
       </group>
+
+
+      <group>
+      <comment>
+      **************************************************************
+      MUSKINGUM-CUNGE-TODINI OPTION
+      **************************************************************
+      </comment>
+
+      <textvar name="ChannelsMCT" value="$(ChannelsMCT)">
+      <comment>
+      Boolean map with value 1 at channel pixels where MCT is
+      used, and 0 at all other pixels
+      </comment>
+      </textvar>
+
+      <textvar name="ChanGradMaxMCT" value="$(ChanGradMaxMCT)">
+      <comment>
+      Maximum channel gradient for channels using MCT routing [-] (for MCT wave: slope cannot be >0.001)
+      </comment>
+      </textvar>
+      </group>
+
 
       <group>
       <comment>
@@ -5392,24 +5523,24 @@ You can use builtin path variables in this template and reference to other paths
       Reported pF upper soil layer [-]
       </comment>
       </textvar>
+      
       <textvar name="PF2AvUpsTS" value="$(PathOut)/pFSubUps.tss">
       <comment>
       Reported pF lower soil layer [-]
       </comment>
       </textvar>
+      
       <textvar name="PF1ForestAvUpsTS" value="$(PathOut)/pFForestTopUps.tss">
       <comment>
       Reported pF upper soil layer [-]
       </comment>
       </textvar>
+      
       <textvar name="PF2ForestAvUpsTS" value="$(PathOut)/pFForestSubUps.tss">
       <comment>
       Reported pF lower soil layer [-]
       </comment>
       </textvar>
-
-
-
       </group>
 
 
@@ -5437,6 +5568,7 @@ You can use builtin path variables in this template and reference to other paths
       map of aquifers (0/1), used to smoothen LZ near extraction areas
       </comment>
       </textvar>
+      </group>
 
 
       <group>
@@ -5451,7 +5583,6 @@ You can use builtin path variables in this template and reference to other paths
       day of the year when the yearly endcalculation is done e.g. 31/10/xxxx = 304
       </comment>
       </textvar>
-
 
       <textvar name="TotalAbsGroundwater" value="$(PathOut)/tAbsGW">
       <comment>
@@ -5616,7 +5747,6 @@ You can use builtin path variables in this template and reference to other paths
       </comment>
       </textvar>
 
-
       <textvar name="TotalAbstractionFromGroundwaterM3" value="$(PathOut)/TotAbsGW">
       <comment>
       Abstraction from groundwater in m3 per timestep
@@ -5743,7 +5873,6 @@ You can use builtin path variables in this template and reference to other paths
       </comment>
       </textvar>
 
-      </group>
 
 
       </group>

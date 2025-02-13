@@ -16,7 +16,7 @@ from .test_utils import setoptions, mk_path_out, ETRS89TestCase
 class TestCaching(ETRS89TestCase):
     case_dir = os.path.join(os.path.dirname(__file__), 'data', 'LF_ETRS89_UseCase')
     settings_file = os.path.join(case_dir, 'settings', 'full.xml')
-    path_out = os.path.join(case_dir, 'out') 
+    path_out = os.path.join(case_dir, 'out')
     if not os.path.exists(path_out):
         os.mkdir(path_out)
     out_dir_a = os.path.join(case_dir, 'out', 'a')
@@ -29,13 +29,13 @@ class TestCaching(ETRS89TestCase):
     def test_caching_6h(self):
       dt_sec = 21600
       self.run_lisflood_caching(dt_sec)
-    
+
     def test_cache_extract(self):
       dt_sec = 86400
       self.run_lisflood_caching(dt_sec, test_extract=True)
 
     def run_lisflood_caching(self, dt_sec, test_extract=False):
-        
+
         settings_a = setoptions(self.settings_file,
                                 vars_to_set={'StepStart': '30/07/2016 06:00', 'StepEnd': '01/08/2016 06:00',
                                              'DtSec': dt_sec, 'PathOut': '$(PathRoot)/out/a',
@@ -82,7 +82,6 @@ class TestCaching(ETRS89TestCase):
         shutil.rmtree(self.out_dir_a, ignore_errors=True)
         shutil.rmtree(self.out_dir_b, ignore_errors=True)
         Cache.clear()
-
 
 @pytest.mark.slow
 class TestCachingSlow(ETRS89TestCase):
@@ -148,6 +147,7 @@ class TestCachingSlow(ETRS89TestCase):
         self.compare_reference('dis', check='map', step_length=dt_sec)
         self.compare_reference('dis', check='tss', step_length=dt_sec)
         self.compare_reference('chanq', check='tss', step_length=dt_sec)
+
 
     def test_dis_daily(self):
         self.run('86400', '02/01/2016 06:00', '02/07/2016 06:00')

@@ -785,6 +785,27 @@ Verifies chunking files using NetCDFTimeChunks with values `1`, `10`, `auto` and
 | test_chunking_24h   | 86400 |30/07/2016 06:00 - 01/09/2016 06:00 | compares output chunking files with reference files             |
 | test_chunking_6h    | 21600 |30/07/2016 06:00 - 01/09/2016 06:00 | compares output chunking files with reference files             |
 
+
+### Testing MCT diffusive wave routing
+
+A set of tests is available to verify the correct functioning of the MCT diffusive wave routing. In these tests all OSLisflood options are switched off and the model runs with core components and river routing. Two sets of tests are available: 1) 'fast' tests that can be run routinely and only take a few minutes; 2) 'slow' tests that need to run before merging new model developments.
+
+#### Testing warm start for MCT diffusive routing
+
+Test ensures that a long cold run is equivalent to an initial cold start + repeated warm starts, when MCT diffusive wave routing is used. The test runs OSLisflood continuously for a long period of time and saves all outputs in a reference folder. It then runs OSLisflood on the same period but restarting the model at every step (start and stop). Outputs of the two runs are compared and maps are expected to be identical.
+During this test, both 'slow' and 'fast' tests generate the reference dataset dynamically and are designed to work when model developments change the model outputs.
+
+#### Testing inflow for MCT diffusive routing
+
+This test verifies the correct functioning of the option inflow, when using MCT diffusive routing. The test runs OSLisflood continuously for a long period of time and saves river discharge time series for a point along the main river (point A) and the point immediatly downstream (point B). It then runs OSLisflood again on the sub-catchment downstream of point B and using the generated river discharge at point A as an inflow at point B. Discharge time series from the two runs at point B are compared, differences should be <0.001 m3/s.
+During this test, both 'slow' and 'fast' tests generate the reference dataset dynamically and are designed to work when model developments change the model outputs.
+
+#### Testing results for MCT diffusive routing
+
+These tests perform short and long (max 1 year) execution of OSlisflood on the Po test catchments clipped from the full setup (EFAS) and assert that results are within defined tolerances if compared with test oracle. All tests have all switches turned off and run with core OSLisflood components and river routing. Note that the tests will fail if model development changes outputs from any of the core model componets. 
+
+
+
 ## Release test for EFAS and GloFAS
 
 At each release, in addition to pass all tests described above, OSLisflood is tested also with full domains of EFAS and GLOFAS.

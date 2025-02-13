@@ -9,7 +9,8 @@ LISFLOOD can generate a wide variety of outputs. Output files can be time series
 | Description                                                  | Units            | File name             |
 | ------------------------------------------------------------ | ---------------- | --------------------- |
 | **RATE VARIABLES AT GAUGES**                                 |                  |                       |
-| $^{1,2}$ channel discharge                                   | $\frac{m^3} {s}$ | dis.tss               |
+| $^{1,2}$ average river discharge                                   | $\frac{m^3} {s}$ | dis.tss               |
+| $^{1,2}$ instantaneous rivers discharge                                   | $\frac{m^3} {s}$ | chanq.tss               |
 | **NUMERICAL CHECKS**                                             |                  |                       |
 | $^2$ cumulative mass balance error                           | $m^3$            | mbError.tss           |
 | $^2$ cumulative mass balance error, expressed as mm water slice (average over catchment) | $mm$             | mbErrorMm.tss         |

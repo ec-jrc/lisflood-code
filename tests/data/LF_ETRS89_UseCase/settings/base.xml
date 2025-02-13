@@ -692,6 +692,12 @@ The option "numCPUs_parallelNumba" may take the following values:
                 </comment>
             </textvar>
 
+            <textvar name="PrevDischargeAvg" value="-9999">
+                <comment>
+					Outflow average discharge on previous routing sub-step (average) [m3/s]
+					Cold start: -9999 sets initial value to 0
+                </comment>
+            </textvar>
         </group>
 
         <group>
@@ -1326,6 +1332,14 @@ The option "numCPUs_parallelNumba" may take the following values:
                 <comment>
                     Reference depth of overland flow [mm], used to compute
                     overland flow Alpha for kin. wave
+                </comment>
+            </textvar>
+
+            <textvar name="BankFullPerc" value="0.5">
+                <comment>
+                    Percentage [-] used to compute the TotalCrossSectionAreaHalfBankFull in the initialisation of the
+                    total cross-sectional area
+                    default: 0.5
                 </comment>
             </textvar>
 
@@ -1973,6 +1987,14 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
             </textvar>
 
+            <textvar name="BankFullPerc" value="$(BankFullPerc)">
+                <comment>
+                    Percentage [-] used to compute the TotalCrossSectionAreaHalfBankFull in the initialisation of the
+                    total cross-sectional area
+                    default: 0.5
+                </comment>
+            </textvar>
+
             <textvar name="GradMin" value="$(GradMin)">
                 <comment>
                     Minimum slope gradient (for kin. wave: slope cannot be 0)
@@ -2171,6 +2193,12 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
             </textvar>
 
+            <textvar name="PrevDischargeAvg" value="$(PrevDischargeAvg)">
+                <comment>
+					Outflow average discharge on previous routing sub-step (average) [m3/s]
+					Cold start: -9999 sets initial value to 0
+                </comment>
+            </textvar>
         </group>
 
 
@@ -2762,6 +2790,12 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
+                <textvar name="ChanQAvgDtState" value="$(PathOut)/chanqavgdt">
+                    <comment>
+                        Reported average discharge over last routing sub-step used to initialise lakes [cu m/s] ChanQAvgDt
+                    </comment>
+                </textvar>
+
                 <textvar name="DSLRForestState" value="$(PathOut)/dslf">
                     <comment>
                         Reported days since last rain
@@ -3003,6 +3037,12 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 <textvar name="ChanQEnd" value="$(PathOut)/chanq.end">
                     <comment>
                         Reported discharge [cu m/s] ChanQ
+                    </comment>
+                </textvar>
+
+                <textvar name="ChanQAvgDtEnd" value="$(PathOut)/chanqavgdt.end">
+                    <comment>
+                        Reported average discharge over last routing sub-step used to initialise lakes [cu m/s] ChanQAvgDt
                     </comment>
                 </textvar>
 

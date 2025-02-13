@@ -378,6 +378,41 @@ These parameters are all related to the [routing of water in the channels](https
 
 
 
+### Diffusive wave routing parameters
+
+The following parameters are related to the [diffusive wave routing](https://ec-jrc.github.io/lisflood-model/3_14_optLISFLOOD_diffusive-wave/) in river channels. The multiplier *CalChanMan3* can be used to fine-tune the diffusive wave propagation when using the Muskingum-Cunge-Todini (MCT) routing, and it can be defined as either a single value or a map. The map *ChannelsMCT* is a Bolean map with the mask of rivers where MCT wave routing must be used. The parameter *ChanGradMaxMCT* defines the maximum riverbed slope for river grid cells using the MCT wave routing. The parameter is provided as a single number and it is recommended to set it to values < 0.001 and > *ChanGradMin*
+```xml
+	<comment>
+	**************************************************************
+	MUSKINGUM-CUNGE-TODINI ROUTING PARAMETERS
+	**************************************************************
+	</comment>
+	<textvar name="CalChanMan3" value="$(PathParams)/params_CalChanMan3">
+	<comment>
+	default: 3.0 [-]
+	Multiplier [-] applied to Channel Manning's n for MCT routing
+	</comment>
+	</textvar>
+	<textvar name="ChannelsMCT" value="$(PathRoot)/maps/chanmct">
+	<comment>
+	Boolean map with value 1 at channel pixels where MCT is
+	used, and 0 at all other pixels
+	</comment>
+	</textvar>
+	<textvar name="ChanGradMaxMCT" value="0.001">
+	<comment>
+	Maximum channel gradient for channels using MCT routing [-] (for MCT wave: slope cannot be 0)
+	Default: 0.001
+	</comment>
+	</textvar>                                                       
+```
+
+- **CalChanMan3** is a multiplier that is applied to the Manning’s roughness map of the [channel system](https://ec-jrc.github.io/lisflood-model/2_16_stdLISFLOOD_channel-routing/) [-] for the grid cells where MCT routing is used
+- **ChannelsMCT** is Bolean mask including the rivers grid cells using the MCT wave routing [-]
+- **ChanGradMaxMCT** is a upper limit for the channel gradient used in the calculation of the MCT wave routing [m/m]
+
+
+
 ### Parameters related to numerics 
 
 This category only contains one parameter at the moment, which can only be a single value. We strongly recommend keeping this parameter at its default value.
@@ -530,8 +565,8 @@ Note that a couple of variables can be [initialized internally](https://ec-jrc.g
 	</comment>                                                          
 	</textvar>                                                          
 	<comment>                                                           
-**************************************************************               
-	The following variables can also be initialized in the model internally. if you want this to happen set them to bogus value of -9999                                                                 
+	**************************************************************               
+	The following variables can also be initialized in the model internally. If you want this to happen set them to bogus value of -9999                                                                 
 	**************************************************************               
 	</comment>                                                          
 	<textvar name="LZInitValue" value="-9999">                      
@@ -571,7 +606,19 @@ Note that a couple of variables can be [initialized internally](https://ec-jrc.g
 	only needed for lakes reservoirs and transmission loss                
 	-9999: use discharge of half bankfull                                 
 	</comment>                                                          
-	</textvar>                                                          
+	</textvar>
+	<textvar name="PrevCmMCTInitValue" value="-9999">
+	<comment>
+	Courant number at previous step for MCT routing
+	Cold start: -9999: use 1
+	</comment>
+	</textvar>
+	<textvar name="PrevDmMCTInitValue" value="-9999">
+	<comment>
+	Reynolds number at previous step for MCT routing
+	Cold start: -9999: use 0
+	</comment>
+	</textvar>		                                                          
 ```
 
 - **WaterDepthInitValue** is the initial amount of water on the soil surface $[mm]$
@@ -603,6 +650,10 @@ Note that a couple of variables can be [initialized internally](https://ec-jrc.g
 - **ThetaInit3Value** is the initial moisture content $[\frac{mm^3} {mm^3}]$ of the lower soil layer (2). A value of -**9999** will set the initial soil moisture content to field capacity.
 
 - **PrevDischarge** is the initial discharge from previous run $[\frac{m^3} {s}]$ used for lakes, reservoirs and transmission loss (only needed if option is on for lakes or reservoirs or transmission loss). Note that PrevDischarge is discharge as an average over the time step (a flux) . A value of **-9999** sets the initial amount of discharge to equivalent of half bankfull.
+
+- **PrevCmMCTInitValue** is the Courant number at the end of the previous step and it is only used for MCT wave routing [-]. A value of **-9999 ** sets the initial value to 1.
+
+- **PrevDmMCTInitValue** is the Reynols number at the end of the previous step and it is only used for MCT wave routing [-]. A value of **-9999 ** sets the initial value to 0.
 
 ```xml
 	<comment>                                                           

@@ -239,11 +239,94 @@ class ETRS89TestCase(object):
             },
         },
     }
+    def teardown_method(self):
+        settings = LisSettings.instance()
+        output_dir = settings.output_dir
+        if os.path.exists(output_dir):
+            shutil.rmtree(output_dir)
+
+    @classmethod
+    def compare_reference(cls, variable='dis', check='map', step_length='86400'):
+        """
+        :param variable: variable to check. Default 'dis' (Discharge)
+        :param check: either 'map' or 'tss'. Default 'map'
+        :param step_length: DtSec (86400 for daily and 21600 for 6h run)
+        """
+
+        settings = LisSettings.instance()
+        binding = settings.binding
+        reference = cls.reference_files[variable][step_length][check]
+
+        if check == 'map':
+            output_map = os.path.normpath(binding[cls.reference_files[variable]['report_map']]) + '.nc'
+            comparator = NetCDFComparator(settings.maskpath)
+            comparator.compare_files(reference, output_map)
+        elif check == 'tss':
+            output_tss = binding[cls.reference_files[variable]['report_tss']]
+            comparator = TSSComparator()
+            comparator.compare_files(reference, output_tss)
+        # If there are differences, test fails before reaching this line (AssertionError(s) in comparator methods)
+        assert True
+
+class MCTTestCase(object):
+    case_dir = os.path.join(os.path.dirname(__file__), 'data', 'LF_MCT_UseCase')
+    ref_dir = os.path.join(case_dir, 'reference')
+    reference_files = {
+        'dis': {
+            'report_map': 'DischargeMaps',
+            'report_tss': 'DisTS',
+            '86400-3600': {
+                'map': os.path.join(ref_dir, 'output_reference_daily/dis.nc'),
+                'tss': os.path.join(ref_dir, 'output_reference_daily/disX.tss'),
+            },
+            '21600-21600': {
+                'map': os.path.join(ref_dir, 'output_reference_6h_6h/dis.nc'),
+                'tss': os.path.join(ref_dir, 'output_reference_6h_6h/disX.tss'),
+            },
+            '21600-3600': {
+                'map': os.path.join(ref_dir, 'output_reference_6h_1h/dis.nc'),
+                'tss': os.path.join(ref_dir, 'output_reference_6h_1h/disX.tss'),
+            },
+        },
+        'chanq': {
+            'report_map': None,
+            'report_tss': 'ChanqTS',
+            '86400-3600': {
+                'map': None,
+                'tss': os.path.join(ref_dir, 'output_reference_daily/chanqX.tss'),
+            },
+            '21600-21600': {
+                'map': None,
+                'tss': os.path.join(ref_dir, 'output_reference_6h_6h/chanqX.tss'),
+            },
+            '21600-3600': {
+                'map': None,
+                'tss': os.path.join(ref_dir, 'output_reference_6h_1h/chanqX.tss'),
+            },
+        },
+        'mbError': {
+            'report_map': None,
+            'report_tss': 'WaterMassBalanceTSS',
+            '86400-3600': {
+                'map': None,
+                'tss': os.path.join(ref_dir, 'output_reference_daily/mbError.tss'),
+            },
+            '21600-21600': {
+                'map': None,
+                'tss': os.path.join(ref_dir, 'output_reference_6h_6h/mbError.tss'),
+            },
+            '21600-3600': {
+                'map': None,
+                'tss': os.path.join(ref_dir, 'output_reference_6h_1h/mbError.tss'),
+            },
+        },
+    }
 
     def teardown_method(self):
         settings = LisSettings.instance()
         output_dir = settings.output_dir
-        shutil.rmtree(output_dir)
+        if os.path.exists(output_dir):
+            shutil.rmtree(output_dir)
 
     @classmethod
     def compare_reference(cls, variable='dis', check='map', step_length='86400'):
