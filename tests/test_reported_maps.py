@@ -3,6 +3,7 @@ import os
 from copy import copy
 
 from pathlib import Path
+import shutil
 
 import lisflood
 from lisflood.global_modules.add1 import loadmap
@@ -12,6 +13,9 @@ from lisflood.global_modules.default_options import default_options
 from .test_utils import setoptions, mk_path_out
 
 class TestReportedMaps():
+
+    case_dir = os.path.join(os.path.dirname(__file__), 'data', 'LF_ETRS89_UseCase')
+    mk_path_out(os.path.join(case_dir, 'out'))
 
     settings_files = {
         # full.xml of LF_ETRS89_UseCase has simulateLakes and repsimulateLakes off

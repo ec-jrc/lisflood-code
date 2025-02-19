@@ -30,6 +30,8 @@ from .test_utils import setoptions, mk_path_out, ETRS89TestCase
 @pytest.mark.slow
 class TestCatch(ETRS89TestCase):
     case_dir = os.path.join(os.path.dirname(__file__), 'data', 'LF_ETRS89_UseCase')
+    mk_path_out(os.path.join(case_dir, 'out'))
+
     modules_to_set = (
         'SplitRouting',
         'simulateReservoirs',
@@ -54,12 +56,12 @@ class TestCatch(ETRS89TestCase):
             "repsimulateLakes", "repStateMaps",
             "repsimulateReservoirs", "repSnowMaps", "repPFMaps", "repLZMaps", "repUZMaps",
             "repGwPercUZLZMaps", "repRWS", "repTotalWUse", "repWIndex",
-            "repSurfaceRunoffMaps", "repRainMaps", "repSnowMaps", "repSnowCoverMaps", "repSnowMeltMaps", 
+            "repSurfaceRunoffMaps", "repRainMaps", "repSnowMaps", "repSnowCoverMaps", "repSnowMeltMaps",
             "repLZMaps", "repUZMaps",
             "repGwPercUZLZMaps", "repRWS", "repPFMaps", "repPFForestMaps"
         )
         settings = setoptions(self.settings_files['base'],
-                              opts_to_set=('repDischargeTs', 'repDischargeMaps', 
+                              opts_to_set=('repDischargeTs', 'repDischargeMaps',
                                             "repThetaMaps", "repThetaForestMaps",
                                             "repThetaIrrigationMaps", "repE2O2",
                                             "repTotalWaterStorageMaps") + self.modules_to_set,
@@ -68,6 +70,7 @@ class TestCatch(ETRS89TestCase):
                                            'StepEnd': step_end,
                                            'DtSec': dt_sec,
                                            'PathOut': output_dir})
+        mk_path_out(output_dir)
         lisfloodexe(settings)
 
     def test_output_daily(self):
@@ -115,18 +118,19 @@ class TestCatch(ETRS89TestCase):
                               vars_to_set={'StepStart': '02/02/2016 06:00',
                                            'StepEnd': '05/02/2016 06:00',
                                            'PathOut': output_dir})
+        mk_path_out(output_dir)
         lisfloodexe(settings)
-        initcond_files = ('ch2cr.end.nc', 'chanq.end.nc', 'chcro.end.nc', 
-                        'chside.end.nc', 'cseal.end.nc', 'cum.end.nc', 
-                        'cumf.end.nc', 'cumi.end.nc', 'dslf.end.nc', 
+        initcond_files = ('ch2cr.end.nc', 'chanq.end.nc', 'chcro.end.nc',
+                        'chside.end.nc', 'cseal.end.nc', 'cum.end.nc',
+                        'cumf.end.nc', 'cumi.end.nc', 'dslf.end.nc',
                         'dsli.end.nc', 'dslr.end.nc', 'frost.end.nc',
-                        'lakeh.end.nc', 'lakeprevinq.end.nc',  
+                        'lakeh.end.nc', 'lakeprevinq.end.nc',
                         'lakeprevoutq.end.nc', 'lz.end.nc', 'ofdir.end.nc',
-                        'offor.end.nc', 'ofoth.end.nc', 'rsfil.end.nc', 
-                        'scova.end.nc', 'scovb.end.nc', 'scovc.end.nc', 
-                        'tha.end.nc', 'thb.end.nc', 'thc.end.nc', 
-                        'thfa.end.nc', 'thfb.end.nc', 'thfc.end.nc', 
-                        'thia.end.nc', 'thib.end.nc', 'thic.end.nc', 
+                        'offor.end.nc', 'ofoth.end.nc', 'rsfil.end.nc',
+                        'scova.end.nc', 'scovb.end.nc', 'scovc.end.nc',
+                        'tha.end.nc', 'thb.end.nc', 'thc.end.nc',
+                        'thfa.end.nc', 'thfb.end.nc', 'thfc.end.nc',
+                        'thia.end.nc', 'thib.end.nc', 'thic.end.nc',
                         'uz.end.nc', 'uzf.end.nc', 'uzi.end.nc')
         for f in initcond_files:
             assert os.path.exists(os.path.join(output_dir, f))

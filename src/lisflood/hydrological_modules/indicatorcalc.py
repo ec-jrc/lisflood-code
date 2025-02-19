@@ -132,7 +132,8 @@ class indicatorcalc(HydroModule):
                 # EXTERNAL FLOW
                 wreg = decompress(self.var.WUseRegionC)
                      # to pcraster map because of the following expression!
-                self.var.RegionMonthExternalInflowM3 = compressArray(areatotal(cover(ifthen(self.var.WaterRegionInflowPoints != 0, upstream(self.var.LddStructuresKinematic,decompress(self.var.MonthDisM3))),0),wreg))
+                # self.var.RegionMonthExternalInflowM3 = compressArray(areatotal(cover(ifthen(self.var.WaterRegionInflowPoints != 0, upstream(self.var.LddStructuresKinematic,decompress(self.var.MonthDisM3))),0),wreg))
+                self.var.RegionMonthExternalInflowM3 = compressArray(areatotal(cover(ifthen(self.var.WaterRegionInflowPoints != 0, upstream(self.var.LddStructuresChan,decompress(self.var.MonthDisM3))),0),wreg))
                 self.var.RegionMonthAbstractionRequiredAllSourcesM3 =  np.take(np.bincount(self.var.WUseRegionC,weights=self.var.MonthAbstractionRequiredAllSourcesM3),self.var.WUseRegionC)
                 self.var.RegionMonthAbstractionRequiredSurfaceGroundWaterM3 = np.take(np.bincount(self.var.WUseRegionC,weights=self.var.MonthAbstractionRequiredSurfaceGroundWaterM3),self.var.WUseRegionC)
                 self.var.RegionMonthAbstractionRequiredSurfaceWaterM3 = np.take(np.bincount(self.var.WUseRegionC,weights=self.var.MonthAbstractionRequiredSurfaceWaterM3),self.var.WUseRegionC)

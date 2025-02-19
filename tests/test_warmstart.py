@@ -58,10 +58,16 @@ class TestWarmStart():
             'simulateReservoirs',
             'repsimulateReservoirs',
         ]
-        check_every = 13 # steps 
+        check_every = 13  # steps
+
+        case_dir = os.path.join(os.path.dirname(__file__), 'data', 'LF_ETRS89_UseCase')
+        out_dir = os.path.join(case_dir, 'out')
+        mk_path_out(out_dir)
+        
         # init
-        path_out_init = mk_path_out('data/LF_ETRS89_UseCase/out/init{}'.format(dt_sec))
-        settings_prerun = setoptions(self.settings_files['prerun'], opts_to_unset=modules_to_unset,
+        path_out_init = mk_path_out(os.path.join(out_dir,'init{}'.format(dt_sec)))
+        settings_prerun = setoptions(self.settings_files['prerun'],
+                                     opts_to_unset=modules_to_unset,
                                      vars_to_set={'DtSec': dt_sec,
                                                   'PathOut': path_out_init,
                                                   'StepStart': step_start,
@@ -79,8 +85,9 @@ class TestWarmStart():
         SeepTopToSubBAverageIrrigationMap_path = settings_prerun.binding['SeepTopToSubBAverageIrrigationMap']
         print(lzavin_path)
         print(avgdis_path)
-        path_out_reference = mk_path_out('data/LF_ETRS89_UseCase/out/longrun_reference{}'.format(dt_sec))
-        settings_longrun = setoptions(self.settings_files['cold'], opts_to_unset=modules_to_unset,
+        path_out_reference = mk_path_out(os.path.join(out_dir,'longrun_reference{}'.format(dt_sec)))
+        settings_longrun = setoptions(self.settings_files['cold'],
+                                      opts_to_unset=modules_to_unset,
                                       vars_to_set={'StepStart': step_start,
                                                    'StepEnd': step_end,
                                                    'LZAvInflowMap': lzavin_path,
@@ -97,8 +104,9 @@ class TestWarmStart():
         # warm run (1. Cold start)
         run_number = 1
         cold_start_step_end = step_start
-        path_out = mk_path_out('data/LF_ETRS89_UseCase/out/run{}_{}'.format(dt_sec, run_number))
-        settings_coldstart = setoptions(self.settings_files['cold'], opts_to_unset=modules_to_unset,
+        path_out = mk_path_out(os.path.join(out_dir,'run{}_{}'.format(dt_sec, run_number)))
+        settings_coldstart = setoptions(self.settings_files['cold'],
+                                        opts_to_unset=modules_to_unset,
                                         vars_to_set={'StepStart': step_start,
                                                      'StepEnd': cold_start_step_end,
                                                      'LZAvInflowMap': lzavin_path,
@@ -127,9 +135,10 @@ class TestWarmStart():
         while warm_step_start <= step_limit:
             run_number += 1
             path_init = prev_settings.output_dir
-            path_out = mk_path_out('data/LF_ETRS89_UseCase/out/run{}_{}'.format(dt_sec, run_number))
+            path_out = mk_path_out(os.path.join(out_dir,'run{}_{}'.format(dt_sec, run_number)))
 
-            settings_warmstart = setoptions(self.settings_files['warm'], opts_to_unset=modules_to_unset,
+            settings_warmstart = setoptions(self.settings_files['warm'],
+                                            opts_to_unset=modules_to_unset,
                                             vars_to_set={'StepStart': warm_step_start.strftime('%d/%m/%Y %H:%M'),
                                                          'StepEnd': warm_step_end.strftime('%d/%m/%Y %H:%M'),
                                                          ######################'LZAvInflowMap': lzavin_path,

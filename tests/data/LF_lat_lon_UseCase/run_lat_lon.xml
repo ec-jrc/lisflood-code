@@ -612,6 +612,12 @@ The option "numCPUs_parallelNumba" may take the following values:
                 </comment>
             </textvar>
 
+            <textvar name="PrevDischargeAvg" value="-9999">
+                <comment>
+					Outflow average discharge on previous routing sub-step (average) [m3/s]
+					Cold start: -9999 sets initial value to 0
+                </comment>
+            </textvar>
 
         </group>
 
@@ -1247,6 +1253,14 @@ The option "numCPUs_parallelNumba" may take the following values:
                 </comment>
             </textvar>
 
+            <textvar name="BankFullPerc" value="0.5">
+                <comment>
+                    Percentage [-] used to compute the TotalCrossSectionAreaHalfBankFull in the initialisation of the
+                    total cross-sectional area
+                    default: 0.5
+                </comment>
+            </textvar>
+
             <textvar name="GradMin" value="0.001">
                 <comment>
                     Minimum slope gradient (for kin. wave: slope cannot be 0)
@@ -1263,6 +1277,27 @@ The option "numCPUs_parallelNumba" may take the following values:
                 <comment>
                     PBchange
                     Multiplier applied to average Q to split into a second line of routing
+                </comment>
+            </textvar>
+
+            <textvar name="ChanBottomWMult" value="1.0">
+                <comment>
+                    $(PathParams)/params_ChanBottomWMult
+                    Multiplier applied to ChanBottomWidth
+                </comment>
+            </textvar>
+
+            <textvar name="ChanDepthTMult" value="1.0">
+                <comment>
+                    $(PathParams)/params_ChanDepthTMult
+                    Multiplier [] applied to ChanDepthThreshold
+                </comment>
+            </textvar>
+
+            <textvar name="ChanSMult" value="1.0">
+                <comment>
+                    $(PathParams)/params_ChanSMult
+                    Multiplier []  applied to ChanSdXdY
                 </comment>
             </textvar>
 
@@ -1850,6 +1885,24 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
             </textvar>
 
+            <textvar name="ChanBottomWMult" value="$(ChanBottomWMult)">
+                <comment>
+                    Multiplier applied to ChanBottomWidth
+                </comment>
+            </textvar>
+
+            <textvar name="ChanDepthTMult" value="$(ChanDepthTMult)">
+                <comment>
+                    Multiplier applied to ChanDepthThreshold
+                </comment>
+            </textvar>
+
+            <textvar name="ChanSMult" value="$(ChanSMult)">
+                <comment>
+                    Multiplier applied to ChanSdXdY
+                </comment>
+            </textvar>
+
             <textvar name="beta" value="$(beta)">
                 <comment>
                     kinematic wave parameter: 0.6 is for broad sheet flow
@@ -1860,6 +1913,14 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 <comment>
                     Reference depth of overland flow [mm], used to compute
                     overland flow Alpha for kin. wave
+                </comment>
+            </textvar>
+
+            <textvar name="BankFullPerc" value="$(BankFullPerc)">
+                <comment>
+                    Percentage [-] used to compute the TotalCrossSectionAreaHalfBankFull in the initialisation of the
+                    total cross-sectional area
+                    default: 0.5
                 </comment>
             </textvar>
 
@@ -2085,6 +2146,12 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
             </textvar>
 
+            <textvar name="PrevDischargeAvg" value="$(PrevDischargeAvg)">
+                <comment>
+					Outflow average discharge on previous routing sub-step (average) [m3/s]
+					Cold start: -9999 sets initial value to 0
+                </comment>
+            </textvar>
         </group>
 
 
@@ -2732,6 +2799,18 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
+                <textvar name="ChanQState" value="$(PathOut)/chanq">
+                    <comment>
+                        Reported istantaneous discharge at end of computation step [cu m/s] ChanQ
+                    </comment>
+                </textvar>
+
+                <textvar name="ChanQAvgDtState" value="$(PathOut)/chanqavgdt">
+                    <comment>
+                        Reported average discharge over last routing sub-step used to initialise lakes [cu m/s] ChanQAvgDt
+                    </comment>
+                </textvar>
+
                 <textvar name="DSLRForestState" value="$(PathOut)/dslf">
                     <comment>
                         Reported days since last rain
@@ -2953,6 +3032,18 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 <textvar name="ChSideEnd" value="$(PathOut)/chside.end">
                     <comment>
                         Reported channel side flow
+                    </comment>
+                </textvar>
+
+                <textvar name="ChanQEnd" value="$(PathOut)/chanq.end">
+                    <comment>
+                        Reported istantaneous discharge at end of computation step [cu m/s] ChanQ
+                    </comment>
+                </textvar>
+
+                <textvar name="ChanQAvgDtEnd" value="$(PathOut)/chanqavgdt.end">
+                    <comment>
+                        Reported average discharge over last routing sub-step used to initialise lakes [cu m/s] ChanQAvgDt
                     </comment>
                 </textvar>
 

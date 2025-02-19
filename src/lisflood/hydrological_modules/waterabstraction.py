@@ -159,14 +159,16 @@ class waterabstraction(HydroModule):
                 pitWuse2 = ifthen(pitWuseMax == self.var.UpArea, WUseRegion)
                 # search outlets in the inland water regions by using the maximum  upstream area as criterium
 
-                pitWuse3 = downstream(self.var.LddStructuresKinematic, WUseRegion)
+                # pitWuse3 = downstream(self.var.LddStructuresKinematic, WUseRegion)
+                pitWuse3 = downstream(self.var.LddStructuresChan, WUseRegion)
                 pitWuse3b = ifthen(pitWuse3 != WUseRegion, WUseRegion)
                 # search point where ldd leaves a water region
 
                 pitWuse = cover(pitWuse1b, pitWuse2, pitWuse3b, nominal(0))
                 # join all sources of pits
 
-                LddWaterRegion = lddrepair(ifthenelse(pitWuse == 0, self.var.LddStructuresKinematic, 5))
+                # LddWaterRegion = lddrepair(ifthenelse(pitWuse == 0, self.var.LddStructuresKinematic, 5))
+                LddWaterRegion = lddrepair(ifthenelse(pitWuse == 0, self.var.LddStructuresChan, 5))
                 # create a Ldd with pits at every water region outlet
                 # this results in a interrupted ldd, so water cannot be transfered to the next water region
                 lddC = compressArray(LddWaterRegion)
@@ -185,8 +187,10 @@ class waterabstraction(HydroModule):
                 # outflowpoints to calculate upstream inflow for balances and Water Exploitation Index
                 # both inland outflowpoints to downstream subbasin, and coastal outlets
 
+                # WaterRegionInflow1 = boolean(
+                #     upstream(self.var.LddStructuresKinematic, cover(scalar(self.var.WaterRegionOutflowPoints), 0)))
                 WaterRegionInflow1 = boolean(
-                    upstream(self.var.LddStructuresKinematic, cover(scalar(self.var.WaterRegionOutflowPoints), 0)))
+                    upstream(self.var.LddStructuresChan, cover(scalar(self.var.WaterRegionOutflowPoints), 0)))
                 self.var.WaterRegionInflowPoints = ifthen(WaterRegionInflow1, boolean(1))
                 # inflowpoints to calculate upstream inflow for balances and Water Exploitation Index
             else:
@@ -482,8 +486,16 @@ class waterabstraction(HydroModule):
             # 10.1 Withdrawal required from channels (CH)
             areatotal_withdrawal_CH_required_M3 = np.maximum(areatotal_withdrawal_SW_required - self.var.areatotal_withdrawal_LakRes_actual_M3, 0.)
             # 10.2 Max abstractable volumes from channels, accounting for e-flow constraint
-            PixelAvailableWaterFromChannelsM3 = np.maximum(
-                self.var.ChanM3Kin - self.var.EFlowThreshold * self.var.DtSec, maskinfo.in_zero()) ### QUESTION! # * (1 - self.var.WUsePercRemain) THIS BIT IS COMMENTED FOR CONSISTENCY WITH EPIC, UNCOMMENT BEFORE THE FINAL MERGE 
+
+            if (not (option['InitLisflood'])) and (option['SplitRouting']):
+                PixelAvailableWaterFromChannelsM3 = np.maximum(
+                self.var.ChanM3Kin - self.var.EFlowThreshold * self.var.DtSec, maskinfo.in_zero()) ### QUESTION! # * (1 - self.var.WUsePercRemain) THIS BIT IS COMMENTED FOR CONSISTENCY WITH EPIC, UNCOMMENT BEFORE THE FINAL MERGE
+            # amount of water in bankful (first line of routing)
+            else:
+                PixelAvailableWaterFromChannelsM3 = np.maximum(
+                    self.var.ChanM3 - self.var.EFlowThreshold * self.var.DtSec,maskinfo.in_zero())  ### QUESTION! # * (1 - self.var.WUsePercRemain) THIS BIT IS COMMENTED FOR CONSISTENCY WITH EPIC, UNCOMMENT BEFORE THE FINAL MERGE
+                # using total water storage in river channel
+
             self.var.AreaTotalAvailableWaterFromChannelsM3 = np.maximum(
                 np.take(np.bincount(self.var.WUseRegionC, weights=PixelAvailableWaterFromChannelsM3),
                         self.var.WUseRegionC),maskinfo.in_zero())
