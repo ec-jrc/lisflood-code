@@ -87,17 +87,17 @@ class transmission(HydroModule):
                 raise LisfloodError(msg)
 
             #TransOut = np.where(self.var.UpTrans,
-            #            (self.var.ChanQ ** self.var.TransPower2 - self.var.TransSub)
-            #            ** self.var.TransPower1, self.var.ChanQ)
+            #            (self.var.ChanQAvgDt ** self.var.TransPower2 - self.var.TransSub)
+            #            ** self.var.TransPower1, self.var.ChanQAvgDt)
             TransOut = np.where(self.var.UpTrans,
-                        (self.var.ChanQ ** (1.0 / self.var.TransPower1) - self.var.TransSub)
-                        ** self.var.TransPower1, self.var.ChanQ)                                         
+                        (self.var.ChanQAvgDt ** (1.0 / self.var.TransPower1) - self.var.TransSub)
+                        ** self.var.TransPower1, self.var.ChanQAvgDt)                                         
             # transmission loss (equation: Rao and Maurer 1996, Water Resources
             # Bulletin Vol 32, No.6)
 
-            TransOut = np.where(self.var.TransSub>1e-6,TransOut,self.var.ChanQ)     
-            self.var.TransLossM3Dt =  np.where((self.var.ChanQ - TransOut)>0.0, (self.var.ChanQ - TransOut) * self.var.DtRouting,0.0)
-            #self.var.TransLossM3Dt = cover((self.var.ChanQ - TransOut) * self.var.DtRouting, scalar(0.0))
+            TransOut = np.where(self.var.TransSub>1e-6,TransOut,self.var.ChanQAvgDt)     
+            self.var.TransLossM3Dt =  np.where((self.var.ChanQAvgDt - TransOut)>0.0, (self.var.ChanQAvgDt - TransOut) * self.var.DtRouting,0.0)
+            #self.var.TransLossM3Dt = cover((self.var.ChanQAvgDt - TransOut) * self.var.DtRouting, scalar(0.0))
             # Loss is Q - transmission outflow
             
             if NoRoutingExecuted == 0:
