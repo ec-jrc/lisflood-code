@@ -32,6 +32,7 @@
         <setoption choice="1" name="openwaterevapo"/>
         <setoption choice="1" name="simulateLakes"/>
         <setoption choice="1" name="simulateReservoirs"/>
+        <setoption choice="0" name="TransLoss"/>
         <setoption choice="0" name="cropsEPIC"/>
 
         <setoption choice="1" name="SplitRouting"/>
@@ -1385,7 +1386,7 @@ threshold value below which there is no outflow to the channel
                 - Use TransSub as calibration constant leave all other parameters at default values
 
             </comment>
-            <textvar name="TransSub" value="0.3">
+            <textvar name="TransSub" value="0.0">
                 <comment>
                     Transmission loss function parameter
                 </comment>
@@ -1398,7 +1399,7 @@ threshold value below which there is no outflow to the channel
                 </comment>
             </textvar>
 
-            <textvar name="TransArea" value="1.0E+10">
+            <textvar name="TransArea" value="0.0">
                 <comment>
                     PBchange
                     downstream area taking into account for transmission loss

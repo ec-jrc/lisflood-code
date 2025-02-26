@@ -103,13 +103,13 @@ class TestWarmStart():
         self.path_out_reference = os.path.join(self.case_dir, 'out', 'longrun_reference{}'.format(dt_sec))
 
         if mct_case == 'mct':
-            opts_to_set = ['repStateMaps']
+            opts_to_set = ['repStateMaps','TransLoss']
             opts_to_unset = ['repMBTs', 'simulateReservoirs', 'simulateLakes']
         elif mct_case == 'mct_reservoirs':
-            opts_to_set = ['repStateMaps', 'simulateReservoirs']
+            opts_to_set = ['repStateMaps', 'simulateReservoirs','TransLoss']
             opts_to_unset = ['repMBTs', 'simulateLakes']
         elif mct_case == 'mct_lakes':
-            opts_to_set = ['repStateMaps', 'simulateLakes','openwaterevapo']
+            opts_to_set = ['repStateMaps', 'simulateLakes','openwaterevapo','TransLoss']
             opts_to_unset = ['repMBTs', 'simulateReservoirs']
 
         settings_longrun = setoptions(self.settings_files['cold'],
@@ -121,7 +121,8 @@ class TestWarmStart():
                                                    'PathOut': self.path_out_reference,
                                                    'ReportSteps': report_steps,
                                                    'DtSec': dt_sec,
-                                                   'DtSecChannel': dt_sec_channel})
+                                                   'DtSecChannel': dt_sec_channel,
+                                                   'TransSub': 0.3})
         # ** execute
         mk_path_out(self.path_out_reference)
         lisfloodexe(settings_longrun)
@@ -142,7 +143,8 @@ class TestWarmStart():
                                                         'PathOut': self.path_out,
                                                         'ReportSteps': report_steps,
                                                         'DtSec': dt_sec,
-                                                        'DtSecChannel': dt_sec_channel})
+                                                        'DtSecChannel': dt_sec_channel,
+                                                        'TransSub': 0.3})
         # ** execute
         mk_path_out(self.path_out)
         lisfloodexe(settings_coldstart)
@@ -177,7 +179,8 @@ class TestWarmStart():
                                                             'timestepInit': timestep_init,
                                                             'ReportSteps': report_steps,
                                                             'DtSec': dt_sec,
-                                                            'DtSecChannel': dt_sec_channel})
+                                                            'DtSecChannel': dt_sec_channel,
+                                                            'TransSub': 0.3})
             # ** execute
             mk_path_out(self.path_out)
             lisfloodexe(settings_warmstart)

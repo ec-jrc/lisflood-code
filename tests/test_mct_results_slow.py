@@ -24,7 +24,7 @@ class TestTSSResults():
         self.out_path_run = os.path.join(self.case_dir, 'out', 'output_'+type)
         settings_file = os.path.join(self.case_dir, 'settings', 'mct_cold.xml')
         settings = setoptions(settings_file,
-                              opts_to_set = ['MCTRouting'],
+                              opts_to_set = ['MCTRouting', 'TransLoss'],
                               opts_to_unset=['SplitRouting',
                                              'repStateUpsGauges',
                                              'repRateUpsGauges',
@@ -40,7 +40,8 @@ class TestTSSResults():
                                            'CalendarDayStart': date_start,
                                            'DtSec' : dtsec,
                                            'DtSecChannel' : dtsec_chan,        # single routing step
-                                           'PathOut': self.out_path_run})
+                                           'PathOut': self.out_path_run,
+                                           'TransSub': 0.0})
 
         mk_path_out(self.out_path_run)
         lisfloodexe(settings)
@@ -130,6 +131,7 @@ class TestTSSResults():
         self.out_path_run = os.path.join(self.case_dir, 'out', 'output_'+type)
         settings_file = os.path.join(self.case_dir, 'settings', 'mct_cold.xml')
         settings = setoptions(settings_file,
+                              opts_to_set=['TransLoss'],
                               opts_to_unset=['MCTRouting',
                                              'SplitRouting',
                                              'repStateUpsGauges',
@@ -146,7 +148,8 @@ class TestTSSResults():
                                            'CalendarDayStart': date_start,
                                            'DtSec' : dtsec,
                                            'DtSecChannel' : dtsec_chan,        # single routing step
-                                           'PathOut': self.out_path_run})
+                                           'PathOut': self.out_path_run,
+                                           'TransSub': 0.0})
 
         mk_path_out(self.out_path_run)
         lisfloodexe(settings)

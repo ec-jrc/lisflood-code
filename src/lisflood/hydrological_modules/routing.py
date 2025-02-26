@@ -401,13 +401,12 @@ class routing(HydroModule):
             # For pixels in order 1 and beyond, upstream contribution is calculated during the calculation step.
             # Initialisation is needed when using Lakes because lakes use average discharge from previous step to calculate the inflow.
 
-            if option['simulateLakes'] or option['simulateReservoirs'] and not option['InitLisflood']:
-                # Initialising average discharge for lakes
-                PrevDischargeAvg = loadmap('PrevDischargeAvg')
-                # Outflow (x+dx) Q during previous routing sub-step for full cross-section (average over last routing sub-step)
-                # Used to calculated average Inflow (x) to reservoirs and lakes
-                self.var.ChanQAvgDt = np.where(PrevDischargeAvg == -9999, self.var.ChanQAvgDt, PrevDischargeAvg)  # np
-                self.var.ChanQKinAvgDt = np.where(PrevDischargeAvg == -9999, self.var.ChanQKinAvgDt, PrevDischargeAvg)  # np
+            # Initialising average discharge for lakes, reservoirs and transmission loss warm start
+            PrevDischargeAvg = loadmap('PrevDischargeAvg')
+            # Outflow (x+dx) Q during previous routing sub-step for full cross-section (average over last routing sub-step)
+            # Used to calculated average Inflow (x) to reservoirs and lakes
+            self.var.ChanQAvgDt = np.where(PrevDischargeAvg == -9999, self.var.ChanQAvgDt, PrevDischargeAvg)  # np
+            self.var.ChanQKinAvgDt = np.where(PrevDischargeAvg == -9999, self.var.ChanQKinAvgDt, PrevDischargeAvg)  # np
 
         # ************************************************************
         # ***** CUMULATIVE OUTPUT VARIABLES  *************************
