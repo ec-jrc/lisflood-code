@@ -169,7 +169,7 @@ def usage():
         which arguments and parameters it accepts, etc
     """
 
-    print('LisfloodPy - Lisflood using pcraster Python framework')
+    print('OS Lisflood - Open Source Lisflood using pcraster Python framework')
     print('Authors: ', __authors__)
     print('Version: ', __version__)
     print('Date: ', __date__)
@@ -193,12 +193,12 @@ def usage():
 
 def headerinfo():
 
-    print("LisfloodPy ", __version__, " ", __date__)
+    print("OS Lisflood ", __version__, " ", __date__)
     print("""
 Water balance and flood simulation model for large catchments\n
-(C) Institute for Environment and Sustainability
+(C) Disaster Risk Management - Unit E1
     Joint Research Centre of the European Commission
-    TP122, I-21020 Ispra (Va), Italy\n""")
+    TP130, I-21027 Ispra (Va), Italy\n""")
 
 
 # ==================================================
