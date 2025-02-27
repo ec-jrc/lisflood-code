@@ -90,13 +90,11 @@ class Reservoir(HydroModule):
         
         settings = LisSettings.instance()
         option = settings.options
+        binding = settings.binding
         maskinfo = MaskInfo.instance()
-        if option['simulateReservoirs'] and not option['InitLisflood']:
-
-            binding = settings.binding
-
+        if option['simulateReservoirs']:
             # load reservoir locations and keep only those on the channel network
-            reservoirs = loadmap('ReservoirSites')
+            reservoirs = loadmap('ReservoirSites')                  # moved here to use the caching feature during calibration
             reservoirs[(reservoirs < 1) | (self.var.IsChannel == 0)] = 0
             self.var.ReservoirSitesC = reservoirs
             self.var.ReservoirSitesCC = np.compress(reservoirs > 0, reservoirs)
@@ -110,6 +108,9 @@ class Reservoir(HydroModule):
                 # rebuild lists of reported files with simulateReservoirs and repsimulateReservoirs = False
                 settings.build_reportedmaps_dicts()
                 return
+            ReservoirSitePcr = loadmap('ReservoirSites', pcr=True)    # moved here to use the caching feature during calibration
+
+        if option['simulateReservoirs'] and not option['InitLisflood']:
             
             # Add reservoir locations to structures map 
             # (used to modify LddKinematic and to calculate LddStructuresKinematic)
@@ -119,11 +120,9 @@ class Reservoir(HydroModule):
             self.var.IsStructureChan = np.where(self.var.ReservoirSitesC > 0, np.bool8(1), self.var.IsStructureChan)
             # Add reservoir locations to structures map (used to modify LddChan
             # and to calculate LddStructuresChan)
-
-            ReservoirSitePcr = loadmap('ReservoirSites', pcr=True)
+            
             self.var.ReservoirSites = ReservoirSitePcr
-            ReservoirSitePcr = ifthen((defined(ReservoirSitePcr) & boolean(decompress(self.var.IsChannel))), ReservoirSitePcr)
-            # Get rid of any reservoirs that are not part of the channel network
+            # filter out reservoirs that are not part of the channel network
             # (following logic of 'old' code the inflow into these reservoirs is
             # always zero, so either change this or leave them out!)
             ReservoirSitePcr = ifthen((defined(ReservoirSitePcr) & boolean(decompress(self.var.IsChannel))), ReservoirSitePcr)

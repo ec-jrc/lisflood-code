@@ -42,7 +42,7 @@ class TestCaching(ETRS89TestCase):
                                              'MapsCaching': 'True'})
         mk_path_out(self.out_dir_a)
         lisfloodexe(settings_a)
-
+        
         cache_size_a = Cache.size()
         cache_found_a = Cache.values_found()
         print('Cache size is {}'.format(cache_size_a))

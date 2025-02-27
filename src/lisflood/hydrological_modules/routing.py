@@ -310,6 +310,8 @@ class routing(HydroModule):
         # Initialise discharge at kinematic wave pixels (note that InvBeta is simply 1/beta, computational efficiency!)
 
         self.var.CumQ = maskinfo.in_zero()
+        if option['InitLisflood']:
+           self.var.CumQ = loadmap('CumQInit')
         # Initialise sum of discharge to calculate average
 
         # ************************************************************
@@ -399,13 +401,12 @@ class routing(HydroModule):
             # For pixels in order 1 and beyond, upstream contribution is calculated during the calculation step.
             # Initialisation is needed when using Lakes because lakes use average discharge from previous step to calculate the inflow.
 
-            if option['simulateLakes'] or option['simulateReservoirs'] and not option['InitLisflood']:
-                # Initialising average discharge for lakes
-                PrevDischargeAvg = loadmap('PrevDischargeAvg')
-                # Outflow (x+dx) Q during previous routing sub-step for full cross-section (average over last routing sub-step)
-                # Used to calculated average Inflow (x) to reservoirs and lakes
-                self.var.ChanQAvgDt = np.where(PrevDischargeAvg == -9999, self.var.ChanQAvgDt, PrevDischargeAvg)  # np
-                self.var.ChanQKinAvgDt = np.where(PrevDischargeAvg == -9999, self.var.ChanQKinAvgDt, PrevDischargeAvg)  # np
+            # Initialising average discharge for lakes, reservoirs and transmission loss warm start
+            PrevDischargeAvg = loadmap('PrevDischargeAvg')
+            # Outflow (x+dx) Q during previous routing sub-step for full cross-section (average over last routing sub-step)
+            # Used to calculated average Inflow (x) to reservoirs and lakes
+            self.var.ChanQAvgDt = np.where(PrevDischargeAvg == -9999, self.var.ChanQAvgDt, PrevDischargeAvg)  # np
+            self.var.ChanQKinAvgDt = np.where(PrevDischargeAvg == -9999, self.var.ChanQKinAvgDt, PrevDischargeAvg)  # np
 
         # ************************************************************
         # ***** CUMULATIVE OUTPUT VARIABLES  *************************
@@ -635,7 +636,11 @@ class routing(HydroModule):
             self.polder_module.dynamic_inloop()
 
         self.inflow_module.dynamic_inloop(NoRoutingExecuted)
-        self.transmission_module.dynamic_inloop()
+        self.transmission_module.dynamic_inloop(NoRoutingExecuted)
+
+        # ************************************************************
+        # ***** CHANNEL FLOW ROUTING: KINEMATIC WAVE  ****************
+        # ************************************************************
 
         if not(option['dynamicWave']):
 
@@ -882,6 +887,7 @@ class routing(HydroModule):
                          StorageStep =  StorageStep + self.var.ReservoirStorageM3.copy()
                          # DisStructureSR = np.where(self.var.IsUpsOfStructureKinematicC, sum1 * self.var.DtRouting, 0)
                          DisStructureSR = np.where(self.var.IsUpsOfStructureChanC, sum1 * self.var.DtRouting, 0)
+                         DisStructureSR[self.var.AtLastPointC == 1 ] = 0 # this line avoids double-counting when a reservoir is located at the outlet of the cacthment
                          DischargeM3StructuresR = np.take(np.bincount(self.var.Catchments, weights=DisStructureSR), self.var.Catchments)
                          DischargeM3StructuresR -= self.var.DischargeM3StructuresIni
 
@@ -890,6 +896,7 @@ class routing(HydroModule):
                          StorageStep =  StorageStep + self.var.LakeStorageM3Balance.copy()
                          # DisStructureSR = np.where(self.var.IsUpsOfStructureKinematicC, sum1 * self.var.DtRouting, 0)
                          DisStructureSR = np.where(self.var.IsUpsOfStructureChanC, sum1 * self.var.DtRouting, 0)
+                         DisStructureSR[self.var.AtLastPointC == 1 ] = 0 # this line avoids double-counting when a reservoir is located at the outlet of the cacthment
                          DischargeM3StructuresR = np.take(np.bincount(self.var.Catchments, weights=DisStructureSR), self.var.Catchments)
                          DisLake = maskinfo.in_zero()
                          np.put(DisLake, self.var.LakeIndex, 0.5 * self.var.LakeInflowCC * self.var.DtRouting)

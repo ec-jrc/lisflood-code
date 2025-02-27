@@ -57,9 +57,8 @@ class lakes(HydroModule):
         binding = settings.binding
         maskinfo = MaskInfo.instance()
 
-        if option['simulateLakes'] and not option['InitLisflood']:
-
-            LakeSitesC = loadmap('LakeSites')
+        if option['simulateLakes']:
+            LakeSitesC = loadmap('LakeSites')               # moved here to use the caching feature during calibration
             LakeSitesC[LakeSitesC < 1] = 0
             LakeSitesC[self.var.IsChannel == 0] = 0
             # Get rid of any lakes that are not part of the channel network
@@ -75,7 +74,10 @@ class lakes(HydroModule):
                 # rebuild lists of reported files with repsimulateLakes and simulateLakes = False
                 settings.build_reportedmaps_dicts()
                 return
-            # break if no lakes
+                # break if no lakes
+            LakeSitePcr = loadmap('LakeSites', pcr=True)    # moved here to use the caching feature during calibration
+
+        if option['simulateLakes'] and not option['InitLisflood']:            
 
             self.var.IsStructureKinematic = np.where(LakeSitesC > 0, np.bool8(1), self.var.IsStructureKinematic)
             # Add lake locations to structures map (used to modify LddKinematic
@@ -86,7 +88,6 @@ class lakes(HydroModule):
 
             # PCRaster part
             # -----------------------
-            LakeSitePcr = loadmap('LakeSites', pcr=True)
             LakeSitePcr = pcraster.ifthen((pcraster.defined(LakeSitePcr) & pcraster.boolean(decompress(self.var.IsChannel))), LakeSitePcr)
             IsStructureLake = pcraster.boolean(LakeSitePcr)
             # additional structure map only for lakes to calculate water balance

@@ -86,7 +86,8 @@ class TestWarmStartLong():
         self.path_out_reference = os.path.join(self.case_dir, 'out', 'longrun_reference{}'.format(dt_sec))
 
         if mct_case == 'mct':
-            opts_to_set = ['repStateMaps','repDischargeMaps']
+            opts_to_set = ['repStateMaps','repDischargeMaps',
+                           'TransLoss']
             opts_to_unset = ['repMBTs', 'simulateReservoirs', 'simulateLakes']
         elif mct_case == 'mct_all':
             opts_to_set = ['repStateMaps',
@@ -95,7 +96,8 @@ class TestWarmStartLong():
                            'drainedIrrigation',
                            'riceIrrigation',
                            'openwaterevapo',
-                           'simulateLakes'
+                           'simulateLakes',
+                           'TransLoss'
                            ]
             opts_to_unset = ['repMBTs',
                              'simulateReservoirs']
@@ -109,7 +111,8 @@ class TestWarmStartLong():
                                                    'PathOut': self.path_out_reference,
                                                    'ReportSteps': report_steps,
                                                    'DtSec': dt_sec,
-                                                   'DtSecChannel': dt_sec_channel})
+                                                   'DtSecChannel': dt_sec_channel,
+                                                   'TransSub': 0.3})
         # ** execute
         mk_path_out(self.path_out_reference)
         lisfloodexe(settings_longrun)
@@ -130,7 +133,8 @@ class TestWarmStartLong():
                                                         'PathOut': self.path_out,
                                                         'ReportSteps': report_steps,
                                                         'DtSec': dt_sec,
-                                                        'DtSecChannel': dt_sec_channel})
+                                                        'DtSecChannel': dt_sec_channel,
+                                                        'TransSub': 0.3})
         # ** execute
         mk_path_out(self.path_out)
         lisfloodexe(settings_coldstart)
@@ -163,7 +167,8 @@ class TestWarmStartLong():
                                                             'timestepInit': timestep_init,
                                                             'ReportSteps': report_steps,
                                                             'DtSec': dt_sec,
-                                                            'DtSecChannel': dt_sec_channel})
+                                                            'DtSecChannel': dt_sec_channel,
+                                                            'TransSub': 0.3})
             # ** execute
             mk_path_out(self.path_out)
             lisfloodexe(settings_warmstart)
@@ -183,9 +188,10 @@ class TestWarmStartLong():
             warm_step_end = warm_step_start
             timestep_init = prev_settings.step_end_dt.strftime('%d/%m/%Y %H:%M')
 
-    ## do not switch this on or next test will fail
-    # def teardown_method(self):
-    #     print('Cleaning directories')
-    #     out_path = os.path.join(self.case_dir, 'out')
-    #     if os.path.exists(out_path) and os.path.isdir(out_path):
-    #         shutil.rmtree(out_path, ignore_errors=True)
+    def teardown_method(self):
+        print('Cleaning directories')
+        folders_list = glob.glob(os.path.join(os.path.dirname(__file__), self.case_dir, 'out/run*')) + \
+            glob.glob(os.path.join(os.path.dirname(__file__), self.case_dir, 'out/longrun_reference*')) 
+        for folder in folders_list:
+            shutil.rmtree(folder)
+

@@ -25,7 +25,7 @@ class TestLatLon():
         mk_path_out(out_path)
         lisfloodexe(settings)
 
-        comparator = TSSComparator()
+        comparator = TSSComparator(atol = 0.00001, rtol = 0.0001)
         reference =  os.path.join(self.case_dir, 'reference', 'dis_{}.tss'.format(self.run_type))
         output_tss =  os.path.join(out_path, 'dis_run.tss')
         comparator.compare_files(reference, output_tss)

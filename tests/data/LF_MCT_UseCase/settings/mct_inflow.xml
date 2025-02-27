@@ -60,6 +60,7 @@ You can use builtin path variables in this template and reference to other paths
         # option to initialize Lisflood
         <setoption choice="0" name="InitLisflood"/>
         <setoption choice="0" name="InitLisfloodwithoutsplit"/>
+        <setoption choice="1" name="ColdStart"/>
 
         # option to read/write NetCDF
         <setoption choice="1" name="readNetcdfStack"/>
@@ -324,6 +325,12 @@ You can use builtin path variables in this template and reference to other paths
               </comment>
             </textvar>
 
+            <textvar name="NumDaysSpinUp" value="180">
+                <comment>
+                    low value to limit testing time
+              </comment>
+            </textvar>   
+ 
 			<textvar name="ReportSteps" value="1..999999">
                 <comment>
 				    1..9999
@@ -973,6 +980,63 @@ You can use builtin path variables in this template and reference to other paths
             </textvar>
         </group>
 
+    <group>
+
+    <comment>
+    **************************************************************
+    CUMULATIVE FLUXES REQUIRED WHEN COMPUTING THE PRE-RUN IN CHUNKS
+    **************************************************************
+    </comment>
+
+    <textvar name="LZInflowCUMInit" value="0.0">
+                <comment>
+                    Cumulative inflow to the lower groundwater zone
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    LZInflowCumEnd: required for the warm start of the pre-run
+                </comment>
+     </textvar>   
+       
+     <textvar name="cumSeepTopToSubBOtherInit" value="0.0">
+                <comment>
+                    Cumulative flux from second to third soil layer, other land cover fraction
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    cumSeepTopToSubBOtherEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>
+       
+     <textvar name="cumSeepTopToSubBForestInit" value="0.0">
+                <comment>
+                    Cumulative flux from second to third soil layer, forest land cover fraction
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    cumSeepTopToSubBForestEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>
+       
+     <textvar name="cumSeepTopToSubBIrrigationInit" value="0.0">
+                <comment>
+                    Cumulative flux from second to third soil layer, irrigation land cover fraction
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    cumSeepTopToSubBIrrigationEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>
+       
+     <textvar name="CumQInit" value="0.0">
+                <comment>
+                    Cumulative discharge
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    CumQEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>           
+                            
+     <textvar name="TimeSinceStartPrerunChunkInit" value="0.0">
+                <comment>
+                    Cumulative number of days from the start of the prerun
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    TimeSinceStartPrerunChunkEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>
+       
+    </group>    
 
         <group>
             <comment>
@@ -1853,6 +1917,12 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     Number of last time step in simulation
                 </comment>
             </textvar>
+
+            <textvar name="NumDaysSpinUp" value="$(NumDaysSpinUp)">
+                <comment>
+                    Number of days used for internal spin-up (fluxes computations during prerun)
+                </comment>
+            </textvar>
         </group>
 
 
@@ -2307,6 +2377,24 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
             </textvar>
 
+            <textvar name="SeepTopToSubBAverageOtherMap" value= "-9999">
+                <comment>
+                     Reported infiltration from the soil layer 2 to soil layer 3, other land cover fraction, average flux over the simulation period [mm]
+            </comment>
+            </textvar>
+          
+            <textvar name="SeepTopToSubBAverageForestMap" value= "-9999">
+                 <comment>
+                        Reported infiltration from the soil layer 2 to soil layer 3, forest land cover fraction, average flux over the simulation period [mm]
+                 </comment>
+            </textvar>
+          
+            <textvar name="SeepTopToSubBAverageIrrigationMap" value= "-9999">
+                 <comment>
+                         Reported infiltration from the soil layer 2 to soil layer 3, irrigated land cover fraction, average flux over the simulation period [mm]
+                  </comment>
+            </textvar>                 
+
             <textvar name="timestepInit" value="$(timestepInit)">
                 <comment>
                     if init condition are stored as netCDF with different time steps
@@ -2570,6 +2658,61 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
         </group>
 
+    <group>
+    <comment>
+    **************************************************************
+    CUMULATIVE FLUXES REQUIRED WHEN COMPUTING THE PRE-RUN IN CHUNKS
+    **************************************************************
+    </comment>
+    <textvar name="LZInflowCUMInit" value="$(LZInflowCUMInit)">
+                <comment>
+                    Cumulative inflow to the lower groundwater zone
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    LZInflowCumEnd: required for the warm start of the pre-run
+                </comment>
+     </textvar>   
+       
+     <textvar name="cumSeepTopToSubBOtherInit" value="$(cumSeepTopToSubBOtherInit)">
+                <comment>
+                    Cumulative flow from second to third soil layer, other land cover fraction
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    cumSeepTopToSubBOtherEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>
+       
+     <textvar name="cumSeepTopToSubBForestInit" value="$(cumSeepTopToSubBForestInit)">
+                <comment>
+                    Cumulative flow from second to third soil layer, forest land cover fraction
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    cumSeepTopToSubBForestEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>
+       
+     <textvar name="cumSeepTopToSubBIrrigationInit" value="$(cumSeepTopToSubBIrrigationInit)">
+                <comment>
+                    Cumulative flow from second to third soil layer, irrigation land cover fraction
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    cumSeepTopToSubBIrrigationEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>
+       
+     <textvar name="CumQInit" value="$(CumQInit)">
+                <comment>
+                    Cumulative discharge
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    CumQEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>           
+                            
+     <textvar name="TimeSinceStartPrerunChunkInit" value="$(TimeSinceStartPrerunChunkInit)">
+                <comment>
+                    Cumulative number of days from the start of the prerun
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    NetTimeSinceStartPrerunChunkEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>
+       
+    </group>
 
 
 
@@ -4261,7 +4404,15 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                         Reported loss from lower zone [mm]
                     </comment>
                 </textvar>
-
+                <textvar name="withdrawalCHactualTS" value="$(PathOut)/withdrawalCHactualTS.tss"></textvar>
+                <textvar name="withdrawalReservoirsTS" value="$(PathOut)/withdrawalReservoirsTS.tss"></textvar>
+                <textvar name="withdrawalLakesTS" value="$(PathOut)/withdrawalLakesTS.tss"></textvar>
+                <textvar name="abstractionGWactualTS" value="$(PathOut)/abstractionGWactualTS.tss"></textvar>
+                <textvar name="returnflowGwAbs2ChannelTS" value="$(PathOut)/returnflowGwAbs2ChannelTS.tss"></textvar>  
+                <textvar name="areatotalshortageSWTS" value="$(PathOut)/areatotalshortageSWTS.tss"></textvar>     
+                <textvar name="withdrawalSWactualTS" value="$(PathOut)/withdrawalSWactualTS.tss"></textvar>  
+                <textvar name="TransLossQAvgTS" value="$(PathOut)/TransLossQAvgTS"></textvar> 
+                <textvar name="TransLossTS" value="$(PathOut)/TransLossTS"></textvar> 
             </group>
 
             <group>

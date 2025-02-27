@@ -108,7 +108,8 @@ class waterbalance(object):
                 #  0.5 * self.var.ChanQ * self.var.DtRouting), scalar(0.0))
                 # because Modified Puls Method is use, some additional offset
                 # has to be added
-            
+                
+            DisStructure[self.var.AtLastPointC == 1 ] = 0 # this line avoids double-counting when a reservoir or a lake is located at the outlet of the cacthment
             self.var.DischargeM3StructuresIni = np.take(np.bincount(self.var.Catchments, weights=DisStructure), self.var.Catchments)
 
 # --------------------------------------------------------------------------
@@ -232,7 +233,7 @@ class waterbalance(object):
             if option['openwaterevapo']:
                 WaterOut += np.take(np.bincount(self.var.Catchments, weights=self.var.EvaWBM3),self.var.Catchments)
             if option['TransLoss']:
-                WaterOut += np.take(np.bincount(self.var.Catchments, weights=self.var.TransCum),self.var.Catchments)
+                WaterOut += np.take(np.bincount(self.var.Catchments, weights=self.var.TransLossWBM3),self.var.Catchments)
             if option['wateruse']:
                 print('WARNING: the water balance module has NOT been verified yet when the option wateruse is ON!')
                 WaterOut += np.take(np.bincount(self.var.Catchments, weights=self.var.IrriLossCUM),self.var.Catchments)
@@ -248,8 +249,8 @@ class waterbalance(object):
             DisStru = np.where(self.var.IsUpsOfStructureChanC, self.var.ChanQAvgDt * self.var.DtRouting, 0)
             # using average discharge
 
+            DisStru[self.var.AtLastPointC == 1 ] = 0 # this line avoids double-counting when a reservoir or a lake is located at the outlet of the cacthment
             DischargeM3Structures = np.take(np.bincount(self.var.Catchments, weights=DisStru), self.var.Catchments)
-
             # on the last time step lakes and reservoirs calculated with the previous routing results
             # so the last (now routed) discharge has to be added to the mass balance
             # (-> the calculation odf the structures is done before the routing)

@@ -167,7 +167,20 @@ class snow(HydroModule):
             else:
                 IceMeltS = TavgS * 7.0 * self.var.DtDay * SummerSeason
 
-            SnowMeltS = np.maximum(np.minimum(SnowMeltS + IceMeltS, self.var.SnowCoverS[i]), maskinfo.in_zero())
+            ####### added by Robert Dill, 8/7/23
+            # to avoid unrealistic high snow accumulation, simulate glacier transport into lower zones
+            SnowMax = 2000
+            GlacierMeltCoef = 1/100
+            GlacierMeltS = np.maximum(self.var.SnowCoverS[i] - SnowMax, maskinfo.in_zero()) \
+                           * GlacierMeltCoef
+
+            self.var.SnowCoverS[i] = self.var.SnowCoverS[i] - GlacierMeltS
+            if i < 2:
+                self.var.SnowCoverS[i + 1] = self.var.SnowCoverS[i + 1] + GlacierMeltS
+                GlacierMeltS = maskinfo.in_zero()
+            #######
+
+            SnowMeltS = np.maximum(np.minimum(SnowMeltS + IceMeltS + GlacierMeltS, self.var.SnowCoverS[i]), maskinfo.in_zero())
             self.var.SnowCoverS[i] = self.var.SnowCoverS[i] + SnowS - SnowMeltS
 
             self.var.Snow += SnowS

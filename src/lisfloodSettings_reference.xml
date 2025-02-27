@@ -46,8 +46,9 @@ You can use builtin path variables in this template and reference to other paths
       <setoption choice="1" name="openwaterevapo"/>
       <setoption choice="1" name="simulateLakes"/>
       <setoption choice="1" name="simulateReservoirs"/>
+      <setoption choice="0" name="TransLoss"/>
 
-      <setoption choice="1" name="SplitRouting"/>
+      <setoption choice="0" name="SplitRouting"/>
       <setoption choice="1" name="MCTRouting"/>
 
       # use inflow data
@@ -59,6 +60,7 @@ You can use builtin path variables in this template and reference to other paths
       # option to initialize Lisflood
       <setoption choice="0" name="InitLisflood"/>
       <setoption choice="0" name="InitLisfloodwithoutsplit"/>
+      <setoption choice="1" name="ColdStart"/>
 
       # option to read/write NetCDF
       <setoption choice="1"  name="readNetcdfStack"/>
@@ -302,11 +304,20 @@ You can use builtin path variables in this template and reference to other paths
         </textvar>
 
         <textvar name="StepEnd" value="01/01/2001 06:00">
-          <comment>
-            01/01/YEAR_END 06:00
-            Number of last time step in simulation
-          </comment>
+        <comment>
+        01/01/YEAR_END 06:00
+        Number of last time step in simulation
+        </comment>
         </textvar>
+
+        <textvar name="NumDaysSpinUp" value="1095">
+        <comment>
+       Number of days to be discarded when computing the average fluxes in the initialization (prerun) simulation.
+       The use of NumDaysSpinUp avoids spurious large fluxes values driven by bogus initial conditions.
+       Recommended value when performing the initialiaztion (prerun) in one chunk or the cold start of the initialization (prerun) >= 1095 (3 years)  
+       Value for lisflood cold run, warm start prerun/run: 0
+        </comment>
+        </textvar> 
 
         <textvar name="ReportSteps" value="1..999999">
         <comment>
@@ -731,7 +742,7 @@ Multiplier []  applied to ChanSdXdY
           Cold start: -9999: use steady-state storage
         </comment>
       </textvar>
-
+        
       <textvar name="TotalCrossSectionAreaInitValue" value="$(PathInit)/chcro">
         <comment>
           initial cross-sectional area of flow in channel[m2]
@@ -956,6 +967,66 @@ Multiplier []  applied to ChanSdXdY
     </textvar>
 
     </group>
+    
+    <group>
+
+    <comment>
+    **************************************************************
+    CUMULATIVE FLUXES REQUIRED WHEN COMPUTING THE PRE-RUN IN CHUNKS
+    **************************************************************
+    </comment>
+
+    <textvar name="LZInflowCUMInit" value="$(PathInit)/LZInflowCumEnd">
+                <comment>
+                    Cumulative inflow to the lower groundwater zone
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    LZInflowCumEnd: required for the warm start of the pre-run
+                </comment>
+     </textvar>   
+       
+     <textvar name="cumSeepTopToSubBOtherInit" value="$(PathInit)/cumSeepTopToSubBOtherEnd">
+                <comment>
+                    Cumulative flux from second to third soil layer, other land cover fraction
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    cumSeepTopToSubBOtherEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>
+       
+     <textvar name="cumSeepTopToSubBForestInit" value="$(PathInit)/cumSeepTopToSubBForestEnd">
+                <comment>
+                    Cumulative flux from second to third soil layer, forest land cover fraction
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    cumSeepTopToSubBForestEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>
+       
+     <textvar name="cumSeepTopToSubBIrrigationInit" value="$(PathInit)/cumSeepTopToSubBIrrigationEnd">
+                <comment>
+                    Cumulative flux from second to third soil layer, irrigation land cover fraction
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    cumSeepTopToSubBIrrigationEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>
+       
+     <textvar name="CumQInit" value="$(PathInit)/CumQEnd">
+                <comment>
+                    Cumulative discharge
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    CumQEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>           
+                            
+     <textvar name="TimeSinceStartPrerunChunkInit" value="$(PathInit)/TimeSinceStartPrerunChunkEnd">
+                <comment>
+                    Cumulative number of days from the start of the prerun
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    TimeSinceStartPrerunChunkEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>
+       
+    </group>    
+    
+    
 
     <group>
 
@@ -1411,7 +1482,7 @@ Multiplier []  applied to ChanSdXdY
     - Use TransSub as calibration constant leave all other parameters at default values
     </comment>
     
-    <textvar name="TransSub" value="0.3">
+    <textvar name="TransSub" value="0.0">
       <comment>
         Transmission loss function parameter
       </comment>
@@ -1424,7 +1495,7 @@ Multiplier []  applied to ChanSdXdY
     </comment>
     </textvar>
 
-    <textvar name="TransArea" value="1.0E+10">
+    <textvar name="TransArea" value="0.0">
     <comment>
     PBchange
     downstream area taking into account for transmission loss
@@ -1820,6 +1891,18 @@ Multiplier []  applied to ChanSdXdY
       <textvar name="StepEnd" value="$(StepEnd)">
       <comment>
       Number of last time step in simulation
+      </comment>
+      </textvar>
+      
+      <textvar name="NumDaysSpinUp" value="$(NumDaysSpinUp)">
+      <comment>
+      Number of days used for internal spin-up (fluxes computations during prerun)
+      </comment>
+      </textvar>
+      
+      <textvar name="NumDaysSpinUp" value="$(NumDaysSpinUp)">
+      <comment>
+      Number of days used for internal spin-up (fluxes computations during prerun)
       </comment>
       </textvar>
       </group>
@@ -2245,7 +2328,7 @@ Multiplier []  applied to ChanSdXdY
       **************************************************************
       </comment>
 
-      <textvar name="LZAvInflowMap" value="$(PathMaps)/lzavin.nc">
+      <textvar name="LZAvInflowMap" value="$(PathInit)/lzavin.nc">
       <comment>
       PRERUNDIR/lzavin
       Reported map of average percolation rate from upper to
@@ -2253,13 +2336,31 @@ Multiplier []  applied to ChanSdXdY
       </comment>
       </textvar>
 
-      <textvar name="AvgDis" value="$(PathMaps)/avgdis.nc">
+      <textvar name="AvgDis" value="$(PathInit)/avgdis.nc">
       <comment>
       PRERUNDIR/avgdis
       CHANNEL split routing in two lines
       Average discharge map [m3/s]
       </comment>
       </textvar>
+
+      <textvar name="SeepTopToSubBAverageOtherMap" value= "$(PathInit)/SeepTopToSubBAverageOtherMap">
+      <comment>
+      Reported infiltration from the soil layer 2 to soil layer 3, other land cover fraction, average flux over the simulation period [mm]
+      </comment>
+      </textvar>
+
+      <textvar name="SeepTopToSubBAverageForestMap" value= "$(PathInit)/SeepTopToSubBAverageForestMap">
+      <comment>
+      Reported infiltration from the soil layer 2 to soil layer 3, forest land cover fraction, average flux over the simulation period [mm]
+      </comment>
+      </textvar>
+
+      <textvar name="SeepTopToSubBAverageIrrigationMap" value= "$(PathInit)/SeepTopToSubBAverageIrrigationMap">
+      <comment>
+      Reported infiltration from the soil layer 2 to soil layer 3, irrigated land cover fraction, average flux over the simulation period [mm]
+      </comment>
+      </textvar>   
 
       <textvar name="timestepInit" value="$(timestepInit)">
       <comment>
@@ -2522,6 +2623,62 @@ Multiplier []  applied to ChanSdXdY
       </comment>
       </textvar>
       </group>
+
+    <group>
+    <comment>
+    **************************************************************
+    CUMULATIVE FLUXES REQUIRED WHEN COMPUTING THE PRE-RUN IN CHUNKS
+    **************************************************************
+    </comment>
+    <textvar name="LZInflowCUMInit" value="$(LZInflowCUMInit)">
+                <comment>
+                    Cumulative inflow to the lower groundwater zone
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    LZInflowCumEnd: required for the warm start of the pre-run
+                </comment>
+     </textvar>   
+       
+     <textvar name="cumSeepTopToSubBOtherInit" value="$(cumSeepTopToSubBOtherInit)">
+                <comment>
+                    Cumulative flow from second to third soil layer, other land cover fraction
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    cumSeepTopToSubBOtherEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>
+       
+     <textvar name="cumSeepTopToSubBForestInit" value="$(cumSeepTopToSubBForestInit)">
+                <comment>
+                    Cumulative flow from second to third soil layer, forest land cover fraction
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    cumSeepTopToSubBForestEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>
+       
+     <textvar name="cumSeepTopToSubBIrrigationInit" value="$(cumSeepTopToSubBIrrigationInit)">
+                <comment>
+                    Cumulative flow from second to third soil layer, irrigation land cover fraction
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    cumSeepTopToSubBIrrigationEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>
+       
+     <textvar name="CumQInit" value="$(CumQInit)">
+                <comment>
+                    Cumulative discharge
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    CumQEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>           
+                            
+     <textvar name="TimeSinceStartPrerunChunkInit" value="$(TimeSinceStartPrerunChunkInit)">
+                <comment>
+                    Cumulative number of days from the start of the prerun
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    NetTimeSinceStartPrerunChunkEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>
+       
+    </group> 
 
 
       <group>
@@ -3387,6 +3544,42 @@ Multiplier []  applied to ChanSdXdY
       </comment>
       </textvar>
 
+      <textvar name="LZInflowCUMEnd" value="$(PathOut)/LZInflowCUMEnd">
+      <comment>
+      Reported cumulative inflow to the lower groundwater zone [mm]
+      </comment>      
+      </textvar>
+      
+      <textvar name="CumQEnd" value="$(PathOut)/CumQEnd">
+      <comment>
+      Reported cumulative discharge [m3/s] (required only when the prerun is performed in chunks)
+      </comment>        
+      </textvar>
+      
+      <textvar name="cumSeepTopToSubBOtherEnd" value="$(PathOut)/cumSeepTopToSubBOtherEnd">
+      <comment>
+      Reported cumulative flux from second to third soil layer, other land cover fraction [mm] (required only when the prerun is performed in chunks)
+      </comment>         
+      </textvar>
+      
+      <textvar name="cumSeepTopToSubBForestEnd" value="$(PathOut)/cumSeepTopToSubBForestEnd">
+      <comment>
+      Reported cumulative flux from second to third soil layer, forest land cover fraction [mm] (required only when the prerun is performed in chunks)
+      </comment>          
+      </textvar>
+      
+      <textvar name="cumSeepTopToSubBIrrigationEnd" value="$(PathOut)/cumSeepTopToSubBIrrigationEnd">
+      <comment>
+      Reported cumulative flux from second to third soil layer, irrigation land cover fraction [mm] (required only when the prerun is performed in chunks)
+      </comment>             
+      </textvar>
+      
+      <textvar name="TimeSinceStartPrerunChunkEnd" value="$(PathOut)/TimeSinceStartPrerunChunkEnd">
+      <comment>
+      Reported total number of days since the start of the prerun (required only when the prerun is performed in chunks)
+      </comment>        
+      </textvar>      
+
       </group>
 
       <group>
@@ -3739,6 +3932,24 @@ Multiplier []  applied to ChanSdXdY
       </comment>
       </textvar>
 
+      <textvar name="SeepTopToSubBAverageOtherMap" value= "$(PathOut)/SeepTopToSubBAverageOtherMap">
+      <comment>
+      Reported infiltration from the soil layer 2 to soil layer 3, other land cover fraction, average flux over the simulation period [mm]
+      </comment>
+      </textvar>
+
+      <textvar name="SeepTopToSubBAverageForestMap" value= "$(PathOut)/SeepTopToSubBAverageForestMap">
+      <comment>
+      Reported infiltration from the soil layer 2 to soil layer 3, forest land cover fraction, average flux over the simulation period [mm]
+      </comment>
+      </textvar>
+
+      <textvar name="SeepTopToSubBAverageIrrigationMap" value= "$(PathOut)/SeepTopToSubBAverageIrrigationMap">
+      <comment>
+      Reported infiltration from the soil layer 2 to soil layer 3, irrigated land cover fraction, average flux over the simulation period [mm]
+      </comment>
+      </textvar>
+
       <textvar name="AvailGWMaps" value="$(PathOut)/agw">
       <comment>
       Reported available groundwater LZ+ GWLoss [mm]
@@ -3769,11 +3980,17 @@ Multiplier []  applied to ChanSdXdY
       </comment>
       </textvar>
 
-      <textvar name="GwLossMaps" value="$(PathOut)/gwl">
+      <textvar name="GwLossMaps" value="$(PathOut)/gwloss">
       <comment>
       Reported GWloss [mm]
       </comment>
       </textvar>
+
+      <textvar name="TransLossMaps" value="$(PathOut)/transloss">
+      <comment>
+      Reported Transloss [mm]
+      </comment>
+      </textvar>      
 
       <textvar name="TotalRunoffMaps" value="$(PathOut)/trun">
       <comment>
@@ -4085,6 +4302,13 @@ Multiplier []  applied to ChanSdXdY
       Days since last rain [days]
       </comment>
       </textvar>
+
+      <textvar name="actETPBUDYKOUpsTS" value="$(PathOut)/actETPBUDYKOUpsTS.tss">
+      <comment>
+      actual evapotranspiration (Budyko) [mm]
+      </comment>
+      </textvar>
+
       </group>
 
 
@@ -4489,6 +4713,61 @@ Multiplier []  applied to ChanSdXdY
       routine
       </comment>
       </textvar>
+      
+      <textvar name="abstractionGWactualTS" value="$(PathOut)/abstractionGWactualTS.tss">
+      <comment>
+      actual withdrawal from groundwater [mm]
+      </comment>      
+      </textvar>
+            
+      <textvar name="withdrawalSWactualTS" value="$(PathOut)/withdrawalSWactualTS.tss">
+      <comment>
+      actual withdrawal from surface water bodies [mm]
+      </comment>     
+      </textvar>       
+
+      <textvar name="withdrawalCHactualTS" value="$(PathOut)/withdrawalCHactualTS.tss">
+      <comment>
+      actual withdrawal from channels [mm]
+      </comment>      
+      </textvar>
+      
+      <textvar name="withdrawalReservoirsTS" value="$(PathOut)/withdrawalReservoirsTS.tss">
+      <comment>
+      actual withdrawal from each reservoir [mm]
+      </comment>      
+      </textvar>
+      
+      <textvar name="withdrawalLakesTS" value="$(PathOut)/withdrawalLakesTS.tss">
+      <comment>
+      actual withdrawal from each lake [mm]
+      </comment>      
+      </textvar>      
+      
+      <textvar name="returnflowGwAbs2ChannelTS" value="$(PathOut)/returnflowGwAbs2ChannelTS.tss">
+      <comment>
+      return flow to channels 
+      </comment>      
+      </textvar>  
+      
+      <textvar name="areatotalshortageSWTS" value="$(PathOut)/areatotalshortageSWTS.tss">
+      <comment>
+      total area water shortage (water demand larger than water availability)
+      </comment>      
+      </textvar>  
+          
+      <textvar name="TransLossQAvgTS" value="$(PathOut)/TransLossQAvgTS">
+      <comment>
+      trasmission loss in m3/s, for direct comparison with dis.tss
+      </comment>      
+      </textvar> 
+      
+      <textvar name="TransLossTS" value="$(PathOut)/TransLossTS">
+      <comment>
+      transmission loss in mm, for direct comparison with gwloss.tss
+      </comment>        
+      </textvar> 
+                 
       </group>
 
 

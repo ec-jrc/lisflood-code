@@ -228,12 +228,14 @@ class LisfloodModel_dyn(DynamicModel):
             WaterLevelDyn = -9999
             # Set water level dynamic wave to dummy value (needed
 
-        if option['InitLisflood'] or option['repAverageDis']:
-            # self.CumQ += self.ChanQ
+        if option['InitLisflood']:
+            if  (self.TimeSinceStart > np.round(self.NumDaysSpinUp/self.DtDay)) :
+                self.CumQ += self.ChanQAvg
+                self.avgdis = self.CumQ/(self.TimeSinceStart + self.TimeSinceStartPrerunChunkInit[0] - np.round(self.NumDaysSpinUp/self.DtDay))
+                # to calculate average discharge over the entire simulation
+        elif option['repAverageDis']:
             self.CumQ += self.ChanQAvg
-            #cmcheck - we should use ChanQAvg here not ChanQ
-            self.avgdis = self.CumQ/self.TimeSinceStart
-            # to calculate average discharge over the entire simulation
+            self.avgdis = self.CumQ/(self.TimeSinceStart)
 
         #self.DischargeM3Out += np.where(self.AtLastPointC ,self.ChanQ * self.DtSec,0)
         self.DischargeM3Out += np.where(self.AtLastPointC, self.ChanQAvg * self.DtSec, 0)

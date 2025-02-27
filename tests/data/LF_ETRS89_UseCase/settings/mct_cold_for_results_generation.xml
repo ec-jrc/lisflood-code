@@ -322,7 +322,13 @@ You can use builtin path variables in this template and reference to other paths
               </comment>
             </textvar>
 
-			<textvar name="ReportSteps" value="1..999999">
+            <textvar name="NumDaysSpinUp" value="180">
+                <comment>
+                    low value to limit testing time
+              </comment>
+            </textvar>   
+ 
+ 			<textvar name="ReportSteps" value="1..999999">
                 <comment>
 				    1..9999
                     Time steps at which to write model state maps (i.e. only
@@ -1825,6 +1831,12 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     Number of last time step in simulation
                 </comment>
             </textvar>
+
+            <textvar name="NumDaysSpinUp" value="$(NumDaysSpinUp)">
+                <comment>
+                    Number of days used for internal spin-up (fluxes computations during prerun)
+                </comment>
+            </textvar>
         </group>
 
 
@@ -2264,6 +2276,24 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     Average discharge map [m3/s]
                 </comment>
             </textvar>
+
+            <textvar name="SeepTopToSubBAverageOtherMap" value= "$(PathRoot)/maps/safe_init/SeepTopToSubBAverageOtherMap">
+                <comment>
+                     Reported infiltration from the soil layer 2 to soil layer 3, other land cover fraction, average flux over the simulation period [mm]
+            </comment>
+            </textvar>
+          
+            <textvar name="SeepTopToSubBAverageForestMap" value= "$(PathRoot)/maps/safe_init/SeepTopToSubBAverageForestMap">
+                 <comment>
+                        Reported infiltration from the soil layer 2 to soil layer 3, forest land cover fraction, average flux over the simulation period [mm]
+                 </comment>
+            </textvar>
+          
+            <textvar name="SeepTopToSubBAverageIrrigationMap" value= "$(PathRoot)/maps/safe_init/SeepTopToSubBAverageIrrigationMap">
+                 <comment>
+                         Reported infiltration from the soil layer 2 to soil layer 3, irrigated land cover fraction, average flux over the simulation period [mm]
+                  </comment>
+            </textvar>                 
 
             <textvar name="timestepInit" value="$(timestepInit)">
                 <comment>
