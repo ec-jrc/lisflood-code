@@ -265,7 +265,7 @@ def loadsetclone(name):
     return map_out
 
 
-def compressArray(map, pcr=True, name=None):
+def compressArray(map, pcr=True, name=None, force_load_with_nans=False):
     maskinfo = MaskInfo.instance()
     if pcr:
         mapnp = pcr2numpy(map,np.nan)
@@ -278,11 +278,13 @@ def compressArray(map, pcr=True, name=None):
         mapnp1 = np.ma.masked_array(map, maskinfo.info.mask)
     mapC = np.ma.compressed(mapnp1)
 
-    if name is not None:
-        if np.max(np.isnan(mapC)):
-            msg = name + " has less valid pixels than area or ldd \n"
-            raise LisfloodError(msg)
-            # test if map has less valid pixel than area.map (or ldd)
+
+    if force_load_with_nans==False:
+        if name is not None:
+            if np.max(np.isnan(mapC)):
+                msg = name + " has less valid pixels than area or ldd \n"
+                raise LisfloodError(msg)
+                # test if map has less valid pixel than area.map (or ldd)
     return mapC.astype(float)
 
 
@@ -342,7 +344,7 @@ def loadmap_cached(*args, **kwargs):
     return loadmap_base(*args, **kwargs)
 
 
-def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averageyearflag=False, value=None):
+def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averageyearflag=False, value=None, force_load_with_nans=False):
     """ Load a static map either value or pcraster map or netcdf (single or stack)
     
     Load a static map either value or pcraster map or netcdf (single or stack)
@@ -357,6 +359,9 @@ def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averagey
     :param lddflag: flag for local drain direction map (CM??)
     :param timestampflag: look for exact time stamp in netcdf file ('exact') or for the closest (left) time stamp available ('closest')
     :param averageyearflag: if True, use "average year" netcdf file over the entire model simulation period
+    :param force_load_with_nans: if True, loads the map without checking for nan values inside area Map. 
+                                Warning: this flag should be used ONLY when managing and manipulating incomplete maps
+                                (maps should be completed before using into actual simulations, otherwise Lisflood will fail)
     :return: map or mapC
     :except: pcr: maps must have the same size of clone.map
              netCDF: time step timestepInit must be included into the stack 
@@ -398,7 +403,8 @@ def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averagey
     # if failed before try reading from netCDF map format
     if not load:
         # read a netcdf  (single one not a stack)
-        filename = os.path.splitext(value)[0] + '.nc'
+        # here we already tried to load the map as PCRaster and failed, thus try as NetCDF (with or without .nc extension)
+        filename = value if value.lower().endswith('.nc') else value + '.nc'
         # get mapextend of netcdf map and calculate the cutting
         cut0, cut1, cut2, cut3 = mapattrNetCDF(filename)
         # load netcdf map but only the rectangle needed
@@ -519,7 +525,7 @@ def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averagey
             if lddflag:
                 map = pcraster.ldd(pcraster.nominal(map))
         else:
-            mapC = compressArray(mapnp, pcr=False, name=filename)
+            mapC = compressArray(mapnp, pcr=False, name=filename, force_load_with_nans = force_load_with_nans)
         flagmap = True
 
     # pcraster map but it has to be an array
