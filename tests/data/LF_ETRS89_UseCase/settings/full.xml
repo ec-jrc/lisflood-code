@@ -4196,7 +4196,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
             </textvar>
 
 
-            <textvar name="RicePlantingDay1" value="$(PathMapsTables)/riceplantingday1.map">
+            <textvar name="RicePlantingDay1" value="$(PathMapsTables)/riceplantingday1">
 
                 <comment>
 
@@ -4207,7 +4207,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
             </textvar>
 
 
-            <textvar name="RiceHarvestDay1" value="$(PathMapsTables)/riceharvestday1.map">
+            <textvar name="RiceHarvestDay1" value="$(PathMapsTables)/riceharvestday1">
 
                 <comment>
 
@@ -4218,7 +4218,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
             </textvar>
 
 
-            <textvar name="RicePlantingDay2" value="$(PathMapsTables)/riceplantingday2.map">
+            <textvar name="RicePlantingDay2" value="$(PathMapsTables)/riceplantingday2">
 
                 <comment>
 
@@ -4229,7 +4229,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
             </textvar>
 
 
-            <textvar name="RiceHarvestDay2" value="$(PathMapsTables)/riceharvestday2.map">
+            <textvar name="RiceHarvestDay2" value="$(PathMapsTables)/riceharvestday2">
 
                 <comment>
 
@@ -6944,7 +6944,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="Grad" value="$(PathMaps)/gradient.map">
+                <textvar name="Grad" value="$(PathMaps)/gradient">
 
                     <comment>
 
@@ -6955,7 +6955,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="ElevationStD" value="$(PathMaps)/elvstd.map">
+                <textvar name="ElevationStD" value="$(PathMaps)/elvstd">
 
                     <comment>
 
@@ -7046,7 +7046,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
 
 
-                <textvar name="SoilDepth1" value="$(PathMapsTables)/soildepth1_o.map">
+                <textvar name="SoilDepth1" value="$(PathMapsTables)/soildepth1_o">
 
                     <comment>
 
@@ -7063,7 +7063,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="SoilDepth2" value="$(PathMapsTables)/soildepth2_o.map">
+                <textvar name="SoilDepth2" value="$(PathMapsTables)/soildepth2_o">
 
                     <comment>
 
@@ -7076,7 +7076,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="SoilDepth3" value="$(PathMapsTables)/soildepth3_o.map">
+                <textvar name="SoilDepth3" value="$(PathMapsTables)/soildepth3_o">
 
                     <comment>
 
@@ -7089,7 +7089,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="SoilDepth1Forest" value="$(PathMapsTables)/soildepth1_f.map">
+                <textvar name="SoilDepth1Forest" value="$(PathMapsTables)/soildepth1_f">
 
                     <comment>
 
@@ -7106,7 +7106,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="SoilDepth2Forest" value="$(PathMapsTables)/soildepth2_f.map">
+                <textvar name="SoilDepth2Forest" value="$(PathMapsTables)/soildepth2_f">
 
                     <comment>
 
@@ -7119,7 +7119,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="SoilDepth3Forest" value="$(PathMapsTables)/soildepth3_f.map">
+                <textvar name="SoilDepth3Forest" value="$(PathMapsTables)/soildepth3_f">
 
                     <comment>
 
@@ -7148,11 +7148,11 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
 
 
-                <textvar name="DirectRunoffFraction" value="$(PathMapsLanduse)/fracsealed.map">
+                <textvar name="DirectRunoffFraction" value="$(PathMapsLanduse)/fracsealed">
 
                     <comment>
 
-                        $(PathMapsLanduse)/fracsealed.map
+                        $(PathMapsLanduse)/fracsealed
 
                         urban area (0-1)
 
@@ -7172,11 +7172,11 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="ForestFraction" value="$(PathMapsLanduse)/fracforest.map">
+                <textvar name="ForestFraction" value="$(PathMapsLanduse)/fracforest">
 
                     <comment>
 
-                        $(PathMapsLanduse)/fracforest.map
+                        $(PathMapsLanduse)/fracforest
 
                         forest fraction of a pixel (0-1)
 
@@ -7198,11 +7198,11 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="WaterFraction" value="$(PathMapsLanduse)/fracwater.map">
+                <textvar name="WaterFraction" value="$(PathMapsLanduse)/fracwater">
 
                     <comment>
 
-                        $(PathMapsLanduse)/fracwater.map
+                        $(PathMapsLanduse)/fracwater
 
                         forest fraction of a pixel (0-1)
 
@@ -7224,11 +7224,11 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="OtherFraction" value="$(PathMapsLanduse)/fracother.map">
+                <textvar name="OtherFraction" value="$(PathMapsLanduse)/fracother">
 
                     <comment>
 
-                        $(PathMapsLanduse)/fracother.map
+                        $(PathMapsLanduse)/fracother
 
                         forest fraction of a pixel (0-1)
 
@@ -7250,11 +7250,11 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="IrrigationFraction" value="$(PathMapsLanduse)/fracirrigated.map">
+                <textvar name="IrrigationFraction" value="$(PathMapsLanduse)/fracirrigated">
 
                     <comment>
 
-                        $(PathMapsLanduse)/fracirrigated.map
+                        $(PathMapsLanduse)/fracirrigated
 
                         irrigated area fraction of a pixel (0-1)
 
@@ -7289,7 +7289,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="RiceFraction" value="$(PathMapsLanduse)/fracrice.map">
+                <textvar name="RiceFraction" value="$(PathMapsLanduse)/fracrice">
 
                     <comment>
 
@@ -7311,7 +7311,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="FractionGroundwaterUsed" value="$(PathMapsLanduse)/fracgwusedNew.map">
+                <textvar name="FractionGroundwaterUsed" value="$(PathMapsLanduse)/fracgwusedNew">
 
                     <comment>
 
@@ -7322,7 +7322,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="FractionNonConventionalWaterUsed" value="$(PathMapsLanduse)/fracncused.map">
+                <textvar name="FractionNonConventionalWaterUsed" value="$(PathMapsLanduse)/fracncused">
 
                     <comment>
 
@@ -7359,7 +7359,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapCropCoef" value="$(PathMapsTables)/cropcoef_o.map">
+                <textvar name="MapCropCoef" value="$(PathMapsTables)/cropcoef_o">
 
                     <comment>
 
@@ -7372,7 +7372,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapCropGroupNumber" value="$(PathMapsTables)/cropgrpn_o.map">
+                <textvar name="MapCropGroupNumber" value="$(PathMapsTables)/cropgrpn_o">
 
                     <comment>
 
@@ -7383,7 +7383,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapN" value="$(PathMapsTables)/mannings_o.map">
+                <textvar name="MapN" value="$(PathMapsTables)/mannings_o">
 
                     <comment>
 
@@ -7396,7 +7396,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapForestCropCoef" value="$(PathMapsTables)/cropcoef_f.map">
+                <textvar name="MapForestCropCoef" value="$(PathMapsTables)/cropcoef_f">
 
                     <comment>
 
@@ -7409,7 +7409,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapForestCropGroupNumber" value="$(PathMapsTables)/cropgrpn_f.map">
+                <textvar name="MapForestCropGroupNumber" value="$(PathMapsTables)/cropgrpn_f">
 
                     <comment>
 
@@ -7420,7 +7420,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapForestN" value="$(PathMapsTables)/mannings_f.map">
+                <textvar name="MapForestN" value="$(PathMapsTables)/mannings_f">
 
                     <comment>
 
@@ -7483,7 +7483,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
 
 
-                <textvar name="Channels" value="$(PathMaps)/chan.map">
+                <textvar name="Channels" value="$(PathMaps)/chan">
 
                     <comment>
 
@@ -7500,7 +7500,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="ChanGrad" value="$(PathMaps)/changrad.map">
+                <textvar name="ChanGrad" value="$(PathMaps)/changrad">
 
                     <comment>
 
@@ -7522,7 +7522,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="ChanLength" value="$(PathMaps)/chanlength.map">
+                <textvar name="ChanLength" value="$(PathMaps)/chanlength">
 
                     <comment>
 
@@ -7544,7 +7544,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="ChanSdXdY" value="$(PathMaps)/chans.map">
+                <textvar name="ChanSdXdY" value="$(PathMaps)/chans">
 
                     <comment>
 
@@ -7599,7 +7599,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
 
 
-                <textvar name="MapThetaSat1" value="$(PathSoilHyd)/thetas1_o.map">
+                <textvar name="MapThetaSat1" value="$(PathSoilHyd)/thetas1_o">
 
                     <comment>
 
@@ -7610,7 +7610,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapThetaSat2" value="$(PathSoilHyd)/thetas2_o.map">
+                <textvar name="MapThetaSat2" value="$(PathSoilHyd)/thetas2_o">
 
                     <comment>
 
@@ -7621,7 +7621,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapThetaSat3" value="$(PathSoilHyd)/thetas3.map">
+                <textvar name="MapThetaSat3" value="$(PathSoilHyd)/thetas3">
 
                     <comment>
 
@@ -7632,7 +7632,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapThetaRes1" value="$(PathSoilHyd)/thetar1.map">
+                <textvar name="MapThetaRes1" value="$(PathSoilHyd)/thetar1">
 
                     <comment>
 
@@ -7643,7 +7643,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapThetaRes2" value="$(PathSoilHyd)/thetar2.map">
+                <textvar name="MapThetaRes2" value="$(PathSoilHyd)/thetar2">
 
                     <comment>
 
@@ -7654,7 +7654,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapThetaRes3" value="$(PathSoilHyd)/thetar3.map">
+                <textvar name="MapThetaRes3" value="$(PathSoilHyd)/thetar3">
 
                     <comment>
 
@@ -7665,7 +7665,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapLambda1" value="$(PathSoilHyd)/lambda1_o.map">
+                <textvar name="MapLambda1" value="$(PathSoilHyd)/lambda1_o">
 
                     <comment>
 
@@ -7678,7 +7678,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapLambda2" value="$(PathSoilHyd)/lambda2_o.map">
+                <textvar name="MapLambda2" value="$(PathSoilHyd)/lambda2_o">
 
                     <comment>
 
@@ -7691,7 +7691,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapLambda3" value="$(PathSoilHyd)/lambda3.map">
+                <textvar name="MapLambda3" value="$(PathSoilHyd)/lambda3">
 
                     <comment>
 
@@ -7704,7 +7704,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapGenuAlpha1" value="$(PathSoilHyd)/genua1_o.map">
+                <textvar name="MapGenuAlpha1" value="$(PathSoilHyd)/genua1_o">
 
                     <comment>
 
@@ -7715,7 +7715,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapGenuAlpha2" value="$(PathSoilHyd)/genua2_o.map">
+                <textvar name="MapGenuAlpha2" value="$(PathSoilHyd)/genua2_o">
 
                     <comment>
 
@@ -7726,7 +7726,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapGenuAlpha3" value="$(PathSoilHyd)/genua3.map">
+                <textvar name="MapGenuAlpha3" value="$(PathSoilHyd)/genua3">
 
                     <comment>
 
@@ -7737,7 +7737,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapKSat1" value="$(PathSoilHyd)/ksat1_o.map">
+                <textvar name="MapKSat1" value="$(PathSoilHyd)/ksat1_o">
 
                     <comment>
 
@@ -7748,7 +7748,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapKSat2" value="$(PathSoilHyd)/ksat2_o.map">
+                <textvar name="MapKSat2" value="$(PathSoilHyd)/ksat2_o">
 
                     <comment>
 
@@ -7759,7 +7759,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapKSat3" value="$(PathSoilHyd)/ksat3.map">
+                <textvar name="MapKSat3" value="$(PathSoilHyd)/ksat3">
 
                     <comment>
 
@@ -7790,7 +7790,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
 
 
-                <textvar name="MapThetaSat1Forest" value="$(PathSoilHyd)/thetas1_f.map">
+                <textvar name="MapThetaSat1Forest" value="$(PathSoilHyd)/thetas1_f">
 
                     <comment>
 
@@ -7801,7 +7801,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapThetaSat2Forest" value="$(PathSoilHyd)/thetas2_f.map">
+                <textvar name="MapThetaSat2Forest" value="$(PathSoilHyd)/thetas2_f">
 
                     <comment>
 
@@ -7812,7 +7812,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapThetaRes1Forest" value="$(PathSoilHyd)/thetar1.map">
+                <textvar name="MapThetaRes1Forest" value="$(PathSoilHyd)/thetar1">
 
                     <comment>
 
@@ -7823,7 +7823,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapThetaRes2Forest" value="$(PathSoilHyd)/thetar2.map">
+                <textvar name="MapThetaRes2Forest" value="$(PathSoilHyd)/thetar2">
 
                     <comment>
 
@@ -7834,7 +7834,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapLambda1Forest" value="$(PathSoilHyd)/lambda1_f.map">
+                <textvar name="MapLambda1Forest" value="$(PathSoilHyd)/lambda1_f">
 
                     <comment>
 
@@ -7847,7 +7847,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapLambda2Forest" value="$(PathSoilHyd)/lambda2_f.map">
+                <textvar name="MapLambda2Forest" value="$(PathSoilHyd)/lambda2_f">
 
                     <comment>
 
@@ -7860,7 +7860,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapGenuAlpha1Forest" value="$(PathSoilHyd)/genua1_f.map">
+                <textvar name="MapGenuAlpha1Forest" value="$(PathSoilHyd)/genua1_f">
 
                     <comment>
 
@@ -7871,7 +7871,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapGenuAlpha2Forest" value="$(PathSoilHyd)/genua2_f.map">
+                <textvar name="MapGenuAlpha2Forest" value="$(PathSoilHyd)/genua2_f">
 
                     <comment>
 
@@ -7882,7 +7882,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapKSat1Forest" value="$(PathSoilHyd)/ksat1_f.map">
+                <textvar name="MapKSat1Forest" value="$(PathSoilHyd)/ksat1_f">
 
                     <comment>
 
@@ -7893,7 +7893,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapKSat2Forest" value="$(PathSoilHyd)/ksat2_f.map">
+                <textvar name="MapKSat2Forest" value="$(PathSoilHyd)/ksat2_f">
 
                     <comment>
 

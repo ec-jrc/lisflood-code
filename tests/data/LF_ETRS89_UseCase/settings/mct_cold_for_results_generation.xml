@@ -4687,7 +4687,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
 				<textvar name="DirectRunoffFraction" value="$(PathMapsLanduse)/fracsealed">
                     <comment>
-						$(PathMapsLanduse)/fracsealed.map
+						$(PathMapsLanduse)/fracsealed
                         urban area (0-1)
                     </comment>
                 </textvar>
@@ -4700,7 +4700,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
 				<textvar name="ForestFraction" value="$(PathMapsLanduse)/fracforest">
                     <comment>
-						$(PathMapsLanduse)/fracforest.map
+						$(PathMapsLanduse)/fracforest
                         forest fraction of a pixel (0-1)
                     </comment>
                 </textvar>
@@ -4714,7 +4714,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
 				<textvar name="WaterFraction" value="$(PathMapsLanduse)/fracwater">
                     <comment>
-						$(PathMapsLanduse)/fracwater.map
+						$(PathMapsLanduse)/fracwater
                         forest fraction of a pixel (0-1)
                     </comment>
                 </textvar>
@@ -4728,7 +4728,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
 				<textvar name="OtherFraction" value="$(PathMapsLanduse)/fracother">
                     <comment>
-						$(PathMapsLanduse)/fracother.map
+						$(PathMapsLanduse)/fracother
                         forest fraction of a pixel (0-1)
                     </comment>
                 </textvar>
@@ -4742,7 +4742,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
 				<textvar name="IrrigationFraction" value="$(PathMapsLanduse)/fracirrigated">
                     <comment>
-						$(PathMapsLanduse)/fracirrigated.map
+						$(PathMapsLanduse)/fracirrigated
                         irrigated area fraction of a pixel (0-1)
                     </comment>
                 </textvar>

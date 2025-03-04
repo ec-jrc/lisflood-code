@@ -404,7 +404,7 @@ def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averagey
     if not load:
         # read a netcdf  (single one not a stack)
         # here we already tried to load the map as PCRaster and failed, thus try as NetCDF (with or without .nc extension)
-        filename = value if value.lower().endswith('.nc') else value + '.nc'
+        filename = value if value.lower().endswith('.nc') or value.lower().endswith('.map') else value + '.nc'
         # get mapextend of netcdf map and calculate the cutting
         cut0, cut1, cut2, cut3 = mapattrNetCDF(filename)
         # load netcdf map but only the rectangle needed

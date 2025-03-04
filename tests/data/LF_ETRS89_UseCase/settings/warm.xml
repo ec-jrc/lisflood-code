@@ -2769,25 +2769,25 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
             </textvar>
 
-            <textvar name="RicePlantingDay1" value="$(PathMapsTables)/riceplantingday1.map">
+            <textvar name="RicePlantingDay1" value="$(PathMapsTables)/riceplantingday1">
                 <comment>
                     map with starting day of the year
                 </comment>
             </textvar>
 
-            <textvar name="RiceHarvestDay1" value="$(PathMapsTables)/riceharvestday1.map">
+            <textvar name="RiceHarvestDay1" value="$(PathMapsTables)/riceharvestday1">
                 <comment>
                     map with starting day of the year
                 </comment>
             </textvar>
 
-            <textvar name="RicePlantingDay2" value="$(PathMapsTables)/riceplantingday2.map">
+            <textvar name="RicePlantingDay2" value="$(PathMapsTables)/riceplantingday2">
                 <comment>
                     map with starting day of the year
                 </comment>
             </textvar>
 
-            <textvar name="RiceHarvestDay2" value="$(PathMapsTables)/riceharvestday2.map">
+            <textvar name="RiceHarvestDay2" value="$(PathMapsTables)/riceharvestday2">
                 <comment>
                     map with starting day of the year
                 </comment>
@@ -4419,13 +4419,13 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="Grad" value="$(PathRoot)/maps/gradient.map">
+                <textvar name="Grad" value="$(PathRoot)/maps/gradient">
                     <comment>
                         slope gradient [-] (0.50 -&gt; tangent=0.5, angle=26.5 degrees)
                     </comment>
                 </textvar>
 
-                <textvar name="ElevationStD" value="$(PathRoot)/maps/elvstd.map">
+                <textvar name="ElevationStD" value="$(PathRoot)/maps/elvstd">
                     <comment>
                         Elevation standard deviation [m], i.e. altitude difference elevation within pixel.
                         Used for sub-pixel modelling of snow accumulation
@@ -4477,7 +4477,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
                 </comment>
 
-                <textvar name="SoilDepth1" value="$(PathMapsTables)/soildepth1_o.map">
+                <textvar name="SoilDepth1" value="$(PathMapsTables)/soildepth1_o">
                     <comment>
                         Soil depth for 1st layer
                         Minimum Soil Depth [mm] for upper soil layer
@@ -4486,21 +4486,21 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="SoilDepth2" value="$(PathMapsTables)/soildepth2_o.map">
+                <textvar name="SoilDepth2" value="$(PathMapsTables)/soildepth2_o">
                     <comment>
                         Soil depth for 2nd layer
                         Minimum Soil Depth [mm] for second soil layer
                     </comment>
                 </textvar>
 
-                <textvar name="SoilDepth3" value="$(PathMapsTables)/soildepth3_o.map">
+                <textvar name="SoilDepth3" value="$(PathMapsTables)/soildepth3_o">
                     <comment>
                         Soil depth for 2nd layer
                         Minimum Soil Depth [mm] for second soil layer
                     </comment>
                 </textvar>
 
-                <textvar name="SoilDepth1Forest" value="$(PathMapsTables)/soildepth1_f.map">
+                <textvar name="SoilDepth1Forest" value="$(PathMapsTables)/soildepth1_f">
                     <comment>
                         Soil depth for 1st layer
                         Minimum Soil Depth [mm] for upper soil layer
@@ -4509,14 +4509,14 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="SoilDepth2Forest" value="$(PathMapsTables)/soildepth2_f.map">
+                <textvar name="SoilDepth2Forest" value="$(PathMapsTables)/soildepth2_f">
                     <comment>
                         Soil depth for 2nd layer
                         Minimum Soil Depth [mm] for lower soil layer
                     </comment>
                 </textvar>
 
-                <textvar name="SoilDepth3Forest" value="$(PathMapsTables)/soildepth3_f.map">
+                <textvar name="SoilDepth3Forest" value="$(PathMapsTables)/soildepth3_f">
                     <comment>
                         Soil depth for 2nd layer
                         Minimum Soil Depth [mm] for lower soil layer 300
@@ -4533,9 +4533,9 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     **************************************************************
                 </comment>
 
-                <textvar name="DirectRunoffFraction" value="$(PathMapsLanduse)/fracsealed.map">
+                <textvar name="DirectRunoffFraction" value="$(PathMapsLanduse)/fracsealed">
                     <comment>
-                        $(PathMapsLanduse)/fracsealed.map
+                        $(PathMapsLanduse)/fracsealed
                         urban area (0-1)
                     </comment>
                 </textvar>
@@ -4546,9 +4546,9 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="ForestFraction" value="$(PathMapsLanduse)/fracforest.map">
+                <textvar name="ForestFraction" value="$(PathMapsLanduse)/fracforest">
                     <comment>
-                        $(PathMapsLanduse)/fracforest.map
+                        $(PathMapsLanduse)/fracforest
                         forest fraction of a pixel (0-1)
                     </comment>
                 </textvar>
@@ -4560,9 +4560,9 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="WaterFraction" value="$(PathMapsLanduse)/fracwater.map">
+                <textvar name="WaterFraction" value="$(PathMapsLanduse)/fracwater">
                     <comment>
-                        $(PathMapsLanduse)/fracwater.map
+                        $(PathMapsLanduse)/fracwater
                         forest fraction of a pixel (0-1)
                     </comment>
                 </textvar>
@@ -4574,9 +4574,9 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="OtherFraction" value="$(PathMapsLanduse)/fracother.map">
+                <textvar name="OtherFraction" value="$(PathMapsLanduse)/fracother">
                     <comment>
-                        $(PathMapsLanduse)/fracother.map
+                        $(PathMapsLanduse)/fracother
                         forest fraction of a pixel (0-1)
                     </comment>
                 </textvar>
@@ -4588,9 +4588,9 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="IrrigationFraction" value="$(PathMapsLanduse)/fracirrigated.map">
+                <textvar name="IrrigationFraction" value="$(PathMapsLanduse)/fracirrigated">
                     <comment>
-                        $(PathMapsLanduse)/fracirrigated.map
+                        $(PathMapsLanduse)/fracirrigated
                         irrigated area fraction of a pixel (0-1)
                     </comment>
                 </textvar>
@@ -4609,7 +4609,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="RiceFraction" value="$(PathMapsLanduse)/fracrice.map">
+                <textvar name="RiceFraction" value="$(PathMapsLanduse)/fracrice">
                     <comment>
                         rice fraction of a pixel (0-1)
                     </comment>
@@ -4627,7 +4627,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="FractionNonConventionalWaterUsed" value="$(PathMapsLanduse)/fracncused.map">
+                <textvar name="FractionNonConventionalWaterUsed" value="$(PathMapsLanduse)/fracncused">
                     <comment>
                         NonConventionalWaterUsed (0-1)
                     </comment>
@@ -4648,40 +4648,40 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="MapCropCoef" value="$(PathMapsTables)/cropcoef_o.map">
+                <textvar name="MapCropCoef" value="$(PathMapsTables)/cropcoef_o">
                     <comment>
                         table with crop coefficient for each land use; values ranging from 0.75 to 1.25;
                         source: Supit, p.83 CFET
                     </comment>
                 </textvar>
 
-                <textvar name="MapCropGroupNumber" value="$(PathMapsTables)/cropgrpn_o.map">
+                <textvar name="MapCropGroupNumber" value="$(PathMapsTables)/cropgrpn_o">
                     <comment>
                         table with crop group number; table 6.1 and 6.2 in WOFOST 6.0, Supit, 1994: p. 86
                     </comment>
                 </textvar>
 
-                <textvar name="MapN" value="$(PathMapsTables)/mannings_o.map">
+                <textvar name="MapN" value="$(PathMapsTables)/mannings_o">
                     <comment>
                         $(PathMapsTables)/manngs_2000_250m.map
                         table with Manning's roughness for each CORINE landcover class
                     </comment>
                 </textvar>
 
-                <textvar name="MapForestCropCoef" value="$(PathMapsTables)/cropcoef_f.map">
+                <textvar name="MapForestCropCoef" value="$(PathMapsTables)/cropcoef_f">
                     <comment>
                         table with crop coefficient for each land use; values ranging from 0.75 to 1.25;
                         source: Supit, p.83 CFET
                     </comment>
                 </textvar>
 
-                <textvar name="MapForestCropGroupNumber" value="$(PathMapsTables)/cropgrpn_f.map">
+                <textvar name="MapForestCropGroupNumber" value="$(PathMapsTables)/cropgrpn_f">
                     <comment>
                         table with crop group number; table 6.1 and 6.2 in WOFOST 6.0, Supit, 1994: p. 86
                     </comment>
                 </textvar>
 
-                <textvar name="MapForestN" value="$(PathMapsTables)/mannings_f.map">
+                <textvar name="MapForestN" value="$(PathMapsTables)/mannings_f">
                     <comment>
                         $(PathMapsTables)/manngs_2000_250m.map
                         table with Manning's roughness for each CORINE landcover class
@@ -4717,7 +4717,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     **************************************************************
                 </comment>
 
-                <textvar name="Channels" value="$(PathRoot)/maps/chan.map">
+                <textvar name="Channels" value="$(PathRoot)/maps/chan">
                     <comment>
                         Boolean map with value 1 at channel pixels and 0 at
                         all other pixels
@@ -4726,7 +4726,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="ChanGrad" value="$(PathRoot)/maps/changrad.map">
+                <textvar name="ChanGrad" value="$(PathRoot)/maps/changrad">
                     <comment>
                         Channel gradient (fraction, dy/dx)
                     </comment>
@@ -4738,7 +4738,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="ChanLength" value="$(PathRoot)/maps/chanlength.map">
+                <textvar name="ChanLength" value="$(PathRoot)/maps/chanlength">
                     <comment>
                         Channel length [meters]
                     </comment>
@@ -4750,7 +4750,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="ChanSdXdY" value="$(PathRoot)/maps/chans.map">
+                <textvar name="ChanSdXdY" value="$(PathRoot)/maps/chans">
                     <comment>
                         Channel side slope, expressed as gradient
                         !! expressed as dx/dy !!! (NOT dy/dx, which would perhaps be more logical)
@@ -4780,94 +4780,94 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     **************************************************************
                 </comment>
 
-                <textvar name="MapThetaSat1" value="$(PathSoilHyd)/thetas1_o.map">
+                <textvar name="MapThetaSat1" value="$(PathSoilHyd)/thetas1_o">
                     <comment>
                         Soil moisture content at saturation [V/V]
                     </comment>
                 </textvar>
 
-                <textvar name="MapThetaSat2" value="$(PathSoilHyd)/thetas2_o.map">
+                <textvar name="MapThetaSat2" value="$(PathSoilHyd)/thetas2_o">
                     <comment>
                         Soil moisture content at saturation [V/V]
                     </comment>
                 </textvar>
 
-                <textvar name="MapThetaSat3" value="$(PathSoilHyd)/thetas3.map">
+                <textvar name="MapThetaSat3" value="$(PathSoilHyd)/thetas3">
                     <comment>
                         Soil moisture content at saturation [V/V]
                     </comment>
                 </textvar>
 
-                <textvar name="MapThetaRes1" value="$(PathSoilHyd)/thetar1.map">
+                <textvar name="MapThetaRes1" value="$(PathSoilHyd)/thetar1">
                     <comment>
                         Residual soil moisture content [V/V]
                     </comment>
                 </textvar>
 
-                <textvar name="MapThetaRes2" value="$(PathSoilHyd)/thetar2.map">
+                <textvar name="MapThetaRes2" value="$(PathSoilHyd)/thetar2">
                     <comment>
                         Residual soil moisture content [V/V]
                     </comment>
                 </textvar>
 
-                <textvar name="MapThetaRes3" value="$(PathSoilHyd)/thetar3.map">
+                <textvar name="MapThetaRes3" value="$(PathSoilHyd)/thetar3">
                     <comment>
                         Residual soil moisture content [V/V]
                     </comment>
                 </textvar>
 
-                <textvar name="MapLambda1" value="$(PathSoilHyd)/lambda1_o.map">
+                <textvar name="MapLambda1" value="$(PathSoilHyd)/lambda1_o">
                     <comment>
                         Pore-size index (Van Genuchten m and n are calculated from this)
                         Lambda is acually 1-n
                     </comment>
                 </textvar>
 
-                <textvar name="MapLambda2" value="$(PathSoilHyd)/lambda2_o.map">
+                <textvar name="MapLambda2" value="$(PathSoilHyd)/lambda2_o">
                     <comment>
                         Pore-size index (Van Genuchten m and n are calculated from this)
                         Lambda is acually 1-n
                     </comment>
                 </textvar>
 
-                <textvar name="MapLambda3" value="$(PathSoilHyd)/lambda3.map">
+                <textvar name="MapLambda3" value="$(PathSoilHyd)/lambda3">
                     <comment>
                         Pore-size index (Van Genuchten m and n are calculated from this)
                         Lambda is acually 1-n
                     </comment>
                 </textvar>
 
-                <textvar name="MapGenuAlpha1" value="$(PathSoilHyd)/genua1_o.map">
+                <textvar name="MapGenuAlpha1" value="$(PathSoilHyd)/genua1_o">
                     <comment>
                         Van Genuchten parameter Alpha
                     </comment>
                 </textvar>
 
-                <textvar name="MapGenuAlpha2" value="$(PathSoilHyd)/genua2_o.map">
+                <textvar name="MapGenuAlpha2" value="$(PathSoilHyd)/genua2_o">
                     <comment>
                         Van Genuchten parameter Alpha
                     </comment>
                 </textvar>
 
-                <textvar name="MapGenuAlpha3" value="$(PathSoilHyd)/genua3.map">
+                <textvar name="MapGenuAlpha3" value="$(PathSoilHyd)/genua3">
                     <comment>
                         Van Genuchten parameter Alpha
                     </comment>
                 </textvar>
 
-                <textvar name="MapKSat1" value="$(PathSoilHyd)/ksat1_o.map">
+                <textvar name="MapKSat1" value="$(PathSoilHyd)/ksat1_o">
                     <comment>
                         Saturated conductivity [cm/day]
                     </comment>
                 </textvar>
 
-                <textvar name="MapKSat2" value="$(PathSoilHyd)/ksat2_o.map">
+                <textvar name="MapKSat2" value="$(PathSoilHyd)/ksat2_o">
                     <comment>
                         Saturated conductivity [cm/day]
                     </comment>
                 </textvar>
 
-                <textvar name="MapKSat3" value="$(PathSoilHyd)/ksat3.map">
+                <textvar name="MapKSat3" value="$(PathSoilHyd)/ksat3">
                     <comment>
                         Saturated conductivity [cm/day]
                     </comment>
@@ -4884,63 +4884,63 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     **************************************************************
                 </comment>
 
-                <textvar name="MapThetaSat1Forest" value="$(PathSoilHyd)/thetas1_f.map">
+                <textvar name="MapThetaSat1Forest" value="$(PathSoilHyd)/thetas1_f">
                     <comment>
                         Soil moisture content at saturation [V/V]
                     </comment>
                 </textvar>
 
-                <textvar name="MapThetaSat2Forest" value="$(PathSoilHyd)/thetas2_f.map">
+                <textvar name="MapThetaSat2Forest" value="$(PathSoilHyd)/thetas2_f">
                     <comment>
                         Soil moisture content at saturation [V/V]
                     </comment>
                 </textvar>
 
-                <textvar name="MapThetaRes1Forest" value="$(PathSoilHyd)/thetar1.map">
+                <textvar name="MapThetaRes1Forest" value="$(PathSoilHyd)/thetar1">
                     <comment>
                         Residual soil moisture content [V/V]
                     </comment>
                 </textvar>
 
-                <textvar name="MapThetaRes2Forest" value="$(PathSoilHyd)/thetar2.map">
+                <textvar name="MapThetaRes2Forest" value="$(PathSoilHyd)/thetar2">
                     <comment>
                         Residual soil moisture content [V/V]
                     </comment>
                 </textvar>
 
-                <textvar name="MapLambda1Forest" value="$(PathSoilHyd)/lambda1_f.map">
+                <textvar name="MapLambda1Forest" value="$(PathSoilHyd)/lambda1_f">
                     <comment>
                         Pore-size index (Van Genuchten m and n are calculated from this)
                         Lambda is acually 1-n
                     </comment>
                 </textvar>
 
-                <textvar name="MapLambda2Forest" value="$(PathSoilHyd)/lambda2_f.map">
+                <textvar name="MapLambda2Forest" value="$(PathSoilHyd)/lambda2_f">
                     <comment>
                         Pore-size index (Van Genuchten m and n are calculated from this)
                         Lambda is acually 1-n
                     </comment>
                 </textvar>
 
-                <textvar name="MapGenuAlpha1Forest" value="$(PathSoilHyd)/genua1_f.map">
+                <textvar name="MapGenuAlpha1Forest" value="$(PathSoilHyd)/genua1_f">
                     <comment>
                         Van Genuchten parameter Alpha
                     </comment>
                 </textvar>
 
-                <textvar name="MapGenuAlpha2Forest" value="$(PathSoilHyd)/genua2_f.map">
+                <textvar name="MapGenuAlpha2Forest" value="$(PathSoilHyd)/genua2_f">
                     <comment>
                         Van Genuchten parameter Alpha
                     </comment>
                 </textvar>
 
-                <textvar name="MapKSat1Forest" value="$(PathSoilHyd)/ksat1_f.map">
+                <textvar name="MapKSat1Forest" value="$(PathSoilHyd)/ksat1_f">
                     <comment>
                         Saturated conductivity [cm/day]
                     </comment>
                 </textvar>
 
-                <textvar name="MapKSat2Forest" value="$(PathSoilHyd)/ksat2_f.map">
+                <textvar name="MapKSat2Forest" value="$(PathSoilHyd)/ksat2_f">
                     <comment>
                         Saturated conductivity [cm/day]
                     </comment>
