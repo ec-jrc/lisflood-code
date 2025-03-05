@@ -1215,13 +1215,13 @@
                 </comment>
             </textvar>
 
-            <textvar name="MapIrrigationCropCoef" value="$(PathMapsTables)/cropcoef_i.map">
+            <textvar name="MapIrrigationCropCoef" value="$(PathMapsTables)/cropcoef_i">
                 <comment>
                     Irrigation crop coefficient
                 </comment>
             </textvar>
 
-            <textvar name="MapIrrigationCropGroupNumber" value="$(PathMapsTables)/cropgrpn_i.map">
+            <textvar name="MapIrrigationCropGroupNumber" value="$(PathMapsTables)/cropgrpn_i">
                 <comment>
                     Irrigation crop group number
                 </comment>
