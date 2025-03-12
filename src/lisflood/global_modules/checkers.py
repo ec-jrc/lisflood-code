@@ -21,10 +21,11 @@ import os
 import inspect
 import warnings
 
+from pcraster.operations import boolean
 import numpy as np
 
 from .errors import LisfloodError, LisfloodWarning
-from .add1 import loadmap, loadsetclone
+from .add1 import loadmap, loadsetclone, compressArray
 from ..hydrological_modules import HydroModule
 from ..hydrological_modules import (surface_routing, evapowater, snow, routing, leafarea, inflow, waterlevel,
                                     waterbalance, wateruse, waterabstraction, lakes, riceirrigation, indicatorcalc,
@@ -39,6 +40,12 @@ def lakes_present(lake_type):
     MaskMap = loadsetclone('MaskMap')  # need to define mask map to use loadmap
     LakeSitesC = loadmap(sites_dict[lake_type])
     LakeSitesC[LakeSitesC < 1] = 0
+
+    # Get rid of any lakes/reservoirs that are not part of the channel network
+    IsChannelPcr = boolean(loadmap('Channels', pcr=True))
+    IsChannel = np.bool8(compressArray(IsChannelPcr))
+    LakeSitesC[IsChannel == 0] = 0
+
     LakeSitesCC = np.compress(LakeSitesC > 0, LakeSitesC)
     if LakeSitesCC.size == 0:
         present = False
