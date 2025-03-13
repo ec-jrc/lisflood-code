@@ -931,6 +931,11 @@ class routing(HydroModule):
             # if flow is slow, Traveltime=DtSec then TravelDistance=PixelLength
             # maximum set to 30km/day for 5km cell, is at DtSec/Traveltime=6, is at Traveltime<DtSec/6
 
+            ####### added by Robert Dill, 2025/03/13
+            # calculate momentum map flow velocity * rivermass [kgm/s]
+            self.var.FlowMomentum = self.var.TotalCrossSectionArea * self.var.ChanLength * 1000 * self.var.FlowVelocity
+            #######
+
 
     def KinRouting(self,SideflowChan):
         """Kinematic routing based on a 4-point implicit finite-difference numerical solution of the kinematic wave equations.
