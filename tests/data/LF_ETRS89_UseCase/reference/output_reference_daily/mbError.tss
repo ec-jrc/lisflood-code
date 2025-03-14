@@ -1,4 +1,4 @@
-timeseries valuescale.scalar settingsfile: /hdd2/releases/lisflood_newinit/lisflood-code/tests/data/LF_ETRS89_UseCase/settings/base.xml_8b52e8bd-841f-4741-ae39-22192faa65a9.xml date: Tue Feb 18 11:48:07 2025
+timeseries valuescale.scalar settingsfile: /hdd2/releases/lisflood_development/lisflood-code/tests/data/LF_ETRS89_UseCase/settings/base.xml_a1cf5a87-4071-49e5-81dd-167cec7657e9.xml date: Fri Mar 14 13:27:17 2025
 2
 timestep
 1
@@ -155,11 +155,11 @@ timestep
      9647         51.579
      9648       -208.024
      9649         51.514
-     9650        50.8033
-     9651        50.7018
+     9650        50.8034
+     9651        50.7017
      9652        51.6292
      9653        50.5481
-     9654        51.7794
+     9654        51.7795
      9655        52.3395
      9656        50.6941
      9657        51.4912
@@ -168,15 +168,15 @@ timestep
      9660       -164.193
      9661        52.2352
      9662        52.5751
-     9663        50.0236
+     9663        50.0237
      9664        52.1742
      9665        52.9815
      9666        52.4591
-     9667         51.566
-     9668         51.076
+     9667        51.5659
+     9668        51.0761
      9669         52.296
-     9670        51.8416
-     9671        51.8466
+     9670        51.8417
+     9671        51.8465
      9672        51.3073
      9673        51.5154
      9674        51.4602
