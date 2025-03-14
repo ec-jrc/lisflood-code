@@ -153,7 +153,7 @@ class Reservoir(HydroModule):
 
             # factor of the flood outflow
             if str(binding['ReservoirFloodOutflowFactor']).endswith('txt'):
-                factor_outflow = lookupscalar(str(binding['ReservoirFloodStorage']), ReservoirSitePcr)
+                factor_outflow = lookupscalar(str(binding['ReservoirFloodOutflowFactor']), ReservoirSitePcr)
                 factor_outflow = compressArray(factor_outflow)
             else:
                 factor_outflow = loadmap('ReservoirFloodOutflowFactor')
@@ -187,14 +187,14 @@ class Reservoir(HydroModule):
             flood_outflow = lookupscalar(str(binding['ReservoirFloodOutflow']), ReservoirSitePcr)
             flood_outflow = compressArray(flood_outflow)
             flood_outflow = np.compress(self.var.ReservoirSitesC > 0, flood_outflow)
-            self.var.FloodReservoirOutflow = factor_outflow * flood_outflow
+            self.var.FloodReservoirOutflow = np.maximum(self.var.NormalReservoirOutflow, factor_outflow * flood_outflow) 
             
             # release coefficient
             self.var.k = np.maximum(1 - 5 * self.var.TotalReservoirStorageM3CC * (1 - self.var.FloodStorageLimit) / self.var.CatchmentAreaM2, 0)
             
             # INITIAL CONDITIONS
             
-            # initial reservoir fill (fraction of total storage, [-])
+            # initial reservoir fill (fraction of total storage, [-]) 
             # -9999: assume reservoirs are filled to 80% of the flood storage limit
             initial_fill = loadmap('ReservoirInitialFill')
             if np.max(initial_fill) == -9999:
@@ -271,7 +271,7 @@ class Reservoir(HydroModule):
             # conservative zone
             outflow = np.where(
                 self.var.ReservoirFillCC <= conservative_fill,
-                normal_outflow * self.var.ReservoirFillCC / conservative_fill,
+                normal_outflow * self.var.ReservoirFillCC / flood_fill,
                 outflow
             )
             # normal zone and NO flood inflow
