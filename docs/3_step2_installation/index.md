@@ -86,7 +86,7 @@ Follow this instruction for a basic test (some sample catchments are included in
 ```bash
 conda create --name lisflood python=3.8 -c conda-forge
 conda activate lisflood
-conda install -c conda-forge pcraster
+conda install -c conda-forge pcraster "gdal<=3.5.3"
 cd lisflood-code
 pip install -r requirements.txt
 ```

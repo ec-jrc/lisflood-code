@@ -30,7 +30,7 @@ jobs:
     - name: Install gdal and pcraster
       shell: bash -el {0}
       run: |
-        conda install -c conda-forge gdal pcraster
+        conda install -c conda-forge "gdal<=3.5.3" pcraster
     - name: Install dependencies
       shell: bash -el {0}
       run: |
