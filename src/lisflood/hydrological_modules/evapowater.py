@@ -91,7 +91,11 @@ class evapowater(HydroModule):
                     self.var.varW1.append(j)
 
                 for i in range(12):
-                    varWName = generateName(binding['WFractionMaps'], varWNo[i])
+                    try:    # for backward compatibility, in case we want to take WFract maps in PCRaster format
+                        varWName = generateName(binding['WFractionMaps'], varWNo[i])
+                    except:
+                        varWName = None
+                        pass
                     self.var.varW.append(loadLAI(binding['WFractionMaps'], varWName, i))
 
     def dynamic_init(self):
