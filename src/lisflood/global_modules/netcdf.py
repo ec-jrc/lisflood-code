@@ -57,10 +57,20 @@ def mask_array(data, mask, crop, core_dims, name, valid_min, valid_max, func_x, 
 
 
 def compress_xarray(mask, crop, data, name, valid_min, valid_max, func_x, func_y):
+    # Get core dimensions dynamically
     core_dims = get_core_dims(data.dims)
-    masked_data = mask_array(data, mask, crop, core_dims=core_dims, name=name, 
-                             valid_min=valid_min, valid_max=valid_max,
-                             func_x=func_x, func_y=func_y)
+    # Determine chunking based on available dimensions
+    if "lat" in data.dims and "lon" in data.dims:
+        chunk_dict = dict(lat=-1, lon=-1)
+    elif "x" in data.dims and "y" in data.dims:
+        chunk_dict = dict(x=-1, y=-1)
+    else:
+        LisfloodWarning(f"Neither (lat, lon) nor (x, y) found in dataset. Available dimensions: {data.dims}")
+    # Apply masking function with dynamically determined chunking and core dimensions
+    masked_data = mask_array(
+        data.chunk(chunk_dict), mask, crop, core_dims=core_dims, name=name,
+        valid_min=valid_min, valid_max=valid_max,
+        func_x=func_x, func_y=func_y)
     return masked_data
 
 
