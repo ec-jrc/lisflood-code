@@ -251,10 +251,22 @@ class waterstorage(HydroModule):
                     tws_oflowM[reservoir_mask] = np.nansum(tws_oflowM3[reservoir_mask]) / grid_area_reservoir
          
             # soil water storage [mm] -> [m]
-            tws_soilM  = ((self.var.Theta1a[0] * self.var.SoilDepth1a[0] + self.var.Theta1b[0] * self.var.SoilDepth1b[0] + self.var.Theta2[0] * self.var.SoilDepth2[0]) * self.var.OtherFraction     +
-                          (self.var.Theta1a[1] * self.var.SoilDepth1a[1] + self.var.Theta1b[1] * self.var.SoilDepth1b[1] + self.var.Theta2[1] * self.var.SoilDepth2[1]) * self.var.ForestFraction    +
-                          (self.var.Theta1a[2] * self.var.SoilDepth1a[2] + self.var.Theta1b[2] * self.var.SoilDepth1b[2] + self.var.Theta2[2] * self.var.SoilDepth2[2]) * self.var.IrrigationFraction
+            tws_soil1M  = ((self.var.Theta1a[0] * self.var.SoilDepth1a[0]) * self.var.OtherFraction     +
+                          (self.var.Theta1a[1] * self.var.SoilDepth1a[1]) * self.var.ForestFraction    +
+                          (self.var.Theta1a[2] * self.var.SoilDepth1a[2]) * self.var.IrrigationFraction
                          ) / 1000
+
+            tws_soil2M  = ((self.var.Theta1b[0] * self.var.SoilDepth1b[0]) * self.var.OtherFraction     +
+                         (self.var.Theta1b[1] * self.var.SoilDepth1b[1]) * self.var.ForestFraction    +
+                         (self.var.Theta1b[2] * self.var.SoilDepth1b[2]) * self.var.IrrigationFraction
+                        ) / 1000
+
+            tws_soil3M  = ((self.var.Theta2[0] * self.var.SoilDepth2[0]) * self.var.OtherFraction     +
+                          (self.var.Theta2[1] * self.var.SoilDepth2[1]) * self.var.ForestFraction    +
+                          (self.var.Theta2[2] * self.var.SoilDepth2[2]) * self.var.IrrigationFraction
+                        ) / 1000
+
+            tws_soilM = tws_soil1M + tws_soil2M + tws_soil3M
                                   
             # groundwater storage [mm] -> [m], (uz,uzf,uzi,lz,fracforest,fracirrigated,fracother)
             tws_groundwaterM = ( self.var.UZ[0] * self.var.OtherFraction      + 
