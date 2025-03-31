@@ -550,7 +550,12 @@ class routing(HydroModule):
         # ************************************************************
         # ***** INITIALISATION FOR MCT ROUTING            ************
         # ************************************************************
-        
+
+        # do not activate MCT during InitRun
+        if option['InitLisflood']:
+            warnings.warn(LisfloodWarning('InitRun. MCT routing is deactivated'))
+            option['MCTRouting'] = False
+
         # even if MCT is active, it should be deactivated if there is no MCT cell in the domain
         if option['MCTRouting']:
             self.var.IsChannelMCTPcr = boolean(loadmap('ChannelsMCT', pcr=True))   #pcr
@@ -710,7 +715,8 @@ class routing(HydroModule):
             # ************************************************************
             if option['InitLisflood']:
                 self.var.IsChannelKinematic = self.var.IsChannel.copy()
-            # Use kinematic routing in all grid cells
+            # Use kinematic routing in all grid cells when performing an InitRun
+            # MCT is automatically switched off (see MCT initialization)
 
             # only run kinematic for InitLisflood option
             # either kinematic or split routing always runs for all pixels when using MCT routing
