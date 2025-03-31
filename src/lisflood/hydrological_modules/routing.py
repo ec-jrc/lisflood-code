@@ -558,6 +558,8 @@ class routing(HydroModule):
             if self.var.IsChannelMCT.sum()==0:
                 warnings.warn(LisfloodWarning('There are no MCT grid cell. MCT routing is deactivated'))
                 option['MCTRouting'] = False
+                # rebuild lists of reported files with MCTRouting = False
+                settings.build_reportedmaps_dicts()
         
         if option['MCTRouting']:
             maskinfo = MaskInfo.instance()
