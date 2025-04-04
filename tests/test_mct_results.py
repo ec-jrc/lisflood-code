@@ -194,6 +194,49 @@ class TestTSSResults():
         output_tss =  os.path.join(self.out_path_run, 'OutletDischargeErrorSplitRoutingM3S.tss')
         comparator.compare_files(reference, output_tss)
 
+    def run_prerun_mct_test(self, date_start, date_end, dtsec, dtsec_chan, type):
+        mk_path_out(os.path.join(self.case_dir, 'out'))
+        # generate lisflood results        
+        path_out_a = os.path.join(self.case_dir, 'out', 'prerunMCTON_'+type)
+        self.out_path_run = path_out_a
+        settings_file = os.path.join(self.case_dir, 'settings', 'mct_prerun_test_only.xml')
+        settings = setoptions(settings_file,
+                              opts_to_set = ['MCTRouting','InitLisflood'],
+                              opts_to_unset=['SplitRouting'],
+                              vars_to_set={'StepStart': date_start,
+                                           'StepEnd': date_end,
+                                           'CalendarDayStart': date_start,
+                                           'DtSec' : dtsec,
+                                           'DtSecChannel' : dtsec_chan,        # single routing step
+                                           'PathOut': self.out_path_run})
+
+        nc_comparator = NetCDFComparator(settings.maskpath, array_equal=True)
+        tss_comparator = TSSComparator(array_equal=True)
+
+        mk_path_out(self.out_path_run)
+        lisfloodexe(settings)
+
+        path_out_b = os.path.join(self.case_dir, 'out', 'prerunMCTOFF_'+type)
+        self.out_path_run = path_out_b
+        settings_file = os.path.join(self.case_dir, 'settings', 'mct_prerun_test_only.xml')
+        settings = setoptions(settings_file,
+                              opts_to_set = ['InitLisflood'],
+                              opts_to_unset=['MCTRouting','SplitRouting'],
+                              vars_to_set={'StepStart': date_start,
+                                           'StepEnd': date_end,
+                                           'CalendarDayStart': date_start,
+                                           'DtSec' : dtsec,
+                                           'DtSecChannel' : dtsec_chan,        # single routing step
+                                           'PathOut': self.out_path_run})
+
+
+        mk_path_out(self.out_path_run)
+        lisfloodexe(settings)
+
+
+        nc_comparator.compare_dirs(path_out_a, path_out_b)
+        tss_comparator.compare_dirs(path_out_a, path_out_b)
+
     def teardown_method(self):
         print('Cleaning directories')
         out_path = os.path.join(self.case_dir, 'out')
@@ -258,6 +301,11 @@ class TestMCTResults(TestTSSResults):
         self.run_split("02/01/2016 06:00", "02/07/2016 06:00", 86400, 21600, 'daily_6h')
     def test_SPLIT_daily_1h(self):
         self.run_split("02/01/2016 06:00", "02/07/2016 06:00", 86400, 3600, 'daily_1h')
+    
+    # #########################################
+    # additional test to check that MCT is not activated in InitLisflood mode      
+    def test_prerun_no_mct(self):
+        self.run_prerun_mct_test("02/01/2016 06:00", "02/07/2016 06:00", 86400, 86400, 'daily')
 
     #########################################
     # cleaning out/ folder

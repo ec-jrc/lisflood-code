@@ -550,7 +550,7 @@ class routing(HydroModule):
         # ************************************************************
         # ***** INITIALISATION FOR MCT ROUTING            ************
         # ************************************************************
-        
+
         # even if MCT is active, it should be deactivated if there is no MCT cell in the domain
         if option['MCTRouting']:
             self.var.IsChannelMCTPcr = boolean(loadmap('ChannelsMCT', pcr=True))   #pcr
@@ -561,7 +561,7 @@ class routing(HydroModule):
                 # rebuild lists of reported files with MCTRouting = False
                 settings.build_reportedmaps_dicts()
         
-        if option['MCTRouting']:
+        if option['MCTRouting'] and not option['InitLisflood']:
             maskinfo = MaskInfo.instance()
 
             self.var.IsChannelMCTPcr = boolean(decompress(self.var.IsChannelMCT))       # pcr
@@ -712,7 +712,8 @@ class routing(HydroModule):
             # ************************************************************
             if option['InitLisflood']:
                 self.var.IsChannelKinematic = self.var.IsChannel.copy()
-            # Use kinematic routing in all grid cells
+            # Use kinematic routing in all grid cells when performing an InitRun
+            # MCT is automatically switched off (see MCT initialization)
 
             # only run kinematic for InitLisflood option
             # either kinematic or split routing always runs for all pixels when using MCT routing
@@ -771,7 +772,7 @@ class routing(HydroModule):
                 # Main channel routing and above bankfull routing from second line of routing
 
             # MUSKINGUM-CUNGE-TODINI ROUTING - no InitLisflood
-            if option['MCTRouting']:
+            if option['MCTRouting'] and not option['InitLisflood']:
                 # MCT routing
                 # This is calculated for MCT grid cell only but takes the output of kinematic or split routing.
                 # First, Kinematic/Split routing is solved on all pixels (including MCT pixels) then results are updated
