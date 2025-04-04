@@ -551,11 +551,6 @@ class routing(HydroModule):
         # ***** INITIALISATION FOR MCT ROUTING            ************
         # ************************************************************
 
-        # do not activate MCT during InitRun
-        if option['InitLisflood']:
-            warnings.warn(LisfloodWarning('InitRun. MCT routing is deactivated'))
-            option['MCTRouting'] = False
-
         # even if MCT is active, it should be deactivated if there is no MCT cell in the domain
         if option['MCTRouting']:
             self.var.IsChannelMCTPcr = boolean(loadmap('ChannelsMCT', pcr=True))   #pcr
@@ -564,7 +559,7 @@ class routing(HydroModule):
                 warnings.warn(LisfloodWarning('There are no MCT grid cell. MCT routing is deactivated'))
                 option['MCTRouting'] = False
         
-        if option['MCTRouting']:
+        if option['MCTRouting'] and not option['InitLisflood']:
             maskinfo = MaskInfo.instance()
 
             self.var.IsChannelMCTPcr = boolean(decompress(self.var.IsChannelMCT))       # pcr
@@ -775,7 +770,7 @@ class routing(HydroModule):
                 # Main channel routing and above bankfull routing from second line of routing
 
             # MUSKINGUM-CUNGE-TODINI ROUTING - no InitLisflood
-            if option['MCTRouting']:
+            if option['MCTRouting'] and not option['InitLisflood']:
                 # MCT routing
                 # This is calculated for MCT grid cell only but takes the output of kinematic or split routing.
                 # First, Kinematic/Split routing is solved on all pixels (including MCT pixels) then results are updated
