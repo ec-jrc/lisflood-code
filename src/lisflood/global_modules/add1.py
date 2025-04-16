@@ -249,7 +249,8 @@ def loadsetclone(name):
     _ = MaskAreaInfo(maskchkarea, map_out)  # MaskAreaInfo init here
     # put in the ldd map
     # if there is no ldd at a cell, this cell should be excluded from modelling
-    ldd = loadmap('Ldd', pcr=True)
+    # set "skip_mask_info" to True, as MaskInfo is initialized only later in the code
+    ldd = loadmap('Ldd', pcr=True, skip_mask_info = True)
     # convert ldd to numpy
     maskldd = pcr2numpy(ldd, np.nan)
 
@@ -344,7 +345,7 @@ def loadmap_cached(*args, **kwargs):
     return loadmap_base(*args, **kwargs)
 
 
-def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averageyearflag=False, value=None, force_load_with_nans=False):
+def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averageyearflag=False, value=None, force_load_with_nans=False, skip_mask_info=False):
     """ Load a static map either value or pcraster map or netcdf (single or stack)
     
     Load a static map either value or pcraster map or netcdf (single or stack)
@@ -362,6 +363,8 @@ def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averagey
     :param force_load_with_nans: if True, loads the map without checking for nan values inside area Map. 
                                 Warning: this flag should be used ONLY when managing and manipulating incomplete maps
                                 (maps should be completed before using into actual simulations, otherwise Lisflood will fail)
+    :param skip_mask_info: if True do not use MaskInfo instance to mask values 
+                                (this is only used in loadsetclone when MaskInfo is not available yet)
     :return: map or mapC
     :except: pcr: maps must have the same size of clone.map
              netCDF: time step timestepInit must be included into the stack 
@@ -498,12 +501,13 @@ def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averagey
 
         # masking
         try:
-            maskinfo = MaskInfo.instance()
-            if mapnp.mask is not np.bool_(0):
-                if (mapnp.mask[maskinfo.info.mask==False].any()==True):
-                    ## warning: fill values masking is different from the area mask map, and some values in the area mask map contains invalid fill values
-                    warnings.warn(LisfloodWarning("Warning: map {} (binding: '{}') has fill values inside the area mask map!".format(filename, name)))
-            mapnp.mask = maskinfo.info.mask
+            if skip_mask_info is False:
+                maskinfo = MaskInfo.instance()
+                if mapnp.mask is not np.bool_(0):
+                    if (mapnp.mask[maskinfo.info.mask==False].any()==True):
+                        ## warning: fill values masking is different from the area mask map, and some values in the area mask map contains invalid fill values
+                        warnings.warn(LisfloodWarning("Warning: map {} (binding: '{}') has fill values inside the area mask map!".format(filename, name)))
+                mapnp.mask = maskinfo.info.mask
         except (KeyError, AttributeError):
             pass
         nf1.close()
@@ -525,11 +529,13 @@ def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averagey
             if lddflag:
                 map = pcraster.ldd(pcraster.nominal(map))
         else:
+            assert(not skip_mask_info)
             mapC = compressArray(mapnp, pcr=False, name=filename, force_load_with_nans = force_load_with_nans)
         flagmap = True
 
     # pcraster map but it has to be an array
     if pcrmap and not pcr:
+        assert(not skip_mask_info)
         mapC = compressArray(map, name=filename)
 
     if flags['checkfiles']:
@@ -541,6 +547,7 @@ def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averagey
         else:
             #print(name, mapC.size)
             if mapC.size > 0:
+                assert(not skip_mask_info)
                 map= decompress(mapC)
                 checkmap(name, filename, map, flagmap, 0)
     if pcr:
