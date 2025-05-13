@@ -1,4 +1,4 @@
-timeseries valuescale.scalar settingsfile: /hdd2/releases/lisflood_newinit/lisflood-code/tests/data/LF_ETRS89_UseCase/settings/mct_cold.xml_fa5a2a29-5dd8-4447-afb1-2d43fda144a8.xml date: Tue Feb 18 10:18:35 2025
+timeseries valuescale.scalar settingsfile: /hdd2/releases/lisflood_mct_optim/lisflood-code/tests/data/LF_ETRS89_UseCase/settings/mct_cold.xml_571cadfc-8cbf-4059-9c9d-c7eb3f36aca6.xml date: Tue May 13 11:05:48 2025
 2
 timestep
 1
@@ -41,12 +41,12 @@ timestep
        37   -1.80623e-09
        38   -2.71561e-09
        39    -1.0442e-09
-       40    1.04449e-11
-       41    7.68119e-11
+       40    1.04452e-11
+       41    7.68122e-11
        42    1.83245e-10
-       43   -1.86848e-10
-       44    5.77408e-11
-       45    -4.5863e-11
+       43   -1.86849e-10
+       44    5.77407e-11
+       45   -4.58631e-11
        46   -2.15394e-10
        47   -5.21184e-10
        48   -5.37089e-10
@@ -134,12 +134,12 @@ timestep
       130    -1.2237e-09
       131     -3.062e-09
       132   -1.00888e-09
-      133   -3.70387e-10
-      134   -5.77517e-11
+      133   -3.70388e-10
+      134   -5.77518e-11
       135    2.60414e-10
       136    4.36612e-10
-      137    7.43239e-11
-      138   -5.85371e-11
+      137    7.43238e-11
+      138   -5.85373e-11
       139   -7.34321e-10
       140   -1.34093e-10
       141   -1.28029e-10
@@ -149,7 +149,7 @@ timestep
       145   -1.10749e-08
       146   -2.29901e-08
       147   -1.51187e-08
-      148    -8.8731e-11
+      148   -8.87308e-11
       149    5.24023e-09
       150    7.29254e-09
       151    7.30617e-09
