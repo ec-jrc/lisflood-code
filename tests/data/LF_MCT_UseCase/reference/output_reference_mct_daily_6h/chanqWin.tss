@@ -1,4 +1,4 @@
-timeseries valuescale.scalar settingsfile: /hdd2/releases/lisflood_newinit/lisflood-code/tests/data/LF_MCT_UseCase/settings/mct_cold.xml_7c961a9a-80ca-4434-837d-7bf451a3f771.xml date: Tue Feb 18 15:46:06 2025
+timeseries valuescale.scalar settingsfile: /hdd2/releases/lisflood_mct_optim/lisflood-code/tests/data/LF_MCT_UseCase/settings/mct_cold.xml_4fbc908c-acb0-4f24-8c7d-4e1de7d7cd4b.xml date: Tue May 13 09:40:28 2025
 9
 timestep
 1
@@ -45,7 +45,7 @@ timestep
        34        0.31255       0.171699       0.356587       0.360301       0.274852     0.00276747       0.157083       0.122242
        35       0.384657       0.168348       0.413337       0.399772       0.315856     0.00204767      0.0998084      0.0645061
        36        0.40962         0.1234       0.348846       0.311201       0.238813     0.00177316      0.0838264      0.0591681
-       37          1e-12        6.90228        3.79159        7.18331        7.78416     0.00166304        6.30531        5.66755
+       37              0        6.90228        3.79159        7.18331        7.78416     0.00166304        6.30531        5.66755
        38         7.4084        4.34773        6.45196        5.92946        5.66068     0.00162154        3.52043        2.98071
        39        5.19479          2.757        4.55465        4.18171        3.88461      0.0233479         2.1478        1.76616
        40        3.54898        1.91855        3.14496        2.90751        2.69394     0.00483374        1.51886        1.24919
