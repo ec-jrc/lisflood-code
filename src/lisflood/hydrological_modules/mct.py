@@ -255,13 +255,13 @@ def MCTRouting_single(
 
         # reference I discharge at x=0
         qmx0 = (q00 + q01) / 2.0
-        if qmx0 <= 0 :  # cmcheck ==0   #tpk
+        if qmx0 <= eps :  # cmcheck ==0   #tpk
             qmx0 = eps                  #tpk
         hmx0 = hoq(qmx0, s0, Balv, ANalv, Nalv)
 
         # reference O discharge at x=1
         qmx1 = (q10 + q11) / 2.0
-        if qmx1 <= 0:  # cmcheck ==0    #tpk
+        if qmx1 <= eps:  # cmcheck ==0    #tpk
             qmx1 = eps                  #tpk
         hmx1 = hoq(qmx1, s0, Balv, ANalv, Nalv)
 
@@ -275,12 +275,12 @@ def MCTRouting_single(
         # Q(t+dt)=(I(t+dt)+O'(t+dt))/2
         qm1 = (q01 + q11) / 2.0
         # cm
-        if qm1 <=0 :  # cmcheck ==0     #tpk
+        if qm1 <= eps :  # cmcheck ==0     #tpk
             qm1 = eps                   #tpk
         # cm
         hm1 = hoq(qm1, s0, Balv, ANalv, Nalv)
         dummy, Ax1, Bx1, Px1, ck1 = qoh(hm1, s0, Balv, ANalv, Nalv)
-        if ck1 <= 0:    #tpk
+        if ck1 <= eps:    #tpk
             ck1 = eps   #tpk
 
         # Calc correcting factor Beta at time t+dt
