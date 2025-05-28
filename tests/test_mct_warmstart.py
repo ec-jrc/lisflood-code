@@ -18,7 +18,7 @@ See the Licence for the specific language governing permissions and limitations 
 from __future__ import absolute_import
 import os
 import shutil
-from datetime import timedelta
+from datetime import datetime, timedelta
 import glob
 
 import pytest
@@ -37,8 +37,18 @@ class TestWarmStart():
 
     settings_files = {
         'cold': os.path.join(case_dir, 'settings', 'mct_cold.xml'),
-        'warm': os.path.join(case_dir, 'settings', 'mct_warm.xml')
+        'warm': os.path.join(case_dir, 'settings', 'mct_warm.xml'),
+        'warm_endmaps': os.path.join(case_dir, 'settings', 'mct_warm_endmaps.xml')
     }
+
+    def test_mct_only_warmstart_daily_using_end_maps(self):
+        calendar_day_start = '02/01/1990 06:00'
+        step_start = '02/01/2016 06:00'
+        step_end = '31/03/2016 06:00'
+        dt_sec = 86400
+        dt_sec_channel = 86400
+        report_steps = '9496..9861'
+        self.run_warmstart_by_dtsec('mct_endmaps', dt_sec, dt_sec_channel, step_end, step_start, calendar_day_start, report_steps=report_steps)
 
     def test_mct_only_warmstart_daily(self):
         calendar_day_start = '02/01/1990 06:00'
@@ -105,12 +115,20 @@ class TestWarmStart():
         if mct_case == 'mct':
             opts_to_set = ['repStateMaps','TransLoss']
             opts_to_unset = ['repMBTs', 'simulateReservoirs', 'simulateLakes']
+            warm_settings_file = 'warm'
+        if mct_case == 'mct_endmaps':
+            opts_to_set = ['repEndMaps','TransLoss']
+            opts_to_unset = ['repMBTs', 'simulateReservoirs', 'simulateLakes']
+            warm_settings_file = 'warm_endmaps'
+            check_every = 0         # check only at the end
         elif mct_case == 'mct_reservoirs':
             opts_to_set = ['repStateMaps', 'simulateReservoirs','TransLoss']
-            opts_to_unset = ['repMBTs', 'simulateLakes']
+            opts_to_unset = ['repEndMaps','repMBTs', 'simulateLakes']
+            warm_settings_file = 'warm'
         elif mct_case == 'mct_lakes':
             opts_to_set = ['repStateMaps', 'simulateLakes','openwaterevapo','TransLoss']
-            opts_to_unset = ['repMBTs', 'simulateReservoirs']
+            opts_to_unset = ['repEndMaps','repMBTs', 'simulateReservoirs']
+            warm_settings_file = 'warm'
 
         settings_longrun = setoptions(self.settings_files['cold'],
                                     opts_to_set=opts_to_set,
@@ -158,17 +176,21 @@ class TestWarmStart():
         # run only 5*13 steps to speed up computation
         # checking 5 steps every 'check_every' steps
         # need to run 5*check_every steps in total
-        step_limit = warm_step_start + 5*check_every*timedelta(seconds=dt_sec)
+        if check_every > 0:
+            step_limit = warm_step_start + 5*check_every*timedelta(seconds=dt_sec)
+        else:
+            step_limit = settings_longrun.step_end_dt
         print('running until {}'.format(step_limit))
         
         nc_comparator = NetCDFComparator(settings_longrun.maskpath)
         tss_comparator = TSSComparator(array_equal=True)
+        settings_warmstart = None
         while warm_step_start <= step_limit:
             run_number += 1
             path_init = prev_settings.output_dir
             self.path_out = (os.path.join(self.case_dir, 'out', 'run{}_{}'.format(dt_sec, run_number)))
 
-            settings_warmstart = setoptions(self.settings_files['warm'],
+            settings_warmstart = setoptions(self.settings_files[warm_settings_file],
                                             opts_to_set=opts_to_set,
                                             opts_to_unset=opts_to_unset,
                                             vars_to_set={'StepStart': warm_step_start.strftime('%d/%m/%Y %H:%M'),
@@ -186,7 +208,7 @@ class TestWarmStart():
             lisfloodexe(settings_warmstart)
 
             # checking values at current timestep (using datetime)
-            if not (run_number % check_every):
+            if (check_every > 0) and not (run_number % check_every):
                 # ****** compare *******
                 # compare every 13 timesteps to speed up test
                 timestep_dt = settings_warmstart.step_end_dt  # NetCDFComparator takes datetime.datetime as timestep
@@ -199,6 +221,14 @@ class TestWarmStart():
             warm_step_start = prev_settings.step_end_dt + timedelta(seconds=dt_sec)
             warm_step_end = warm_step_start
             timestep_init = prev_settings.step_end_dt.strftime('%d/%m/%Y %H:%M')
+
+        # check at the end of the whole period on the last path_out when check_every is zero
+        if check_every == 0:
+            timestep_dt = settings_warmstart.step_end_dt  # NetCDFComparator takes datetime.datetime as timestep
+            timestep = settings_warmstart.step_end_int
+            nc_comparator.compare_dirs(self.path_out, self.path_out_reference, timestep=timestep_dt)
+            tss_comparator.compare_dirs(self.path_out, self.path_out_reference, timestep=timestep)
+
 
     def teardown_method(self):
         print('Cleaning directories')
