@@ -339,10 +339,11 @@ def MCTRouting_single(
     # q1m cannot be smaller than eps or it will cause instability
     if q1mm < 0:   # cmcheck <=0
         q1mm = 0
-        if ql < 0: ql = 0
+        ###if ql < 0: ql = 0
         # prevent water abstraction or open water evaporation from drying out the channel and keep extracting water
         # NOTE THIS GENERATES AN ERROR IN THE WATER BALANCE
         V11 = V00 + (q0mm + ql - q1mm) * dt
+        if V11 < 0: V11 = 0
 
     # q11 Outflow at O(t+dt)
     # q1m average outflow in time dt
