@@ -3499,7 +3499,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="TotaltoChanMaps" value="$(PathOut)/ttoc">
+                <textvar name="TotalToChanMaps" value="$(PathOut)/ttoc">
                     <comment>
                         Reported total runoff that enters the channel: groundwater + surface runoff [mm]
                     </comment>
