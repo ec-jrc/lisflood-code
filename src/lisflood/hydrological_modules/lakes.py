@@ -239,6 +239,14 @@ class lakes(HydroModule):
             # SI = S1/dtime - Qout1/2 + (Qin1 + Qin2)/2 = S1/dtime - Qout1/2 + LakeIn
             # Right hand part of the Modified Puls Method equation above
 
+            # Check LakeOutflowCC for negative values
+            if any(LakeStorageIndicator < 0):
+                # this can happen with large oscillations in the lake inflow
+                msg = "Negative or NaN outflow from lakes. " \
+                      "Consider increasing computation time step for routing (DtSecChannel) \n"
+                warnings.warn(LisfloodWarning(msg))
+                LakeStorageIndicator[LakeStorageIndicator < 0] = 0
+
             # Qout2
             self.var.LakeOutflowCC = np.square( -self.var.LakeFactor + np.sqrt(self.var.LakeFactorSqr + 2 * LakeStorageIndicator))
             # Qout2 average lake outflow in [m3/s] per timestep t (routing sub-step)
@@ -286,7 +294,7 @@ class lakes(HydroModule):
                     self.var.sumLakeInCC = self.var.LakeInflowCC * self.var.DtRouting
                     self.var.sumLakeOutCC = QLakeOutM3DtCC
                     # for timeseries output - in and outflow to the reservoir
-                    # is sumed up over the sub timesteps and stored in m/s
+                    # is summed up over the sub timesteps and stored in m/s
                     # set to zero at first timestep
                 else:
                     self.var.sumLakeInCC += self.var.LakeInflowCC * self.var.DtRouting

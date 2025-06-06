@@ -67,6 +67,8 @@ You can use builtin path variables in this template and reference to other paths
       <setoption choice="1"  name="writeNetcdfStack"/>
       <setoption choice="1"  name="writeNetcdf"/>
 
+      # option to Report PaddyRiceDebug information in CSV file for debugging Paddy Rice Water Abstraction issue on dry Channels
+		  <setoption choice="0"  name="repPaddyRiceDebug"/>
 
       #-----------------------------------------------------------
       # report time series

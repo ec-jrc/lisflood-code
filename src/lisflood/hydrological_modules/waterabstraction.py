@@ -10,6 +10,7 @@ See the Licence for the specific language governing permissions and limitations 
 """
 from __future__ import absolute_import, print_function
 
+import os
 import warnings
 
 from pcraster import boolean, nominal, ifthen, defined, areamaximum, downstream, cover, lddrepair, ifthenelse, upstream, \
@@ -250,6 +251,14 @@ class waterabstraction(HydroModule):
             self.var.FractionAbstractedFromChannels = maskinfo.in_zero()
             self.var.areatotal_abstraction_SW_actual_irrigation_M3 = maskinfo.in_zero()
             self.var.areatotal_withdrawal_SW_actual_M3 = maskinfo.in_zero()
+
+            #### Prepare output file to store info on potential issue for Paddy Rice Water Abstraction
+            if option.get('repPaddyRiceDebug') is True:
+                self.debug_paddyrice_filename = os.path.join(settings.output_dir,f"debug_paddyrice.csv")
+                if os.path.exists(self.debug_paddyrice_filename):
+                    os.remove(self.debug_paddyrice_filename)
+
+
               
 
     def dynamic(self):
@@ -678,8 +687,33 @@ class waterabstraction(HydroModule):
 
             self.var.Theta1a.values[iveg] = self.var.W1a.values[iveg] / self.var.SoilDepth1a.values[ilanduse] 
             self.var.Theta1b.values[iveg] = self.var.W1b.values[iveg] / self.var.SoilDepth1b.values[ilanduse]
-            
 
+            if option.get('repPaddyRiceDebug') is True:
+                # ************************************************************
+                # 20. Check if we abstracted more water for PaddyRice then available water, and write a txt file (known issue, to be fixed)
+                # (issue for Paddy Rice Water Abstraction)
+                # ************************************************************
+                unique_regions, index = np.unique(self.var.WUseRegionC, return_index=True)
+                areatotal_PaddyRiceWaterAbstractionFromSurfaceWaterM3 = np.take(np.bincount(self.var.WUseRegionC, weights=self.var.PaddyRiceWaterAbstractionFromSurfaceWaterM3), self.var.WUseRegionC)
+                for region, idx in zip(unique_regions, index):
+                    if (areatotal_PaddyRiceWaterAbstractionFromSurfaceWaterM3[idx]>0.0) and (self.var.areatotal_withdrawal_LakRes_actual_M3[idx] + \
+                                                                                             self.var.AreaTotalAvailableWaterFromChannelsM3[idx] - \
+                                                                                             areatotal_withdrawal_SW_required[idx] < 0.0):
+                        header = None
+                        if not os.path.exists(self.debug_paddyrice_filename):
+                            header = "Step, Region, areatotal_PaddyRiceWaterAbstractionFromSurfaceWaterM3, " \
+                                     "areatotal_withdrawal_LakRes_actual_M3, AreaTotalAvailableWaterFromChannelsM3, " \
+                                     "areatotal_withdrawal_SW_required, areatotal_withdrawal_SW_except_PaddyRice_required\n"
+                        message = f"{self.var.currentStep}, {region}, {areatotal_PaddyRiceWaterAbstractionFromSurfaceWaterM3[idx]}, " \
+                                  f"{self.var.areatotal_withdrawal_LakRes_actual_M3[idx]}, {self.var.AreaTotalAvailableWaterFromChannelsM3[idx]}, " \
+                                  f"{areatotal_withdrawal_SW_required[idx]}, {areatotal_withdrawal_SW_required[idx]-areatotal_PaddyRiceWaterAbstractionFromSurfaceWaterM3[idx]}\n"
+                        #print(message)
+                        # Open the file in write mode
+                        with open(self.debug_paddyrice_filename, 'a') as file:
+                            if header is not None:
+                                file.write(header)
+                            # Write the message to the file
+                            file.write(message)
 
 #from numba import njit
 #from builtins import max, min
