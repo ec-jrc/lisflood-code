@@ -255,11 +255,12 @@ class waterabstraction(HydroModule):
             #### Prepare output file to store info on potential issue for Paddy Rice Water Abstraction
             if option.get('repPaddyRiceDebug') is True:
                 self.debug_paddyrice_filename = os.path.join(settings.output_dir,f"debug_paddyrice.csv")
-                if os.path.exists(self.debug_paddyrice_filename):
-                    os.remove(self.debug_paddyrice_filename)
-
-
-              
+                try:
+                    if os.path.exists(self.debug_paddyrice_filename):
+                        os.remove(self.debug_paddyrice_filename)
+                except IOError:
+                    print("Error accessing file {0}".format(self.debug_paddyrice_filename))
+             
 
     def dynamic(self):
         """ dynamic part of the water use module
@@ -708,12 +709,15 @@ class waterabstraction(HydroModule):
                                   f"{self.var.areatotal_withdrawal_LakRes_actual_M3[idx]}, {self.var.AreaTotalAvailableWaterFromChannelsM3[idx]}, " \
                                   f"{areatotal_withdrawal_SW_required[idx]}, {areatotal_withdrawal_SW_required[idx]-areatotal_PaddyRiceWaterAbstractionFromSurfaceWaterM3[idx]}\n"
                         #print(message)
-                        # Open the file in write mode
-                        with open(self.debug_paddyrice_filename, 'a') as file:
-                            if header is not None:
-                                file.write(header)
-                            # Write the message to the file
-                            file.write(message)
+                        try:
+                            # Open the file in write mode
+                            with open(self.debug_paddyrice_filename, 'a') as file:
+                                if header is not None:
+                                    file.write(header)
+                                # Write the message to the file
+                                file.write(message)
+                        except IOError:
+                            print("Error accessing file {0} (2)".format(self.debug_paddyrice_filename))
 
 #from numba import njit
 #from builtins import max, min
