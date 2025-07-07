@@ -54,7 +54,7 @@ class Reservoir(HydroModule):
 
     Referenecs:
     -----------
-    Hanazaki, R., Yamazaki, D., Yoshimura, K.: Development of a Reservoir FLood Control Scheme for
+    Hanazaki, R., Yamazaki, D., Yoshimura, K.: Development of a Reservoir Flood Control Scheme for
     Global Flood Models, Journal of Advances in Modeling Earth Systems, 14,
     https://doi.org/10.1029/2021MS002944, 2022.
     """
@@ -187,10 +187,7 @@ class Reservoir(HydroModule):
             flood_outflow = lookupscalar(str(binding['ReservoirFloodOutflow']), ReservoirSitePcr)
             flood_outflow = compressArray(flood_outflow)
             flood_outflow = np.compress(self.var.ReservoirSitesC > 0, flood_outflow)
-            self.var.FloodReservoirOutflow = np.maximum(self.var.NormalReservoirOutflow, factor_outflow * flood_outflow) 
-            
-            # release coefficient
-            self.var.k = np.maximum(1 - 5 * self.var.TotalReservoirStorageM3CC * (1 - self.var.FloodStorageLimit) / self.var.CatchmentAreaM2, 0)
+            self.var.FloodReservoirOutflow = np.maximum(self.var.NormalReservoirOutflow, factor_outflow * flood_outflow)
             
             # INITIAL CONDITIONS
             
@@ -236,7 +233,6 @@ class Reservoir(HydroModule):
 
             InvDtSecDay = 1 / float(86400)
             # InvDtSecDay=self.var.InvDtSec
-
             
             # storage limits
             conservative_fill = self.var.ConservativeStorageLimit
@@ -248,7 +244,7 @@ class Reservoir(HydroModule):
             normal_outflow = self.var.NormalReservoirOutflow
             conservative_outflow = normal_outflow * conservative_fill / flood_fill
             flood_outflow = self.var.FloodReservoirOutflow
-            
+
             # reservoir inflow in [m3/s]
             # (LddStructuresKinematic equals LddKinematic, but without the pits/sinks upstream of the structure
             # locations; note that using Ldd here instead would introduce MV!)
@@ -260,9 +256,14 @@ class Reservoir(HydroModule):
             # flood event
             inflow_mask = inflow >= flood_outflow
 
-            # update reservoir storage [m3] and filling [-]
+            # current reservoir storage [m3]
             if NoRoutingExecuted == 0:
                 self.var.ReservoirStorageM3CC = np.compress(self.var.ReservoirSitesC > 0, self.var.ReservoirStorageM3)
+
+            # release coefficient
+            self.var.k = np.maximum(1 - (self.var.TotalReservoirStorageM3CC - self.var.ReservoirStorageM3CC) / (self.var.CatchmentAreaM2 * 0.2), 0)
+
+            # update reservoir storage [m3] and filling [-]
             self.var.ReservoirStorageM3CC += inflow_m3
             self.var.ReservoirFillCC = self.var.ReservoirStorageM3CC / self.var.TotalReservoirStorageM3CC
             
