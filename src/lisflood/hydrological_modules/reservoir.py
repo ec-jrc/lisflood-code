@@ -187,10 +187,7 @@ class Reservoir(HydroModule):
             flood_outflow = lookupscalar(str(binding['ReservoirFloodOutflow']), ReservoirSitePcr)
             flood_outflow = compressArray(flood_outflow)
             flood_outflow = np.compress(self.var.ReservoirSitesC > 0, flood_outflow)
-            self.var.FloodReservoirOutflow = np.maximum(self.var.NormalReservoirOutflow, factor_outflow * flood_outflow) 
-            
-            # # release coefficient
-            # self.var.k = np.maximum(1 - 5 * self.var.TotalReservoirStorageM3CC * (1 - self.var.FloodStorageLimit) / self.var.CatchmentAreaM2, 0)
+            self.var.FloodReservoirOutflow = np.maximum(self.var.NormalReservoirOutflow, factor_outflow * flood_outflow)
             
             # INITIAL CONDITIONS
             
