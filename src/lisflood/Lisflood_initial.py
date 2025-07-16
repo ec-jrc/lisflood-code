@@ -59,6 +59,7 @@ from .hydrological_modules.soilloop import soilloop
 from .hydrological_modules.opensealed import opensealed
 from .hydrological_modules.waterbalance import waterbalance
 from .hydrological_modules.waterlevel import waterlevel
+from .hydrological_modules.waterstorage import waterstorage
 from .hydrological_modules.structures import structures
 
 from .global_modules.output import outputTssMap
@@ -150,6 +151,7 @@ class LisfloodModel_ini(DynamicModel):
         self.opensealed_module = opensealed(self)
         self.waterbalance_module = waterbalance(self)
         self.waterlevel_module = waterlevel(self)
+        self.waterstorage_module = waterstorage(self)
         self.structures_module = structures(self)
 
         self.prescribed_vegetation = self.epic_settings.prescribed_vegetation
@@ -204,6 +206,7 @@ class LisfloodModel_ini(DynamicModel):
         self.reservoir_module.initial()
         self.lakes_module.initial()
         self.polder_module.initial()
+        self.waterstorage_module.initial()
 
         self.transmission_module.initial()
 
