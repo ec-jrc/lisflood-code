@@ -17,7 +17,7 @@ See the Licence for the specific language governing permissions and limitations 
 from __future__ import absolute_import, print_function
 from nine import range
 
-from pcraster import ifthenelse, downstream, lddrepair
+from pcraster import ifthenelse, downstream, lddrepair, scalar
 import numpy as np
 
 from ..global_modules.add1 import loadmap, compressArray, decompress, generateName, loadLAI
@@ -60,7 +60,8 @@ class evapowater(HydroModule):
         maskinfo = MaskInfo.instance()
         if option['openwaterevapo']:
             LakeMask = loadmap('LakeMask', pcr=True)
-            LakeMask = ifthenelse((LakeMask<0)&(LakeMask>-9999), 0, LakeMask)
+            LakeMaskScalar = scalar(LakeMask)
+            LakeMask = ifthenelse((LakeMaskScalar<0)&(LakeMaskScalar!=-9999), 0, LakeMask)
             # lmask = ifthenelse(LakeMask != 0, self.var.LddStructuresKinematic, 5)
             lmask = ifthenelse(LakeMask != 0, self.var.LddStructuresChan, 5)
             LddEva = lddrepair(lmask)

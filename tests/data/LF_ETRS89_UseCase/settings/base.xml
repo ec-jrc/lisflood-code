@@ -65,6 +65,9 @@
 
         <setoption choice="0" name="repWIndex"/>
 
+        <setoption choice="0" name="repTWSMaps"/>
+        <setoption choice="0" name="repStorageMaps"/>
+        <setoption choice="0" name="repFlowMomMaps"/>
 
     </lfoptions>
 
