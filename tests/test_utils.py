@@ -94,6 +94,18 @@ class ETRS89TestCase(object):
                 'tss': os.path.join(ref_dir, 'output_reference_6h/chanqWin.tss'),
             },
         },
+        # 'chanqavgdt': {
+        #     'report_map': None,
+        #     'report_tss': 'ChanqavgdtTS',
+        #     '86400': {
+        #         'map': None,
+        #         'tss': os.path.join(ref_dir, 'output_reference_daily/chanqavgdt.tss'),
+        #     },
+        #     '21600': {
+        #         'map': None,
+        #         'tss': os.path.join(ref_dir, 'output_reference_6h/chanqavgdt.tss'),
+        #     },
+        # },
         'thia': {
             'report_map': 'Theta1IrrigationState',
             'report_tss': None,
@@ -354,6 +366,22 @@ class MCTTestCase(object):
                 'tss': os.path.join(ref_dir, 'output_reference_6h_1h/chanqX.tss'),
             },
         },
+        # 'chanqavgdt': {
+        #     'report_map': None,
+        #     'report_tss': 'ChanqavgdtTS',
+        #     '86400-3600': {
+        #         'map': None,
+        #         'tss': os.path.join(ref_dir, 'output_reference_daily/chanqavgdt.tss'),
+        #     },
+        #     '21600-21600': {
+        #         'map': None,
+        #         'tss': os.path.join(ref_dir, 'output_reference_6h_6h/chanqavgdt.tss'),
+        #     },
+        #     '21600-3600': {
+        #         'map': None,
+        #         'tss': os.path.join(ref_dir, 'output_reference_6h_1h/chanqavgdt.tss'),
+        #     },
+        # },
         'mbError': {
             'report_map': None,
             'report_tss': 'WaterMassBalanceTSS',

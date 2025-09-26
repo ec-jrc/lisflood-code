@@ -50,8 +50,6 @@ You can use builtin path variables in this template and reference to other paths
 
         <setoption choice="0" name="SplitRouting"/>
         <setoption choice="1" name="MCTRouting"/>
-        <setoption choice="1" name="ColdStart"/>
-
 
         # use inflow data
         <setoption choice="0" name="inflow"/>
@@ -62,13 +60,15 @@ You can use builtin path variables in this template and reference to other paths
         # option to initialize Lisflood
         <setoption choice="0" name="InitLisflood"/>
         <setoption choice="0" name="InitLisfloodwithoutsplit"/>
+        <setoption choice="1" name="ColdStart"/>
 
         # option to read/write NetCDF
         <setoption choice="1" name="readNetcdfStack"/>
         <setoption choice="1" name="writeNetcdfStack"/>
         <setoption choice="1" name="writeNetcdf"/>
 
-
+      # option to Report PaddyRiceDebug information in CSV file for debugging Paddy Rice Water Abstraction issue on dry Channels
+		  <setoption choice="0"  name="repPaddyRiceDebug"/>
 
         #-----------------------------------------------------------
         # report time series
@@ -164,8 +164,6 @@ You can use builtin path variables in this template and reference to other paths
         <setoption choice="0" name="repWIndex"/> 
 
     </lfoptions>
-
-
     <lfuser>
 
         <group>
@@ -173,7 +171,6 @@ You can use builtin path variables in this template and reference to other paths
 				**************************************************************
 				netCDF parameters
 				**************************************************************
-			</comment>
 
 			<textvar name="NetCDFTimeChunks" value="-1"/>
 			<comment>
@@ -4184,6 +4181,12 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
             <textvar name="ChanqTS" value="$(PathOut)/chanqWin.tss">
                 <comment>
 					Reported instantaneous discharge at the end of routing sub-step [cu m/s]
+                </comment>
+            </textvar>
+
+            <textvar name="ChanqavgdtTS" value="$(PathOut)/chanqavgdt.tss">
+                <comment>
+                    Reported average discharge on the last routing sub-step [cu m/s]
                 </comment>
             </textvar>
 

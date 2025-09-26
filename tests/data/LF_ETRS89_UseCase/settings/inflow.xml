@@ -3834,7 +3834,13 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
             </textvar>
             <textvar name="ChanqTS" value="$(PathOut)/chanqWin.tss">
                 <comment>
-                    Reported discharge over last routing sub-step [cu m/s]
+					Reported instantaneous discharge at the end of routing sub-step [cu m/s]
+                </comment>
+            </textvar>
+
+            <textvar name="ChanqavgdtTS" value="$(PathOut)/chanqavgdt.tss">
+                <comment>
+                    Reported average discharge on the last routing sub-step [cu m/s]
                 </comment>
             </textvar>
 

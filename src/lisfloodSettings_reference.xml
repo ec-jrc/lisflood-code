@@ -1711,17 +1711,14 @@ Multiplier []  applied to ChanSdXdY
 
     <textvar name="InflowPoints" value="$(PathInflow)/inflowPoints">
       <comment>
-        OPTIONAL: nominal map with locations of (measured)
-        inflow hydrographs [cu m / s]
+        OPTIONAL: nominal map with locations of (measured) inflow hydrographs [cu m / s]
       </comment>
     </textvar>
 
     <textvar name="QInTS" value="$(PathInflow)/inflowHyd.tss">
     <comment>
-    OPTIONAL: observed or simulated input hydrographs as
-    time series [cu m / s]
-    Note that identifiers in time series correspond to
-    InflowPoints map (also optional)
+    OPTIONAL: observed or simulated input hydrographs as time series [cu m / s]
+    Note that identifiers in time series correspond to InflowPoints map (also optional). ChanqavgdtTS should be used during calibration
     </comment>
     </textvar>
     </group>
@@ -4205,6 +4202,12 @@ Multiplier []  applied to ChanSdXdY
       <textvar name="ChanqTS" value="$(PathOut)/chanqWin.tss">
       <comment>
       Reported instantaneous discharge at the end of routing sub-step [cu m/s]
+      </comment>
+      </textvar>
+
+      <textvar name="ChanqavgdtTS" value="$(PathOut)/chanqavgdt.tss">
+      <comment>
+      Reported average discharge on the last routing sub-step [cu m/s]
       </comment>
       </textvar>
 

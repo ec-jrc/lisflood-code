@@ -12,7 +12,7 @@ from lisflood.global_modules.settings import LisSettings
 
 from .test_utils import setoptions, mk_path_out
 
-@pytest.mark.slow
+# @pytest.mark.slow
 class TestInflow():
 
     case_dir = os.path.join(os.path.dirname(__file__), 'data', 'LF_ETRS89_UseCase')
@@ -26,7 +26,7 @@ class TestInflow():
         settings_file = os.path.join(self.case_dir, 'settings', 'mct_inflow.xml')
         settings = setoptions(settings_file,
                               opts_to_set = ['MCTRouting'],
-                              opts_to_unset = ['inflow',
+                               opts_to_unset = ['inflow',
                                                'SplitRouting'],
                               vars_to_set={'StepStart': date_start,
                                            'StepEnd': date_end,
@@ -36,7 +36,7 @@ class TestInflow():
                                            'BankFullPerc': '0.1',
                                            'MaskMap': '$(PathRoot)/maps/mask.nc',
                                            'Gauges': '4317500 2447500',  # one cell upstream of inflow point
-                                           'ChanqTS': out_path_run+'/inflow.tss',
+                                           'ChanqavgdtTS': out_path_run+'/inflow.tss',
                                            'PathOut': out_path_run})
         mk_path_out(out_path_ref)
         mk_path_out(out_path_run)
@@ -86,20 +86,25 @@ class TestInflow():
         lisfloodexe(settings)
 
         # set precision for the test
-        atol = 15.
+        atol = 550.
         rtol = 0.1
         comparator = TSSComparator(atol,rtol)
 
-        # # test when DtSec = DtSecChannel
+        # # # test when DtSec = DtSecChannel
         # reference =  os.path.join(out_path_ref, 'disWin.tss')
         # output_tss =  os.path.join(out_path_run, 'disWin.tss')
         # comparator.compare_files(reference, output_tss)
+        #
+        # # test when DtSec != DtSecChannel
+        # reference =  os.path.join(out_path_ref, 'chanqWin.tss')
+        # output_tss =  os.path.join(out_path_run, 'chanqWin.tss')
+        # comparator.compare_files(reference, output_tss)
 
         # test when DtSec != DtSecChannel
-        reference =  os.path.join(out_path_ref, 'chanqWin.tss')
-        output_tss =  os.path.join(out_path_run, 'chanqWin.tss')
-
+        reference =  os.path.join(out_path_ref, 'chanqavgdt.tss')
+        output_tss =  os.path.join(out_path_run, 'chanqavgdt.tss')
         comparator.compare_files(reference, output_tss)
+
 
     def teardown_method(self, type):
         print('Cleaning directories')

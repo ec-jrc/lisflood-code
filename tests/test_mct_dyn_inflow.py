@@ -32,7 +32,7 @@ class TestInflow():
                                            'BankFullPerc': '0.2',
                                            'MaskMap': '$(PathRoot)/maps/mask.nc',
                                            'Gauges': '4292500 2377500',     # one cell upstream of inflow point
-                                           'ChanqTS': out_path_run+'/inflow.tss',
+                                           'ChanqavgdtTS': out_path_run+'/inflow.tss',
                                            'PathOut': out_path_run})
         mk_path_out(out_path_ref)
         mk_path_out(out_path_run)
@@ -78,7 +78,7 @@ class TestInflow():
         lisfloodexe(settings)
 
         # set precisioon for the test
-        atol = 7.
+        atol = 3.0
         rtol = 0.01
         comparator = TSSComparator(atol,rtol)
 
@@ -90,7 +90,11 @@ class TestInflow():
         # test when DtSec != DtSecChannel
         reference =  os.path.join(out_path_ref, 'chanqWin.tss')
         output_tss =  os.path.join(out_path_run, 'chanqWin.tss')
+        comparator.compare_files(reference, output_tss)
 
+        # test when DtSec != DtSecChannel
+        reference =  os.path.join(out_path_ref, 'chanqavgdt.tss')
+        output_tss =  os.path.join(out_path_run, 'chanqavgdt.tss')
         comparator.compare_files(reference, output_tss)
 
     def teardown_method(self, type):
