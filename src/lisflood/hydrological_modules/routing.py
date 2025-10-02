@@ -69,7 +69,9 @@ class routing(HydroModule):
         """
         settings = LisSettings.instance()
         option = settings.options
+        flags = settings.flags
         maskinfo = MaskInfo.instance()
+
 
         # ************************************************************
         # ***** NUMBER OF ROUTING STEPS          *********************
@@ -542,6 +544,7 @@ class routing(HydroModule):
         """
         settings = LisSettings.instance()
         option = settings.options
+        flags = settings.flags
 
         if not (option['SplitRouting']):
             self.var.ChannelAlpha2 = None
@@ -631,6 +634,7 @@ class routing(HydroModule):
         """
         settings = LisSettings.instance()
         option = settings.options
+        flags = settings.flags
 
         if not(option['InitLisflood']):    # only with no InitLisflood
             self.lakes_module.dynamic_inloop(NoRoutingExecuted)
@@ -803,6 +807,29 @@ class routing(HydroModule):
                     self.var.PrevDm0,       # Reynolds number in input: at time t; in output: at time t+dt
                     self.var.ChanM3         # Channel storage volume. In input: at time t V00; in output: at time t+dt V11
                 )
+
+                ##################################################################3
+                # if flags['debug']:
+                # checking Courant number for potential instability in MCT
+                if not np.all(self.var.PrevCm0 <= 1):
+                    warnings.warn(LisfloodWarning("WARNING! Courant > 1. Consider using smaller DtRouting steps or using kinematic routing"))
+
+                ##################################################################3
+                # checking cahnqvagdt and chanq for instability in MCT that can can create issues when using inflows
+                # Only consider elements where ChanQAvgDt >1000
+                dismask = self.var.ChanQAvgDt > 1000.
+                # Check for ChanQ values that are 10x larger or smaller than ChanQAvgDt
+                too_large = self.var.ChanQ[dismask] > 15 * self.var.ChanQAvgDt[dismask]
+                too_small = self.var.ChanQ[dismask] < 0.05 * self.var.ChanQAvgDt[dismask]
+
+                bad = too_large | too_small
+
+                if np.any(bad):
+                    warnings.warn(LisfloodWarning("WARNING! At least one ChanQ is >> or << ChanQAvgDt. Consider increasing DtRouting step or using kinematic routing"))
+                    # # list 'bad' cells
+                    # bad_indices = np.where(dismask)[0][bad]
+                    # print("Bad indices:", bad_indices)
+                ##################################################################3
 
             else:
                 # Store results of kinematic/split routing in the general variables

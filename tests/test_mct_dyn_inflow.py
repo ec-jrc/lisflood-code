@@ -32,7 +32,7 @@ class TestInflow():
                                            'BankFullPerc': '0.2',
                                            'MaskMap': '$(PathRoot)/maps/mask.nc',
                                            'Gauges': '4292500 2377500',     # one cell upstream of inflow point
-                                           'ChanqavgdtTS': out_path_run+'/inflow.tss',
+                                           'ChanqavgdtTS': out_path_run+'/inflow.tss',  # use chanqavgdt as inflow
                                            'PathOut': out_path_run})
         mk_path_out(out_path_ref)
         mk_path_out(out_path_run)
@@ -77,10 +77,12 @@ class TestInflow():
         mk_path_out(out_path_run)
         lisfloodexe(settings)
 
-        # set precisioon for the test
-        atol = 3.0
+        # set precision for the test and number of steps to skip at the beginning of the time series
+        atol = 2.0
+        # atol = 5.0  # single routing step
         rtol = 0.01
-        comparator = TSSComparator(atol,rtol)
+        init_steps_to_skip = 20
+        comparator = TSSComparator(atol,rtol,init_steps_to_skip)
 
         # test when DtSec = DtSecChannel
         reference =  os.path.join(out_path_ref, 'disWin.tss')

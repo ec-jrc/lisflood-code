@@ -12,7 +12,7 @@ from lisflood.global_modules.settings import LisSettings
 
 from .test_utils import setoptions, mk_path_out
 
-# @pytest.mark.slow
+@pytest.mark.slow
 class TestInflow():
 
     case_dir = os.path.join(os.path.dirname(__file__), 'data', 'LF_ETRS89_UseCase')
@@ -36,7 +36,7 @@ class TestInflow():
                                            'BankFullPerc': '0.1',
                                            'MaskMap': '$(PathRoot)/maps/mask.nc',
                                            'Gauges': '4317500 2447500',  # one cell upstream of inflow point
-                                           'ChanqavgdtTS': out_path_run+'/inflow.tss',
+                                           'ChanqavgdtTS': out_path_run+'/inflow.tss',  # use chanqavgdt as inflow
                                            'PathOut': out_path_run})
         mk_path_out(out_path_ref)
         mk_path_out(out_path_run)
@@ -85,20 +85,21 @@ class TestInflow():
         mk_path_out(out_path_run)
         lisfloodexe(settings)
 
-        # set precision for the test
-        atol = 550.
-        rtol = 0.1
-        comparator = TSSComparator(atol,rtol)
+        # set precision for the test and number of steps to skip at the beginning of the time series
+        atol = 505.
+        rtol = 0.01
+        init_steps_to_skip = 20
+        comparator = TSSComparator(atol,rtol,init_steps_to_skip)
 
-        # # # test when DtSec = DtSecChannel
-        # reference =  os.path.join(out_path_ref, 'disWin.tss')
-        # output_tss =  os.path.join(out_path_run, 'disWin.tss')
-        # comparator.compare_files(reference, output_tss)
-        #
-        # # test when DtSec != DtSecChannel
-        # reference =  os.path.join(out_path_ref, 'chanqWin.tss')
-        # output_tss =  os.path.join(out_path_run, 'chanqWin.tss')
-        # comparator.compare_files(reference, output_tss)
+        # test when DtSec = DtSecChannel
+        reference =  os.path.join(out_path_ref, 'disWin.tss')
+        output_tss =  os.path.join(out_path_run, 'disWin.tss')
+        comparator.compare_files(reference, output_tss)
+
+        # test when DtSec != DtSecChannel
+        reference =  os.path.join(out_path_ref, 'chanqWin.tss')
+        output_tss =  os.path.join(out_path_run, 'chanqWin.tss')
+        comparator.compare_files(reference, output_tss)
 
         # test when DtSec != DtSecChannel
         reference =  os.path.join(out_path_ref, 'chanqavgdt.tss')
