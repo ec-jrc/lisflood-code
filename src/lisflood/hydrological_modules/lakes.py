@@ -242,7 +242,7 @@ class lakes(HydroModule):
             # Check LakeOutflowCC for negative values
             if any(LakeStorageIndicator < 0):
                 # this can happen with large oscillations in the lake inflow
-                msg = "Negative or NaN outflow from lakes. " \
+                msg = f"Negative outflow from lakes. (Total negative values: {sum(LakeStorageIndicator < 0)}) \n" \
                       "Consider increasing computation time step for routing (DtSecChannel) \n"
                 warnings.warn(LisfloodWarning(msg))
                 LakeStorageIndicator[LakeStorageIndicator < 0] = 0
@@ -273,7 +273,9 @@ class lakes(HydroModule):
             # self.var.LakeStorageM3CC < 0 leads to NaN in state files
             # Check LakeStorageM3CC for negative values and set them to zero
             if any(np.isnan(self.var.LakeStorageM3CC)) or any(self.var.LakeStorageM3CC < 0):
-                msg = "Negative or NaN volume for lake storage set to 0. " \
+                msg = "Negative or NaN volume for lake storage set to 0. \n" \
+                      f"(Total negative values: {sum(self.var.LakeStorageM3CC < 0)}, " \
+                      f"Total NaN values: {sum(np.isnan(self.var.LakeStorageM3CC))})\n" \
                       "Increase computation time step for routing (DtSecChannel) \n"
                 warnings.warn(LisfloodWarning(msg))
                 self.var.LakeStorageM3CC[self.var.LakeStorageM3CC < 0] = 0
