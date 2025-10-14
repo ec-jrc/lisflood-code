@@ -809,18 +809,18 @@ class routing(HydroModule):
                 )
 
                 ##################################################################3
-                # if flags['debug']:
-                # checking Courant number for potential instability in MCT
-                if not np.all(self.var.PrevCm0 <= 1):
-                    warnings.warn(LisfloodWarning("WARNING! Courant > 1. Consider using smaller DtRouting steps or using kinematic routing"))
+                if flags['debug']:
+                    # checking Courant number for potential instability in MCT
+                    if not np.all(self.var.PrevCm0 <= 1):
+                        warnings.warn(LisfloodWarning("WARNING! Courant > 1. Consider using smaller DtRouting steps or using kinematic routing"))
 
                 ##################################################################3
-                # checking cahnqvagdt and chanq for instability in MCT that can can create issues when using inflows
-                # Only consider elements where ChanQAvgDt >1000
-                dismask = self.var.ChanQAvgDt > 1000.
+                # checking chanqvagdt and chanq for instability in MCT that can can create issues when using inflows
+                # Only consider elements where ChanQAvgDt >100 or ChanQ >100
+                dismask = (self.var.ChanQ > 100.) | (self.var.ChanQAvgDt > 100.)
                 # Check for ChanQ values that are 10x larger or smaller than ChanQAvgDt
-                too_large = self.var.ChanQ[dismask] > 15 * self.var.ChanQAvgDt[dismask]
-                too_small = self.var.ChanQ[dismask] < 0.05 * self.var.ChanQAvgDt[dismask]
+                too_large = self.var.ChanQ[dismask] > 10 * self.var.ChanQAvgDt[dismask]
+                too_small = self.var.ChanQ[dismask] < 0.1 * self.var.ChanQAvgDt[dismask]
 
                 bad = too_large | too_small
 
