@@ -89,7 +89,7 @@ class TestInflow():
         atol = 505.
         rtol = 0.01
         init_steps_to_skip = 20
-        comparator = TSSComparator(atol,rtol,init_steps_to_skip)
+        comparator = TSSComparator(atol,rtol,init_skip_steps = init_steps_to_skip)
 
         # test when DtSec = DtSecChannel
         reference =  os.path.join(out_path_ref, 'disWin.tss')
