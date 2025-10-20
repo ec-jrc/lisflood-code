@@ -23,15 +23,16 @@ def setoptions(settings_file, opts_to_set=None, opts_to_unset=None, vars_to_set=
     opts_to_set = [] if opts_to_set is None else opts_to_set
     opts_to_unset = [] if opts_to_unset is None else opts_to_unset
     vars_to_set = {} if vars_to_set is None else vars_to_set
-    with open(settings_file) as tpl:
+    with open(settings_file) as filetocheck:
         try:
             # Attempt to parse the XML file
-            etree.parse(tpl)
+            etree.parse(filetocheck)
         except etree.XMLSyntaxError as e:
             # If a syntax error is encountered, print the error and exit
             print(f"XMLSyntaxError: {e}")
             raise e
 
+    with open(settings_file) as tpl:
         soup = BeautifulSoup(tpl, 'lxml-xml')
         for opt in opts_to_set:
             for tag in soup.find_all("setoption", {'name': opt}):
