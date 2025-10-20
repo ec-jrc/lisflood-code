@@ -171,7 +171,7 @@ You can use builtin path variables in this template and reference to other paths
 				**************************************************************
 				netCDF parameters
 				**************************************************************
-
+            </comment>
 			<textvar name="NetCDFTimeChunks" value="-1"/>
 			<comment>
 				!-- Optimization of netCDF I/O through chunking and caching.
