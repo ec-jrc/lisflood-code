@@ -5417,7 +5417,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="PF2ForestTS" value="$(PathOut)/   <textvar name="PF2ForestTS" value="$(PathOut)/pFForestSub.tss">
+                <textvar name="PF2ForestTS" value="$(PathOut)/pFForestSub.tss">
                     <comment>
                         Reported pF lower soil layer [-]
                     </comment>
