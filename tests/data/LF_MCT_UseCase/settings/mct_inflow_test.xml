@@ -4087,6 +4087,12 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
             </textvar>
 
+            <textvar name="ChanqavgdtTS" value="$(PathOut)/chanqavgdt.tss">
+                <comment>
+                    Reported average discharge on the last routing sub-step [cu m/s]
+                </comment>
+            </textvar>
+
             <textvar name="WaterLevelTS" value="$(PathOut)/waterLevel.tss">
                 <comment>
                     Reported water level [m]
