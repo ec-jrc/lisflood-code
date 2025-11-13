@@ -3,6 +3,7 @@ import os
 from copy import copy
 
 from pathlib import Path
+import shutil
 
 import lisflood
 from lisflood.global_modules.add1 import loadmap
@@ -12,6 +13,9 @@ from lisflood.global_modules.default_options import default_options
 from .test_utils import setoptions, mk_path_out
 
 class TestReportedMaps():
+
+    case_dir = os.path.join(os.path.dirname(__file__), 'data', 'LF_ETRS89_UseCase')
+    mk_path_out(os.path.join(case_dir, 'out'))
 
     settings_files = {
         # full.xml of LF_ETRS89_UseCase has simulateLakes and repsimulateLakes off
@@ -128,10 +132,11 @@ class TestReportedMaps():
     #             self._reported_map(self.settings_files['full'], map_to_check=[rep_map.output_var], mocker=mocker,
     #                             files_to_check=files_to_check)
 
-    def test_prerun(self, mocker):
-        self._reported_map(self.settings_files['initrun'], map_to_check=['AvgDis', 'LZAvInflowMap'], mocker=mocker,
-                           files_to_check=['avgdis.nc', 'lzavin.nc'])
-
+   
+    def test_prerun(self, mocker): 
+        self._reported_map(self.settings_files['initrun'], map_to_check=['AvgDis', 'LZAvInflowMap','SeepTopToSubBAverageOtherMap','SeepTopToSubBAverageForestMap','SeepTopToSubBAverageIrrigationMap','Theta1End','Theta2End','Theta3End','Theta1ForestEnd','Theta2ForestEnd','Theta3ForestEnd','Theta1IrrigationEnd','Theta2IrrigationEnd','Theta3IrrigationEnd','UZEnd','UZForestEnd','UZIrrigationEnd'], mocker=mocker, ######2024#######
+                           files_to_check=['avgdis.nc', 'lzavin.nc','SeepTopToSubBAverageOtherMap.nc','SeepTopToSubBAverageForestMap.nc','SeepTopToSubBAverageIrrigationMap.nc','tha.end','thb.end','thc.end','thfa.end','thfb.end','thfc.end','thia.end','thib.end','thic.end','uz.end','uzf.end','uzi.end']) 
+                     
     def test_rep_dischargemaps(self, mocker):
         """
         Test that

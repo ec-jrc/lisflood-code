@@ -59,7 +59,11 @@ class leafarea(HydroModule):
                                      coords=coord_prescribed, dims=coord_prescribed.keys())
         for i in self.var.LAIX.interval.values:
             for veg, map_name in self.var.PRESCRIBED_LAI.items():
-                LAIName = generateName(binding[map_name], LAINr[i])
+                try:    # for backward compatibility, in case we want to take lai maps in PCRaster format
+                    LAIName = generateName(binding[map_name], LAINr[i])
+                except:
+                    LAIName = None
+                    pass
                 self.var.LAIX.loc[i,veg] = loadLAI(binding[map_name], LAIName, i)
         # Calendar day to interval lookup list
         self.var.L1 = []

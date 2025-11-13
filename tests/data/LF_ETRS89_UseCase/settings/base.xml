@@ -18,6 +18,7 @@
         <setoption choice="0" name="simulatePF"/>
         <setoption choice="0" name="SplitRouting"/>
         <setoption choice="0" name="InitLisflood"/>
+        <setoption choice="1" name="ColdStart"/>
         <setoption choice="0" name="repEndMaps"/>
         <setoption choice="0" name="repStateMaps"/>
         <setoption choice="0" name="repDischargeTs"/>
@@ -26,7 +27,7 @@
         <setoption choice="0" name="repThetaForestMaps" />
         <setoption choice="0" name="repThetaIrrigationMaps" />
         <setoption choice="0" name="repE2O2" />
-        
+
 
         # report gauges and sites
 
@@ -95,7 +96,7 @@
             <comment>
 
             The option "OutputMapsChunks" may take the following values:
-                - "[positive integer number]"  : Dump outputs to disk every X steps (default 1) 
+                - "[positive integer number]"  : Dump outputs to disk every X steps (default 1)
             </comment>
             <textvar name="OutputMapsChunks" value="1"/>
 
@@ -108,7 +109,7 @@
 
             <!-- Parallelisation of using Numba runtime compiled library .
 The option "numCPUs_parallelNumba" may take the following values:
-    - "0"           : set to NUMBA_NUM_THREADS Environment Variable 
+    - "0"           : set to NUMBA_NUM_THREADS Environment Variable
                       (if NUMBA_NUM_THREADS is not set, will take the number of CPU cores determined by python's multiprocessing.cpu_count())
     - "1"           : serial execution (not parallel)
     - "2", "3", ... : manual setting of the number of parallel threads.
@@ -233,6 +234,12 @@ The option "numCPUs_parallelNumba" may take the following values:
                 </comment>
             </textvar>
 
+            <textvar name="NumDaysSpinUp" value="180">
+                <comment>
+                    low value to limit testing time
+              </comment>
+            </textvar>   
+            
             <textvar name="ReportSteps" value="6000..9999">
                 <comment>
                     Time steps at which to write model state maps (i.e. only
@@ -379,22 +386,22 @@ The option "numCPUs_parallelNumba" may take the following values:
                 </comment>
             </textvar>
 
-            <textvar name="adjust_Normal_Flood" value="$(PathParams)/params_adjust_Normal_Flood.nc">
+            <textvar name="ReservoirFloodStorage" value="$(PathTables)/rflim.txt">
                 <comment>
-                    default: 0.8
-                    $(PathParams)/params_adjust_Normal_Flood.nc
-                    adjusting the balance between normal and flood storage
-                    big values (= closer to 1.0 = close to flood) results in keeping the outflow longer at rnormq
-                    Range 0.01 - 0.99
+                  Fraction of the total reservoir storage above which the reservoirs enters
+                  the flood control zone.
                 </comment>
             </textvar>
 
-            <textvar name="ReservoirRnormqMult" value="$(PathParams)/params_ReservoirRnormqMult.nc">
+            <textvar name="ReservoirFloodOutflowFactor" value="0.3">
                 <comment>
-                    default: 1.0
-                    $(PathParams)/params_ReservoirRnormqMult.nc
-                    Reservoir rnormq (normal outflow)
-                    fraction of the value in table rnormq.txt range: 0.5 - 2
+                    Factor of the 100-year return inflow (`ReservoirFloodOutflow`) that defines the inflow
+                    value that switches, when exceeded, the reservoir routine to flood control mode.
+                    It can be a map (NetCDF), a table (TXT) or a float. Negative values will be replaced by
+                    the default value of 0.3
+                      Units: -
+                      Range: 0.1 - 0.5
+                      Default: 0.3
                 </comment>
             </textvar>
 
@@ -590,7 +597,7 @@ The option "numCPUs_parallelNumba" may take the following values:
                 </comment>
             </textvar>
 
-            <textvar name="UZInitValue" value="0">
+            <textvar name="UZInitValue" value="$(PathRoot)/maps/safe_init/uz.end.nc">
                 <comment>
                     water in upper store [mm]
                 </comment>
@@ -628,21 +635,21 @@ The option "numCPUs_parallelNumba" may take the following values:
                 </comment>
             </textvar>
 
-            <textvar name="ThetaInit1Value" value="-9999">
+            <textvar name="ThetaInit1Value" value="$(PathRoot)/maps/safe_init/tha.end.nc">
                 <comment>
                     initial soil moisture content layer 1
                     -9999: use field capacity values
                 </comment>
             </textvar>
 
-            <textvar name="ThetaInit2Value" value="-9999">
+            <textvar name="ThetaInit2Value" value="$(PathRoot)/maps/safe_init/thb.end.nc">
                 <comment>
                     initial soil moisture content layer 2
                     -9999: use field capacity values
                 </comment>
             </textvar>
 
-            <textvar name="ThetaInit3Value" value="-9999">
+            <textvar name="ThetaInit3Value" value="$(PathRoot)/maps/safe_init/thc.end.nc">
                 <comment>
                     initial soil moisture content layer 2
                     -9999: use field capacity values
@@ -692,6 +699,12 @@ The option "numCPUs_parallelNumba" may take the following values:
                 </comment>
             </textvar>
 
+            <textvar name="PrevDischargeAvg" value="-9999">
+                <comment>
+					Outflow average discharge on previous routing sub-step (average) [m3/s]
+					Cold start: -9999 sets initial value to 0
+                </comment>
+            </textvar>
         </group>
 
         <group>
@@ -709,7 +722,7 @@ The option "numCPUs_parallelNumba" may take the following values:
                 </comment>
             </textvar>
 
-            <textvar name="UZForestInitValue" value="0">
+            <textvar name="UZForestInitValue" value="$(PathRoot)/maps/safe_init/uzf.end.nc">
                 <comment>
                     water in upper store [mm]
                 </comment>
@@ -721,21 +734,21 @@ The option "numCPUs_parallelNumba" may take the following values:
                 </comment>
             </textvar>
 
-            <textvar name="ThetaForestInit1Value" value="-9999">
+            <textvar name="ThetaForestInit1Value" value="$(PathRoot)/maps/safe_init/thfa.end.nc">
                 <comment>
                     initial soil moisture content layer 1
                     -9999: use field capacity values
                 </comment>
             </textvar>
 
-            <textvar name="ThetaForestInit2Value" value="-9999">
+            <textvar name="ThetaForestInit2Value" value="$(PathRoot)/maps/safe_init/thfb.end.nc">
                 <comment>
                     initial soil moisture content layer 2
                     -9999: use field capacity values
                 </comment>
             </textvar>
 
-            <textvar name="ThetaForestInit3Value" value="-9999">
+            <textvar name="ThetaForestInit3Value" value="$(PathRoot)/maps/safe_init/thfc.end.nc">
                 <comment>
                     initial soil moisture content layer 2
                     -9999: use field capacity values
@@ -760,7 +773,7 @@ The option "numCPUs_parallelNumba" may take the following values:
                 </comment>
             </textvar>
 
-            <textvar name="UZIrrigationInitValue" value="0">
+            <textvar name="UZIrrigationInitValue" value="$(PathRoot)/maps/safe_init/uzi.end.nc">
                 <comment>
                     water in upper store [mm]
                 </comment>
@@ -772,21 +785,21 @@ The option "numCPUs_parallelNumba" may take the following values:
                 </comment>
             </textvar>
 
-            <textvar name="ThetaIrrigationInit1Value" value="-9999">
+            <textvar name="ThetaIrrigationInit1Value" value="$(PathRoot)/maps/safe_init/thia.end.nc">
                 <comment>
                     initial soil moisture content layer 1
                     -9999: use field capacity values
                 </comment>
             </textvar>
 
-            <textvar name="ThetaIrrigationInit2Value" value="-9999">
+            <textvar name="ThetaIrrigationInit2Value" value="$(PathRoot)/maps/safe_init/thib.end.nc">
                 <comment>
                     initial soil moisture content layer 2
                     -9999: use field capacity values
                 </comment>
             </textvar>
 
-            <textvar name="ThetaIrrigationInit3Value" value="-9999">
+            <textvar name="ThetaIrrigationInit3Value" value="$(PathRoot)/maps/safe_init/thic.end.nc">
                 <comment>
                     initial soil moisture content layer 2
                     -9999: use field capacity values
@@ -811,6 +824,65 @@ The option "numCPUs_parallelNumba" may take the following values:
             </textvar>
 
         </group>
+
+    <group>
+
+    <comment>
+    **************************************************************
+    CUMULATIVE FLUXES REQUIRED WHEN COMPUTING THE PRE-RUN IN CHUNKS
+    **************************************************************
+    </comment>
+
+    <textvar name="LZInflowCUMInit" value="0">
+                <comment>
+                    Cumulative inflow to the lower groundwater zone
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    LZInflowCumEnd: required for the warm start of the pre-run
+                </comment>
+     </textvar>   
+       
+     <textvar name="cumSeepTopToSubBOtherInit" value="0">
+                <comment>
+                    Cumulative flux from second to third soil layer, other land cover fraction
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    cumSeepTopToSubBOtherEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>
+       
+     <textvar name="cumSeepTopToSubBForestInit" value="0">
+                <comment>
+                    Cumulative flux from second to third soil layer, forest land cover fraction
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    cumSeepTopToSubBForestEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>
+       
+     <textvar name="cumSeepTopToSubBIrrigationInit" value="0">
+                <comment>
+                    Cumulative flux from second to third soil layer, irrigation land cover fraction
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    cumSeepTopToSubBIrrigationEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>
+       
+     <textvar name="CumQInit" value="0">
+                <comment>
+                    Cumulative discharge
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    CumQEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>           
+                            
+     <textvar name="TimeSinceStartPrerunChunkInit" value="0">
+                <comment>
+                    Cumulative number of days from the start of the prerun
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    NetTimeSinceStartPrerunChunkEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>
+       
+    </group>  
+
 
         <group>
 
@@ -1059,19 +1131,19 @@ The option "numCPUs_parallelNumba" may take the following values:
                     More than the transpiration is added e.g to prevent salinisation
                 </comment>
             </textvar>
-            
-            <textvar name="IrrigationWaterReUseM3" value="0.0">           
-            <comment>           
-                  Annual amount (m3) of treated wastewater reused for irrigation                 
-            </comment>           
+
+            <textvar name="IrrigationWaterReUseM3" value="0.0">
+            <comment>
+                  Annual amount (m3) of treated wastewater reused for irrigation
+            </comment>
             </textvar>
-                       
-            <textvar name="IrrigationWaterReUseNumDays" value="143">          
-            <comment>           
-                  Number of days over which the annual amount of treated wastewater for irrigation is used                
-            </comment>           
+
+            <textvar name="IrrigationWaterReUseNumDays" value="143">
+            <comment>
+                  Number of days over which the annual amount of treated wastewater for irrigation is used
+            </comment>
             </textvar>
-            
+
             <textvar name="LivestockConsumptiveUseFraction" value="0.15">
                 <comment>
                     Consumptive Use (1-Recycling ratio) for livestock water use (0-1)
@@ -1132,14 +1204,6 @@ The option "numCPUs_parallelNumba" may take the following values:
                     Fraction of water re-used in industry (e.g. 50% = 0.5 = half of the water is re-used, used twice
                     (baseline=0, maximum=1
                     scenruse.map
-                </comment>
-            </textvar>
-
-
-            <textvar name="FirstDayOfMonth" value="$(PathTables)/firstdayofmonth.txt">
-                <comment>
-                    table with days for each water use maps
-                    1st column: range of days; 2nd column: suffix of wuse map
                 </comment>
             </textvar>
 
@@ -1301,7 +1365,7 @@ The option "numCPUs_parallelNumba" may take the following values:
                 </comment>
             </textvar>
 
-            <textvar name="UpAreaTrans" value="$(PathRoot)/maps/ec_upArea">
+            <textvar name="UpAreaTrans" value="$(PathRoot)/maps/ec_upArea.nc">
                 <comment>
                     upstream area
                 </comment>
@@ -1334,6 +1398,14 @@ The option "numCPUs_parallelNumba" may take the following values:
                 <comment>
                     Reference depth of overland flow [mm], used to compute
                     overland flow Alpha for kin. wave
+                </comment>
+            </textvar>
+
+            <textvar name="BankFullPerc" value="0.5">
+                <comment>
+                    Percentage [-] used to compute the TotalCrossSectionAreaHalfBankFull in the initialisation of the
+                    total cross-sectional area
+                    default: 0.5
                 </comment>
             </textvar>
 
@@ -1399,7 +1471,7 @@ The option "numCPUs_parallelNumba" may take the following values:
                     </comment>
                 </textvar>
 
-                <textvar name="ReservoirInitialFillValue" value="-9999">
+                <textvar name="ReservoirInitialFill" value="-9999">
                     <comment>
                         Initial reservoir fill fraction
                         -9999 sets initial fill to normal storage limit
@@ -1599,6 +1671,12 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
             </textvar>
 
+           <textvar name="NumDaysSpinUp" value="$(NumDaysSpinUp)">
+                <comment>
+                    Number of days used for internal spin-up (fluxes computations during prerun)
+                </comment>
+            </textvar>  
+            
         </group>
 
         <group>
@@ -1981,6 +2059,14 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
             </textvar>
 
+            <textvar name="BankFullPerc" value="$(BankFullPerc)">
+                <comment>
+                    Percentage [-] used to compute the TotalCrossSectionAreaHalfBankFull in the initialisation of the
+                    total cross-sectional area
+                    default: 0.5
+                </comment>
+            </textvar>
+
             <textvar name="GradMin" value="$(GradMin)">
                 <comment>
                     Minimum slope gradient (for kin. wave: slope cannot be 0)
@@ -2042,6 +2128,24 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     Average discharge map [m3/s]
                 </comment>
             </textvar>
+            
+            <textvar name="SeepTopToSubBAverageOtherMap" value= "$(PathRoot)/maps/safe_init/SeepTopToSubBAverageOtherMap">
+                <comment>
+                     Reported infiltration from the soil layer 2 to soil layer 3, other land cover fraction, average flux over the simulation period [mm]
+            </comment>
+            </textvar>
+          
+            <textvar name="SeepTopToSubBAverageForestMap" value= "$(PathRoot)/maps/safe_init/SeepTopToSubBAverageForestMap">
+                 <comment>
+                        Reported infiltration from the soil layer 2 to soil layer 3, forest land cover fraction, average flux over the simulation period [mm]
+                 </comment>
+            </textvar>
+          
+            <textvar name="SeepTopToSubBAverageIrrigationMap" value= "$(PathRoot)/maps/safe_init/SeepTopToSubBAverageIrrigationMap">
+                 <comment>
+                         Reported infiltration from the soil layer 2 to soil layer 3, irrigated land cover fraction, average flux over the simulation period [mm]
+                  </comment>
+            </textvar>               
 
             <textvar name="timestepInit" value="$(timestepInit)">
                 <comment>
@@ -2179,6 +2283,12 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
             </textvar>
 
+            <textvar name="PrevDischargeAvg" value="$(PrevDischargeAvg)">
+                <comment>
+					Outflow average discharge on previous routing sub-step (average) [m3/s]
+					Cold start: -9999 sets initial value to 0
+                </comment>
+            </textvar>
         </group>
 
 
@@ -2290,6 +2400,61 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
         </group>
 
+    <group>
+    <comment>
+    **************************************************************
+    CUMULATIVE FLUXES REQUIRED WHEN COMPUTING THE PRE-RUN IN CHUNKS
+    **************************************************************
+    </comment>
+    <textvar name="LZInflowCUMInit" value="$(LZInflowCUMInit)">
+                <comment>
+                    Cumulative inflow to the lower groundwater zone
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    LZInflowCumEnd: required for the warm start of the pre-run
+                </comment>
+     </textvar>   
+       
+     <textvar name="cumSeepTopToSubBOtherInit" value="$(cumSeepTopToSubBOtherInit)">
+                <comment>
+                    Cumulative flow from second to third soil layer, other land cover fraction
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    cumSeepTopToSubBOtherEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>
+       
+     <textvar name="cumSeepTopToSubBForestInit" value="$(cumSeepTopToSubBForestInit)">
+                <comment>
+                    Cumulative flow from second to third soil layer, forest land cover fraction
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    cumSeepTopToSubBForestEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>
+       
+     <textvar name="cumSeepTopToSubBIrrigationInit" value="$(cumSeepTopToSubBIrrigationInit)">
+                <comment>
+                    Cumulative flow from second to third soil layer, irrigation land cover fraction
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    cumSeepTopToSubBIrrigationEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>
+       
+     <textvar name="CumQInit" value="$(CumQInit)">
+                <comment>
+                    Cumulative discharge
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    CumQEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>           
+                            
+     <textvar name="TimeSinceStartPrerunChunkInit" value="$(TimeSinceStartPrerunChunkInit)">
+                <comment>
+                    Cumulative number of days from the start of the prerun
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    NetTimeSinceStartPrerunChunkEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>
+       
+    </group> 
 
         <group>
             <comment>
@@ -2346,13 +2511,6 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
             </textvar>
 
-            <textvar name="LAIOfDay" value="$(PathTables)/laiofday.txt">
-                <comment>
-                    table with days for each LAI maps
-                    1st column: range of days; 2nd column: suffix of LAI map
-                </comment>
-            </textvar>
-
         </group>
 
         <group>
@@ -2362,13 +2520,6 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 INPUT WATER USE MAPS AND PARAMETERS
                 **************************************************************
             </comment>
-
-            <textvar name="FirstDayOfMonth" value="$(PathTables)/firstdayofmonth.txt">
-                <comment>
-                    table with days for each water use maps
-                    1st column: range of days; 2nd column: suffix of wuse map
-                </comment>
-            </textvar>
 
             <textvar name="DomesticDemandMaps" value="$(PathWaterUse)/$(PrefixWaterUseDomestic)">
                 <comment>
@@ -2483,17 +2634,17 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     More than the transpiration is added e.g to prevent salinisation
                 </comment>
             </textvar>
-            
-            <textvar name="IrrigationWaterReUseM3" value="$(IrrigationWaterReUseM3)">           
-                 <comment>           
-                  Annual amount (m3) of treated wastewater reused for irrigation                  
-                 </comment>    
-            </textvar>
-                       
-            <textvar name="IrrigationWaterReUseNumDays" value="$(IrrigationWaterReUseNumDays)">      
+
+            <textvar name="IrrigationWaterReUseM3" value="$(IrrigationWaterReUseM3)">
                  <comment>
-                  Number of days over which the annual amount of treated wastewater for irrigation is used                
-                 </comment>          
+                  Annual amount (m3) of treated wastewater reused for irrigation
+                 </comment>
+            </textvar>
+
+            <textvar name="IrrigationWaterReUseNumDays" value="$(IrrigationWaterReUseNumDays)">
+                 <comment>
+                  Number of days over which the annual amount of treated wastewater for irrigation is used
+                 </comment>
             </textvar>
 
             <textvar name="MapIrrigationCropCoef" value="$(MapIrrigationCropCoef)">
@@ -2784,6 +2935,12 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
+                <textvar name="ChanQAvgDtState" value="$(PathOut)/chanqavgdt">
+                    <comment>
+                        Reported average discharge over last routing sub-step used to initialise lakes [cu m/s] ChanQAvgDt
+                    </comment>
+                </textvar>
+
                 <textvar name="DSLRForestState" value="$(PathOut)/dslf">
                     <comment>
                         Reported days since last rain
@@ -3028,6 +3185,12 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
+                <textvar name="ChanQAvgDtEnd" value="$(PathOut)/chanqavgdt.end">
+                    <comment>
+                        Reported average discharge over last routing sub-step used to initialise lakes [cu m/s] ChanQAvgDt
+                    </comment>
+                </textvar>
+
                 <textvar name="DischargeEnd" value="$(PathOut)/dis.end">
                     <comment>
                         Reported discharge [cu m/s] (average over the model timesteps) (AvgDis)
@@ -3112,6 +3275,41 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
+      <textvar name="LZInflowCUMEnd" value="$(PathOut)/LZInflowCUMEnd">
+      <comment>
+      Reported cumulative inflow to the lower groundwater zone [mm]
+      </comment>      
+      </textvar>
+      
+      <textvar name="CumQEnd" value="$(PathOut)/CumQEnd">
+      <comment>
+      Reported cumulative discharge [m3/s] (required only when the prerun is performed in chunks)
+      </comment>        
+      </textvar>
+      
+      <textvar name="cumSeepTopToSubBOtherEnd" value="$(PathOut)/cumSeepTopToSubBOtherEnd">
+      <comment>
+      Reported cumulative flux from second to third soil layer, other land cover fraction [mm] (required only when the prerun is performed in chunks)
+      </comment>         
+      </textvar>
+      
+      <textvar name="cumSeepTopToSubBForestEnd" value="$(PathOut)/cumSeepTopToSubBForestEnd">
+      <comment>
+      Reported cumulative flux from second to third soil layer, forest land cover fraction [mm] (required only when the prerun is performed in chunks)
+      </comment>          
+      </textvar>
+      
+      <textvar name="cumSeepTopToSubBIrrigationEnd" value="$(PathOut)/cumSeepTopToSubBIrrigationEnd">
+      <comment>
+      Reported cumulative flux from second to third soil layer, irrigation land cover fraction [mm] (required only when the prerun is performed in chunks)
+      </comment>             
+      </textvar>
+      
+      <textvar name="TimeSinceStartPrerunChunkEnd" value="$(PathOut)/TimeSinceStartPrerunChunkEnd">
+      <comment>
+      Reported total number of days since the start of the prerun (required only when the prerun is performed in chunks)
+      </comment>        
+      </textvar>
 
             </group>
 
@@ -3219,7 +3417,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                         Reported storage in lower response box [mm]
                     </comment>
                 </textvar>
-                
+
                 <textvar name="TotalWaterStorageMaps" value="$(PathOut)/tws">
                     <comment>
                         Reported total water storage [mm]
@@ -3376,6 +3574,12 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
+                <textvar name="ETActBudykoMaps" value="$(PathOut)/etactBUDYKO">
+                    <comment>
+                        Reported actual evapotranspiration onfly from forest and others [mm]
+                    </comment>
+                </textvar>
+
                 <textvar name="LeafDrainageMaps" value="$(PathOut)/ldra">
                     <comment>
                         Reported leaf drainage [mm]
@@ -3405,7 +3609,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                         Reported seepage to groundwater[mm]
                     </comment>
                 </textvar>
-
+                               
                 <textvar name="AvailGWMaps" value="$(PathOut)/agw">
                     <comment>
                         Reported available groundwater LZ+ GWLoss [mm]
@@ -3657,6 +3861,12 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
             </textvar>
 
+            <textvar name="ChanqavgdtTS" value="$(PathOut)/chanqavgdt.tss">
+                <comment>
+                    Reported average discharge on the last routing sub-step [cu m/s]
+                </comment>
+            </textvar>
+
             <textvar name="WaterLevelTS" value="$(PathOut)/waterLevel.tss">
                 <comment>
                     Reported water level [m]
@@ -3751,7 +3961,12 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                         Days since last rain [days]
                     </comment>
                 </textvar>
-
+                
+               <textvar name="actETPBUDYKOUpsTS" value="$(PathOut)/actETPBUDYKOUpsTS.tss">
+                    <comment>
+                       actual evapotranspiration (Budyko) [mm]
+                    </comment>
+               </textvar>
 
             </group>
 
@@ -3867,7 +4082,15 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                         Reported loss from lower zone [mm]
                     </comment>
                 </textvar>
-
+           <textvar name="withdrawalCHactualTS" value="$(PathOut)/withdrawalCHactualTS.tss"></textvar>
+           <textvar name="withdrawalReservoirsTS" value="$(PathOut)/withdrawalReservoirsTS.tss"></textvar>
+           <textvar name="withdrawalLakesTS" value="$(PathOut)/withdrawalLakesTS.tss"></textvar>
+           <textvar name="abstractionGWactualTS" value="$(PathOut)/abstractionGWactualTS.tss"></textvar>
+           <textvar name="returnflowGwAbs2ChannelTS" value="$(PathOut)/returnflowGwAbs2ChannelTS.tss"></textvar>  
+           <textvar name="areatotalshortageSWTS" value="$(PathOut)/areatotalshortageSWTS.tss"></textvar>     
+           <textvar name="withdrawalSWactualTS" value="$(PathOut)/withdrawalSWactualTS.tss"></textvar> 
+           <textvar name="TransLossQAvgTS" value="$(PathOut)/TransLossQAvgTS"></textvar> 
+           <textvar name="TransLossTS" value="$(PathOut)/TransLossTS"></textvar>             
             </group>
 
             <group>
@@ -3905,8 +4128,12 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     <comment>
                         Potential open water evaporation [mm/time step]
                     </comment>
-                </textvar>
-
+                </textvar>                           
+                <textvar name="actETPBUDYKOUpsTS" value="$(PathOut)/actETPBUDYKOUpsTS.tss">                
+                    <comment>
+                        ESActPixel+self.var.TaPixel+self.var.TaInterceptionAll+self.var.EvaAddM3*self.var.M3toMM
+                    </comment>
+                </textvar>  
             </group>
 
             <group>
@@ -4105,7 +4332,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     <comment>
                         Reported mass balance error due to the split routing module, for each catchment [m3]
                     </comment>
-                </textvar>  
+                </textvar>
 
                 <textvar name="OutletDischargeErrorSplitRoutingTSS" value="$(PathOut)/OutletDischargeErrorSplitRoutingM3S.tss">
                     <comment>
@@ -4714,7 +4941,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="ReservoirInitialFillValue" value="$(ReservoirInitialFillValue)">
+                <textvar name="ReservoirInitialFill" value="$(ReservoirInitialFill)">
                     <comment>
                         Initial reservoir storage (fraction)
                     </comment>
@@ -4725,45 +4952,33 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     Input tables
                 </comment>
 
-                <textvar name="TabTotStorage" value="$(PathTables)/rtstor.txt">
+                <textvar name="ReservoirTotalStorage" value="$(PathTables)/rtstor.txt">
                     <comment>
-                        Total reservoir storage capacity [cu m]
+                      Total reservoir storage capacity
+                        Units: m³
                     </comment>
                 </textvar>
 
-                <textvar name="TabConservativeStorageLimit" value="$(PathTables)/rclim.txt">
+                <textvar name="ReservoirFloodOutflow" value="$(PathTables)/rndq.txt">
                     <comment>
-                        Conservative reservoir storage (fraction, typically 0.07)
+                      Reservoir inflow associated with the 100-year return period.
+                      It is modified by a calibration parameter (`ReservoirFloodOutflowFactor`) to
+                      define the inflow above which the reservoir switches to flood control mode
+                          Units: m³/s
                     </comment>
                 </textvar>
 
-                <textvar name="TabNormalStorageLimit" value="$(PathTables)/rnlim.txt">
+                <textvar name="ReservoirNormalOutflow" value="$(PathTables)/rnormq.txt">
                     <comment>
-                        Normal reservoir storage limit (fraction, typically 0.65)
+                      NReservoir average inflow used to define the normal reservoir release
+                            Units: m³/s
                     </comment>
                 </textvar>
 
-                <textvar name="TabFloodStorageLimit" value="$(PathTables)/rflim.txt">
+                <textvar name="ReservoirMinOutflow" value="$(PathTables)/rminq.txt">
                     <comment>
-                        Flood reservoir storage limit (fraction, typically 0.90)
-                    </comment>
-                </textvar>
-
-                <textvar name="TabNonDamagingOutflowQ" value="$(PathTables)/rndq.txt">
-                    <comment>
-                        Non damaging reservoir outflow Q [cu m / s]
-                    </comment>
-                </textvar>
-
-                <textvar name="TabNormalOutflowQ" value="$(PathTables)/rnormq.txt">
-                    <comment>
-                        Normal outflow Q [cu m / s]
-                    </comment>
-                </textvar>
-
-                <textvar name="TabMinOutflowQ" value="$(PathTables)/rminq.txt">
-                    <comment>
-                        Minimum reservoir outflow Q [cu m / s]
+                      Minimum reservoir release:
+                          Units: m³/s
                     </comment>
                 </textvar>
 
@@ -4802,17 +5017,17 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="adjust_Normal_Flood" value="$(adjust_Normal_Flood)">
+                <textvar name="ReservoirFloodStorage" value="$(ReservoirFloodStorage)">
                     <comment>
-                        adjusting the balance between normal and flood storage
-                        big values (= closer to 1.0 = close to flood) results in keeping the outflow longer at rnormq
+                      Fraction of the total reservoir storage above which the reservoirs enters
+                      the flood control zone.
                     </comment>
                 </textvar>
 
-                <textvar name="ReservoirRnormqMult" value="$(ReservoirRnormqMult)">
+                <textvar name="ReservoirFloodOutflowFactor" value="$(ReservoirFloodOutflowFactor)">
                     <comment>
-                        Reservoir rnormq (normal outflow)
-                        fraction of the value in table rnormq.txt range: 0.5 - 2
+                      Factor of the 100-year return inflow that defines a flood event, i.e., the
+                      reservoir routine switches to flood control mode.
                     </comment>
                 </textvar>
 

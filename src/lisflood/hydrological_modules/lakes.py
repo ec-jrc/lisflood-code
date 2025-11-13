@@ -35,7 +35,7 @@ class lakes(HydroModule):
     # ************************************************************
     """
     input_files_keys = {'simulateLakes': ['LakeSites', 'TabLakeArea', 'TabLakeA', 'LakeMultiplier',
-                                          'LakeInitialLevelValue', 'TabLakeAvNetInflowEstimate', 'PrevDischarge',
+                                          'LakeInitialLevelValue', 'TabLakeAvNetInflowEstimate', 'PrevDischarge', 'PrevDischargeAvg',
                                           'LakePrevInflowValue', 'LakePrevOutflowValue']}
     module_name = 'Lakes'
 
@@ -57,9 +57,8 @@ class lakes(HydroModule):
         binding = settings.binding
         maskinfo = MaskInfo.instance()
 
-        if option['simulateLakes'] and not option['InitLisflood']:
-
-            LakeSitesC = loadmap('LakeSites')
+        if option['simulateLakes']:
+            LakeSitesC = loadmap('LakeSites')               # moved here to use the caching feature during calibration
             LakeSitesC[LakeSitesC < 1] = 0
             LakeSitesC[self.var.IsChannel == 0] = 0
             # Get rid of any lakes that are not part of the channel network
@@ -75,26 +74,27 @@ class lakes(HydroModule):
                 # rebuild lists of reported files with repsimulateLakes and simulateLakes = False
                 settings.build_reportedmaps_dicts()
                 return
-            # break if no lakes
+                # break if no lakes
+            LakeSitePcr = loadmap('LakeSites', pcr=True)    # moved here to use the caching feature during calibration
+
+        if option['simulateLakes'] and not option['InitLisflood']:            
 
             self.var.IsStructureKinematic = np.where(LakeSitesC > 0, np.bool8(1), self.var.IsStructureKinematic)
             # Add lake locations to structures map (used to modify LddKinematic
             # and to calculate LddStructuresKinematic)
+            self.var.IsStructureChan = np.where(LakeSitesC > 0, np.bool8(1), self.var.IsStructureChan)
+            # Add lake locations to structures map (used to modify LddChan
+            # and to calculate LddStructuresChan)
 
             # PCRaster part
             # -----------------------
-            LakeSitePcr = loadmap('LakeSites', pcr=True)
             LakeSitePcr = pcraster.ifthen((pcraster.defined(LakeSitePcr) & pcraster.boolean(decompress(self.var.IsChannel))), LakeSitePcr)
             IsStructureLake = pcraster.boolean(LakeSitePcr)
             # additional structure map only for lakes to calculate water balance
-            self.var.IsUpsOfStructureLake = pcraster.downstream(self.var.LddKinematic, pcraster.cover(IsStructureLake, 0))
+            # self.var.IsUpsOfStructureLake = pcraster.downstream(self.var.LddKinematic, pcraster.cover(IsStructureLake, 0))
+            self.var.IsUpsOfStructureLake = pcraster.downstream(self.var.LddChan, pcraster.cover(IsStructureLake, 0))
             # Get all pixels just upstream of lakes
             # -----------------------
-
-            self.var.LakeInflowOldCC = np.bincount(self.var.downstruct, weights=self.var.ChanQ)[self.var.LakeIndex]
-            # for Modified Puls Method the Q(inflow)1 has to be used.
-            # It is assumed that this is the same as Q(inflow)2 for the first timestep
-            # has to be checked if this works in forecasting mode!
 
             LakeArea = pcraster.lookupscalar(str(binding['TabLakeArea']), LakeSitePcr)
             LakeAreaC = compressArray(LakeArea)
@@ -109,28 +109,35 @@ class lakes(HydroModule):
             # Lake parameter A (suggested  value equal to outflow width in [m])
             # multiplied with the calibration parameter LakeMultiplier
 
+            # S1 storage at time t-1
             LakeInitialLevelValue  = loadmap('LakeInitialLevelValue')
             if np.max(LakeInitialLevelValue) == -9999:
+                # 'cold' start
                 LakeAvNetInflowEstimate = pcraster.lookupscalar(str(binding['TabLakeAvNetInflowEstimate']), LakeSitePcr)
                 LakeAvNetC = compressArray(LakeAvNetInflowEstimate)
                 self.var.LakeAvNetCC = np.compress(LakeSitesC > 0, LakeAvNetC)
-
                 LakeStorageIniM3CC = self.var.LakeAreaCC * np.sqrt(self.var.LakeAvNetCC / self.var.LakeACC)
-                # Initial lake storage [m3]  based on: S = LakeArea * H = LakeArea
-                # * sqrt(Q/a)
+                # Initial lake storage [m3] S1  based on: S = LakeArea * H = LakeArea * sqrt(Q/a)
                 self.var.LakeLevelCC = LakeStorageIniM3CC / self.var.LakeAreaCC
             else:
+                # 'warm' start
                 self.var.LakeLevelCC = np.compress(LakeSitesC > 0, LakeInitialLevelValue)
                 LakeStorageIniM3CC = self.var.LakeAreaCC * self.var.LakeLevelCC
-                # Initial lake storage [m3]  based on: S = LakeArea * H
+                # Initial lake storage [m3] S1 based on: S = LakeArea * H
+                self.var.LakeAvNetCC = np.compress(LakeSitesC > 0, loadmap('PrevDischargeAvg'))
 
-                self.var.LakeAvNetCC = np.compress(LakeSitesC > 0, loadmap('PrevDischarge'))
-
+            # Qinflow1 at time t-1
             LakePrevInflowValue  = loadmap('LakePrevInflowValue')
-            if np.max(LakeInitialLevelValue) == -9999:
-                self.var.LakeInflowOldCC = np.bincount(self.var.downstruct, weights = self.var.ChanQ)[self.var.LakeIndex]
+            if np.max(LakePrevInflowValue) == -9999:
+                # self.var.LakeInflowOldCC = np.bincount(self.var.downstruct, weights=self.var.ChanQ)[self.var.LakeIndex] #cm22-1
+                self.var.LakeInflowOldCC = np.bincount(self.var.downstruct, weights=self.var.ChanQAvgDt)[self.var.LakeIndex]
+                # Qin1 instantaneous inflow to the lake at the beginning of sub-routing step
+                # for Modified Puls Method the Q(inflow)1 (average inflow at (sub-routing) step t-1) needs to be defined.
+                # It is assumed that this is the same as Q(inflow)2 for the first timestep for 'cold' start
             else:
                 self.var.LakeInflowOldCC = np.compress(LakeSitesC > 0, LakePrevInflowValue)
+                # Qin1 average inflow to the lake at (sub-routing) step t-1
+
 
             # Repeatedly used expressions in lake routine
 
@@ -151,6 +158,7 @@ class lakes(HydroModule):
             # results in a formular : Q = 1.5 * b * H ** 2 = a*H**2 -> H =
             # sqrt(Q/a)
             self.var.LakeFactor = self.var.LakeAreaCC / (self.var.DtRouting * np.sqrt(self.var.LakeACC))
+            # LakeFactor = A/(Dt * sqrt(alpha))
 
             #  solving the equation  (S2/dtime + Qout2/2) = (S1/dtime + Qout1/2) - Qout1 + (Qin1 + Qin2)/2
             #  SI = (S2/dtime + Qout2/2) =  (A*H)/DtRouting + Q/2 = A/(DtRouting*sqrt(a)  * sqrt(Q) + Q/2
@@ -163,18 +171,20 @@ class lakes(HydroModule):
             # for faster calculation inside dynamic section
 
             LakeStorageIndicator = LakeStorageIniM3CC / self.var.DtRouting + self.var.LakeAvNetCC / 2
-            # SI = S/dt + Q/2
+            # SI = S1/dt + Qout1/2
 
+            # Qoutflow1 at time t
             LakePrevOutflowValue  = loadmap('LakePrevOutflowValue')
             if np.max(LakePrevOutflowValue) == -9999:
                 self.var.LakeOutflowCC = np.square(-self.var.LakeFactor + np.sqrt(self.var.LakeFactorSqr + 2 * LakeStorageIndicator))
+                # Qout1 instant outflow from lake at t (beginning of the sub-routing step) for 'cold' start
                 # solution of quadratic equation
                 # it is as easy as this because:
                 # 1. storage volume is increase proportional to elevation
-                # 2. Q= a *H **2.0  (if you choose Q= a *H **1.5 you have to solve
-                # the formula of Cardano)
+                # 2. Q= a *H **2.0  (if you choose Q= a *H **1.5 you have to solve the formula of Cardano)
             else:
                 self.var.LakeOutflowCC = np.compress(LakeSitesC > 0, LakePrevOutflowValue)
+                # Qout1 instant outflow from lake at t (beginning of the sub-routing step) for warm start
 
             self.var.LakeStorageM3CC = LakeStorageIniM3CC.copy()
             self.var.LakeStorageM3BalanceCC = LakeStorageIniM3CC.copy()
@@ -208,47 +218,66 @@ class lakes(HydroModule):
         option = settings.options
         maskinfo = MaskInfo.instance()
         if not(option['InitLisflood']) and option['simulateLakes']:    # only with no InitLisflood
-
+            # S1
             if NoRoutingExecuted==0:
                 self.var.LakeStorageM3CC=np.compress(self.var.LakeSitesC2 > 0, self.var.LakeStorageM3)
-            
-            self.var.LakeInflowCC = np.bincount(self.var.downstruct, weights=self.var.ChanQ)[self.var.LakeIndex]
-            # Lake inflow in [m3/s]
+                # S1 lake storage at t-1
+
+            # Qin2
+            # self.var.LakeInflowCC = np.bincount(self.var.downstruct, weights=self.var.ChanQ)[self.var.LakeIndex]
+            self.var.LakeInflowCC = np.bincount(self.var.downstruct, weights=self.var.ChanQAvgDt)[self.var.LakeIndex]
+            # Qin2 lake average inflow in [m3/s] per timestep t (routing sub-step)
 
             LakeIn = (self.var.LakeInflowCC + self.var.LakeInflowOldCC) * 0.5
-            # for Modified Puls Method: (S2/dtime + Qout2/2) = (S1/dtime + Qout1/2) - Qout1 + (Qin1 + Qin2)/2
-            #  here: (Qin1 + Qin2)/2
+            # for Modified Puls Method: (S2/dtime + Qout2/2) = (S1/dtime - Qout1/2) + (Qin1 + Qin2)/2
+            # here: (Qin1 + Qin2)/2 approx lake inflow
+
             self.var.LakeInflowOldCC = self.var.LakeInflowCC.copy()
-            # Qin2 becomes Qin1 for the next time step
+            # Qin2 becomes Qin1 for the next routing time step
 
             LakeStorageIndicator = self.var.LakeStorageM3CC /self.var.DtRouting - 0.5 * self.var.LakeOutflowCC + LakeIn
-            # here S1/dtime - Qout1/2 + LakeIn , so that is the right part
-            # of the equation above
+            # SI = S1/dtime - Qout1/2 + (Qin1 + Qin2)/2 = S1/dtime - Qout1/2 + LakeIn
+            # Right hand part of the Modified Puls Method equation above
 
+            # Check LakeOutflowCC for negative values
+            if any(LakeStorageIndicator < 0):
+                # this can happen with large oscillations in the lake inflow
+                msg = f"Negative outflow from lakes. \n" \
+                      f"(Total negative values: {sum(LakeStorageIndicator < 0)}, " \
+                      f"Lakes IDs: {self.var.LakeSitesCC[LakeStorageIndicator < 0]}) \n" \
+                      "Consider increasing computation time step for routing (DtSecChannel) \n"
+                warnings.warn(LisfloodWarning(msg))
+                LakeStorageIndicator[LakeStorageIndicator < 0] = 0
+
+            # Qout2
             self.var.LakeOutflowCC = np.square( -self.var.LakeFactor + np.sqrt(self.var.LakeFactorSqr + 2 * LakeStorageIndicator))
+            # Qout2 average lake outflow in [m3/s] per timestep t (routing sub-step)
             # Flow out of lake:
-            #  solving the equation  (S2/dtime + Qout2/2) = (S1/dtime + Qout1/2) - Qout1 + (Qin1 + Qin2)/2
-            #  SI = (S2/dtime + Qout2/2) =  (A*H)/DtRouting + Q/2 = A/(DtRouting*sqrt(a)  * sqrt(Q) + Q/2
+            #  solving the equation  (S2/dtime + Qout2/2) = (S1/dtime + Qout1/2) + (Qin1 + Qin2)/2
+            #  (S2/dtime + Qout2/2) = SI = (A*H)/DtRouting + Q/2 = A/(DtRouting*sqrt(a))  * sqrt(Q) + Q/2
             #  -> replacement: A/(DtRouting*sqrt(a)) = Lakefactor, Y = sqrt(Q)
             #  Y**2 + 2*Lakefactor*Y-2*SI=0
             # solution of this quadratic equation:
-            # Q=sqr(-LakeFactor+sqrt(sqr(LakeFactor)+2*SI));
+            # Q=sqr(-LakeFactor+sqrt(sqr(LakeFactor)+2*SI))
+            # Qout2 always >= 0
 
-            # expanding the size to save as state variable
+            # expanding the size to save Qout2 as state variable ('LakePrevOutflowValue')
             self.var.LakeOutflow = maskinfo.in_zero()
             np.put(self.var.LakeOutflow, self.var.LakeIndex, self.var.LakeOutflowCC)
 
             QLakeOutM3DtCC = self.var.LakeOutflowCC * self.var.DtRouting
-            # Outflow in [m3] per timestep
-            # Needed at every cell, hence cover statement
+            # Lake outflow in [m3] per timestep t (sub-routing step)
 
+            # S2
             self.var.LakeStorageM3CC = (LakeStorageIndicator - self.var.LakeOutflowCC* 0.5) * self.var.DtRouting
-            # Lake storage
+            # Lake storage at t
 
             # self.var.LakeStorageM3CC < 0 leads to NaN in state files
             # Check LakeStorageM3CC for negative values and set them to zero
             if any(np.isnan(self.var.LakeStorageM3CC)) or any(self.var.LakeStorageM3CC < 0):
-                msg = "Negative or NaN volume for lake storage set to 0. " \
+                msg = "Negative or NaN volume for lake storage set to 0. \n" \
+                      f"Total negative values: {sum(self.var.LakeStorageM3CC < 0)}, Lakes IDs: {self.var.LakeSitesCC[self.var.LakeStorageM3CC < 0]} \n" \
+                      f"Total NaN values: {sum(np.isnan(self.var.LakeStorageM3CC))}, Lakes IDs: {self.var.LakeSitesCC[np.isnan(self.var.LakeStorageM3CC)]} \n" \
                       "Increase computation time step for routing (DtSecChannel) \n"
                 warnings.warn(LisfloodWarning(msg))
                 self.var.LakeStorageM3CC[self.var.LakeStorageM3CC < 0] = 0
@@ -269,7 +298,7 @@ class lakes(HydroModule):
                     self.var.sumLakeInCC = self.var.LakeInflowCC * self.var.DtRouting
                     self.var.sumLakeOutCC = QLakeOutM3DtCC
                     # for timeseries output - in and outflow to the reservoir
-                    # is sumed up over the sub timesteps and stored in m/s
+                    # is summed up over the sub timesteps and stored in m/s
                     # set to zero at first timestep
                 else:
                     self.var.sumLakeInCC += self.var.LakeInflowCC * self.var.DtRouting

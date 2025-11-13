@@ -6,14 +6,14 @@ In the current version of LISFLOOD, all the model inputs are provided as either 
 
 LISFLOOD requires that all maps must have *identical* location attributes (number of rows, columns, cellsize, upper x and y coordinates).
 
-The input maps can be classified according to two main cathegories:<br>
+The input maps can be classified according to two main categories:<br>
 + **meteorological forcings**. These maps provide time series of values for each pixel of the computational domain. More specifically, the meteorological forcings provide the values of precipitation, temperature, reference values of evaporation from water surfaces, reference values of evaporation from open water bodies, reference values of evapotranspiration for each pixel of the modelled area. For each meteorological forcing, one map is required for each computational time step. <br>
 + **static maps**. These maps provide information of morphological, physical, soil, and land use properties for each pixel of the computational domain. 
 
 
 ### Meteorological forcings
 
-The meteorological forcing variables are defined in *map stacks*. A *map stack* is simply a series of maps, where each map represents the value of a variable at an individual time step.<br>It is recommented to use the netcdf format. <br> The users that prefer to prepare the meteorological forcings maps in pcraster format, must name the files according to the following rules: the name of each map is made up of a total of 11 characters: 8 characters, a dot and a 3-character suffix. Each map name starts with a *prefix*, and ends with the time step number. All character positions in between are filled with zeros ("0"). <br>
+The meteorological forcing variables are defined in *map stacks*. A *map stack* is simply a series of maps, where each map represents the value of a variable at an individual time step.<br>It is recommented to use the netcdf format. <br> LISFLOOD is capable of reading meteorological forcings split into multiple files (e.g. yearly chuncks). To use this functionality, it is enough to add the symbol '\*' after the file name (e.g. ET0_\*) <br> The users that prefer to prepare the meteorological forcings maps in pcraster format, must name the files according to the following rules: the name of each map is made up of a total of 11 characters: 8 characters, a dot and a 3-character suffix. Each map name starts with a *prefix*, and ends with the time step number. All character positions in between are filled with zeros ("0"). <br>
 
 Generally used prefixes for the meteorological forcings maps are: <br>
 + tp : total precipitation; units: mm/day.<br>
@@ -31,7 +31,7 @@ The section [Static Maps](../4_Static-Maps-introduction) provides detailed guide
 +  [land use maps](../4_Static-Maps_land-use/): fraction of forest; fraction of irrigated crops; fraction of rice crops; fraction of inland water; fraction of sealed surfaces; fraction of other land uses.
 +   [land use depending](../4_Static-Maps_land-use-depending/):crop coefficient; crop group number; Manning/s's surface roughness; soil depth.
 +   [soil hydraulic properties](../4_Static-Maps_soil-hydraulic-properties/): saturated hydraulic conductivity; soil water content at saturation; residual soil water content; parameters alpha and lambda of Van Genuchten's equations.
-+   [channel geometry](../4_Static-Maps_channel-geometry/): channels mask; channels side slope; channels length; channels gradient; Manning's rougheness coefficient of the channels; channels bottom width; floodplain width; bankfull channels depth.
++   [channel geometry](../4_Static-Maps_channel-geometry/): channels mask; channels side slope; channels length; channels gradient; Manning's rougheness coefficient of the channels; channels bottom width; floodplain width; bankfull channels depth; MCT diffusive wave routing channels.
 +   [leaf area index](../4_Static-Maps_leaf-area-index/): evolution of vegetation over time (leaf area index) for land covers forest, irrigated areas, others.
 +   [reservoirs and lakes](../4_Static-Maps_reservoirs-lakes/): lake mask; lakes ID points; reservoirs ID points. These maps are required only upon activation of the [lakes module](https://ec-jrc.github.io/lisflood-model/3_02_optLISFLOOD_lakes/) and/or of the [reservoirs module](https://ec-jrc.github.io/lisflood-model/3_03_optLISFLOOD_reservoirs/).
 +  [rice calendar](../4_Static-Maps_rice-calendar/): rice calendar for planting and harvesting seasons. These maps are required only when activating the [rice irrigation module](https://ec-jrc.github.io/lisflood-model/2_17_stdLISFLOOD_irrigation/)
@@ -39,9 +39,9 @@ The section [Static Maps](../4_Static-Maps-introduction) provides detailed guide
 +  water demand maps: domestic, energetic, livestock, industrial water use. These maps represent the time series of spatially distributed values of water demand for domestic, energetic, livestock, and industrial water use. These maps  are required only when activating the [water use module](https://ec-jrc.github.io/lisflood-model/2_18_stdLISFLOOD_water-use/)
 + outlet points: locations and IDs of the points for which LISFLOOD provides the time series of discharge values.
 
-#### Role of "mask" and "channels" maps 
+#### Role of "mask", "channels" ans "channelsMCT" maps 
 
-The mask map (i.e. "area.map") defines the model domain. In order to avoid unexpected results, **it is vital that all maps that are related to topography, land use and soil are defined** (i.e. don't contain a missing value) for each pixel that is "true" (has a Boolean 1 value) on the mask map. The same applies for all meteorological input and the Leaf Area Index maps. Similarly, all pixels that are "true" on the channels map must have some valid (non-missing) value on each of the channel parameter maps. Undefined pixels can lead to unexpected behaviour of the model, output that is full of missing values, loss of mass balance and possibly even model crashes. Some maps needs to have values in a defined range e.g. the gradient map has to be greater than 0.
+The mask map (i.e. "area.map") defines the model domain. In order to avoid unexpected results, **it is vital that all maps that are related to topography, land use and soil are defined** (i.e. don't contain a missing value) for each pixel that is "true" (has a Boolean 1 value) on the mask map. The same applies for all meteorological input and the Leaf Area Index maps. Similarly, all pixels that are "true" on the channels map must have some valid (non-missing) value on each of the channel parameter maps. At the same time, all pixels that have value "true" in the MCT rivers mask must also belong to the "channels" map. Undefined pixels can lead to unexpected behaviour of the model, output that is full of missing values, loss of mass balance and possibly even model crashes. Some maps needs to have values in a defined range e.g. the gradient map has to be greater than 0.
 
 #### Geometrical properties of the computational grid cell
 
@@ -77,14 +77,14 @@ Calibrated parameters are optimised for a specific model set up. It is often req
 
 ### INPUT TABLES
 
-The geographical location of lakes and reservoirs is identified by the two maps described [here](../4_Static-Maps_reservoirs-lakes/). These maps provide the location of lakes and reservoirs. Each lake and each reservoir is identified by its ID (a in integer number). LISFLOOD requires additional information for the adequate modelling of [lakes](https://ec-jrc.github.io/lisflood-model/3_02_optLISFLOOD_lakes/) and [reservoirs](https://ec-jrc.github.io/lisflood-model/3_03_optLISFLOOD_reservoirs/). These additional pieces of information are supplied to the numerical code by using tables in *.txt* format. Each table has 2 colums: the first column is the ID of the lake or of the reservoir, the second column is the quantity required by LISFLOOD. The table below provides the list of the pieces of information which are required for the adequate modelling of lakes and reservoirs.
+The geographical location of lakes and reservoirs is identified by the two maps described [here](../4_Static-Maps_reservoirs-lakes/). These maps provide the location of lakes and reservoirs. Each lake and each reservoir is identified by its ID (an integer number). LISFLOOD requires additional information for the adequate modelling of [lakes](https://ec-jrc.github.io/lisflood-model/3_02_optLISFLOOD_lakes/) and [reservoirs](https://ec-jrc.github.io/lisflood-model/3_03_optLISFLOOD_reservoirs/). These additional pieces of information are supplied to the numerical code by using tables in *.txt* format. Each table has 2 columns: the first column is the ID of the lake or of the reservoir, the second column is the quantity required by LISFLOOD. The table below provides the list of the pieces of information which are required for the adequate modelling of lakes and reservoirs.
 ##### Table: LISFLOOD input tables
 
 | **Table**             | **Default name**      | **Description**       |
 |----------------------------|-----------------------|--------------------------|
-| Lake area   | Lakearea.txt          | Lake syrface area in m2 |
-| Lake alpha parameter   | lakea.txt          | Lake parameter alpha: a detailed descrpition can be found [here](https://ec-jrc.github.io/lisflood-model/3_02_optLISFLOOD_lakes/)  |
-| Lake average inflow   | lakeaverageinflow.txt          | Average inflow to the lake: a detailed descrpition can be found [here](https://ec-jrc.github.io/lisflood-model/3_02_optLISFLOOD_lakes/) |
+| Lake area   | Lakearea.txt          | Lake surface area in m2 |
+| Lake alpha parameter   | lakea.txt          | Lake parameter alpha: a detailed description can be found [here](https://ec-jrc.github.io/lisflood-model/3_02_optLISFLOOD_lakes/)  |
+| Lake average inflow   | lakeaverageinflow.txt          | Average inflow to the lake: a detailed description can be found [here](https://ec-jrc.github.io/lisflood-model/3_02_optLISFLOOD_lakes/) |
 | Reservoir storage   | rstor.txt          | Volume in m3, total reservoirs storage capacity |
 | Reservoir minimum outflow   | rminq.txt          | Discharge in m3/s.   |
 | Reservoir normal outflow   | rnormq.txt          | Discharge in m3/s.  |

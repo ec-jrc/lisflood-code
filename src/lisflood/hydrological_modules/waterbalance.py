@@ -57,6 +57,7 @@ class waterbalance(object):
             # not done in Init Lisflood
 
             ChannelInitM3 = self.var.ChanIniM3
+            # Initial total water volume in river channels [m3]
             if not(option['InitLisflood']):    # only with no InitLisflood
                 if option['simulateLakes']:
                     ChannelInitM3 += self.var.LakeStorageIniM3
@@ -89,23 +90,26 @@ class waterbalance(object):
             #DisStructure = cover(ifthen(
             #    self.var.IsUpsOfStructureKinematic, self.var.ChanQ * self.var.DtRouting), scalar(0.0))
 
-            DisStructure = np.where(self.var.IsUpsOfStructureKinematicC, self.var.ChanQ * self.var.DtRouting, 0)
-            
-            # Discharge upstream of structure locations (coded as pits) in [m3/time step]
+            # DisStructure = np.where(self.var.IsUpsOfStructureKinematicC, self.var.ChanQ * self.var.DtRouting, 0)
+            DisStructure = np.where(self.var.IsUpsOfStructureChanC, self.var.ChanQAvgDt * self.var.DtRouting, 0)
+            # Average Discharge upstream of structure locations (coded as pits) in [m3/time step]
             # Needed for mass balance error calculations (see comment to calculation of WaterInit below)
             # Inclusion of DischargeM3Structures: adding this corrects a (relatively small) offset that occurs otherwise
             # if structures (reservoirs, lakes) are used.
             # calculation of structur influence happens before routing, therefore the initial state is used at the structure onece to often
             # (because it is not routed yet to the structure)
 
+            # CM
             if option['simulateLakes']:
-                DisStructure += np.where(compressArray(self.var.IsUpsOfStructureLake), 0.5 * self.var.ChanQ * self.var.DtRouting, 0)
+                # DisStructure += np.where(compressArray(self.var.IsUpsOfStructureLake), 0.5 * self.var.ChanQ * self.var.DtRouting, 0)
+                DisStructure += np.where(compressArray(self.var.IsUpsOfStructureLake), 0.5 * self.var.ChanQAvgDt * self.var.DtRouting, 0)
 
                 # DisStructure += cover(ifthen(self.var.IsUpsOfStructureLake,
                 #  0.5 * self.var.ChanQ * self.var.DtRouting), scalar(0.0))
                 # because Modified Puls Method is use, some additional offset
                 # has to be added
-            
+                
+            DisStructure[self.var.AtLastPointC == 1 ] = 0 # this line avoids double-counting when a reservoir or a lake is located at the outlet of the cacthment
             self.var.DischargeM3StructuresIni = np.take(np.bincount(self.var.Catchments, weights=DisStructure), self.var.Catchments)
 
 # --------------------------------------------------------------------------
@@ -157,9 +161,10 @@ class waterbalance(object):
             #    decompress(self.var.TotalPrecipitation) * self.var.MMtoM3, catch)
         
             self.var.sumInWB[np.isnan(self.var.sumInWB)] = 0
-            WaterIn = np.take(np.bincount(self.var.Catchments, weights=self.var.sumInWB),self.var.Catchments)
-            WaterIn += np.take(np.bincount(self.var.Catchments, weights=self.var.TotalPrecipitationWB*self.var.MMtoM3), self.var.Catchments)
-               # Accumulated incoming water [cu m]
+            WaterIn = np.take(np.bincount(self.var.Catchments, weights=self.var.sumInWB),self.var.Catchments)   # inflow
+
+            WaterIn += np.take(np.bincount(self.var.Catchments, weights=self.var.TotalPrecipitationWB*self.var.MMtoM3), self.var.Catchments) # same as self.var.Precipitation
+            # Accumulated incoming water [cu m]
             # NOTE: It is NOT possible to nest all terms into one areatotal statement because channel-related maps have MV for non-channel
             # pixels, resulting in MV creation when adding directly!!
             # MMtoM3 equals MMtoM*PixelArea, which may (or may not) be
@@ -202,15 +207,22 @@ class waterbalance(object):
                  WaterStored_nextstep += np.take(np.bincount(self.var.Catchments,weights=HillslopeStoredM3),self.var.Catchments)
 
             # Total water stored [m3]
+
+
             # This goes out:
             HillslopeOutM3 = (self.var.TaWB + self.var.TaInterceptionWB + self.var.ESActWB + self.var.GwLossWB) * self.var.MMtoM3
             # Water that goes out of the system at the hillslope level [m3]
+            # self.var.TaWB transpiration same as self.var.TaPixel
             # (evaporation and groundwater loss)
 
             ##sum1 = self.var.sumDis.copy()
             sum1 = self.var.ChanQAvg.copy()
+            # averge outflow during model time step
             sum1[self.var.AtLastPointC == 0] = 0
             WaterOut = np.take(np.bincount(self.var.Catchments,weights=sum1 * self.var.DtSec),self.var.Catchments)
+            # Water that goes out of the system at the channels level [m3]
+            # (average rivers flow)
+
             WaterOut += np.take(np.bincount(self.var.Catchments,weights=HillslopeOutM3),self.var.Catchments)
 
             #WaterOut = areatotal(cover(ifthen(
@@ -221,7 +233,7 @@ class waterbalance(object):
             if option['openwaterevapo']:
                 WaterOut += np.take(np.bincount(self.var.Catchments, weights=self.var.EvaWBM3),self.var.Catchments)
             if option['TransLoss']:
-                WaterOut += np.take(np.bincount(self.var.Catchments, weights=self.var.TransCum),self.var.Catchments)
+                WaterOut += np.take(np.bincount(self.var.Catchments, weights=self.var.TransLossWBM3),self.var.Catchments)
             if option['wateruse']:
                 print('WARNING: the water balance module has NOT been verified yet when the option wateruse is ON!')
                 WaterOut += np.take(np.bincount(self.var.Catchments, weights=self.var.IrriLossCUM),self.var.Catchments)
@@ -232,9 +244,13 @@ class waterbalance(object):
             # for this double counting)
             # new 12.11.09 PB
             # added cumulative transmission loss
-            DisStru = np.where(self.var.IsUpsOfStructureKinematicC, self.var.ChanQ * self.var.DtRouting, 0)
-            DischargeM3Structures = np.take(np.bincount(self.var.Catchments, weights=DisStru), self.var.Catchments)
 
+            # DisStru = np.where(self.var.IsUpsOfStructureKinematicC, self.var.ChanQ * self.var.DtRouting, 0)
+            DisStru = np.where(self.var.IsUpsOfStructureChanC, self.var.ChanQAvgDt * self.var.DtRouting, 0)
+            # using average discharge
+
+            DisStru[self.var.AtLastPointC == 1 ] = 0 # this line avoids double-counting when a reservoir or a lake is located at the outlet of the cacthment
+            DischargeM3Structures = np.take(np.bincount(self.var.Catchments, weights=DisStru), self.var.Catchments)
             # on the last time step lakes and reservoirs calculated with the previous routing results
             # so the last (now routed) discharge has to be added to the mass balance
             # (-> the calculation odf the structures is done before the routing)
@@ -242,6 +258,7 @@ class waterbalance(object):
             if option['simulateLakes']:
                 DisLake = maskinfo.in_zero()
                 np.put(DisLake, self.var.LakeIndex, 0.5 * self.var.LakeInflowCC * self.var.DtRouting)
+
                 DischargeM3Lake = np.take(np.bincount(self.var.Catchments, weights=DisLake),self.var.Catchments)
                 #DischargeM3Lake = areatotal(cover(0.5 * self.var.LakeInflow * self.var.DtRouting, scalar(0.0)), catch)
                 # because Modified Puls Method is using QIn=(Qin1+Qin2)/2, we need a correction
@@ -258,9 +275,11 @@ class waterbalance(object):
             # Discharge just upstream of structure locations (coded as pits) in [cu m / time step]
             # Needed for mass balance error calculations, because of double counting of structure
             # storage and water in the channel.
+
+
             # Mass balance:
             self.var.MBError = self.var.WaterInit + WaterIn - WaterStored - WaterOut - DischargeM3Structures
-            # Totl mass balance error per catchment [cu m]. Mass balance error is computed for each computational time step.
+            # Total mass balance error per catchment [cu m]. Mass balance error is computed for each computational time step.
   
             CatchArea = np.take(np.bincount(self.var.Catchments, weights=self.var.PixelArea),self.var.Catchments)
             self.var.MBErrorMM = self.var.MtoMM * self.var.MBError / CatchArea

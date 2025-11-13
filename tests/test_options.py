@@ -104,8 +104,8 @@ class TestOptions():
         mock_api.side_effect = self.dummyloadmap
         mocker.patch('lisflood.hydrological_modules.reservoir.loadmap', new=mock_api)
         lisfloodexe(settings)
-        calls = [call('ReservoirSites'), call('ReservoirSites', pcr=True), call('adjust_Normal_Flood'),
-                 call('ReservoirRnormqMult'), call('ReservoirInitialFillValue')]
+        calls = [call('ReservoirSites'), call('ReservoirSites', pcr=True), call('UpAreaTrans'),
+                 call('ReservoirFloodOutflowFactor'), call('ReservoirInitialFill')]
         lisflood.hydrological_modules.reservoir.loadmap.assert_has_calls(calls)
 
     def test_lakes_only(self, mocker):

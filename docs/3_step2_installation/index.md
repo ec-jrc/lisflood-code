@@ -56,7 +56,7 @@ Using conda environment is very handy since installing latest PCRaster and its d
 1. Install [miniconda](https://docs.conda.io/en/latest/miniconda.html) 
 2. Create a conda env named "lisflood" and install dependencies:
 ```
-conda create --name lisflood python=3.7 -c conda-forge
+conda create --name lisflood python=3.8 -c conda-forge
 conda activate lisflood
 conda install -c conda-forge pcraster
 pip install lisflood-model
@@ -84,9 +84,9 @@ Follow this instruction for a basic test (some sample catchments are included in
 2. **Install requirements into a python 3 conda env**
 
 ```bash
-conda create --name lisflood python=3.7 -c conda-forge
+conda create --name lisflood python=3.8 -c conda-forge
 conda activate lisflood
-conda install -c conda-forge pcraster
+conda install -c conda-forge pcraster "gdal<=3.5.3"
 cd lisflood-code
 pip install -r requirements.txt
 ```

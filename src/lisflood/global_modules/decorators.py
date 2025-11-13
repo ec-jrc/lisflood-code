@@ -78,7 +78,7 @@ class Cache:
                 return_data = self.cache[key]
         else:
             return_data = self.cache[key]
-            self.found[self.name] += 1
+            self.found[self.name] += 1          
         return return_data
     
     @classmethod

@@ -102,6 +102,7 @@ class miscInitial(HydroModule):
         self.var.DtSecChannel = loadmap('DtSecChannel')
         # Sub time step used for kinematic wave channel routing [seconds]
         # within the model,the smallest out of DtSecChannel and DtSec is used
+        self.var.NumDaysSpinUp = loadmap('NumDaysSpinUp')
 
         self.var.MMtoM = 0.001
         # Multiplier to convert wate depths in mm to meters

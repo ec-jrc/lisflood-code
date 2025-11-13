@@ -26,7 +26,7 @@ You can use conda environment to easily install dependencies.
 ```bash
 conda create --name lisflood python=3.10 -c conda-forge
 conda activate lisflood
-conda install -c conda-forge pcraster gdal
+conda install -c conda-forge pcraster "gdal<=3.5.3"
 ```
 
 * Install lisflood-model pypi package
@@ -53,7 +53,7 @@ git clone --single-branch --branch master https://github.com/ec-jrc/lisflood-cod
 ```bash
 conda create --name lisflood python=3.10 -c conda-forge
 conda activate lisflood
-conda install -c conda-forge pcraster gdal
+conda install -c conda-forge pcraster "gdal<=3.5.3"
 cd lisflood-code
 pip install -r requirements.txt
 ```

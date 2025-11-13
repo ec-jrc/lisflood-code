@@ -41,9 +41,11 @@ def is_path(v):
         return False
     path_no_ext, current_ext = os.path.splitext(v)
     v_alt = '{}.{}'.format(path_no_ext, 'nc' if current_ext in ('.map', '') else 'map')
+    v_alt2 = v if v.lower().endswith('.nc') else v + '.nc'
     a = (os.path.exists(v) and os.path.isfile(v)) or os.access(v, os.W_OK)
     b = (os.path.exists(v_alt) and os.path.isfile(v_alt)) or os.access(v_alt, os.W_OK)
-    return a or b
+    c = (os.path.exists(v_alt2) and os.path.isfile(v_alt2)) or os.access(v_alt2, os.W_OK)
+    return a or b or c
 
 
 class HydroModule(object):

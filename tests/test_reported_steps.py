@@ -32,6 +32,7 @@ from .test_utils import ETRS89TestCase, setoptions, mk_path_out
 class TestRepStepMaps(ETRS89TestCase):
     case_dir = os.path.join(os.path.dirname(__file__), 'data', 'LF_ETRS89_UseCase')
     settings_file = os.path.join(case_dir, 'settings', 'cold.xml')
+    out_dir = os.path.join(case_dir, 'out')
     out_dir_a = os.path.join(case_dir, 'out', 'a')
     out_dir_b = os.path.join(case_dir, 'out', 'b')
 
@@ -43,6 +44,7 @@ class TestRepStepMaps(ETRS89TestCase):
                                              'PathOut': '$(PathRoot)/out/a',
                                              'ReportSteps': strReportStepA, 
                                              })
+        mk_path_out(self.out_dir)
         mk_path_out(self.out_dir_a)
         lisfloodexe(settings_a)
 
