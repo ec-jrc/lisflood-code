@@ -131,6 +131,22 @@ Windows users are recommended to execute LISFLOOD with a Docker image.
 
 The users are recommended to download the [reference settings xml](https://github.com/ec-jrc/lisflood-code/tree/master/src/lisfloodSettings_reference.xml) file and adapt it by inserting their own paths and modelling choices.
 
+## Settings Tool
+
+This package also installs `lisflood-settings-tool`, a CLI utility to parse, lint and update LISFLOOD settings XML files while preserving comments.
+
+Examples:
+
+```bash
+# Clean/lint a settings file (no updates)
+lisflood-settings-tool in.xml out.xml
+
+# Update from YAML plus explicit overrides
+lisflood-settings-tool in.xml out.xml --yaml updates.yaml --option wateruse=1 --user PathRoot=/data/project
+
+# Validate only (no output file is written)
+lisflood-settings-tool in.xml --check
+```
 
 
 ## Collaborate
