@@ -133,19 +133,19 @@ The users are recommended to download the [reference settings xml](https://githu
 
 ## Settings Tool
 
-This package also installs `lisflood-settings-tool`, a CLI utility to parse, lint and update LISFLOOD settings XML files while preserving comments.
+This package also installs `lisflood-settings`, a CLI utility to parse, lint and update LISFLOOD settings XML files while preserving comments.
 
 Examples:
 
 ```bash
-# Clean/lint a settings file (no updates)
-lisflood-settings-tool in.xml out.xml
-
-# Update from YAML plus explicit overrides
-lisflood-settings-tool in.xml out.xml --yaml updates.yaml --option wateruse=1 --user PathRoot=/data/project
-
 # Validate only (no output file is written)
-lisflood-settings-tool in.xml --check
+lisflood-settings check -i in.xml
+
+# Clean/lint a settings file (no updates, writes formatted copy)
+lisflood-settings set -i in.xml -o out.xml
+
+# Update from file plus explicit overrides
+lisflood-settings set -i in.xml -o out.xml -f updates.yaml --lfoptions wateruse=1 TemperatureInKelvin=0 --lfuser PathRoot=/data/project NetCDFTimeChunks=10
 ```
 
 

@@ -5,15 +5,10 @@ LISFLOOD settings XML formatter and updater.
 from __future__ import absolute_import
 
 import argparse
-import re
 import sys
 
 import yaml
 from lxml import etree
-
-
-_PLACEHOLDER_RE = re.compile(r"\$\(([^)]+)\)")
-_BUILTIN_BINDING_VARS = {"ProjectDir", "ProjectPath", "SettingsDir", "SettingsPath"}
 
 
 class SettingsToolError(Exception):
@@ -28,24 +23,7 @@ def _parse_bool(value):
         return 1
     if sval in ("0", "false", "no", "off"):
         return 0
-    raise SettingsToolError("Invalid option value '{}'. Use 0/1 or true/false.".format(value))
-
-
-def _parse_set_expression(expression):
-    if "=" not in expression:
-        raise SettingsToolError("Invalid --set '{}' (expected section.name=value)".format(expression))
-    lhs, value = expression.split("=", 1)
-    if "." not in lhs:
-        raise SettingsToolError(
-            "Invalid --set '{}' (expected lfoptions.name=value or lfuser.name=value)".format(expression)
-        )
-    section, name = lhs.split(".", 1)
-    section = section.strip().lower()
-    if section not in ("lfoptions", "lfuser"):
-        raise SettingsToolError("Unsupported section '{}' in --set '{}'".format(section, expression))
-    if not name.strip():
-        raise SettingsToolError("Missing variable name in --set '{}'".format(expression))
-    return section, name.strip(), value
+    raise SettingsToolError("Invalid lfoptions value '{}'. Use 0/1 or true/false.".format(value))
 
 
 def _get_required_child(root, names):
@@ -74,40 +52,30 @@ def _index_textvars(section_elem):
     return indexed
 
 
-def _resolve_with_user(value, user_values):
-    resolved = value
-    for _ in range(25):
-        matches = _PLACEHOLDER_RE.findall(resolved)
-        if not matches:
-            return resolved
-        changed = False
-        for key in matches:
-            if key in user_values:
-                resolved = resolved.replace("$({})".format(key), user_values[key])
-                changed = True
-        if not changed:
-            return resolved
-    raise SettingsToolError("Could not resolve placeholders after 25 iterations: {}".format(value))
+def _key_value_arg(expression):
+    if "=" not in expression:
+        raise argparse.ArgumentTypeError(
+            "Invalid entry '{}' (expected KEY=VALUE).".format(expression)
+        )
+    name, value = expression.split("=", 1)
+    if not name.strip():
+        raise argparse.ArgumentTypeError(
+            "Invalid entry '{}' (empty key in KEY=VALUE).".format(expression)
+        )
+    return name.strip(), value
 
 
-def _validate_compatibility(binding_nodes, user_values):
-    issues = []
-    allowed = set(user_values.keys()) | _BUILTIN_BINDING_VARS
-    for name, node in binding_nodes.items():
-        value = node.get("value", "")
-        for ref in _PLACEHOLDER_RE.findall(value):
-            if ref not in allowed:
-                issues.append(
-                    "Binding '{}' references undefined variable '$({})'.".format(name, ref)
-                )
-        try:
-            _resolve_with_user(value, user_values)
-        except SettingsToolError as exc:
-            issues.append("Binding '{}' is not resolvable: {}.".format(name, exc))
-    return issues
+def _flatten_pairs(raw_values):
+    if not raw_values:
+        return []
+    # raw_values shape with nargs='+' and action='append': [[(k,v), ...], ...]
+    flattened = []
+    for values in raw_values:
+        flattened.extend(values)
+    return flattened
 
 
-def run_tool(input_path, output_path=None, yaml_path=None, set_values=None, option_values=None, user_values=None, check=False):
+def run_tool(input_path, output_path=None, file_path=None, lfoptions_values=None, lfuser_values=None, check=False):
     parser = etree.XMLParser(remove_blank_text=True, remove_comments=False)
     tree = etree.parse(input_path, parser)
     root = tree.getroot()
@@ -116,58 +84,46 @@ def run_tool(input_path, output_path=None, yaml_path=None, set_values=None, opti
 
     lfoptions_elem = _get_required_child(root, ("lfoptions",))
     lfuser_elem = _get_required_child(root, ("lfuser",))
-    lfbinding_elem = _get_required_child(root, ("lfbinding", "lfbindings"))
-
-    options_index = _index_options(lfoptions_elem)
-    user_index = _index_textvars(lfuser_elem)
-    binding_index = _index_textvars(lfbinding_elem)
-
-    merged_option_updates = {}
-    merged_user_updates = {}
-
-    if yaml_path:
-        with open(yaml_path, "r") as stream:
-            payload = yaml.safe_load(stream) or {}
-        yaml_options = payload.get("lfoptions") or payload.get("options") or {}
-        yaml_user = payload.get("lfuser") or payload.get("user") or {}
-        if not isinstance(yaml_options, dict) or not isinstance(yaml_user, dict):
-            raise SettingsToolError("YAML file must use mapping values for lfoptions/lfuser.")
-        merged_option_updates.update(yaml_options)
-        merged_user_updates.update(yaml_user)
-
-    for section, name, value in set_values or []:
-        if section == "lfoptions":
-            merged_option_updates[name] = value
-        else:
-            merged_user_updates[name] = value
-    for name, value in option_values or []:
-        merged_option_updates[name] = value
-    for name, value in user_values or []:
-        merged_user_updates[name] = value
-
-    for name, value in merged_option_updates.items():
-        node = options_index.get(name)
-        if node is None:
-            raise SettingsToolError("lfoptions variable '{}' not found in XML.".format(name))
-        node.set("choice", str(_parse_bool(value)))
-
-    for name, value in merged_user_updates.items():
-        node = user_index.get(name)
-        if node is None:
-            raise SettingsToolError("lfuser variable '{}' not found in XML.".format(name))
-        node.set("value", str(value))
-
-    user_values_map = dict((name, node.get("value", "")) for name, node in user_index.items())
-    # Compatibility checks between lfbinding and lfuser are intentionally disabled.
-    # compatibility_issues = _validate_compatibility(binding_index, user_values_map)
-    # if compatibility_issues:
-    #     raise SettingsToolError("Compatibility validation failed:\n- {}".format("\n- ".join(compatibility_issues)))
+    _ = _get_required_child(root, ("lfbinding", "lfbindings"))
 
     if check:
         return 0
 
     if not output_path:
-        raise SettingsToolError("Output path is required unless --check is used.")
+        raise SettingsToolError("Output path is required for the 'set' subcommand.")
+
+    options_index = _index_options(lfoptions_elem)
+    user_index = _index_textvars(lfuser_elem)
+
+    merged_lfoptions = {}
+    merged_lfuser = {}
+
+    if file_path:
+        with open(file_path, "r") as stream:
+            payload = yaml.safe_load(stream) or {}
+        yaml_options = payload.get("lfoptions") or payload.get("options") or {}
+        yaml_user = payload.get("lfuser") or payload.get("user") or {}
+        if not isinstance(yaml_options, dict) or not isinstance(yaml_user, dict):
+            raise SettingsToolError("Update file must use mapping values for lfoptions/lfuser.")
+        merged_lfoptions.update(yaml_options)
+        merged_lfuser.update(yaml_user)
+
+    for name, value in lfoptions_values or []:
+        merged_lfoptions[name] = value
+    for name, value in lfuser_values or []:
+        merged_lfuser[name] = value
+
+    for name, value in merged_lfoptions.items():
+        node = options_index.get(name)
+        if node is None:
+            raise SettingsToolError("lfoptions variable '{}' not found in XML.".format(name))
+        node.set("choice", str(_parse_bool(value)))
+
+    for name, value in merged_lfuser.items():
+        node = user_index.get(name)
+        if node is None:
+            raise SettingsToolError("lfuser variable '{}' not found in XML.".format(name))
+        node.set("value", str(value))
 
     tree.write(output_path, encoding="utf-8", pretty_print=True)
     return 0
@@ -177,68 +133,64 @@ def build_parser():
     parser = argparse.ArgumentParser(
         description="Parse, validate, lint and update LISFLOOD settings XML files."
     )
-    parser.add_argument("input", help="Input LISFLOOD settings XML file.")
-    parser.add_argument("output", nargs="?", help="Output XML path (required unless --check).")
-    parser.add_argument(
-        "--yaml",
-        dest="yaml",
-        help="YAML file with updates. Format: {lfoptions: {name: 0/1}, lfuser: {name: value}}.",
-    )
-    parser.add_argument(
-        "--set",
-        action="append",
-        help="Update value using section.name=value, where section is lfoptions or lfuser. Can be repeated.",
-    )
-    parser.add_argument(
-        "--option",
-        action="append",
-        help="Update lfoptions value using name=value (equivalent to --set lfoptions.name=value).",
-    )
-    parser.add_argument(
-        "--user",
-        action="append",
-        help="Update lfuser value using name=value (equivalent to --set lfuser.name=value).",
-    )
-    parser.add_argument(
-        "--check",
-        action="store_true",
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    check_parser = subparsers.add_parser(
+        "check",
         help="Validate XML structure/sections without writing output.",
     )
+    check_parser.add_argument("-i", "--input", required=True, help="Input LISFLOOD settings XML file.")
+
+    set_parser = subparsers.add_parser(
+        "set",
+        help="Apply updates and write output XML.",
+    )
+    set_parser.add_argument("-i", "--input", required=True, help="Input LISFLOOD settings XML file.")
+    set_parser.add_argument("-o", "--output", required=True, help="Output XML path.")
+    set_parser.add_argument(
+        "-f",
+        "--file",
+        dest="file",
+        help="YAML file with updates. Format: {lfoptions: {name: 0/1}, lfuser: {name: value}}.",
+    )
+    set_parser.add_argument(
+        "--lfoptions",
+        action="append",
+        nargs="+",
+        type=_key_value_arg,
+        metavar="KEY=VALUE",
+        help="One or more lfoptions updates. Example: --lfoptions TemperatureInKelvin=1 wateruse=0",
+    )
+    set_parser.add_argument(
+        "--lfuser",
+        action="append",
+        nargs="+",
+        type=_key_value_arg,
+        metavar="KEY=VALUE",
+        help="One or more lfuser updates. Example: --lfuser PathRoot=/data NetCDFTimeChunks=10",
+    )
+
     return parser
 
 
 def main(argv=None):
     parser = build_parser()
     args = parser.parse_args(argv)
-    try:
-        set_values = []
-        for expression in args.set or []:
-            set_values.append(_parse_set_expression(expression))
-        option_values = []
-        for expression in args.option or []:
-            if "=" not in expression:
-                raise SettingsToolError("Invalid --option '{}' (expected name=value)".format(expression))
-            name, value = expression.split("=", 1)
-            if not name.strip():
-                raise SettingsToolError("Invalid --option '{}' (empty name)".format(expression))
-            option_values.append((name.strip(), value))
-        user_values = []
-        for expression in args.user or []:
-            if "=" not in expression:
-                raise SettingsToolError("Invalid --user '{}' (expected name=value)".format(expression))
-            name, value = expression.split("=", 1)
-            if not name.strip():
-                raise SettingsToolError("Invalid --user '{}' (empty name)".format(expression))
-            user_values.append((name.strip(), value))
 
+    try:
+        if args.command == "check":
+            run_tool(input_path=args.input, check=True)
+            return 0
+
+        lfoptions_values = _flatten_pairs(args.lfoptions)
+        lfuser_values = _flatten_pairs(args.lfuser)
         run_tool(
             input_path=args.input,
             output_path=args.output,
-            yaml_path=args.yaml,
-            set_values=set_values,
-            option_values=option_values,
-            user_values=user_values,
-            check=args.check,
+            file_path=args.file,
+            lfoptions_values=lfoptions_values,
+            lfuser_values=lfuser_values,
+            check=False,
         )
     except (SettingsToolError, etree.XMLSyntaxError, OSError, yaml.YAMLError) as exc:
         print("Error: {}".format(exc), file=sys.stderr)

@@ -161,7 +161,7 @@ setup(
     scripts=['bin/lisflood'],
     entry_points={
         'console_scripts': [
-            'lisflood-settings-tool=lisflood.settings_tool:main',
+            'lisflood-settings=lisflood.settings_tool:main',
         ],
     },
     zip_safe=True,
