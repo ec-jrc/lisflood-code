@@ -1,3 +1,4 @@
+from lxml import etree
 
 import os
 import sys
@@ -22,6 +23,15 @@ def setoptions(settings_file, opts_to_set=None, opts_to_unset=None, vars_to_set=
     opts_to_set = [] if opts_to_set is None else opts_to_set
     opts_to_unset = [] if opts_to_unset is None else opts_to_unset
     vars_to_set = {} if vars_to_set is None else vars_to_set
+    with open(settings_file) as filetocheck:
+        try:
+            # Attempt to parse the XML file
+            etree.parse(filetocheck)
+        except etree.XMLSyntaxError as e:
+            # If a syntax error is encountered, print the error and exit
+            print(f"XMLSyntaxError: {e}")
+            raise e
+
     with open(settings_file) as tpl:
         soup = BeautifulSoup(tpl, 'lxml-xml')
         for opt in opts_to_set:
@@ -94,6 +104,18 @@ class ETRS89TestCase(object):
                 'tss': os.path.join(ref_dir, 'output_reference_6h/chanqWin.tss'),
             },
         },
+        # 'chanqavgdt': {
+        #     'report_map': None,
+        #     'report_tss': 'ChanqavgdtTS',
+        #     '86400': {
+        #         'map': None,
+        #         'tss': os.path.join(ref_dir, 'output_reference_daily/chanqavgdt.tss'),
+        #     },
+        #     '21600': {
+        #         'map': None,
+        #         'tss': os.path.join(ref_dir, 'output_reference_6h/chanqavgdt.tss'),
+        #     },
+        # },
         'thia': {
             'report_map': 'Theta1IrrigationState',
             'report_tss': None,
@@ -354,6 +376,22 @@ class MCTTestCase(object):
                 'tss': os.path.join(ref_dir, 'output_reference_6h_1h/chanqX.tss'),
             },
         },
+        # 'chanqavgdt': {
+        #     'report_map': None,
+        #     'report_tss': 'ChanqavgdtTS',
+        #     '86400-3600': {
+        #         'map': None,
+        #         'tss': os.path.join(ref_dir, 'output_reference_daily/chanqavgdt.tss'),
+        #     },
+        #     '21600-21600': {
+        #         'map': None,
+        #         'tss': os.path.join(ref_dir, 'output_reference_6h_6h/chanqavgdt.tss'),
+        #     },
+        #     '21600-3600': {
+        #         'map': None,
+        #         'tss': os.path.join(ref_dir, 'output_reference_6h_1h/chanqavgdt.tss'),
+        #     },
+        # },
         'mbError': {
             'report_map': None,
             'report_tss': 'WaterMassBalanceTSS',

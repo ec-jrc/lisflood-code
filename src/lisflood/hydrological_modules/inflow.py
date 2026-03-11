@@ -57,7 +57,7 @@ class inflow(HydroModule):
         if option['inflow']:
             self.var.InflowPoints = loadmap('InflowPoints') #1D array size is pixels belonging to basin mask
 
-            self.var.QInM3Old = np.where(self.var.InflowPoints > 0, self.var.ChanQ * self.var.DtSec, 0)
+            self.var.QInM3Old = np.where(self.var.InflowPoints > 0, self.var.ChanQAvgDt * self.var.DtSec, 0)
             # inflow volume for model step
 
             # read inflow map
@@ -125,7 +125,6 @@ class inflow(HydroModule):
             # Get inflow hydrograph at each inflow point [m3/s]
             QIn = compressArray(QIn)
             QIn[np.isnan(QIn)] = 0
-            #cmcheck - inflow
             self.var.QInM3 = QIn * self.var.DtSec
             # Convert to [m3] per time step
             self.var.TotalQInM3 += self.var.QInM3
@@ -145,7 +144,7 @@ class inflow(HydroModule):
         settings = LisSettings.instance()
         option = settings.options
         
-        if option['inflow']: #cmcheck - inflow
+        if option['inflow']:
 
             self.var.QInDt = (self.var.QInM3Old + (NoRoutingExecuted + 1) * self.var.QDelta) * self.var.InvNoRoutSteps
             # flow from inlets per sub step
