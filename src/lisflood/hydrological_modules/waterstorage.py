@@ -62,61 +62,34 @@ class waterstorage(HydroModule):
             # find ranges of IDs for lakes [LakeID_min+1:LakeID_max] and reservoirs [ReservoirID_min+1:ReservoirID_max]
             # LakeMask   land       = 0
             #            water      = 1
-            #                         or for lakes:      ID = LakeID_min(default:1000)+lakeID
-            #                                reservoirs: ID = ReservoirID_min(default:5000) + reservoirID
-            #                         in case LakeMask==0 (no water defined before insertion of lake-/reservoir-IDs)
+            #                         or for lakes:      ID = LakeID_min + lakeID
+            #                                reservoirs: ID = ReservoirID_min + reservoirID
+            #                         in case LakeMask == 0 (no water defined before insertion of lake-/reservoir-IDs)
             #                         lake and reservoirs IDs are inserted with negative values
-            #
-            # the gap between 1 and lakeIDs and between lakeIds and reservoirIDs has to be greater than <gap_min>
-            # gaps within lakeIDs or reservoirIDs have to be smaller than <gap_min>
-            gap_min = 499
             LakeMask[LakeMask<=-9999] = np.nan
             LakeMask = np.abs(LakeMask)
-            id_all = np.unique(LakeMask[~np.isnan(LakeMask)]).astype(int)
-            id_max = id_all[-1]
-            lowerBounds = (id_all+1)[:-1]
-            upperBounds = (id_all-1)[1:]
-            mask = lowerBounds<=upperBounds-(max(1,gap_min)-1)
 
-            n_gaps = np.count_nonzero(mask)
-            if n_gaps == 0:
-                # only land/water mask, no lakes or reservoir IDs
-                LakeID_min = id_max
-                LakeID_max = LakeID_min
-                ReservoirID_min = id_max
-                ReservoirID_max = ReservoirID_min
-            else:
-                # beginning of lake IDs
-                LakeID_min = upperBounds[mask][0]
-                if n_gaps == 1:
-                    # only lake IDs
-                    LakeID_max = id_max+1
-                    # no reservoir IDs
-                    ReservoirID_min = id_max
-                    ReservoirID_max = ReservoirID_min
-                else:
-                    # end of lake IDs
-                    LakeID_max = lowerBounds[mask][1]
-                    # beginning of reservoir IDs
-                    ReservoirID_min = upperBounds[mask][1]
-                    # end of reservoir IDs
-                    ReservoirID_max = id_max+1
+            LakeID_min = 100000
+            LakeID_max = 500000
+            ReservoirID_min = 500000
 
             # extract lake distribution map
             self.var.LakeDistribution = np.where((LakeMask > LakeID_min) & (LakeMask < LakeID_max), LakeMask-LakeID_min, np.nan)
             # extract reservoir distribution map
-            self.var.ReservoirDistribution = np.where((LakeMask > ReservoirID_min) & (LakeMask < ReservoirID_max), LakeMask-ReservoirID_min, np.nan)
+            self.var.ReservoirDistribution = np.where((LakeMask > ReservoirID_min), LakeMask-ReservoirID_min, np.nan)
 
             # check number of ID with number of sites
-            if n_gaps < 1:
-                msg = "{} LakeMask map (containing no lake or reservoir IDs) not compatible for TWS calculation"
+            number_of_lakeIDs = len(
+                np.unique(self.var.LakeDistribution[~np.isnan(self.var.LakeDistribution)]).astype(int))
+            number_of_reservoirIDs = len(
+                np.unique(self.var.ReservoirDistribution[~np.isnan(self.var.ReservoirDistribution)]).astype(int))
+            if (number_of_lakeIDs < 1) | (number_of_reservoirIDs < 1):
+                msg = "LakeMask map (containing no lake or reservoir IDs) not compatible for TWS calculation"
                 raise LisfloodError(msg)
             if option['simulateLakes']:
-                number_of_lakeIDs = len(np.unique(self.var.LakeDistribution[~np.isnan(self.var.LakeDistribution)]).astype(int))
                 if self.var.LakeSitesCC.size != number_of_lakeIDs:
                     warnings.warn(LisfloodWarning('Number of lake IDs in map LakeMask ('+str(number_of_lakeIDs)+') not equal number of lake sites defined in map LakeSites ('+str(self.var.LakeSitesCC.size)+').'))
             if option['simulateReservoirs']:
-                number_of_reservoirIDs = len(np.unique(self.var.ReservoirDistribution[~np.isnan(self.var.ReservoirDistribution)]).astype(int))
                 if self.var.ReservoirSitesCC.size != number_of_reservoirIDs:
                     warnings.warn(LisfloodWarning('Number of reservoir IDs in map LakeMask ('+str(number_of_reservoirIDs)+') not equal number of reservoir sites defined in map ReservoirSites ('+str(self.var.ReservoirSitesCC.size)+').'))
 
@@ -205,10 +178,11 @@ class waterstorage(HydroModule):
             for n in np.unique(lake_extent[~np.isnan(lake_extent)]).astype(int):
                 if n > 0:
                     lake_mask = np.nonzero(lake_extent == n)
-                    grid_area_lake = np.nansum(self.var.PixelArea[lake_mask])
-                    tws_lakeM[lake_mask] = tws_lakeM3[self.var.LakeSitesC2==n] / grid_area_lake
-                    tws_riverM[lake_mask] = np.nansum(tws_riverM3[lake_mask]) / grid_area_lake
-                    tws_oflowM[lake_mask] = np.nansum(tws_oflowM3[lake_mask]) / grid_area_lake
+                    if option['simulateLakes']:
+                        grid_area_lake = np.nansum(self.var.PixelArea[lake_mask])
+                        tws_lakeM[lake_mask] = tws_lakeM3[self.var.LakeSitesC2==n] / grid_area_lake
+                        tws_riverM[lake_mask] = np.nansum(tws_riverM3[lake_mask]) / grid_area_lake
+                        tws_oflowM[lake_mask] = np.nansum(tws_oflowM3[lake_mask]) / grid_area_lake
             
             # reservoir water storage [m3]
             # in routing.py: self.var.IsChannelPcr = boolean(loadmap('Channels', pcr=True))
@@ -245,10 +219,11 @@ class waterstorage(HydroModule):
             for n in np.unique(reservoir_extent[~np.isnan(reservoir_extent)]).astype(int):
                 if n > 0:
                     reservoir_mask = np.nonzero(reservoir_extent == n)
-                    grid_area_reservoir = np.nansum(self.var.PixelArea[reservoir_mask])
-                    tws_reservoirM[reservoir_mask] = tws_reservoirM3[self.var.ReservoirSitesC==n] / grid_area_reservoir
-                    tws_riverM[reservoir_mask] = np.nansum(tws_riverM3[reservoir_mask]) / grid_area_reservoir
-                    tws_oflowM[reservoir_mask] = np.nansum(tws_oflowM3[reservoir_mask]) / grid_area_reservoir
+                    if option['simulateReservoirs']:  
+                        grid_area_reservoir = np.nansum(self.var.PixelArea[reservoir_mask])
+                        tws_reservoirM[reservoir_mask] = tws_reservoirM3[self.var.ReservoirSitesC==n] / grid_area_reservoir
+                        tws_riverM[reservoir_mask] = np.nansum(tws_riverM3[reservoir_mask]) / grid_area_reservoir
+                        tws_oflowM[reservoir_mask] = np.nansum(tws_oflowM3[reservoir_mask]) / grid_area_reservoir
          
             # soil water storage [mm] -> [m]
             tws_soil1M  = ((self.var.Theta1a[0] * self.var.SoilDepth1a[0]) * self.var.OtherFraction     +
