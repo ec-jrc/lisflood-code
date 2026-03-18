@@ -135,6 +135,7 @@ You can use builtin path variables in this template and reference to other paths
       <setoption choice="0" name="repSurfaceRunoffMaps"/>	#Surface runoff
       <setoption choice="0" name="repFastRunoffMaps"/>	#Surface runoff +  UZ [mm]
       <setoption choice="0" name="repTotalRunoffMaps"/>	#Surface runoff +  UZ [mm] + LZ
+      <setoption choice="0" name="repOverlandFlowMaps"/>
       <setoption choice="0" name="repWaterDepthMaps"/>
 
       <setoption choice="0" name="repThetaMaps"/>
@@ -163,6 +164,7 @@ You can use builtin path variables in this template and reference to other paths
       <setoption choice="0" name="repTotalAbs"/>
       <setoption choice="0" name="repTotalWUse"/>
       <setoption choice="0" name="repWIndex"/>
+      <setoption choice="0" name="repTotalWaterStorageMaps"/>
 
   </lfoptions>
   <lfuser>
@@ -3267,21 +3269,11 @@ You can use builtin path variables in this template and reference to other paths
       </comment>
       </textvar>
 
-      <textvar name="TaPixelMaps" value="$(PathOut)/Ta_pixel">
-      <comment>
-      Reported transpiration maps, weighted sum over the fractions of each pixel [mm]
-      </comment>
-      </textvar>
-      </group>
-
-
       <group>
       <comment>
       **************************************************************
       "END" MAPS, AKA REPORTED OUTPUT MAPS CALLED "END"
       Same as above, but always at last time step
-      Support for these "end" maps will most likely be
-      discontinued some time soon
       **************************************************************
       </comment>
 
@@ -3672,30 +3664,6 @@ You can use builtin path variables in this template and reference to other paths
       </comment>
       </textvar>
 
-      <textvar name="LZMaps0" value="$(PathOut)/lzn">
-      <comment>
-      Reported storage in lower response box [mm]
-      </comment>
-      </textvar>
-
-      <textvar name="LZMaps1" value="$(PathOut)/lz1">
-      <comment>
-      Reported storage in lower response box [mm]
-      </comment>
-      </textvar>
-
-      <textvar name="LZMaps2" value="$(PathOut)/lz2">
-      <comment>
-      Reported storage in lower response box [mm]
-      </comment>
-      </textvar>
-
-      <textvar name="LZMaps3" value="$(PathOut)/lz3">
-      <comment>
-      Reported storage in lower response box [mm]
-      </comment>
-      </textvar>
-
       <textvar name="TotalWaterStorageMaps" value="$(PathOut)/tws">
       <comment>
       Reported total water storage [mm]
@@ -3801,7 +3769,7 @@ You can use builtin path variables in this template and reference to other paths
       </comment>
       </textvar>
 
-      <textvar name="CumIntSealedMaps" value="$(PathOut)/cums">
+      <textvar name="CumIntSealedMaps" value="$(PathOut)/cseal">
       <comment>
       Reported interception (depression) storage, direct runoff (impervious) fraction [mm]
       </comment>
@@ -3942,25 +3910,6 @@ You can use builtin path variables in this template and reference to other paths
       Reported seepage to groundwater(from soil layer 2 to groundwater), weighted sum over the fraction of each pixel [mm]
       </comment>
       </textvar>
-
-      <textvar name="SeepTopToSubBAverageOtherMap" value= "$(PathOut)/SeepTopToSubBAverageOtherMap">
-      <comment>
-      Reported infiltration from the soil layer 2 to soil layer 3, other land cover fraction, average flux over the simulation period [mm]
-      </comment>
-      </textvar>
-
-      <textvar name="SeepTopToSubBAverageForestMap" value= "$(PathOut)/SeepTopToSubBAverageForestMap">
-      <comment>
-      Reported infiltration from the soil layer 2 to soil layer 3, forest land cover fraction, average flux over the simulation period [mm]
-      </comment>
-      </textvar>
-
-      <textvar name="SeepTopToSubBAverageIrrigationMap" value= "$(PathOut)/SeepTopToSubBAverageIrrigationMap">
-      <comment>
-      Reported infiltration from the soil layer 2 to soil layer 3, irrigated land cover fraction, average flux over the simulation period [mm]
-      </comment>
-      </textvar>
-
       <textvar name="AvailGWMaps" value="$(PathOut)/agw">
       <comment>
       Reported available groundwater LZ+ GWLoss [mm]
