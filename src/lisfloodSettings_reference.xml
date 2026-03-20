@@ -75,6 +75,7 @@ You can use builtin path variables in this template and reference to other paths
       #-----------------------------------------------------------
       # report discharge TS
       <setoption choice="1" name="repDischargeTs"/>
+      <setoption choice="1" name="repEtactBudykoTs"/>
 
       # report gauges and sites
   	  # sites (pixel average)
@@ -134,6 +135,7 @@ You can use builtin path variables in this template and reference to other paths
       <setoption choice="0" name="repSurfaceRunoffMaps"/>	#Surface runoff
       <setoption choice="0" name="repFastRunoffMaps"/>	#Surface runoff +  UZ [mm]
       <setoption choice="0" name="repTotalRunoffMaps"/>	#Surface runoff +  UZ [mm] + LZ
+      <setoption choice="0" name="repOverlandFlowMaps"/>
       <setoption choice="0" name="repWaterDepthMaps"/>
 
       <setoption choice="0" name="repThetaMaps"/>
@@ -162,6 +164,7 @@ You can use builtin path variables in this template and reference to other paths
       <setoption choice="0" name="repTotalAbs"/>
       <setoption choice="0" name="repTotalWUse"/>
       <setoption choice="0" name="repWIndex"/>
+      <setoption choice="0" name="repTotalWaterStorageMaps"/>
 
   </lfoptions>
   <lfuser>
@@ -173,33 +176,39 @@ You can use builtin path variables in this template and reference to other paths
         **************************************************************
 
         !-- Optimization of netCDF I/O through chunking and caching.
+		</comment>
 
+		<textvar name="NetCDFTimeChunks" value="-1">
+		<comment>
         The option "NetCDFTimeChunks" may take the following values:
             - "-1"                         : Load everything upfront
             - "[positive integer number]"  : Chunk size defined by user
             - "auto"                       : Let xarray to decide
         </comment>
-        <textvar name="NetCDFTimeChunks" value="-1"/>
+		</textvar>
 
+		<textvar name="MapsCaching" value="False">
         <comment>
             The option "MapsCaching" may take the following values:
                 - "True"   : Cache maps during execution
                 - "False"  : No caching
-        </comment>
-        <textvar name="MapsCaching" value="False"/>
+        </comment>        
+		</textvar>
 
+        <textvar name="OutputMapsChunks" value="1">
         <comment>
           The option "OutputMapsChunks" may take the following values:
               - "[positive integer number]"  : Dump outputs to disk every X steps (default 1)
         </comment>
-        <textvar name="OutputMapsChunks" value="1"/>
+		</textvar>
 
+        <textvar name="OutputMapsDataType" value="float64">
         <comment>
           The option "OutputMapsDataType" sets the output data type and may take the following values:
               - "float64"
               - "float32"
         </comment>
-        <textvar name="OutputMapsDataType" value="float64"/>
+		</textvar>
 
         <comment>
             **************************************************************
@@ -207,6 +216,8 @@ You can use builtin path variables in this template and reference to other paths
             **************************************************************
         </comment>
 
+		<textvar name="numCPUs_parallelNumba" value="0">
+		<comment>
         !-- Parallelisation of using Numba runtime compiled library .
         The option "numCPUs_parallelNumba" may take the following values:
             - "0"           : set to NUMBA_NUM_THREADS Environment Variable
@@ -214,7 +225,8 @@ You can use builtin path variables in this template and reference to other paths
             - "1"           : serial execution (not parallel)
             - "2", "3", ... : manual setting of the number of parallel threads.
                               (if exceeding NUMBA_NUM_THREADS, the value is set to NUMBA_NUM_THREADS) -->
-        <textvar name="numCPUs_parallelNumba" value="0"/>
+		</comment>
+		</textvar>
 
         <comment>
           **************************************************************
@@ -535,9 +547,9 @@ You can use builtin path variables in this template and reference to other paths
 
         <textvar name="ChanSMult" value="1.0">
             <comment>
-            default: 1.0
-$(PathParams)/params_ChanSMult
-Multiplier []  applied to ChanSdXdY
+              default: 1.0
+              $(PathParams)/params_ChanSMult
+              Multiplier []  applied to ChanSdXdY
             </comment>
         </textvar>
     </group>
@@ -1301,6 +1313,7 @@ Multiplier []  applied to ChanSdXdY
 
       <textvar name="EnergyConsumptiveUseFraction" value="$(PathMaps)/energyconsumptiveuse">
         <comment>
+            # $(PathMaps)/energyconsumptiveuse
         	# Consumptive Use (1-Recycling ratio) for energy water use (0-1) [-]
         	# Source: Torcellini et al. (2003) "Consumptive Use for US Power Production"
             # map advised by Neil Edwards, Energy Industry
@@ -1320,7 +1333,7 @@ Multiplier []  applied to ChanSdXdY
       <textvar name="LeakageFraction" value="$(PathMaps)/leakage">
         <comment>
           Default : 0.2
-          $(PathRoot)/leakage
+          $(PathMaps)/leakage
           Fraction of leakage of public water supply (0=no leakage, 1=100% leakage)
         </comment>
       </textvar>
@@ -1378,12 +1391,6 @@ Multiplier []  applied to ChanSdXdY
       <textvar name="LandUseMask" value="$(PathMaps)/lusemask">
         <comment>
         Land Use Mask
-        </comment>
-      </textvar>
-
-      <textvar name="WaterUseMaps" value="$(PathOut)/wuse">
-        <comment>
-        Reported water use [cu m/s], depending on the availability of discharge
         </comment>
       </textvar>
 
@@ -1589,6 +1596,7 @@ Multiplier []  applied to ChanSdXdY
     even for options that are not actually used!
     **************************************************************
     </comment>
+    </group>
 
     <group>
 
@@ -1899,11 +1907,6 @@ Multiplier []  applied to ChanSdXdY
       </comment>
       </textvar>
       
-      <textvar name="NumDaysSpinUp" value="$(NumDaysSpinUp)">
-      <comment>
-      Number of days used for internal spin-up (fluxes computations during prerun)
-      </comment>
-      </textvar>
       </group>
 
       <group>
@@ -2327,7 +2330,7 @@ Multiplier []  applied to ChanSdXdY
       **************************************************************
       </comment>
 
-      <textvar name="LZAvInflowMap" value="$(PathInit)/lzavin.nc">
+      <textvar name="LZAvInflowMap" value="$(PathInit)/lzavin">
       <comment>
       PRERUNDIR/lzavin
       Reported map of average percolation rate from upper to
@@ -2335,7 +2338,7 @@ Multiplier []  applied to ChanSdXdY
       </comment>
       </textvar>
 
-      <textvar name="AvgDis" value="$(PathInit)/avgdis.nc">
+      <textvar name="AvgDis" value="$(PathInit)/avgdis">
       <comment>
       PRERUNDIR/avgdis
       CHANNEL split routing in two lines
@@ -2897,12 +2900,6 @@ Multiplier []  applied to ChanSdXdY
       </comment>
       </textvar>
 
-      <textvar name="WaterUseMaps" value="$(WaterUseMaps)">
-      <comment>
-      Reported water use [cu m/s], depending on the availability of discharge
-      </comment>
-      </textvar>
-
       <textvar name="WaterUseTS" value="$(WaterUseTS)">
       <comment>
       Time series of upstream water use at gauging stations
@@ -3030,9 +3027,11 @@ Multiplier []  applied to ChanSdXdY
 
       <group>
       <comment>
+      **************************************************************
       STATE VARIABLES AT SELECTED TIME STEPS
       ONLY FOR INITIALISATION OF SUCCEEDING RUNS
       REPORTING TIME STEPS SET THROUGH "ReportSteps" OPTION
+      **************************************************************
       </comment>
 
       <textvar name="Theta1State" value="$(PathOut)/tha">
@@ -3270,20 +3269,12 @@ Multiplier []  applied to ChanSdXdY
       </comment>
       </textvar>
 
-      <textvar name="TaPixelMaps" value="$(PathOut)/Ta_pixel">
-      <comment>
-      Reported transpiration maps, weighted sum over the fractions of each pixel [mm]
-      </comment>
-      </textvar>
-      </group>
-
-
       <group>
       <comment>
+      **************************************************************
       "END" MAPS, AKA REPORTED OUTPUT MAPS CALLED "END"
       Same as above, but always at last time step
-      Support for these "end" maps will most likely be
-      discontinued some time soon
+      **************************************************************
       </comment>
 
       <textvar name="Theta1End" value="$(PathOut)/tha.end">
@@ -3405,15 +3396,15 @@ Multiplier []  applied to ChanSdXdY
       </comment>
       </textvar>
 
-      <textvar name="LakeStorageM3" value="$(PathOut)/lakest.end">
-      <comment>
-      Reported lake storage [m3]
-      </comment>
-      </textvar>
-
       <textvar name="ReservoirFillEnd" value="$(PathOut)/rsfil.end">
       <comment>
       Reported reservoir filling [-]
+      </comment>
+      </textvar>
+
+      <textvar name="PolderLevelEnd" value="$(PathOut)/hpol.end">
+      <comment>
+      name of output map(s) with polder level
       </comment>
       </textvar>
 
@@ -3583,11 +3574,13 @@ Multiplier []  applied to ChanSdXdY
 
       <group>
       <comment>
+      **************************************************************
       INDIVIDUAL DRIVING METEOROLOGICAL VARIABLES (AT EVERY TIME STEP)
       ONLY IF REPORTING OF EACH RESPECTIVE VARIABLE IS
       SWITCHED ON (DEFAULT: ALL SWITCHED OFF)
       Note reporting is done as a quantity per time step, not as
       an intensity (as in meteo input!)
+      **************************************************************
       </comment>
 
       <textvar name="PrecipitationMapsOut" value="$(PathOut)/pr">
@@ -3619,14 +3612,23 @@ Multiplier []  applied to ChanSdXdY
       Potential evaporation from open water surface [mm per time step]
       </comment>
       </textvar>
+
+      <textvar name="EWater" value="$(PathOut)/ewater">
+      <comment>
+      EvaAddM3*self.var.M3toMM [mm per time step]
+      </comment>
+      </textvar>
+
       </group>
 
 
       <group>
       <comment>
+      **************************************************************
       INDIVIDUAL STATE VARIABLES (AT EVERY TIME STEP)
       ONLY IF REPORTING OF EACH RESPECTIVE VARIABLE IS
       SWITCHED ON (DEFAULT: ALL SWITCHED OFF)
+      **************************************************************
       </comment>
 
       <textvar name="Theta1Maps" value="$(PathOut)/tha">
@@ -3657,30 +3659,6 @@ Multiplier []  applied to ChanSdXdY
       </textvar>
 
       <textvar name="LZMaps" value="$(PathOut)/lz">
-      <comment>
-      Reported storage in lower response box [mm]
-      </comment>
-      </textvar>
-
-      <textvar name="LZMaps0" value="$(PathOut)/lzn">
-      <comment>
-      Reported storage in lower response box [mm]
-      </comment>
-      </textvar>
-
-      <textvar name="LZMaps1" value="$(PathOut)/lz1">
-      <comment>
-      Reported storage in lower response box [mm]
-      </comment>
-      </textvar>
-
-      <textvar name="LZMaps2" value="$(PathOut)/lz2">
-      <comment>
-      Reported storage in lower response box [mm]
-      </comment>
-      </textvar>
-
-      <textvar name="LZMaps3" value="$(PathOut)/lz3">
       <comment>
       Reported storage in lower response box [mm]
       </comment>
@@ -3791,7 +3769,7 @@ Multiplier []  applied to ChanSdXdY
       </comment>
       </textvar>
 
-      <textvar name="CumIntSealedMaps" value="$(PathOut)/cums">
+      <textvar name="CumIntSealedMaps" value="$(PathOut)/cseal">
       <comment>
       Reported interception (depression) storage, direct runoff (impervious) fraction [mm]
       </comment>
@@ -3800,9 +3778,11 @@ Multiplier []  applied to ChanSdXdY
 
       <group>
       <comment>
+      **************************************************************
       INDIVIDUAL RATE VARIABLES (AT EVERY TIME STEP)
       ONLY IF REPORTING OF EACH RESPECTIVE VARIABLE IS
       SWITCHED ON (DEFAULT: ALL SWITCHED OFF)
+      **************************************************************
       </comment>
 
       <textvar name="RainMaps" value="$(PathOut)/rain">
@@ -3930,25 +3910,6 @@ Multiplier []  applied to ChanSdXdY
       Reported seepage to groundwater(from soil layer 2 to groundwater), weighted sum over the fraction of each pixel [mm]
       </comment>
       </textvar>
-
-      <textvar name="SeepTopToSubBAverageOtherMap" value= "$(PathOut)/SeepTopToSubBAverageOtherMap">
-      <comment>
-      Reported infiltration from the soil layer 2 to soil layer 3, other land cover fraction, average flux over the simulation period [mm]
-      </comment>
-      </textvar>
-
-      <textvar name="SeepTopToSubBAverageForestMap" value= "$(PathOut)/SeepTopToSubBAverageForestMap">
-      <comment>
-      Reported infiltration from the soil layer 2 to soil layer 3, forest land cover fraction, average flux over the simulation period [mm]
-      </comment>
-      </textvar>
-
-      <textvar name="SeepTopToSubBAverageIrrigationMap" value= "$(PathOut)/SeepTopToSubBAverageIrrigationMap">
-      <comment>
-      Reported infiltration from the soil layer 2 to soil layer 3, irrigated land cover fraction, average flux over the simulation period [mm]
-      </comment>
-      </textvar>
-
       <textvar name="AvailGWMaps" value="$(PathOut)/agw">
       <comment>
       Reported available groundwater LZ+ GWLoss [mm]
@@ -4063,7 +4024,19 @@ Multiplier []  applied to ChanSdXdY
       </comment>
       </textvar>
 
+      <textvar name="PrefFlowOtherMaps" value="$(PathOut)/pflowO">
+      <comment>
+      Reported preferential flow [mm]
+      </comment>
+      </textvar>
+
       <textvar name="PrefFlowForestMaps" value="$(PathOut)/pflowF">
+      <comment>
+      Reported preferential flow [mm]
+      </comment>
+      </textvar>
+
+      <textvar name="PrefFlowIrrigationMaps" value="$(PathOut)/pflowi">
       <comment>
       Reported preferential flow [mm]
       </comment>
@@ -4078,6 +4051,12 @@ Multiplier []  applied to ChanSdXdY
       <textvar name="SeepSubToGWForestMaps" value="$(PathOut)/sgwF">
       <comment>
       Reported seepage to groundwater[mm]
+      </comment>
+      </textvar>
+
+      <textvar name="UZOutflowOtherMaps" value="$(PathOut)/quzO">
+      <comment>
+      Reported upper zone outflow [mm]
       </comment>
       </textvar>
 
@@ -4142,7 +4121,9 @@ Multiplier []  applied to ChanSdXdY
 
       <group>
       <comment>
+      **************************************************************
       MISCELLANEOUS OUTPUT MAPS AND TIME SERIES
+      **************************************************************
       </comment>
 
       <textvar name="LZAvInflowTS" value="$(PathOut)/lzAvIn.tss">
@@ -4221,7 +4202,9 @@ Multiplier []  applied to ChanSdXdY
 
       <group>
       <comment>
+      **************************************************************
       OUTPUT AT SITES: STATE VARIABLES
+      **************************************************************
       </comment>
 
       <textvar name="WaterDepthTS" value="$(PathOut)/wDepth.tss">
@@ -4319,7 +4302,9 @@ Multiplier []  applied to ChanSdXdY
 
       <group>
       <comment>
+      **************************************************************
       OUTPUT AT SITES: RATE VARIABLES
+      **************************************************************
       </comment>
 
       <textvar name="RainTS" value="$(PathOut)/rain.tss">
@@ -4434,9 +4419,11 @@ Multiplier []  applied to ChanSdXdY
 
       <group>
       <comment>
+      **************************************************************
       AVERAGE VALUES OF METEOROLOGICAL FORCING VARIABLES
       UPSTREAM OF GAUGES
       (only if repMeteoUpsGauges option is activated)
+      **************************************************************
       </comment>
 
       <textvar name="PrecipitationAvUpsTS" value="$(PathOut)/precipUps.tss">
@@ -4469,7 +4456,7 @@ Multiplier []  applied to ChanSdXdY
       </comment>
       </textvar>
 
-      <textvar name="actETPUpsTS" value="$(PathOut)/actETPUpsX.tss">
+      <textvar name="actETPUpsTS" value="$(PathOut)/actETPUps.tss">
       <comment>
       ESActPixel+self.var.TaPixel+self.var.TaInterceptionAll+self.var.EvaAddM3*self.var.M3toMM
       </comment>
@@ -4479,9 +4466,11 @@ Multiplier []  applied to ChanSdXdY
 
       <group>
       <comment>
+      **************************************************************
       AVERAGE VALUES OF MODEL STATE VARIABLES
       UPSTREAM OF GAUGES
       (only if repStateUpsGauges option is activated)
+      **************************************************************
       </comment>
 
       <textvar name="WaterDepthAvUpsTS" value="$(PathOut)/wDepthUps.tss">
@@ -4536,9 +4525,11 @@ Multiplier []  applied to ChanSdXdY
 
       <group>
       <comment>
+      **************************************************************
       AVERAGE VALUES OF MODEL RATE VARIABLES
       UPSTREAM OF GAUGES
       (only if repRateUpsGauges option is activated)
+      **************************************************************
       </comment>
 
       <textvar name="RainAvUpsTS" value="$(PathOut)/rainUps.tss">
@@ -4653,7 +4644,9 @@ Multiplier []  applied to ChanSdXdY
 
       <group>
       <comment>
+      **************************************************************
       NUMERICS
+      **************************************************************
       </comment>
 
       <textvar name="WaterMassBalanceTSS" value="$(PathOut)/mbError.tss">
@@ -4761,13 +4754,13 @@ Multiplier []  applied to ChanSdXdY
       </comment>      
       </textvar>  
           
-      <textvar name="TransLossQAvgTS" value="$(PathOut)/TransLossQAvgTS">
+      <textvar name="TransLossQAvgTS" value="$(PathOut)/TransLossQAvgTS.tss">
       <comment>
       trasmission loss in m3/s, for direct comparison with dis.tss
       </comment>      
       </textvar> 
       
-      <textvar name="TransLossTS" value="$(PathOut)/TransLossTS">
+      <textvar name="TransLossTS" value="$(PathOut)/TransLossTS.tss">
       <comment>
       transmission loss in mm, for direct comparison with gwloss.tss
       </comment>        
@@ -4782,6 +4775,7 @@ Multiplier []  applied to ChanSdXdY
       BASE INPUT MAPS AND TABLES
       **************************************************************
       </comment>
+      </group>
 
       <group>
       <comment>
@@ -5348,7 +5342,9 @@ Multiplier []  applied to ChanSdXdY
         </textvar>
 
         <comment>
+        **************************************************************
           Input tables
+        **************************************************************
         </comment>
 
         <textvar name="ReservoirTotalStorage" value="$(PathTables)/res_storage.txt">
@@ -5382,7 +5378,9 @@ Multiplier []  applied to ChanSdXdY
         </textvar>
 
         <comment>
+        **************************************************************
           Output time series
+        **************************************************************
         </comment>
 
         <textvar name="ReservoirInflowTS" value="$(PathOut)/res_inflow.tss">
@@ -5409,7 +5407,7 @@ Multiplier []  applied to ChanSdXdY
             </comment>
         </textvar>
 
-        <textvar name="ReservoirFillState" value="$(PathOut)/res_fill">
+        <textvar name="ReservoirFillState" value="$(PathOut)/rsfil">
             <comment>
                 Output map(s) (NetCDF format) with reservoir filling (fraction of total storage) [-]
             </comment>
@@ -5475,7 +5473,9 @@ Multiplier []  applied to ChanSdXdY
         </textvar>
 
         <comment>
+        **************************************************************
           Input tables
+        **************************************************************
         </comment>
 
         <textvar name="TabLakeArea" value="$(PathTables)/lakearea.txt">
@@ -5497,7 +5497,9 @@ Multiplier []  applied to ChanSdXdY
         </textvar>
 
         <comment>
+        **************************************************************
           Output time series
+        **************************************************************
         </comment>
 
         <textvar name="LakeInflowTS" value="$(PathOut)/qLakeIn.tss">
@@ -5618,6 +5620,7 @@ Multiplier []  applied to ChanSdXdY
           name of output map(s) with polder level
           </comment>
         </textvar>
+
       </group>
 
       <group>
@@ -5724,7 +5727,9 @@ Multiplier []  applied to ChanSdXdY
       </comment>
 
       <comment>
+      **************************************************************
       PF PARAMETERS
+      **************************************************************
       </comment>
 
       <textvar name="HeadMax" value="$(HeadMax)">
@@ -5736,7 +5741,9 @@ Multiplier []  applied to ChanSdXdY
       </textvar>
 
       <comment>
+      **************************************************************
       PF MAPS
+      **************************************************************
       </comment>
 
       <textvar name="PF1Maps" value="$(PathOut)/pftop">
@@ -5770,7 +5777,9 @@ Multiplier []  applied to ChanSdXdY
       </textvar>
 
       <comment>
+      **************************************************************
       PF TIMESERIES, VALUES AT SITES
+      **************************************************************
       </comment>
 
       <textvar name="PF1TS" value="$(PathOut)/pFTop.tss">
@@ -5799,7 +5808,9 @@ Multiplier []  applied to ChanSdXdY
       </textvar>
 
       <comment>
+      **************************************************************
       PF TIMESERIES, AVERAGE VALUES UPSTREAM OF GAUGES
+      **************************************************************
       </comment>
 
       <textvar name="PF1AvUpsTS" value="$(PathOut)/pFTopUps.tss">
@@ -6130,7 +6141,6 @@ Multiplier []  applied to ChanSdXdY
       </group>
 
 
-
       <group>
       <comment>
       **************************************************************
@@ -6156,13 +6166,7 @@ Multiplier []  applied to ChanSdXdY
       [mm]
       </comment>
       </textvar>
-
-
-
       </group>
-
-      </group>
-
     </lfbinding>
 
   <prolog>
