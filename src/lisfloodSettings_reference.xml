@@ -3269,6 +3269,7 @@ You can use builtin path variables in this template and reference to other paths
       </comment>
       </textvar>
 
+      </group>
       <group>
       <comment>
       **************************************************************
