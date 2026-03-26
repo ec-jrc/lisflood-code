@@ -1,7 +1,7 @@
 import pytest
 from lxml import etree
 
-from lisflood.settings_tool import main
+from lisflood.settings_tool import main, SettingsToolError
 
 
 SAMPLE_XML = """\
@@ -19,6 +19,65 @@ SAMPLE_XML = """\
         <comment>Keep me</comment>
       </textvar>
       <textvar name="SomeUserVar" value="abc"/>
+    </group>
+  </lfuser>
+  <lfbinding>
+    <group>
+      <textvar name="SharedVar" value="$(PathRoot)/shared"/>
+      <textvar name="MaskMap" value="$(PathRoot)/mask.nc"/>
+    </group>
+  </lfbinding>
+</lfsettings>
+"""
+
+SAMPLE_BAD_REF_XML = """\
+<lfsettings>
+  <lfoptions>
+    <setoption choice="0" name="wateruse"/>
+  </lfoptions>
+  <lfuser>
+    <group>
+      <textvar name="PathRoot" value="/data"/>
+      <textvar name="MaskMap" value="$(UndefinedVar)/mask.nc"/>
+    </group>
+  </lfuser>
+  <lfbinding>
+    <group>
+      <textvar name="MaskMap" value="$(MaskMap)"/>
+    </group>
+  </lfbinding>
+</lfsettings>
+"""
+
+SAMPLE_BAD_BINDING_REF_XML = """\
+<lfsettings>
+  <lfoptions>
+    <setoption choice="0" name="wateruse"/>
+  </lfoptions>
+  <lfuser>
+    <group>
+      <textvar name="PathRoot" value="/data"/>
+    </group>
+  </lfuser>
+  <lfbinding>
+    <group>
+      <textvar name="MaskMap" value="$(NoSuchVar)/mask.nc"/>
+    </group>
+  </lfbinding>
+</lfsettings>
+"""
+
+SAMPLE_XML_B = """\
+<lfsettings>
+  <lfoptions>
+    <setoption choice="1" name="TemperatureInKelvin"/>
+    <setoption choice="0" name="wateruse"/>
+  </lfoptions>
+  <lfuser>
+    <group>
+      <textvar name="PathRoot" value="/data/root"/>
+      <textvar name="SharedVar" value="/tmp/project/shared"/>
+      <textvar name="SomeUserVar" value="xyz"/>
     </group>
   </lfuser>
   <lfbinding>
@@ -164,3 +223,75 @@ class TestSettingsTool:
 
         with pytest.raises(SystemExit):
             main(["set", "-i", str(src), "-o", str(dst), "--lfoptions", "wateruse=1", "not-a-pair"])
+
+    def test_check_validates_refs_ok(self, tmp_path):
+        src = tmp_path / "settings.xml"
+        _write(src, SAMPLE_XML)
+
+        rc = main(["check", "-i", str(src)])
+        assert rc == 0
+
+    def test_check_catches_undefined_lfuser_ref(self, tmp_path):
+        src = tmp_path / "bad.xml"
+        _write(src, SAMPLE_BAD_REF_XML)
+
+        rc = main(["check", "-i", str(src)])
+        assert rc == 1
+
+    def test_check_catches_undefined_lfbinding_ref(self, tmp_path):
+        src = tmp_path / "bad.xml"
+        _write(src, SAMPLE_BAD_BINDING_REF_XML)
+
+        rc = main(["check", "-i", str(src)])
+        assert rc == 1
+
+    def test_check_allows_builtin_vars(self, tmp_path):
+        xml = """\
+<lfsettings>
+  <lfoptions/>
+  <lfuser>
+    <group>
+      <textvar name="PathRoot" value="$(SettingsPath)/../../root"/>
+    </group>
+  </lfuser>
+  <lfbinding>
+    <group>
+      <textvar name="MaskMap" value="$(PathRoot)/mask.nc"/>
+    </group>
+  </lfbinding>
+</lfsettings>
+"""
+        src = tmp_path / "builtin.xml"
+        _write(src, xml)
+
+        rc = main(["check", "-i", str(src)])
+        assert rc == 0
+
+    def test_diff_identical_files(self, tmp_path, capsys):
+        src = tmp_path / "a.xml"
+        _write(src, SAMPLE_XML)
+
+        rc = main(["diff", "-i", str(src), "-o", str(src)])
+        assert rc == 0
+        assert "No differences" in capsys.readouterr().out
+
+    def test_diff_shows_changes(self, tmp_path, capsys):
+        a = tmp_path / "a.xml"
+        b = tmp_path / "b.xml"
+        _write(a, SAMPLE_XML)
+        _write(b, SAMPLE_XML_B)
+
+        rc = main(["diff", "-i", str(a), "-o", str(b)])
+        assert rc == 0
+
+        out = capsys.readouterr().out
+        assert "TemperatureInKelvin" in out
+        assert "wateruse" in out
+        assert "PathRoot" in out
+        assert "SomeUserVar" in out
+        assert "Equivalent command" in out
+        # Generated command uses real paths with _copy suffix
+        assert str(a) in out
+        assert "b_copy.xml" in out
+        # Values are single-quoted for shell safety
+        assert "'PathRoot=/data/root'" in out
