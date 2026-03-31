@@ -85,7 +85,7 @@ You can use builtin path variables in this template and reference to other paths
       <setoption choice="1" name="repStateUpsGauges"/>
       <setoption choice="1" name="repRateUpsGauges"/>
       <setoption choice="1" name="repMeteoUpsGauges"/>
-
+      <setoption choice="0" name="repBal1"/>
       # report reservoirs and lakes
       <setoption choice="1" name="repsimulateLakes"/>
       <setoption choice="1" name="repsimulateReservoirs"/>
@@ -125,7 +125,7 @@ You can use builtin path variables in this template and reference to other paths
       <setoption choice="0" name="repTaMaps"/>
       <setoption choice="0" name="repETActMaps"/>
       <setoption choice="0" name="repESActMaps"/>
-
+      
       <setoption choice="0" name="repDSLRMaps"/>
       <setoption choice="0" name="repCumInterCeptionMaps"/>
       <setoption choice="0" name="repInterceptionMaps"/>
@@ -2161,7 +2161,7 @@ You can use builtin path variables in this template and reference to other paths
       </comment>
       </textvar>
 
-      <textvar name="EvaOpenTS" value="$(PathOut)/evaopenUps.tss">
+      <textvar name="EvaOpenTS" value="$(PathOut)/">
       <comment>
       Time series of upstream water evaporation from open water at gauging stations
       </comment>
@@ -3257,7 +3257,7 @@ You can use builtin path variables in this template and reference to other paths
       </comment>
       </textvar>
 
-      <textvar name="TaForestMapa" value="$(PathOut)/Ta_forest">
+      <textvar name="TaForestMaps" value="$(PathOut)/Ta_forest">
       <comment>
       Reported transpiration maps, forest fraction [mm]
       </comment>
