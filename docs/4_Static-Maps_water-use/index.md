@@ -66,6 +66,7 @@ fracnonconventionalwateruse =  \frac{water withdrawal from non conventional sour
 $$
 
 Finally, the proportion of water demand to be satisfied by surface water resources is computed internally by OS LISFLOOD as:
+
 $$
 fracsurfacewateruse = 1 - (fracgroundwateruse + fracnonconventionalwateruse)
 $$
