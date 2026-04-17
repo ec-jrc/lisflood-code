@@ -1,4 +1,4 @@
-# Water demand maps and related information
+# Water use maps and water use related information
 
 This chapter describes the main features of time variant (transient) sectoral water demand maps for domestic, livestock, industrial, energy (cooling) sectors. 
 This chapter then focuses on the description of the ancillary maps required by OS LISFLOOD for the modelling of water abstraction from groundwater, surface water (channels, lakes, reservoirs), and non-conventional sources (e.g. desalination plants). 
