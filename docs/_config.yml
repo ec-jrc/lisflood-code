@@ -241,6 +241,8 @@ defaults:
           url: 4_Static-Maps_reservoirs-lakes   
         - title: "Rice calendar maps"
           url: 4_Static-Maps_rice-calendar  
+        - title: "Water use and water use related maps"
+          url: 4_Static-Maps_water-use            
         - title: "Static maps: appendix"
           url: 4_Static-Maps_appendix   
                                                                        
