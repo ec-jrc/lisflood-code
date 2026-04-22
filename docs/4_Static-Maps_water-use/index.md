@@ -104,6 +104,12 @@ Conversely, domestic water saving fraction reduces water demand, and, consequent
 For both inputs, OS LISFLOOD accepts a constant value or a map. The reports [Bisselink et al, 2018](https://publications.jrc.ec.europa.eu/repository/handle/JRC110927) and [De Roo et al, 2020](https://publications.jrc.ec.europa.eu/repository/handle/JRC120388) provide information on domestic leakage and water saving fraction, respectively.
 In the current European 1arcmin and global 3arcmin set-ups,domestic leakage fraction is set to 0: water demnad maps are computed leveraging on water withdrawal values reported by FAO AQUASTAT[https://www.fao.org/aquastat/en/], which should, by definition, already account for leakages.
 
+### Environmental flow
+Environmental flow is defined as the amount of water which should be always present in a river to ensure the survival (or well-being) of the aquatic ecosystem. In OS LISFLOOD, Environmental Flow is a lower threshold: water abstraction for the channel stops when discharge is lower than such a threshold.
+OS LISFLOOD accepts either a constant value or a map as input. These values could be defined by water management plans of by statistical analysis (e.g. 10th percentile of a naturalized simulation, i.e. a simulation without water use, lakes, reservoirs).
+It is here noted that OS LISFLOOD equally ensures a minimum water volume in lakes and reservoirs: these minimum values are set internally by the code, as explained in the Water Use chapter.
+
+
 ### Water regions map
 As the spatial resolution of the model increases, the assumption of coincidence between demand and abstraction locations within the same model grid cell becomes increasingly invalid. To address this limitation, the concept of water regions is introduced. A water region is defined as a subcatchment where demand and abstraction activities occur, allowing for a more accurate representation of the spatial relationships between these processes. 
 *Water regions* are generally defined by sub-river-basins within a Country. In order to mimick reality, it is advisable to avoid cross-Country-border abstractions. Whenever information is available, it is strongly recommended to align the *water regions* with the actual areas managed by water management authorities, such as regional water boards. In Europe, the River Basin Districts, as defined in the Water Framework Directive and subdivided by country, can be used.
