@@ -16,7 +16,7 @@ See the Licence for the specific language governing permissions and limitations 
 """
 from __future__ import print_function, absolute_import
 
-from pcraster import lddmask, accuflux, boolean, downstream, pit, path, lddrepair, ifthenelse, cover, nominal, uniqueid, \
+from pcraster import lddmask, accuflux, boolean, scalar, downstream, pit, path, lddrepair, ifthenelse, cover, nominal, uniqueid, \
     catchment, upstream, pcr2numpy
 
 import warnings
@@ -30,6 +30,7 @@ from .inflow import inflow
 from .transmission import transmission
 from .kinematic_wave_parallel import kinematicWave, kwpt
 from .mct import MCTWave
+from .mctheadwater import mctheadwater
 
 from ..global_modules.settings import LisSettings, MaskInfo
 from ..global_modules.errors import LisfloodWarning
@@ -61,6 +62,7 @@ class routing(HydroModule):
         self.polder_module = polder(self.var)
         self.inflow_module = inflow(self.var)
         self.transmission_module = transmission(self.var)
+        self.mctheadwater_module = mctheadwater(self.var)
 
 # --------------------------------------------------------------------------
 # --------------------------------------------------------------------------
@@ -602,6 +604,7 @@ class routing(HydroModule):
             PrevDmMCT = loadmap('PrevDmMCTInitValue')
             self.var.PrevDm0 = np.where(PrevDmMCT == -9999, maskinfo.in_zero(), PrevDmMCT) #np
             # Reynolds number (Dm) for MCT at previous time step t0
+
 
             # ************************************************************
             # ***** INITIALISE MUSKINGUM-CUNGE-TODINI WAVE ROUTER ********

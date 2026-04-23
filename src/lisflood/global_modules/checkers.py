@@ -26,7 +26,7 @@ from ..hydrological_modules import HydroModule
 from ..hydrological_modules import (surface_routing, evapowater, snow, routing, leafarea, inflow, waterlevel,
                                     waterbalance, wateruse, waterabstraction, lakes, riceirrigation, indicatorcalc,
                                     landusechange, frost, groundwater, miscInitial, soilloop, soil,
-                                    reservoir, transmission)
+                                    reservoir, transmission, mctheadwater)
 
 
 class ModulesInputs:

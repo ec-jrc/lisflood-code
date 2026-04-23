@@ -49,6 +49,7 @@ from .hydrological_modules.groundwater import groundwater
 from .hydrological_modules.surface_routing import surface_routing
 from .hydrological_modules.reservoir import Reservoir
 from .hydrological_modules.lakes import lakes
+from .hydrological_modules.mctheadwater import mctheadwater
 from .hydrological_modules.polder import polder
 from .hydrological_modules.waterabstraction import waterabstraction
 from .hydrological_modules.indicatorcalc import indicatorcalc
@@ -138,6 +139,7 @@ class LisfloodModel_ini(DynamicModel):
         self.surface_routing_module = surface_routing(self)
         self.reservoir_module = Reservoir(self) # get_reservoir(option['reservoirHanazaki'])
         self.lakes_module = lakes(self)
+        self.mctheadwater_module = mctheadwater(self)
         self.polder_module = polder(self)
         self.waterabstraction_module = waterabstraction(self)
         self.indicatorcalc_module = indicatorcalc(self)
@@ -220,6 +222,19 @@ class LisfloodModel_ini(DynamicModel):
         if option.get('MCTRouting'):
             self.routing_module.initialMCT()
             # initialising Muskingum-Cunge-Todini routing for channel
+            self.mctheadwater_module.initial()
+            # adding MCT checkpoints to structures
+
+        # #### inflowbug
+        # self.structures_module.initial()
+        # # Structures such as reservoirs and lakes are modelled by interrupting the channel flow paths
+
+        # ####
+        # self.routing_module.initialSecond()
+        # # CHANNEL INITIAL SPLIT UP IN SECOND CHANNEL
+        # self.surface_routing_module.initialSecond()
+        # # #### inflowbug
+
 
         self.evapowater_module.initial()
         self.riceirrigation_module.initial()

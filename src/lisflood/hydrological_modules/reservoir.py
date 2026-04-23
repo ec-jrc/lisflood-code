@@ -52,7 +52,7 @@ class Reservoir(HydroModule):
         dynamic_inloop(NoRoutingExecuted: int): Performs dynamic calculations within the routing
                    loop to simulate inflow, storage, and controlled outflow from the reservoirs.
 
-    Referenecs:
+    References:
     -----------
     Hanazaki, R., Yamazaki, D., Yoshimura, K.: Development of a Reservoir Flood Control Scheme for
     Global Flood Models, Journal of Advances in Modeling Earth Systems, 14,
