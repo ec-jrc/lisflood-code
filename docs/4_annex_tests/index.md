@@ -809,7 +809,7 @@ These tests perform short and long (max 1 year) execution of OSlisflood on the P
 ## Release test for EFAS and GloFAS
 
 At each release, in addition to pass all tests described above, OSLisflood is tested also with full domains of EFAS and GLOFAS.
-These tests are executed by internal OSLisflood developers when hydrological model is not changed.
+These tests are executed by internal OSLisflood developers.
 
 
 [🔝](#top)
