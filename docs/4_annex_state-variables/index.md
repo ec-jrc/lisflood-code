@@ -42,6 +42,11 @@
 | PrevDmMCTState *MCT            | prevdm             | PrevDmMCT             | -    | Reynolds number at previous step for MCT routing                                                  |
 
 *L = this state variable is required when lakes are included in the modelling domain
+
 *R = this state variable is required when reservoirs are included in the modelling domain
+
 *SR = this state variable is required when using the split routing module
+
 *MCT = this state variable is required when using diffusive routing (MCT)
+
+A detailed description of OS LISFLOOD standard and optional modules is available from the [Model Documentation](https://ec-jrc.github.io/lisflood-model/)
