@@ -65,28 +65,28 @@ The channel length map (in meters) can be created by using the 'rivlen' layers f
 ### Channel gradient (changrad)
 To compute the channel gradient map, the absolute difference (in meters) of the elevation between two grid-cells is first calculated by using i) the local drain direction (ldd) map to extract the connectivity between grid-cells, and ii) the channel length of the upstream grid-cell:<br/>
 
-$ \small elevationDifference = elevationUpstreamCell-elevationDownstreamCell $
+$\small elevationDifference = elevationUpstreamCell-elevationDownstreamCell$
 
 Then, the channel gradient is computed and assigned to the upstream grid-cell:
 
-$ changrad=\frac{elevationDifference}{chanlength} $
+$changrad=\frac{elevationDifference}{chanlength}$
 
 $changrad$ is set equal 0 where $ldd$ is 5.
 
 ### Manning's roughness coefficient (chanman)
 The Manning's roughness coefficient for channels can be derived by an empirical relationship between the elevation (in $m$) of the grid-cell and its upstream area (in $km^2$) following [Burek et al. (2014)](https://ec-jrc.github.io/lisflood/pdfs/Dataset_hydro.pdf):
 
-$ chanman =$ <br>
-$ 0.025 + 0.015 \cdot \min(\frac{50}{upstreamArea} , 1) + 0.030 \cdot \min(\frac{elevation}{2000} , 1) $
+$chanman =$ <br>
+$0.025 + 0.015 \cdot \min(\frac{50}{upstreamArea} , 1) + 0.030 \cdot \min(\frac{elevation}{2000} , 1)$
 
 ### Bottom width (chanbw)
 The channel bottom width map can be computed using empirical relationship that relate channel width of the grid-cell with its upstream area (in $km^2$); for example, following [Burek et al. (2014)](https://ec-jrc.github.io/lisflood/pdfs/Dataset_hydro.pdf):<br/>
 
-$ chanbw = 0.0032 \cdot upstreamArea $
+$chanbw = 0.0032 \cdot upstreamArea$
 
 It is here noted that the study mentioned above ([Burek et al. (2014)](https://ec-jrc.github.io/lisflood/pdfs/Dataset_hydro.pdf)), also suggests a second step. The LISFLOOD model first needs to be run for the entire simulation period length with the initial channel bottom width to get a long-term average discharge ($avgdis$) which is then used in the following *empirical* equation:<br/>
 
-$ chanbw_step2 = avgdis^0.539 $
+$chanbw_step2 = avgdis^0.539$
  
 The latter empirical equation stems from a study on the European domain ([Burek et al. (2014)](https://ec-jrc.github.io/lisflood/pdfs/Dataset_hydro.pdf)).
 It is not possible to identify an optimal solution for all the catchments, and all the applications. Users are advised to test the one or two-steps protocol for their specific scenario and identify the best solution according to their expert judgement.
@@ -96,17 +96,17 @@ For example, chanbw used for the Copernicus Emergency Management Service Europea
 ### Floodplain width (Wfp)
 The floodplain width (in $m$) can be computed using the following equation from [Burek et al. (2014)](https://ec-jrc.github.io/lisflood/pdfs/Dataset_hydro.pdf):<br/>
 
-$ floodplainWidth = 3 \cdot chanbw $
+$floodplainWidth = 3 \cdot chanbw$
 
 ### Bankfull channel depth (chanbnkf)
 Channel bankfull depth can be computed in two steps. The first step uses the empirical relationship relating the channel bankfull depth of the grid-cell with its upstream area (in $km^2$) following [Burek et al. (2014)](https://ec-jrc.github.io/lisflood/pdfs/Dataset_hydro.pdf):<br/>
 
-$ chanbnkf_{step1} = 0.27 \cdot upstreamArea^{0.33} $
+$chanbnkf_{step1} = 0.27 \cdot upstreamArea^{0.33}$
 
 The second (optional) step uses the Manning's equation following [Burek et al. (2014)](https://ec-jrc.github.io/lisflood/pdfs/Dataset_hydro.pdf). The LISFLOOD model first needs to be run for the entire simulation period length with the initial channel bottom width and bankfull depth parameters to get a long-term average discharge ($avgdis$) which is then used in the Manning's equation:<br/>
 
-$ chanbnkf_{step2} =$<br>
-$ 1.004 \cdot chanman^{0.6} \cdot (2 \cdot avgdis)^{0.6} \cdot chanbw^{-0.6} \cdot changrad^{-0.3} $
+$chanbnkf_{step2} =$<br>
+$1.004 \cdot chanman^{0.6} \cdot (2 \cdot avgdis)^{0.6} \cdot chanbw^{-0.6} \cdot changrad^{-0.3}$
 
 It is not possible to identify an optimal solution for all the catchments, and all the applications. Users are advised to test the one or two-steps protocol for their specific scenario and identify the best solution according to their expert judgement.
 For example, chanbnkf used for the Copernicus Emergency Management Service European and Global Flood Awareness System ([CEMS EFAS](https://european-flood.emergency.copernicus.eu/react) and [CEMS GloFAS](https://global-flood.emergency.copernicus.eu/react)) operational set-ups were computed based on the first step only.
