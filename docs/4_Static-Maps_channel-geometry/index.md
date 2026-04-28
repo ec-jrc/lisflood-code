@@ -48,7 +48,7 @@ Channel characteristics, explained above, are shown in the Figure 41 below.  <br
 The channel mask map is used to identify the cells that have channels. The grid-cells that have a channel length (see chanlength map creation below) above zero are assigned to the Boolean field '1', the grid-cells that have a channel length below or equal to zero are assigned with NoData.
 
 ### MCT Channel mask (chanmct)
-The  MCT channel mask map is used to identify the cells using the Muskingum-Cunge-Todini diffusive wave routing. The grid-cells that have a riverbed slope < *ChanGradMaxMCT* (default value 0.001) and a set number of upstream grid cells also meeting the same condition are assigned to the mask. All downstream channel pixels of any of the pixels using MCT wave routing are also added to the mask.
+The  MCT channel mask map is used to identify the cells using the Muskingum-Cunge-Todini diffusive wave routing (details on the routing methodology are available in the [OS LISFLOOD Model Documentation](https://ec-jrc.github.io/lisflood-model/)). The grid-cells that have a riverbed slope < *ChanGradMaxMCT* (default value 0.001) and a set number of upstream grid cells also meeting the same condition are assigned to the mask. All downstream channel pixels of any of the pixels using MCT wave routing are also added to the mask. The OS LISFLOOD utility [mctrivers](https://github.com/ec-jrc/lisflood-utilities#mctrivers) can be used to generate the MCT channel mask. 
 
 ### Side slope (chans)
 The channel side slope map is calculated by dividing the horizontal distance (referred as 'dx' in Figure 42) by vertical distance (referred as 'dy' in Figure 42); here ‘1’ was assigned to all the grid cells, which correspond to a 45° angle of the side slope.
@@ -82,11 +82,11 @@ $0.025 + 0.015 \cdot \min(\frac{50}{upstreamArea} , 1) + 0.030 \cdot \min(\frac{
 ### Bottom width (chanbw)
 The channel bottom width map can be computed using empirical relationship that relate channel width of the grid-cell with its upstream area (in $km^2$); for example, following [Burek et al. (2014)](https://ec-jrc.github.io/lisflood/pdfs/Dataset_hydro.pdf):<br/>
 
-$chanbw = 0.0032 \cdot upstreamArea$
+$chanbw_{step1} = 0.0032 \cdot upstreamArea$
 
 It is here noted that the study mentioned above ([Burek et al. (2014)](https://ec-jrc.github.io/lisflood/pdfs/Dataset_hydro.pdf)), also suggests a second step. The LISFLOOD model first needs to be run for the entire simulation period length with the initial channel bottom width to get a long-term average discharge ($avgdis$) which is then used in the following *empirical* equation:<br/>
 
-$chanbw_step2 = avgdis^0.539$
+$chanbw_{step2} = avgdis^{0.539}$
  
 The latter empirical equation stems from a study on the European domain ([Burek et al. (2014)](https://ec-jrc.github.io/lisflood/pdfs/Dataset_hydro.pdf)).
 It is not possible to identify an optimal solution for all the catchments, and all the applications. Users are advised to test the one or two-steps protocol for their specific scenario and identify the best solution according to their expert judgement.
