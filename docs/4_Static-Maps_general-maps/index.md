@@ -1,7 +1,7 @@
 # General maps
 
-+ **Domain mask & land use mask maps.** <br>
-The mask maps in the hydrological model are used to detect where model should perform computations and where it shouldn't (skip the grid-cell). Area and land use masks are both Boolean maps which define model boundaries and land use calculation domain respectively.<br>
++ **Domain (or area) mask & land use mask maps.** <br>
+The mask maps in the hydrological model are used to detect where model should perform computations and where it shouldn't (skip the grid-cell). Domain (or area) and land use masks are both Boolean maps which define model boundaries and land use calculation domain respectively.<br>
 
 + **Grid-cell length & grid-cell area maps.** <br>
 The grid-cell length and grid-cell area maps are used in LISFLOOD model to accurately compute the areal sums over grid-cells (e.g. the upstream area of the river when areas of all connected grid-cells are summed together or the rainfall amount over a certain grid-cell). If projection properties are in meters these maps become optional.<br>
@@ -35,7 +35,7 @@ To reiterate, the domain map must have 1 value were LISFLOOD computations are ex
   <img src="../media/Static-Maps/area_Global_03min.png" width="513" /> 
 </p>
 
-*Figure 1: Mask map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right) with coloured areas showing land pixel.*
+*Figure 1: Domain (or area) mask map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right) with coloured areas showing land pixel.*
 
 
 
