@@ -84,9 +84,9 @@ class mctheadwater(HydroModule):
         maskinfo = MaskInfo.instance()
         if option['MCTRouting']:
 
-            mctsource = loadmap('InflowPoints')     ### temporary da cambiare addiungendo una chiave in settings
-            mctsource[(mctsource < 1) | (self.var.IsChannel == 0)] = 0
-            # load MCT source locations and keep only those on the channel network
+            # mctsource = loadmap('InflowPoints')     ### temporary da cambiare addiungendo una chiave in settings
+            # mctsource[(mctsource < 1) | (self.var.IsChannel == 0)] = 0
+            # # load MCT source locations and keep only those on the channel network
 
 
             UpStreamPcr = upstream(self.var.LddChan, scalar(self.var.IsChannelPcr))
@@ -104,12 +104,21 @@ class mctheadwater(HydroModule):
             mctheadwater[np.isnan(mctheadwater)] = 0.0
             # flatten and add mask
 
-            self.var.CheckpointSitesC = ((mctsource == 1) | (mctheadwater == 1)).astype(int)  #np
-            # merge source points and headwater points to create the full list of checkpoints
+            # self.var.CheckpointSitesC = ((mctsource == 1) | (mctheadwater == 1)).astype(int)  #np
+            # # merge source points and headwater points to create the full list of checkpoints
 
-            self.var.CheckpointSitesC = mctsource
-            self.var.CheckpointSitesCC = np.compress(mctsource > 0, mctsource)
-            self.var.CheckpointIndex = np.nonzero(mctsource)[0]
+            self.var.MCTHeadwaterSitesC = mctheadwater
+            self.var.MCTHeadwaterSitesCC = np.compress(mctheadwater > 0, mctheadwater)
+            self.var.MCTHeadwaterIndex = np.nonzero(mctheadwater)[0]
+
+            # Add MCT headwater locations to structures map
+            # (used to modify LddKinematic and to calculate LddStructuresKinematic)
+            self.var.IsStructureKinematic = np.where(self.var.MCTHeadwaterSitesC > 0, np.bool8(1), self.var.IsStructureKinematic)
+            # Add reservoir locations to structures map (used to modify LddKinematic
+            # and to calculate LddStructuresKinematic)
+            self.var.IsStructureChan = np.where(self.var.MCTHeadwaterSitesC > 0, np.bool8(1), self.var.IsStructureChan)
+            # Add reservoir locations to structures map (used to modify LddChan
+            # and to calculate LddStructuresChan)
 
 
     def dynamic_inloop(self, NoRoutingExecuted: int):
@@ -136,21 +145,17 @@ class mctheadwater(HydroModule):
             # reservoir inflow in [m3/s]
             # (LddStructuresKinematic equals LddKinematic, but without the pits/sinks upstream of the structure
             # locations; note that using Ldd here instead would introduce MV!)
-            inflow = np.bincount(self.var.downstruct, weights=self.var.ChanQAvgDt)[self.var.ReservoirIndex]
+            inflow = np.bincount(self.var.downstruct, weights=self.var.ChanQAvgDt)[self.var.MCTHeadwaterIndex]
 
             # reservoir outflow in [m3] per sub step
             outflow_m3 = inflow * self.var.DtRouting
 
+            ######
+            # outflow_m3 = outflow_m3 / outflow_m3 * 999999
+            #####
+
             # expanding the size as input for routing routine
             # this is released to the channel again at each sub timestep
-            self.var.QResOutM3Dt = maskinfo.in_zero()
-            np.put(self.var.QResOutM3Dt, self.var.ReservoirIndex, outflow_m3)
+            self.var.QHeadOutM3Dt = maskinfo.in_zero()
+            np.put(self.var.QHeadOutM3Dt, self.var.MCTHeadwaterIndex, outflow_m3)
 
-
-            if NoRoutingExecuted == (self.var.NoRoutSteps - 1):
-
-                # expanding the size after last sub timestep
-                self.var.ReservoirStorageM3 = maskinfo.in_zero()
-                self.var.ReservoirFill = maskinfo.in_zero()
-                np.put(self.var.ReservoirStorageM3, self.var.ReservoirIndex, self.var.ReservoirStorageM3CC)
-                np.put(self.var.ReservoirFill, self.var.ReservoirIndex, self.var.ReservoirFillCC)

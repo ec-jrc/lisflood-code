@@ -209,8 +209,8 @@ class LisfloodModel_ini(DynamicModel):
 
         self.transmission_module.initial()
 
-        self.structures_module.initial()
-        # Structures such as reservoirs and lakes are modelled by interrupting the channel flow paths
+        # self.structures_module.initial()
+        # # Structures such as reservoirs and lakes are modelled by interrupting the channel flow paths
 
         # ----------------------------------------------------------------------
         # ----------------------------------------------------------------------
@@ -223,11 +223,11 @@ class LisfloodModel_ini(DynamicModel):
             self.routing_module.initialMCT()
             # initialising Muskingum-Cunge-Todini routing for channel
             self.mctheadwater_module.initial()
-            # adding MCT checkpoints to structures
+            # adding MCT headwater to structures
 
         # #### inflowbug
-        # self.structures_module.initial()
-        # # Structures such as reservoirs and lakes are modelled by interrupting the channel flow paths
+        self.structures_module.initial()
+        # Structures such as reservoirs and lakes and MCT headwater are modelled by interrupting the channel flow paths
 
         # ####
         # self.routing_module.initialSecond()
