@@ -4,7 +4,7 @@ In this document we report details about all kind of tests we execute during dev
 
 ## Introduction
 
-In [tests/](https://github.com/ec-jrc/lisflood-code/tree/master/tests){:target="_blank"} folder of lisflood-code repository there are several unit 
+In [tests/](https://github.com/ec-jrc/lisflood-code/tree/master/tests) folder of lisflood-code repository there are several unit 
 tests ensuring that all *helper components* of Lisflood work as expected. 
 These components are not strictly related to the hydrological model but are essential for the execution.
 
@@ -21,13 +21,13 @@ See the dedicated paragraph on this page for more details.
 Static data and fixtures (i.e. static maps and meteo forcings) comes from two catchments. 
 They are netCDF files reduced in space (Po catchment area) and time (6 hourly data from 2015-12-10 12:00 to 2017-12-29 12:00) from original EFAS dataset.
 
-In tests where values comparison are needed, we use [lisfloodutilities.compare](https://github.com/ec-jrc/lisflood-utilities/blob/master/src/lisfloodutilities/compare/__init__.py){:target="_blank"} 
+In tests where values comparison are needed, we use [lisfloodutilities.compare](https://github.com/ec-jrc/lisflood-utilities/blob/master/src/lisfloodutilities/compare/__init__.py)
 helper classes (NetCDFComparator, TSSComparator).
 
 These classes compare netCDF and TSSs values between two dataset of OSLisflood results, using `atol=0.0001` and `rtol=0.001` (defaults values in NetCDFComparator and TSSComparator). 
-See [`numpy.allclose`](https://numpy.org/doc/stable/reference/generated/numpy.allclose.html){:target="_blank"} for more details. 
+See [`numpy.allclose`](https://numpy.org/doc/stable/reference/generated/numpy.allclose.html) for more details. 
 
-Some tests use `array_equal` option in order to compare values using [`numpy.array_equal`](https://numpy.org/doc/stable/reference/generated/numpy.array_equal.html){:target="_blank"} function.
+Some tests use `array_equal` option in order to compare values using [`numpy.array_equal`](https://numpy.org/doc/stable/reference/generated/numpy.array_equal.html) function.
 
 Tests that are using Comparator classes are:
 
@@ -214,7 +214,7 @@ The following table summarize the matrix of combinations of options we test:
    
 #### Implementation
 
-[test_options.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_options.py){:target="_blank"}
+[test_options.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_options.py)
 
 We define a test for each combination from the table above then we check that a particular function inside the module is called with expected arguments. 
 We use a mocked `loadmap` function (the function that LF uses to load netCDF or PCRaster maps) and check that it's called/not called as expected by the module under test.
@@ -243,7 +243,7 @@ Make sure that OSLisflood prints state maps and end maps. Last step in state map
 
 #### Implementation
 
-[test_state_end_maps.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_state_end_maps.py){:target="_blank"}
+[test_state_end_maps.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_state_end_maps.py)
 
 
 |Test case                | Expected                                                                                                                                     |
@@ -273,7 +273,7 @@ In LF, you activate/deactivate report maps/tss options by setting 1/0 in *lfopti
 | repWIndex             |
 
 #### Implementation
-[test_reported_maps.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_reported_maps.py){:target="_blank"}
+[test_reported_maps.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_reported_maps.py)
 
 In order to test that a specific map is written when a report map option is activated, 
 we mock the ```lisflood.global_modules.output.writenet``` (the function LF uses to write netCDF maps) and assert that 
@@ -302,7 +302,7 @@ Make sure that OSLisflood prints TSS files when reporting options are active.
 | repMeteoUpsGauges |
 
 #### Implementation
-[test_reported_tss.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_reported_tss.py){:target="_blank"}
+[test_reported_tss.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_reported_tss.py)
 
 In order to test that a specific TSS is written when a report tss option is activated, 
 we mock the ```lisflood.global_modules.output.TimeoutputTimeseries``` (the PCRaster framework class that LF uses to write TSS files)
@@ -324,7 +324,7 @@ def test_rep_dischargetss(self):
 Make sure that OSLisflood prints state files following reporting steps formula in ReportSteps xml option.
 
 #### Implementation
-[test_reported_steps.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_reported_steps.py){:target="_blank"}
+[test_reported_steps.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_reported_steps.py)
 
 In order to test that specific files are written when a step matches the ReportSteps formula, we use a test formula 'starttime+10..endtime'.
 Then we geterate specific outputs for the desired steps and compare the two output using NetCDFComparator(array_equal=True)
@@ -370,7 +370,7 @@ Then we geterate specific outputs for the desired steps and compare the two outp
 Make sure OSLisflood can run an initial run to generate AVGDIS and LZAVIN maps with proper extension (.nc or .map)
 
 #### Implementation
-[test_reported_maps.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_reported_maps.py){:target="_blank"}
+[test_reported_maps.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_reported_maps.py)
 
 Test asserts that writenet was called with 'AvgDis' and 'LZAvInflowMap' arguments (LF variables for avgdis.nc and lzavin.nc files) and with the correct filename.
  
@@ -390,7 +390,7 @@ We need to ensure that either using dates or integers for StepStart and StepEnd 
 Tests are done with daily and 6-hourly timesteps (i.e. DtSec=86400 and DtSec=21600).
 
 #### Implementation
-[test_dates_steps.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_dates_steps.py){:target="_blank"}
+[test_dates_steps.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_dates_steps.py)
 
 Execute lisflood with report options activated, using dates formats for StepStart and StepEnd and a daily timestep. 
 Then execute lisflood with same setup, this time using integers for StepStart and StepEnd.
@@ -439,7 +439,7 @@ UseWaterDemandAveYear = this option allows to read water demand information from
 For more information please refer to [Water use - LISFLOOD (ec-jrc.github.io)](https://ec-jrc.github.io/lisflood-model/2_18_stdLISFLOOD_water-use/)
 
 #### Implementation
-[test_water_abstraction.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_water_abstraction.py){:target="_blank"}
+[test_water_abstraction.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_water_abstraction.py)
 The test uses two datasets: waterdemand19902019, that includes daily data from 1990 to 2019, and waterdemand, that includes only one year used as reference for any year.
 Test asserts that output generated using TransientWaterDemandChange with useWaterDemandAveYear flag active using the reference dataset included into the waterdemand folder is the same of the one generated disabling useWaterDemandAveYear flag and using the waterdemand19902019 folder.
  
@@ -472,13 +472,13 @@ Test asserts that output generated using TransientWaterDemandChange with useWate
 
 ## Other LF tests included in repository
 
-There are other tests included in [tests/](https://github.com/ec-jrc/lisflood-code/tree/master/tests){:target="_blank"}.
+There are other tests included in [tests/](https://github.com/ec-jrc/lisflood-code/tree/master/tests).
 folder of repository that can't be defined as unit tests. 
 
 These tests execute the development version of lisflood with some predefined XML settings, 
 and asserts that results are equal to a reference dataset (test oracle data in black-box terminology). 
 
-In order to reduce dataset size, we use a test catchment (same as [LF_ETRS89_UseCase](https://github.com/ec-jrc/lisflood-usecases/tree/master/LF_ETRS89_UseCase){:target="_blank"}) 
+In order to reduce dataset size, we use a test catchment (same as [LF_ETRS89_UseCase](https://github.com/ec-jrc/lisflood-usecases/tree/master/LF_ETRS89_UseCase)) 
 with static data clipped from EFAS domain. Meteo netCDF forcings are also cut from domain and contain 6 hourly data from 2015-12-10 12:00 to 2017-12-29 12:00. 
 
 **Note:** These tests fail when hydrological model is changed between reference version and current version under test.
@@ -502,7 +502,7 @@ All test cases are executed with following modules activated:
 
 #### Implementation
 
-[test_results.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_results.py){:target="_blank"}
+[test_results.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_results.py)
 
 
 |Test case            | DtSec | Simulation period                  | Expected                                                     |
@@ -546,7 +546,7 @@ All test cases are executed with following modules activated:
 **Note:** This test doesn't use a reference dataset so it's not a black-box test. It ensures that cold and warm runs are equivalent.
 
 #### Implementation
-[test_warmstart.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_warmstart.py){:target="_blank"}
+[test_warmstart.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_warmstart.py)
 
 To illustrate implementation of this test we take test_warmstart_daily as example. test_warmstart_6h is similar but with a shorter simulation period and DtSec=21600.
 1. Execute an initialization run for year 2000 and save avgdis.nc and lzavin.nc outputs in a folder.
@@ -656,7 +656,7 @@ This test demonstrates that wateruse module introduces incongruities between run
  
 
 #### Implementation
-[test_subcatchments.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_subcatchments.py){:target="_blank"}
+[test_subcatchments.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_subcatchments.py)
 
 ```python
 settings_files = {
@@ -734,7 +734,7 @@ This test verifies the correct functioning of the option inflow. Uses a catchmen
 
 #### Implementation
 
-[test_inflow.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_inflow.py){:target="_blank"}
+[test_inflow.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_inflow.py)
 
 
 |Test case            | DtSec | Simulation period                  | Expected                                                     |
@@ -748,7 +748,7 @@ Verifies the correct functioning of the code for projected and geographic coordi
 
 #### Implementation
 
-[test_latlon.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_latlon.py){:target="_blank"}
+[test_latlon.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_latlon.py)
 
 
 |Test case            | DtSec | Simulation period                  | Expected                                                     |
@@ -763,7 +763,7 @@ Verifies the use of cached files. It compares the output generated and the numbe
 
 #### Implementation
 
-[test_caching.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_caching.py){:target="_blank"}
+[test_caching.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_caching.py)
 
 
 |Test case            | DtSec | Simulation period                  | Expected                                                     |
@@ -777,7 +777,7 @@ Verifies chunking files using NetCDFTimeChunks with values `1`, `10`, `auto` and
 
 #### Implementation
 
-[test_chunking.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_chunking.py){:target="_blank"}
+[test_chunking.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_chunking.py)
 
 
 |Test case            | DtSec | Simulation period                  | Expected                                                     |

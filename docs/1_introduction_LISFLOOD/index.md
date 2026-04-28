@@ -15,6 +15,6 @@ OS LISFLOOD can be used to generate long-term water balance simulations (climato
 Although LISFLOOD's primary output product is channel discharge, all internal rate and state variables (soil moisture, for example) can be written as output as well.
 All output can be written as grids, or time series at user-defined points or areas. The user has complete control over how output is written, thus minimising any waste of disk space or CPU time.
 
-LISFLOOD is implemented in Python high level language: requirements and installation guidelines are described in [this page](https://github.com/ec-jrc/lisflood-code#lisflood-os). 
+LISFLOOD is implemented in Python high level language: the users are recommented to refer to the chapter [Installation of the LISFLOOD model](3_step2_installation/index.md) and to the readme of the [OS LISFLOOD GitHub repository](https://github.com/ec-jrc/lisflood-code#lisflood-os) to find detailed information on requirements and installation protocol.
 
 [🔝](#top)
