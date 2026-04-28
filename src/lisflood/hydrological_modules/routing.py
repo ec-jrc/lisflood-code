@@ -806,7 +806,7 @@ class routing(HydroModule):
                 self.mctheadwater_module.dynamic_inloop(NoRoutingExecuted)
                 # calculate sideflow from MCT headwater pixels
 
-                SideflowChanM3 += self.var.QHeadOutM3Dt
+                SideflowChanM3 += self.var.QHeadM3Dt
                 # MCT headwater pixles outflow volume per routing sub step [m3]
 
                 # Sideflow contribution to MCT grid cells expressed in [m3/s]

@@ -219,15 +219,18 @@ class LisfloodModel_ini(DynamicModel):
         # CHANNEL INITIAL SPLIT UP IN SECOND CHANNEL
         self.surface_routing_module.initialSecond()
 
+
         if option.get('MCTRouting'):
             self.routing_module.initialMCT()
             # initialising Muskingum-Cunge-Todini routing for channel
             self.mctheadwater_module.initial()
             # adding MCT headwater to structures
 
-        # #### inflowbug
         self.structures_module.initial()
         # Structures such as reservoirs and lakes and MCT headwater are modelled by interrupting the channel flow paths
+
+
+
 
         # ####
         # self.routing_module.initialSecond()

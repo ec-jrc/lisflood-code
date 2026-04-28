@@ -111,6 +111,8 @@ class mctheadwater(HydroModule):
             self.var.MCTHeadwaterSitesCC = np.compress(mctheadwater > 0, mctheadwater)
             self.var.MCTHeadwaterIndex = np.nonzero(mctheadwater)[0]
 
+            self.var.QInHeadM3Old = np.where(self.var.MCTHeadwaterSitesC > 0, self.var.ChanQAvgDt * self.var.DtSec, 0)  # self.var.QInM3Old
+
             # Add MCT headwater locations to structures map
             # (used to modify LddKinematic and to calculate LddStructuresKinematic)
             self.var.IsStructureKinematic = np.where(self.var.MCTHeadwaterSitesC > 0, np.bool8(1), self.var.IsStructureKinematic)
@@ -119,6 +121,10 @@ class mctheadwater(HydroModule):
             self.var.IsStructureChan = np.where(self.var.MCTHeadwaterSitesC > 0, np.bool8(1), self.var.IsStructureChan)
             # Add reservoir locations to structures map (used to modify LddChan
             # and to calculate LddStructuresChan)
+
+
+
+
 
 
     def dynamic_inloop(self, NoRoutingExecuted: int):
@@ -145,17 +151,14 @@ class mctheadwater(HydroModule):
             # reservoir inflow in [m3/s]
             # (LddStructuresKinematic equals LddKinematic, but without the pits/sinks upstream of the structure
             # locations; note that using Ldd here instead would introduce MV!)
-            inflow = np.bincount(self.var.downstruct, weights=self.var.ChanQAvgDt)[self.var.MCTHeadwaterIndex]
+            inflow = np.bincount(self.var.downstruct, weights=self.var.ChanQAvgDt)[self.var.MCTHeadwaterIndex]  #same as Qin
+            inflow = self.var.ChanQAvgDt[7] #this is just to make it the same as the inflow run  REMOVE
 
-            # reservoir outflow in [m3] per sub step
-            outflow_m3 = inflow * self.var.DtRouting
+            self.var.QInHeadM3 = maskinfo.in_zero()
+            np.put(self.var.QInHeadM3, self.var.MCTHeadwaterIndex, inflow * self.var.DtSec)
+            self.var.QDeltaM3 = (self.var.QInHeadM3 - self.var.QInHeadM3Old) * self.var.InvNoRoutSteps
 
-            ######
-            # outflow_m3 = outflow_m3 / outflow_m3 * 999999
-            #####
+            self.var.QHeadM3Dt = (self.var.QInHeadM3Old + (NoRoutingExecuted + 1) * self.var.QDeltaM3) * self.var.InvNoRoutSteps
+            pass
 
-            # expanding the size as input for routing routine
-            # this is released to the channel again at each sub timestep
-            self.var.QHeadOutM3Dt = maskinfo.in_zero()
-            np.put(self.var.QHeadOutM3Dt, self.var.MCTHeadwaterIndex, outflow_m3)
 
