@@ -37,7 +37,7 @@ A detailed description of OS LISFLOOD standard and optional modules is available
 
 
 *The reservoir modelling routine was updated with OS LISFLOOD v5: the updated methodology is described in [this page](https://ec-jrc.github.io/lisflood-model/3_03_optLISFLOOD_reservoirs/). Former versions of OS LISFLOOD code required the following parameters for reservoir modelling:*
-*| ParameterName                  | MinValue           | MaxValue           | DefaultValue       | 
+| ParameterName                  | MinValue           | MaxValue           | DefaultValue       | 
 | :----------------------------- | -----------------: | -----------------: | -----------------: | 
 | adjust_Normal_Flood | 0.01 | 0.99 | 0.8 | 
-| ReservoirRnormqMult | 0.25 | 2 | 1 |*
+| ReservoirRnormqMult | 0.25 | 2 | 1 |
