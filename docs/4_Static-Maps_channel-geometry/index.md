@@ -45,7 +45,7 @@ Channel characteristics, explained above, are shown in the Figure 41 below.  <br
 ## Methodology
 
 ### Channel mask (chan)
-The channel mask map is used to identify the cells that have channels. The grid-cells that have a channel length (see chanlength map creation below) above zero are assigned to the Boolean field '1', the grid-cells that have a channel length below or equal to zero are assigned with NoData.
+The channel mask map indicates with 1 the pixels (cells) that have channels. In the current OS LISFLOOD implementation, all pixels included in the mask map have value 1, meaning that all pixels are suitable to convey water and included in the routing computations. Water accumulates from smaller to larger streams according to the local drainage direction [ldd](/4_Static-Maps_topography/index.md) map.
 
 ### MCT Channel mask (chanmct)
 The  MCT channel mask map is used to identify the cells using the Muskingum-Cunge-Todini diffusive wave routing (details on the routing methodology are available in the [OS LISFLOOD Model Documentation](https://ec-jrc.github.io/lisflood-model/)). The grid-cells that have a riverbed slope < *ChanGradMaxMCT* (default value 0.001) and a set number of upstream grid cells also meeting the same condition are assigned to the mask. All downstream channel pixels of any of the pixels using MCT wave routing are also added to the mask. The OS LISFLOOD utility [mctrivers](https://github.com/ec-jrc/lisflood-utilities#mctrivers) can be used to generate the MCT channel mask. 
