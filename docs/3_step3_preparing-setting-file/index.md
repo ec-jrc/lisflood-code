@@ -627,12 +627,12 @@ This page has the purpose to provide an overview of the variables requiring an i
 	-9999: use discharge of half bankfull                                 
 	</comment>                                                          
 	</textvar>
-    <textvar name="PrevDischargeAvg" value="$(PathInit)/chanqavgdt.end.nc">
-    <comment>
-    Outflow average discharge on previous routing sub-step (average) [m3/s]
-    Cold start: -9999 sets initial value to 0
-    </comment>
-    </textvar>
+        <textvar name="PrevDischargeAvg" value="$(PathInit)/chanqavgdt.end.nc">
+        <comment>
+        Outflow average discharge on previous routing sub-step (average) [m3/s]
+        -9999: use discharge of half bankfull 
+        </comment>
+        </textvar>
 	<textvar name="PrevCmMCTInitValue" value="-9999">
 	<comment>
 	Courant number at previous step for MCT routing
@@ -677,9 +677,9 @@ This page has the purpose to provide an overview of the variables requiring an i
 
 - **PrevDischarge** and **PrevDischargeAvg** are the initial discharge from previous run (instantaneous and average values in the last sub-roting step) $[\frac{m^3} {s}]$ used for lakes, reservoirs and transmission loss (only needed if option is on for lakes or reservoirs or transmission loss). A value of **-9999** sets the initial amount of discharge to equivalent of half bankfull.
 
-- **PrevCmMCTInitValue** is the Courant number at the end of the previous step and it is only used for MCT wave routing [-]. A value of **-9999 ** sets the initial value to 1.
+- **PrevCmMCTInitValue** is the Courant number at the end of the previous step and it is only used for MCT wave routing [-]. A value of -**9999 ** sets the initial value to 1.
 
-- **PrevDmMCTInitValue** is the Reynols number at the end of the previous step and it is only used for MCT wave routing [-]. A value of **-9999 ** sets the initial value to 0.
+- **PrevDmMCTInitValue** is the Reynols number at the end of the previous step and it is only used for MCT wave routing [-]. A value of -**9999 ** sets the initial value to 0.
 
 ```xml
 	<comment>                                                           
