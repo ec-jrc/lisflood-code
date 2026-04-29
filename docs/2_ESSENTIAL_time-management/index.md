@@ -26,6 +26,7 @@ In Settings file, three different keys are used to specify start date, end date 
 
 - **timestepInit:**  this key is used to specify which timestamp must be used to retrieve  information from existing state files (i.e. from a previous simulation)
   >For  example, if we want to start a new simulation at "03/01/2017 06:00" and  we want to use hydrological state information from the last time step,  we will set timestepInit to "02/01/2017 06:00". Outputs with timestamp  "02/01/2017 06:00" will be used to initialize the model, while the first  output of the simulation will be be store with timestamp "03/01/2017  06:00"
+
 ![](../media/image64.png)
 
 > <span style="color:red"> **Both timestamps and time steps ALWAYS refer to the END of the TIME INTERVAL!**</span>
