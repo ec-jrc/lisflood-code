@@ -111,8 +111,6 @@ class mctheadwater(HydroModule):
             self.var.MCTHeadwaterSitesCC = np.compress(mctheadwater > 0, mctheadwater)
             self.var.MCTHeadwaterIndex = np.nonzero(mctheadwater)[0]
 
-            self.var.QInHeadM3Old = np.where(self.var.MCTHeadwaterSitesC > 0, self.var.ChanQAvgDt * self.var.DtSec, 0)  # self.var.QInM3Old
-
             # Add MCT headwater locations to structures map
             # (used to modify LddKinematic and to calculate LddStructuresKinematic)
             self.var.IsStructureKinematic = np.where(self.var.MCTHeadwaterSitesC > 0, np.bool8(1), self.var.IsStructureKinematic)
@@ -123,7 +121,21 @@ class mctheadwater(HydroModule):
             # and to calculate LddStructuresChan)
 
 
+    def dynamic_init(self):
+        """ Initialization of the dynamic part of the MCT headwater module
+            init mct headwater before sub step routing
+        """
 
+        # ************************************************************
+        # ***** HEADWATER INIT
+        # ************************************************************
+        settings = LisSettings.instance()
+        option = settings.options
+        if option['MCTRouting']:
+            self.var.QInHeadM3Old = np.where(self.var.MCTHeadwaterSitesC > 0, self.var.ChanQAvgDt * self.var.DtSec, 0)  # self.var.QInM3Old
+            # difference between old and new headwater flow  per sub step
+            # in order to calculate the amount of headwater flow in the routing loop
+            pass
 
 
 
@@ -152,13 +164,17 @@ class mctheadwater(HydroModule):
             # (LddStructuresKinematic equals LddKinematic, but without the pits/sinks upstream of the structure
             # locations; note that using Ldd here instead would introduce MV!)
             inflow = np.bincount(self.var.downstruct, weights=self.var.ChanQAvgDt)[self.var.MCTHeadwaterIndex]  #same as Qin
-            inflow = self.var.ChanQAvgDt[7] #this is just to make it the same as the inflow run  REMOVE
+            # inflow = self.var.ChanQAvgDt[7] #this is just to make it the same as the inflow run  REMOVE
 
             self.var.QInHeadM3 = maskinfo.in_zero()
             np.put(self.var.QInHeadM3, self.var.MCTHeadwaterIndex, inflow * self.var.DtSec)
             self.var.QDeltaM3 = (self.var.QInHeadM3 - self.var.QInHeadM3Old) * self.var.InvNoRoutSteps
 
             self.var.QHeadM3Dt = (self.var.QInHeadM3Old + (NoRoutingExecuted + 1) * self.var.QDeltaM3) * self.var.InvNoRoutSteps
+            # output to the MCT headwater cells
+
+            self.var.QInHeadM3Old = self.var.QInHeadM3.copy()
+            # save the upstream inflow for next step
             pass
 
 

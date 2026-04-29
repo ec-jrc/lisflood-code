@@ -176,6 +176,46 @@ class routing(HydroModule):
             self.var.LddKinematic = self.var.LddChan
             self.var.LddKinematicNp = compressArray(self.var.LddKinematic)  # np
 
+
+        # ************************************************************
+        # ***** MCT DRAINAGE NETWORK GEOMETRY - LDD  *****************
+        # ************************************************************
+        if option['MCTRouting']:
+
+                self.var.IsChannelMCTPcr = boolean(loadmap('ChannelsMCT', pcr=True))  # pcr
+                # load mask of MCT river grid cells
+                self.var.IsChannelMCT = np.bool8(compressArray(self.var.IsChannelMCTPcr))  # bool
+
+                # even if MCT is active, it should be deactivated if there is no MCT cell in the domain
+                if self.var.IsChannelMCT.sum() == 0:
+                    warnings.warn(LisfloodWarning('There are no MCT grid cell. MCT routing is deactivated'))
+                    option['MCTRouting'] = False
+                    # rebuild lists of reported files with MCTRouting = False
+                    settings.build_reportedmaps_dicts()
+
+        if option['MCTRouting'] and not option['InitLisflood']:
+
+            self.var.IsChannelMCTPcr = boolean(decompress(self.var.IsChannelMCT))       # pcr
+            # Identify channel pixels where Muskingum-Cunge-Todini is used
+
+            self.var.mctmask = np.bool8(pcr2numpy(self.var.IsChannelMCTPcr,0))
+            # Create a mask with cells using MCT
+
+            self.var.IsChannelKinematicPcr = (self.var.IsChannelPcr == 1) & (self.var.IsChannelMCTPcr == 0)  #pcr
+            self.var.IsChannelKinematic = np.bool8(compressArray(self.var.IsChannelKinematicPcr))   #np
+            # Identify channel pixels where Kinematic wave is used instead of MCT
+
+            self.var.LddMCT = lddmask(self.var.LddChan, self.var.IsChannelMCTPcr)  #pcr
+            # Ldd for MCT routing
+
+            self.var.LddKinematic = lddmask(self.var.LddChan, self.var.IsChannelKinematicPcr)    #pcr
+            # Ldd for kinematic routing
+
+
+        # ************************************************************
+        # ***** MCT DRAINAGE NETWORK GEOMETRY - LDD  *****************
+        # ************************************************************
+
         self.var.AtLastPoint = boolean(pit(self.var.Ldd))    #pcr
         # Assign True to each of the grid cells where there are outlet points
         # Function 'pit' assigns a unique number starting from 1 to pit cells (ldd=5) in the Ldd
@@ -489,6 +529,14 @@ class routing(HydroModule):
                 self.var.ChanQKin = (self.var.ChanM3Kin * self.var.InvChanLength * self.var.InvChannelAlpha) ** (self.var.InvBeta)
                 # (Real) outflow from main channel when second line of routing is active (= using riverbed Manning coeff 2)
 
+    def initialKinematicWave(self):
+        """ Initialization of the parallel kinematic wave router for Kinematic routing and SplitRouting:
+        main channel-only routing if self.var.ChannelAlpha2 is None; else split-routing(main channel + floodplains).
+        Initialization uses LDD for kinematic routing (LddKinematic)
+        """
+        settings = LisSettings.instance()
+        option = settings.options
+        flags = settings.flags
 
         # ************************************************************
         # ***** INITIALISE PARALLEL KINEMATIC WAVE ROUTER ************
@@ -556,34 +604,34 @@ class routing(HydroModule):
         # ***** INITIALISATION FOR MCT ROUTING            ************
         # ************************************************************
 
-        # even if MCT is active, it should be deactivated if there is no MCT cell in the domain
-        if option['MCTRouting']:
-            self.var.IsChannelMCTPcr = boolean(loadmap('ChannelsMCT', pcr=True))   #pcr
-            self.var.IsChannelMCT = np.bool8(compressArray(self.var.IsChannelMCTPcr))   #bool
-            if self.var.IsChannelMCT.sum()==0:
-                warnings.warn(LisfloodWarning('There are no MCT grid cell. MCT routing is deactivated'))
-                option['MCTRouting'] = False
-                # rebuild lists of reported files with MCTRouting = False
-                settings.build_reportedmaps_dicts()
+        # # even if MCT is active, it should be deactivated if there is no MCT cell in the domain
+        # if option['MCTRouting']:
+        #     self.var.IsChannelMCTPcr = boolean(loadmap('ChannelsMCT', pcr=True))   #pcr
+        #     self.var.IsChannelMCT = np.bool8(compressArray(self.var.IsChannelMCTPcr))   #bool
+        #     if self.var.IsChannelMCT.sum()==0:
+        #         warnings.warn(LisfloodWarning('There are no MCT grid cell. MCT routing is deactivated'))
+        #         option['MCTRouting'] = False
+        #         # rebuild lists of reported files with MCTRouting = False
+        #         settings.build_reportedmaps_dicts()
         
         if option['MCTRouting'] and not option['InitLisflood']:
             maskinfo = MaskInfo.instance()
 
-            self.var.IsChannelMCTPcr = boolean(decompress(self.var.IsChannelMCT))       # pcr
-            # Identify channel pixels where Muskingum-Cunge-Todini is used
-
-            self.var.mctmask = np.bool8(pcr2numpy(self.var.IsChannelMCTPcr,0))
-            # Create a mask with cells using MCT
-
-            self.var.IsChannelKinematicPcr = (self.var.IsChannelPcr == 1) & (self.var.IsChannelMCTPcr == 0)  #pcr
-            self.var.IsChannelKinematic = np.bool8(compressArray(self.var.IsChannelKinematicPcr))   #np
-            # Identify channel pixels where Kinematic wave is used instead of MCT
-
-            self.var.LddMCT = lddmask(self.var.LddChan, self.var.IsChannelMCTPcr)  #pcr
-            # Ldd for MCT routing
-
-            self.var.LddKinematic = lddmask(self.var.LddChan, self.var.IsChannelKinematicPcr)    #pcr
-            # Ldd for kinematic routing
+            # self.var.IsChannelMCTPcr = boolean(decompress(self.var.IsChannelMCT))       # pcr
+            # # Identify channel pixels where Muskingum-Cunge-Todini is used
+            #
+            # self.var.mctmask = np.bool8(pcr2numpy(self.var.IsChannelMCTPcr,0))
+            # # Create a mask with cells using MCT
+            #
+            # self.var.IsChannelKinematicPcr = (self.var.IsChannelPcr == 1) & (self.var.IsChannelMCTPcr == 0)  #pcr
+            # self.var.IsChannelKinematic = np.bool8(compressArray(self.var.IsChannelKinematicPcr))   #np
+            # # Identify channel pixels where Kinematic wave is used instead of MCT
+            #
+            # self.var.LddMCT = lddmask(self.var.LddChan, self.var.IsChannelMCTPcr)  #pcr
+            # # Ldd for MCT routing
+            #
+            # self.var.LddKinematic = lddmask(self.var.LddChan, self.var.IsChannelKinematicPcr)    #pcr
+            # # Ldd for kinematic routing
 
             ChanGradMaxMCT = loadmap('ChanGradMaxMCT')
             # Maximum riverbed slope for MCT rivers
@@ -811,7 +859,7 @@ class routing(HydroModule):
 
                 # Sideflow contribution to MCT grid cells expressed in [m3/s]
                 SideflowChanMCT = np.where(self.var.IsChannelMCT, SideflowChanM3 * self.var.InvDtRouting, 0)  #Ql
-
+                SideflowChanMCTM3 = np.where(self.var.IsChannelMCT, SideflowChanM3, 0)
                 ####################
 
 

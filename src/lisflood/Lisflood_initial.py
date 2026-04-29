@@ -207,36 +207,29 @@ class LisfloodModel_ini(DynamicModel):
         self.lakes_module.initial()
         self.polder_module.initial()
 
+        self.mctheadwater_module.initial()
+
         self.transmission_module.initial()
 
-        # self.structures_module.initial()
-        # # Structures such as reservoirs and lakes are modelled by interrupting the channel flow paths
+        self.structures_module.initial()
+        # Structures such as reservoirs and lakes are modelled by interrupting the channel flow paths
 
         # ----------------------------------------------------------------------
         # ----------------------------------------------------------------------
 
         self.routing_module.initialSecond()
         # CHANNEL INITIAL SPLIT UP IN SECOND CHANNEL
+
         self.surface_routing_module.initialSecond()
 
+        self.routing_module.initialKinematicWave()
 
         if option.get('MCTRouting'):
             self.routing_module.initialMCT()
             # initialising Muskingum-Cunge-Todini routing for channel
-            self.mctheadwater_module.initial()
+            self.mctheadwater_module.dynamic_init()
             # adding MCT headwater to structures
 
-        self.structures_module.initial()
-        # Structures such as reservoirs and lakes and MCT headwater are modelled by interrupting the channel flow paths
-
-
-
-
-        # ####
-        # self.routing_module.initialSecond()
-        # # CHANNEL INITIAL SPLIT UP IN SECOND CHANNEL
-        # self.surface_routing_module.initialSecond()
-        # # #### inflowbug
 
 
         self.evapowater_module.initial()
