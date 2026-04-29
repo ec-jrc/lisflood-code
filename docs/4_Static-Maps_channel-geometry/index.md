@@ -29,7 +29,7 @@ Channel characteristics, explained above, are shown in the Figure 41 below.  <br
 |Channel length         |chanlength.nc; <br> Type: Float32          | Units: m;<br> Range>0         |Channel length (value can exceed grid size, to account for meandering rivers)|
 |Channel gradient         |changrad.nc; <br> Type: Float32           |Units: m/m;<br> Range: [0-1]          |Channel longitudinal gradient|
 |Manning's roughness coefficient |chanman.nc; <br> Type: Float32           |Units: m<sup>1/3</sup> s<sup>-1</sup>         |channels Manning's roughness coefficient |
-|Bottom width         |chanbw.nc; <br> Type: Float32           |Units: m;<br> Range>0          |Channel bottom width|
+|Bottom width         |chanbw.nc; <br> Type: Float32           |Units: m;<br> Range>=0          |Channel bottom width|
 |Floodplain         |chanflpn.nc; <br> Type: Float32           |Units: m;<br> Range>0          |Width of the area where the surplus of water is distributed when the water level in the channel exceeds the bankfull channel depth
 |Bankfull channel depth         |chanbnkf.nc; <br> Type: Float32           |Units: m;<br> Range>0          |Bankfull channel depth
 
@@ -80,11 +80,12 @@ $chanman =$ <br>
 $0.025 + 0.015 \cdot \min(\frac{50}{upstreamArea} , 1) + 0.030 \cdot \min(\frac{elevation}{2000} , 1)$
 
 ### Bottom width (chanbw)
-The channel bottom width map can be computed using empirical relationship that relate channel width of the grid-cell with its upstream area (in $km^2$); for example, following [Burek et al. (2014)](https://ec-jrc.github.io/lisflood/pdfs/Dataset_hydro.pdf):<br/>
+The channel bottom width map can be computed using empirical relationship that relate channel width of the grid-cell with its upstream area (in $km^2$).
+For example, following [Burek et al. (2014)](https://ec-jrc.github.io/lisflood/pdfs/Dataset_hydro.pdf):<br/>
 
 $chanbw_{step1} = 0.0032 \cdot upstreamArea$
 
-It is here noted that the study mentioned above ([Burek et al. (2014)](https://ec-jrc.github.io/lisflood/pdfs/Dataset_hydro.pdf)), also suggests a second step. The LISFLOOD model first needs to be run for the entire simulation period length with the initial channel bottom width to get a long-term average discharge ($avgdis$) which is then used in the following *empirical* equation:<br/>
+The same study ([Burek et al. (2014)](https://ec-jrc.github.io/lisflood/pdfs/Dataset_hydro.pdf)), also suggests a second step, which relates *chanbw* to average discharge value. The initial channel bottom width from step1 is used to run a OS LISFLOOD simulation for at least a few years to compute a long-term average discharge ($avgdis$). This latter value is then used in the following *empirical* equation:<br/>
 
 $chanbw_{step2} = avgdis^{0.539}$
  
