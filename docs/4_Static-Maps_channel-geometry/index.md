@@ -60,7 +60,7 @@ The channel side slope map is calculated by dividing the horizontal distance (re
 *Figure 42: Zoom of Figure 41 with highlighted components dx and dy (in red) used to calculate the channel side slope (original figure is from [Burek et al., 2013](https://publications.jrc.ec.europa.eu/repository/handle/JRC78917)).*
 
 ### Channel length (chanlenght)
-The channel length map (in meters) can be created by using the 'rivlen' layers from the CaMa-Flood dataset (for more information see the FLOW method of Yamazaki, link), multiplied by the LISFLOOD model mask.
+The channel length map (in meters) can be created by using the 'rivlen' layers from the Catchment-based Macro-scale Floodplain Global River Hydrodynamics Model v4.0 maps ([CaMa-Flood](https://global-hydrodynamics.github.io/CaMa-Flood/); [Yamazaki et al, 2011](https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2010WR009726)), multiplied by the LISFLOOD model mask.
 
 ### Channel gradient (changrad)
 To compute the channel gradient map, the absolute difference (in meters) of the elevation between two grid-cells is first calculated by using i) the local drain direction (ldd) map to extract the connectivity between grid-cells, and ii) the channel length of the upstream grid-cell:<br/>
@@ -90,7 +90,9 @@ $chanbw_{step2} = avgdis^{0.539}$
  
 The latter empirical equation stems from a study on the European domain ([Burek et al. (2014)](https://ec-jrc.github.io/lisflood/pdfs/Dataset_hydro.pdf)).
 It is not possible to identify an optimal solution for all the catchments, and all the applications. Users are advised to test the one or two-steps protocol for their specific scenario and identify the best solution according to their expert judgement.
-For example, chanbw used for the Copernicus Emergency Management Service European and Global Flood Awareness System ([CEMS EFAS](https://european-flood.emergency.copernicus.eu/react) and [CEMS GloFAS](https://global-flood.emergency.copernicus.eu/react)) operational set-ups were computed based on the first step only.
+
+It is here noted that chanbw used for the Copernicus Emergency Management Service European and Global Flood Awareness System ([CEMS EFAS](https://european-flood.emergency.copernicus.eu/react) and [CEMS GloFAS](https://global-flood.emergency.copernicus.eu/react)) operational set-ups were computed using a slightly different protocol: *width* values from the ([CaMa-Flood](https://global-hydrodynamics.github.io/CaMa-Flood/)) were used as primary source of data. Where the processing of such primary source of data led to negative values, *chanbw* was computed using step1 of the protocol explained in this page. 
+More details on the workflow used to derive CEMS EFAS and GloFAS *chanbw* maps are provided in [Choulga et al., 2024](https://hess.copernicus.org/articles/28/2991/2024/).
 
 
 ### Floodplain width (Wfp)
