@@ -1,16 +1,29 @@
 # Step 4: Initialisation & cold start of LISFLOOD
 
-Just as any other hydrological model, LISFLOOD needs to know the initial state (i.e. amount of water stored) of its internal state variables in order to be able to produce reasonable discharge simulations. However, in practice we hardly ever know the initial state of all state variables at a given time. Hence, we have to estimate the state of the initial storages in a reasonable way, which is also called the initialisation of a hydrological model.
+Just as any other hydrological model, LISFLOOD needs to know the initial state (i.e. amount of water stored in the groundwater zone, soil, channels) of its internal state variables in order to start a simulation. However, in practice we hardly ever know the initial state of all state variables at a given time. Hence, the state of the initial storages must be estimated: this phase is the initialisation of a hydrological model.
 
-In this subsection we will:
-  1. demonstrate the effect of the model's initial state on simulation results
+
+>**OS LISFLOOD prerun** simulation has the purpose to adequately initialize the state of the slow storages, namely grounwater zone and soil. OS LISFLOOD prerun constitutes the **initialization run**. OS LISFLOOD prerun output is used as input to the OS LISFLOOD cold start run.
+
+>OS LISFLOOD cold start run and warm start run deliver the actual model outputs to be usef for analysis/forecasts.
+
+>**OS LISFLOOD cold start** run takes as input the OS LISFLOOD prerun output to initialize the slow storages (soil and groundwater). Initial values of fast(er) respoding storages (e.g. channel volume) are set to bogus values. It is always recommended to discard the initial (3) years of the OS LISFLOOD cold start to allow adequate initialization of fast(er) respoding storages.
+
+>**OS LISFLOOD warm start** resumes the computations from the end states of a preceeding simulation. The set-up of this type of simulation is described in the next section of this user guide.
+
+
+In this page we will:
+  1. demonstrate the effect of the model's initial states on simulation results
   2. explain the theory of initialisation and the steady-state storage concept
-  3. explain how to run the initialisation (pre-run) for kinematic and split routing configurations
+  3. explain how to run the pre-run (initialization) for kinematic (kinematic and diffusive) and split routing (split routing and diffusive) routing configurations
   4. describe how to use the pre-run outputs to set up a cold start
   5. describe how to complete the initialisation in temporal chunks when needed
 
+## The impact of the model initial state on simulation results 
 
-## 4.1 The impact of the model's initial state on simulation results 
+When setting up a simulation, most of the internal state variables can be simply set to 0 at the start of the run. For example, this applies to the initial snow cover (*SnowCoverInitValue*), frost index (*FrostIndexInitValue*), interception storage (*CumIntInitValue*). 
+
+However, this simple approach does not hold for all the state variables.
 
 To better understand the impact of the initial model state on the results of a simulation, let's start with a simple example. The Figure below shows 3 LISFLOOD simulations of soil moisture for the upper soil layer. In the first simulation, it was assumed that the soil is initially completely saturated. In the second one, the soil was assumed to be completely dry (i.e. at residual moisture content). Finally, a third simulation was done where the initial soil moisture content was assumed to be in between these two extremes.
 
@@ -18,51 +31,93 @@ To better understand the impact of the initial model state on the results of a s
 
   **Figure:** *Simulation of soil moisture in upper soil layer for a soil that is initially at saturation (s), at residual moisture content (r) and in between (\[s+r\]/2)*
 
-What is clear from the Figure is that the initial amount of moisture in the soil only has a marked effect on the start of each simulation; after a few months the three curves converge. In other words, the "memory" of the upper soil layer only goes back a few months (or, more precisely, for time lags of more than about 8 months the autocorrelation in time is negligible).
+The initial amount of moisture in the upper soil layer only has a marked effect on the start of each simulation; after a few months the three curves converge. In other words, the "memory" of the upper soil layer only goes back a few months (or, more precisely, for time lags of more than about 8 months the autocorrelation in time is negligible).
 
-In theory, this behaviour provides a convenient and simple way to initialise a model such as LISFLOOD. Suppose we want to do a simulation of the year 1995. We obviously don't know the state of the soil at the beginning of that year. However, we can get around this by starting the simulation a bit earlier than 1995, say one year. In that case we use the year 1994 as a *warm-up* period, assuming that by the start of 1995 the influence of the initial conditions (i.e. 1-1-1994) is negligible. The very same technique can be applied to initialise LISFLOOD's other state variables, such as the amounts of water in the lower soil layer, the upper groundwater zone, the lower groundwater zone, and in the channel.
+This behaviour provides a convenient and simple way to initialise the soil moisture state of the upper soil layer. Suppose we want to do a simulation of the year 1995. We obviously don't know the state of the soil at the beginning of that year. However, we can get around this by starting the simulation a bit earlier than 1995, say one year. In that case we use the year 1994 as a *spin-up* period, assuming that by the start of 1995 the influence of the initial conditions (i.e. 1-1-1994) is negligible. 
 
-## 4.2 The theory of initialisation
+Even though the use of a sufficiently long spin-up period usually results in a correct initialisation of many state variables, the time needed to initialise any storage component of the model is dependent on its specific water average residence time. As briefly shown above, the moisture content of the upper soil layer tends to respond relatively quickly to meteorological forcing variables (precipitation, evapo(transpi)ration). As a result, relatively short spin-up periods are sufficient to initialise this storage component. At the other extreme, the response of the (thick) lower soil layers and of the lower groundwater zone is generally very slow. 
 
-When setting up a **model cold run**, most of the internal state variables can be simply set to 0 at the start of the run. For example, this applies to the initial snow cover (*SnowCoverInitValue*), frost index (*FrostIndexInitValue*), interception storage (*CumIntInitValue*). The initial value of the 'days since last rainfall event' (*DSLRInitValue*) is typically set to 1.
+To explain the challenge of the adequate initialization of the lower groundwater zone, we resume here the content presented in [this chapter](https://ec-jrc.github.io/lisflood-model/2_13_stdLISFLOOD_groundwater/) of OS LISFLOOD Model Documentation. 
 
-For soil and groundwater state variables, initialisation is somewhat less straightforward. The amount of water that can be stored in the three soil layers (*ThetaInit1Value*, *ThetaInit2Value*, *ThetaInit3Value*) is limited by the soil's porosity. The lower groundwater zone poses special problems because of its overall slow response (discussed in a separate section below). Because of this, LISFLOOD provides the possibility to initialise these variables internally. The following Table summarises these special initialisation methods:
+The Figure below shows the results of two numerical experiments. In the upper Figure, we start with a very high initial storage of the groundwater lower zone (1500 mm). The inflow rate is fairly small (0.2 mm/day), and the outflow rate is relatively large. What is interesting here is that, over time, the storage evolves asymptotically towards a constant state. In the lower Figure, we start with a much smaller initial storage (50 mm), but the inflow rate is much higher (1.5 mm/day) and the outflow rate is much smaller. Here we see an upward trend, again towards a constant value. However, in this case the constant ‘end’ value is not reached within the simulation period. 
 
-**Table:** *LISFLOOD special initialisation methods*$^1$ 
+<img src="../media/image39.png">
+
+**Figure** Two 10-year simulations of lower zone storage with constant inflow. Upper Figure: high initial storage, storage approaches steady-state storage
+(dashed) after about 1500 days. Lower Figure: low initial storage, storage doesn’t reach steady-state within 10 years.
+
+At this point it should be clear that being able to know the ‘end’ storages in the Figure above in advance would be very helpful, because it would eliminate any trend in the water content of the lower groundwater zone. 
+
+A similar reasoning applies to the soil water content of the third soil layer.
+
+Spurious trends in the soil layers and in the lower groundwater zone will obviously lead to spurious trends in the baseflow simulations. Consequently, to avoid unrealistic trends in the simulations, very long spin-up periods may be needed, thus requiring a large amount of computational and time resources.
+
+To by-pass the need for excessively long spin-up periods, LISFLOOD is capable of calculating a *steady-state* storage amount for the third soil layer and for the lower groundwater zone. This *steady state* storage, introduced in this [chapter](https://ec-jrc.github.io/lisflood-model/2_13_stdLISFLOOD_groundwater/), is very effective for reducing spin-up time. 
+
+The following paragraphs explain how the analytical solutions can be used to leverage on the **outputs of a OS LISFLOOD prerun** to adequately initialize volumetric soil moisture content and lower groundwater zone water content of a **OS LISFLOOD cold start**.
+
+The complete list of initial state values for a **OS LISFLOOD prerun** is presented [here](https://github.com/ec-jrc/lisflood-code/blob/feature/docs/docs/3_step3_preparing-setting-file/index.md#initial-conditions-os-lisflood-prerun-cold-start-warm-start). The only relevant outputs of the OS LISFLOOD prerun are:
+- end states of volumetric soil content and upper groundwater zone water content;
+- average fluxes values (from upper to lower soil layer, net inflow to the lower groundwater zone);
+- average discharge (when using SplitRouting).
+
+
+### Initialization of soil moisture content
+
+> An improved initialization scheme has been implemented in OS-LISFLOOD v5.0.0, allowing to remove non-realistic trends in soil moisture content and fictitious discharge values in the channels previously observed, for example, in arid climates. Albeit the former initialization strategy with bogus values is still feasibile, the use of the methodology explained here is highly recommended, for all modelling excercises.
+
+OS LISFLOOD prerun provides in output end states and average fluxes. The end states are the volumetric soil moisture content for the three soil layers and the three land covers (9 maps). The average fluxes represent the average infiltration (over the simulation period) from the soil layer 2 to soil layer 3, for the three land cover fractions (3 maps indicated as *SeepTopToSubBAverageXX*). In the cold run, the end states are used to initialise the volumetric soil moisture content of soil layers 1 and 2. The initialisation of the volumetric soil moisture content of soil layer 3 makes use of the relevant end state and of the fluxes.
+Accorind to the steady-state approach, the model tries to enable long term equilibrium conditions between average inflow and outflow fluxes in the third soil layer. 
+
+ADD EQUATION!!!
+
+In more detail, for soil layer 3, the average seepage maps as well as an .end map are produced that later serves as a starting guess for solving the second-order, non-linear Van Genuchten equation. Accounting for an adequate spin-up period of the initialization run allows and is recommended to compute realistic average fluxes values. This latter outcome can be achieved by adequately setting the value of *NumDaysSpinUp*.
+
+
+
+### Initialization of the upper groundwater zone
+To initialize the upper groudwater zone water content it is recommended to use the end state generated by the prerun. <br>
+
+
+### Initialisation of the lower groundwater zone
+
+The condition in which *the lower groundwater zone storage is constant over time means that the in- and outflow terms balance each other out*. This condition is known as a **steady state situation**, and the constant ‘end’ storage is in fact the *steady state storage*.
+The rate of change of the lower zone’s storage at any moment is given by the continuity equation:
+
+$$
+\frac{dLZ}{dt}=I(t)-O(t)
+$$
+
+where $I$ is the inflow (i.e. groundwater recharge) and $O$ is the outflow rate. For a situation where the storage remains constant, we can write:
+<br>$\frac{dLZ}{dt}=0$  only if  $I(t)=O(t)$
+
+This equation can be re-written as:
+<br>$I(t) = \frac{1}{T_{lz}} \cdot LZ$
+
+Solving this for LZ gives the steady state storage:
+<br>$LZ_{ss} = T_{lz} \cdot I(t)$
+
+T_{lz} is a parameter provided as input to the model.
+The OS LISFLOOD preun is used to compute $I(t)$, here defined as the average net inflow to the lower groundwater zone: $LZavin$.
+T_{lz} and $LZavin$ allow to obtain LZ *steady state storage* value.
+
+For this purpose, the prerun must include a sufficiently long simulation period (a few decades) to allow the computation of representative values of LZavin. The set-up of the prerun run is explained below; the protocol differs slightly depending on the settings of the split routing option.
+
+**Table:** LISFLOOD special initialisation methods activated by setting the value of each respective variable to a 'bogus' value of -9999
 
 | **Variable**          | **Description**       | **Initialisation method**     |
 |-------------------------------|-------------------------------|-------------------------------|
-| ThetaInit1Value / <br> ThetaForestInit1Value    | initial soil moisture content<br> upper soil layer (V/V)| set to soil moisture content <br> at field capacity |
-| ThetaInit2Value / <br> ThetaForestInit2Value    | initial soil moisture content <br> lower soil layer (V/V) | set to soil moisture content <br> at field capacity |
-| LZInitValue / <br> LZForestInitValue       | initial water in lower <br>  groundwater zone (mm)    | set to steady-state storage |
-| TotalCrossSectionArea <br> InitValue | initial cross-sectional area <br> of water in channels              | set to half of bankfull depth      |
-| PrevDischarge         | Initial discharge     | set to half of bankfull depth       |
-
-$^1$ These special initialisation methods are activated by setting the value of each respective variable to a 'bogus' value of "-9999"*     
-
-Note that the "-9999" 'bogus' value can *only* be used with the variables in the Table above; the use of the 'bogus' value for all the other variables will produce nonsense results! For this reason, the initialisation of the lower groundwater zone is necessary.<br>
-
-*WARNING!* In some areas, the use of initial soil water content equal to field capacity leads to nonrealistic trends in soil moisture content and to fictitious discharge values in the channels. <br>
-The issue above can occur, for instance, in catchments with arid climate and very thick (~10^2) soil layers or in catchments in very cold area where frost conditions are frequent.
-
-To avoid nonrealistic results in such specific contexts, an improved initialization scheme has been implemented in OS-LISFLOOD v5.0.0.
-
-**Initialization of the soil moisture content**: the prerun provides in output end states and average fluxes. The end states are the volumetric soil moisture content for the three soil layers and the three land covers (9 maps). The average fluxes represent the average infiltration (over the simulation period) from the soil layer 2 to soil layer 3, for the three land cover fractions (3 maps indicated as *SeepTopToSubBAverageXX*). In the cold run, the end states are used to initialise the volumetric soil moisture content of soil layers 1 and 2. The initialisation of the volumetric soil moisture content of soil layer 3 makes use of the relevant end state and of the fluxes, following the same reasoning implemented for the lower groundwater zone (see below), the model tries to enable long term equilibrium conditions between average inflow and outflow fluxes in the third soil layer. In more detail, for soil layer 3, the average seepage maps as well as an .end map are produced that later serves as a starting guess for solving the second-order, non-linear Van Genuchten equation. Accounting for an adequate spin-up period of the initialization run allows and is recommended to compute realistic average fluxes values. This latter outcome can be achieved by adequately setting the value of *NumDaysSpinUp*.
-
-**Initialization of the upper groundwater zone** water content: it is recommended to use the end state generated by the prerun. <br>
-
-*Please note that the content of this paragraph does not apply to the runs with warm start!* <br>
+| ThetaInit1Value  <br> ThetaForestInit1Value  <br> ThetaIrrigationInit1Value    | initial volumetric soil moisture content<br> superficial soil layer (V/V)| set to soil moisture content <br> at field capacity, recommended only in LISFLOOD **prerun**|
+| ThetaInit2Value  <br> ThetaForestInit2Value  <br> ThetaIrrigationInit2Value     | initial volumetric soil moisture content <br> upper soil layer (V/V) | set to soil moisture content <br> at field capacity, recommended only in LISFLOOD **prerun** |
+| ThetaInit3Value  <br> ThetaForestInit3Value  <br> ThetaIrrigationInit3Value     | initial volumetric soil moisture content <br> lower soil layer (V/V) | set to soil moisture content <br> at field capacity, recommended only in LISFLOOD **prerun** |
+| LZInitValue       | initial water in lower <br>  groundwater zone ($mm$)    | set to steady-state storage, only used in LISFLOOD **coldstart** |
+| TotalCrossSectionArea <br> InitValue | initial cross-sectional area ($m^2$) <br> of water in channels              | set to half of bankfull depth, used in LISFLOOD **prerun and coldstart**      |
+| PrevDischarge <br>PrevDischargeAvg        | Initial discharge ($m^3/s$)     | set to half of bankfull depth, used in LISFLOOD **prerun and coldstart**       |
 
 
-**Initialisation of the lower groundwater zone**
-Even though the use of a sufficiently long warm-up period usually results in a correct initialisation, a complicating factor is that the time needed to initialise any storage component of the model is dependent on the average residence time of the water in it. For example, the moisture content of the upper soil layer tends to respond almost instantly to LISFLOOD's meteorological forcing variables (precipitation, evapo(transpi)ration). As a result, relatively short warm-up periods are sufficient to initialise this storage component. At the other extreme, the response of the lower groundwater zone is generally very slow (especially for large values of $T_{lz}$). Consequently, to avoid unrealistic trends in the simulations, very long warm-up periods may be needed. The Figure below shows a typical example for an 8-year simulation, in which a decreasing trend in the lower groundwater zone is visible throughout the whole simulation period. Because the amount of water in the lower zone is directly proportional to the baseflow in the channel, this will obviously lead to an unrealistic long-term simulation of baseflow. Assuming the long-term climatic input is more or less constant, the baseflow (and thus the storage in the lower zone) should be free of any long-term trends (although some seasonal variation is normal). In order to avoid the need for excessive warm-up periods, LISFLOOD is capable of calculating a *steady-state* storage amount for the lower groundwater zone. This *steady state* storage is very effective for reducing the lower zone's warm-up time. The concept of *steady state* is explained in the [LISFLOOD model description](https://ec-jrc.github.io/lisflood-model/2_13_stdLISFLOOD_groundwater/), here we will show how it can be used to speed up the initialisation of a LISFLOOD run.
+*Note that the "-9999" 'bogus' value can *only* be used with the variables in the Table above; the use of the 'bogus' value for all the other variables will produce nonsense results!<br>*
 
 
-**Steady-state storage in practice**
-An actual LISFLOOD simulation differs from the theoretical *steady state*:
-The steady-state storage $LZ_{ss}$ is directly proportional to the average recharge into the lower groundwater zone. In practice, this average recharge cannot be known a priori for two reasons: it varies in time rather than being constant, and it is controlled by the availability of water in the upper groundwater zone, which in turn depends on the supply of water from the soil. Hence, during calibration the average recharge will differ for every parameter set since it depends on soil and subsoil parameters (e.g. $T_{uz}$, $GW_{perc}$, $b$, and so on). Note, however, that the average recharge will *always* be smaller than the value of $GW_{perc}$, which is used as an upper limit in the model. Therefore $LZ_{ss}$ and hence the correct initial storage can only be reliably estimated after running the model via *average* recharge, which is one of the purpose of the pre-run.
-
-As an alternative to using the internal initialization (and hence the bogus values), LZavin and AvgDis (LZInitValue and PrevDischarge) can be computed using an initialization run (or pre-run). The pre-run procedure must include a sufficiently long warm-up period to allow the computation of reliable values of LZavin and AvgDis. The set-up of the initialization run is explained in Section 4.3; the protocol differs slightly depending on the settings of the split routing option.
 
 ## 4.3 What you need to do:  
 
@@ -563,3 +618,4 @@ These outputs are:
     * SeepTopToSubBAverageForestMap.nc, average flux from second to third soil layer - forest land cover fraction  
 
     * SeepTopToSubBAverageIrrigationMap.nc, average flux from second to third soil layer - irrigation land cover fraction  
+
