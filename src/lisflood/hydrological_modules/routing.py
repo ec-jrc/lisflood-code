@@ -74,7 +74,6 @@ class routing(HydroModule):
         flags = settings.flags
         maskinfo = MaskInfo.instance()
 
-
         # ************************************************************
         # ***** NUMBER OF ROUTING STEPS          *********************
         # ************************************************************
@@ -175,6 +174,37 @@ class routing(HydroModule):
             # For all routing options (kinematic, split and MCT)
             self.var.LddKinematic = self.var.LddChan
             self.var.LddKinematicNp = compressArray(self.var.LddKinematic)  # np
+
+        # ************************************************************
+        # ***** MCT DRAINAGE NETWORK GEOMETRY - LDD  *****************
+        # ************************************************************
+
+        if option['MCTRouting']:
+
+                self.var.IsChannelMCTPcr = boolean(loadmap('ChannelsMCT', pcr=True))  # pcr
+                # load mask of MCT river grid cells
+                self.var.IsChannelMCT = np.bool8(compressArray(self.var.IsChannelMCTPcr))  # bool
+
+                # even if MCT is active, it should be deactivated if there is no MCT cell in the domain
+                if self.var.IsChannelMCT.sum() == 0:
+                    warnings.warn(LisfloodWarning('There are no MCT grid cell. MCT routing is deactivated'))
+                    option['MCTRouting'] = False
+                    # rebuild lists of reported files with MCTRouting = False
+                    settings.build_reportedmaps_dicts()
+
+        if option['MCTRouting'] and not option['InitLisflood']:
+
+            self.var.IsChannelMCTPcr = boolean(decompress(self.var.IsChannelMCT))       # pcr
+            # Identify channel pixels where Muskingum-Cunge-Todini is used
+
+            self.var.mctmask = np.bool8(pcr2numpy(self.var.IsChannelMCTPcr,0))
+            # Create a mask with cells using MCT
+            
+            # both variables are necessary to include MCT headwater pixels in the LDD as structures
+
+        # ************************************************************
+        # ***** MCT DRAINAGE NETWORK GEOMETRY - LDD  *****************
+        # ************************************************************
 
         self.var.AtLastPoint = boolean(pit(self.var.Ldd))    #pcr
         # Assign True to each of the grid cells where there are outlet points
@@ -564,24 +594,25 @@ class routing(HydroModule):
         # ***** INITIALISATION FOR MCT ROUTING            ************
         # ************************************************************
 
-        # even if MCT is active, it should be deactivated if there is no MCT cell in the domain
-        if option['MCTRouting']:
-            self.var.IsChannelMCTPcr = boolean(loadmap('ChannelsMCT', pcr=True))   #pcr
-            self.var.IsChannelMCT = np.bool8(compressArray(self.var.IsChannelMCTPcr))   #bool
-            if self.var.IsChannelMCT.sum()==0:
-                warnings.warn(LisfloodWarning('There are no MCT grid cell. MCT routing is deactivated'))
-                option['MCTRouting'] = False
-                # rebuild lists of reported files with MCTRouting = False
-                settings.build_reportedmaps_dicts()
+        # the following lines where moved to initial
+        # # even if MCT is active, it should be deactivated if there is no MCT cell in the domain
+        # if option['MCTRouting']:
+        #     self.var.IsChannelMCTPcr = boolean(loadmap('ChannelsMCT', pcr=True))   #pcr
+        #     self.var.IsChannelMCT = np.bool8(compressArray(self.var.IsChannelMCTPcr))   #bool
+        #     if self.var.IsChannelMCT.sum()==0:
+        #         warnings.warn(LisfloodWarning('There are no MCT grid cell. MCT routing is deactivated'))
+        #         option['MCTRouting'] = False
+        #         # rebuild lists of reported files with MCTRouting = False
+        #         settings.build_reportedmaps_dicts()
         
         if option['MCTRouting'] and not option['InitLisflood']:
             maskinfo = MaskInfo.instance()
 
-            self.var.IsChannelMCTPcr = boolean(decompress(self.var.IsChannelMCT))       # pcr
-            # Identify channel pixels where Muskingum-Cunge-Todini is used
-
-            self.var.mctmask = np.bool8(pcr2numpy(self.var.IsChannelMCTPcr,0))
-            # Create a mask with cells using MCT
+            # the following lines where moved to initial
+            # self.var.IsChannelMCTPcr = boolean(decompress(self.var.IsChannelMCT))       # pcr
+            # # Identify channel pixels where Muskingum-Cunge-Todini is used
+            # self.var.mctmask = np.bool8(pcr2numpy(self.var.IsChannelMCTPcr,0))
+            # # Create a mask with cells using MCT
 
             self.var.IsChannelKinematicPcr = (self.var.IsChannelPcr == 1) & (self.var.IsChannelMCTPcr == 0)  #pcr
             self.var.IsChannelKinematic = np.bool8(compressArray(self.var.IsChannelKinematicPcr))   #np
