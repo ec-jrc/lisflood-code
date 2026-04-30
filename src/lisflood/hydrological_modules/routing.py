@@ -824,8 +824,8 @@ class routing(HydroModule):
                 # First, Kinematic/Split routing is solved on all pixels (including MCT pixels) then results are updated
                 # for the MCT pixels.
                 
-                # Sideflow contribution to MCT grid cells expressed in [m3/s]
-                SideflowChanMCT = np.where(self.var.IsChannelMCT, SideflowChanM3 * self.var.InvDtRouting, 0)  #Ql
+                # # Sideflow contribution to MCT grid cells expressed in [m3/s]
+                # SideflowChanMCT = np.where(self.var.IsChannelMCT, SideflowChanM3 * self.var.InvDtRouting, 0)  #Ql
 
                 # Grab outflow at the end of the previous routing step t for all pixels) - current state of the MCT pixel
                 ChanQ_0 = self.var.ChanQ.copy()     # Outflow (x+dx) at time t (end of previous routing step) (instant)  -> used to calc q00
@@ -836,6 +836,20 @@ class routing(HydroModule):
                 self.var.ChanQ = ChanQ              # -> used to calc q01
                 self.var.ChanM3 = ChanM3
                 self.var.ChanQAvgDt = ChanQAvgDt    # -> used to calc q0m
+
+                # ####################
+                #
+                # self.mctheadwater_module.dynamic_inloop(NoRoutingExecuted)
+                # # calculate sideflow from MCT headwater pixels
+                #
+                # SideflowChanM3 += self.var.QHeadM3Dt
+                # # MCT headwater pixles outflow volume per routing sub step [m3]
+                #
+                # ####################
+
+                # Sideflow contribution to MCT grid cells expressed in [m3/s]
+                SideflowChanMCT = np.where(self.var.IsChannelMCT, SideflowChanM3 * self.var.InvDtRouting, 0)  #Ql
+                SideflowChanMCTM3 = np.where(self.var.IsChannelMCT, SideflowChanM3, 0)
 
                 # Solve MCT routing and update current state at MCT pixels
                 self.mct_river_router.routing(

@@ -139,7 +139,7 @@ class LisfloodModel_ini(DynamicModel):
         self.surface_routing_module = surface_routing(self)
         self.reservoir_module = Reservoir(self) # get_reservoir(option['reservoirHanazaki'])
         self.lakes_module = lakes(self)
-        # self.mctheadwater_module = mctheadwater(self)
+        self.mctheadwater_module = mctheadwater(self)
         self.polder_module = polder(self)
         self.waterabstraction_module = waterabstraction(self)
         self.indicatorcalc_module = indicatorcalc(self)
@@ -208,7 +208,7 @@ class LisfloodModel_ini(DynamicModel):
         self.polder_module.initial()
 
         # MCT HEADWATER
-        # self.mctheadwater_module.initial()
+        self.mctheadwater_module.initial()
 
         self.transmission_module.initial()
 
@@ -219,16 +219,16 @@ class LisfloodModel_ini(DynamicModel):
         # ----------------------------------------------------------------------
 
         self.routing_module.initialSecond()
-        # CHANNEL INITIAL SPLIT UP IN SECOND CHANNEL
-
-        self.routing_module.initialKinematicWave()
+        # CHANNEL INITIAL SPLIT UP IN SECOND CHANNEL       
 
         self.surface_routing_module.initialSecond()
+
+        self.routing_module.initialKinematicWave()
 
         if option.get('MCTRouting'):
             self.routing_module.initialMCT()
             # initialising Muskingum-Cunge-Todini routing for channel
-            # self.mctheadwater_module.dynamic_init()
+            self.mctheadwater_module.dynamic_init()
             # adding MCT headwater to structures
 
         self.evapowater_module.initial()
