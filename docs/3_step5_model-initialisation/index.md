@@ -1,6 +1,8 @@
-# Step 4: Initialisation & cold start of LISFLOOD
+# Step 4: LISFLOOD initializion or prerun
 
 Just as any other hydrological model, LISFLOOD needs to know the initial state (i.e. amount of water stored in the groundwater zone, soil, channels) of its internal state variables in order to start a simulation. However, in practice we hardly ever know the initial state of all state variables at a given time. Hence, the state of the initial storages must be estimated: this phase is the initialisation of a hydrological model.
+
+A OS LISFLOOD simulation requires at least a prerun and a cold start. In some cases, performing warm start simulations might be convenient. The types of OS LISFLOOD runs are explained below. This page focuses on the OS LISFLOOD prerun, the next page is dedicated to the cold start and the warm start.
 
 >**OS LISFLOOD prerun** simulation has the purpose to adequately initialize the state of the slow storages, namely grounwater zone and soil. OS LISFLOOD prerun constitutes the **initialization run**. OS LISFLOOD prerun output is used as input to the OS LISFLOOD cold start run.
 
@@ -8,7 +10,7 @@ Just as any other hydrological model, LISFLOOD needs to know the initial state (
 
 >**OS LISFLOOD cold start** run takes as input the OS LISFLOOD prerun output to initialize the slow storages (soil and groundwater). Initial values of fast(er) respoding storages (e.g. channel volume) are set to bogus values. It is always recommended to discard the initial (3) years of the OS LISFLOOD cold start to allow adequate initialization of fast(er) respoding storages.
 
->**OS LISFLOOD warm start** resumes the computations from the end states of a preceeding simulation. The set-up of this type of simulation is described in the next section of this user guide.
+>**OS LISFLOOD warm start** resumes the computations from the end states of a preceeding simulation. 
 
 
 In this page we will:
@@ -16,7 +18,7 @@ In this page we will:
   2. [explain the theory of initialisation and the steady-state storage concept](../3_step5_model-initialisation/index.md#the-theory-of-initialisation-and-the-steady-state-storage-concept)
   3. [explain how to run the pre-run (initialization) for kinematic (kinematic and diffusive) and split routing (split routing and diffusive) routing configurations](../3_step5_model-initialisation/index.md#set-up-of-a-lisflood-prerun)
   4. [describe how to complete the initialisation in temporal chunks when needed](../3_step5_model-initialisation/index.md#set-up-of-a-lisflood-prerun-in-temporal-chunks)
-  5. [describe how to use the pre-run outputs to set up a cold start](../3_step5_model-initialisation/index.md#set-up-of-the-cold-start-model-run)
+ 
  
 
 ## The impact of the model initial state on simulation results 
@@ -144,7 +146,7 @@ $$
 
 
 
-## Set-up of a LISFLOOD prerun
+## Setting-up of a LISFLOOD prerun
 
 ### Option 1: If using Kinematic routing only (no split routing):
 
@@ -205,13 +207,6 @@ Similarly, set the name of the reporting map for the end states in <lfuser> sect
 ```
 6) Run the model for a long period (best for the whole modelling period)
 
-7) Go back to the LISFLOOD settings file, and set the InitLisfloodwithoutsplit to inactive, leaving all other switches as before:
-
-```xml
-    <setoption choice="0" name="InitLisfloodwithoutsplit"/>
-    <setoption choice="0" name="InitLisflood"/>
-    <setoption choice="1" name="ColdStart/>
-```
 
 ### Option 2: If using Split routing:
 
@@ -263,19 +258,17 @@ Similarly, set the name of the reporting map for the end states in <lfuser> sect
     <textvar name="AvgDis" value="$(PathOut)/avgdis">
 ```
 
-7) Run the model for a longer period (if possible more than 3 years, best for the whole modelling period)
+7) Run the model for a long period (best for the whole modelling period)
 
-8) Go back to the LISFLOOD settings file, and set the InitLisflood inactive, leaving all other switches as before:
 
-```xml
-    <setoption choice="0" name="InitLisfloodwithoutsplit"/>
-    <setoption choice="0" name="InitLisflood"/>
-    <setoption choice="1" name="ColdStart/>
-```
+> - Using option SplitRouting=1 but InitLisfloodwithoutsplit=1  will result in an AvgDis file with zero values everywhere.
+> - In case of doubts, check content of AvgDis file: if it's all zero, then split routing must be off. Note that an AvgDis file containing all zero values will automatically set LISFLOOD cold start to no split routing, even if SplitRouting=1.
 
 
 
-## Set-up of a LISFLOOD prerun in temporal chunks
+
+
+## Setting-up of a LISFLOOD prerun in temporal chunks
 
 Due to specific settings of the computational infrastructure (e.g. timewall that limits the maximum duration of a job), it might be necessary to complete the LISFLOOD initialization in chunks.
 
@@ -517,130 +510,3 @@ These outputs are:
     * SeepTopToSubBAverageForestMap.nc, average flux from second to third soil layer - forest land cover fraction  
 
     * SeepTopToSubBAverageIrrigationMap.nc, average flux from second to third soil layer - irrigation land cover fraction  
-
-
-
-## Set-up of the cold start model run
-
-
-i) Checking the lower zone initialisation
-
-The presence of any initialisation problems of the lower zone can be checked by adding the following line to the ‘lfoptions’ element of the settings file:
-
-```xml
-<setoption name="repStateUpsGauges" choice="1"></setoption>
-```
-
-This tells the model to write the values of all state variables (averages, upstream of contributing area to each gauge) to time series files. The default name of the lower zone time series is ‘lzUps.tss’.
-
-
-
-![initLZDemo](../media/image40.png)
-
-***Figure:*** *Initialisation of lower groundwater zone with and without using a pre-run. Note the strong decreasing trend in the simulation without pre-run.*
-
-
-
-
-ii) The prerun will then create a number (from 1 to 17, depending on the .xml settings) of maps in NetCDF format. Copy those maps (found in folder "out", see the setting $(PathOut) above) into the folder "init" ($(PathInit))
-
-The following list enumerates the files required for the correct execution of the LISFLOOD Cold Start:
-
-    * lzavin.nc (strictly required)
-
-    * avgdis.nc (strictly required, but only when using SplitRouting)
-
-    * uz.end.nc, groundwater upper zone water content - other land cover fraction (strongly recommended)
-
-    * uzf.end.nc, groundwater upper zone water content - forest land cover fraction (strongly recommended)
-
-    * uzi.end.nc, groundwater upper zone water content - irrigation land cover fraction (strongly recommended)
-
-    * th1.end.nc, soil moisture - other land cover fraction - first layer (strongly recommended)
-
-    * th2.end.nc, soil moisture - other land cover fraction - second layer (strongly recommended)
-
-    * th3.end.nc, soil moisture - other land cover fraction - third layer (strongly recommended)
-
-    * thf1.end.nc, soil moisture - forest land cover fraction - first layer (strongly recommended)
-
-    * thf2.end.nc, soil moisture - forest land cover fraction - second layer (strongly recommended)
-
-    * thf3.end.nc, soil moisture - forest land cover fraction - third layer (strongly recommended)
-
-    * thi1.end.nc, soil moisture - irrigation land cover fraction - first layer (strongly recommended)
-
-    * thi2.end.nc, soil moisture - irrigation land cover fraction - second layer (strongly recommended)
-
-    * thi3.end.nc, soil moisture - irrigation land cover fraction - third layer (strongly recommended)
-
-    * SeepTopToSubBAverageOtherMap.nc, average flux from second to third soil layer - other land cover fraction (strongly recommended)
-
-    * SeepTopToSubBAverageForestMap.nc, average flux from second to third soil layer - forest land cover fraction (strongly recommended)
-
-    * SeepTopToSubBAverageIrrigationMap.nc, average flux from second to third soil layer - irrigation land cover fraction (strongly recommended)
-
-With strongly recommended we mean that the produced .end maps of the initialization run are used as start values of the model run (cold start). 
-
-```xml
-**************************************************************
-INITIAL CONDITIONS FOR THE WATER BALANCE MODEL
-(can be either maps or single values)
-**************************************************************
-</comment>
-
-<textvar name="LZAvInflowMap" value="$(PathInit)/lzavin">
-<comment>
-$(PathInit)/lzavin.map
-Reported map of average percolation rate from upper to
-lower groundwater zone (reported for end of simulation)
-</comment>
-</textvar>
-
-<textvar name="AvgDis" value="$(PathInit)/avgdis">
-<comment>
-$(PathInit)/avgdis.map
-CHANNEL split routing in two lines
-Average discharge map [m3/s]
-</comment>
-</textvar>
-
-<textvar name="SeepTopToSubBAverageOtherMap" value= "$(PathInit)/SeepTopToSubBAverageOtherMap">
-<textvar name="SeepTopToSubBAverageForestMap" value= "$(PathInit)/SeepTopToSubBAverageForestMap">
-<textvar name="SeepTopToSubBAverageIrrigationMap" value= "$(PathInit)/SeepTopToSubBAverageIrrigationMap">
-
-**************************************************************
-INITIAL CONDITIONS OTHER/FOREST/IRRIGATION
-(maps or single values)
-**************************************************************
-
-<textvar name="ThetaInit1Value" value="$(PathInit)/th1.end">
-<textvar name="ThetaInit2Value" value="$(PathInit)/th2.end">
-<textvar name="ThetaInit3Value" value="$(PathInit)/th3.end">
-
-<textvar name="ThetaForestInit1Value" value="$(PathInit)/thf1.end">
-<textvar name="ThetaForestInit2Value" value="$(PathInit)/thf2.end">
-<textvar name="ThetaForestInit3Value" value="$(PathInit)/thf3.end">
-
-<textvar name="ThetaIrrigationInit1Value" value="$(PathInit)/thi1.end">
-<textvar name="ThetaIrrigationInit2Value" value="$(PathInit)/thi2.end">
-<textvar name="ThetaIrrigationInit3Value" value="$(PathInit)/thi3.end">
-
-<textvar name="UZInitValue" value="$(PathInit)/uz.end">
-<textvar name="UZForestInitValue" value="$(PathInit)/uzf.end">
-<textvar name="UZIrrigationInitValue" value="$(PathInit)/uzi.end">
-```
-
-iii) launch LISFLOOD
-
-To run the model, start up a command prompt (Windows) or a console window (Linux) and type 'lisflood' followed by the name of the settings file, e.g.:
-
-```unix
-lisflood settings.xml
-```
-
-
-> Important note:
-> - Calibration parameters obtained with no split routing should never be used to run simulations with split routing and vice versa.
-> - Using option InitLisfloodwithoutsplit=1 will result in an AvgDis file with zero values everywhere.
-> - In case of doubts, check content of AvgDis file: if it's all zero, then split routing must be off. Note that an AvgDis file containing all zero values will automatically set LISFLOOD to no split routing, even if SplitRouting=1.
