@@ -4,7 +4,7 @@ In the current version of OS LISFLOOD, all the model inputs are provided as eith
 
 ### INPUT MAPS
 
-> Albeit OS LISFLOOD can still read maps in pcraster format, users are strongly recommended to prepare their own input maps in NetCDF format: pcraster format will be discarded in future versions of OS LISFLOOD (timeline not yet defined).
+> Albeit OS LISFLOOD can still read maps in pcraster format, users are strongly recommended to prepare their own input maps in NetCDF format: pcraster format will be discarded in future versions of OS LISFLOOD (timeline not yet defined). Users interested in converting their existing pcraster maps into NetCDF format can refer to the [OS LISFLOOD untility pcr2nc](https://github.com/ec-jrc/lisflood-utilities#pcr2nc).
 
 LISFLOOD requires that all maps must have *identical* location attributes (number of rows, columns, cellsize, upper x and y coordinates).
 
@@ -32,16 +32,16 @@ Generally used prefixes for the meteorological forcings maps are: <br>
 ### Static maps
 The section [Static Maps](../4_Static-Maps-introduction) provides detailed guidelines for the preparation of the static maps data set. The following paragraph provides an overview of the information provided by the static maps.
 +   [general maps](../4_Static-Maps_general-maps/): area mask; landuse mask; grid-cell length; grid-cell area.
-+  [topography](../4_Static-Maps_topography/): local drain direction; gradient; standard deviation of elevation; upstream area.
-+  [land use maps](../4_Static-Maps_land-use/): fraction of forest; fraction of irrigated crops; fraction of rice crops; fraction of inland water; fraction of sealed surfaces; fraction of other land uses.
++   [topography](../4_Static-Maps_topography/): local drain direction; gradient; standard deviation of elevation; upstream area.
++   [land use maps](../4_Static-Maps_land-use/): fraction of forest; fraction of irrigated crops; fraction of rice crops; fraction of inland water; fraction of sealed surfaces; fraction of other land uses.
 +   [land use depending](../4_Static-Maps_land-use-depending/):crop coefficient; crop group number; Manning/s's surface roughness; soil depth.
 +   [soil hydraulic properties](../4_Static-Maps_soil-hydraulic-properties/): saturated hydraulic conductivity; soil water content at saturation; residual soil water content; parameters alpha and lambda of Van Genuchten's equations.
 +   [channel geometry](../4_Static-Maps_channel-geometry/): channels mask; channels side slope; channels length; channels gradient; Manning's rougheness coefficient of the channels; channels bottom width; floodplain width; bankfull channels depth; MCT diffusive wave routing channels.
 +   [leaf area index](../4_Static-Maps_leaf-area-index/): evolution of vegetation over time (leaf area index) for land covers forest, irrigated areas, others.
 +   [reservoirs and lakes](../4_Static-Maps_reservoirs-lakes/): lake mask; lakes ID points; reservoirs ID points. These maps are required only upon activation of the [lakes module](https://ec-jrc.github.io/lisflood-model/3_02_optLISFLOOD_lakes/) and/or of the [reservoirs module](https://ec-jrc.github.io/lisflood-model/3_03_optLISFLOOD_reservoirs/).
-+  [rice calendar](../4_Static-Maps_water-use/): rice calendar for planting and harvesting seasons. These maps are required only when activating the [rice irrigation module](https://ec-jrc.github.io/lisflood-model/2_17_stdLISFLOOD_irrigation/)
++   [rice calendar](../4_Static-Maps_water-use/): rice calendar for planting and harvesting seasons. These maps are required only when activating the [rice irrigation module](https://ec-jrc.github.io/lisflood-model/2_17_stdLISFLOOD_irrigation/)
 +   inflow points: locations and IDs of the points in which LISFLOOD adds an inflow hydrograph, as explained [here](https://ec-jrc.github.io/lisflood-model/3_09_optLISFLOOD_inflow-hydrograph/)
-+  [sectoral water demand maps]: domestic, energetic, livestock, industrial water use. These maps represent the time series of spatially distributed values of water demand for domestic, energetic, livestock, and industrial water use. These maps  are required only when activating the [water use module](https://ec-jrc.github.io/lisflood-model/2_18_stdLISFLOOD_water-use/)
++   [sectoral water demand maps]: domestic, energetic, livestock, industrial water use. These maps represent the time series of spatially distributed values of water demand for domestic, energetic, livestock, and industrial water use. These maps  are required only when activating the [water use module](https://ec-jrc.github.io/lisflood-model/2_18_stdLISFLOOD_water-use/)
 + outlet points: locations and IDs of the points for which OS LISFLOOD provides the time series of discharge values.
 
 #### Role of "mask", "channels" ans "channelsMCT" maps 
