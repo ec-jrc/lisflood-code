@@ -135,7 +135,6 @@ class mctheadwater(HydroModule):
             self.var.QInHeadM3Old = np.where(self.var.MCTHeadwaterSitesC > 0, self.var.ChanQAvgDt * self.var.DtSec, 0)  # self.var.QInM3Old
             # difference between old and new headwater flow  per sub step
             # in order to calculate the amount of headwater flow in the routing loop
-            pass
 
 
 
@@ -163,8 +162,7 @@ class mctheadwater(HydroModule):
             # reservoir inflow in [m3/s]
             # (LddStructuresKinematic equals LddKinematic, but without the pits/sinks upstream of the structure
             # locations; note that using Ldd here instead would introduce MV!)
-            # inflow = np.bincount(self.var.downstruct, weights=self.var.ChanQAvgDt)[self.var.MCTHeadwaterIndex]  #same as Qin
-            inflow = self.var.ChanQAvgDt[7] #this is just to make it the same as the inflow run  REMOVE
+            inflow = np.bincount(self.var.downstruct, weights=self.var.ChanQAvgDt)[self.var.MCTHeadwaterIndex]  #same as Qin
 
             self.var.QInHeadM3 = maskinfo.in_zero()
             np.put(self.var.QInHeadM3, self.var.MCTHeadwaterIndex, inflow * self.var.DtSec)
@@ -175,6 +173,5 @@ class mctheadwater(HydroModule):
 
             self.var.QInHeadM3Old = self.var.QInHeadM3.copy()
             # save the upstream inflow for next step
-            pass
 
 

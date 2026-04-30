@@ -74,6 +74,7 @@ class routing(HydroModule):
         flags = settings.flags
         maskinfo = MaskInfo.instance()
 
+
         # ************************************************************
         # ***** NUMBER OF ROUTING STEPS          *********************
         # ************************************************************
@@ -175,10 +176,12 @@ class routing(HydroModule):
             self.var.LddKinematic = self.var.LddChan
             self.var.LddKinematicNp = compressArray(self.var.LddKinematic)  # np
 
+
         # ************************************************************
         # ***** MCT DRAINAGE NETWORK GEOMETRY - LDD  *****************
         # ************************************************************
 
+        # This is done here to be able to add MCT headwater pixels to structures
         if option['MCTRouting']:
 
                 self.var.IsChannelMCTPcr = boolean(loadmap('ChannelsMCT', pcr=True))  # pcr
@@ -199,8 +202,6 @@ class routing(HydroModule):
 
             self.var.mctmask = np.bool8(pcr2numpy(self.var.IsChannelMCTPcr,0))
             # Create a mask with cells using MCT
-            
-            # both variables are necessary to include MCT headwater pixels in the LDD as structures
 
         # ************************************************************
         # ***** MCT DRAINAGE NETWORK GEOMETRY - LDD  *****************
@@ -593,26 +594,9 @@ class routing(HydroModule):
         # ************************************************************
         # ***** INITIALISATION FOR MCT ROUTING            ************
         # ************************************************************
-
-        # the following lines where moved to initial
-        # # even if MCT is active, it should be deactivated if there is no MCT cell in the domain
-        # if option['MCTRouting']:
-        #     self.var.IsChannelMCTPcr = boolean(loadmap('ChannelsMCT', pcr=True))   #pcr
-        #     self.var.IsChannelMCT = np.bool8(compressArray(self.var.IsChannelMCTPcr))   #bool
-        #     if self.var.IsChannelMCT.sum()==0:
-        #         warnings.warn(LisfloodWarning('There are no MCT grid cell. MCT routing is deactivated'))
-        #         option['MCTRouting'] = False
-        #         # rebuild lists of reported files with MCTRouting = False
-        #         settings.build_reportedmaps_dicts()
         
         if option['MCTRouting'] and not option['InitLisflood']:
             maskinfo = MaskInfo.instance()
-
-            # the following lines where moved to initial
-            # self.var.IsChannelMCTPcr = boolean(decompress(self.var.IsChannelMCT))       # pcr
-            # # Identify channel pixels where Muskingum-Cunge-Todini is used
-            # self.var.mctmask = np.bool8(pcr2numpy(self.var.IsChannelMCTPcr,0))
-            # # Create a mask with cells using MCT
 
             self.var.IsChannelKinematicPcr = (self.var.IsChannelPcr == 1) & (self.var.IsChannelMCTPcr == 0)  #pcr
             self.var.IsChannelKinematic = np.bool8(compressArray(self.var.IsChannelKinematicPcr))   #np
@@ -632,7 +616,6 @@ class routing(HydroModule):
             self.var.ChanGrad[MCT_slope_mask] = ChanGradMaxMCT
             # set max channel slope for MCT pixels
 
-            # cmcheck
             # This could become a calibration parameter if we want to use MCT+SplitRouting
             self.var.ChanManMCT = (self.var.ChanMan / self.var.CalChanMan) * loadmap('CalChanMan3')
             # Mannings coefficient for MCT pixels (same as second line of split routing)
@@ -643,6 +626,7 @@ class routing(HydroModule):
             PrevDmMCT = loadmap('PrevDmMCTInitValue')
             self.var.PrevDm0 = np.where(PrevDmMCT == -9999, maskinfo.in_zero(), PrevDmMCT) #np
             # Reynolds number (Dm) for MCT at previous time step t0
+
 
             # ************************************************************
             # ***** INITIALISE MUSKINGUM-CUNGE-TODINI WAVE ROUTER ********
@@ -684,6 +668,7 @@ class routing(HydroModule):
 
         self.inflow_module.dynamic_inloop(NoRoutingExecuted)
         self.transmission_module.dynamic_inloop(NoRoutingExecuted)
+
 
         # ************************************************************
         # ***** CHANNEL FLOW ROUTING: KINEMATIC WAVE  ****************
@@ -750,7 +735,6 @@ class routing(HydroModule):
                      self.var.AddedTRUN -= np.take(np.bincount(self.var.Catchments, weights=self.var.WUseAddM3Dt.copy()),self.var.Catchments)      
 
             # Sideflow contribution to kinematic and split routing grid cells expressed in [cu m /s / m channel length]
-
             SideflowChan = np.where(self.var.IsChannelKinematic, SideflowChanM3 * self.var.InvChanLength * self.var.InvDtRouting,0)
 
             # ************************************************************
@@ -823,7 +807,8 @@ class routing(HydroModule):
                 # This is calculated for MCT grid cell only but takes the output of kinematic or split routing.
                 # First, Kinematic/Split routing is solved on all pixels (including MCT pixels) then results are updated
                 # for the MCT pixels.
-                
+
+
                 # # Sideflow contribution to MCT grid cells expressed in [m3/s]
                 # SideflowChanMCT = np.where(self.var.IsChannelMCT, SideflowChanM3 * self.var.InvDtRouting, 0)  #Ql
 
@@ -837,19 +822,20 @@ class routing(HydroModule):
                 self.var.ChanM3 = ChanM3
                 self.var.ChanQAvgDt = ChanQAvgDt    # -> used to calc q0m
 
-                # ####################
-                #
-                # self.mctheadwater_module.dynamic_inloop(NoRoutingExecuted)
-                # # calculate sideflow from MCT headwater pixels
-                #
-                # SideflowChanM3 += self.var.QHeadM3Dt
-                # # MCT headwater pixles outflow volume per routing sub step [m3]
-                #
-                # ####################
+
+                ####################
+
+                self.mctheadwater_module.dynamic_inloop(NoRoutingExecuted)
+                # calculate sideflow from MCT headwater pixels
+
+                SideflowChanM3 += self.var.QHeadM3Dt
+                # MCT headwater pixles outflow volume per routing sub step [m3]
 
                 # Sideflow contribution to MCT grid cells expressed in [m3/s]
                 SideflowChanMCT = np.where(self.var.IsChannelMCT, SideflowChanM3 * self.var.InvDtRouting, 0)  #Ql
                 SideflowChanMCTM3 = np.where(self.var.IsChannelMCT, SideflowChanM3, 0)
+                ####################
+
 
                 # Solve MCT routing and update current state at MCT pixels
                 self.mct_river_router.routing(

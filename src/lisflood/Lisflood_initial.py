@@ -207,7 +207,6 @@ class LisfloodModel_ini(DynamicModel):
         self.lakes_module.initial()
         self.polder_module.initial()
 
-        # MCT HEADWATER
         self.mctheadwater_module.initial()
 
         self.transmission_module.initial()
@@ -219,7 +218,7 @@ class LisfloodModel_ini(DynamicModel):
         # ----------------------------------------------------------------------
 
         self.routing_module.initialSecond()
-        # CHANNEL INITIAL SPLIT UP IN SECOND CHANNEL       
+        # CHANNEL INITIAL SPLIT UP IN SECOND CHANNEL
 
         self.surface_routing_module.initialSecond()
 
@@ -230,6 +229,8 @@ class LisfloodModel_ini(DynamicModel):
             # initialising Muskingum-Cunge-Todini routing for channel
             self.mctheadwater_module.dynamic_init()
             # adding MCT headwater to structures
+
+
 
         self.evapowater_module.initial()
         self.riceirrigation_module.initial()
