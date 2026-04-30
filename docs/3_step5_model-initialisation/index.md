@@ -62,46 +62,68 @@ The complete list of initial state values for a **OS LISFLOOD prerun** is presen
 - average discharge (when using SplitRouting).
 
 
-### Initialization of soil moisture content
+### Initialization of volumetric soil moisture content 
 
-> An improved initialization scheme has been implemented in OS-LISFLOOD v5.0.0, allowing to remove non-realistic trends in soil moisture content and fictitious discharge values in the channels previously observed, for example, in arid climates. Albeit the former initialization strategy with bogus values is still feasibile, the use of the methodology explained here is highly recommended, for all modelling excercises.
+> An improved initialization scheme has been implemented in OS-LISFLOOD v5, allowing to remove non-realistic trends in the thrid soil layer volumetric soil moisture content and consequent fictitious discharge values in the channels. There were previously observed, for example, in arid climates. Albeit the former initialization strategy with bogus values is still feasibile, the use of the methodology explained here is highly recommended, for all modelling excercises.
 
-OS LISFLOOD prerun provides in output end states and average fluxes. The end states are the volumetric soil moisture content for the three soil layers and the three land covers (9 maps). The average fluxes represent the average infiltration (over the simulation period) from the soil layer 2 to soil layer 3, for the three land cover fractions (3 maps indicated as *SeepTopToSubBAverageXX*). In the cold run, the end states are used to initialise the volumetric soil moisture content of soil layers 1 and 2. The initialisation of the volumetric soil moisture content of soil layer 3 makes use of the relevant end state and of the fluxes.
-Accorind to the steady-state approach, the model tries to enable long term equilibrium conditions between average inflow and outflow fluxes in the third soil layer. 
+OS LISFLOOD prerun provides in output end states and average fluxes. The end states are the volumetric soil moisture content for the three soil layers and the three land covers (9 maps). The average fluxes represent the average infiltration (over the simulation period) from the soil layer 2 to soil layer 3, for the three land cover fractions (3 maps indicated as *SeepTopToSubBAverageOther/Forest/Irrigated*). In the cold run, the end states are used to initialise the volumetric soil moisture content of soil layers 1 and 2. The initialisation of the volumetric soil moisture content of soil layer 3 makes use of the relevant end state and of the fluxes.
+Specifically, according to the steady-state approach, the model tries to enable long term equilibrium conditions between average inflow and outflow fluxes in the third soil layer. 
+*SeepTopToSubBAverageOther/Forest/Irrigated* is the average inflow to the third soil layer. As explained above, this quantity is computed during the prerun.
 
-ADD EQUATION!!!
+$$ 
+q_{soil2to3,fraction} = SeepTopToSubBAverageFraction
+$$
 
-In more detail, for soil layer 3, the average seepage maps as well as an .end map are produced that later serves as a starting guess for solving the second-order, non-linear Van Genuchten equation. Accounting for an adequate spin-up period of the initialization run allows and is recommended to compute realistic average fluxes values. This latter outcome can be achieved by adequately setting the value of *NumDaysSpinUp*.
+The prerun must include a sufficiently long simulation period (a few decades) to allow the computation of representative valuse of  *SeepTopToSubBAverageOther/Forest/Irrigated*. Furthermore, accounting for an adequate spin-up period of the prerun allows is recommended to compute realistic average fluxes values. This latter outcome can be achieved by adequately setting the value of *NumDaysSpinUp* (recommended value: 1095 days, i.e. 3 years). 
+
+Within OS LISFLOOD, the outflow from the third soil layer to the upper groundwater zone is defined by the equations explained in the chapter [Soil moisture redistribution](https://ec-jrc.github.io/lisflood-model/2_12_stdLISFLOOD_soilmoisture-redistribution/) of the [Model Documentation](https://ec-jrc.github.io/lisflood-model/).
+
+$$ 
+q_{soil3toUZ,fraction} = K_s \cdot \sqrt{( \frac{w - w_r}{w_s - w_r})} \cdot \{ 1 - [ 1 - ( \frac{w -w_r}{w_s - w_r})^\frac{1}{m}]^m\}^2
+$$
+
+where $K_s$ is the saturated conductivity of the soil $[\frac{mm}{day}]$; and $w, w_r$ and $w_s$ are the actual, residual and maximum amounts of moisture in the soil respectively (all in $[mm]$); $m$ is a parameter related to the pore-size index.
+
+The long term equilibrium conditions between average inflow and outflow fluxes requires, for each fraction, within each pixel:
+
+$$ 
+SeepTopToSubBAverageFraction = K_s \cdot \sqrt{( \frac{w - w_r}{w_s - w_r})} \cdot \{ 1 - [ 1 - ( \frac{w -w_r}{w_s - w_r})^\frac{1}{m}]^m\}^2
+$$
+
+The third layer volumetric soil moisture content *steady state storage* value is computed by solving the second-order, non-linear equation above, where $w$ is the only unknown.  
+Prerun end states of volumetric soil moisture of layer 3 are used as initial guess for the numerical solution of the equation above.
 
 
-
-### Initialization of the upper groundwater zone
+### Initialization of the upper groundwater zone water content
 To initialize the upper groudwater zone water content it is recommended to use the end state generated by the prerun. <br>
 
 
-### Initialisation of the lower groundwater zone
+### Initialisation of the lower groundwater zone water content
 
-The condition in which *the lower groundwater zone storage is constant over time means that the in- and outflow terms balance each other out*. This condition is known as a **steady state situation**, and the constant ‘end’ storage is in fact the *steady state storage*.
-The rate of change of the lower zone’s storage at any moment is given by the continuity equation:
+According to the steady-state approach, the condition in which *the lower groundwater zone storage is constant over time means that the in- and outflow terms balance each other out*. OS LISFLOOD approach for the computation of inflow, outflow, and storage variation is explained in the chapter [Groudwater](https://ec-jrc.github.io/lisflood-model/2_13_stdLISFLOOD_groundwater/) of the [Model Documentation](https://ec-jrc.github.io/lisflood-model/).
+
+The prerun computes the average net inflow $LZavin$ over the simulation period. For this purpose, the prerun must include a sufficiently long simulation period (a few decades) to achieve representative $LZavin$ values.
+
+Within OS LISFLOOD, groundwater outflow is computed as:
 
 $$
-\frac{dLZ}{dt}=I(t)-O(t)
+Q_{lz}=\frac{1}{T_{lz}} \cdot LZ
 $$
 
-where $I$ is the inflow (i.e. groundwater recharge) and $O$ is the outflow rate. For a situation where the storage remains constant, we can write:
-<br>$\frac{dLZ}{dt}=0$  only if  $I(t)=O(t)$
+$T_{lz}$ is a parameter provided as input to the model or defined by calibration.
 
-This equation can be re-written as:
-<br>$I(t) = \frac{1}{T_{lz}} \cdot LZ$
+The steady state storage $LZ_{ss}$ is then computed internally by the code:
 
-Solving this for LZ gives the steady state storage:
-<br>$LZ_{ss} = T_{lz} \cdot I(t)$
+$$
+\frac{1}{T_{lz}} \cdot LZ =  LZ_{avin}
+$$
 
-T_{lz} is a parameter provided as input to the model.
-The OS LISFLOOD preun is used to compute $I(t)$, here defined as the average net inflow to the lower groundwater zone: $LZavin$.
-T_{lz} and $LZavin$ allow to obtain LZ *steady state storage* value.
+$$
+LZ_{ss} = T_{lz} \cdot LZ_{avin}
+$$
 
-For this purpose, the prerun must include a sufficiently long simulation period (a few decades) to allow the computation of representative values of LZavin. The set-up of the prerun run is explained below; the protocol differs slightly depending on the settings of the split routing option.
+
+ The set-up of the prerun run is explained below; the protocol differs slightly depending on the settings of the split routing option.
 
 **Table:** LISFLOOD special initialisation methods activated by setting the value of each respective variable to a 'bogus' value of -9999
 
@@ -123,7 +145,7 @@ For this purpose, the prerun must include a sufficiently long simulation period 
 
 ### Option 1: If using Kinematic routing only (no split routing):
 
-1) Set initial state of all state variables to either 0,1 or -9999 (i.e. cold start with default values or internally initialised values) in Settings.XML file
+1) Set initial state of all state variables to either 0, 1 or -9999 (i.e. cold start with bogus values or internally initialised values) in Settings.XML file
 
 2) Activate the “InitLisfloodwithoutsplit” and the "InitLisflood" options in <lfoptions> section of Settings.XML file using:
 ```xml
