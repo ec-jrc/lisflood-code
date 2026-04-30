@@ -12,11 +12,11 @@ Just as any other hydrological model, LISFLOOD needs to know the initial state (
 
 
 In this page we will:
-  1. demonstrate the effect of the model's initial states on simulation results
-  2. explain the theory of initialisation and the steady-state storage concept
-  3. explain how to run the pre-run (initialization) for kinematic (kinematic and diffusive) and split routing (split routing and diffusive) routing configurations
-  4. describe how to complete the initialisation in temporal chunks when needed
-  5. describe how to use the pre-run outputs to set up a cold start
+  1. [demonstrate the effect of the model's initial states on simulation results](../3_step5_model-initialisation/index.md#the-impact-of-the-model-initial-state-on-simulation-results)
+  2. [explain the theory of initialisation and the steady-state storage concept](../3_step5_model-initialisation/index.md#the-theory-of-initialisation-and-the-steady-state-storage-concept)
+  3. [explain how to run the pre-run (initialization) for kinematic (kinematic and diffusive) and split routing (split routing and diffusive) routing configurations](../3_step5_model-initialisation/index.md#set-up-of-a-lisflood-prerun)
+  4. [describe how to complete the initialisation in temporal chunks when needed](../3_step5_model-initialisation/index.md#set-up-of-a-lisflood-prerun-in-temporal-chunks)
+  5. [describe how to use the pre-run outputs to set up a cold start](../3_step5_model-initialisation/index.md#set-up-of-the-cold-start-model-run)
  
 
 ## The impact of the model initial state on simulation results 
