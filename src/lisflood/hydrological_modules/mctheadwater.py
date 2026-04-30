@@ -163,8 +163,8 @@ class mctheadwater(HydroModule):
             # reservoir inflow in [m3/s]
             # (LddStructuresKinematic equals LddKinematic, but without the pits/sinks upstream of the structure
             # locations; note that using Ldd here instead would introduce MV!)
-            inflow = np.bincount(self.var.downstruct, weights=self.var.ChanQAvgDt)[self.var.MCTHeadwaterIndex]  #same as Qin
-            # inflow = self.var.ChanQAvgDt[7] #this is just to make it the same as the inflow run  REMOVE
+            # inflow = np.bincount(self.var.downstruct, weights=self.var.ChanQAvgDt)[self.var.MCTHeadwaterIndex]  #same as Qin
+            inflow = self.var.ChanQAvgDt[7] #this is just to make it the same as the inflow run  REMOVE
 
             self.var.QInHeadM3 = maskinfo.in_zero()
             np.put(self.var.QInHeadM3, self.var.MCTHeadwaterIndex, inflow * self.var.DtSec)
