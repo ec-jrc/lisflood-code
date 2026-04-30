@@ -2,25 +2,6 @@
 
 Just as any other hydrological model, LISFLOOD needs to know the initial state (i.e. amount of water stored in the groundwater zone, soil, channels) of its internal state variables in order to start a simulation. However, in practice we hardly ever know the initial state of all state variables at a given time. Hence, the state of the initial storages must be estimated: this phase is the initialisation of a hydrological model.
 
-<div class="warning" style='padding:0.1em; background-color:#E9D8FD; color:#69337A'>
-<span>
-
-<p style='margin-left:1em;'>
-
-OS LISFLOOD **prerun** simulation has the purpose to adequately initialize the state of the slow storages, namely grounwater zone and soil. OS LISFLOOD prerun constitutes the **initialization run**. OS LISFLOOD prerun output is used as input to the OS LISFLOOD cold start run.
-
-OS LISFLOOD cold start run and warm start run deliver the actual model outputs to be usef for analysis/forecasts.
-
-OS LISFLOOD **cold start** run takes as input the OS LISFLOOD prerun output to initialize the slow storages (soil and groundwater). Initial values of fast(er) respoding storages (e.g. channel volume) are set to bogus values. It is always recommended to discard the initial (3) years of the OS LISFLOOD cold start to allow adequate initialization of fast(er) respoding storages.
-
-OS LISFLOOD **warm start** resumes the computations from the end states of a preceeding simulation. The set-up of this type of simulation is described in the next section of this user guide.
-</p>
-<p style='margin-bottom:1em; margin-right:1em; text-align:right; font-family:Georgia'> <b></i>
-</p></span>
-</div>
-
-
-
 >**OS LISFLOOD prerun** simulation has the purpose to adequately initialize the state of the slow storages, namely grounwater zone and soil. OS LISFLOOD prerun constitutes the **initialization run**. OS LISFLOOD prerun output is used as input to the OS LISFLOOD cold start run.
 
 >OS LISFLOOD cold start run and warm start run deliver the actual model outputs to be usef for analysis/forecasts.
