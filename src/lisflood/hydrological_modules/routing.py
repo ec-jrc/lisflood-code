@@ -728,7 +728,7 @@ class routing(HydroModule):
              else:
                  self.var.AddedTRUN += np.take(np.bincount(self.var.Catchments, weights=self.var.ToChanM3RunoffDt.copy()),self.var.Catchments)
                  if option['inflow']:
-                     self.var.AddedTRUN += np.take(np.bincount(self.var.Catchments, weights=self.var.QInDt),self.var.Catchments) 
+                     self.var.AddedTRUN += np.take(np.bincount(self.var.Catchments, weights=self.var.QInDt),self.var.Catchments)
                  if option['openwaterevapo']:
                      self.var.AddedTRUN -= np.take(np.bincount(self.var.Catchments, weights=self.var.EvaAddM3Dt.copy()),self.var.Catchments)
                  if option['wateruse']:

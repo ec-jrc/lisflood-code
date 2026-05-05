@@ -19,8 +19,9 @@ See the Licence for the specific language governing permissions and limitations 
 
 from __future__ import print_function, absolute_import
 
-from pcraster import scalar, numpy2pcr, Nominal, setclone, Boolean, pcr2numpy, upstream
-from pcraster import Scalar, numpy2pcr, Nominal, setclone, Boolean, pcr2numpy
+from pcraster import scalar, upstream
+from pcraster import Scalar, numpy2pcr, pcr2numpy,downstream, boolean
+import pcraster
 
 from nine import range
 
@@ -120,6 +121,19 @@ class mctheadwater(HydroModule):
             # Add reservoir locations to structures map (used to modify LddChan
             # and to calculate LddStructuresChan)
 
+            # # PCRaster part
+            # # -----------------------
+            # MCTHeadwaterSitePcr = numpy2pcr(Scalar, mctheadwater, 0)
+            # MCTHeadwaterSitePcr = pcraster.ifthen((pcraster.defined(MCTHeadwaterSitePcr) & pcraster.boolean(decompress(self.var.IsChannel))), MCTHeadwaterSitePcr)
+            # IsStructureMCTheadwater = pcraster.boolean(MCTHeadwaterSitePcr)
+            # # additional structure map only for lakes to calculate water balance
+            # # self.var.IsUpsOfStructureLake = pcraster.downstream(self.var.LddKinematic, pcraster.cover(IsStructureLake, 0))
+            # self.var.IsUpsOfStructureMCTHeadwater = pcraster.downstream(self.var.LddChan, pcraster.cover(IsStructureMCTheadwater, 0))
+            # # Get all pixels just upstream of MCT headwater cells to calulate water balance
+            # # -----------------------
+
+
+
 
     def dynamic_init(self):
         """ Initialization of the dynamic part of the MCT headwater module
@@ -137,7 +151,6 @@ class mctheadwater(HydroModule):
             # in order to calculate the amount of headwater flow in the routing loop
 
 
-
     def dynamic_inloop(self, NoRoutingExecuted: int):
         """
         Performs the dynamic simulation of MCT headwater/source within the routing loop. This method
@@ -153,6 +166,8 @@ class mctheadwater(HydroModule):
         settings = LisSettings.instance()
         option = settings.options
         maskinfo = MaskInfo.instance()
+
+        self.var.QHeadADDEDM3 = maskinfo.in_zero()
         
         if option['MCTRouting'] and not option['InitLisflood']:
 
@@ -162,7 +177,11 @@ class mctheadwater(HydroModule):
             # reservoir inflow in [m3/s]
             # (LddStructuresKinematic equals LddKinematic, but without the pits/sinks upstream of the structure
             # locations; note that using Ldd here instead would introduce MV!)
-            inflow = np.bincount(self.var.downstruct, weights=self.var.ChanQAvgDt)[self.var.MCTHeadwaterIndex]  #same as Qin
+            # inflow = np.bincount(self.var.downstruct, weights=self.var.ChanQAvgDt)[self.var.MCTHeadwaterIndex]  #same as Qin
+
+            ########
+            inflow = self.var.ChanQAvgDt[7]  # this is just to make it the same as the inflow run  REMOVE
+            ########
 
             self.var.QInHeadM3 = maskinfo.in_zero()
             np.put(self.var.QInHeadM3, self.var.MCTHeadwaterIndex, inflow * self.var.DtSec)
@@ -173,5 +192,9 @@ class mctheadwater(HydroModule):
 
             self.var.QInHeadM3Old = self.var.QInHeadM3.copy()
             # save the upstream inflow for next step
+
+            self.var.QHeadADDEDM3 += self.var.QHeadM3Dt
+            # adding volume to the water balance
+
 
 

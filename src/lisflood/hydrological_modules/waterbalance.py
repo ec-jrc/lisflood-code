@@ -91,7 +91,7 @@ class waterbalance(object):
             #    self.var.IsUpsOfStructureKinematic, self.var.ChanQ * self.var.DtRouting), scalar(0.0))
 
             # DisStructure = np.where(self.var.IsUpsOfStructureKinematicC, self.var.ChanQ * self.var.DtRouting, 0)
-            DisStructure = np.where(self.var.IsUpsOfStructureChanC, self.var.ChanQAvgDt * self.var.DtRouting, 0)
+            DisStructure = np.where(self.var.IsUpsOfStructureChanC, self.var.ChanQAvgDt * self.var.DtRouting, 0)    #np
             # Average Discharge upstream of structure locations (coded as pits) in [m3/time step]
             # Needed for mass balance error calculations (see comment to calculation of WaterInit below)
             # Inclusion of DischargeM3Structures: adding this corrects a (relatively small) offset that occurs otherwise
@@ -99,10 +99,12 @@ class waterbalance(object):
             # calculation of structur influence happens before routing, therefore the initial state is used at the structure onece to often
             # (because it is not routed yet to the structure)
 
+            # DisStructure = np.where(self.var.IsUpsOfStructureReservoir, self.var.ChanQAvgDt * self.var.DtRouting, 0)
+
             # CM
             if option['simulateLakes']:
                 # DisStructure += np.where(compressArray(self.var.IsUpsOfStructureLake), 0.5 * self.var.ChanQ * self.var.DtRouting, 0)
-                DisStructure += np.where(compressArray(self.var.IsUpsOfStructureLake), 0.5 * self.var.ChanQAvgDt * self.var.DtRouting, 0)
+                DisStructure += np.where(compressArray(self.var.IsUpsOfStructureLake), 0.5 * self.var.ChanQAvgDt * self.var.DtRouting, 0)   #np
 
                 # DisStructure += cover(ifthen(self.var.IsUpsOfStructureLake,
                 #  0.5 * self.var.ChanQ * self.var.DtRouting), scalar(0.0))
@@ -246,11 +248,11 @@ class waterbalance(object):
             # added cumulative transmission loss
 
             # DisStru = np.where(self.var.IsUpsOfStructureKinematicC, self.var.ChanQ * self.var.DtRouting, 0)
-            DisStru = np.where(self.var.IsUpsOfStructureChanC, self.var.ChanQAvgDt * self.var.DtRouting, 0)
+            DisStru = np.where(self.var.IsUpsOfStructureChanC, self.var.ChanQAvgDt * self.var.DtRouting, 0) #np
             # using average discharge
 
             DisStru[self.var.AtLastPointC == 1 ] = 0 # this line avoids double-counting when a reservoir or a lake is located at the outlet of the cacthment
-            DischargeM3Structures = np.take(np.bincount(self.var.Catchments, weights=DisStru), self.var.Catchments)
+            DischargeM3Structures = np.take(np.bincount(self.var.Catchments, weights=DisStru), self.var.Catchments) #np
             # on the last time step lakes and reservoirs calculated with the previous routing results
             # so the last (now routed) discharge has to be added to the mass balance
             # (-> the calculation odf the structures is done before the routing)
@@ -275,7 +277,6 @@ class waterbalance(object):
             # Discharge just upstream of structure locations (coded as pits) in [cu m / time step]
             # Needed for mass balance error calculations, because of double counting of structure
             # storage and water in the channel.
-
 
             # Mass balance:
             self.var.MBError = self.var.WaterInit + WaterIn - WaterStored - WaterOut - DischargeM3Structures
