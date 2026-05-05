@@ -318,7 +318,7 @@ class ETRS89TestCase(object):
             shutil.rmtree(output_dir)
 
     @classmethod
-    def compare_reference(cls, variable='dis', check='map', step_length='86400'):
+    def compare_reference(cls, variable='dis', check='map', step_length='86400', atol=0.0001, rtol=0.001):
         """
         :param variable: variable to check. Default 'dis' (Discharge)
         :param check: either 'map' or 'tss'. Default 'map'
@@ -331,11 +331,11 @@ class ETRS89TestCase(object):
 
         if check == 'map':
             output_map = os.path.normpath(binding[cls.reference_files[variable]['report_map']]) + '.nc'
-            comparator = NetCDFComparator(settings.maskpath)
+            comparator = NetCDFComparator(settings.maskpath, atol=atol, rtol=rtol)
             comparator.compare_files(reference, output_map)
         elif check == 'tss':
             output_tss = binding[cls.reference_files[variable]['report_tss']]
-            comparator = TSSComparator()
+            comparator = TSSComparator(atol=atol, rtol=rtol)
             comparator.compare_files(reference, output_tss)
         # If there are differences, test fails before reaching this line (AssertionError(s) in comparator methods)
         assert True

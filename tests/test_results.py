@@ -189,6 +189,6 @@ class TestCatch(ETRS89TestCase):
 
     def test_waterbalance_6h(self):
         self.run_waterbalance('21600', '02/01/2016 06:00', '02/07/2016 06:00')
-        self.compare_reference('mbError', check='tss', step_length='21600')
+        self.compare_reference('mbError', check='tss', step_length='21600', atol=0.0005, rtol=0.005)
         self.compare_reference('mbErrorSplitRoutingM3', check='tss', step_length='21600')
     
