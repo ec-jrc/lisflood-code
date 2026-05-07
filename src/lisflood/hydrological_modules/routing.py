@@ -31,6 +31,7 @@ from .transmission import transmission
 from .kinematic_wave_parallel import kinematicWave, kwpt
 from .mct import MCTWave
 from .mctheadwater import mctheadwater
+from .mctconfluence import mctconfluence
 
 from ..global_modules.settings import LisSettings, MaskInfo
 from ..global_modules.errors import LisfloodWarning
@@ -63,6 +64,7 @@ class routing(HydroModule):
         self.inflow_module = inflow(self.var)
         self.transmission_module = transmission(self.var)
         self.mctheadwater_module = mctheadwater(self.var)
+        self.mctconfluence_module = mctconfluence(self.var)
 
 # --------------------------------------------------------------------------
 # --------------------------------------------------------------------------
@@ -608,6 +610,11 @@ class routing(HydroModule):
             self.var.LddKinematic = lddmask(self.var.LddChan, self.var.IsChannelKinematicPcr)    #pcr
             # Ldd for kinematic routing
 
+
+            # # INITIALISE MCT CONFLUENCE
+            # self.mctconfluence_module.initial()
+            # #####################################################
+
             ChanGradMaxMCT = loadmap('ChanGradMaxMCT')
             # Maximum riverbed slope for MCT rivers
             # Check where IsChannelMCT is True and values in ChanGrad > ChanGradMaxMCT
@@ -824,18 +831,30 @@ class routing(HydroModule):
 
 
                 ####################
+                # MCT HEADWATER
 
                 self.mctheadwater_module.dynamic_inloop(NoRoutingExecuted)
                 # calculate sideflow from MCT headwater pixels
 
                 SideflowChanM3 += self.var.QHeadM3Dt
-                # MCT headwater pixles outflow volume per routing sub step [m3]
+                # MCT headwater pixels outflow volume per routing sub step [m3]
+
+                ####################
+                # MCT CONFLUENCE
+
+                self.mctconfluence_module.dynamic_inloop(NoRoutingExecuted)
+                # calculate sideflow from MCT confluence pixels
+
+                SideflowChanM3 += self.var.QConfM3Dt
+                # MCT confluence pixels outflow volume per routing sub step [m3]
+
+                ####################
+
+
 
                 # Sideflow contribution to MCT grid cells expressed in [m3/s]
                 SideflowChanMCT = np.where(self.var.IsChannelMCT, SideflowChanM3 * self.var.InvDtRouting, 0)  #Ql
                 SideflowChanMCTM3 = np.where(self.var.IsChannelMCT, SideflowChanM3, 0)
-                ####################
-
 
                 # Solve MCT routing and update current state at MCT pixels
                 self.mct_river_router.routing(

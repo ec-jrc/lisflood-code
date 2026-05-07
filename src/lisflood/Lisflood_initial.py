@@ -50,6 +50,7 @@ from .hydrological_modules.surface_routing import surface_routing
 from .hydrological_modules.reservoir import Reservoir
 from .hydrological_modules.lakes import lakes
 from .hydrological_modules.mctheadwater import mctheadwater
+from .hydrological_modules.mctconfluence import mctconfluence
 from .hydrological_modules.polder import polder
 from .hydrological_modules.waterabstraction import waterabstraction
 from .hydrological_modules.indicatorcalc import indicatorcalc
@@ -140,6 +141,7 @@ class LisfloodModel_ini(DynamicModel):
         self.reservoir_module = Reservoir(self) # get_reservoir(option['reservoirHanazaki'])
         self.lakes_module = lakes(self)
         self.mctheadwater_module = mctheadwater(self)
+        self.mctconfluence_module = mctconfluence(self)
         self.polder_module = polder(self)
         self.waterabstraction_module = waterabstraction(self)
         self.indicatorcalc_module = indicatorcalc(self)
@@ -208,6 +210,7 @@ class LisfloodModel_ini(DynamicModel):
         self.polder_module.initial()
 
         self.mctheadwater_module.initial()
+        # initialising MCT headwater pixels
 
         self.transmission_module.initial()
 
@@ -227,8 +230,13 @@ class LisfloodModel_ini(DynamicModel):
         if option.get('MCTRouting'):
             self.routing_module.initialMCT()
             # initialising Muskingum-Cunge-Todini routing for channel
+
+            self.mctconfluence_module.initial()
+            # initialising MCT confluence pixels
+
             self.mctheadwater_module.dynamic_init()
-            # adding MCT headwater to structures
+            self.mctconfluence_module.dynamic_init()
+
 
 
 
