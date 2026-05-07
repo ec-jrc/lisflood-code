@@ -237,9 +237,6 @@ class LisfloodModel_ini(DynamicModel):
             self.mctheadwater_module.dynamic_init()
             self.mctconfluence_module.dynamic_init()
 
-
-
-
         self.evapowater_module.initial()
         self.riceirrigation_module.initial()
         self.waterabstraction_module.initial()

@@ -20,16 +20,9 @@ See the Licence for the specific language governing permissions and limitations 
 from __future__ import print_function, absolute_import
 
 from pcraster import scalar, upstream
-from pcraster import Scalar, numpy2pcr, pcr2numpy,downstream, boolean
-import pcraster
-
+from pcraster import Scalar, numpy2pcr, pcr2numpy
 from nine import range
-
-import warnings
-
-from pcraster.operations import ifthen, boolean, defined, lookupscalar
 import numpy as np
-
 from ..global_modules.settings import LisSettings, MaskInfo
 from ..global_modules.add1 import loadmap, compressArray, decompress, makenumpy
 from ..global_modules.errors import LisfloodWarning
@@ -38,25 +31,24 @@ from . import HydroModule
 
 class mctheadwater(HydroModule):
     """
-    Adds upstream discharge as a lateral flux at headwater and source grid cells when MCT routing is enabled.
+    Adds contribution from Kinematic cells to MCT cells as a lateral flow when MCT routing is enabled.
+    This is for MCT cells that have upstream contributions from both kinematic cells only.
 
-    This module handles the initialization and dynamic simulation of checkpoints, accounting for
-    inflow and outflow. It can be used in MCT channels to account for headwater/source grid cells.
-    It injects upstream discharge to the downstream grid cell as lateral inflow.
+    This module handles the initialization and dynamic simulation of MCT headwater cells.
+    It injects upstream discharge from kinematic cells to the downstream MCT grid cell as lateral flow.
 
     Attributes:
     -----------
-        var (object): An object containing all the variables used within the reservoir module.
+        var (object): An object containing all the variables used within the mctheadwater module.
 
     Methods:
     --------
         initial(): Sets up the initial conditions and parameters for the simulation,
-                   including headwater/source locations.
+                   including headwater locations.
         dynamic_inloop(NoRoutingExecuted: int): Performs dynamic calculations within the routing
-                   loop to simulate inflow and outflow from the headwater/source.
+                   loop to simulate the kinematic to MCT confluence.
     """
-    
-    # input_files_keys = {'mctheadwater': ['Checkpoints']}
+
     module_name = 'MCTHeadwater'
 
     def __init__(self, mctheadwater_variable):
@@ -64,19 +56,19 @@ class mctheadwater(HydroModule):
 
     def __init__(self, mctheadwater_variable):
         """
-        Initializes the MCT headwater/source module with a given variable object.
+        Initializes the MCT headwater module with a given variable object.
 
         Parameters:
         -----------
         mctheadwater_variable: object
-            An object containing the variables needed for the MCT headwater/source simulation.
+            An object containing the variables needed for the MCT headwater simulation.
         """
 
         self.var = mctheadwater_variable
         
     def initial(self):
         """
-        Initiates the MCT headwater/source module by loading the necessary data and maps.
+        Initiates the MCT headwater module by loading the necessary data and maps.
         """
         
         settings = LisSettings.instance()
@@ -84,11 +76,6 @@ class mctheadwater(HydroModule):
         binding = settings.binding
         maskinfo = MaskInfo.instance()
         if option['MCTRouting']:
-
-            # mctsource = loadmap('InflowPoints')     ### temporary da cambiare addiungendo una chiave in settings
-            # mctsource[(mctsource < 1) | (self.var.IsChannel == 0)] = 0
-            # # load MCT source locations and keep only those on the channel network
-
 
             UpStreamPcr = upstream(self.var.LddChan, scalar(self.var.IsChannelPcr))
             UpStream = pcr2numpy(UpStreamPcr, 0)
@@ -133,27 +120,19 @@ class mctheadwater(HydroModule):
             # # -----------------------
 
 
-
-
     def dynamic_init(self):
         """ Initialization of the dynamic part of the MCT headwater module
             init mct headwater before sub step routing
         """
-
-        # ************************************************************
-        # ***** HEADWATER INIT
-        # ************************************************************
         settings = LisSettings.instance()
         option = settings.options
         if option['MCTRouting']:
             self.var.QInHeadM3Old = np.where(self.var.MCTHeadwaterSitesC > 0, self.var.ChanQAvgDt * self.var.DtSec, 0)  # self.var.QInM3Old
-            # difference between old and new headwater flow  per sub step
-            # in order to calculate the amount of headwater flow in the routing loop
 
 
     def dynamic_inloop(self, NoRoutingExecuted: int):
         """
-        Performs the dynamic simulation of MCT headwater/source within the routing loop. This method
+        Performs the dynamic simulation of MCT headwater within the routing loop. This method
         injects upstream discharge to the downstream grid cell as lateral inflow.
 
         Parameters:
@@ -174,24 +153,25 @@ class mctheadwater(HydroModule):
             InvDtSecDay = 1 / float(86400)
             # InvDtSecDay=self.var.InvDtSec
 
-            # reservoir inflow in [m3/s]
-            # (LddStructuresKinematic equals LddKinematic, but without the pits/sinks upstream of the structure
-            # locations; note that using Ldd here instead would introduce MV!)
             inflow = np.bincount(self.var.downstruct, weights=self.var.ChanQAvgDt)[self.var.MCTHeadwaterIndex]  #same as Qin
+            # contribution to the MCT pixel from upstream Kinematic pixels
 
             # ########
+            # debug
             # inflow = self.var.ChanQAvgDt[7]  # this is just to make it the same as the inflow run  REMOVE
             # ########
 
             self.var.QInHeadM3 = maskinfo.in_zero()
             np.put(self.var.QInHeadM3, self.var.MCTHeadwaterIndex, inflow * self.var.DtSec)
             self.var.QDeltaM3 = (self.var.QInHeadM3 - self.var.QInHeadM3Old) * self.var.InvNoRoutSteps
+            # difference between old and new headwater flow  per sub step
+            # in order to calculate the amount of headwater flow in the routing loop
 
             self.var.QHeadM3Dt = (self.var.QInHeadM3Old + (NoRoutingExecuted + 1) * self.var.QDeltaM3) * self.var.InvNoRoutSteps
             # output to the MCT headwater cells
 
             self.var.QInHeadM3Old = self.var.QInHeadM3.copy()
-            # save the upstream inflow for next step
+            # save the upstream flow for next step
 
             self.var.QHeadADDEDM3 += self.var.QHeadM3Dt
             # adding volume to the water balance
