@@ -2,7 +2,7 @@
 
 This page describes how to prepare your own settings file. Instead of writing the settings file completely from scratch, we suggest usinng the [reference settings file](https://github.com/ec-jrc/lisflood-code/tree/master/src/lisfloodSettings_reference.xml) as a starting point. 
 
-In oder the run a simulation you will need:
+In order the run a simulation you will need:
 
   -   Meteo input maps
   -   Static input maps 
