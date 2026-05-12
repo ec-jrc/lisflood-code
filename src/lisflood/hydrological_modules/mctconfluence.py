@@ -18,7 +18,7 @@ See the Licence for the specific language governing permissions and limitations 
 """
 
 from __future__ import print_function, absolute_import
-from pcraster import Scalar, numpy2pcr, pcr2numpy,downstream, boolean
+from pcraster import Scalar, numpy2pcr, pcr2numpy,downstream, boolean,lddrepair,ifthenelse
 from nine import range
 import numpy as np
 from ..global_modules.settings import LisSettings, MaskInfo
@@ -86,13 +86,20 @@ class mctconfluence(HydroModule):
             maskKinematic[compressArray(self.var.AtLastPoint) == 1] = False
             # find location of KIN pixels (only) in LddKin that are at the confluence with an MCT pixel
             # do not include sinks upstream of structures (lakes, reservoirs, MCT headwater pixels) and outlets
+            maskKinematicPcr = boolean(decompress(maskKinematic))
 
-            self.var.UpsOfMCTConfluence = np.where(maskKinematic, down, 0)
+            self.var.LddChan = ifthenelse(maskKinematicPcr, 5, self.var.LddChan)
+            # Adding sink at the last KIN pixels upstream of the confluence with an MCT pixel to LddChan
+            # already added to LddKinematic
+
+            self.var.KinematicUpsOfMCTConfluence = np.where(maskKinematic, down, 0)
             # find last KIN pixels upstream of the confluence with an MCT pixel and assign it the id of the downstream MCT pixel
 
             mctconfluence = maskinfo.in_zero()
-            mctconfluence[np.isin(inAr, self.var.UpsOfMCTConfluence[self.var.UpsOfMCTConfluence != 0])] = 1
-            # for each element in UpsOfMCTConfluence (they are Kinematic cells), get the value of the downstream cell and find the  position ix of that same value in inAr, read the inAr value and put 1 in the corrisponding position in mctconfluence
+            mctconfluence[np.isin(inAr, self.var.KinematicUpsOfMCTConfluence[self.var.KinematicUpsOfMCTConfluence != 0])] = 1
+            # for each element in KinematicUpsOfMCTConfluence (they are Kinematic cells), get the value of the downstream cell,
+            # then find the  position ix of that same value in inAr (vector with numbering of all cells) this is the position of the MCT confluence cell,
+            # read the inAr value and put 1 in the corrisponding position in mctconfluence
             # identify location of MCT pixels that receive a contribution from an upstream KIN pixel (with no structure on it)
 
             # mctconfluence[self.var.MCTHeadwaterSitesC == 1] = 0
@@ -103,6 +110,7 @@ class mctconfluence(HydroModule):
             self.var.MCTConfluenceSitesC = mctconfluence
             self.var.MCTConfluenceSitesCC = np.compress(mctconfluence > 0, mctconfluence)
             self.var.MCTConfluenceIndex = np.nonzero(mctconfluence)[0]
+            pass
 
 
     def dynamic_init(self):
@@ -138,7 +146,7 @@ class mctconfluence(HydroModule):
             InvDtSecDay = 1 / float(86400)
             # InvDtSecDay=self.var.InvDtSec
 
-            lateralflow = np.bincount(self.var.UpsOfMCTConfluence, weights=self.var.ChanQAvgDt)[self.var.MCTConfluenceIndex]  #same as Qin
+            lateralflow = np.bincount(self.var.KinematicUpsOfMCTConfluence, weights=self.var.ChanQAvgDt)[self.var.MCTConfluenceIndex]  #same as Qin
             # contribution to the MCT pixel from upstream Kinematic pixels
 
             self.var.QInConfM3 = maskinfo.in_zero()

@@ -144,6 +144,7 @@ class routing(HydroModule):
         self.var.LddToChan = lddrepair(ifthenelse(self.var.IsChannelPcr, 5, self.var.Ldd)) #pcr
         self.var.LddToChanNp=compressArray(self.var.LddToChan)  #np
         # Routing of runoff (incl. groundwater) to the river channel
+        # LDD for routing runoff (incl. groundwater) to the channel
 
         if option['dynamicWave']:
             pass
@@ -178,6 +179,8 @@ class routing(HydroModule):
             self.var.LddKinematic = self.var.LddChan
             self.var.LddKinematicNp = compressArray(self.var.LddKinematic)  # np
 
+        # At this point, LddChan and LddKinematic do not have sinks at reservoirs/lakes or MCT headwater and MCT confluences
+        # LddMCT does not exist yet
 
         # ************************************************************
         # ***** MCT DRAINAGE NETWORK GEOMETRY - LDD  *****************
@@ -538,6 +541,7 @@ class routing(HydroModule):
         # Initialise parallel kinematic wave router: main channel-only routing if self.var.ChannelAlpha2 is None; else split-routing(main channel + floodplains)
         # Initialization includes LDD for kinematic routing
         maskinfo = MaskInfo.instance()
+
         self.river_router = kinematicWave(compressArray(self.var.LddKinematic), ~maskinfo.info.mask, self.var.ChannelAlpha,
                                            self.var.Beta, self.var.ChanLength, self.var.DtRouting,
                                           alpha_floodplains=self.var.ChannelAlpha2, flagnancheck=flags['nancheck'])

@@ -107,6 +107,7 @@ class mctheadwater(HydroModule):
             self.var.IsStructureChan = np.where(self.var.MCTHeadwaterSitesC > 0, np.bool8(1), self.var.IsStructureChan)
             # Add reservoir locations to structures map (used to modify LddChan
             # and to calculate LddStructuresChan)
+            pass
 
             # # PCRaster part
             # # -----------------------

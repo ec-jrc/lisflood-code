@@ -81,3 +81,4 @@ class structures(object):
             # Update LddKinematic by adding a pit in the pixel immediately upstream of a structure
             self.var.LddChan = lddrepair(ifthenelse(IsUpsOfStructureChan, 5, self.var.LddChan))     #pcr map
             # Update LddChan by adding a pit in the pixel immediately upstream of a structure
+            pass

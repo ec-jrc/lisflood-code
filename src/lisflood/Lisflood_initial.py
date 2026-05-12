@@ -205,6 +205,8 @@ class LisfloodModel_ini(DynamicModel):
         self.inflow_module.initial()
         self.surface_routing_module.initial()
 
+        # At this point LddChan and LddKinematic do not have any structure reservoirs/lakes MCT headwater MCT confluence
+
         self.reservoir_module.initial()
         self.lakes_module.initial()
         self.polder_module.initial()
@@ -216,6 +218,7 @@ class LisfloodModel_ini(DynamicModel):
 
         self.structures_module.initial()
         # Structures such as reservoirs and lakes are modelled by interrupting the channel flow paths
+        # At this point we have reservoirs/lakes MCT headwater in the LDD
 
         # ----------------------------------------------------------------------
         # ----------------------------------------------------------------------
@@ -225,6 +228,7 @@ class LisfloodModel_ini(DynamicModel):
 
         self.surface_routing_module.initialSecond()
 
+        # MCT confluence must be in the LddKinematic when I get here
         self.routing_module.initialKinematicWave()
 
         if option.get('MCTRouting'):
@@ -236,6 +240,7 @@ class LisfloodModel_ini(DynamicModel):
 
             self.mctheadwater_module.dynamic_init()
             self.mctconfluence_module.dynamic_init()
+
 
         self.evapowater_module.initial()
         self.riceirrigation_module.initial()
