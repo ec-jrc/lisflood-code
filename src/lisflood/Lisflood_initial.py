@@ -218,7 +218,10 @@ class LisfloodModel_ini(DynamicModel):
 
         self.structures_module.initial()
         # Structures such as reservoirs and lakes are modelled by interrupting the channel flow paths
-        # At this point we have reservoirs/lakes MCT headwater in the LDD
+        # At this point we have reservoirs/lakes and MCT headwater points in the LDD
+
+        self.mctconfluence_module.initial()
+        # initialising MCT confluence points and adding MCT confluence to the LDD
 
         # ----------------------------------------------------------------------
         # ----------------------------------------------------------------------
@@ -235,11 +238,13 @@ class LisfloodModel_ini(DynamicModel):
             self.routing_module.initialMCT()
             # initialising Muskingum-Cunge-Todini routing for channel
 
-            self.mctconfluence_module.initial()
-            # initialising MCT confluence pixels
-
             self.mctheadwater_module.dynamic_init()
             self.mctconfluence_module.dynamic_init()
+
+        # self.routing_module.initialKinematicWave()
+        # this cannot be here because I need river_router in the MCT initialization
+
+
 
 
         self.evapowater_module.initial()

@@ -208,6 +208,11 @@ class routing(HydroModule):
             self.var.mctmask = np.bool8(pcr2numpy(self.var.IsChannelMCTPcr,0))
             # Create a mask with cells using MCT
 
+            self.var.IsChannelKinematicPcr = (self.var.IsChannelPcr == 1) & (self.var.IsChannelMCTPcr == 0)  #pcr
+            self.var.IsChannelKinematic = np.bool8(compressArray(self.var.IsChannelKinematicPcr))   #np
+            # Identify channel pixels where Kinematic wave is used instead of MCT
+
+
         # ************************************************************
         # ***** MCT DRAINAGE NETWORK GEOMETRY - LDD  *****************
         # ************************************************************
@@ -604,9 +609,9 @@ class routing(HydroModule):
         if option['MCTRouting'] and not option['InitLisflood']:
             maskinfo = MaskInfo.instance()
 
-            self.var.IsChannelKinematicPcr = (self.var.IsChannelPcr == 1) & (self.var.IsChannelMCTPcr == 0)  #pcr
-            self.var.IsChannelKinematic = np.bool8(compressArray(self.var.IsChannelKinematicPcr))   #np
-            # Identify channel pixels where Kinematic wave is used instead of MCT
+            # self.var.IsChannelKinematicPcr = (self.var.IsChannelPcr == 1) & (self.var.IsChannelMCTPcr == 0)  #pcr
+            # self.var.IsChannelKinematic = np.bool8(compressArray(self.var.IsChannelKinematicPcr))   #np
+            # # Identify channel pixels where Kinematic wave is used instead of MCT
 
             self.var.LddMCT = lddmask(self.var.LddChan, self.var.IsChannelMCTPcr)  #pcr
             # Ldd for MCT routing

@@ -18,7 +18,7 @@ See the Licence for the specific language governing permissions and limitations 
 """
 
 from __future__ import print_function, absolute_import
-from pcraster import Scalar, numpy2pcr, pcr2numpy,downstream, boolean,lddrepair,ifthenelse
+from pcraster import Scalar, numpy2pcr, pcr2numpy,downstream, boolean,lddrepair,ifthenelse,lddmask
 from nine import range
 import numpy as np
 from ..global_modules.settings import LisSettings, MaskInfo
@@ -79,18 +79,26 @@ class mctconfluence(HydroModule):
             # Assign a number to each non-missing pixel as cell id, starting from 0
             inAr = compressArray(inArPcr)
 
-            down = (compressArray(downstream(self.var.LddStructuresChan, inArPcr))).astype("int32")  # np
+            down = (compressArray(downstream(self.var.LddChan, inArPcr))).astype("int32")  # np
             # assign to each pixel the cell id of the pixel it is contributing to
+            # At this point, LddChan do not contain structures
 
-            maskKinematic = (compressArray(self.var.LddKinematic) == 5) & (self.var.IsUpsOfStructureKinematicC != 1)
+            LddKinematic = lddmask(self.var.LddChan, self.var.IsChannelKinematicPcr)
+            # this is the same as the self.var.LddKinematic with only kinematic cells and no structures
+            # MCT pixels are masked out
+
+            maskKinematic = (compressArray(LddKinematic) == 5) & (self.var.IsUpsOfStructureKinematicC != 1)
+
             maskKinematic[compressArray(self.var.AtLastPoint) == 1] = False
             # find location of KIN pixels (only) in LddKin that are at the confluence with an MCT pixel
             # do not include sinks upstream of structures (lakes, reservoirs, MCT headwater pixels) and outlets
             maskKinematicPcr = boolean(decompress(maskKinematic))
 
             self.var.LddChan = ifthenelse(maskKinematicPcr, 5, self.var.LddChan)
-            # Adding sink at the last KIN pixels upstream of the confluence with an MCT pixel to LddChan
-            # already added to LddKinematic
+            self.var.LddKinematic = ifthenelse(maskKinematicPcr, 5, self.var.LddKinematic)
+            # Adding sinks to Ldd at the last KIN pixels upstream of the confluence with an MCT pixel to LddChan and LddKinematic
+            # This similar to what is done in structures
+            # At this point LddChan and LddKinematic only have points upstream of a Kin-MCT confluence
 
             self.var.KinematicUpsOfMCTConfluence = np.where(maskKinematic, down, 0)
             # find last KIN pixels upstream of the confluence with an MCT pixel and assign it the id of the downstream MCT pixel
