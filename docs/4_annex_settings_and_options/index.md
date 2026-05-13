@@ -2,13 +2,13 @@ This annex presents a nearly comprehensive list of setting options, inputs, and 
 
 The content is organized in the following tables:
 
-- **lfoptions**: list of available switches to activate optional modules and optional outputs (time series and map formats)
+- [**lfoptions**](../4_annex_settings_and_options/index.md#table-lisflood-settings-lfoptions): list of available switches to activate optional modules and optional outputs (time series and map formats)
 - **luser*: list of variables which are generally defined by the users.
 - **lfbinding**: list of model variables.
 - **initial variables*: list of variables required for model initialization (cold and warm start of both prerun and run)
 
 
-## **Table:** *LISFLOOD Settings: lfoptions.*
+## **Table:** *lfoptions section in OS LISFLOOD settings xml*
 
 The table below presents the ist of available switches to activate optional modules and optional outputs (time series and map formats). For each option, 1 = ON; 0 = OFF. Deault staus is 0 = OFF, unless otherwise indicated in the table. 
 
@@ -106,7 +106,7 @@ The table below presents the ist of available switches to activate optional modu
 
 
 
-##**Table:** *LISFLOOD Settings: lfuser.*
+## **Table:** *lfuser in OS LISFLOOD settings xml*
 
 
 |   section   (XML)       |   module                                   |   KEY                                      |   Type                  |   I/O                          |   Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
@@ -269,7 +269,7 @@ The table below presents the ist of available switches to activate optional modu
 | lfuser                  | EVAPORATION FROM OPEN WATER                | maxNoEva                                   | 10                      | value                          | input                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 
 
-##**Table:** *LISFLOOD Settings: lfbinding.*
+## **Table:** *lfbinging section in OS LISFLOOD settings xml*
 
 |   section   (XML)       |   module                                                       |   KEY                                      | settings                                              |   Type                  |   I/O                          |   Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 |:------------------------|:---------------------------------------------------------------|:-------------------------------------------|:------------------------------------------------------|:------------------------|:-------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -525,7 +525,7 @@ The table below presents the ist of available switches to activate optional modu
 
 
 
-##**Table:** *Variables required for model initialization.*
+## **Table:** *Variables required for model initialization.*
 
 |   section   (XML)       |   module                                   |   KEY                                   | In settings xml                               | Type                         | Cold Start: prerun and run                                     | Warm Start: preun                | Warm Start: run              | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 |:------------------------|:-------------------------------------------|:----------------------------------------|:----------------------------------------------|:-----------------------------|:---------------------------------------------------------------|:---------------------------------|:-----------------------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
