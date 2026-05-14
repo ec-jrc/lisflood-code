@@ -49,23 +49,33 @@ The sections ‘lfuser’, ‘lfoptions’ and ‘lfbinding’' have different p
     - Options that activate OS LISFLOOD optional modules, such as simulate reservoirs, lakes, etc.
     - Options to activate the reporting of additional output maps and time series (e.g. soil moisture maps)
 
-    A comprehensive list of available options and default values is contained in the [Annex: settings and options](https://ec-jrc.github.io/lisflood-code/4_annex_settings_and_options/).
+    Options are set to active using "1" (viceversa, "0" means that the option is de-activated).
     
     Users are not obliged to include all available options in Settings.xml file: if one option is not specified in Settings.xml, the default option will be automatically used.
     If Users leave the ‘lfoptions’ element empty, LISFLOOD will simply run using default options (i.e. run model without optional modules; only report most basic output files). 
     However, the ‘lfoptions’ element itself (i.e. <lfoptions> </lfoptions>) has to be present, even if empty.
 
+    A comprehensive list of available options and default values is contained in the [Annex: settings and options](https://ec-jrc.github.io/lisflood-code/4_annex_settings_and_options/).
+
 
 + <span style="color:green"> **lfuser**</span> contains user-defined definition of **paths** to all in- and output files, and main model parameters (calibration + time-related).
 
      The variables in the ‘lfuser’ elements are all text variables, and they are used simply to substitute repeatedly used expressions in the binding element. 
+     OS LISFLOOD code makes use of the settings in the 'lfbinding' section (see below). 'lfbinding' section includes all the settings. 'lfuser' section includes the subset of settings that are often changed by users. If a setting in the 'lfbinding' section refers to the 'lfuser' section, OS LISFLOOD code will use the latter one. 
+     For example:
 
+```xml
+     'lfuser' secttion: 
+     <textvar name="IrrigationEfficiency" value="$(PathMaps)/irrigation_efficiency_baseline.nc"></textvar>
+     'lfbinding' secttion: 
+     <textvar name="IrrigationEfficiency" value="$(IrrigationEfficiency)"></textvar>
+```
 
 + <span style="color:pink"> **lfbinding**</span> contains definition of **all parameter values** of LISFLOOD model as well as **all in- and output maps, time series and tables**.
 
-    It is possible to define everything directly in the ‘lfbinding’ element without using any text variables at al. In that case, the ‘lfuser’ element can remain empty, even though it has to be present (i.e. <lfuser> </lfuser>) [NOT recommended]
+    Since OS LISFLOOD code refers to the ‘lfbinding’ section, it is possible to define everything directly in the ‘lfbinding’ section without using any text variables in 'lfuser' section. In that case, the ‘lfuser’ element can remain empty, even though it has to be present (i.e. <lfuser> </lfuser>).
 
-    In general, it is a good idea to use user-defined variables for everything that needs to be changed on a regular basis (paths to input maps, tables, meteorological data, and parameter values). This way Users only have to deal with the variables in the ‘lfuser’ element, without having to worry about anything in ‘lfbinding’ at all. “lfuser” allows to have all the important variables defined in the same element.
+    In general, it is a good idea to use user-defined variables for everything that needs to be changed on a regular basis (paths to input maps, tables, meteorological data, and parameter values). According to this approachm users will only need to verify and edit the variables in the ‘lfuser’ element, and changes to ‘lfbinding’ are not required.
 
 
 
