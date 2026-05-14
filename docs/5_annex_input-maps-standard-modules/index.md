@@ -33,7 +33,7 @@ $ET0$, $EW0$ and $ES0$ can be calculated using standard meteorological observati
 
 ***Table:*** *LISFLOOD input maps.*
 
-| Map                                                       | Default name   | Units, range                                           | Description                                                  |
+| Map                                                       | Default name   | Units, range (indicative)                                         | Description                                                  |
 | --------------------------------------------------------- | ------------------- | ------------------------------------------------------ | ------------------------------------------------------------ |
 | **GENERAL**                                               |                     |                                                        |                                                              |
 | MaskMap                                                   | area.nc            | Unit: - <br> Range: 0 or 1                             | Boolean map that defines model boundaries                    |
@@ -49,14 +49,15 @@ $ET0$, $EW0$ and $ES0$ can be calculated using standard meteorological observati
 | Fraction of rice fields                                   | fracrice.nc      | U.:[-] <br> R.: 0 ≤ map ≤ 1                            | Fraction for each cell dedicated to paddy rice crops. Values range from 0 to 1 |
 | Fraction of other land cover                              | fracother.nc       | U.: [-] <br> R.: 0 ≤ map ≤ 1                           | Other (non-forested natural area, pervious surface of urban areas, shrubs abd bushes, ...) fraction for each cell. |
 | **LAND COVER depending maps**                             |                     |                                                        |                                                              |
-| Crop coef. for forest                                     | cropcoef_forest.nc | U.: [-] <br> R.: 0.8≤ map ≤ 1.2                        | Crop coefficient for forest                                  |
-| Crop coef. for other                                      | cropcoef_other.nc  | U.: [-] <br> R.: 0.8≤ map ≤ 1.2                        | Crop coefficient for other                                   |
+| Crop coeff. for forest                                     | cropcoef_forest.nc | U.: [-] <br> R.: 0.2≤ map ≤ 1.2                        | Crop coefficient for forest                                  |
+| Crop coeff. for other                                      | cropcoef_other.nc  | U.: [-] <br> R.: 0.2≤ map ≤ 1.2                        | Crop coefficient for other                                   |
+| Crop coeff. for irrigated areas                                     | cropcoef_irr.nc  | U.: [-] <br> R.: 0.2≤ map ≤ 1.2                        | Crop coefficient for other                                   |
 | Crop group number for forest                              | crgrnum_forest.nc  | U.: [-] <br> R.: 1 ≤ map ≤ 5                           | Crop group number for forest                                 |
 | Crop group number for forest                              | crgrnum_other.nc   | U.: [-] <br> R.: 1 ≤ map ≤ 5                           | Crop group number for other                                  |
-| Crop group number for irrigation                              | crgrnum_irr.nc   | U.: [-] <br> R.: 1 ≤ map ≤ 5                           | Crop group number for irrigation                                  |
-| Manning for forest                                        | mannings_forest.nc | U.: $m^{-1/3} s$ <br> R.: 0.2≤ map ≤ 0.4               | Manning's roughness for forest                               |
-| Manning for other                                         | mannings_other.nc  | U.: $m^{-1/3} s$  <br> R.: 0.01≤ map ≤0.3              | Manning's roughness for other                                |
-| Manning for irrigation                                         | mannings_irr.nc  | U.: $m^{-1/3} s$  <br> R.: 0.01≤ map ≤0.3              | Manning's roughness for irrigation                                |
+| Crop group number for irrigated areas                              | crgrnum_irr.nc   | U.: [-] <br> R.: 1 ≤ map ≤ 5                           | Crop group number for irrigation                                  |
+| Manning for forest                                        | mannings_forest.nc | U.: $m^{1/3} s^{-1}$ <br> R.: 0.015≤ map ≤ 0.4               | Manning's roughness for forest                               |
+| Manning for other                                         | mannings_other.nc  | U.: $m^{1/3} s^{-1}$  <br> R.: 0.015≤ map ≤0.4              | Manning's roughness for other                                |
+| Manning for irrigation                                         | mannings_irr.nc  | U.: $m^{1/3} s^{-1}$  <br> R.: 0.015≤ map ≤0.4              | Manning's roughness for irrigation                                |
 | Soil depth for forest for layer1                          | soildepth1_forest.nc | U.: $mm$ <br> R.: map ≥ 50                             | Forest soil depth for soil layer 1            |
 | Soil depth for other for layer1                           | soildepth1_other.nc  | U.: $mm$ <br> R.: map ≥ 50                             | Other soil depth for soil layer 1           |
 | Soil depth for forest for layer2                          | soildepth2_forest.nc | U.: $mm$ <br> R.: map ≥ 50                             | Forest soil depth for soil layer 2                           |
