@@ -1,9 +1,9 @@
 # Essential concepts
 
 This page presents:
-- an overview of the required files and folders
-- an overview of the OS LISFLOOD Settings.xml file (the main and essential argument of OS LISFLOOD command line)
-- the time convention within lisflood, understanding of the latter is **essential for a correct model set-up**.
+- an overview of the [required files and folders](../3_step1_ESSENTIAL_concepts_to_get_started/index.md#what-is-needed-to-run-a-os-lisflood-model)
+- an overview of the [OS LISFLOOD Settings.xml](../3_step1_ESSENTIAL_concepts_to_get_started/index.md#os-lisflood-settings-file-settingsxml) (the main and essential argument of OS LISFLOOD command line)
+- the [time convention within lisflood](../3_step1_ESSENTIAL_concepts_to_get_started/index.md#time-convention-within-os-lisflood-model), understanding of the latter is **essential for a correct model set-up**.
 
 ## What is needed to run a OS LISFLOOD model?
 
