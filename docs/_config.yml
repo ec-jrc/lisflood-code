@@ -203,7 +203,7 @@ defaults:
       - section_title: "Step-by-step user guide"
         items:
         - title: "Step 1: Essential concepts to get started"
-          url: 2_step1_ESSENTIAL_concepts_to_get_started
+          url: 3_step1_ESSENTIAL_concepts_to_get_started
         - title: "Step 2: Preparing the settings file"
           url: 3_step2_preparing-setting-file
         - title: "Step 3: Preparing input files"
