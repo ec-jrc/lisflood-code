@@ -45,13 +45,13 @@ class structures(object):
         """
         self.var.LddStructuresKinematic = self.var.LddKinematic     #pcr map
         LddStructuresKinematicNp = compressArray(self.var.LddStructuresKinematic)
-        # Unmodified version of LddKinematic is needed to connect inflow and outflow points
-        # of each structure (called LddStructuresKinematic now)
+        # Unmodified version of LddKinematic is needed for MCT confluence
+        # Legacy not used keeping for consistency
 
         self.var.LddStructuresChan = self.var.LddChan   #pcr map
         LddStructuresChanNp = compressArray(self.var.LddStructuresChan)
-        # Unmodified version of LddChan is needed to connect inflow and outflow points
-        # of each structure (called LddStructuresChan now)
+        # Unmodified version of LddChan is used in evapowater, indicatorcalc and waterabstreaction
+        # It is neded to identify MCT confluences
 
         settings = LisSettings.instance()
         option = settings.options

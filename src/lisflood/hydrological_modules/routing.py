@@ -819,10 +819,6 @@ class routing(HydroModule):
                 # First, Kinematic/Split routing is solved on all pixels (including MCT pixels) then results are updated
                 # for the MCT pixels.
 
-
-                # # Sideflow contribution to MCT grid cells expressed in [m3/s]
-                # SideflowChanMCT = np.where(self.var.IsChannelMCT, SideflowChanM3 * self.var.InvDtRouting, 0)  #Ql
-
                 # Grab outflow at the end of the previous routing step t for all pixels) - current state of the MCT pixel
                 ChanQ_0 = self.var.ChanQ.copy()     # Outflow (x+dx) at time t (end of previous routing step) (instant)  -> used to calc q00
                 ChanM3_0 = self.var.ChanM3.copy()   # Channel storage at time t (end of previous routing step) (instant) V00

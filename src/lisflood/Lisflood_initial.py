@@ -205,7 +205,7 @@ class LisfloodModel_ini(DynamicModel):
         self.inflow_module.initial()
         self.surface_routing_module.initial()
 
-        # At this point LddChan and LddKinematic do not have any structure reservoirs/lakes MCT headwater MCT confluence
+        # At this point LddChan and LddKinematic do not have any structure reservoirs/lakes MCT confluence
 
         self.reservoir_module.initial()
         self.lakes_module.initial()
@@ -213,16 +213,14 @@ class LisfloodModel_ini(DynamicModel):
 
         self.transmission_module.initial()
 
-        # self.mctheadwater_module.initial()
-        # # initialising MCT headwater pixels and adding pixels upstream of MCT headwater to the LDD
-
-        self.mctconfluence_module.initial()
-        # initialising MCT confluence points and adding MCT confluence to the LDD
-
-        # At this point LddKinematic and LddChan have pits upstream of (structures) reservoirs and lakes but not at MCT interface pixels
         self.structures_module.initial()
         # Structures such as reservoirs and lakes are modelled by interrupting the channel flow paths
-        # At this point LddKinematic and LddChan have pits upstream of (structures) reservoirs and lakes and at MCT interface pixels
+        # At this point LddKinematic and LddChan have pits upstream of (structures) reservoirs and lakes
+
+        # self.mctheadwater_module.initial()
+        # # initialising MCT headwater pixels and adding pixels upstream of MCT headwater to the LDD
+        self.mctconfluence_module.initial()
+        # initialising MCT confluence points and adding MCT confluence sinks to the LDD
 
         # ----------------------------------------------------------------------
         # ----------------------------------------------------------------------
