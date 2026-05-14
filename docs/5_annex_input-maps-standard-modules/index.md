@@ -51,7 +51,7 @@ $ET0$, $EW0$ and $ES0$ can be calculated using standard meteorological observati
 | **LAND COVER depending maps**                             |                     |                                                        |                                                              |
 | Crop coeff. for forest                                     | cropcoef_forest.nc | U.: [-] <br> R.: 0.2≤ map ≤ 1.2                        | Crop coefficient for forest                                  |
 | Crop coeff. for other                                      | cropcoef_other.nc  | U.: [-] <br> R.: 0.2≤ map ≤ 1.2                        | Crop coefficient for other                                   |
-| Crop coeff. for irrigated areas                                     | cropcoef_irr.nc  | U.: [-] <br> R.: 0.2≤ map ≤ 1.2                        | Crop coefficient for other                                   |
+| Crop coeff. for irrigated areas                                     | cropcoef_irr.nc  | U.: [-] <br> R.: 0.2≤ map ≤ 1.2                        | Crop coefficient for irrigated areas                                   |
 | Crop group number for forest                              | crgrnum_forest.nc  | U.: [-] <br> R.: 1 ≤ map ≤ 5                           | Crop group number for forest                                 |
 | Crop group number for forest                              | crgrnum_other.nc   | U.: [-] <br> R.: 1 ≤ map ≤ 5                           | Crop group number for other                                  |
 | Crop group number for irrigated areas                              | crgrnum_irr.nc   | U.: [-] <br> R.: 1 ≤ map ≤ 5                           | Crop group number for irrigation                                  |
