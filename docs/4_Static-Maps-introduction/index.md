@@ -19,7 +19,7 @@ This user guide provides the examples for the European and Global domains that a
 + Ocean masked with NoData (except, pixel length and pixel area maps).
 
 
-### Reference
+## References
 
 Readers of this user guide are encouarged to cite the scinetific publications listed below.
 
@@ -32,13 +32,13 @@ Users of OS LISFLOOD are encouraged to refer to this online documentation. Inacc
 
 
 
-### Available data sets
+## Available datasets
 
 OS LISFLOOD static input maps and tables for the operational versions of the [Copernicus Emergency Management Service](https://emergency.copernicus.eu/) European and Global Flood Awareness System ([EFAS](https://european-flood.emergency.copernicus.eu/react/), [GloFAS](https://global-flood.emergency.copernicus.eu/react/)) can be downloaded from:
 
 - EC-JRC Data Catalogue, [LISFLOOD static and parameter maps for Europe](https://data.jrc.ec.europa.eu/dataset/f572c443-7466-4adf-87aa-c0847a169f23)
 
-- EC-JRC Data Catalogue, [LISFLOOD static and parameter maps for GloFAS] (https://publications.jrc.ec.europa.eu/repository/handle/JRC132801)
+- EC-JRC Data Catalogue, [LISFLOOD static and parameter maps for GloFAS](https://publications.jrc.ec.europa.eu/repository/handle/JRC132801)
 
 The European Meteorological Observations (EMO) 1 arcmin-resolution, (sub-)daily, multi-variable gridded meteorological dataset includes precipitation, temperatuure, wind speed,solar radiation and water vapour pressure for the pan-European EFAS computational domain, and it can be downloaded from:
 
