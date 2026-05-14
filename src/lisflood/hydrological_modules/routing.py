@@ -63,7 +63,7 @@ class routing(HydroModule):
         self.polder_module = polder(self.var)
         self.inflow_module = inflow(self.var)
         self.transmission_module = transmission(self.var)
-        self.mctheadwater_module = mctheadwater(self.var)
+        # self.mctheadwater_module = mctheadwater(self.var)
         self.mctconfluence_module = mctconfluence(self.var)
 
 # --------------------------------------------------------------------------
@@ -833,11 +833,11 @@ class routing(HydroModule):
                 self.var.ChanM3 = ChanM3
                 self.var.ChanQAvgDt = ChanQAvgDt    # -> used to calc q0m
 
-                # MCT HEADWATER
-                self.mctheadwater_module.dynamic_inloop(NoRoutingExecuted)
-                # calculate sideflow from MCT headwater pixels
-                SideflowChanM3 += self.var.QHeadM3Dt
-                # MCT headwater pixels outflow volume per routing sub step [m3]
+                # # MCT HEADWATER
+                # self.mctheadwater_module.dynamic_inloop(NoRoutingExecuted)
+                # # calculate sideflow from MCT headwater pixels
+                # SideflowChanM3 += self.var.QHeadM3Dt
+                # # MCT headwater pixels outflow volume per routing sub step [m3]
 
                 # MCT CONFLUENCE
                 self.mctconfluence_module.dynamic_inloop(NoRoutingExecuted)

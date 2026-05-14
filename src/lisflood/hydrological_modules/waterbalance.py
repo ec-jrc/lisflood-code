@@ -250,6 +250,7 @@ class waterbalance(object):
             # DisStru = np.where(self.var.IsUpsOfStructureKinematicC, self.var.ChanQ * self.var.DtRouting, 0)
             DisStru = np.where(self.var.IsUpsOfStructureChanC, self.var.ChanQAvgDt * self.var.DtRouting, 0) #np
             # using average discharge
+            # At this point self.var.IsUpsOfStructureChanC only includes structures (reservoirs and lakes)
 
             DisStru[self.var.AtLastPointC == 1 ] = 0 # this line avoids double-counting when a reservoir or a lake is located at the outlet of the cacthment
             DischargeM3Structures = np.take(np.bincount(self.var.Catchments, weights=DisStru), self.var.Catchments) #np
@@ -288,6 +289,8 @@ class waterbalance(object):
             
 
             self.var.WaterInit = WaterStored + DischargeM3Structures
+            
+
             if option['TransientLandUseChange'] and (self.var.DynamicLandCoverDelta > 0.0):
                  self.var.WaterInit = WaterStored_nextstep + DischargeM3Structures
             # update the water storage             

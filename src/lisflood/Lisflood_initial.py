@@ -140,7 +140,7 @@ class LisfloodModel_ini(DynamicModel):
         self.surface_routing_module = surface_routing(self)
         self.reservoir_module = Reservoir(self) # get_reservoir(option['reservoirHanazaki'])
         self.lakes_module = lakes(self)
-        self.mctheadwater_module = mctheadwater(self)
+        # self.mctheadwater_module = mctheadwater(self)
         self.mctconfluence_module = mctconfluence(self)
         self.polder_module = polder(self)
         self.waterabstraction_module = waterabstraction(self)
@@ -211,17 +211,18 @@ class LisfloodModel_ini(DynamicModel):
         self.lakes_module.initial()
         self.polder_module.initial()
 
-        self.mctheadwater_module.initial()
-        # initialising MCT headwater pixels
-
         self.transmission_module.initial()
 
-        self.structures_module.initial()
-        # Structures such as reservoirs and lakes are modelled by interrupting the channel flow paths
-        # At this point we have reservoirs/lakes and MCT headwater points in the LDD
+        # self.mctheadwater_module.initial()
+        # # initialising MCT headwater pixels and adding pixels upstream of MCT headwater to the LDD
 
         self.mctconfluence_module.initial()
         # initialising MCT confluence points and adding MCT confluence to the LDD
+
+        # At this point LddKinematic and LddChan have pits upstream of (structures) reservoirs and lakes but not at MCT interface pixels
+        self.structures_module.initial()
+        # Structures such as reservoirs and lakes are modelled by interrupting the channel flow paths
+        # At this point LddKinematic and LddChan have pits upstream of (structures) reservoirs and lakes and at MCT interface pixels
 
         # ----------------------------------------------------------------------
         # ----------------------------------------------------------------------
@@ -238,11 +239,12 @@ class LisfloodModel_ini(DynamicModel):
             self.routing_module.initialMCT()
             # initialising Muskingum-Cunge-Todini routing for channel
 
-            self.mctheadwater_module.dynamic_init()
+            # self.mctheadwater_module.dynamic_init()
             self.mctconfluence_module.dynamic_init()
 
         # self.routing_module.initialKinematicWave()
         # this cannot be here because I need river_router in the MCT initialization
+
 
 
 

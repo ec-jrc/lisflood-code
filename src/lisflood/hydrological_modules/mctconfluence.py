@@ -85,13 +85,14 @@ class mctconfluence(HydroModule):
 
             LddKinematic = lddmask(self.var.LddChan, self.var.IsChannelKinematicPcr)
             # this is the same as the self.var.LddKinematic with only kinematic cells and no structures
+            # pits added at the last Kin pixel before confluence to MCT pixels
             # MCT pixels are masked out
 
-            maskKinematic = (compressArray(LddKinematic) == 5) & (self.var.IsUpsOfStructureKinematicC != 1)
+            maskKinematic = (compressArray(LddKinematic) == 5)      #& (self.var.IsUpsOfStructureKinematicC != 1)
 
             maskKinematic[compressArray(self.var.AtLastPoint) == 1] = False
             # find location of KIN pixels (only) in LddKin that are at the confluence with an MCT pixel
-            # do not include sinks upstream of structures (lakes, reservoirs, MCT headwater pixels) and outlets
+            # this does NOT include sinks upstream of structures (lakes, reservoirs) and outlets
             maskKinematicPcr = boolean(decompress(maskKinematic))
 
             self.var.LddChan = ifthenelse(maskKinematicPcr, 5, self.var.LddChan)
@@ -147,7 +148,7 @@ class mctconfluence(HydroModule):
         option = settings.options
         maskinfo = MaskInfo.instance()
 
-        self.var.QConfADDEDM3 = maskinfo.in_zero()
+        # self.var.QConfADDEDM3 = maskinfo.in_zero()
         
         if option['MCTRouting'] and not option['InitLisflood']:
 
@@ -169,8 +170,8 @@ class mctconfluence(HydroModule):
             self.var.QInConfM3Old = self.var.QInConfM3.copy()
             # save the lateral flow for next step
 
-            self.var.QConfADDEDM3 += self.var.QConfM3Dt
-            # adding volume to the water balance
+            # self.var.QConfADDEDM3 += self.var.QConfM3Dt
+
 
 
 

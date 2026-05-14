@@ -21,6 +21,7 @@ from __future__ import print_function, absolute_import
 
 from pcraster import scalar, upstream
 from pcraster import Scalar, numpy2pcr, pcr2numpy
+from pcraster import downstream, boolean, cover, lddrepair, ifthenelse
 from nine import range
 import numpy as np
 from ..global_modules.settings import LisSettings, MaskInfo
@@ -88,7 +89,9 @@ class mctheadwater(HydroModule):
             mctheadwater = (self.var.mctmask & (UpStreamMCT == 0) & (UpStream != 0)).astype(int)
             # identify pixels in the MCT network that are head MCT pixels and are not general head pixels
 
-            mctheadwater = compressArray(numpy2pcr(Scalar, mctheadwater, 0))
+            mctheadwaterPcr = numpy2pcr(Scalar, mctheadwater, 0)
+
+            mctheadwater = compressArray(mctheadwaterPcr)
             mctheadwater[np.isnan(mctheadwater)] = 0.0
             # flatten and add mask
 
@@ -99,26 +102,32 @@ class mctheadwater(HydroModule):
             self.var.MCTHeadwaterSitesCC = np.compress(mctheadwater > 0, mctheadwater)
             self.var.MCTHeadwaterIndex = np.nonzero(mctheadwater)[0]
 
-            # Add MCT headwater locations to structures map
-            # (used to modify LddKinematic and to calculate LddStructuresKinematic)
-            self.var.IsStructureKinematic = np.where(self.var.MCTHeadwaterSitesC > 0, np.bool8(1), self.var.IsStructureKinematic)
-            # Add reservoir locations to structures map (used to modify LddKinematic
-            # and to calculate LddStructuresKinematic)
-            self.var.IsStructureChan = np.where(self.var.MCTHeadwaterSitesC > 0, np.bool8(1), self.var.IsStructureChan)
-            # Add reservoir locations to structures map (used to modify LddChan
-            # and to calculate LddStructuresChan)
-            pass
+            # # Add MCT headwater locations to structures map
+            # # (used to modify LddKinematic and to calculate LddStructuresKinematic)
+            # self.var.IsStructureKinematic = np.where(self.var.MCTHeadwaterSitesC > 0, np.bool8(1), self.var.IsStructureKinematic)
+            # # Add reservoir locations to structures map (used to modify LddKinematic
+            # # and to calculate LddStructuresKinematic)
+            # self.var.IsStructureChan = np.where(self.var.MCTHeadwaterSitesC > 0, np.bool8(1), self.var.IsStructureChan)
+            # # Add reservoir locations to structures map (used to modify LddChan
+            # # and to calculate LddStructuresChan)
 
-            # # PCRaster part
-            # # -----------------------
-            # MCTHeadwaterSitePcr = numpy2pcr(Scalar, mctheadwater, 0)
-            # MCTHeadwaterSitePcr = pcraster.ifthen((pcraster.defined(MCTHeadwaterSitePcr) & pcraster.boolean(decompress(self.var.IsChannel))), MCTHeadwaterSitePcr)
-            # IsStructureMCTheadwater = pcraster.boolean(MCTHeadwaterSitePcr)
-            # # additional structure map only for lakes to calculate water balance
-            # # self.var.IsUpsOfStructureLake = pcraster.downstream(self.var.LddKinematic, pcraster.cover(IsStructureLake, 0))
-            # self.var.IsUpsOfStructureMCTHeadwater = pcraster.downstream(self.var.LddChan, pcraster.cover(IsStructureMCTheadwater, 0))
-            # # Get all pixels just upstream of MCT headwater cells to calulate water balance
-            # # -----------------------
+            # at this point, Ldd already have pits upstream of reservoirs and lakes
+            IsUpsOfMCTHeadwaterKinematic = downstream(     #pcr map
+                self.var.LddKinematic,
+                cover(boolean(decompress(self.var.MCTHeadwaterSitesC)), boolean(0))
+            )
+            # Find location of pixels immediately upstream of an MCT Headwater pixel on the LddKinematic
+
+            IsUpsOfMCTHeadwaterChan = downstream(      #pcr map
+                self.var.LddChan,
+                cover(boolean(decompress(self.var.MCTHeadwaterSitesC)), boolean(0))
+            )
+            # Find location of pixels immediately upstream of a structure on the LddChan
+
+            self.var.LddKinematic = lddrepair(ifthenelse(IsUpsOfMCTHeadwaterKinematic, 5, self.var.LddKinematic))  #pcr map
+            # Update LddKinematic by adding a pit in the pixel immediately upstream of a MCT headwater pixel
+            self.var.LddChan = lddrepair(ifthenelse(IsUpsOfMCTHeadwaterChan, 5, self.var.LddChan))     #pcr map
+            # Update LddChan by adding a pit in the pixel immediately upstream of a MCT headwater pixel
 
 
     def dynamic_init(self):
@@ -147,7 +156,7 @@ class mctheadwater(HydroModule):
         option = settings.options
         maskinfo = MaskInfo.instance()
 
-        self.var.QHeadADDEDM3 = maskinfo.in_zero()
+        # self.var.QHeadADDEDM3 = maskinfo.in_zero()
         
         if option['MCTRouting'] and not option['InitLisflood']:
 
@@ -174,8 +183,7 @@ class mctheadwater(HydroModule):
             self.var.QInHeadM3Old = self.var.QInHeadM3.copy()
             # save the upstream flow for next step
 
-            self.var.QHeadADDEDM3 += self.var.QHeadM3Dt
-            # adding volume to the water balance
+            # self.var.QHeadADDEDM3 += self.var.QHeadM3Dt
 
 
 
