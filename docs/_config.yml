@@ -246,18 +246,18 @@ defaults:
                                                                        
       - section_title: "Annex"
         items:
-        - title: "LISFLOOD input files"
-          url: 4_annex_input-files
+        - title: "LISFLOOD standard modules input maps "
+          url: 5_annex_input-maps-standard-modules
         - title: "LISFLOOD output files"
-          url: 4_annex_output-files
+          url: 5_annex_output-files
         - title: "LISFLOOD settings and options"
-          url: 4_annex_settings_and_options
+          url: 5_annex_settings_and_options
         - title: "LISFLOOD state variables"
-          url: 4_annex_state-variables
+          url: 5_annex_state-variables
         - title: "LISFLOOD parameters range and default values"
-          url: 4_annex_parameters
+          url: 5_annex_parameters
         - title: "LISFLOOD Tests documentation"
-          url: 4_annex_tests
+          url: 5_annex_tests
 
       - section_title: "Not to forget"
         items:
