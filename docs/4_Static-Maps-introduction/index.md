@@ -38,7 +38,7 @@ OS LISFLOOD static input maps and tables for the operational versions of the [Co
 
 - EC-JRC Data Catalogue, [LISFLOOD static and parameter maps for Europe](https://data.jrc.ec.europa.eu/dataset/f572c443-7466-4adf-87aa-c0847a169f23)
 
-- EC-JRC Data Catalogue, [LISFLOOD static and parameter maps for GloFAS](https://publications.jrc.ec.europa.eu/repository/handle/JRC132801)
+- EC-JRC Data Catalogue, [LISFLOOD static and parameter maps for GloFAS](https://data.jrc.ec.europa.eu/dataset/68050d73-9c06-499c-a441-dc5053cb0c86)
 
 The European Meteorological Observations (EMO) 1 arcmin-resolution, (sub-)daily, multi-variable gridded meteorological dataset includes precipitation, temperatuure, wind speed,solar radiation and water vapour pressure for the pan-European EFAS computational domain, and it can be downloaded from:
 
