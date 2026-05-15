@@ -193,10 +193,12 @@ class LisfloodModel_ini(DynamicModel):
 
         self.snow_module.initial()
         self.frost_module.initial()
-        self.leafarea_module.initial()
-        self.soilloop_module.initial()
 
+        self.leafarea_module.initial()
+
+        self.soilloop_module.initial()
         self.soil_module.initial()
+
         self.routing_module.initial()
 
         self.groundwater_module.initial()

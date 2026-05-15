@@ -291,6 +291,10 @@ class routing(HydroModule):
         TotalCrossSectionAreaHalfBankFull = BankFullPerc * self.var.TotalCrossSectionAreaBankFull
         # set BankFullPerc to 0.5 for half bankfull
 
+        # # Channel volume initialization for MCT cells
+        # TotalCrossSectionAreaHalfBankFull = np.where(self.var.IsChannelKinematic, TotalCrossSectionAreaHalfBankFull, 0.01 * self.var.TotalCrossSectionAreaBankFull)
+        # # set initial volume in MCT cells to 1% of bankfull
+
         TotalCrossSectionAreaInitValue = loadmap('TotalCrossSectionAreaInitValue')
         self.var.TotalCrossSectionArea = np.where(TotalCrossSectionAreaInitValue == -9999, TotalCrossSectionAreaHalfBankFull, TotalCrossSectionAreaInitValue)
         # Total cross-sectional area [m2]: if initial value in binding equals -9999 the value at half bankfull is used,
@@ -557,7 +561,7 @@ class routing(HydroModule):
         if option['InitLisflood'] and option['repMBTs']:
             # Calculate initial water storage in rivers (no lakes no reservoirs)
             # self.var.StorageStepINIT= self.var.ChanM3Kin
-            self.var.StorageStepINIT = self.var.ChanM3
+            self.var.StorageStepINIT = self.var.ChanM3.copy()
             # Initial water volume in river channels
             self.var.DischargeM3StructuresIni = maskinfo.in_zero()
             if option['simulateReservoirs']:
@@ -567,7 +571,7 @@ class routing(HydroModule):
             self.var.StorageStepINIT = np.take(np.bincount(self.var.Catchments, weights=self.var.StorageStepINIT), self.var.Catchments)
 
         if not option['InitLisflood'] and option['repMBTs']:
-           self.var.StorageStepINIT = self.var.ChanM3
+           self.var.StorageStepINIT = self.var.ChanM3.copy()
            # DisStructure = np.where(self.var.IsUpsOfStructureKinematicC, self.var.ChanQ * self.var.DtRouting, 0)
            DisStructure = np.where(self.var.IsUpsOfStructureChanC, self.var.ChanQ * self.var.DtRouting, 0)
            if not(option['SplitRouting']):
