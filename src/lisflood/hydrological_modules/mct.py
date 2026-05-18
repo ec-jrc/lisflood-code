@@ -110,7 +110,7 @@ class MCTWave:
         )
 
 
-# @njit(parallel=True, fastmath=False, cache=True)
+@njit(parallel=True, fastmath=False, cache=True)
 def mct_routing(
     # static inputs (not changing between time steps)
     ChanLength,             # Channel length
@@ -223,7 +223,7 @@ def mct_routing(
             PrevDm0[kinpix] = Dm1       # Reynolds number at the end of routing step t+dt (instant)
 
 
-# @njit(nogil=True, fastmath=False, cache=True)
+@njit(nogil=True, fastmath=False, cache=True)
 def MCTRouting_single(
     V00, q10, q01, q00, ql, q0mm, Cm0, Dm0, dt, xpix, s0, Balv, ANalv, Nalv
 ):
@@ -374,7 +374,7 @@ def MCTRouting_single(
     return q11, q1mm, V11, Cm1, Dm1
 
 
-# @njit(nogil=True, fastmath=False, cache=True)
+@njit(nogil=True, fastmath=False, cache=True)
 def hoq(q, s0, Balv, ANalv, Nalv):
     """Water depth h from discharge q.
     Given a generic cross-section (rectangular, triangular or trapezoidal) and a steady-state discharge q=Q*, it computes
@@ -452,7 +452,7 @@ def hoq(q, s0, Balv, ANalv, Nalv):
     return y
 
 
-# @njit(nogil=True, fastmath=False, cache=True)
+@njit(nogil=True, fastmath=False, cache=True)
 def qoh(y, s0, Balv, ANalv, Nalv):
     """Discharge q from water depth h.
     Given a generic river cross-section (rectangular, triangular and trapezoidal)
@@ -506,7 +506,7 @@ def qoh(y, s0, Balv, ANalv, Nalv):
     return q, a, b, p, cel
 
 
-# @njit(nogil=True, fastmath=False, cache=True)
+@njit(nogil=True, fastmath=False, cache=True)
 def hoV(V, xpix, Balv, ANalv):
     """Water depth h from volume V.
     Given a generic river cross-section (rectangular, triangular and trapezoidal) and a river channel volume V,
@@ -541,7 +541,7 @@ def hoV(V, xpix, Balv, ANalv):
     return y
 
 
-# @njit(nogil=True, fastmath=False, cache=True)
+@njit(nogil=True, fastmath=False, cache=True)
 def qoV(V, xpix, s0, Balv, ANalv, Nalv):
     """Discharge q from river channel volume V.
     Given a generic river cross-section (rectangular, triangular and trapezoidal)
@@ -563,13 +563,13 @@ def qoV(V, xpix, s0, Balv, ANalv, Nalv):
     return q
 
 
-# @njit(nogil=True, fastmath=False, cache=True)
+@njit(nogil=True, fastmath=False, cache=True)
 def cotan(x):
     """There is no cotangent function in numpy"""
     return np.cos(x) / np.sin(x)
 
 
-# @njit(nogil=True, fastmath=False, cache=True)
+@njit(nogil=True, fastmath=False, cache=True)
 def rad_from_dxdy(dxdy):
     """Calculate radians"""
     rad = np.arctan(1 / dxdy)
