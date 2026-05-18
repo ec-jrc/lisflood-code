@@ -239,7 +239,7 @@ def MCTRouting_single(
 
     # Calc O' first guess for the outflow at time t+dt
     # O'(t+dt)=O(t)+(I(t+dt)-I(t))
-    q11 = q10 + (q01 - q00)
+    q11 = q10 + (q01 - q00) # + ql
 
     # check for negative and zero discharge values
     # zero outflow is not allowed
@@ -249,6 +249,11 @@ def MCTRouting_single(
     # calc reference discharge at time t
     # qm0 = (I(t)+O(t))/2
     # qm0 = (q00 + q10) / 2.
+
+    # ql correction for hydraulic state computation
+    # Only positive ql contributes (ignore abstraction), 
+    # /2 represents uniform distribution along reach
+    # ql_correction = max(ql, 0.0) / 2.0
 
     # Calc O(t+dt)=q11 at time t+dt using MCT equations
     for i in range(2):  # repeat 2 times for accuracy
@@ -273,7 +278,7 @@ def MCTRouting_single(
 
         # Calc reference discharge time t+dt
         # Q(t+dt)=(I(t+dt)+O'(t+dt))/2
-        qm1 = (q01 + q11) / 2.0
+        qm1 = (q01 + q11) / 2.0 # + ql_correction
         # cm
         if qm1 <= eps :  # cmcheck ==0     #tpk
             qm1 = eps                   #tpk
@@ -291,10 +296,24 @@ def MCTRouting_single(
         Cm1 = ck1 * dt / xpix / Beta1
 
         # Calc MCT parameters
+        # Guard Diffusivity
+        # Dm1 = min(max(Dm1, 0.0), 1.0)
         den = 1 + Cm1 + Dm1
+
         c1 = (-1 + Cm1 + Dm1) / den
-        c2 = (1 + Cm0 - Dm0) / den * (Cm1 / Cm0)
-        c3 = (1 - Cm0 + Dm0) / den * (Cm1 / Cm0)
+
+        # Guard against Cm0 near zero (first timestep or after dry conditions)
+        if Cm0 > eps:
+            cm_ratio = Cm1 / Cm0
+            if cm_ratio > 3.0:
+                cm_ratio = 3.0
+            elif cm_ratio < 0.1:
+                cm_ratio = 0.1
+        else:
+            cm_ratio = 1.0
+
+        c2 = (1 + Cm0 - Dm0) / den * cm_ratio
+        c3 = (1 - Cm0 + Dm0) / den * cm_ratio
         c4 = (2 * Cm1) / den
 
         # cmcheck
@@ -304,8 +323,28 @@ def MCTRouting_single(
         # Mass balance equation that takes into consideration the lateral flow
         q11 = c1 * q01 + c2 * q00 + c3 * q10 + c4 * ql
 
+        # Diagnostic - now only fires when the CLAMPED ratio is at the ceiling
+        # or other suspicious conditions
+        # if cm_ratio >= 3.0 - 1e-9:  # ratio was clamped
+        #     print("CLAMPED Cm0=", Cm0, "Cm1=", Cm1, "raw_ratio=", Cm1/max(Cm0, 0.001), "q01=", q01)
+            
         if q11 < 0:  # cmcheck <=0  #tpk
             q11 = 0                 #tpk
+
+        # NEW: mass-balance upper bound
+        # if ql > 0:
+        #     ql_abs = ql
+        # else:
+        #     ql_abs = -ql
+        # max_q11 = q01 + q00 + ql_abs + V00 / dt
+        # if q11 > max_q11:
+        #     q11 = max_q11
+
+        # After q11 is computed
+        # max_physical = q01 + q00 + abs(ql) + V00 / dt
+        # if q11 > max_physical * 1.1:  # exceeds physical bound by >10%
+        #     print("MASS VIOLATION q11=", q11, "max_phys=", max_physical, 
+        #         "q01=", q01, "q00=", q00, "ql=", ql, "V00=", V00)
 
         #### end of for loop
 
@@ -326,6 +365,10 @@ def MCTRouting_single(
     else:
         V11 = (1 - Dm1) * dt / (2 * Cm1) * q01 + (1 + Dm1) * dt / (2 * Cm1) * q11
         # V11 = k1 * (x1 * q01 + (1. - x1) * q11) # MUST be the same as above!
+    # transition = min(1.0, q11 / (q11 + eps))  # Sigmoid-like transition
+    # V11_formula1 = V00 + (q00 + q01 - q10 - q11) * dt / 2
+    # V11_formula2 = (1 - Dm1) * dt / (2 * Cm1) * q01 + (1 + Dm1) * dt / (2 * Cm1) * q11
+    # V11 = transition * V11_formula2 + (1 - transition) * V11_formula1
 
     if V11 < 0 :    #tpk
         V11 = 0     #tpk
@@ -334,6 +377,14 @@ def MCTRouting_single(
     # calc average discharge outflow q1m for MCT channels during routing sub step dt
     # Calculate average outflow using water balance for MCT channel grid cell over sub-routing step
     q1mm = q0mm + ql + (V00 - V11) / dt
+    # Ensure q1mm is consistent with q11 (instantaneous outflow)
+    # q1mm should be within reasonable bounds of q11
+    # if q11 > 0:
+    #     ratio = q1mm / q11
+    #     if ratio > 10:
+    #         q1mm = 10 * q11
+    #     elif ratio < 0.1:
+    #         q1mm = 0.1 * q11
 
     # cmcheck
     # q1m cannot be smaller than eps or it will cause instability
