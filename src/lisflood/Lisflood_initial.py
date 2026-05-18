@@ -199,12 +199,15 @@ class LisfloodModel_ini(DynamicModel):
         self.soilloop_module.initial()
         self.soil_module.initial()
 
+        self.inflow_module.initial()
+        # moved here because I am using it to read the calibration inflow points location
+
         self.routing_module.initial()
 
         self.groundwater_module.initial()
         self.waterlevel_module.initial()
 
-        self.inflow_module.initial()
+        # self.inflow_module.initial()
         self.surface_routing_module.initial()
 
         # At this point LddChan and LddKinematic do not have any structure reservoirs/lakes MCT confluence

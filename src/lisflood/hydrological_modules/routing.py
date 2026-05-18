@@ -649,6 +649,9 @@ class routing(HydroModule):
             mct_ldd = self.compress_mct(compressArray(self.var.LddMCT))
             # Compress LddMCT to array with MCT pixels only
 
+            mct_CalInflowPoints = self.compress_mct(self.var.CalInflowPoints)
+            # Compress CalInflowPoints to array with MCT pixels only
+
             mapping_mct = self.compress_mct(range(len(self.var.ChanLength)))
             # create mapping from global domain pixels index to MCT pixels index
 
@@ -663,7 +666,7 @@ class routing(HydroModule):
                 self.var.DtRouting,         # computation time step for routing [s]
                 self.river_router,          # class
                 mapping_mct,                # MCT pixels mapping
-                self.var.CalInflowPoints,    # inflow points used by the calibration suite
+                mct_CalInflowPoints,    # inflow points used by the calibration suite
             )
 
 
