@@ -49,6 +49,7 @@ from .hydrological_modules.groundwater import groundwater
 from .hydrological_modules.surface_routing import surface_routing
 from .hydrological_modules.reservoir import Reservoir
 from .hydrological_modules.lakes import lakes
+from .hydrological_modules.mctconfluence import mctconfluence
 from .hydrological_modules.polder import polder
 from .hydrological_modules.waterabstraction import waterabstraction
 from .hydrological_modules.indicatorcalc import indicatorcalc
@@ -138,6 +139,8 @@ class LisfloodModel_ini(DynamicModel):
         self.surface_routing_module = surface_routing(self)
         self.reservoir_module = Reservoir(self) # get_reservoir(option['reservoirHanazaki'])
         self.lakes_module = lakes(self)
+        # self.mctheadwater_module = mctheadwater(self)
+        self.mctconfluence_module = mctconfluence(self)
         self.polder_module = polder(self)
         self.waterabstraction_module = waterabstraction(self)
         self.indicatorcalc_module = indicatorcalc(self)
@@ -189,10 +192,12 @@ class LisfloodModel_ini(DynamicModel):
 
         self.snow_module.initial()
         self.frost_module.initial()
-        self.leafarea_module.initial()
-        self.soilloop_module.initial()
 
+        self.leafarea_module.initial()
+
+        self.soilloop_module.initial()
         self.soil_module.initial()
+
         self.routing_module.initial()
 
         self.groundwater_module.initial()
@@ -200,6 +205,8 @@ class LisfloodModel_ini(DynamicModel):
 
         self.inflow_module.initial()
         self.surface_routing_module.initial()
+
+        # At this point LddChan and LddKinematic do not have any structure reservoirs/lakes MCT confluence
 
         self.reservoir_module.initial()
         self.lakes_module.initial()
@@ -209,17 +216,37 @@ class LisfloodModel_ini(DynamicModel):
 
         self.structures_module.initial()
         # Structures such as reservoirs and lakes are modelled by interrupting the channel flow paths
+        # At this point LddKinematic and LddChan have pits upstream of (structures) reservoirs and lakes
+
+        # self.mctheadwater_module.initial()
+        # # initialising MCT headwater pixels and adding pixels upstream of MCT headwater to the LDD
+        self.mctconfluence_module.initial()
+        # initialising MCT confluence points and adding MCT confluence sinks to the LDD
 
         # ----------------------------------------------------------------------
         # ----------------------------------------------------------------------
 
         self.routing_module.initialSecond()
         # CHANNEL INITIAL SPLIT UP IN SECOND CHANNEL
+
         self.surface_routing_module.initialSecond()
+
+        # MCT confluence must be in the LddKinematic when I get here
+        self.routing_module.initialKinematicWave()
 
         if option.get('MCTRouting'):
             self.routing_module.initialMCT()
             # initialising Muskingum-Cunge-Todini routing for channel
+
+            # self.mctheadwater_module.dynamic_init()
+            self.mctconfluence_module.dynamic_init()
+
+        # self.routing_module.initialKinematicWave()
+        # this cannot be here because I need river_router in the MCT initialization
+
+
+
+
 
         self.evapowater_module.initial()
         self.riceirrigation_module.initial()
