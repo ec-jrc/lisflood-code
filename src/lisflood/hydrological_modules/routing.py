@@ -52,7 +52,8 @@ class routing(HydroModule):
                                 'ChanBottomWMult', 'ChanDepthTMult', 'ChanSMult'],
                         'SplitRouting': ['CrossSection2AreaInitValue', 'PrevSideflowInitValue', 'CalChanMan2'],
                         'dynamicWave': ['ChannelsDynamic'],
-                        'MCTRouting': ['ChannelsMCT', 'ChanGradMaxMCT', 'PrevCmMCTInitValue', 'PrevDmMCTInitValue', 'CalChanMan3']}
+                        'MCTRouting': ['ChannelsMCT', 'ChanGradMaxMCT', 'PrevCmMCTInitValue', 'PrevDmMCTInitValue', 'CalChanMan3'],
+                        'inflow': ['InflowPoints']}
     module_name = 'Routing'
 
     def __init__(self, routing_variable):
@@ -644,13 +645,27 @@ class routing(HydroModule):
 
 
             # ************************************************************
+            # ***** CALIBRATION INFLOW POINTS ********
+            # ************************************************************
+
+            CalibPoints = loadmap('InflowPoints')  # 1D array size
+            # read location of calibration points
+
+            inAr = np.arange(maskinfo.info.mapC[0], dtype="int32")  # np
+            # Assign a number to each non-missing pixel as cell id, by row starting from 0
+
+            CalibPointsIds = inAr[CalibPoints != 0]
+            # pixel id of calibration points
+
+
+            # ************************************************************
             # ***** INITIALISE MUSKINGUM-CUNGE-TODINI WAVE ROUTER ********
             # ************************************************************
             mct_ldd = self.compress_mct(compressArray(self.var.LddMCT))
             # Compress LddMCT to array with MCT pixels only
 
-            mct_CalInflowPoints = self.compress_mct(self.var.CalInflowPoints)
-            # Compress CalInflowPoints to array with MCT pixels only
+            # mct_CalInflowPoints = self.compress_mct(self.var.CalInflowPoints)
+            # # Compress CalInflowPoints to array with MCT pixels only
 
             mapping_mct = self.compress_mct(range(len(self.var.ChanLength)))
             # create mapping from global domain pixels index to MCT pixels index
@@ -666,7 +681,7 @@ class routing(HydroModule):
                 self.var.DtRouting,         # computation time step for routing [s]
                 self.river_router,          # class
                 mapping_mct,                # MCT pixels mapping
-                mct_CalInflowPoints,    # inflow points used by the calibration suite
+                CalibPointsIds,                # id of calibrationn points in full LDD
             )
 
 

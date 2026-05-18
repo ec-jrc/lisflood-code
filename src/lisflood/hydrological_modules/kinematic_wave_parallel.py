@@ -74,6 +74,7 @@ def streamLookups(flow_dir, land_mask):
     '''
     Compute the downstream lookup vector for a D8 water flow channel network,
     i.e. the adjecency list of the directed graph describing flow direction from each pixel.
+    Each land_mask pixel is assigned a unique id from 0 to numpix-1, numbered by row
     Arguments:
         flow_dir (numpy.ndarray): LISFLOOD flow matrix values (FLOW_CODE).
         land_mask (numpy.ndarray): land mask on coordinate mesh.
@@ -82,12 +83,20 @@ def streamLookups(flow_dir, land_mask):
         upstream lookup (numpy.ndarray): each row gives the immediately upstream pixels (-1 = fill value); size = num_pixels, max_ups_pixs <= 8
     '''
     flow_dir[~land_mask] = 8 # exceeds number of rows of IX_ADDS
+    # assign 8 to all pixels not belonging to land_mask
     num_pixs = land_mask.sum()
+    # count number of pixels in land_mask
+
     # Create 2D array of indices of land pixels (each index is unique)
     # The IDs are numbered from 0 to num_pixs-1
     land_points = -np.ones(land_mask.shape, int)
     land_points[land_mask] = np.arange(num_pixs, dtype=int)
+    # every land pixel has now a unique id (pixel id)
+
     downstream_lookup, upstream_lookup = kwpt.upDownLookups(flow_dir, np.ascontiguousarray(land_mask).astype(np.uint8), land_points, num_pixs, IX_ADDS)
+    # downstream_lookup[i] = index of the cell receiving flow from node i
+    # upstream_lookup[i, :] = indices of all cells draining into node i
+
     max_num_ups_pixs = max(1, np.any(upstream_lookup != -1, 0).sum()) # maximum number of upstreams pixels
     return downstream_lookup, np.ascontiguousarray(upstream_lookup[:,:max_num_ups_pixs]).astype(int) 
 
