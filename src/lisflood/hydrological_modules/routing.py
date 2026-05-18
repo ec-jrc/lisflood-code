@@ -662,7 +662,8 @@ class routing(HydroModule):
                 self.var.ChanSdXdY,         # Riverbed side slope
                 self.var.DtRouting,         # computation time step for routing [s]
                 self.river_router,          # class
-                mapping_mct                 # MCT pixels mapping
+                mapping_mct,                # MCT pixels mapping
+                self.var.CalInflowPoints,    # inflow points used by the calibration suite
             )
 
 

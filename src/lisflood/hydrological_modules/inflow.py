@@ -54,6 +54,19 @@ class inflow(HydroModule):
         # ************************************************************
         settings = LisSettings.instance()
         option = settings.options
+
+
+        #####################################################################################
+        #cm
+
+        self.var.CalInflowPoints = loadmap('InflowPoints')  # 1D array size is pixels belonging to basin mask
+        # read location of calibration inflow points
+        # this is the location of grid cells that are used as inflows in the calibration suite
+        # this is the grid cell where the calibration point is contributing to
+        #####################################################################################
+
+
+
         if option['inflow']:
             self.var.InflowPoints = loadmap('InflowPoints') #1D array size is pixels belonging to basin mask
 
