@@ -293,9 +293,9 @@ class routing(HydroModule):
         TotalCrossSectionAreaHalfBankFull = BankFullPerc * self.var.TotalCrossSectionAreaBankFull
         # set BankFullPerc to 0.5 for half bankfull
 
-        # Channel volume initialization for MCT cells
-        TotalCrossSectionAreaHalfBankFull = np.where(self.var.IsChannelKinematic, TotalCrossSectionAreaHalfBankFull, 0.01 * self.var.TotalCrossSectionAreaBankFull)
-        # set initial volume in MCT cells to 1% of bankfull
+        # # Channel volume initialization for MCT cells
+        # TotalCrossSectionAreaHalfBankFull = np.where(self.var.IsChannelKinematic, TotalCrossSectionAreaHalfBankFull, 0.01 * self.var.TotalCrossSectionAreaBankFull)
+        # # set initial volume in MCT cells to 1% of bankfull
 
         TotalCrossSectionAreaInitValue = loadmap('TotalCrossSectionAreaInitValue')
         self.var.TotalCrossSectionArea = np.where(TotalCrossSectionAreaInitValue == -9999, TotalCrossSectionAreaHalfBankFull, TotalCrossSectionAreaInitValue)
