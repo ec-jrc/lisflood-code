@@ -50,6 +50,7 @@ You can use builtin path variables in this template and reference to other paths
 
       <setoption choice="0" name="SplitRouting"/>
       <setoption choice="1" name="MCTRouting"/>
+      <setoption choice="1" name="MCTRoutingInterface"/>      
 
       # use inflow data
       <setoption choice="0" name="inflow"/>

@@ -73,7 +73,7 @@ class mctconfluence(HydroModule):
         option = settings.options
         binding = settings.binding
         maskinfo = MaskInfo.instance()
-        if option['MCTRouting']:
+        if option['MCTRouting'] and option['MCTRoutingInterface']:
 
             inArPcr = decompress(np.arange(maskinfo.info.mapC[0], dtype="int32"))  # pcr
             # Assign a number to each non-missing pixel as cell id, starting from 0
@@ -126,7 +126,7 @@ class mctconfluence(HydroModule):
         """
         settings = LisSettings.instance()
         option = settings.options
-        if option['MCTRouting']:
+        if option['MCTRouting'] and option['MCTRoutingInterface']:
             self.var.QInConfM3Old = np.where(self.var.MCTConfluenceSitesC > 0, self.var.ChanQAvgDt * self.var.DtSec, 0)
 
 
@@ -148,7 +148,7 @@ class mctconfluence(HydroModule):
 
         # self.var.QConfADDEDM3 = maskinfo.in_zero()
         
-        if option['MCTRouting'] and not option['InitLisflood']:
+        if option['MCTRouting'] and option['MCTRoutingInterface'] and not option['InitLisflood']:
 
             InvDtSecDay = 1 / float(86400)
             # InvDtSecDay=self.var.InvDtSec

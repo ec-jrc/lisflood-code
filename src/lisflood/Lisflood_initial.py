@@ -221,8 +221,9 @@ class LisfloodModel_ini(DynamicModel):
 
         # self.mctheadwater_module.initial()
         # # initialising MCT headwater pixels and adding pixels upstream of MCT headwater to the LDD
-        self.mctconfluence_module.initial()
-        # initialising MCT confluence points and adding MCT confluence sinks to the LDD
+        if option.get('MCTRoutingInterface'):
+            self.mctconfluence_module.initial()
+            # initialising MCT confluence points and adding MCT confluence sinks to the LDD
 
         # ----------------------------------------------------------------------
         # ----------------------------------------------------------------------
@@ -238,9 +239,9 @@ class LisfloodModel_ini(DynamicModel):
         if option.get('MCTRouting'):
             self.routing_module.initialMCT()
             # initialising Muskingum-Cunge-Todini routing for channel
-
-            # self.mctheadwater_module.dynamic_init()
-            self.mctconfluence_module.dynamic_init()
+            if option.get('MCTRoutingInterface'):
+                # self.mctheadwater_module.dynamic_init()
+                self.mctconfluence_module.dynamic_init()
 
         # self.routing_module.initialKinematicWave()
         # this cannot be here because I need river_router in the MCT initialization

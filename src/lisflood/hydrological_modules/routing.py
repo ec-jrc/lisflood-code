@@ -198,6 +198,7 @@ class routing(HydroModule):
                 if self.var.IsChannelMCT.sum() == 0:
                     warnings.warn(LisfloodWarning('There are no MCT grid cell. MCT routing is deactivated'))
                     option['MCTRouting'] = False
+                    option['MCTRoutingInterface'] = False
                     # rebuild lists of reported files with MCTRouting = False
                     settings.build_reportedmaps_dicts()
 
@@ -859,10 +860,11 @@ class routing(HydroModule):
                 # # MCT headwater pixels outflow volume per routing sub step [m3]
 
                 # MCT CONFLUENCE
-                self.mctconfluence_module.dynamic_inloop(NoRoutingExecuted)
-                # calculate sideflow from MCT confluence pixels
-                SideflowChanM3 += self.var.QConfM3Dt
-                # MCT confluence pixels outflow volume per routing sub step [m3]
+                if option['MCTRoutingInterface']:
+                    self.mctconfluence_module.dynamic_inloop(NoRoutingExecuted)
+                    # calculate sideflow from MCT confluence pixels
+                    SideflowChanM3 += self.var.QConfM3Dt
+                    # MCT confluence pixels outflow volume per routing sub step [m3]
 
                 # Sideflow contribution to MCT grid cells expressed in [m3/s]
                 SideflowChanMCT = np.where(self.var.IsChannelMCT, SideflowChanM3 * self.var.InvDtRouting, 0)  #Ql
