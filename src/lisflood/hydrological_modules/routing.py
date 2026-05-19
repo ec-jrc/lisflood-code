@@ -53,7 +53,7 @@ class routing(HydroModule):
                         'SplitRouting': ['CrossSection2AreaInitValue', 'PrevSideflowInitValue', 'CalChanMan2'],
                         'dynamicWave': ['ChannelsDynamic'],
                         'MCTRouting': ['ChannelsMCT', 'ChanGradMaxMCT', 'PrevCmMCTInitValue', 'PrevDmMCTInitValue', 'CalChanMan3'],
-                        'inflow': ['InflowPoints']}
+                        'simulateCalibrationPoints': ['CalibrationPoints']}
     module_name = 'Routing'
 
     def __init__(self, routing_variable):
@@ -645,16 +645,16 @@ class routing(HydroModule):
 
 
             # ************************************************************
-            # ***** CALIBRATION INFLOW POINTS ********
+            # ***** CALIBRATION POINTS                            ********
             # ************************************************************
-
-            CalibPoints = loadmap('InflowPoints')  # 1D array size
-            # read location of calibration points
+            CalibPoints = maskinfo.in_zero()
+            if option['simulateCalibrationPoints']:
+                CalibPoints = loadmap('CalibrationPoints')  # 1D array size all catchment pixels
+                # read location of calibration points
 
             inAr = np.arange(maskinfo.info.mapC[0], dtype="int32")  # np
             # Assign a number to each non-missing pixel as cell id, by row starting from 0
-
-            CalibPointsIds = inAr[CalibPoints != 0]
+            CalibPointsIds = inAr[CalibPoints > 0]
             # pixel id of calibration points
 
 

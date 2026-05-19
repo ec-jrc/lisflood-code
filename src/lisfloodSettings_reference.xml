@@ -1723,6 +1723,13 @@ You can use builtin path variables in this template and reference to other paths
       </comment>
     </textvar>
 
+    <textvar name="CalibrationPoints" value="$(PathRoot)/maps/p2.nc">
+      <comment>
+        location of calibration points
+        OPTIONAL: nominal map with locations of calibration points
+      </comment>
+    </textvar>
+
     <textvar name="QInTS" value="$(PathInflow)/inflowHyd.tss">
     <comment>
     OPTIONAL: observed or simulated input hydrographs as time series [cu m / s]
@@ -5636,6 +5643,13 @@ You can use builtin path variables in this template and reference to other paths
           <comment>
           OPTIONAL: nominal map with locations of (measured)
           inflow hydrographs
+          </comment>
+        </textvar>
+
+        <textvar name="CalibrationPoints" value="$(CalibrationPoints)">
+          <comment>
+            location of calibration points
+            OPTIONAL: nominal map with locations of calibration points
           </comment>
         </textvar>
 
