@@ -84,9 +84,9 @@ Follow this instruction for a basic test (some sample catchments are included in
 2. **Install requirements into a python 3 conda env**
 
 ```bash
-conda create --name lisflood python=3.8 -c conda-forge
+conda create --name lisflood python=3.10 -c conda-forge
 conda activate lisflood
-conda install -c conda-forge pcraster "gdal<=3.5.3"
+conda install -c conda-forge pcraster gdal
 cd lisflood-code
 pip install -r requirements.txt
 ```

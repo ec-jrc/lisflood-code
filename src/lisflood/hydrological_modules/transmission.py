@@ -53,7 +53,7 @@ class transmission(HydroModule):
             # downstream area taking into account for transmission loss
             self.var.UpAreaTrans = loadmap('UpAreaTrans')
             # upstream area
-            self.var.UpTrans = np.where(self.var.UpAreaTrans >= TransArea,np.bool8(1),np.bool8(0))
+            self.var.UpTrans = np.where(self.var.UpAreaTrans >= TransArea,np.bool(1),np.bool(0))
             # Downstream taking into accound for transmission loss
             # if upstream area (the total one) is bigger than a threshold us
             # transmission loss

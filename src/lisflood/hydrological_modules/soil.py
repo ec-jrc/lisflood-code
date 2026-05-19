@@ -324,20 +324,20 @@ class soil(HydroModule):
         self.var.Sat1 = self.var.allocateVariableAllVegetation()
         self.var.Sat2 = self.var.allocateVariableAllVegetation()
         '''
-        self.var.PoreSpaceNotZero1a = splitlanduse(np.bool8((self.var.SoilDepth1a[0] != 0) & (self.var.WS1a[0] != 0)),
-                                                   np.bool8((self.var.SoilDepth1a[1] != 0) & (self.var.WS1a[1] != 0)),
-                                                   np.bool8((self.var.SoilDepth1a[2] != 0) & (self.var.WS1a[2] != 0)))
-        self.var.PoreSpaceNotZero1b = splitlanduse(np.bool8((self.var.SoilDepth1b[0] != 0) & (self.var.WS1b[0] != 0)),
-                                                   np.bool8((self.var.SoilDepth1b[1] != 0) & (self.var.WS1b[1] != 0)),
-                                                   np.bool8((self.var.SoilDepth1b[2] != 0) & (self.var.WS1b[2] != 0)))
-        self.var.PoreSpaceNotZero2 = splitlanduse(np.bool8((self.var.SoilDepth2[0] != 0) & (self.var.WS2[0] != 0)),
-                                                  np.bool8((self.var.SoilDepth2[1] != 0) & (self.var.WS2[1] != 0)),
-                                                  np.bool8((self.var.SoilDepth2[2] != 0) & (self.var.WS2[2] != 0)))
+        self.var.PoreSpaceNotZero1a = splitlanduse(np.bool((self.var.SoilDepth1a[0] != 0) & (self.var.WS1a[0] != 0)),
+                                                   np.bool((self.var.SoilDepth1a[1] != 0) & (self.var.WS1a[1] != 0)),
+                                                   np.bool((self.var.SoilDepth1a[2] != 0) & (self.var.WS1a[2] != 0)))
+        self.var.PoreSpaceNotZero1b = splitlanduse(np.bool((self.var.SoilDepth1b[0] != 0) & (self.var.WS1b[0] != 0)),
+                                                   np.bool((self.var.SoilDepth1b[1] != 0) & (self.var.WS1b[1] != 0)),
+                                                   np.bool((self.var.SoilDepth1b[2] != 0) & (self.var.WS1b[2] != 0)))
+        self.var.PoreSpaceNotZero2 = splitlanduse(np.bool((self.var.SoilDepth2[0] != 0) & (self.var.WS2[0] != 0)),
+                                                  np.bool((self.var.SoilDepth2[1] != 0) & (self.var.WS2[1] != 0)),
+                                                  np.bool((self.var.SoilDepth2[2] != 0) & (self.var.WS2[2] != 0)))
 
-#        self.var.PoreSpaceNotZero1 = [np.bool8((self.var.SoilDepth1[0] != 0) & (self.var.WS1[0] != 0)),
-#            np.bool8((self.var.SoilDepth1[1] != 0) & (self.var.WS1[1] != 0))]
-#        self.var.PoreSpaceNotZero2 = [np.bool8((self.var.SoilDepth2[0] != 0) & (self.var.WS2[0] != 0)),
-#            np.bool8((self.var.SoilDepth2[1] != 0) & (self.var.WS2[1] != 0))]
+#        self.var.PoreSpaceNotZero1 = [np.bool((self.var.SoilDepth1[0] != 0) & (self.var.WS1[0] != 0)),
+#            np.bool((self.var.SoilDepth1[1] != 0) & (self.var.WS1[1] != 0))]
+#        self.var.PoreSpaceNotZero2 = [np.bool((self.var.SoilDepth2[0] != 0) & (self.var.WS2[0] != 0)),
+#            np.bool((self.var.SoilDepth2[1] != 0) & (self.var.WS2[1] != 0))]
         # Flag that is Boolean 1 if pixel has (any) soil moisture storage space.
         # Needed to avoid divisions by zero in soil moisture calculations
 

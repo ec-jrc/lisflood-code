@@ -114,7 +114,7 @@ class routing(HydroModule):
         # Calculate inverse, so we can multiply in dynamic (faster than divide)
 
         self.var.IsChannelPcr = boolean(loadmap('Channels', pcr=True))  #pcr
-        self.var.IsChannel = np.bool8(compressArray(self.var.IsChannelPcr))   #bool
+        self.var.IsChannel = np.bool(compressArray(self.var.IsChannelPcr))   #bool
         self.var.IsChannelPcr = boolean(decompress(self.var.IsChannel))       #pcr
         # Identify grid cells containing a river channel
 
@@ -122,11 +122,11 @@ class routing(HydroModule):
         # Identify channel pixels using kinematic or split routing
         # (identical to IsChannel, unless MCT wave is used, see below)
 
-        self.var.IsStructureChan = np.bool8(maskinfo.in_zero())        #bool
+        self.var.IsStructureChan = np.bool(maskinfo.in_zero())        #bool
         # Initialise map that identifies special inflow/outflow structures (reservoirs, lakes) within the
         # channel routing. Set to (dummy) value of zero modified in reservoirs and lakes functions (if those are used)
 
-        self.var.IsStructureKinematic = np.bool8(maskinfo.in_zero())        #bool
+        self.var.IsStructureKinematic = np.bool(maskinfo.in_zero())        #bool
         # Initialise map that identifies special inflow/outflow structures (reservoirs, lakes) within the
         # kinematic wave channel routing. Set to (dummy) value of zero modified in reservoirs and lakes functions
         # (if those are used)
@@ -177,7 +177,7 @@ class routing(HydroModule):
         self.var.AtLastPoint = boolean(pit(self.var.Ldd))    #pcr
         # Assign True to each of the grid cells where there are outlet points
         # Function 'pit' assigns a unique number starting from 1 to pit cells (ldd=5) in the Ldd
-        self.var.AtLastPointC = np.bool8(compressArray(self.var.AtLastPoint)) #np
+        self.var.AtLastPointC = np.bool(compressArray(self.var.AtLastPoint)) #np
 
         lddC = compressArray(self.var.LddChan)     #np
         inAr = decompress(np.arange(maskinfo.info.mapC[0], dtype="int32"))  #pcr
@@ -557,7 +557,7 @@ class routing(HydroModule):
         # even if MCT is active, it should be deactivated if there is no MCT cell in the domain
         if option['MCTRouting']:
             self.var.IsChannelMCTPcr = boolean(loadmap('ChannelsMCT', pcr=True))   #pcr
-            self.var.IsChannelMCT = np.bool8(compressArray(self.var.IsChannelMCTPcr))   #bool
+            self.var.IsChannelMCT = np.bool(compressArray(self.var.IsChannelMCTPcr))   #bool
             if self.var.IsChannelMCT.sum()==0:
                 warnings.warn(LisfloodWarning('There are no MCT grid cell. MCT routing is deactivated'))
                 option['MCTRouting'] = False
@@ -570,11 +570,11 @@ class routing(HydroModule):
             self.var.IsChannelMCTPcr = boolean(decompress(self.var.IsChannelMCT))       # pcr
             # Identify channel pixels where Muskingum-Cunge-Todini is used
 
-            self.var.mctmask = np.bool8(pcr2numpy(self.var.IsChannelMCTPcr,0))
+            self.var.mctmask = np.bool(pcr2numpy(self.var.IsChannelMCTPcr,0))
             # Create a mask with cells using MCT
 
             self.var.IsChannelKinematicPcr = (self.var.IsChannelPcr == 1) & (self.var.IsChannelMCTPcr == 0)  #pcr
-            self.var.IsChannelKinematic = np.bool8(compressArray(self.var.IsChannelKinematicPcr))   #np
+            self.var.IsChannelKinematic = np.bool(compressArray(self.var.IsChannelKinematicPcr))   #np
             # Identify channel pixels where Kinematic wave is used instead of MCT
 
             self.var.LddMCT = lddmask(self.var.LddChan, self.var.IsChannelMCTPcr)  #pcr

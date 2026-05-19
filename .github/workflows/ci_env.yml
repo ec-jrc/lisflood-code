@@ -12,25 +12,29 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 5
+      matrix:
+        python-version: [ "3.10", "3.11", "3.12"]
 
     steps:
-    - uses: actions/checkout@v3
-    - uses: conda-incubator/setup-miniconda@v2
+    - name: Checkout github repo
+      uses: actions/checkout@v4
+    - name: Setup Miniconda
+      uses: conda-incubator/setup-miniconda@v3
       with:
         auto-update-conda: true
-        python-version: 3.8
+        python-version: ${{ matrix.python-version }}
+        miniforge-version: latest
     - name: Conda info
       shell: bash -el {0}
       run: conda info
     - name: Install python and gcc
       shell: bash -el {0}
       run: |
-        conda install -c conda-forge python=3.8
         conda install -c conda-forge gcc=12.1.0
     - name: Install gdal and pcraster
       shell: bash -el {0}
       run: |
-        conda install -c conda-forge "gdal<=3.5.3" pcraster
+        conda install -c conda-forge gdal pcraster
     - name: Install dependencies
       shell: bash -el {0}
       run: |
