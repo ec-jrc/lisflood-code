@@ -49,7 +49,6 @@ from .hydrological_modules.groundwater import groundwater
 from .hydrological_modules.surface_routing import surface_routing
 from .hydrological_modules.reservoir import Reservoir
 from .hydrological_modules.lakes import lakes
-from .hydrological_modules.mctconfluence import mctconfluence
 from .hydrological_modules.polder import polder
 from .hydrological_modules.waterabstraction import waterabstraction
 from .hydrological_modules.indicatorcalc import indicatorcalc
