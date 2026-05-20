@@ -379,12 +379,12 @@ def MCTRouting_single(
     q1mm = q0mm + ql + (V00 - V11) / dt
     # Ensure q1mm is consistent with q11 (instantaneous outflow)
     # q1mm should be within reasonable bounds of q11
-    # if q11 > 0:
-    #     ratio = q1mm / q11
-    #     if ratio > 10:
-    #         q1mm = 10 * q11
-    #     elif ratio < 0.1:
-    #         q1mm = 0.1 * q11
+    if q11 > 0:
+        ratio = q1mm / q11
+        if ratio > 10:
+            q1mm = q11
+        elif ratio < 0.1:
+            q1mm = q11
 
     # cmcheck
     # q1m cannot be smaller than eps or it will cause instability
