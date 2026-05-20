@@ -171,13 +171,14 @@ def mct_routing(
             q00 = 0.0
             q0m = 0.0
             q01 = 0.0
+            ql = SideflowChanMCT[kinpix]   # ← ql defined BEFORE the loop
             for ups_ix in range(num_upstream_pixels[kinpix]):
                 ups_pix = upstream_pixels[ups_ix]   # upstream pixel id
                 #####################################################################################################
                 # This is necessary for EFAS6/GloFAs5 calibration
                 if np.any(CalibPointsIds == ups_pix):
                     # this upstream pixel is a calibration point - add to sideflow
-                    ql += ChanQAvgDt[ups_pix]
+                    ql += ChanQAvgDt[ups_pix]   # avoid += 
                     # Sideflow during step dt including contribution from calibration pixel
                 else:
                     # not a calibration point - go as usual
@@ -195,7 +196,7 @@ def mct_routing(
             Cm0 = PrevCm0[kinpix]   # Courant number at the end of previous step t
             Dm0 = PrevDm0[kinpix]   # Reynolds number at the end of previous step t
 
-            ql = SideflowChanMCT[kinpix]    # Sideflow during step dt
+            # ql = SideflowChanMCT[kinpix]    # Sideflow during step dt
 
             # static data
             xpix = ChanLength[kinpix]                   # Channel length
