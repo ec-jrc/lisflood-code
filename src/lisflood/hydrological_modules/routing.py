@@ -16,7 +16,7 @@ See the Licence for the specific language governing permissions and limitations 
 """
 from __future__ import print_function, absolute_import
 
-from pcraster import lddmask, accuflux, boolean, scalar, downstream, pit, path, lddrepair, ifthenelse, cover, nominal, uniqueid, \
+from pcraster import lddmask, accuflux, boolean, downstream, pit, path, lddrepair, ifthenelse, cover, nominal, uniqueid, \
     catchment, upstream, pcr2numpy
 
 import warnings
@@ -30,7 +30,6 @@ from .inflow import inflow
 from .transmission import transmission
 from .kinematic_wave_parallel import kinematicWave, kwpt
 from .mct import MCTWave
-from .mctconfluence import mctconfluence
 
 from ..global_modules.settings import LisSettings, MaskInfo
 from ..global_modules.errors import LisfloodWarning
@@ -51,7 +50,8 @@ class routing(HydroModule):
                                 'ChanBottomWMult', 'ChanDepthTMult', 'ChanSMult'],
                         'SplitRouting': ['CrossSection2AreaInitValue', 'PrevSideflowInitValue', 'CalChanMan2'],
                         'dynamicWave': ['ChannelsDynamic'],
-                        'MCTRouting': ['ChannelsMCT', 'ChanGradMaxMCT', 'PrevCmMCTInitValue', 'PrevDmMCTInitValue', 'CalChanMan3']}
+                        'MCTRouting': ['ChannelsMCT', 'ChanGradMaxMCT', 'PrevCmMCTInitValue', 'PrevDmMCTInitValue', 'CalChanMan3'],
+                        'simulateCalibrationPoints': ['CalibrationPoints']}
     module_name = 'Routing'
 
     def __init__(self, routing_variable):
@@ -62,7 +62,6 @@ class routing(HydroModule):
         self.polder_module = polder(self.var)
         self.inflow_module = inflow(self.var)
         self.transmission_module = transmission(self.var)
-        self.mctconfluence_module = mctconfluence(self.var)
 
 # --------------------------------------------------------------------------
 # --------------------------------------------------------------------------
@@ -291,7 +290,7 @@ class routing(HydroModule):
         # set BankFullPerc to 0.5 for half bankfull
 
         # Channel volume initialization for MCT cells
-        TotalCrossSectionAreaHalfBankFull = np.where(self.var.IsChannelKinematic, TotalCrossSectionAreaHalfBankFull, 0.01 * self.var.TotalCrossSectionAreaBankFull)
+        # TotalCrossSectionAreaHalfBankFull = np.where(self.var.IsChannelKinematic, TotalCrossSectionAreaHalfBankFull, 0.01 * self.var.TotalCrossSectionAreaBankFull)
         # set initial volume in MCT cells to 1% of bankfull
 
         TotalCrossSectionAreaInitValue = loadmap('TotalCrossSectionAreaInitValue')
@@ -641,12 +640,28 @@ class routing(HydroModule):
             self.var.PrevDm0 = np.where(PrevDmMCT == -9999, maskinfo.in_zero(), PrevDmMCT) #np
             # Reynolds number (Dm) for MCT at previous time step t0
 
+            # ************************************************************
+            # ***** CALIBRATION POINTS                            ********
+            # ************************************************************
+            CalibPoints = maskinfo.in_zero()
+            if option['simulateCalibrationPoints']:
+                CalibPoints = loadmap('CalibrationPoints')  # 1D array size all catchment pixels
+                # read location of calibration points
+
+            inAr = np.arange(maskinfo.info.mapC[0], dtype="int32")  # np
+            # Assign a number to each non-missing pixel as cell id, by row starting from 0
+            CalibPointsIds = inAr[CalibPoints > 0]
+            # pixel id of calibration points
+
 
             # ************************************************************
             # ***** INITIALISE MUSKINGUM-CUNGE-TODINI WAVE ROUTER ********
             # ************************************************************
             mct_ldd = self.compress_mct(compressArray(self.var.LddMCT))
             # Compress LddMCT to array with MCT pixels only
+
+            # mct_CalInflowPoints = self.compress_mct(self.var.CalInflowPoints)
+            # # Compress CalInflowPoints to array with MCT pixels only
 
             mapping_mct = self.compress_mct(range(len(self.var.ChanLength)))
             # create mapping from global domain pixels index to MCT pixels index
@@ -661,7 +676,8 @@ class routing(HydroModule):
                 self.var.ChanSdXdY,         # Riverbed side slope
                 self.var.DtRouting,         # computation time step for routing [s]
                 self.river_router,          # class
-                mapping_mct                 # MCT pixels mapping
+                mapping_mct,                 # MCT pixels mapping
+                CalibPointsIds,                # id of calibrationn points in full LDD
             )
 
 
@@ -830,18 +846,6 @@ class routing(HydroModule):
                 self.var.ChanQ = ChanQ              # -> used to calc q01
                 self.var.ChanM3 = ChanM3
                 self.var.ChanQAvgDt = ChanQAvgDt    # -> used to calc q0m
-
-                # # MCT HEADWATER
-                # self.mctheadwater_module.dynamic_inloop(NoRoutingExecuted)
-                # # calculate sideflow from MCT headwater pixels
-                # SideflowChanM3 += self.var.QHeadM3Dt
-                # # MCT headwater pixels outflow volume per routing sub step [m3]
-
-                # MCT CONFLUENCE
-                self.mctconfluence_module.dynamic_inloop(NoRoutingExecuted)
-                # calculate sideflow from MCT confluence pixels
-                SideflowChanM3 += self.var.QConfM3Dt
-                # MCT confluence pixels outflow volume per routing sub step [m3]
 
                 # Sideflow contribution to MCT grid cells expressed in [m3/s]
                 SideflowChanMCT = np.where(self.var.IsChannelMCT, SideflowChanM3 * self.var.InvDtRouting, 0)  #Ql
