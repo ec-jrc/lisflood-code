@@ -34,8 +34,8 @@ class waterstorage(HydroModule):
     # Sum up water storage in individual compartements 
     """
     input_files_keys = {
-        'repTWSMaps': ['LakeMask'],
-        'repStorageMaps': ['LakeMask']
+        'repTWSMaps': ['LakeExtent','ReservoirExtent'],
+        'repStorageMaps': ['LakeExtent','ReservoirExtent']
     }
     module_name = 'WaterStorage'
 
@@ -58,67 +58,26 @@ class waterstorage(HydroModule):
         # load water map and separate into maps of lake and reservoir distribution
         if (not(option['InitLisflood'])) and (option['repStorageMaps'] or option['repTWSMaps']):
 
-            LakeMask = loadmap('LakeMask')
-            # find ranges of IDs for lakes [LakeID_min+1:LakeID_max] and reservoirs [ReservoirID_min+1:ReservoirID_max]
-            # LakeMask   land       = 0
-            #            water      = 1
-            #                         or for lakes:      ID = LakeID_min(default:1000)+lakeID
-            #                                reservoirs: ID = ReservoirID_min(default:5000) + reservoirID
-            #                         in case LakeMask==0 (no water defined before insertion of lake-/reservoir-IDs)
-            #                         lake and reservoirs IDs are inserted with negative values
-            #
-            # the gap between 1 and lakeIDs and between lakeIds and reservoirIDs has to be greater than <gap_min>
-            # gaps within lakeIDs or reservoirIDs have to be smaller than <gap_min>
-            gap_min = 499
-            LakeMask[LakeMask<=-9999] = np.nan
-            LakeMask = np.abs(LakeMask)
-            id_all = np.unique(LakeMask[~np.isnan(LakeMask)]).astype(int)
-            id_max = id_all[-1]
-            lowerBounds = (id_all+1)[:-1]
-            upperBounds = (id_all-1)[1:]
-            mask = lowerBounds<=upperBounds-(max(1,gap_min)-1)
+            self.var.LakeDistribution = loadmap('LakeExtent')
+            self.var.ReservoirDistribution = loadmap('ReservoirExtent')
 
-            n_gaps = np.count_nonzero(mask)
-            if n_gaps == 0:
-                # only land/water mask, no lakes or reservoir IDs
-                LakeID_min = id_max
-                LakeID_max = LakeID_min
-                ReservoirID_min = id_max
-                ReservoirID_max = ReservoirID_min
-            else:
-                # beginning of lake IDs
-                LakeID_min = upperBounds[mask][0]
-                if n_gaps == 1:
-                    # only lake IDs
-                    LakeID_max = id_max+1
-                    # no reservoir IDs
-                    ReservoirID_min = id_max
-                    ReservoirID_max = ReservoirID_min
-                else:
-                    # end of lake IDs
-                    LakeID_max = lowerBounds[mask][1]
-                    # beginning of reservoir IDs
-                    ReservoirID_min = upperBounds[mask][1]
-                    # end of reservoir IDs
-                    ReservoirID_max = id_max+1
+            # check number of IDs in lake/res extent map with number of sites
+            lake_ids = np.unique(self.var.LakeDistribution[~np.isnan(self.var.LakeDistribution)]).astype(int)
+            number_of_lakeIDs = len(lake_ids[lake_ids != 0]) # ID must not be zero
+            res_ids = np.unique(self.var.ReservoirDistribution[~np.isnan(self.var.ReservoirDistribution)]).astype(int)
+            number_of_reservoirIDs = len(res_ids[res_ids != 0]) # ID must not be zero
 
-            # extract lake distribution map
-            self.var.LakeDistribution = np.where((LakeMask > LakeID_min) & (LakeMask < LakeID_max), LakeMask-LakeID_min, np.nan)
-            # extract reservoir distribution map
-            self.var.ReservoirDistribution = np.where((LakeMask > ReservoirID_min) & (LakeMask < ReservoirID_max), LakeMask-ReservoirID_min, np.nan)
+            if (number_of_lakeIDs == 0):
+                warnings.warn(LisfloodWarning('LakeExtent map contains no lake IDs. Please check consistency between LakeExtent map and model domain.'))
+            if (number_of_reservoirIDs == 0):
+                warnings.warn(LisfloodWarning('ReservoirExtent map contains no reservoir IDs. Please check consistency between ReservoirExtent map and model domain.'))
 
-            # check number of ID with number of sites
-            if n_gaps < 1:
-                msg = "{} LakeMask map (containing no lake or reservoir IDs) not compatible for TWS calculation"
-                raise LisfloodError(msg)
             if option['simulateLakes']:
-                number_of_lakeIDs = len(np.unique(self.var.LakeDistribution[~np.isnan(self.var.LakeDistribution)]).astype(int))
                 if self.var.LakeSitesCC.size != number_of_lakeIDs:
-                    warnings.warn(LisfloodWarning('Number of lake IDs in map LakeMask ('+str(number_of_lakeIDs)+') not equal number of lake sites defined in map LakeSites ('+str(self.var.LakeSitesCC.size)+').'))
+                    warnings.warn(LisfloodWarning('Number of lake IDs in map LakeExtent ('+str(number_of_lakeIDs)+') not equal to number of lake sites defined in map LakeSites ('+str(self.var.LakeSitesCC.size)+').'))
             if option['simulateReservoirs']:
-                number_of_reservoirIDs = len(np.unique(self.var.ReservoirDistribution[~np.isnan(self.var.ReservoirDistribution)]).astype(int))
                 if self.var.ReservoirSitesCC.size != number_of_reservoirIDs:
-                    warnings.warn(LisfloodWarning('Number of reservoir IDs in map LakeMask ('+str(number_of_reservoirIDs)+') not equal number of reservoir sites defined in map ReservoirSites ('+str(self.var.ReservoirSitesCC.size)+').'))
+                    warnings.warn(LisfloodWarning('Number of reservoir IDs in map ReservoirExtent ('+str(number_of_reservoirIDs)+') not equal to number of reservoir sites defined in map ReservoirSites ('+str(self.var.ReservoirSitesCC.size)+').'))
 
 
 # --------------------------------------------------------------------------
@@ -139,116 +98,56 @@ class waterstorage(HydroModule):
             # ************************************************************
             
             # river water storage [m3]
-            # in routing.py: *** initial river storage is stored in
-            #                    self.var.ChanM3 = self.var.TotalCrossSectionArea * self.var.ChanLength
-            #                    self.var.ChanIniM3 = self.var.ChanM3.copy()
-            #                    self.var.ChanM3Kin = self.var.ChanIniM3.copy().astype(float)
-            #                *** split routing
-            #                    self.var.Chan2M3Kin = self.var.CrossSection2Area * self.var.ChanLength + self.var.Chan2M3Start
-            #                    self.var.ChanM3Kin = self.var.ChanM3 - self.var.Chan2M3Kin + self.var.Chan2M3Start
-            #                *** Volume in main channel at end of computation step
-            #                    self.var.ChanM3Kin = self.var.ChanLength * self.var.ChannelAlpha * self.var.ChanQKin**self.var.Beta
-            #                *** floodplain routing
-            #                    self.var.Chan2M3Kin = self.var.ChanLength * self.var.ChannelAlpha2 * self.var.Chan2QKin ** self.var.Beta
-            #                    self.var.CrossSection2Area = (self.var.Chan2M3Kin - self.var.Chan2M3Start) * self.var.InvChanLength  
-            #                    TotalCrossSectionArea = np.maximum(self.var.ChanM3Kin*self.var.InvChanLength,0.01)
-            # in Lisflood_dynamic.py:
-            #                *** add main channel and floodplains
-            #                    self.ChanM3 = self.ChanM3Kin + selfChan2M3Kin - self.Chan2M3Start
-            #                    self.TotalCrossSectionArea = self.ChanM3 * self.InvChanLength            
-            #tws_riverM3 = self.var.ChanM3.copy() ?
             tws_riverM3 = self.var.TotalCrossSectionArea * self.var.ChanLength
             
             # [m3] -> [m]
             tws_riverM = tws_riverM3 / self.var.PixelArea
             
             # overlandflow water storage [m3]
-            # in surface_routing.py: self.var.M3all = self.var.OFM3Direct + self.var.OFM3Other + self.var.OFM3Forest
             tws_oflowM3 = self.var.OFM3Direct + self.var.OFM3Forest + self.var.OFM3Other
             
             # [m3] -> [m]
             tws_oflowM = tws_oflowM3 / self.var.PixelArea
             
             # lake water storage [m3]
-            # in lakes.py: LakeSitesC = loadmap('LakeSites')
-            #              LakeSitesC[LakeSitesC < 1] = 0
-            #              LakeSitesC[self.var.IsChannel == 0] = 0
-            #              self.var.LakeSitesC2 = LakeSitesC 
-            #
-            #              LakeArea = pcraster.lookupscalar(str(binding['TabLakeArea']), LakeSitePcr)
-            #              LakeAreaC = compressArray(LakeArea)
-            #              self.var.LakeAreaCC = np.compress(LakeSitesC > 0, LakeAreaC)
-            #
-            #              self.var.LakeStorageM3CC = (LakeStorageIndicator - self.var.LakeOutflowCC* 0.5) * self.var.DtRouting
-            #              self.var.LakeStorageM3CC[self.var.LakeStorageM3CC < 0] = 0
-            #              self.var.LakeStorageM3CC[np.isnan(self.var.LakeStorageM3CC)] = 0
-            #              self.var.LakeStorageM3BalanceCC += LakeIn * self.var.DtRouting - QLakeOutM3DtCC
-            #              self.var.LakeLevelCC = self.var.LakeStorageM3CC / self.var.LakeAreaCC
-            #
-            #              self.var.LakeStorageM3Balance = maskinfo.in_zero()
-            #              self.var.LakeStorageM3 = maskinfo.in_zero()
-            #              self.var.LakeLevel = maskinfo.in_zero()
-            #              np.put(self.var.LakeStorageM3Balance, self.var.LakeIndex, self.var.LakeStorageM3BalanceCC)
-            #              np.put(self.var.LakeStorageM3, self.var.LakeIndex, self.var.LakeStorageM3CC)
-            #              np.put(self.var.LakeLevel, self.var.LakeIndex, self.var.LakeLevelCC)
             tws_lakeM3 = np.zeros(tws_riverM3.shape, dtype=np.float32)
+            # lake water storage [m]
+            tws_lakeM = np.zeros(tws_riverM.shape, dtype=np.float32)
+
             if option['simulateLakes']:
-                #tws_lakeM3  = self.var.LakeStorageM3.copy() ? 
-                #tws_lakeM3  = self.var.LakeStorageM3Balance ?
                 LakeArea = maskinfo.in_zero()
                 np.put(LakeArea, self.var.LakeIndex, self.var.LakeAreaCC)
                 tws_lakeM3 = self.var.LakeLevel * LakeArea
-                
-            # [m3] -> [m] distribute lake/river/oflow over lake areas 
-            tws_lakeM = np.zeros(tws_riverM.shape, dtype=np.float32)
-            lake_extent = self.var.LakeDistribution
-            for n in np.unique(lake_extent[~np.isnan(lake_extent)]).astype(int):
-                if n > 0:
-                    lake_mask = np.nonzero(lake_extent == n)
-                    grid_area_lake = np.nansum(self.var.PixelArea[lake_mask])
-                    tws_lakeM[lake_mask] = tws_lakeM3[self.var.LakeSitesC2==n] / grid_area_lake
-                    tws_riverM[lake_mask] = np.nansum(tws_riverM3[lake_mask]) / grid_area_lake
-                    tws_oflowM[lake_mask] = np.nansum(tws_oflowM3[lake_mask]) / grid_area_lake
+
+                # [m3] -> [m] distribute lake/river/oflow over lake areas
+                lake_extent = self.var.LakeDistribution
+                for n in np.unique(lake_extent[~np.isnan(lake_extent)]).astype(int):
+                    if n != 0:
+                        lake_mask = np.nonzero(lake_extent == n)
+                        grid_area_lake = np.nansum(self.var.PixelArea[lake_mask])
+                        tws_lakeM[lake_mask] = tws_lakeM3[self.var.LakeSitesC2==n] / grid_area_lake
+                        tws_riverM[lake_mask] = np.nansum(tws_riverM3[lake_mask]) / grid_area_lake
+                        tws_oflowM[lake_mask] = np.nansum(tws_oflowM3[lake_mask]) / grid_area_lake
             
             # reservoir water storage [m3]
-            # in routing.py: self.var.IsChannelPcr = boolean(loadmap('Channels', pcr=True))
-            #                self.var.IsChannel = np.bool8(compressArray(self.var.IsChannelPcr))
-            #
-            # in reservoir.py: self.var.ReservoirSitesC = loadmap('ReservoirSites')
-            #                  self.var.ReservoirSitesC[self.var.ReservoirSitesC < 1] = 0
-            #                  self.var.ReservoirSitesC[self.var.IsChannel == 0] = 0
-            #
-            #                  TotalReservoirStorageM3 = lookupscalar(str(binding['TabTotStorage']), ReservoirSitePcr)
-            #                  self.var.TotalReservoirStorageM3C = compressArray(TotalReservoirStorageM3)
-            #                  self.var.TotalReservoirStorageM3C = np.where(np.isnan(self.var.TotalReservoirStorageM3C), 0, self.var.TotalReservoirStorageM3C)
-            #                  self.var.TotalReservoirStorageM3CC = np.compress(self.var.ReservoirSitesC > 0, self.var.TotalReservoirStorageM3C)
-            #
-            #                  self.var.ReservoirStorageM3CC -= QResOutM3DtCC
-            #                  self.var.ReservoirFillCC = self.var.ReservoirStorageM3CC / self.var.TotalReservoirStorageM3CC
-            #                  self.var.ReservoirFillCC[np.isnan(self.var.ReservoirFillCC)] = 0
-            #                  self.var.ReservoirFillCC[self.var.ReservoirFillCC < 0] = 0
-            #
-            #                  self.var.ReservoirStorageM3 = maskinfo.in_zero()
-            #                  self.var.ReservoirFill = maskinfo.in_zero()
-            #                  np.put(self.var.ReservoirStorageM3, self.var.ReservoirIndex, self.var.ReservoirStorageM3CC)
-            #                  np.put(self.var.ReservoirFill, self.var.ReservoirIndex, self.var.ReservoirFillCC)
             tws_reservoirM3 = np.zeros(tws_riverM3.shape, dtype=np.float32)
+            # reservoir water storage [m]
+            tws_reservoirM = np.zeros(tws_riverM.shape, dtype=np.float32)
+
             if option['simulateReservoirs']:  
-                #tws_reservoirM3  = self.var.ReservoirStorageM3.copy() ?
                 TotalReservoirStorage = maskinfo.in_zero()
                 np.put(TotalReservoirStorage, self.var.ReservoirIndex, self.var.TotalReservoirStorageM3CC)
                 tws_reservoirM3 = self.var.ReservoirFill * TotalReservoirStorage
-            
-            # [m3] -> [m] distribute reservoir/river/oflow over reservoir areas 
-            tws_reservoirM = np.zeros(tws_riverM.shape, dtype=np.float32)
-            reservoir_extent = self.var.ReservoirDistribution
-            for n in np.unique(reservoir_extent[~np.isnan(reservoir_extent)]).astype(int):
-                if n > 0:
-                    reservoir_mask = np.nonzero(reservoir_extent == n)
-                    grid_area_reservoir = np.nansum(self.var.PixelArea[reservoir_mask])
-                    tws_reservoirM[reservoir_mask] = tws_reservoirM3[self.var.ReservoirSitesC==n] / grid_area_reservoir
-                    tws_riverM[reservoir_mask] = np.nansum(tws_riverM3[reservoir_mask]) / grid_area_reservoir
-                    tws_oflowM[reservoir_mask] = np.nansum(tws_oflowM3[reservoir_mask]) / grid_area_reservoir
+
+                # [m3] -> [m] distribute reservoir/river/oflow over reservoir areas
+                reservoir_extent = self.var.ReservoirDistribution
+                for n in np.unique(reservoir_extent[~np.isnan(reservoir_extent)]).astype(int):
+                    if n != 0:
+                        reservoir_mask = np.nonzero(reservoir_extent == n)
+                        grid_area_reservoir = np.nansum(self.var.PixelArea[reservoir_mask])
+                        tws_reservoirM[reservoir_mask] = tws_reservoirM3[self.var.ReservoirSitesC==n] / grid_area_reservoir
+                        tws_riverM[reservoir_mask] = np.nansum(tws_riverM3[reservoir_mask]) / grid_area_reservoir
+                        tws_oflowM[reservoir_mask] = np.nansum(tws_oflowM3[reservoir_mask]) / grid_area_reservoir
          
             # soil water storage [mm] -> [m]
             tws_soil1M  = ((self.var.Theta1a[0] * self.var.SoilDepth1a[0]) * self.var.OtherFraction     +
@@ -293,4 +192,3 @@ class waterstorage(HydroModule):
             self.var.snowstor      = tws_snowM
             self.var.cumstor       = tws_cumM
             self.var.twsstor       = tws_riverM + tws_oflowM + tws_lakeM + tws_reservoirM + tws_soilM + tws_groundwaterM + tws_snowM + tws_cumM
-                      
