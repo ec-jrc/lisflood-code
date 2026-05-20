@@ -173,11 +173,11 @@ class mctheadwater(HydroModule):
 
             self.var.QInHeadM3 = maskinfo.in_zero()
             np.put(self.var.QInHeadM3, self.var.MCTHeadwaterIndex, inflow * self.var.DtSec)
-            self.var.QDeltaM3 = (self.var.QInHeadM3 - self.var.QInHeadM3Old) * self.var.InvNoRoutSteps
+            self.var.QDeltaHeadM3 = (self.var.QInHeadM3 - self.var.QInHeadM3Old) * self.var.InvNoRoutSteps
             # difference between old and new headwater flow  per sub step
             # in order to calculate the amount of headwater flow in the routing loop
 
-            self.var.QHeadM3Dt = (self.var.QInHeadM3Old + (NoRoutingExecuted + 1) * self.var.QDeltaM3) * self.var.InvNoRoutSteps
+            self.var.QHeadM3Dt = (self.var.QInHeadM3Old + (NoRoutingExecuted + 1) * self.var.QDeltaHeadM3) * self.var.InvNoRoutSteps
             # output to the MCT headwater cells
 
             self.var.QInHeadM3Old = self.var.QInHeadM3.copy()

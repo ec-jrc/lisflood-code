@@ -111,7 +111,7 @@ class inflow(HydroModule):
         settings = LisSettings.instance()
         option = settings.options
         if option['inflow']:
-            self.var.QDelta = (self.var.QInM3 - self.var.QInM3Old) * self.var.InvNoRoutSteps
+            self.var.QDeltaM3 = (self.var.QInM3 - self.var.QInM3Old) * self.var.InvNoRoutSteps
             # difference between old and new inlet flow  per sub step
             # in order to calculate the amount of inlet flow in the routing loop
 
@@ -147,6 +147,6 @@ class inflow(HydroModule):
         
         if option['inflow']:
 
-            self.var.QInDt = (self.var.QInM3Old + (NoRoutingExecuted + 1) * self.var.QDelta) * self.var.InvNoRoutSteps
+            self.var.QInM3Dt = (self.var.QInM3Old + (NoRoutingExecuted + 1) * self.var.QDeltaM3) * self.var.InvNoRoutSteps
             # flow from inlets per sub step
-            self.var.QinADDEDM3 += self.var.QInDt 
+            self.var.QinADDEDM3 += self.var.QInM3Dt

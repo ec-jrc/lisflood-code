@@ -727,7 +727,7 @@ class routing(HydroModule):
                 SideflowChanM3 -= self.var.WUseAddM3Dt
                 # Water use abstraction from rivers - withdrawal    [m3]
             if option['inflow']:
-                SideflowChanM3 += self.var.QInDt
+                SideflowChanM3 += self.var.QInM3Dt
                 # Flow volume from inlets per sub step [m3]
             if option['TransLoss']:
                 SideflowChanM3 -= self.var.TransLossM3Dt
@@ -755,7 +755,7 @@ class routing(HydroModule):
              if (NoRoutingExecuted<1):
                  self.var.AddedTRUN = np.take(np.bincount(self.var.Catchments, weights=self.var.ToChanM3RunoffDt.copy()),self.var.Catchments)
                  if option['inflow']:
-                     self.var.AddedTRUN += np.take(np.bincount(self.var.Catchments, weights=self.var.QInDt),self.var.Catchments)
+                     self.var.AddedTRUN += np.take(np.bincount(self.var.Catchments, weights=self.var.QInM3Dt),self.var.Catchments)
                  if option['openwaterevapo']:
                      self.var.AddedTRUN -= np.take(np.bincount(self.var.Catchments, weights=self.var.EvaAddM3Dt.copy()),self.var.Catchments)
                  if option['wateruse']:
@@ -763,7 +763,7 @@ class routing(HydroModule):
              else:
                  self.var.AddedTRUN += np.take(np.bincount(self.var.Catchments, weights=self.var.ToChanM3RunoffDt.copy()),self.var.Catchments)
                  if option['inflow']:
-                     self.var.AddedTRUN += np.take(np.bincount(self.var.Catchments, weights=self.var.QInDt),self.var.Catchments)
+                     self.var.AddedTRUN += np.take(np.bincount(self.var.Catchments, weights=self.var.QInM3Dt),self.var.Catchments)
                  if option['openwaterevapo']:
                      self.var.AddedTRUN -= np.take(np.bincount(self.var.Catchments, weights=self.var.EvaAddM3Dt.copy()),self.var.Catchments)
                  if option['wateruse']:
