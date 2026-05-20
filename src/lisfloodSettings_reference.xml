@@ -46,11 +46,12 @@ You can use builtin path variables in this template and reference to other paths
       <setoption choice="1" name="openwaterevapo"/>
       <setoption choice="1" name="simulateLakes"/>
       <setoption choice="1" name="simulateReservoirs"/>
+      <setoption choice="1" name="simulateCalibrationPoints "/>
       <setoption choice="0" name="TransLoss"/>
 
       <setoption choice="0" name="SplitRouting"/>
       <setoption choice="1" name="MCTRouting"/>
-      <setoption choice="1" name="MCTRoutingInterface"/>      
+      <setoption choice="1" name="MCTRoutingInterface"/>
 
       # use inflow data
       <setoption choice="0" name="inflow"/>
