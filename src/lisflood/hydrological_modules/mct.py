@@ -336,9 +336,9 @@ def MCTRouting_single(
         #     ql_abs = ql
         # else:
         #     ql_abs = -ql
-        # max_q11 = q01 + q00 + ql_abs + V00 / dt
-        # if q11 > max_q11:
-        #     q11 = max_q11
+        max_q11 = q01 + q00 + abs(ql) + V00 / dt
+        if q11 > max_q11:
+            q11 = max_q11
 
         # After q11 is computed
         # max_physical = q01 + q00 + abs(ql) + V00 / dt
