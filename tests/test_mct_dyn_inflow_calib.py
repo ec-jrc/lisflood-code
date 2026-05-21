@@ -62,11 +62,11 @@ class TestInflow():
                                            'CalChanMan3': '5.0',
                                            'CalibrationPoints': "$(PathRoot)/maps/p2.nc",
                               })
-        # mk_path_out(out_path_run)
+
         lisfloodexe(settings)
 
         # run with inflow from dynamic reference and generate outflow at inflow point
-        # out_path_ref = os.path.join(self.case_dir, 'reference_mct_dyn', 'inflow_'+type)
+        out_path_ref = os.path.join(self.case_dir, 'reference_mct_dyn', 'inflow_'+type)
         out_path_run = os.path.join(self.case_dir, self.run_type)
         settings_file = os.path.join(self.case_dir, 'settings', 'mct_inflow_calib.xml')
         settings = setoptions(settings_file,
