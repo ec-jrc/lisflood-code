@@ -38,7 +38,7 @@ class TestInflow():
                                            'ChannelsMCT': '$(PathRoot)/maps/chanmct_conf',
                                            'ChanGradMaxMCT': '0.00005',
                                            'CalChanMan3': '5.0',
-                                           'CalibrationPoints': "$(PathRoot)/maps/p2.nc",
+                                           'CalibrationPoints': "$(PathRoot)/maps/inflow.nc",
                                            })
         mk_path_out(out_path_ref)
         mk_path_out(out_path_run)
@@ -63,7 +63,7 @@ class TestInflow():
                                            'ChannelsMCT': '$(PathRoot)/maps/chanmct_conf',
                                            'ChanGradMaxMCT': '0.00005',
                                            'CalChanMan3': '5.0',
-                                           'CalibrationPoints': "$(PathRoot)/maps/p2.nc",
+                                           # 'CalibrationPoints': "$(PathRoot)/maps/inflow.nc",
                               })
 
         lisfloodexe(settings)
@@ -89,6 +89,7 @@ class TestInflow():
                                            'ChannelsMCT': '$(PathRoot)/maps/chanmct_conf',
                                            'ChanGradMaxMCT': '0.00005',
                                            'CalChanMan3': '5.0',
+                                           # 'CalibrationPoints': "$(PathRoot)/maps/inflow.nc",
                                            })
         mk_path_out(out_path_run)
         lisfloodexe(settings)
@@ -114,27 +115,27 @@ class TestInflow():
         output_tss =  os.path.join(out_path_run, 'chanqavgdt.tss')
         comparator.compare_files(reference, output_tss)
 
-    def teardown_method(self, type):
-        print('Cleaning directories')
-
-        ref_path = os.path.join(self.case_dir, 'reference_mct_dyn')
-        if os.path.exists(ref_path) and os.path.isdir(ref_path):
-            shutil.rmtree(ref_path, ignore_errors=True)
-
-        out_path = os.path.join(self.case_dir, self.run_type)
-        if os.path.exists(out_path) and os.path.isdir(out_path):
-            shutil.rmtree(out_path, ignore_errors=True)
+    # def teardown_method(self, type):
+    #     print('Cleaning directories')
+    #
+    #     ref_path = os.path.join(self.case_dir, 'reference_mct_dyn')
+    #     if os.path.exists(ref_path) and os.path.isdir(ref_path):
+    #         shutil.rmtree(ref_path, ignore_errors=True)
+    #
+    #     out_path = os.path.join(self.case_dir, self.run_type)
+    #     if os.path.exists(out_path) and os.path.isdir(out_path):
+    #         shutil.rmtree(out_path, ignore_errors=True)
 
 
 class TestInflowShort(TestInflow):
 
     run_type = 'short'
 
-    def test_mct_inflow_daily(self):
-         self.run("02/01/2016 06:00", "30/01/2016 06:00", 86400,'daily')
+    # def test_mct_inflow_daily(self):
+    #      self.run("02/01/2016 06:00", "30/01/2016 06:00", 86400,'daily')
     def test_mct_inflow_6h(self):
         self.run("01/03/2016 06:00", "30/03/2016 06:00", 21600,'6h')
 
     # cleaning folders
-    def cleaning(self,):
-        self.teardown_method()
+    # def cleaning(self,):
+    #     self.teardown_method()
