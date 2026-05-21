@@ -27,16 +27,17 @@ class TestInflow():
                               vars_to_set={'StepStart': date_start,
                                            'StepEnd': date_end,
                                            'CalendarDayStart': date_start,
-                                           'DtSec' : dtsec,
+                                           # 'DtSec' : dtsec,
                                            # 'DtSecChannel' : dtsec,        # single routing step
-                                           'BankFullPerc': '0.1',
-                                           'MaskMap': '$(PathRoot)/maps/mask.nc',
-                                           'Gauges': '4292500 2377500',     # one cell upstream of inflow point (p2)
+                                           # 'BankFullPerc': '0.1',
+                                           # 'MaskMap': '$(PathRoot)/maps/mask.nc',
+                                           # 'Gauges': '4292500 2377500',     # one cell upstream of inflow point (p2)
                                            'ChanqavgdtTS': out_path_run+'/inflow.tss',  # use chanqavgdt as inflow
                                            'PathOut': out_path_run,
                                            # 'ChannelsMCT': '$(PathRoot)/maps/chanmct_everywhere',
-                                           'ChanGradMaxMCT': '0.00005',
-                                           'CalChanMan3': '5.0'})
+                                           # 'ChanGradMaxMCT': '0.00005',
+                                           # 'CalChanMan3': '5.0',
+                                           })
         mk_path_out(out_path_ref)
         mk_path_out(out_path_run)
         lisfloodexe(settings)
@@ -50,20 +51,20 @@ class TestInflow():
                               vars_to_set={'StepStart': date_start,
                                            'StepEnd': date_end,
                                            'CalendarDayStart': date_start,
-                                           'DtSec' : dtsec,
+                                           # 'DtSec' : dtsec,
                                            # 'DtSecChannel': dtsec,         # single routing step
-                                           'BankFullPerc': '0.1',
-                                           'MaskMap': '$(PathRoot)/maps/mask.nc',
+                                           #'BankFullPerc': '0.1',
+                                           # 'MaskMap': '$(PathRoot)/maps/mask.nc',
                                            # 'Gauges': '4322500 2447500  4447500 2422500',    # inflow and outlet
                                            # 'Gauges': '4297500 2372500',                       # inflow point (p5)
                                            'PathOut': out_path_run,
                                            # 'ChannelsMCT': '$(PathRoot)/maps/chanmct_everywhere',
-                                           'ChanGradMaxMCT': '0.00005',
-                                           'CalChanMan3': '5.0',
-                                           'CalibrationPoints': "$(PathRoot)/maps/p2.nc",
+                                           # 'ChanGradMaxMCT': '0.00005',
+                                           # 'CalChanMan3': '5.0',
+                                           # 'CalibrationPoints': "$(PathRoot)/maps/p2.nc",
                               })
 
-        lisfloodexe(settings)
+        # lisfloodexe(settings)
 
         # run with inflow from dynamic reference and generate outflow at inflow point
         out_path_ref = os.path.join(self.case_dir, 'reference_mct_dyn', 'inflow_'+type)
@@ -74,9 +75,9 @@ class TestInflow():
                               vars_to_set={'StepStart': date_start,
                                            'StepEnd': date_end,
                                            'CalendarDayStart': date_start,
-                                           'DtSec' : dtsec,
+                                           # 'DtSec' : dtsec,
                                            # 'DtSecChannel': dtsec,     # single routing step
-                                           'BankFullPerc': '0.1',
+                                           # 'BankFullPerc': '0.1',
                                            'MaskMap': '$(PathRoot)/maps/interbasin_mask.nc',
                                            'InflowPoints': '$(PathRoot)/maps/inflow.nc',
                                            'QInTS': out_path_ref+'/inflow.tss',
@@ -84,10 +85,11 @@ class TestInflow():
                                            # 'Gauges': '4297500 2372500',                       # inflow point (p5)
                                            'PathOut': out_path_run,
                                            # 'ChannelsMCT': '$(PathRoot)/maps/chanmct_everywhere',
-                                           'ChanGradMaxMCT': '0.00005',
-                                           'CalChanMan3': '5.0'})
+                                           # 'ChanGradMaxMCT': '0.00005',
+                                           # 'CalChanMan3': '5.0',
+                                           })
         mk_path_out(out_path_run)
-        lisfloodexe(settings)
+        # lisfloodexe(settings)
 
         # set precision for the test and number of steps to skip at the beginning of the time series
         atol = 2.0

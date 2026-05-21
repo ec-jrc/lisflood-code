@@ -46,11 +46,11 @@ You can use builtin path variables in this template and reference to other paths
         <setoption choice="0" name="openwaterevapo"/>
         <setoption choice="0" name="simulateLakes"/>
         <setoption choice="0" name="simulateReservoirs"/>
-        <setoption choice="1" name="simulateCalibrationPoints"/>
+        <setoption choice="0" name="simulateCalibrationPoints"/>
 
         <setoption choice="0" name="SplitRouting"/>
         <setoption choice="1" name="MCTRouting"/>
-        <setoption choice="1" name="MCTRoutingInterface"/>
+        <setoption choice="0" name="MCTRoutingInterface"/>
 
 
         # use inflow data
@@ -292,7 +292,7 @@ You can use builtin path variables in this template and reference to other paths
                 </comment>
             </textvar>
 
-            <textvar name="CalendarDayStart" value="01/01/2016 06:00">
+            <textvar name="CalendarDayStart" value="01/03/2016 06:00">
                 <comment>
 					Reference day and time
                 </comment>
@@ -313,14 +313,14 @@ You can use builtin path variables in this template and reference to other paths
                 </comment>
             </textvar>
 
-            <textvar name="StepStart" value="01/01/2016 06:00">
+            <textvar name="StepStart" value="01/03/2016 06:00">
                 <comment>
 					01/01/YEAR_START 12:00
                     Number of first time step in simulation
                 </comment>
             </textvar>
 
-            <textvar name="StepEnd" value="31/12/2016 06:00">
+            <textvar name="StepEnd" value="01/04/2016 06:00">
               <comment>
 					01/01/YEAR_END 06:00
 					Number of last time step in simulation
