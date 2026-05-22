@@ -355,12 +355,6 @@ def MCTRouting_single(
         if q11 > max_q11:
             q11 = max_q11
 
-        # After q11 is computed
-        # max_physical = q01 + q00 + abs(ql) + V00 / dt
-        # if q11 > max_physical * 1.1:  # exceeds physical bound by >10%
-        #     print("MASS VIOLATION q11=", q11, "max_phys=", max_physical, 
-        #         "q01=", q01, "q00=", q00, "ql=", ql, "V00=", V00)
-
         #### end of for loop
 
     # # cmcheck
@@ -394,12 +388,12 @@ def MCTRouting_single(
     q1mm = q0mm + ql + (V00 - V11) / dt
     # Ensure q1mm is consistent with q11 (instantaneous outflow)
     # q1mm should be within reasonable bounds of q11
-    if q11 > 0:
-        ratio = q1mm / q11
-        if ratio > 10:
-            q1mm = q11
-        elif ratio < 0.1:
-            q1mm = q11
+    # if q11 > 0:
+    #     ratio = q1mm / q11
+    #     if ratio > 10:
+    #         q1mm = q11
+    #     elif ratio < 0.1:
+    #         q1mm = q11
 
     # cmcheck
     # q1m cannot be smaller than eps or it will cause instability

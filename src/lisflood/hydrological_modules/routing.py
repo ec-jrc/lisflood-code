@@ -868,7 +868,7 @@ class routing(HydroModule):
                 # Case 1: ChanQAvgDt too small relative to ChanQ (flood arrival)
                 mct_avg_too_small = (
                     self.var.IsChannelMCT &
-                    (self.var.ChanQ > 100.) &
+                    (self.var.ChanQ > 0.1) &
                     (self.var.ChanQAvgDt < 0.1 * self.var.ChanQ)
                 )
                 self.var.ChanQAvgDt = np.where(mct_avg_too_small, self.var.ChanQ, self.var.ChanQAvgDt)
@@ -876,7 +876,7 @@ class routing(HydroModule):
                 # Case 2: ChanQAvgDt too large relative to ChanQ (flood recession / cold start)
                 mct_avg_too_large = (
                     self.var.IsChannelMCT &
-                    (self.var.ChanQAvgDt > 100.) &
+                    (self.var.ChanQAvgDt > 0.1) &
                     (self.var.ChanQ < 0.1 * self.var.ChanQAvgDt)
                 )
                 self.var.ChanQAvgDt = np.where(mct_avg_too_large, self.var.ChanQ, self.var.ChanQAvgDt)
