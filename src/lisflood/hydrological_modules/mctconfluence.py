@@ -126,8 +126,13 @@ class mctconfluence(HydroModule):
         """
         settings = LisSettings.instance()
         option = settings.options
+        maskinfo = MaskInfo.instance()
         if option['MCTRouting'] and option['MCTRoutingInterface']:
-            self.var.QInConfM3Old = np.where(self.var.MCTConfluenceSitesC > 0, self.var.ChanQAvgDt * self.var.DtSec, 0)
+            lateralflow = np.bincount(self.var.KinematicUpsOfMCTConfluence, weights=self.var.ChanQAvgDt)[self.var.MCTConfluenceIndex]  #same as Qin
+            # contribution to the MCT pixel from upstream Kinematic pixels
+            self.var.QInConfM3Old = maskinfo.in_zero()
+            np.put(self.var.QInConfM3Old, self.var.MCTConfluenceIndex, lateralflow * self.var.DtSec)
+            pass
 
 
     def dynamic_inloop(self, NoRoutingExecuted: int):

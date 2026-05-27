@@ -860,6 +860,7 @@ class routing(HydroModule):
                 # # MCT headwater pixels outflow volume per routing sub step [m3]
 
                 # MCT CONFLUENCE
+                # This needs to be here because I need to grab the input to MCT pixels from outflow at the end of routing step of kinematic pixels
                 if option['MCTRoutingInterface']:
                     self.mctconfluence_module.dynamic_inloop(NoRoutingExecuted)
                     # calculate sideflow from MCT confluence pixels
