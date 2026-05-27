@@ -31,7 +31,7 @@ from lisflood.main import lisfloodexe
 from .test_utils import setoptions, mk_path_out
 
 
-class TestWarmStart():
+class TestWarmStartMCTcalib():
 
     case_dir = os.path.join(os.path.dirname(__file__), 'data', 'LF_MCT_UseCase')
 
@@ -41,7 +41,7 @@ class TestWarmStart():
         'warm_endmaps': os.path.join(case_dir, 'settings', 'mct_warm_endmaps_interface.xml')
     }
 
-    def test_mct_only_warmstart_daily_using_end_maps(self):
+    def test_mctcal_only_warmstart_daily_using_end_maps(self):
         calendar_day_start = '02/01/1990 06:00'
         step_start = '02/01/2016 06:00'
         step_end = '31/03/2016 06:00'
@@ -50,7 +50,7 @@ class TestWarmStart():
         report_steps = '9496..9861'
         self.run_warmstart_by_dtsec('mct_endmaps', dt_sec, dt_sec_channel, step_end, step_start, calendar_day_start, report_steps=report_steps)
 
-    def test_mct_only_warmstart_daily(self):
+    def test_mctcal_only_warmstart_daily(self):
         calendar_day_start = '02/01/1990 06:00'
         step_start = '02/01/2016 06:00'
         step_end = '31/03/2016 06:00'
@@ -59,7 +59,7 @@ class TestWarmStart():
         report_steps = '9496..9861'
         self.run_warmstart_by_dtsec('mct', dt_sec, dt_sec_channel, step_end, step_start, calendar_day_start, report_steps=report_steps)
 
-    def test_mct_and_reservoirs_warmstart_daily(self):
+    def test_mctcal_and_reservoirs_warmstart_daily(self):
         calendar_day_start = '02/01/1990 06:00'
         step_start = '02/01/2016 06:00'
         step_end = '31/03/2016 06:00'
@@ -68,7 +68,7 @@ class TestWarmStart():
         report_steps = '9496..9861'
         self.run_warmstart_by_dtsec('mct_reservoirs', dt_sec, dt_sec_channel, step_end, step_start, calendar_day_start, report_steps=report_steps)
 
-    def test_mct_and_lakes_warmstart_daily(self):
+    def test_mctcal_and_lakes_warmstart_daily(self):
         calendar_day_start = '02/01/1990 06:00'
         step_start = '02/01/2016 06:00'
         step_end = '31/03/2016 06:00'
@@ -77,7 +77,7 @@ class TestWarmStart():
         report_steps = '9496..9861'
         self.run_warmstart_by_dtsec('mct_lakes', dt_sec, dt_sec_channel, step_end, step_start, calendar_day_start, report_steps=report_steps)
 
-    def test_mct_only_warmstart_6h(self):
+    def test_mctcal_only_warmstart_6h(self):
         calendar_day_start = '02/01/1990 06:00'
         step_start = '01/03/2016 06:00'
         step_end = '31/05/2016 06:00'
@@ -86,7 +86,7 @@ class TestWarmStart():
         report_steps = '38220..38830'
         self.run_warmstart_by_dtsec('mct', dt_sec, dt_sec_channel, step_end, step_start, calendar_day_start, report_steps=report_steps)
 
-    def test_mct_and_reservoirs_warmstart_6h(self):
+    def test_mctcal_and_reservoirs_warmstart_6h(self):
         calendar_day_start = '02/01/1990 06:00'
         step_start = '01/03/2016 06:00'
         step_end = '31/05/2016 06:00'
@@ -95,7 +95,7 @@ class TestWarmStart():
         report_steps = '38220..38830'
         self.run_warmstart_by_dtsec('mct_reservoirs', dt_sec, dt_sec_channel, step_end, step_start, calendar_day_start, report_steps=report_steps)
 
-    def test_mct_and_lakes_warmstart_6h(self):
+    def test_mctcal_and_lakes_warmstart_6h(self):
         calendar_day_start = '02/01/1990 06:00'
         step_start = '01/03/2016 06:00'
         step_end = '31/05/2016 06:00'
