@@ -250,6 +250,14 @@ def MCTRouting_single(
     Dm1: Reynolds number at t+1 for state file
     """
 
+    if q00 <= 1e-1 and q01 <= 1e-1 and q10 <= 1e-1:
+        q11 = q10
+        q1mm = q10
+        V11 = V00 + (q00 + q01 - q10 - q11) * dt / 2
+        if V11 < 0:
+            V11 = 0
+        return q11, q1mm, V11, Cm0, Dm0
+    # Standard approach if not ill-conditioned approx. 0 values
     eps = 1e-18
 
     # Calc O' first guess for the outflow at time t+dt
@@ -388,12 +396,12 @@ def MCTRouting_single(
     q1mm = q0mm + ql + (V00 - V11) / dt
     # Ensure q1mm is consistent with q11 (instantaneous outflow)
     # q1mm should be within reasonable bounds of q11
-    # if q11 > 0:
-    #     ratio = q1mm / q11
-    #     if ratio > 10:
-    #         q1mm = q11
-    #     elif ratio < 0.1:
-    #         q1mm = q11
+    if q11 > 0:
+        ratio = q1mm / q11
+        if ratio > 10:
+            q1mm = q11
+        elif ratio < 0.1:
+            q1mm = q11
 
     # cmcheck
     # q1m cannot be smaller than eps or it will cause instability
