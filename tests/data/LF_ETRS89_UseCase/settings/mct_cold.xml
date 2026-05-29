@@ -47,6 +47,7 @@ You can use builtin path variables in this template and reference to other paths
         <setoption choice="0" name="simulateLakes"/>
         <setoption choice="0" name="simulateReservoirs"/>
         <setoption choice="0" name="TransLoss"/>
+        <setoption choice="0" name="simulateCalibrationPoints"/>
 
         <setoption choice="0" name="SplitRouting"/>
         <setoption choice="1" name="MCTRouting"/>
@@ -1678,6 +1679,13 @@ You can use builtin path variables in this template and reference to other paths
                     <comment>
                         OPTIONAL: nominal map with locations of (measured)
                         inflow hydrographs [cu m / s]
+                    </comment>
+                </textvar>
+
+                <textvar name="CalibrationPoints" value="$(PathRoot)/maps/ec_outlets.nc">
+                    <comment>
+                        location of calibration points
+                        OPTIONAL: nominal map with locations of calibration points
                     </comment>
                 </textvar>
 
@@ -5476,6 +5484,13 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
+                <textvar name="CalibrationPoints" value="$(CalibrationPoints)">
+                    <comment>
+                        location of calibration points
+                        OPTIONAL: nominal map with locations of calibration points
+                    </comment>
+                </textvar>
+                
                 <textvar name="QInTS" value="$(QInTS)">
                     <comment>
                         Observed or simulated input hydrographs as

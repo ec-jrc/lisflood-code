@@ -77,6 +77,42 @@ class TestWarmStartLong():
         report_steps = '38220..38830'
         self.run_warmstart_by_dtsec('mct_all', dt_sec, dt_sec_channel, step_end, step_start, calendar_day_start,report_steps=report_steps)
 
+    def test_mct_only_warmstart_daily_withcalibpoints(self):
+        calendar_day_start = '02/01/1990 06:00'
+        step_start = '02/01/2016 06:00'
+        step_end = '31/12/2016 06:00'
+        dt_sec = 86400
+        dt_sec_channel = 3600
+        report_steps = '9496..9861'
+        self.run_warmstart_by_dtsec('mct_calibpoints', dt_sec, dt_sec_channel, step_end, step_start, calendar_day_start,report_steps=report_steps)
+
+    def test_mct_warmstart_daily_withcalibpoints(self):
+        calendar_day_start = '02/01/1990 06:00'
+        step_start = '02/01/2016 06:00'
+        step_end = '31/12/2016 06:00'
+        dt_sec = 86400
+        dt_sec_channel = 3600
+        report_steps = '9496..9861'
+        self.run_warmstart_by_dtsec('mct_all_calibpoints', dt_sec, dt_sec_channel, step_end, step_start, calendar_day_start,report_steps=report_steps)
+
+    def test_mct_only_warmstart_6h_withcalibpoints(self):
+        calendar_day_start = '02/01/1990 06:00'
+        step_start = '01/03/2016 06:00'
+        step_end = '31/07/2016 06:00'
+        dt_sec = 21600
+        dt_sec_channel = 3600
+        report_steps = '38220..38830'
+        self.run_warmstart_by_dtsec('mct_calibpoints', dt_sec, dt_sec_channel, step_end, step_start, calendar_day_start,report_steps=report_steps)
+
+    def test_mct_warmstart_6h_withcalibpoints(self):
+        calendar_day_start = '02/01/1990 06:00'
+        step_start = '01/03/2016 06:00'
+        step_end = '31/07/2016 06:00'
+        dt_sec = 21600
+        dt_sec_channel = 3600
+        report_steps = '38220..38830'
+        self.run_warmstart_by_dtsec('mct_all_calibpoints', dt_sec, dt_sec_channel, step_end, step_start, calendar_day_start,report_steps=report_steps)
+
     def run_warmstart_by_dtsec(self, mct_case, dt_sec, dt_sec_channel, step_end, step_start, calendar_day_start,report_steps='1..9999'):
 
         mk_path_out(os.path.join(self.case_dir, 'out'))
@@ -101,6 +137,25 @@ class TestWarmStartLong():
                            ]
             opts_to_unset = ['repMBTs',
                              'simulateReservoirs']
+        elif mct_case == 'mct_calibpoints':
+            opts_to_set = ['repStateMaps','repDischargeMaps',
+                           'TransLoss', 
+                           'simulateCalibrationPoints']
+            opts_to_unset = ['repMBTs', 'simulateReservoirs', 'simulateLakes']
+        elif mct_case == 'mct_all_calibpoints':
+            opts_to_set = ['repStateMaps',
+                           'repDischargeMaps',
+                           'wateruse',
+                           'drainedIrrigation',
+                           'riceIrrigation',
+                           'openwaterevapo',
+                           'simulateLakes',
+                           'TransLoss', 
+                           'simulateCalibrationPoints'
+                           ]
+            opts_to_unset = ['repMBTs',
+                             'simulateReservoirs']
+            
 
         settings_longrun = setoptions(self.settings_files['cold'],
                                     opts_to_set=opts_to_set,
