@@ -4,6 +4,8 @@ Lakes and reservoirs can be defined as a significant volume of water, which occu
 
 The modelling of lakes and reservoirs requires three maps and a set of txt files.
 
+For the generation of total water storage output (option "repTWSMaps"), two additional maps are needed to distribute the mass over the extent of the lakes/reservoirs.
+
  
 ## Lake mask map
 
@@ -42,7 +44,7 @@ If a grid-cell has any fraction of inland water and is inside the GLWD Level 1 a
 ## Reservoirs map and tables 
 
 Reservoirs are identified using a unique integer number (ID).
-The reservoirs map shows the outflow location of each reservoir: each outflow point has the ID of the relevant reservoir. Modelling of reservoirs within OS LISFLOOD then requires the following pieces of information: reservoir storage, minimum reservoir outflow, normal reservoir outflow, flood reservoir outflow (connected to 100 year return period discharge). The latter information is provuided to the code in .txt format (these txt files are traditionally called OS LISFLOOD tables).
+The reservoirs map shows the outflow location of each reservoir: each outflow point has the ID of the relevant reservoir. Modelling of reservoirs within OS LISFLOOD then requires the following pieces of information: reservoir storage, minimum reservoir outflow, normal reservoir outflow, flood reservoir outflow (connected to 100 year return period discharge). The latter information is provided to the code in .txt format (these txt files are traditionally called OS LISFLOOD tables).
 
 ### General map and tables information and possible source data
 
@@ -137,7 +139,7 @@ The following paragraphs provide guidelines for the generation of the lake map a
 
 Lake unique identifier (1) and coordinates of the outlet mapped on the OS LISFLOOD local drainage direction map  ([ldd](https://ec-jrc.github.io/lisflood-code/4_Static-Maps_topography/)) (3) are required to generate the lake map. Geographic oordinates of the lake outlet (2) and OS LISFLOOD local drainage direction map  ([ldd](https://ec-jrc.github.io/lisflood-code/4_Static-Maps_topography/)) are essential to generate (3). Adequate model representation requires the agreement between lake catchment area (7) and OS LISFLOOD [upstream area map](https://ec-jrc.github.io/lisflood-code/4_Static-Maps_topography/).
 
-Lake surface area can be retrieved from local datasets or global datasets such as HydroLAKES](https://www.hydrosheds.org/products/hydrolakes), [GLWD](https://www.hydrosheds.org/products/glwd), [GRAND](https://www.globaldamwatch.org/grand).
+Lake surface area can be retrieved from local datasets or global datasets such as [HydroLAKES](https://www.hydrosheds.org/products/hydrolakes), [GLWD](https://www.hydrosheds.org/products/glwd), [GRAND](https://www.globaldamwatch.org/grand).
 
 Where lake outlet width cannot be retrieved from external datdaset, it can be measured with GIS tools.
 
@@ -147,3 +149,25 @@ Lake maps and tables of the European 1arcmin domain and global 3arcmin domain ar
 Lakes included in the European 1arcmin domain had a minimum volume of 10 hm3, a minimum lake surface area of 5 km2, a minimum upstream catchment area of 50 km2.
 Lakes included in the global 3arcmin domain had a minimum volume of 100 hm3, a minimum lake surface area of 50 km2, a minimum upstream catchment area of 250 km2.
 Lake outlet width was generally measured with GIS tools; lake average inflow was computed using OS LISFLOOD CEMS EFAS and CEMS GloFAS discharge reanalysis (GloFASv4 reanalysis for GloFASv5 tables; EFASv5 naturalized flow for EFASv6 tables).
+
+## Lake and reservoir extent maps
+
+The lake and reservoir modules output lake/reservoir levels at the outlet locations (output file lakeh.nc for locations in res.nc and lakes.nc). For the generation of total water storage maps (option "repTWSMaps") these information have to be converted to mass changes and spatially distributed over the extent of the lakes/reservoirs. For this, two maps have to be generated that contain the lake/reservoir ID for each pixel belonging to the area covered by the respective lake/reservoir.
+
+### General map information
+
+| Map/table name | File name; type | Units; range | Description |
+| :---| :--- | :--- | :--- |
+|Lake extent|lake_ext.nc; <br>Type: Float32|Units: -; <br>Range: integer  ID number to identify each lake | Lake ID (ID of outflow location) for each pixel belonging to the surface extent of the lake|
+|Reservoir extent|res_ext.nc; <br>Type: Float32|Units: -; <br>Range: integer  ID number to identify each reservoir | Reservoir ID (ID of outflow location) for each pixel belonging to the surface extent of the reservoir|
+
+### Methodology
+The creation of the lake extent map requires: 
+
+1. Lake outflow location with unique lake identifier (e.g., lakes.nc)
+2. external local or global dataset containing the vectorized polygons of the lake outlines (e.g., in shapefile format), such as [HydroLAKES](https://www.hydrosheds.org/products/hydrolakes), as well as the surface area of the lake
+3. Table relating the unique lake identifier of OS LISFLOOD to the lake identifier in the external data set
+
+The creation of a raster file fulfilling the criteria for a consistent lake extent map (e.g., lakes with an area smaller than the grid cell size must not be neglected; lakes assigned to only one grid cell must not be overwritten by other lakes; different source shapefiles,...) is not straight forward, thus, a standard rasterize command is not appropriate. Therefore, a python script (prepare_lisflood_lakeresExtent.py) is provided to create the lake extent map from the input data above. It has to be adapted to the actual paths and data sources. It loops over each lake defined in the outlet location file and performs the following actions: If the total lake area is too small in comparison to the grid cell area (e.g., smaller than 5% of the cell area), the outlet location pixel is set as the lake extent. Otherwise, the corresponding polygon from the shapefile is intersected with the grid cells and each grid cell containing a fraction of the lake extent is checked. If the lake covers a sufficiently large fraction (e.g., more than 7%) of the grid cell cell, it is counted to the lake extent (i.e., the lake ID is assigned), else it is neglected. If no intersection fraction is large enough (e.g., if the lake is very thin but long) the outlet location pixel is set as the lake extent.  
+
+The creation of the reservoir extent map can be done analogously to the lake extent map with the same python script.
