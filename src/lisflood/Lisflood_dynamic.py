@@ -209,7 +209,6 @@ class LisfloodModel_dyn(DynamicModel):
         #     # Total channel storage [m3] = Volume in main channel (ChanM3Kin) + volume above bankfull (Chan2M3Kin - Chan2M3Start)
         #     # at t+dt
 
-
         self.TotalCrossSectionArea = self.ChanM3 * self.InvChanLength
         # Total river channel cross-section area at t+dt
 
@@ -240,7 +239,6 @@ class LisfloodModel_dyn(DynamicModel):
         #self.DischargeM3Out += np.where(self.AtLastPointC ,self.ChanQ * self.DtSec,0)
         self.DischargeM3Out += np.where(self.AtLastPointC, self.ChanQAvg * self.DtSec, 0)
         # Cumulative outflow out of map
-        # cmcheck - we should use ChanQAvg here not ChanQ
 
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         # Calculate water level

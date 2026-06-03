@@ -36,21 +36,21 @@ You can use builtin path variables in this template and reference to other paths
         <setoption choice="0" name="groundwaterSmooth"/>
         
         <setoption choice="0" name="wateruse"/>
-        <setoption choice="0" name="TransientWaterDemandChange"/>
+        <setoption choice="1" name="TransientWaterDemandChange"/>
         <setoption choice="0" name="useWaterDemandAveYear"/>
-        <setoption choice="0" name="wateruseRegion"/>
+        <setoption choice="1" name="wateruseRegion"/>
 
 		<setoption choice="0" name="cropsEPIC"/>
         <setoption choice="0" name="drainedIrrigation"/>
         <setoption choice="0" name="riceIrrigation"/>
         <setoption choice="0" name="openwaterevapo"/>
-        <setoption choice="1" name="simulateLakes"/>
-        <setoption choice="1" name="simulateReservoirs"/>
-        <setoption choice="0" name="simulateCalibrationPoints"/>
+        <setoption choice="0" name="simulateLakes"/>
+        <setoption choice="0" name="simulateReservoirs"/>
+        <setoption choice="1" name="simulateCalibrationPoints"/>
 
         <setoption choice="0" name="SplitRouting"/>
         <setoption choice="1" name="MCTRouting"/>
-        <setoption choice="0" name="MCTRoutingInterface"/>
+        <setoption choice="1" name="MCTRoutingInterface"/>
 
 
         # use inflow data
@@ -62,6 +62,7 @@ You can use builtin path variables in this template and reference to other paths
         # option to initialize Lisflood
         <setoption choice="0" name="InitLisflood"/>
         <setoption choice="0" name="InitLisfloodwithoutsplit"/>
+        <setoption choice="1" name="ColdStart"/>
 
         # option to read/write NetCDF
         <setoption choice="1" name="readNetcdfStack"/>
@@ -74,7 +75,7 @@ You can use builtin path variables in this template and reference to other paths
         # report time series
         #-----------------------------------------------------------
         # report discharge TS
-        <setoption choice="1" name="repDischargeTs"/>         
+        <setoption choice="1" name="repDischargeTs"/>          
 
         # report gauges and sites
 		# sites (pixel average)
@@ -86,17 +87,17 @@ You can use builtin path variables in this template and reference to other paths
         <setoption choice="0" name="repMeteoUpsGauges"/>
 
         # report reservoirs and lakes
-        <setoption choice="1" name="repsimulateLakes"/>        
-        <setoption choice="1" name="repsimulateReservoirs"/>    
+        <setoption choice="0" name="repsimulateLakes"/>         
+        <setoption choice="0" name="repsimulateReservoirs"/>    
 
         # report mass balance
-        <setoption choice="0" name="repMBTs"/>
+        <setoption choice="1" name="repMBTs"/>
 
         #-----------------------------------------------------------
         # report maps
         #-----------------------------------------------------------
         # report state maps
-        <setoption choice="0" name="repStateMaps"/>
+        <setoption choice="0" name="repStateMaps"/>     
 
         # report end maps
         <setoption choice="0" name="repEndMaps"/>       
@@ -110,7 +111,7 @@ You can use builtin path variables in this template and reference to other paths
 		<setoption choice="0"  name="repEWRefMaps"/>
 	
 		# dicharge
-        <setoption choice="0" name="repDischargeMaps"/>
+        <setoption choice="0" name="repDischargeMaps"/> 
 
 		<setoption choice="0" name="repAverageDis"/>             
         <setoption choice="0" name="repLZAvInflow"/>
@@ -119,7 +120,7 @@ You can use builtin path variables in this template and reference to other paths
         <setoption choice="0" name="repRainMaps"/>		
         <setoption choice="0" name="repSnowMaps"/>		
         <setoption choice="0" name="repSnowCoverMaps"/>	
-        <setoption choice="0" name="repSnowMeltMaps"/> 
+        <setoption choice="0" name="repSnowMeltMaps"/>  
 
         <setoption choice="0" name="repTaMaps"/>        
         <setoption choice="0" name="repETActMaps"/>     
@@ -131,9 +132,9 @@ You can use builtin path variables in this template and reference to other paths
         <setoption choice="0" name="repEWIntMaps"/>             
         <setoption choice="0" name="repLeafDrainageMaps"/>      
 
-        <setoption choice="0" name="repSurfaceRunoffMaps"/>	   #Surface runoff
-        <setoption choice="0" name="repFastRunoffMaps"/>  	   #Surface runoff +  UZ [mm]
-        <setoption choice="0" name="repTotalRunoffMaps"/>	   #Surface runoff +  UZ [mm] + LZ
+        <setoption choice="0" name="repSurfaceRunoffMaps"/>	        #Surface runoff
+        <setoption choice="0" name="repFastRunoffMaps"/>  	        #Surface runoff +  UZ [mm]
+        <setoption choice="0" name="repTotalRunoffMaps"/>	        #Surface runoff +  UZ [mm] + LZ
         <setoption choice="0" name="repWaterDepthMaps"/>        
 
         <setoption choice="0" name="repThetaMaps"/>
@@ -143,16 +144,16 @@ You can use builtin path variables in this template and reference to other paths
         <setoption choice="0" name="repSurfaceSoilMoistureMaps"/>
 
         <setoption choice="0" name="repUZMaps"/>
-        <setoption choice="0" name="repUZOutflowMaps"/>         
+        <setoption choice="0" name="repUZOutflowMaps"/>        
         <setoption choice="0" name="repLZMaps"/>
         <setoption choice="0" name="repLZOutflowMaps"/>         
 
-        <setoption choice="0" name="repInfiltrationMaps"/>     
+        <setoption choice="0" name="repInfiltrationMaps"/>      
         <setoption choice="0" name="repPrefFlowMaps"/>          
         <setoption choice="0" name="repPercolationMaps"/>
         <setoption choice="0" name="repSeepSubToGWMaps"/>       
         <setoption choice="0" name="repGwPercUZLZMaps"/>        
-        <setoption choice="0" name="repGwLossMaps"/>            
+        <setoption choice="0" name="repGwLossMaps"/>           
 
         <setoption choice="0" name="repRWS"/>
         <setoption choice="0" name="repPFMaps"/>
@@ -246,10 +247,12 @@ You can use builtin path variables in this template and reference to other paths
                     Clone map
                     col row cellsize xupleft yupleft
                     or pcraster maps or netcdf maps
-                </comment>
+               </comment>
             </textvar>
-            <textvar name="Gauges" value="$(PathRoot)/maps/ec_outlets">
+            <textvar name="Gauges" value="4307500 2377500  4292500 2377500  4302500 2377500  4302500 2372500 4297500 2372500 4312500 2377500 4287500 2372500 4282500 2367500 4292500 2372500">
                 <comment>
+                    4297500 2372500 inflow point
+                    4307500 2377500 outlet
                     Nominal map with gauge locations (i.e cells for which simulated discharge
                     is written to file(1,2,3 etc)
                     lat lon (lat2 lon2 ...)
@@ -263,7 +266,7 @@ You can use builtin path variables in this template and reference to other paths
                 </comment>
             </textvar>
 
-			<textvar name="Latitude" value="$(PathRoot)/maps/ec_lat">
+			<textvar name="Latitude" value="$(PathRoot)/ec_lat">
                 <comment>
                     latitude map to be used for snow/ice modelling
                 </comment>
@@ -317,7 +320,7 @@ You can use builtin path variables in this template and reference to other paths
                 </comment>
             </textvar>
 
-            <textvar name="StepEnd" value="30/12/2016 06:00">
+            <textvar name="StepEnd" value="01/04/2016 06:00">
               <comment>
 					01/01/YEAR_END 06:00
 					Number of last time step in simulation
@@ -330,7 +333,7 @@ You can use builtin path variables in this template and reference to other paths
               </comment>
             </textvar>   
  
- 			<textvar name="ReportSteps" value="1..999999">
+			<textvar name="ReportSteps" value="1..999999">
                 <comment>
 				    1..9999
                     Time steps at which to write model state maps (i.e. only
@@ -339,7 +342,9 @@ You can use builtin path variables in this template and reference to other paths
 
                 </comment>
             </textvar>
+
         </group>
+
 
 
         <group>
@@ -368,6 +373,8 @@ You can use builtin path variables in this template and reference to other paths
                     Time steps at which to write model state maps (i.e. only
                     those maps that would be needed to define initial conditions
                     for succeeding model run)
+
+
                 </comment>
             </textvar>
         </group>
@@ -817,7 +824,7 @@ You can use builtin path variables in this template and reference to other paths
 
 			<textvar name="PrevDischarge" value="-9999">
                 <comment>
-					Outflow discharge at the end of previous step (instantaneous) [m3/s]
+					Outflow discharge at the end of previous step (instantaneous) [m3/s] 
 					Cold start: -9999 sets initial value to 0
                 </comment>
             </textvar>
@@ -975,6 +982,63 @@ You can use builtin path variables in this template and reference to other paths
             </textvar>
         </group>
 
+    <group>
+
+    <comment>
+    **************************************************************
+    CUMULATIVE FLUXES REQUIRED WHEN COMPUTING THE PRE-RUN IN CHUNKS
+    **************************************************************
+    </comment>
+
+    <textvar name="LZInflowCUMInit" value="0.0">
+                <comment>
+                    Cumulative inflow to the lower groundwater zone
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    LZInflowCumEnd: required for the warm start of the pre-run
+                </comment>
+     </textvar>   
+       
+     <textvar name="cumSeepTopToSubBOtherInit" value="0.0">
+                <comment>
+                    Cumulative flux from second to third soil layer, other land cover fraction
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    cumSeepTopToSubBOtherEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>
+       
+     <textvar name="cumSeepTopToSubBForestInit" value="0.0">
+                <comment>
+                    Cumulative flux from second to third soil layer, forest land cover fraction
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    cumSeepTopToSubBForestEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>
+       
+     <textvar name="cumSeepTopToSubBIrrigationInit" value="0.0">
+                <comment>
+                    Cumulative flux from second to third soil layer, irrigation land cover fraction
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    cumSeepTopToSubBIrrigationEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>
+       
+     <textvar name="CumQInit" value="0.0">
+                <comment>
+                    Cumulative discharge
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    CumQEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>           
+                            
+     <textvar name="TimeSinceStartPrerunChunkInit" value="0.0">
+                <comment>
+                    Cumulative number of days from the start of the prerun
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    TimeSinceStartPrerunChunkEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>
+       
+    </group>    
 
         <group>
             <comment>
@@ -1031,25 +1095,25 @@ You can use builtin path variables in this template and reference to other paths
                 </comment>
             </textvar>
 
-            <textvar name="PrefixWaterUseDomestic" value="dom">
+            <textvar name="PrefixWaterUseDomestic" value="dom_2014">
                 <comment>
                     prefix domestic water use maps
                 </comment>
             </textvar>
 
-            <textvar name="PrefixWaterUseLivestock" value="liv">
+            <textvar name="PrefixWaterUseLivestock" value="liv_2014">
                 <comment>
                     prefix livestock water use maps
                 </comment>
             </textvar>
 
-            <textvar name="PrefixWaterUseEnergy" value="ene">
+            <textvar name="PrefixWaterUseEnergy" value="ene_2014">
                 <comment>
                     prefix energy water use maps
                 </comment>
             </textvar>
 
-            <textvar name="PrefixWaterUseIndustry" value="ind">
+            <textvar name="PrefixWaterUseIndustry" value="ind_2014">
                 <comment>
                     prefix industry water use maps
                 </comment>
@@ -1108,10 +1172,12 @@ You can use builtin path variables in this template and reference to other paths
                     which is not immediatly causing surface runoff [mm]
                 </comment>
             </textvar>
+
         </group>
 
 
         <group>
+
             <comment>
                 **************************************************************
                 SNOW AND FROST RELATED PARAMETERS
@@ -1180,14 +1246,17 @@ You can use builtin path variables in this template and reference to other paths
                     Molnau and Bissel found a value 56-85 for NW USA.
                 </comment>
             </textvar>
+
         </group>
 
 
         <group>
+
             <comment>
                 **************************************************************
                 IRRIGATION AND WATER ABSTRACTION RELATED PARAMETERS
                 **************************************************************
+
             </comment>
 
             <textvar name="IrrigationEfficiency" value="0.75">
@@ -1364,6 +1433,7 @@ You can use builtin path variables in this template and reference to other paths
 
 
         <group>
+
             <comment>
                 **************************************************************
                 GROUNDWATER RELATED PARAMETERS
@@ -1389,6 +1459,7 @@ You can use builtin path variables in this template and reference to other paths
                     map of aquifers (0/1), used to smoothen LZ near extraction areas
                 </comment>
             </textvar>
+
         </group>
 
 
@@ -1397,6 +1468,7 @@ You can use builtin path variables in this template and reference to other paths
                 **************************************************************
                 EVAPORATION FROM OPEN WATER
                 **************************************************************
+
             </comment>
 
             <textvar name="FracMaxWater" value="$(PathRoot)/maps/fracmaxwater">
@@ -1410,10 +1482,12 @@ You can use builtin path variables in this template and reference to other paths
                     Mask with Lakes from GLWD database
                 </comment>
             </textvar>
+
         </group>
 
 
         <group>
+
             <comment>
                 **************************************************************
                 TRANSMISSION LOSS PARAMETERS
@@ -1449,10 +1523,12 @@ You can use builtin path variables in this template and reference to other paths
                     upstream area
                 </comment>
             </textvar>
+
         </group>
 
 
         <group>
+
             <comment>
                 **************************************************************
                 ROUTING PARAMETERS
@@ -1569,10 +1645,12 @@ You can use builtin path variables in this template and reference to other paths
                         is set to -9999
                     </comment>
                 </textvar>
+
             </group>
 
 
             <group>
+
                 <comment>
                     **************************************************************
                     POLDER OPTION
@@ -1590,10 +1668,12 @@ You can use builtin path variables in this template and reference to other paths
                         Initial water level in polder [m]
                     </comment>
                 </textvar>
+
             </group>
 
 
             <group>
+
                 <comment>
                     **************************************************************
                     DYNAMIC WAVE OPTION
@@ -1614,6 +1694,7 @@ You can use builtin path variables in this template and reference to other paths
                         at most downstream pixel)
                     </comment>
                 </textvar>
+
             </group>
 
 
@@ -1624,8 +1705,11 @@ You can use builtin path variables in this template and reference to other paths
                     **************************************************************
                 </comment>
                 
-                <textvar name="ChannelsMCT" value="$(PathRoot)/maps/chanmct">
+                <textvar name="ChannelsMCT" value="$(PathRoot)/maps/chanmct_conf">
                     <comment>
+						test_chanmct_all                        
+                        test_chanmct_2
+                        chanmct_single
                         Boolean map with value 1 at channel pixels where MCT is
                         used, and 0 at all other pixels
                     </comment>
@@ -1637,10 +1721,12 @@ You can use builtin path variables in this template and reference to other paths
 						Default: 0.001
                     </comment>
                 </textvar>
+
             </group>
 
 
             <group>
+
                 <comment>
                     **************************************************************
                     INFLOW HYDROGRAPH (OPTIONAL)
@@ -1654,7 +1740,7 @@ You can use builtin path variables in this template and reference to other paths
                     </comment>
                 </textvar>
 
-                <textvar name="CalibrationPoints" value="$(PathRoot)/maps/ec_outlets">
+                <textvar name="CalibrationPoints" value="$(PathRoot)/maps/p2.nc">
                     <comment>
                         location of calibration points
                         OPTIONAL: nominal map with locations of calibration points
@@ -1901,10 +1987,12 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     which is not immediatly causing surface runoff [mm]
                 </comment>
             </textvar>
+
         </group>
 
 
         <group>
+
             <comment>
                 **************************************************************
                 SNOW AND FROST RELATED PARAMETERS
@@ -1980,10 +2068,12 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     Molnau and Bissel found a value 56-85 for NW USA.
                 </comment>
             </textvar>
+
         </group>
 
 
         <group>
+
             <comment>
                 **************************************************************
                 INFILTRATION PARAMETERS
@@ -2007,10 +2097,12 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 					flow with increased soil moisture storage [-]
                 </comment>
             </textvar>
+
         </group>
 
 
         <group>
+
             <comment>
                 **************************************************************
                 GROUNDWATER RELATED PARAMETERS
@@ -2052,7 +2144,10 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 					A value of 0 (closed lower boundary) is recommended as a starting value.
                 </comment>
             </textvar>
+
         </group>
+
+
 
 
         <group>
@@ -2106,10 +2201,15 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     Time series of upstream water evaporation from open water at gauging stations
                 </comment>
             </textvar>
+
+
         </group>
 
 
+
+
         <group>
+
             <comment>
                 **************************************************************
                 TRANSMISSION LOSS PARAMETERS
@@ -2270,7 +2370,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 **************************************************************
             </comment>
 
-            <textvar name="LZAvInflowMap" value="$(PathRoot)/maps/safe_init/lzavin">
+            <textvar name="LZAvInflowMap" value="$(PathRoot)/maps/safe_init/ec_lzavin">
                 <comment>
 					PRERUNDIR/lzavin
                     Reported map of average percolation rate from upper to
@@ -2278,7 +2378,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
             </textvar>
 
-            <textvar name="AvgDis" value="$(PathRoot)/maps/safe_init/avgdis">
+            <textvar name="AvgDis" value="$(PathRoot)/maps/safe_init/ec_avgdis">
                 <comment>
 					PRERUNDIR/avgdis
                     CHANNEL split routing in two lines
@@ -2286,19 +2386,19 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
             </textvar>
 
-            <textvar name="SeepTopToSubBAverageOtherMap" value= "$(PathRoot)/maps/safe_init/SeepTopToSubBAverageOtherMap">
+            <textvar name="SeepTopToSubBAverageOtherMap" value= "-9999">
                 <comment>
                      Reported infiltration from the soil layer 2 to soil layer 3, other land cover fraction, average flux over the simulation period [mm]
             </comment>
             </textvar>
           
-            <textvar name="SeepTopToSubBAverageForestMap" value= "$(PathRoot)/maps/safe_init/SeepTopToSubBAverageForestMap">
+            <textvar name="SeepTopToSubBAverageForestMap" value= "-9999">
                  <comment>
                         Reported infiltration from the soil layer 2 to soil layer 3, forest land cover fraction, average flux over the simulation period [mm]
                  </comment>
             </textvar>
           
-            <textvar name="SeepTopToSubBAverageIrrigationMap" value= "$(PathRoot)/maps/safe_init/SeepTopToSubBAverageIrrigationMap">
+            <textvar name="SeepTopToSubBAverageIrrigationMap" value= "-9999">
                  <comment>
                          Reported infiltration from the soil layer 2 to soil layer 3, irrigated land cover fraction, average flux over the simulation period [mm]
                   </comment>
@@ -2463,7 +2563,6 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
 
         <group>
-
             <comment>
                 **************************************************************
                 INITIAL CONDITIONS FOREST
@@ -2519,6 +2618,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
 
         <group>
+
             <comment>
                 **************************************************************
                 INITIAL CONDITIONS IRRIGATION
@@ -2564,7 +2664,65 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     -9999: use field capacity values
                 </comment>
             </textvar>
+
         </group>
+
+    <group>
+    <comment>
+    **************************************************************
+    CUMULATIVE FLUXES REQUIRED WHEN COMPUTING THE PRE-RUN IN CHUNKS
+    **************************************************************
+    </comment>
+    <textvar name="LZInflowCUMInit" value="$(LZInflowCUMInit)">
+                <comment>
+                    Cumulative inflow to the lower groundwater zone
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    LZInflowCumEnd: required for the warm start of the pre-run
+                </comment>
+     </textvar>   
+       
+     <textvar name="cumSeepTopToSubBOtherInit" value="$(cumSeepTopToSubBOtherInit)">
+                <comment>
+                    Cumulative flow from second to third soil layer, other land cover fraction
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    cumSeepTopToSubBOtherEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>
+       
+     <textvar name="cumSeepTopToSubBForestInit" value="$(cumSeepTopToSubBForestInit)">
+                <comment>
+                    Cumulative flow from second to third soil layer, forest land cover fraction
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    cumSeepTopToSubBForestEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>
+       
+     <textvar name="cumSeepTopToSubBIrrigationInit" value="$(cumSeepTopToSubBIrrigationInit)">
+                <comment>
+                    Cumulative flow from second to third soil layer, irrigation land cover fraction
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    cumSeepTopToSubBIrrigationEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>
+       
+     <textvar name="CumQInit" value="$(CumQInit)">
+                <comment>
+                    Cumulative discharge
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    CumQEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>           
+                            
+     <textvar name="TimeSinceStartPrerunChunkInit" value="$(TimeSinceStartPrerunChunkInit)">
+                <comment>
+                    Cumulative number of days from the start of the prerun
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    NetTimeSinceStartPrerunChunkEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>
+       
+    </group>
+
 
 
         <group>
@@ -2623,9 +2781,9 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
             </textvar>
         </group>
 
-
         <group>
             <comment>
+
                 **************************************************************
                 INPUT WATER USE MAPS AND PARAMETERS
                 **************************************************************
@@ -2716,6 +2874,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     scenruse.map
                 </comment>
             </textvar>
+
 
             <textvar name="IrrigationEfficiency" value="$(IrrigationEfficiency)">
                 <comment>
@@ -2821,6 +2980,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 <comment>
                 </comment>
             </textvar>
+
         </group>
 
 
@@ -2830,6 +2990,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 RICE IRRIGATION
                 **************************************************************
             </comment>
+
 
             <textvar name="RiceFlooding" value="10.0">
                 <comment>
@@ -2867,6 +3028,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     map with starting day of the year
                 </comment>
             </textvar>
+
         </group>
 
 
@@ -2913,7 +3075,6 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
             </textvar>
         </group>
-
 
             <group>
                 <comment>
@@ -3020,6 +3181,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 						Reported interception storage [mm]
                     </comment>
                 </textvar>
+
 
                 <textvar name="CrossSection2State" value="$(PathOut)/ch2cr">
                     <comment>
@@ -3164,6 +3326,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 					Reported transpiration maps, weighted sum over the fractions of each pixel [mm]
                     </comment>
                 </textvar>
+
             </group>
 
 
@@ -3300,6 +3463,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
+
                 <textvar name="ReservoirFillEnd" value="$(PathOut)/rsfil.end">
                     <comment>
 						Reported reservoir filling [-]
@@ -3393,6 +3557,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
+
                 <textvar name="DSLRIrrigationEnd" value="$(PathOut)/dslri.end">
                     <comment>
                         Reported days since last rain
@@ -3472,8 +3637,8 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                         Potential evaporation from open water surface [mm per time step]
                     </comment>
                 </textvar>
-            </group>
 
+            </group>
 
             <group>
                 <comment>
@@ -3968,6 +4133,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 						Reported storage in upper response box [mm]
                     </comment>
                 </textvar>
+
             </group>
 
 
@@ -4253,7 +4419,15 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                         Reported loss from lower zone [mm]
                     </comment>
                 </textvar>
-
+                <textvar name="withdrawalCHactualTS" value="$(PathOut)/withdrawalCHactualTS.tss"></textvar>
+                <textvar name="withdrawalReservoirsTS" value="$(PathOut)/withdrawalReservoirsTS.tss"></textvar>
+                <textvar name="withdrawalLakesTS" value="$(PathOut)/withdrawalLakesTS.tss"></textvar>
+                <textvar name="abstractionGWactualTS" value="$(PathOut)/abstractionGWactualTS.tss"></textvar>
+                <textvar name="returnflowGwAbs2ChannelTS" value="$(PathOut)/returnflowGwAbs2ChannelTS.tss"></textvar>  
+                <textvar name="areatotalshortageSWTS" value="$(PathOut)/areatotalshortageSWTS.tss"></textvar>     
+                <textvar name="withdrawalSWactualTS" value="$(PathOut)/withdrawalSWactualTS.tss"></textvar>  
+                <textvar name="TransLossQAvgTS" value="$(PathOut)/TransLossQAvgTS"></textvar> 
+                <textvar name="TransLossTS" value="$(PathOut)/TransLossTS"></textvar> 
             </group>
 
             <group>
@@ -4564,6 +4738,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                         routine
                     </comment>
                 </textvar>
+
             </group>
 
 
@@ -4852,10 +5027,12 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 						table with Manning's roughness [m^(1/3) s^(-1)] for each CORINE landcover class
                     </comment>
                 </textvar>
+
             </group>
 
 
             <group>
+
                 <comment>
                     **************************************************************
                     Variable Channel NoSubStepChannel
@@ -5108,7 +5285,11 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 						Saturated conductivity [mm/day] for soil layer 1b (upper soil layer)
                     </comment>
                 </textvar>
+
+
             </group>
+
+
 
 
             <group>
@@ -5137,6 +5318,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                         Initial reservoir storage (fraction)
                     </comment>
                 </textvar>
+
 
                 <comment>
                     Input tables
@@ -5328,8 +5510,8 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                         Output map with lake outflow at previous routing sub-step (ChanQ(t-1)) [m3/s]
                         -9999 sets initial value
                     </comment>
-                </textvar>                   
-            </group>
+                </textvar>
+           </group>
 
 
             <group>
@@ -5338,6 +5520,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     POLDERS(if used)
                     **************************************************************
                 </comment>
+
 
                 <textvar name="mu" value="$(mu)">
                     <comment>
@@ -5410,6 +5593,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                         name of output map(s) with polder level
                     </comment>
                 </textvar>
+
             </group>
 
 
@@ -5442,6 +5626,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                         InflowPoints map (also optional)
                     </comment>
                 </textvar>
+
             </group>
 
 
@@ -5513,6 +5698,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                         Maximum channel gradient for channels using MCT routing [-] (for MCT wave: slope cannot be >0.001)
                     </comment>
                 </textvar>
+
             </group>            
             
 
@@ -5625,6 +5811,9 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                         Reported pF lower soil layer [-]
                     </comment>
                 </textvar>
+
+
+
             </group>
 
 
@@ -5720,9 +5909,8 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 					<textvar name="WEI_Plus" value="$(PathOut)/WeiPlus">
 						<comment>
 							Water Exploitation Index - Consumption; for water regions
-
-                        </comment>
-                    </textvar>
+						</comment>
+					</textvar>
 
                     <textvar name="RegionMonthInternalFlowM3" value="$(PathOut)/RgIn">
                         <comment>
@@ -5745,8 +5933,8 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 					<textvar name="RegionMonthConsumptionActualM3" value="$(PathOut)/RgWCA">  
 						<comment>
 							Region Water Consumption
-						</comment>
-					</textvar>
+                       </comment>
+                    </textvar>
 
                     <textvar name="RegionMonthReservoirAndLakeStorageM3" value="$(PathOut)/RsLk">
                         <comment>

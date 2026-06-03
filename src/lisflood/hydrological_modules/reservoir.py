@@ -24,6 +24,7 @@ import warnings
 
 from pcraster.operations import ifthen, boolean, defined, lookupscalar
 import numpy as np
+import pcraster
 
 from ..global_modules.settings import LisSettings, MaskInfo
 from ..global_modules.add1 import loadmap, compressArray, decompress, makenumpy
@@ -52,7 +53,7 @@ class Reservoir(HydroModule):
         dynamic_inloop(NoRoutingExecuted: int): Performs dynamic calculations within the routing
                    loop to simulate inflow, storage, and controlled outflow from the reservoirs.
 
-    Referenecs:
+    References:
     -----------
     Hanazaki, R., Yamazaki, D., Yoshimura, K.: Development of a Reservoir Flood Control Scheme for
     Global Flood Models, Journal of Advances in Modeling Earth Systems, 14,
@@ -126,6 +127,15 @@ class Reservoir(HydroModule):
             # (following logic of 'old' code the inflow into these reservoirs is
             # always zero, so either change this or leave them out!)
             ReservoirSitePcr = ifthen((defined(ReservoirSitePcr) & boolean(decompress(self.var.IsChannel))), ReservoirSitePcr)
+
+            # # PCRaster part
+            # # -----------------------
+            # IsStructureReservoir = pcraster.boolean(ReservoirSitePcr)
+            # # additional structure map only for reservoirs to calculate water balance
+            # self.var.IsUpsOfStructureReservoir = pcraster.downstream(self.var.LddChan, pcraster.cover(IsStructureReservoir, 0))
+            # # Get all pixels just upstream of reservoirs
+            # # -----------------------
+
             
             # RESERVOIR CHARACTERISTICS
             

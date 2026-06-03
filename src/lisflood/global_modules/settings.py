@@ -507,7 +507,7 @@ class LisSettings(with_metaclass(ThreadSingleton)):
             else:
                 pathout = pathout.replace(pathout[a1:a2 + 1], s2)
 
-        # CM: output folder
+        # output folder
         return pathout
 
     @staticmethod
@@ -790,13 +790,13 @@ def inttodate(int_in, ref_date, binding=None):
         settings = LisSettings.instance()
         binding = settings.binding
 
-    # CM: get model time step as float form 'DtSec' in Settings.xml file
+    # get model time step as float form 'DtSec' in Settings.xml file
     DtSec = float(binding['DtSec'])
-    # CM: compute fraction of day corresponding to model time step as float
+    # compute fraction of day corresponding to model time step as float
     DtDay = DtSec / 86400.
     # Time step, expressed as fraction of day (same as self.var.DtSec and self.var.DtDay)
 
-    # CM: compute date corresponding to intIn steps from reference date refDate
+    # compute date corresponding to intIn steps from reference date refDate
     stepDate = ref_date + datetime.timedelta(days=(int_in * DtDay))
 
     return stepDate

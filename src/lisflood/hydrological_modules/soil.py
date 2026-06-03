@@ -422,7 +422,7 @@ class soil(HydroModule):
         # ***** INITIAL VALUES
         # ************************************************************
         # Inputs in waterbalance model and/or initial assumption
-        # CMmod
+
         # DSLRInit = defsoil('DSLRInitValue', 'DSLRForestInitValue','DSLRIrrigationInitValue')
         
         

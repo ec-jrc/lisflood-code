@@ -45,13 +45,13 @@ class structures(object):
         """
         self.var.LddStructuresKinematic = self.var.LddKinematic     #pcr map
         LddStructuresKinematicNp = compressArray(self.var.LddStructuresKinematic)
-        # Unmodified version of LddKinematic is needed to connect inflow and outflow points
-        # of each structure (called LddStructuresKinematic now)
+        # Unmodified version of LddKinematic is needed for MCT confluence
+        # Legacy not used keeping for consistency
 
         self.var.LddStructuresChan = self.var.LddChan   #pcr map
         LddStructuresChanNp = compressArray(self.var.LddStructuresChan)
-        # Unmodified version of LddChan is needed to connect inflow and outflow points
-        # of each structure (called LddStructuresChan now)
+        # Unmodified version of LddChan is used in evapowater, indicatorcalc and waterabstreaction
+        # It is neded to identify MCT confluences
 
         settings = LisSettings.instance()
         option = settings.options
@@ -62,7 +62,7 @@ class structures(object):
                 cover(boolean(decompress(self.var.IsStructureKinematic)), boolean(0))
             )
             # Downstream assigns to result the expression value of the neighbouring downstream cell
-            # Over is used to cover missing values on an expression with values taken from one or more different expression(s)
+            # Cover is used to cover missing values on an expression with values taken from one or more different expression(s)
             # Decompress is numpy2pcr
             # Find location of pixels immediately upstream of a structure on the LddKinematic
 
@@ -72,12 +72,13 @@ class structures(object):
             )
             # Find location of pixels immediately upstream of a structure on the LddChan
 
-            self.var.IsUpsOfStructureKinematicC = compressArray(IsUpsOfStructureKinematic)  #np compressed array
-            # Location of pixels immediately upstream of a structure on the LddKinematic
-            self.var.IsUpsOfStructureChanC = compressArray(IsUpsOfStructureChan)    #np compressed array
-            # Location of pixels immediately upstream of a structure on the LddChan
-
             self.var.LddKinematic = lddrepair(ifthenelse(IsUpsOfStructureKinematic, 5, self.var.LddKinematic))  #pcr map
             # Update LddKinematic by adding a pit in the pixel immediately upstream of a structure
             self.var.LddChan = lddrepair(ifthenelse(IsUpsOfStructureChan, 5, self.var.LddChan))     #pcr map
             # Update LddChan by adding a pit in the pixel immediately upstream of a structure
+            # At this point LddKinematic and LddChan have pits upstream of (structures) reservoirs and lakes but not at MCT interface pixels
+
+            self.var.IsUpsOfStructureKinematicC = compressArray(IsUpsOfStructureKinematic)  #np compressed array
+            # Location of pixels immediately upstream of a structure on the LddKinematic
+            self.var.IsUpsOfStructureChanC = compressArray(IsUpsOfStructureChan)    #np compressed array
+            # Location of pixels immediately upstream of a structure on the LddChan
