@@ -29,11 +29,9 @@ from . import HydroModule
 
 class mctconfluence(HydroModule):
     """
-    Adds contribution from Kinematic cells to MCT cells as a lateral flow when MCT routing is enabled.
-    This is for MCT cells that have upstream contributions from both kinematic and MCT cells.
-
-    This module handles the initialization and dynamic simulation of Kinematic to MCT cells confluence.
-    It injects side discharge to the downstream grid cell as lateral flow.
+    This module handles the initialization and dynamic simulation of the interface between Kinematic and MCT cells.
+    If MCT routing is enabled, when a Kinematic pixel flows into an MCT pixel, this module injects Kinematic channel
+    discharge to the MCT downstream grid cell as lateral flow.
 
     Attributes:
     -----------
@@ -44,7 +42,7 @@ class mctconfluence(HydroModule):
         initial(): Sets up the initial conditions and parameters for the simulation,
                    including confluence locations.
         dynamic_inloop(NoRoutingExecuted: int): Performs dynamic calculations within the routing
-                   loop to simulate the kinematic to MCT confluence.
+                   loop to simulate the kinematic to MCT interface.
     """
 
     module_name = 'MCTConfluence'
@@ -87,7 +85,7 @@ class mctconfluence(HydroModule):
             # Mask of LddKinematic with only kinematic cells and no structures
             # Sinks are added at the last Kin pixel before confluence with MCT pixels
 
-            maskKinematic = (compressArray(LddKinematic) == 5)      #& (self.var.IsUpsOfStructureKinematicC != 1)
+            maskKinematic = (compressArray(LddKinematic) == 5)
 
             # find location of KIN pixels (only) in LddKin that are upstream of the confluence with an MCT pixel
             maskKinematic[compressArray(self.var.AtLastPoint) == 1] = False
@@ -98,7 +96,7 @@ class mctconfluence(HydroModule):
             self.var.LddChan = ifthenelse(maskKinematicPcr, 5, self.var.LddChan)
             self.var.LddKinematic = ifthenelse(maskKinematicPcr, 5, self.var.LddKinematic)
             # Adding sinks to Ldd at the last KIN pixels upstream of the confluence with an MCT pixel to LddChan and LddKinematic
-            # This similar to what is done in structures
+            # This is similar to what is done in structures
             # At this point LddChan and LddKinematic have sinks upstteam of structures and of a Kin-MCT confluence and outlets
 
             self.var.KinematicUpsOfMCTConfluence = np.where(maskKinematic, down, 0)
@@ -117,7 +115,6 @@ class mctconfluence(HydroModule):
             self.var.MCTConfluenceSitesC = mctconfluence
             self.var.MCTConfluenceSitesCC = np.compress(mctconfluence > 0, mctconfluence)
             self.var.MCTConfluenceIndex = np.nonzero(mctconfluence)[0]
-            pass
 
 
     def dynamic_init(self):
@@ -128,16 +125,15 @@ class mctconfluence(HydroModule):
         option = settings.options
         maskinfo = MaskInfo.instance()
         if option['MCTRouting'] and option['MCTRoutingInterface']:
-            lateralflow = np.bincount(self.var.KinematicUpsOfMCTConfluence, weights=self.var.ChanQAvgDt)[self.var.MCTConfluenceIndex]  #same as Qin
+            lateralflow = np.bincount(self.var.KinematicUpsOfMCTConfluence, weights=self.var.ChanQAvgDt)[self.var.MCTConfluenceIndex]
             # contribution to the MCT pixel from upstream Kinematic pixels
             self.var.QInConfM3Old = maskinfo.in_zero()
             np.put(self.var.QInConfM3Old, self.var.MCTConfluenceIndex, lateralflow * self.var.DtSec)
-            pass
 
 
     def dynamic_inloop(self, NoRoutingExecuted: int):
         """
-        Performs the dynamic simulation of MCT confluence within the routing loop. This method
+        Performs the dynamic simulation of Kin-MCT confluence within the routing loop. This method
         injects upstream discharge to the downstream grid cell as lateral inflow.
 
         Parameters:
@@ -151,12 +147,7 @@ class mctconfluence(HydroModule):
         option = settings.options
         maskinfo = MaskInfo.instance()
 
-        # self.var.QConfADDEDM3 = maskinfo.in_zero()
-        
         if option['MCTRouting'] and option['MCTRoutingInterface'] and not option['InitLisflood']:
-
-            InvDtSecDay = 1 / float(86400)
-            # InvDtSecDay=self.var.InvDtSec
 
             lateralflow = np.bincount(self.var.KinematicUpsOfMCTConfluence, weights=self.var.ChanQAvgDt)[self.var.MCTConfluenceIndex]  #same as Qin
             # contribution to the MCT pixel from upstream Kinematic pixels
@@ -172,8 +163,6 @@ class mctconfluence(HydroModule):
 
             self.var.QInConfM3Old = self.var.QInConfM3.copy()
             # save the lateral flow for next step
-
-            # self.var.QConfADDEDM3 += self.var.QConfM3Dt
 
 
 

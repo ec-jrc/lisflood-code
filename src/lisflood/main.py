@@ -144,7 +144,7 @@ def lisfloodexe(lissettings=None):
         except:
             print(calendar(binding["timestepInit"], binding['calendar_type']))
 
-        # CM: print start step and end step for reporting model state maps
+        # print start step and end step for reporting model state maps
         print("Start Rep Step  - End Rep Step: ", report_steps['rep'][0], " - ", report_steps['rep'][-1])
         print("Start Rep Date  - End Rep Date: ",
               inttodate(calendar(report_steps['rep'][0] - 1, binding['calendar_type']), calendar(binding['CalendarDayStart'], binding['calendar_type'])),

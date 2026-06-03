@@ -135,7 +135,7 @@ class waterabstraction(HydroModule):
             else:
                 if option['useWaterDemandAveYear']:
                     raise LisfloodError("TransientWaterDemandChange option must be turned on to use average year water demand (useWaterDemandAveYear)")
-                # CM: using information on water demand from NetCDF files, only loaded once in init, not in dynamic
+                # using information on water demand from NetCDF files, only loaded once in init, not in dynamic
                 self.var.DomesticDemandMM = loadmap('DomesticDemandMaps', timestampflag='closest') * self.var.DtDay
                 self.var.IndustrialDemandMM = loadmap('IndustrialDemandMaps', timestampflag='closest') * self.var.DtDay
                 self.var.LivestockDemandMM = loadmap('LivestockDemandMaps', timestampflag='closest') * self.var.DtDay
@@ -681,7 +681,7 @@ class waterabstraction(HydroModule):
             # ************************************************************
             # 19. update state variables                             *** 
             # ************************************************************
-            # CM Update state variables for changes to W1a[2] and W1b[2]
+            # Update state variables for changes to W1a[2] and W1b[2]
             
             veg = "Irrigated_prescribed"
             iveg,ilanduse,_ = self.var.get_landuse_and_indexes_from_vegetation_GLOBAL(veg)

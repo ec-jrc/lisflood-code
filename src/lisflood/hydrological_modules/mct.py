@@ -153,8 +153,6 @@ def mct_routing(
     ChanM3,         # V11 channel storage volume at t+dt (instant)
     """
 
-
-
     num_orders = mct_order_start_stop.shape[0]
 
     # loop on orders
@@ -182,7 +180,7 @@ def mct_routing(
                 ups_pix = upstream_pixels[ups_ix]   # upstream pixel id
 
                 #####################################################################################################
-                # This is necessary for EFAS6/GloFAs5 calibration
+                # Check if there is a calibration point within the contributing pixels
                 if np.any(CalibPointsIds == ups_pix):
                     # this upstream pixel is a calibration point - add to sideflow
                     ql += ChanQAvgDt[ups_pix]
@@ -192,7 +190,6 @@ def mct_routing(
                     q00 += ChanQ_0[ups_pix]  # Inflow (x) to the pixel at previous step t (instant)
                     q0m += ChanQAvgDt[ups_pix]  # Average inflow (x) to the pixel at previous step t (average)
                     q01 += ChanQ[ups_pix]  # Inflow (x) at current step t+dt (instant)
-
                 #####################################################################################################
 
             # get outflow from the pixel at previous step t
@@ -264,8 +261,8 @@ def MCTRouting_single(
 
     # check for negative and zero discharge values
     # zero outflow is not allowed
-    if q11 < 0:  # cmcheck <=0  #tpk
-        q11 = 0                 #tpk
+    if q11 < 0:
+        q11 = 0
 
     # calc reference discharge at time t
     # qm0 = (I(t)+O(t))/2
@@ -276,14 +273,14 @@ def MCTRouting_single(
 
         # reference I discharge at x=0
         qmx0 = (q00 + q01) / 2.0
-        if qmx0 <= eps :  # cmcheck ==0   #tpk
-            qmx0 = eps                  #tpk
+        if qmx0 <= eps :
+            qmx0 = eps
         hmx0 = hoq(qmx0, s0, Balv, ANalv, Nalv)
 
         # reference O discharge at x=1
         qmx1 = (q10 + q11) / 2.0
-        if qmx1 <= eps:  # cmcheck ==0    #tpk
-            qmx1 = eps                  #tpk
+        if qmx1 <= eps:
+            qmx1 = eps
         hmx1 = hoq(qmx1, s0, Balv, ANalv, Nalv)
 
         # Calc riverbed slope correction factor
@@ -295,14 +292,13 @@ def MCTRouting_single(
         # Calc reference discharge time t+dt
         # Q(t+dt)=(I(t+dt)+O'(t+dt))/2
         qm1 = (q01 + q11) / 2.0
-        # cm
-        if qm1 <= eps :  # cmcheck ==0     #tpk
-            qm1 = eps                   #tpk
-        # cm
+        if qm1 <= eps :
+            qm1 = eps
+
         hm1 = hoq(qm1, s0, Balv, ANalv, Nalv)
         dummy, Ax1, Bx1, Px1, ck1 = qoh(hm1, s0, Balv, ANalv, Nalv)
-        if ck1 <= eps:    #tpk
-            ck1 = eps   #tpk
+        if ck1 <= eps:
+            ck1 = eps
 
         # Calc correcting factor Beta at time t+dt
         Beta1 = ck1 / (qm1 / Ax1)
@@ -318,19 +314,18 @@ def MCTRouting_single(
         c3 = (1 - Cm0 + Dm0) / den * (Cm1 / Cm0)
         c4 = (2 * Cm1) / den
 
-        # cmcheck
         # Calc outflow q11 at time t+1
         # Mass balance equation without lateral flow
         # q11 = c1 * q01 + c2 * q00 + c3 * q10
         # Mass balance equation that takes into consideration the lateral flow
         q11 = c1 * q01 + c2 * q00 + c3 * q10 + c4 * ql
 
-        if q11 < 0:  # cmcheck <=0  #tpk
-            q11 = 0                 #tpk
+        if q11 < 0:
+            q11 = 0
 
         #### end of for loop
 
-    # # cmcheck
+    # debug
     # calc_t = xpix / ck1
     # if calc_t < dt:
     #     print('xpix/ck1 < dt')
@@ -348,17 +343,16 @@ def MCTRouting_single(
         V11 = (1 - Dm1) * dt / (2 * Cm1) * q01 + (1 + Dm1) * dt / (2 * Cm1) * q11
         # V11 = k1 * (x1 * q01 + (1. - x1) * q11) # MUST be the same as above!
 
-    if V11 < 0 :    #tpk
-        V11 = 0     #tpk
+    if V11 < 0 :
+        V11 = 0
 
-    ### calc integration on the control volume (pixel)
+    # calc integration on the control volume (pixel)
     # calc average discharge outflow q1m for MCT channels during routing sub step dt
     # Calculate average outflow using water balance for MCT channel grid cell over sub-routing step
     q1mm = q0mm + ql + (V00 - V11) / dt
 
-    # cmcheck
     # q1m cannot be smaller than eps or it will cause instability
-    if q1mm < 0:   # cmcheck <=0
+    if q1mm < 0:
         q1mm = 0
         ###if ql < 0: ql = 0
         # prevent water abstraction or open water evaporation from drying out the channel and keep extracting water

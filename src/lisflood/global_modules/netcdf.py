@@ -530,8 +530,8 @@ def write_netcdf_header(settings,
     # time coordinates and associated values
     if frequency is not None:  # output file with "time" dimension
         n_steps = len(rep_steps)
-        #Get initial and final dates for data to be stored in nerCDF file
-        # CM: Create time stamps for each step stored in netCDF file
+        # Get initial and final dates for data to be stored in nerCDF file
+        # Create time stamps for each step stored in netCDF file
         all_dates = np.array([start_date + datetime.timedelta(days=(int(d)-1)*DtDay) for d in rep_steps])
         all_steps = np.array(rep_steps)
         if frequency == "all":
@@ -556,16 +556,16 @@ def write_netcdf_header(settings,
         time = nf1.createVariable('time', float, ('time'))
         time.standard_name = 'time'
         time.calendar = binding["calendar_type"]
-        # CM: select the time unit according to model time step
+        # select the time unit according to model time step
         DtDay_in_sec = DtDay * 86400
         if DtDay_in_sec >= 86400:
             # Daily model time steps or larger
             time.units = 'days since %s' % start_date.strftime("%Y-%m-%d %H:%M:%S.0")
         elif DtDay_in_sec >= 3600 and DtDay_in_sec < 86400:
-            # CM: hours to days model time steps
+            # hours to days model time steps
             time.units = 'hours since %s' % start_date.strftime("%Y-%m-%d %H:%M:%S.0")
         elif DtDay_in_sec >= 60 and DtDay_in_sec <3600:
-            # CM: minutes to hours model time step
+            # minutes to hours model time step
             time.units = 'minutes since %s' % start_date.strftime("%Y-%m-%d %H:%M:%S.0")
         nf1.variables["time"][:] = date2num(time_stamps, time.units, time.calendar)
 

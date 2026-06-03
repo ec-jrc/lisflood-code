@@ -45,7 +45,7 @@ class surface_routing(HydroModule):
         """ initial part of the surface_routing module
         """
         maskinfo = MaskInfo.instance()
-        # CM mod
+
         OFM3OtherInit = loadmap('OFOtherInitValue')
         OFM3ForestInit = loadmap('OFForestInitValue')
         OFM3DirectInit = loadmap('OFDirectInitValue')
@@ -56,7 +56,6 @@ class surface_routing(HydroModule):
         # self.var.WaterDepth = self.var.WaterDepthInit.copy()
         # initial overland flow water depth [mm]
         # for initial water in CHANNEL see CHANNEL GEOMETRY section below!
-        ## end CM mod
 
         self.var.OFM3Other = makenumpy(OFM3OtherInit)
         self.var.OFM3Forest = makenumpy(OFM3ForestInit)
@@ -94,8 +93,6 @@ class surface_routing(HydroModule):
         self.var.OFQOther = ((self.var.OFM3Other * self.var.InvPixelLength * self.var.InvOFAlpha.values[self.var.dim_runoff[1].index('Other')])**(self.var.InvBeta)).astype(float)
         self.var.OFQForest = ((self.var.OFM3Forest * self.var.InvPixelLength * self.var.InvOFAlpha.values[self.var.dim_runoff[1].index('Forest')])**(self.var.InvBeta)).astype(float)
 
-        # cmcheck
-        # do I need to initialise from self.var.OFQDirect?
         # Initial average overland discharge [m3 s-1]
         self.var.OFQDirectAvg = maskinfo.in_zero()
         self.var.OFQOtherAvg = maskinfo.in_zero()
@@ -206,12 +203,9 @@ class surface_routing(HydroModule):
         self.var.M3all = self.var.OFM3Direct + self.var.OFM3Other + self.var.OFM3Forest
         # Total overland flow storage [m3]
 
-        # cmcheck
-        # this should be calculated using the average flow
         self.var.OFToChanM3 = np.where(self.var.IsChannel, self.var.QallAvg * self.var.DtSec, 0)
         # self.var.OFToChanM3 = np.where(self.var.IsChannel, self.var.Qall * self.var.DtSec, 0)
         # Overland flow in channel pixels (in [m3])is added to channel
-
 
         self.var.WaterDepth = self.var.M3all * self.var.M3toMM
         # Update water depth [mm]

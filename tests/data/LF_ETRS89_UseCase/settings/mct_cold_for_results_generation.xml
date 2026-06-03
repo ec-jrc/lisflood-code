@@ -44,11 +44,13 @@ You can use builtin path variables in this template and reference to other paths
         <setoption choice="0" name="drainedIrrigation"/>
         <setoption choice="0" name="riceIrrigation"/>
         <setoption choice="0" name="openwaterevapo"/>
-        <setoption choice="0" name="simulateLakes"/>
-        <setoption choice="0" name="simulateReservoirs"/>
+        <setoption choice="1" name="simulateLakes"/>
+        <setoption choice="1" name="simulateReservoirs"/>
+        <setoption choice="0" name="simulateCalibrationPoints"/>
 
         <setoption choice="0" name="SplitRouting"/>
-        <setoption choice="0" name="MCTRouting"/>
+        <setoption choice="1" name="MCTRouting"/>
+        <setoption choice="0" name="MCTRoutingInterface"/>
 
 
         # use inflow data
@@ -88,7 +90,7 @@ You can use builtin path variables in this template and reference to other paths
         <setoption choice="1" name="repsimulateReservoirs"/>    
 
         # report mass balance
-        <setoption choice="1" name="repMBTs"/>
+        <setoption choice="0" name="repMBTs"/>
 
         #-----------------------------------------------------------
         # report maps
@@ -287,19 +289,19 @@ You can use builtin path variables in this template and reference to other paths
                 </comment>
             </textvar>
 
-            <textvar name="CalendarDayStart" value="02/01/2016 06:00">
+            <textvar name="CalendarDayStart" value="01/03/2016 06:00">
                 <comment>
 					Reference day and time
                 </comment>
             </textvar>
 
-            <textvar name="DtSec" value="86400">
+            <textvar name="DtSec" value="21600">
                 <comment>
                     timestep [seconds]
                 </comment>
             </textvar>
 
-            <textvar name="DtSecChannel" value="86400">
+            <textvar name="DtSecChannel" value="3600">
                 <comment>
                     17280 5 times subrouting
 					21600 6 hours
@@ -308,14 +310,14 @@ You can use builtin path variables in this template and reference to other paths
                 </comment>
             </textvar>
 
-            <textvar name="StepStart" value="02/01/2016 06:00">
+            <textvar name="StepStart" value="01/03/2016 06:00">
                 <comment>
 					01/01/YEAR_START 12:00
                     Number of first time step in simulation
                 </comment>
             </textvar>
 
-            <textvar name="StepEnd" value="02/07/2016 06:00">
+            <textvar name="StepEnd" value="30/12/2016 06:00">
               <comment>
 					01/01/YEAR_END 06:00
 					Number of last time step in simulation
@@ -469,7 +471,7 @@ You can use builtin path variables in this template and reference to other paths
                 </comment>
             </textvar>
 
-            <textvar name="CalChanMan3" value="$(PathParams)/params_CalChanMan3">
+            <textvar name="CalChanMan3" value="5.0">
                 <comment>
 					default: 3.0 [-]
                     $(PathParams)/CalChanMan3
@@ -1476,7 +1478,7 @@ You can use builtin path variables in this template and reference to other paths
                 </comment>
             </textvar>
 
-            <textvar name="BankFullPerc" value="0.5">
+            <textvar name="BankFullPerc" value="0.1">
                 <comment>
                     Percentage [-] used to compute the TotalCrossSectionAreaHalfBankFull in the initialisation of the
                     total cross-sectional area
@@ -1629,7 +1631,7 @@ You can use builtin path variables in this template and reference to other paths
                     </comment>
                 </textvar>
 
-                <textvar name="ChanGradMaxMCT" value="0.001">
+                <textvar name="ChanGradMaxMCT" value="0.00005">
                     <comment>
                         Maximum channel gradient for channels using MCT routing [-] (for MCT wave: slope cannot be 0)
 						Default: 0.001
@@ -1649,6 +1651,13 @@ You can use builtin path variables in this template and reference to other paths
                     <comment>
                         OPTIONAL: nominal map with locations of (measured)
                         inflow hydrographs [cu m / s]
+                    </comment>
+                </textvar>
+
+                <textvar name="CalibrationPoints" value="$(PathRoot)/maps/ec_outlets">
+                    <comment>
+                        location of calibration points
+                        OPTIONAL: nominal map with locations of calibration points
                     </comment>
                 </textvar>
 
@@ -5415,6 +5424,13 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     <comment>
                         OPTIONAL: nominal map with locations of (measured)
 						inflow hydrographs
+                    </comment>
+                </textvar>
+
+                <textvar name="CalibrationPoints" value="$(CalibrationPoints)">
+                    <comment>
+                        location of calibration points
+                        OPTIONAL: nominal map with locations of calibration points
                     </comment>
                 </textvar>
 

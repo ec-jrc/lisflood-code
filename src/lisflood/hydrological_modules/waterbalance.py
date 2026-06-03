@@ -101,7 +101,6 @@ class waterbalance(object):
 
             # DisStructure = np.where(self.var.IsUpsOfStructureReservoir, self.var.ChanQAvgDt * self.var.DtRouting, 0)
 
-            # CM
             if option['simulateLakes']:
                 # DisStructure += np.where(compressArray(self.var.IsUpsOfStructureLake), 0.5 * self.var.ChanQ * self.var.DtRouting, 0)
                 DisStructure += np.where(compressArray(self.var.IsUpsOfStructureLake), 0.5 * self.var.ChanQAvgDt * self.var.DtRouting, 0)   #np

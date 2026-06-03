@@ -30,7 +30,6 @@ from .inflow import inflow
 from .transmission import transmission
 from .kinematic_wave_parallel import kinematicWave, kwpt
 from .mct import MCTWave
-from .mctheadwater import mctheadwater
 from .mctconfluence import mctconfluence
 
 from ..global_modules.settings import LisSettings, MaskInfo
@@ -64,7 +63,6 @@ class routing(HydroModule):
         self.polder_module = polder(self.var)
         self.inflow_module = inflow(self.var)
         self.transmission_module = transmission(self.var)
-        # self.mctheadwater_module = mctheadwater(self.var)
         self.mctconfluence_module = mctconfluence(self.var)
 
 # --------------------------------------------------------------------------
@@ -180,14 +178,14 @@ class routing(HydroModule):
             self.var.LddKinematic = self.var.LddChan
             self.var.LddKinematicNp = compressArray(self.var.LddKinematic)  # np
 
-        # At this point, LddChan and LddKinematic do not have sinks at reservoirs/lakes or MCT headwater and MCT confluences
+        # At this point, LddChan and LddKinematic do not have sinks at reservoirs/lakes or MCT confluences
         # LddMCT does not exist yet
 
         # ************************************************************
         # ***** MCT DRAINAGE NETWORK GEOMETRY - LDD  *****************
         # ************************************************************
 
-        # This is done here to be able to add MCT headwater pixels to structures
+        # This is done here to be able to add MCT confluence pixels to structures
         if option['MCTRouting']:
 
                 self.var.IsChannelMCTPcr = boolean(loadmap('ChannelsMCT', pcr=True))  # pcr
@@ -283,19 +281,20 @@ class routing(HydroModule):
             ChanDepthThreshold * (self.var.ChanUpperWidth + self.var.ChanBottomWidth)
         # Area (sq m) of bank full discharge cross-section [m2] (trapezoid area equation)
 
-        # cmcheck - TotalCrossSectionAreaHalfBankFull is not 1/2 TotalCrossSectionAreaBankFull it's trapezoid
         # ChanUpperWidthHalfBankFull = self.var.ChanBottomWidth + 2 * self.var.ChanSdXdY * 0.5 * ChanDepthThreshold
         # TotalCrossSectionAreaHalfBankFull = 0.5 * \
         #     0.5 * ChanDepthThreshold * (ChanUpperWidthHalfBankFull + self.var.ChanBottomWidth)
         # Cross-sectional area at half bankfull [m2]
+        # TotalCrossSectionAreaHalfBankFull is not 1/2 TotalCrossSectionAreaBankFull it's trapezoid
         # This can be used to initialise channel flow (see below)
         BankFullPerc = loadmap('BankFullPerc')
         TotalCrossSectionAreaHalfBankFull = BankFullPerc * self.var.TotalCrossSectionAreaBankFull
         # set BankFullPerc to 0.5 for half bankfull
 
-        # # Channel volume initialization for MCT cells
+        # Channel volume initialization for MCT cells
         # TotalCrossSectionAreaHalfBankFull = np.where(self.var.IsChannelKinematic, TotalCrossSectionAreaHalfBankFull, 0.01 * self.var.TotalCrossSectionAreaBankFull)
-        # # set initial volume in MCT cells to 1% of bankfull
+        # set initial volume in MCT cells to 1% of bankfull
+        # not used now but it could be used in the future
 
         TotalCrossSectionAreaInitValue = loadmap('TotalCrossSectionAreaInitValue')
         self.var.TotalCrossSectionArea = np.where(TotalCrossSectionAreaInitValue == -9999, TotalCrossSectionAreaHalfBankFull, TotalCrossSectionAreaInitValue)
@@ -473,7 +472,6 @@ class routing(HydroModule):
         # Cumulative inflow volume from inflow hydrographs [m3]
         self.var.sumDis = maskinfo.in_zero()
         self.var.sumIn = maskinfo.in_zero()
-        # cmcheck - non so se sostituita da self.var.sumInWB
         self.var.sumInWB = maskinfo.in_zero()
 
     def initialSecond(self):
@@ -497,7 +495,6 @@ class routing(HydroModule):
             # Manning's roughtness coefficient n for second line of routing
             AlpTermChan2 = (ChanMan2 / (np.sqrt(self.var.ChanGrad))) ** self.var.Beta
             self.var.ChannelAlpha2 = (AlpTermChan2 * (self.var.ChanWettedPerimeterAlpha ** self.var.AlpPow)).astype(float)
-            #cmcheck -> using channel wetted perimeter of half bankfull ChanWettedPerimeterAlpha ?
             self.var.InvChannelAlpha2 = 1 / self.var.ChannelAlpha2
             # calculating second Alpha for second (virtual) channel
 
@@ -831,7 +828,6 @@ class routing(HydroModule):
                 # Total channel storage [m3] = Volume in main channel (ChanM3Kin) + volume above bankfull in second line (Chan2M3Kin - Chan2M3Start)
                 # Total channel storage V at the end of computation step t+dt for full section (instant)
 
-                # cmcheck
                 ChanQAvgDt = np.maximum(self.var.ChanQKinAvgDt + self.var.Chan2QKinAvgDt - self.var.QLimit, 0)
                 # (real) total outflow (at x+dx) at time t+dt end of step for the full cross-section (instant)
                 # Main channel routing and above bankfull routing from second line of routing
@@ -853,14 +849,8 @@ class routing(HydroModule):
                 self.var.ChanM3 = ChanM3
                 self.var.ChanQAvgDt = ChanQAvgDt    # -> used to calc q0m
 
-                # # MCT HEADWATER
-                # self.mctheadwater_module.dynamic_inloop(NoRoutingExecuted)
-                # # calculate sideflow from MCT headwater pixels
-                # SideflowChanM3 += self.var.QHeadM3Dt
-                # # MCT headwater pixels outflow volume per routing sub step [m3]
-
                 # MCT CONFLUENCE
-                # This needs to be here because I need to grab the input to MCT pixels from outflow at the end of routing step of kinematic pixels
+                # This needs to be here because we need to grab the input to MCT pixels from the outflow at the end of routing step of kinematic pixels
                 if option['MCTRoutingInterface']:
                     self.mctconfluence_module.dynamic_inloop(NoRoutingExecuted)
                     # calculate sideflow from MCT confluence pixels

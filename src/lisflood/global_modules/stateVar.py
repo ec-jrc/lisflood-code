@@ -20,7 +20,7 @@ from lisflood.global_modules.settings import CDFFlags
 from .add1 import *
 
 
-# CM: new-style class in Python 2.x
+# new-style class in Python 2.x
 class stateVar(object):
 
     """

@@ -183,7 +183,7 @@ def loadsetclone(name):
         # settings x is first
         # setclone row col cellsize xupleft yupleft
         try:
-            setclone(int(coord[1]), int(coord[0]), float(coord[2]), float(coord[3]), float(coord[4]))   # CM: pcraster
+            setclone(int(coord[1]), int(coord[0]), float(coord[2]), float(coord[3]), float(coord[4]))   # pcraster
         except:
             rem = "["+str(coord[0])+" "+ str(coord[1])+" "+ str(coord[2])+" "+ str(coord[3])+" "+str(coord[4])+"]"
             msg = "Maskmap: " + rem + \
@@ -357,7 +357,7 @@ def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averagey
     
     :param name: name of key in Settings.xml input file containing path and name of the map file (as string)
     :param pcr: flag for output maps in pcraster format 
-    :param lddflag: flag for local drain direction map (CM??)
+    :param lddflag: flag for local drain direction map
     :param timestampflag: look for exact time stamp in netcdf file ('exact') or for the closest (left) time stamp available ('closest')
     :param averageyearflag: if True, use "average year" netcdf file over the entire model simulation period
     :param force_load_with_nans: if True, loads the map without checking for nan values inside area Map. 
@@ -709,11 +709,11 @@ def readnetcdf(name, time, timestampflag='exact', averageyearflag=False):
     t_steps = nf1.variables['time'][:]    # get values for timesteps ([  0.,  24.,  48.,  72.,  96.])
     t_unit = nf1.variables['time'].units  # get unit (u'hours since 2015-01-01 06:00:00')
     t_cal = get_calendar_type(nf1)
-    # CM: get year from time unit in case average year is used
+    # get year from time unit in case average year is used
     if averageyearflag:
-        # CM: get date of the first step in netCDF file containing average year values
+        # get date of the first step in netCDF file containing average year values
         first_date = num2date(t_steps[0], t_unit, t_cal)
-        # CM: get year of the first step in netCDF file containing average year values
+        # get year of the first step in netCDF file containing average year values
         t_ref_year = first_date.year
     settings = LisSettings.instance()
     binding = settings.binding
@@ -733,7 +733,7 @@ def readnetcdf(name, time, timestampflag='exact', averageyearflag=False):
         try:
             currentDate = currentDate.replace(year=t_ref_year)
         except:
-            # CM: if simulation year is leap and average year is not, switch 29/2 with 28/2
+            # if simulation year is leap and average year is not, switch 29/2 with 28/2
             currentDate = currentDate.replace(day=28)
             currentDate = currentDate.replace(year=t_ref_year)
 
@@ -747,9 +747,9 @@ def readnetcdf(name, time, timestampflag='exact', averageyearflag=False):
             msg = "Date " + str(currentDate) + " not stored in " + filename
             raise LisfloodError(msg)
         elif (timestampflag == 'closest'):
-            # CM: get the closest value
+            # get the closest value
             current_ncdf_step_new = takeClosest(t_steps, current_ncdf_step)
-            # CM: set current_ncdf_step to the closest available time step in netCDF file
+            # set current_ncdf_step to the closest available time step in netCDF file
             current_ncdf_step = current_ncdf_step_new
 
     # get index of timestep in netCDF file corresponding to current simulation date

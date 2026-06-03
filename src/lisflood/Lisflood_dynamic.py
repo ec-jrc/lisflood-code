@@ -239,7 +239,6 @@ class LisfloodModel_dyn(DynamicModel):
         #self.DischargeM3Out += np.where(self.AtLastPointC ,self.ChanQ * self.DtSec,0)
         self.DischargeM3Out += np.where(self.AtLastPointC, self.ChanQAvg * self.DtSec, 0)
         # Cumulative outflow out of map
-        # cmcheck - we should use ChanQAvg here not ChanQ
 
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         # Calculate water level
