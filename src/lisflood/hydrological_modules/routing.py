@@ -865,6 +865,9 @@ class routing(HydroModule):
                 )
                 problematic = np.where(self.var.PrevDm0[self.var.IsChannelMCT] > 2)[0]
 
+                # Save the original ChanQAvgDt before correction so we can compute the delta
+                ChanQAvgDt_old = self.var.ChanQAvgDt.copy()
+
                 # Case 1: ChanQAvgDt too small relative to ChanQ (flood arrival)
                 mct_avg_too_small = (
                     self.var.IsChannelMCT &
@@ -872,14 +875,37 @@ class routing(HydroModule):
                     (self.var.ChanQAvgDt < 0.1 * self.var.ChanQ)
                 )
                 self.var.ChanQAvgDt = np.where(mct_avg_too_small, self.var.ChanQ, self.var.ChanQAvgDt)
-
+                if np.any(mct_avg_too_small)>0:
+                    print("small", np.sum(mct_avg_too_small))
                 # Case 2: ChanQAvgDt too large relative to ChanQ (flood recession / cold start)
                 mct_avg_too_large = (
                     self.var.IsChannelMCT &
                     (self.var.ChanQAvgDt > 0.1) &
                     (self.var.ChanQ < 0.1 * self.var.ChanQAvgDt)
                 )
+                if np.any(mct_avg_too_large)>0:
+                    print("large", np.sum(mct_avg_too_large)) 
                 self.var.ChanQAvgDt = np.where(mct_avg_too_large, self.var.ChanQ, self.var.ChanQAvgDt)
+                # Mass-balance correction: update ChanM3 to stay consistent with the new ChanQAvgDt
+                # If we increased reported outflow, storage must have decreased correspondingly
+                delta_avg = self.var.ChanQAvgDt - ChanQAvgDt_old
+                self.var.ChanM3 = np.where(
+                    self.var.IsChannelMCT,
+                    self.var.ChanM3 - delta_avg * self.var.DtRouting,
+                    self.var.ChanM3
+                )
+                
+                # averge outflow during model time step
+                delta_avg2 = delta_avg.copy()
+                delta_avg2[self.var.AtLastPointC == 0] = 0
+                delta_outlet = np.take(np.bincount(self.var.Catchments,weights=delta_avg2 * self.var.DtSec),self.var.Catchments)
+                
+                print("Stefania: ", np.sum((delta_avg * self.var.DtRouting)),"------Stefania 2:", delta_outlet[0])
+                print(np.sum(self.var.ChanM3))
+
+                # Prevent negative storage
+                self.var.ChanM3 = np.maximum(self.var.ChanM3, 0.0)
+
                 # if 95 <= self.var.currentStep <= 110:
                 #     mct_pixels = self.var.IsChannelMCT
                 #     cm0 = self.var.PrevCm0[mct_pixels]  # this is now Cm1 after routing

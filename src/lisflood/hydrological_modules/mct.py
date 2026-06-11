@@ -405,6 +405,16 @@ def MCTRouting_single(
         V11 = V00 + (q0mm + ql - q1mm) * dt
         if V11 < 0: V11 = 0
 
+    # # Ratio guard: snap q1mm to q11 and recompute V11 consistently
+    # if q11 > 0.1 and q1mm < 0.1 * q11:
+    #     q1mm = q11
+    #     V11 = V00 + (q0mm + ql - q1mm) * dt
+    #     if V11 < 0: V11 = 0
+    # elif q1mm > 0.1 and q11 < 0.1 * q1mm:
+    #     q1mm = q11
+    #     V11 = V00 + (q0mm + ql - q1mm) * dt
+    #     if V11 < 0: V11 = 0
+
     # q11 Outflow at O(t+dt)
     # q1m average outflow in time dt
     # V11 water volume at t+dt

@@ -117,6 +117,7 @@ class waterbalance(object):
 
     def storage_channel(self, option):
         ChannelStoredM3 = self.var.ChanM3.copy()
+        print(np.sum(ChannelStoredM3))
         if option['simulateLakes']:
             ChannelStoredM3 += self.var.LakeStorageM3Balance
         if option['simulateReservoirs']:
@@ -279,6 +280,8 @@ class waterbalance(object):
 
             # Mass balance:
             self.var.MBError = self.var.WaterInit + WaterIn - WaterStored - WaterOut - DischargeM3Structures
+            # print("Init: ",self.var.WaterInit[0],"Inq: ", WaterIn[0],"WaterStored: ",WaterStored[0],"Outq: ",WaterOut[0], "QStruct",DischargeM3Structures[0])
+
             # Total mass balance error per catchment [cu m]. Mass balance error is computed for each computational time step.
   
             CatchArea = np.take(np.bincount(self.var.Catchments, weights=self.var.PixelArea),self.var.Catchments)
