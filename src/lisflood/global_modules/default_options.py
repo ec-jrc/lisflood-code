@@ -1529,10 +1529,10 @@ default_options = {'EnKF': False,
                                                          restrictoption=['nonInit'], operation=['']),
                        'MctOutletErrorTSS': TimeSeries(name='MctOutletErrorTSS', output_var='MBErrorMCTM3', # Timo addition 1 for clamping tracking 
                                                          where='Catchments', repoption=['repMBTs'],
-                                                         restrictoption=['nonInit'], operation=['']),
+                                                         restrictoption=['nonInit', 'MCTRouting'], operation=['']),
                        'MctCatchmentErrorTSS': TimeSeries(name='MctCatchmentErrorTSS', output_var='MBErrorCatchmentM3', # Timo addition 2 for clamping tracking
                                                          where='Catchments', repoption=['repMBTs'],
-                                                         restrictoption=['nonInit'], operation=['']),
+                                                         restrictoption=['nonInit', 'MCTRouting'], operation=['']),
                        'WaterUseSitesTS': TimeSeries(name='WaterUseSitesTS', output_var='WUseSumM3', where='Sites',
                                                      repoption=['repwateruseSites'],
                                                      restrictoption=['nonInit', 'wateruse'], operation=['']),

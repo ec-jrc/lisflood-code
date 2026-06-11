@@ -180,7 +180,9 @@ class LisfloodModel_dyn(DynamicModel):
         # ************************************************************
         maskinfo = MaskInfo.instance()
         self.sumDisDay = maskinfo.in_zero()
-
+        if option['repMBTs'] and option['MCTRouting']:
+            self.delta_avg_total    = maskinfo.in_zero()
+            self.delta_outlet_total = maskinfo.in_zero()
         # sums up discharge of the sub steps
         for NoRoutingExecuted in range(self.NoRoutSteps):
             self.routing_module.dynamic(NoRoutingExecuted)

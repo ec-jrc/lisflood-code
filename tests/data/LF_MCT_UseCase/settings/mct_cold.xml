@@ -4662,7 +4662,19 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                         Reported mass balance error at outlet [cu m]
                     </comment>
                 </textvar>
+		
+				<textvar name="MctOutletErrorTSS" value="$(PathOut)/mbErrorMCT.tss">
+				    <comment>
+					Volume error at catchment outlets introduced by MCT ChanQAvgDt clamping [m3]
+				    </comment>
+				</textvar>
 
+				<textvar name="MctCatchmentErrorTSS" value="$(PathOut)/mctClampCatchmentError.tss">
+				    <comment>
+					Spatially distributed volume error introduced by MCT ChanQAvgDt clamping, summed per catchment [m3]
+				    </comment>
+				</textvar>
+		
                 <textvar name="MassBalanceMMTSS" value="$(PathOut)/mbErrorMm.tss">
                     <comment>
                         Reported mass balance error at outlet (as mm water slice)

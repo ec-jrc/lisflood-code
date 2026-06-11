@@ -281,7 +281,10 @@ class waterbalance(object):
             # Mass balance:
             self.var.MBError = self.var.WaterInit + WaterIn - WaterStored - WaterOut - DischargeM3Structures
             # print("Init: ",self.var.WaterInit[0],"Inq: ", WaterIn[0],"WaterStored: ",WaterStored[0],"Outq: ",WaterOut[0], "QStruct",DischargeM3Structures[0])
-
+            # MCT clamp balance alteration
+            if option['MCTRouting']:
+                self.var.MBErrorMCTM3 = self.var.delta_outlet_total 
+                self.var.MBErrorCatchmentM3 = self.var.delta_avg_total  
             # Total mass balance error per catchment [cu m]. Mass balance error is computed for each computational time step.
   
             CatchArea = np.take(np.bincount(self.var.Catchments, weights=self.var.PixelArea),self.var.Catchments)
