@@ -4656,6 +4656,18 @@ You can use builtin path variables in this template and reference to other paths
       </comment>
       </textvar>
 
+				<textvar name="MCTOutletErrorTSS" value="$(PathOut)/mctClampOutletErrorM3.tss">
+				    <comment>
+					Volume error at catchment outlets introduced by MCT ChanQAvgDt clamping [m3]
+				    </comment>
+				</textvar>
+
+				<textvar name="MCTCatchmentErrorTSS" value="$(PathOut)/mctClampCatchmentErrorM3.tss">
+				    <comment>
+					Spatially distributed volume error introduced by MCT ChanQAvgDt clamping, summed per catchment [m3]
+				    </comment>
+				</textvar>
+
       <textvar name="MassBalanceMMTSS" value="$(PathOut)/mbErrorMm.tss">
       <comment>
       Reported mass balance error at outlet (as mm water slice)

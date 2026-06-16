@@ -21,11 +21,17 @@ class TestTSSResults():
         mk_path_out(os.path.join(self.case_dir, 'out'))
         # generate lisflood results
         out_path_ref = os.path.join(self.case_dir, 'reference', 'output_reference_mct_'+type)
-        self.out_path_run = os.path.join(self.case_dir, 'out', 'output_'+type)
+        self.out_path_run = os.path.join(self.case_dir, 'out', 'output_mct_'+type)
         settings_file = os.path.join(self.case_dir, 'settings', 'mct_cold.xml')
+        if "_calib" in type:
+            opts_to_set = ['MCTRouting','simulateCalibrationPoints']
+            opts_to_unset = ['SplitRouting']
+        else:
+            opts_to_set = ['MCTRouting']
+            opts_to_unset = ['SplitRouting','simulateCalibrationPoints']
         settings = setoptions(settings_file,
-                              opts_to_set = ['MCTRouting'],
-                              opts_to_unset=['SplitRouting'],
+                              opts_to_set = opts_to_set,
+                              opts_to_unset= opts_to_unset,
                               vars_to_set={'StepStart': date_start,
                                            'StepEnd': date_end,
                                            'CalendarDayStart': date_start,
@@ -61,11 +67,17 @@ class TestTSSResults():
         mk_path_out(os.path.join(self.case_dir, 'out'))
         # generate lisflood results
         out_path_ref = os.path.join(self.case_dir, 'reference', 'output_reference_mcts_'+type)
-        self.out_path_run = os.path.join(self.case_dir, 'out', 'output_'+type)
+        self.out_path_run = os.path.join(self.case_dir, 'out', 'output_mcts_'+type)
         settings_file = os.path.join(self.case_dir, 'settings', 'mct_cold.xml')
+        if "_calib" in type:
+            opts_to_set = ['MCTRouting','SplitRouting','simulateCalibrationPoints']
+            opts_to_unset = None
+        else:
+            opts_to_set = ['MCTRouting', 'SplitRouting']
+            opts_to_unset = ['simulateCalibrationPoints']
         settings = setoptions(settings_file,
-                              opts_to_set = ['MCTRouting',
-                                             'SplitRouting'],
+                              opts_to_set = opts_to_set,
+                              opts_to_unset = opts_to_unset,
                               vars_to_set={'StepStart': date_start,
                                            'StepEnd': date_end,
                                            'CalendarDayStart': date_start,
@@ -110,7 +122,7 @@ class TestTSSResults():
         mk_path_out(os.path.join(self.case_dir, 'out'))
         # generate lisflood results
         out_path_ref = os.path.join(self.case_dir, 'reference', 'output_reference_kin_'+type)
-        self.out_path_run = os.path.join(self.case_dir, 'out', 'output_'+type)
+        self.out_path_run = os.path.join(self.case_dir, 'out', 'output_kin_'+type)
         settings_file = os.path.join(self.case_dir, 'settings', 'mct_cold.xml')
         settings = setoptions(settings_file,
                               opts_to_unset=['MCTRouting',
@@ -149,7 +161,7 @@ class TestTSSResults():
         mk_path_out(os.path.join(self.case_dir, 'out'))
         # generate lisflood results
         out_path_ref = os.path.join(self.case_dir, 'reference', 'output_reference_split_'+type)
-        self.out_path_run = os.path.join(self.case_dir, 'out', 'output_'+type)
+        self.out_path_run = os.path.join(self.case_dir, 'out', 'output_split_'+type)
         settings_file = os.path.join(self.case_dir, 'settings', 'mct_cold.xml')
         settings = setoptions(settings_file,
                               opts_to_set = ['SplitRouting'],
@@ -254,10 +266,14 @@ class TestMCTResults(TestTSSResults):
     # test results of MCT+KIN routing
     def test_MCT_6h(self):
         self.run_mct("02/01/2016 06:00", "02/07/2016 06:00", 21600, 21600,'6h')
+    def test_MCT_6h_calib(self):
+        self.run_mct("02/01/2016 06:00", "02/07/2016 06:00", 21600, 21600,'6h_calib')
     def test_MCT_6h_1h(self):
         self.run_mct("02/01/2016 06:00", "02/07/2016 06:00", 21600, 3600,'6h_1h')
     def test_MCT_daily(self):
         self.run_mct("02/01/2016 06:00", "02/07/2016 06:00", 86400, 86400,'daily')
+    def test_MCT_daily_calib(self):
+        self.run_mct("02/01/2016 06:00", "02/07/2016 06:00", 86400, 86400,'daily_calib')
     def test_MCT_daily_6h(self):
         self.run_mct("02/01/2016 06:00", "02/07/2016 06:00", 86400, 21600,'daily_6h')
     def test_MCT_daily_1h(self):
@@ -267,10 +283,14 @@ class TestMCTResults(TestTSSResults):
     # test results of MCT+SPLIT routing
     def test_MCTS_6h(self):
         self.run_mcts("02/01/2016 06:00", "02/07/2016 06:00", 21600, 21600,'6h')
+    def test_MCTS_6h_calib(self):
+        self.run_mcts("02/01/2016 06:00", "02/07/2016 06:00", 21600, 21600,'6h_calib')
     def test_MCTS_6h_1h(self):
         self.run_mcts("02/01/2016 06:00", "02/07/2016 06:00", 21600, 3600,'6h_1h')
     def test_MCTS_daily(self):
         self.run_mcts("02/01/2016 06:00", "02/07/2016 06:00", 86400, 86400,'daily')
+    def test_MCTS_daily_calib(self):
+        self.run_mcts("02/01/2016 06:00", "02/07/2016 06:00", 86400, 86400,'daily_calib')
     def test_MCTS_daily_6h(self):
         self.run_mcts("02/01/2016 06:00", "02/07/2016 06:00", 86400, 21600,'daily_6h')
     def test_MCTS_daily_1h(self):
@@ -309,6 +329,6 @@ class TestMCTResults(TestTSSResults):
 
     #########################################
     # cleaning out/ folder
-    # def cleaning(self,):
-    #     self.teardown_method()
+    def cleaning(self,):
+        self.teardown_method()
 
