@@ -863,7 +863,6 @@ class routing(HydroModule):
                     self.var.PrevDm0,       # Reynolds number in input: at time t; in output: at time t+dt
                     self.var.ChanM3         # Channel storage volume. In input: at time t V00; in output: at time t+dt V11
                 )
-                problematic = np.where(self.var.PrevDm0[self.var.IsChannelMCT] > 2)[0]
 
                 # Save the original ChanQAvgDt before correction so we can compute the delta
                 if option['repMBTs'] and option['MCTRouting']:
@@ -893,15 +892,6 @@ class routing(HydroModule):
                     delta_outlet = np.take(np.bincount(self.var.Catchments,weights=delta_avg2 * self.var.DtRouting),self.var.Catchments)
                     self.var.delta_outlet_total += delta_outlet
 
-                # if 95 <= self.var.currentStep <= 110:
-                #     mct_pixels = self.var.IsChannelMCT
-                #     cm0 = self.var.PrevCm0[mct_pixels]  # this is now Cm1 after routing
-                #     # We can't get cm_ratio directly but we can see Cm distribution
-                #     print(f"Step {self.var.currentStep}, substep {NoRoutingExecuted}:")
-                #     print(f"  Cm: min={cm0.min():.2f} mean={cm0.mean():.2f} max={cm0.max():.2f}")
-                #     print(f"  Dm: min={self.var.PrevDm0[mct_pixels].min():.2f} "
-                #         f"mean={self.var.PrevDm0[mct_pixels].mean():.2f} "
-                #         f"max={self.var.PrevDm0[mct_pixels].max():.2f}")
                 ##################################################################3
                 if flags['debug']:
                     # checking Courant number for potential instability in MCT
@@ -918,19 +908,11 @@ class routing(HydroModule):
 
                 bad = too_large | too_small
 
-                # if np.any(bad):
-                #     warnings.warn(LisfloodWarning("WARNING! At least one ChanQ is >> or << ChanQAvgDt. Consider increasing DtRouting step or using kinematic routing"))
-                #     # # list 'bad' cells
-                #     # bad_indices = np.where(dismask)[0][bad]
-                #     # print("Bad indices:", bad_indices)
-                #     bad_indices = np.where(dismask)[0][bad]
-                #     print("Step:", NoRoutingExecuted)
-                #     print("Bad indices:", bad_indices)
-                #     print("ChanQ at bad:", self.var.ChanQ[bad_indices])
-                #     print("ChanQAvgDt at bad:", self.var.ChanQAvgDt[bad_indices])
-                #     print("PrevCm0 at bad:", self.var.PrevCm0[bad_indices])
-                #     print("PrevDm0 at bad:", self.var.PrevDm0[bad_indices])
-                #     print("IsChannelMCT at bad:", self.var.IsChannelMCT[bad_indices])
+                if np.any(bad):
+                    warnings.warn(LisfloodWarning("WARNING! At least one ChanQ is >> or << ChanQAvgDt. Consider increasing DtRouting step or using kinematic routing"))
+                    # # list 'bad' cells
+                    # bad_indices = np.where(dismask)[0][bad]
+                    # print("Bad indices:", bad_indices)
                 ##################################################################3
 
             else:

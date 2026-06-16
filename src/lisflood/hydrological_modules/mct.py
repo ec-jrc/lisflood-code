@@ -41,6 +41,7 @@ class MCTWave:
         self.mapping_mct = mapping_mct
         self.CalibPointsIds = CalibPointsIds
 
+
     def _setMCTRoutingOrders(self):
         """Compute the MCT wave routing order. Pixels are grouped in sets with the same order.
         Pixels in the same set are independent and can be routed in parallel. Sets must be processed in series, starting from order 0.
@@ -164,6 +165,7 @@ def mct_routing(
             mctpix = mct_pixels_ordered[index]
             # Find the corresponding pixel id in the full LDD
             kinpix = mapping_mct[mctpix]
+
             # Find id of upstream contributing pixels (from full LDD)
             upstream_pixels = upstream_lookup[kinpix]
 
@@ -171,7 +173,9 @@ def mct_routing(
             q00 = 0.0
             q0m = 0.0
             q01 = 0.0
+
             ql = SideflowChanMCT[kinpix]   # ← ql defined BEFORE the loop
+
             for ups_ix in range(num_upstream_pixels[kinpix]):
                 ups_pix = upstream_pixels[ups_ix]   # upstream pixel id
                 #####################################################################################################
@@ -185,7 +189,6 @@ def mct_routing(
                     q00 += ChanQ_0[ups_pix]  # Inflow (x) to the pixel at previous step t (instant)
                     q0m += ChanQAvgDt[ups_pix]  # Average inflow (x) to the pixel at previous step t (average)
                     q01 += ChanQ[ups_pix]  # Inflow (x) at current step t+dt (instant)
-
                 #####################################################################################################
 
             # get outflow from the pixel at previous step t
@@ -254,35 +257,30 @@ def MCTRouting_single(
 
     # Calc O' first guess for the outflow at time t+dt
     # O'(t+dt)=O(t)+(I(t+dt)-I(t))
-    q11 = q10 + (q01 - q00) # + ql
+    q11 = q10 + (q01 - q00)
 
     # check for negative and zero discharge values
     # zero outflow is not allowed
-    if q11 < 0:  # cmcheck <=0  #tpk
-        q11 = 0                 #tpk
+    if q11 < 0:  # cmcheck <=0  
+        q11 = 0                 
 
     # calc reference discharge at time t
     # qm0 = (I(t)+O(t))/2
     # qm0 = (q00 + q10) / 2.
-
-    # ql correction for hydraulic state computation
-    # Only positive ql contributes (ignore abstraction), 
-    # /2 represents uniform distribution along reach
-    # ql_correction = max(ql, 0.0) / 2.0
 
     # Calc O(t+dt)=q11 at time t+dt using MCT equations
     for i in range(2):  # repeat 2 times for accuracy
 
         # reference I discharge at x=0
         qmx0 = (q00 + q01) / 2.0
-        if qmx0 <= eps :  # cmcheck ==0   #tpk
-            qmx0 = eps                  #tpk
+        if qmx0 <= eps :  # cmcheck ==0   
+            qmx0 = eps                  
         hmx0 = hoq(qmx0, s0, Balv, ANalv, Nalv)
 
         # reference O discharge at x=1
         qmx1 = (q10 + q11) / 2.0
-        if qmx1 <= eps:  # cmcheck ==0    #tpk
-            qmx1 = eps                  #tpk
+        if qmx1 <= eps:  # cmcheck ==0    
+            qmx1 = eps                  
         hmx1 = hoq(qmx1, s0, Balv, ANalv, Nalv)
 
         # Calc riverbed slope correction factor
@@ -293,15 +291,15 @@ def MCTRouting_single(
 
         # Calc reference discharge time t+dt
         # Q(t+dt)=(I(t+dt)+O'(t+dt))/2
-        qm1 = (q01 + q11) / 2.0 # + ql_correction
+        qm1 = (q01 + q11) / 2.0
         # cm
-        if qm1 <= eps :  # cmcheck ==0     #tpk
-            qm1 = eps                   #tpk
+        if qm1 <= eps :  # cmcheck ==0     
+            qm1 = eps                   
         # cm
         hm1 = hoq(qm1, s0, Balv, ANalv, Nalv)
         dummy, Ax1, Bx1, Px1, ck1 = qoh(hm1, s0, Balv, ANalv, Nalv)
-        if ck1 <= eps:    #tpk
-            ck1 = eps   #tpk
+        if ck1 <= eps:    
+            ck1 = eps   
 
         # Calc correcting factor Beta at time t+dt
         Beta1 = ck1 / (qm1 / Ax1)
@@ -312,7 +310,6 @@ def MCTRouting_single(
 
         # Calc MCT parameters
         # Guard Diffusivity
-        # Dm1 = min(max(Dm1, 0.0), 1.0)
         den = 1 + Cm1 + Dm1
 
         c1 = (-1 + Cm1 + Dm1) / den
@@ -331,26 +328,16 @@ def MCTRouting_single(
         c3 = (1 - Cm0 + Dm0) / den * cm_ratio
         c4 = (2 * Cm1) / den
 
-        # cmcheck
         # Calc outflow q11 at time t+1
         # Mass balance equation without lateral flow
         # q11 = c1 * q01 + c2 * q00 + c3 * q10
         # Mass balance equation that takes into consideration the lateral flow
         q11 = c1 * q01 + c2 * q00 + c3 * q10 + c4 * ql
-
-        # Diagnostic - now only fires when the CLAMPED ratio is at the ceiling
-        # or other suspicious conditions
-        # if cm_ratio >= 3.0 - 1e-9:  # ratio was clamped
-        #     print("CLAMPED Cm0=", Cm0, "Cm1=", Cm1, "raw_ratio=", Cm1/max(Cm0, 0.001), "q01=", q01)
             
-        if q11 < 0:  # cmcheck <=0  #tpk
-            q11 = 0                 #tpk
+        if q11 < 0:  
+            q11 = 0                 
 
-        # NEW: mass-balance upper bound
-        # if ql > 0:
-        #     ql_abs = ql
-        # else:
-        #     ql_abs = -ql
+        # mass-balance upper bound
         max_q11 = q01 + q00 + abs(ql) + V00 / dt
         if q11 > max_q11:
             q11 = max_q11
@@ -374,26 +361,14 @@ def MCTRouting_single(
     else:
         V11 = (1 - Dm1) * dt / (2 * Cm1) * q01 + (1 + Dm1) * dt / (2 * Cm1) * q11
         # V11 = k1 * (x1 * q01 + (1. - x1) * q11) # MUST be the same as above!
-    # transition = min(1.0, q11 / (q11 + eps))  # Sigmoid-like transition
-    # V11_formula1 = V00 + (q00 + q01 - q10 - q11) * dt / 2
-    # V11_formula2 = (1 - Dm1) * dt / (2 * Cm1) * q01 + (1 + Dm1) * dt / (2 * Cm1) * q11
-    # V11 = transition * V11_formula2 + (1 - transition) * V11_formula1
 
-    if V11 < 0 :    #tpk
-        V11 = 0     #tpk
+    if V11 < 0 :    
+        V11 = 0     
 
     ### calc integration on the control volume (pixel)
     # calc average discharge outflow q1m for MCT channels during routing sub step dt
     # Calculate average outflow using water balance for MCT channel grid cell over sub-routing step
     q1mm = q0mm + ql + (V00 - V11) / dt
-    # Ensure q1mm is consistent with q11 (instantaneous outflow)
-    # q1mm should be within reasonable bounds of q11
-    # if q11 > 0:
-    #     ratio = q1mm / q11
-    #     if ratio > 10:
-    #         q1mm = q11
-    #     elif ratio < 0.1:
-    #         q1mm = q11
 
     # cmcheck
     # q1m cannot be smaller than eps or it will cause instability
@@ -404,16 +379,6 @@ def MCTRouting_single(
         # NOTE THIS GENERATES AN ERROR IN THE WATER BALANCE
         V11 = V00 + (q0mm + ql - q1mm) * dt
         if V11 < 0: V11 = 0
-
-    # # Ratio guard: snap q1mm to q11 and recompute V11 consistently
-    # if q11 > 0.1 and q1mm < 0.1 * q11:
-    #     q1mm = q11
-    #     V11 = V00 + (q0mm + ql - q1mm) * dt
-    #     if V11 < 0: V11 = 0
-    # elif q1mm > 0.1 and q11 < 0.1 * q1mm:
-    #     q1mm = q11
-    #     V11 = V00 + (q0mm + ql - q1mm) * dt
-    #     if V11 < 0: V11 = 0
 
     # q11 Outflow at O(t+dt)
     # q1m average outflow in time dt

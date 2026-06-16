@@ -138,7 +138,6 @@ class LisfloodModel_ini(DynamicModel):
         self.surface_routing_module = surface_routing(self)
         self.reservoir_module = Reservoir(self) # get_reservoir(option['reservoirHanazaki'])
         self.lakes_module = lakes(self)
-
         self.polder_module = polder(self)
         self.waterabstraction_module = waterabstraction(self)
         self.indicatorcalc_module = indicatorcalc(self)
@@ -221,7 +220,6 @@ class LisfloodModel_ini(DynamicModel):
 
         self.routing_module.initialSecond()
         # CHANNEL INITIAL SPLIT UP IN SECOND CHANNEL
-
         self.surface_routing_module.initialSecond()
 
         # MCT confluence must be in the LddKinematic when I get here
@@ -233,10 +231,6 @@ class LisfloodModel_ini(DynamicModel):
 
         # self.routing_module.initialKinematicWave()
         # this cannot be here because I need river_router in the MCT initialization
-
-
-
-
 
         self.evapowater_module.initial()
         self.riceirrigation_module.initial()
