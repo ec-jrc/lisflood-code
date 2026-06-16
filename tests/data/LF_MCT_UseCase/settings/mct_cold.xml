@@ -214,7 +214,7 @@ You can use builtin path variables in this template and reference to other paths
                 **************************************************************
             </comment>
 
-			<textvar name="numCPUs_parallelNumba" value="0"/>
+			<textvar name="numCPUs_parallelNumba" value="2"/>
 			</comment>
 				!-- Parallelisation of using Numba runtime compiled library .
 				The option "numCPUs_parallelNumba" may take the following values:
@@ -4663,13 +4663,13 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 		
-				<textvar name="MctOutletErrorTSS" value="$(PathOut)/mbErrorMCT.tss">
+				<textvar name="MCTOutletErrorTSS" value="$(PathOut)/mctClampOutletErrorM3.tss">
 				    <comment>
 					Volume error at catchment outlets introduced by MCT ChanQAvgDt clamping [m3]
 				    </comment>
 				</textvar>
 
-				<textvar name="MctCatchmentErrorTSS" value="$(PathOut)/mctClampCatchmentError.tss">
+				<textvar name="MCTCatchmentErrorTSS" value="$(PathOut)/mctClampCatchmentErrorM3.tss">
 				    <comment>
 					Spatially distributed volume error introduced by MCT ChanQAvgDt clamping, summed per catchment [m3]
 				    </comment>

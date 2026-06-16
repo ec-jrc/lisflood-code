@@ -42,15 +42,15 @@ class TestTSSResults():
         rtol = 0.0001
         comparator = TSSComparator(atol,rtol)
 
-        # # compare results for average discharge output
-        # reference =  os.path.join(out_path_ref, 'disWin.tss')
-        # output_tss =  os.path.join(self.out_path_run, 'disWin.tss')
-        # comparator.compare_files(reference, output_tss)
+        # compare results for average discharge output
+        reference =  os.path.join(out_path_ref, 'disWin.tss')
+        output_tss =  os.path.join(self.out_path_run, 'disWin.tss')
+        comparator.compare_files(reference, output_tss)
 
-        # # compare results for instant discharge output
-        # reference =  os.path.join(out_path_ref, 'chanqWin.tss')
-        # output_tss =  os.path.join(self.out_path_run, 'chanqWin.tss')
-        # comparator.compare_files(reference, output_tss)
+        # compare results for instant discharge output
+        reference =  os.path.join(out_path_ref, 'chanqWin.tss')
+        output_tss =  os.path.join(self.out_path_run, 'chanqWin.tss')
+        comparator.compare_files(reference, output_tss)
 
         # compare mass balance error
         reference =  os.path.join(out_path_ref, 'mbError.tss')
@@ -239,9 +239,9 @@ class TestTSSResults():
 
     def teardown_method(self):
         print('Cleaning directories')
-        # out_path = os.path.join(self.case_dir, 'out')
-        # if os.path.exists(out_path) and os.path.isdir(out_path):
-        #     shutil.rmtree(out_path, ignore_errors=True)
+        out_path = os.path.join(self.case_dir, 'out')
+        if os.path.exists(out_path) and os.path.isdir(out_path):
+            shutil.rmtree(out_path, ignore_errors=True)
 
 
 # do_not_run
@@ -253,7 +253,7 @@ class TestMCTResults(TestTSSResults):
     ###########################################
     # test results of MCT+KIN routing
     def test_MCT_6h(self):
-        self.run_mct("02/01/2016 06:00", "02/03/2016 06:00", 21600, 21600,'6h')
+        self.run_mct("02/01/2016 06:00", "02/07/2016 06:00", 21600, 21600,'6h')
     def test_MCT_6h_1h(self):
         self.run_mct("02/01/2016 06:00", "02/07/2016 06:00", 21600, 3600,'6h_1h')
     def test_MCT_daily(self):

@@ -876,16 +876,12 @@ class routing(HydroModule):
                     (self.var.ChanQAvgDt < 0.1 * self.var.ChanQ)
                 )
                 self.var.ChanQAvgDt = np.where(mct_avg_too_small, self.var.ChanQ, self.var.ChanQAvgDt)
-                if np.any(mct_avg_too_small)>0:
-                    print("small", np.sum(mct_avg_too_small))
                 # Case 2: ChanQAvgDt too large relative to ChanQ (flood recession / cold start)
                 mct_avg_too_large = (
                     self.var.IsChannelMCT &
                     (self.var.ChanQAvgDt > 0.1) &
                     (self.var.ChanQ < 0.1 * self.var.ChanQAvgDt)
                 )
-                if np.any(mct_avg_too_large)>0:
-                    print("large", np.sum(mct_avg_too_large)) 
                 self.var.ChanQAvgDt = np.where(mct_avg_too_large, self.var.ChanQ, self.var.ChanQAvgDt)
                 # Check Q Differences due to clamping
                 if option['repMBTs'] and option['MCTRouting']:
@@ -896,7 +892,6 @@ class routing(HydroModule):
                     delta_avg2[self.var.AtLastPointC == 0] = 0
                     delta_outlet = np.take(np.bincount(self.var.Catchments,weights=delta_avg2 * self.var.DtRouting),self.var.Catchments)
                     self.var.delta_outlet_total += delta_outlet
-                    print("Stefania: ", np.sum((delta_avg * self.var.DtRouting)),"------Stefania 2:", delta_outlet[0])
 
                 # if 95 <= self.var.currentStep <= 110:
                 #     mct_pixels = self.var.IsChannelMCT

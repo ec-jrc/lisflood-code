@@ -1,8 +1,8 @@
-timeseries valuescale.scalar settingsfile: /hdd2/releases/lisflood_mct_optim/lisflood-code/tests/data/LF_MCT_UseCase/settings/mct_cold.xml_1eb18d4a-321e-4ad7-86f9-3de24251045e.xml date: Tue May 13 10:07:55 2025
+timeseries valuescale.scalar settingsfile: /scratch/schafti/00_LISFDLOOD_Dev/02_mct_routing/lisflood-code/tests/data/LF_MCT_UseCase/settings/mct_cold.xml_a24b6cb5-48f0-46c6-a871-20842f1140a7.xml date: Fri Jun 12 16:41:02 2026
 2
 timestep
 1
-        1    -0.00556932
+        1        -129013
         2    -0.00556932
         3    -0.00556932
         4    -0.00556932
@@ -38,7 +38,7 @@ timestep
        34    -0.00556932
        35    -0.00556932
        36    -0.00556932
-       37    -0.00556932
+       37        7664.37
        38    -0.00556932
        39    -0.00556932
        40    -0.00556932
@@ -133,7 +133,7 @@ timestep
       129    -0.00556932
       130    -0.00556932
       131    -0.00556932
-      132    -0.00556932
+      132        17829.2
       133    -0.00556932
       134    -0.00556932
       135    -0.00556932
@@ -164,7 +164,7 @@ timestep
       160    -0.00556932
       161    -0.00556932
       162    -0.00556932
-      163    -0.00556932
+      163        9808.17
       164    -0.00556932
       165    -0.00556932
       166    -0.00556932
