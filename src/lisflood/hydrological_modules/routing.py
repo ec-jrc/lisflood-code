@@ -189,7 +189,7 @@ class routing(HydroModule):
 
                 self.var.IsChannelMCTPcr = boolean(loadmap('ChannelsMCT', pcr=True))  # pcr
                 # load mask of MCT river grid cells
-                self.var.IsChannelMCT = np.bool8(compressArray(self.var.IsChannelMCTPcr))  # bool
+                self.var.IsChannelMCT = np.bool(compressArray(self.var.IsChannelMCTPcr))  # bool
 
                 # even if MCT is active, it should be deactivated if there is no MCT cell in the domain
                 if self.var.IsChannelMCT.sum() == 0:
@@ -203,11 +203,11 @@ class routing(HydroModule):
             self.var.IsChannelMCTPcr = boolean(decompress(self.var.IsChannelMCT))       # pcr
             # Identify channel pixels where Muskingum-Cunge-Todini is used
 
-            self.var.mctmask = np.bool8(pcr2numpy(self.var.IsChannelMCTPcr,0))
+            self.var.mctmask = np.bool(pcr2numpy(self.var.IsChannelMCTPcr,0))
             # Create a mask with cells using MCT
 
             self.var.IsChannelKinematicPcr = (self.var.IsChannelPcr == 1) & (self.var.IsChannelMCTPcr == 0)  #pcr
-            self.var.IsChannelKinematic = np.bool8(compressArray(self.var.IsChannelKinematicPcr))   #np
+            self.var.IsChannelKinematic = np.bool(compressArray(self.var.IsChannelKinematicPcr))   #np
             # Identify channel pixels where Kinematic wave is used instead of MCT
 
 
