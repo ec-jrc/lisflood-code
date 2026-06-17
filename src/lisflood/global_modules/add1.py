@@ -523,6 +523,7 @@ def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averagey
                 mapnp[mapnp < 0] = -99
                 map = numpy2pcr(Nominal, mapnp, -99)
             elif checkint == "uint8":
+                mapnp[np.isnan(mapnp)] = 255
                 map = numpy2pcr(Scalar, mapnp, 255)
             else:
                 mapnp[np.isnan(mapnp)] = -9999
