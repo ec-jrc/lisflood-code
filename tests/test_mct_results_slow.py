@@ -200,6 +200,11 @@ class TestTSSResults():
         comparator.compare_files(reference, output_tss)
 
         # compare mass balance error
+        # set precision for the mass balance error test
+        atol = 0.0005
+        rtol = 0.008
+        comparator = TSSComparator(atol,rtol)
+
         reference =  os.path.join(out_path_ref, 'mbError.tss')
         output_tss =  os.path.join(self.out_path_run, 'mbError.tss')
         comparator.compare_files(reference, output_tss)

@@ -243,7 +243,7 @@ def loadsetclone(name):
         raise LisfloodError("Maskmap: {} is not a valid mask map nor valid coordinates".format(name))
     _ = MaskAttrs(uuid.uuid4())  # init maskattrs
     # convert numpy map to 8bit
-    maskarea = np.bool8(mapnp)
+    maskarea = np.bool(mapnp)
     #check ldd map by maskchkarea map
     maskchkarea = np.logical_not(maskarea)
     _ = MaskAreaInfo(maskchkarea, map_out)  # MaskAreaInfo init here
@@ -520,8 +520,11 @@ def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averagey
                 mapnp[mapnp.mask] = -9999
                 map = numpy2pcr(Nominal, mapnp, -9999)
             elif checkint == "int8":
-                mapnp[mapnp < 0] = -9999
-                map = numpy2pcr(Nominal, mapnp, -9999)
+                mapnp[mapnp < 0] = -99
+                map = numpy2pcr(Nominal, mapnp, -99)
+            elif checkint == "uint8":
+                mapnp[np.isnan(mapnp)] = 255
+                map = numpy2pcr(Scalar, mapnp, 255)
             else:
                 mapnp[np.isnan(mapnp)] = -9999
                 map = numpy2pcr(Scalar, mapnp, -9999)

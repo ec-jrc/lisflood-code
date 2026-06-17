@@ -2,7 +2,7 @@ name: lisflood
 channels:
   - conda-forge
 dependencies:
-  - python=3.8
+  - python>=3.10
   - pcraster
-  - gdal<=3.5.3
+  - gdal
   - pip
