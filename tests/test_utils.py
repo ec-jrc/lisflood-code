@@ -72,7 +72,8 @@ def mk_path_out(p):
     path_out = os.path.join(os.path.dirname(__file__), p)
     if os.path.exists(path_out):
         shutil.rmtree(path_out)
-    os.mkdir(path_out)
+    if not os.path.exists(path_out):
+        os.mkdir(path_out)
     return path_out
 
 

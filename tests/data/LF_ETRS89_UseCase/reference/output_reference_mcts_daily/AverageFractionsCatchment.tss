@@ -1,4 +1,4 @@
-timeseries valuescale.scalar settingsfile: /hdd2/releases/lisflood_mct_optim/lisflood-code/tests/data/LF_ETRS89_UseCase/settings/mct_cold.xml_2206a935-4d9e-4084-9547-b6439d8d10c8.xml date: Tue May 13 11:11:45 2025
+timeseries valuescale.scalar settingsfile: /scratch/schafti/00_LISFDLOOD_Dev/02_mct_routing/lisflood-code/tests/data/LF_ETRS89_UseCase/settings/mct_cold.xml_d10349d0-5b31-4c30-b397-943c18e3b587.xml date: Mon Jun 15 14:49:10 2026
 2
 timestep
 1
