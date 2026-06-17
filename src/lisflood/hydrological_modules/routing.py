@@ -50,7 +50,8 @@ class routing(HydroModule):
                                 'ChanBottomWMult', 'ChanDepthTMult', 'ChanSMult'],
                         'SplitRouting': ['CrossSection2AreaInitValue', 'PrevSideflowInitValue', 'CalChanMan2'],
                         'dynamicWave': ['ChannelsDynamic'],
-                        'MCTRouting': ['ChannelsMCT', 'ChanGradMaxMCT', 'PrevCmMCTInitValue', 'PrevDmMCTInitValue', 'CalChanMan3']}
+                        'MCTRouting': ['ChannelsMCT', 'ChanGradMaxMCT', 'PrevCmMCTInitValue', 'PrevDmMCTInitValue', 'CalChanMan3'],
+                        'simulateCalibrationPoints': ['CalibrationPoints']}
     module_name = 'Routing'
 
     def __init__(self, routing_variable):
@@ -140,6 +141,7 @@ class routing(HydroModule):
         self.var.LddToChan = lddrepair(ifthenelse(self.var.IsChannelPcr, 5, self.var.Ldd)) #pcr
         self.var.LddToChanNp=compressArray(self.var.LddToChan)  #np
         # Routing of runoff (incl. groundwater) to the river channel
+        # LDD for routing runoff (incl. groundwater) to the channel
 
         if option['dynamicWave']:
             pass
@@ -173,6 +175,45 @@ class routing(HydroModule):
             # For all routing options (kinematic, split and MCT)
             self.var.LddKinematic = self.var.LddChan
             self.var.LddKinematicNp = compressArray(self.var.LddKinematic)  # np
+
+
+        # At this point, LddChan and LddKinematic do not have sinks at reservoirs/lakes or MCT headwater and MCT confluences
+        # LddMCT does not exist yet
+
+        # ************************************************************
+        # ***** MCT DRAINAGE NETWORK GEOMETRY - LDD  *****************
+        # ************************************************************
+
+        # This is done here to be able to add MCT headwater pixels to structures
+        if option['MCTRouting']:
+
+                self.var.IsChannelMCTPcr = boolean(loadmap('ChannelsMCT', pcr=True))  # pcr
+                # load mask of MCT river grid cells
+                self.var.IsChannelMCT = np.bool8(compressArray(self.var.IsChannelMCTPcr))  # bool
+
+                # even if MCT is active, it should be deactivated if there is no MCT cell in the domain
+                if self.var.IsChannelMCT.sum() == 0:
+                    warnings.warn(LisfloodWarning('There are no MCT grid cell. MCT routing is deactivated'))
+                    option['MCTRouting'] = False
+                    # rebuild lists of reported files with MCTRouting = False
+                    settings.build_reportedmaps_dicts()
+
+        if option['MCTRouting'] and not option['InitLisflood']:
+
+            self.var.IsChannelMCTPcr = boolean(decompress(self.var.IsChannelMCT))       # pcr
+            # Identify channel pixels where Muskingum-Cunge-Todini is used
+
+            self.var.mctmask = np.bool8(pcr2numpy(self.var.IsChannelMCTPcr,0))
+            # Create a mask with cells using MCT
+
+            self.var.IsChannelKinematicPcr = (self.var.IsChannelPcr == 1) & (self.var.IsChannelMCTPcr == 0)  #pcr
+            self.var.IsChannelKinematic = np.bool8(compressArray(self.var.IsChannelKinematicPcr))   #np
+            # Identify channel pixels where Kinematic wave is used instead of MCT
+
+
+        # ************************************************************
+        # ***** MCT DRAINAGE NETWORK GEOMETRY - LDD  *****************
+        # ************************************************************
 
         self.var.AtLastPoint = boolean(pit(self.var.Ldd))    #pcr
         # Assign True to each of the grid cells where there are outlet points
@@ -247,6 +288,10 @@ class routing(HydroModule):
         BankFullPerc = loadmap('BankFullPerc')
         TotalCrossSectionAreaHalfBankFull = BankFullPerc * self.var.TotalCrossSectionAreaBankFull
         # set BankFullPerc to 0.5 for half bankfull
+
+        # Channel volume initialization for MCT cells
+        # TotalCrossSectionAreaHalfBankFull = np.where(self.var.IsChannelKinematic, TotalCrossSectionAreaHalfBankFull, 0.01 * self.var.TotalCrossSectionAreaBankFull)
+        # set initial volume in MCT cells to 1% of bankfull
 
         TotalCrossSectionAreaInitValue = loadmap('TotalCrossSectionAreaInitValue')
         self.var.TotalCrossSectionArea = np.where(TotalCrossSectionAreaInitValue == -9999, TotalCrossSectionAreaHalfBankFull, TotalCrossSectionAreaInitValue)
@@ -459,7 +504,7 @@ class routing(HydroModule):
                 # Over bankful discharge starts at QLimit
                 # lower discharge limit for second line of routing
                 # set to multiple of average discharge (map from prerun)
-                # QSplitMult =2 is around 90 to 95% of Q
+                # QSplitMult = 2 is around 90 to 95% of Q
 
                 self.var.QLimit = loadmap_base('AvgDis') * loadmap('QSplitMult')
                 # Using loadmap_base function as we don't want to cache avgdis in the calibration
@@ -486,7 +531,15 @@ class routing(HydroModule):
                 # Total (virtual) outflow from river channel when second routing line is active (= using increased Manning coeff 2)
                 self.var.ChanQKin = (self.var.ChanM3Kin * self.var.InvChanLength * self.var.InvChannelAlpha) ** (self.var.InvBeta)
                 # (Real) outflow from main channel when second line of routing is active (= using riverbed Manning coeff 2)
-
+        
+    def initialKinematicWave(self):
+        """ Initialization of the parallel kinematic wave router for Kinematic routing and SplitRouting:
+        main channel-only routing if self.var.ChannelAlpha2 is None; else split-routing(main channel + floodplains).
+        Initialization uses LDD for kinematic routing (LddKinematic)
+        """
+        settings = LisSettings.instance()
+        option = settings.options
+        flags = settings.flags
 
         # ************************************************************
         # ***** INITIALISE PARALLEL KINEMATIC WAVE ROUTER ************
@@ -505,7 +558,7 @@ class routing(HydroModule):
         if option['InitLisflood'] and option['repMBTs']:
             # Calculate initial water storage in rivers (no lakes no reservoirs)
             # self.var.StorageStepINIT= self.var.ChanM3Kin
-            self.var.StorageStepINIT = self.var.ChanM3
+            self.var.StorageStepINIT = self.var.ChanM3.copy()
             # Initial water volume in river channels
             self.var.DischargeM3StructuresIni = maskinfo.in_zero()
             if option['simulateReservoirs']:
@@ -515,7 +568,7 @@ class routing(HydroModule):
             self.var.StorageStepINIT = np.take(np.bincount(self.var.Catchments, weights=self.var.StorageStepINIT), self.var.Catchments)
 
         if not option['InitLisflood'] and option['repMBTs']:
-           self.var.StorageStepINIT = self.var.ChanM3
+           self.var.StorageStepINIT = self.var.ChanM3.copy()
            # DisStructure = np.where(self.var.IsUpsOfStructureKinematicC, self.var.ChanQ * self.var.DtRouting, 0)
            DisStructure = np.where(self.var.IsUpsOfStructureChanC, self.var.ChanQ * self.var.DtRouting, 0)
            if not(option['SplitRouting']):
@@ -554,28 +607,13 @@ class routing(HydroModule):
         # ***** INITIALISATION FOR MCT ROUTING            ************
         # ************************************************************
 
-        # even if MCT is active, it should be deactivated if there is no MCT cell in the domain
-        if option['MCTRouting']:
-            self.var.IsChannelMCTPcr = boolean(loadmap('ChannelsMCT', pcr=True))   #pcr
-            self.var.IsChannelMCT = np.bool8(compressArray(self.var.IsChannelMCTPcr))   #bool
-            if self.var.IsChannelMCT.sum()==0:
-                warnings.warn(LisfloodWarning('There are no MCT grid cell. MCT routing is deactivated'))
-                option['MCTRouting'] = False
-                # rebuild lists of reported files with MCTRouting = False
-                settings.build_reportedmaps_dicts()
         
         if option['MCTRouting'] and not option['InitLisflood']:
             maskinfo = MaskInfo.instance()
 
-            self.var.IsChannelMCTPcr = boolean(decompress(self.var.IsChannelMCT))       # pcr
-            # Identify channel pixels where Muskingum-Cunge-Todini is used
-
-            self.var.mctmask = np.bool8(pcr2numpy(self.var.IsChannelMCTPcr,0))
-            # Create a mask with cells using MCT
-
-            self.var.IsChannelKinematicPcr = (self.var.IsChannelPcr == 1) & (self.var.IsChannelMCTPcr == 0)  #pcr
-            self.var.IsChannelKinematic = np.bool8(compressArray(self.var.IsChannelKinematicPcr))   #np
-            # Identify channel pixels where Kinematic wave is used instead of MCT
+            # self.var.IsChannelKinematicPcr = (self.var.IsChannelPcr == 1) & (self.var.IsChannelMCTPcr == 0)  #pcr
+            # self.var.IsChannelKinematic = np.bool8(compressArray(self.var.IsChannelKinematicPcr))   #np
+            # # Identify channel pixels where Kinematic wave is used instead of MCT
 
             self.var.LddMCT = lddmask(self.var.LddChan, self.var.IsChannelMCTPcr)  #pcr
             # Ldd for MCT routing
@@ -591,7 +629,6 @@ class routing(HydroModule):
             self.var.ChanGrad[MCT_slope_mask] = ChanGradMaxMCT
             # set max channel slope for MCT pixels
 
-            # cmcheck
             # This could become a calibration parameter if we want to use MCT+SplitRouting
             self.var.ChanManMCT = (self.var.ChanMan / self.var.CalChanMan) * loadmap('CalChanMan3')
             # Mannings coefficient for MCT pixels (same as second line of split routing)
@@ -604,10 +641,27 @@ class routing(HydroModule):
             # Reynolds number (Dm) for MCT at previous time step t0
 
             # ************************************************************
+            # ***** CALIBRATION POINTS                            ********
+            # ************************************************************
+            CalibPoints = maskinfo.in_zero()
+            if option['simulateCalibrationPoints']:
+                CalibPoints = loadmap('CalibrationPoints')  # 1D array size all catchment pixels
+                # read location of calibration points
+
+            inAr = np.arange(maskinfo.info.mapC[0], dtype="int32")  # np
+            # Assign a number to each non-missing pixel as cell id, by row starting from 0
+            CalibPointsIds = inAr[CalibPoints > 0]
+            # pixel id of calibration points
+
+
+            # ************************************************************
             # ***** INITIALISE MUSKINGUM-CUNGE-TODINI WAVE ROUTER ********
             # ************************************************************
             mct_ldd = self.compress_mct(compressArray(self.var.LddMCT))
             # Compress LddMCT to array with MCT pixels only
+
+            # mct_CalInflowPoints = self.compress_mct(self.var.CalInflowPoints)
+            # # Compress CalInflowPoints to array with MCT pixels only
 
             mapping_mct = self.compress_mct(range(len(self.var.ChanLength)))
             # create mapping from global domain pixels index to MCT pixels index
@@ -622,7 +676,8 @@ class routing(HydroModule):
                 self.var.ChanSdXdY,         # Riverbed side slope
                 self.var.DtRouting,         # computation time step for routing [s]
                 self.river_router,          # class
-                mapping_mct                 # MCT pixels mapping
+                mapping_mct,                 # MCT pixels mapping
+                CalibPointsIds,                # id of calibrationn points in full LDD
             )
 
 
@@ -702,7 +757,7 @@ class routing(HydroModule):
              else:
                  self.var.AddedTRUN += np.take(np.bincount(self.var.Catchments, weights=self.var.ToChanM3RunoffDt.copy()),self.var.Catchments)
                  if option['inflow']:
-                     self.var.AddedTRUN += np.take(np.bincount(self.var.Catchments, weights=self.var.QInDt),self.var.Catchments) 
+                     self.var.AddedTRUN += np.take(np.bincount(self.var.Catchments, weights=self.var.QInDt),self.var.Catchments)
                  if option['openwaterevapo']:
                      self.var.AddedTRUN -= np.take(np.bincount(self.var.Catchments, weights=self.var.EvaAddM3Dt.copy()),self.var.Catchments)
                  if option['wateruse']:
@@ -782,9 +837,6 @@ class routing(HydroModule):
                 # First, Kinematic/Split routing is solved on all pixels (including MCT pixels) then results are updated
                 # for the MCT pixels.
                 
-                # Sideflow contribution to MCT grid cells expressed in [m3/s]
-                SideflowChanMCT = np.where(self.var.IsChannelMCT, SideflowChanM3 * self.var.InvDtRouting, 0)  #Ql
-
                 # Grab outflow at the end of the previous routing step t for all pixels) - current state of the MCT pixel
                 ChanQ_0 = self.var.ChanQ.copy()     # Outflow (x+dx) at time t (end of previous routing step) (instant)  -> used to calc q00
                 ChanM3_0 = self.var.ChanM3.copy()   # Channel storage at time t (end of previous routing step) (instant) V00
@@ -794,6 +846,10 @@ class routing(HydroModule):
                 self.var.ChanQ = ChanQ              # -> used to calc q01
                 self.var.ChanM3 = ChanM3
                 self.var.ChanQAvgDt = ChanQAvgDt    # -> used to calc q0m
+
+                # Sideflow contribution to MCT grid cells expressed in [m3/s]
+                SideflowChanMCT = np.where(self.var.IsChannelMCT, SideflowChanM3 * self.var.InvDtRouting, 0)  #Ql
+                # SideflowChanMCTM3 = np.where(self.var.IsChannelMCT, SideflowChanM3, 0)
 
                 # Solve MCT routing and update current state at MCT pixels
                 self.mct_river_router.routing(
@@ -807,6 +863,34 @@ class routing(HydroModule):
                     self.var.PrevDm0,       # Reynolds number in input: at time t; in output: at time t+dt
                     self.var.ChanM3         # Channel storage volume. In input: at time t V00; in output: at time t+dt V11
                 )
+
+                # Save the original ChanQAvgDt before correction so we can compute the delta
+                if option['repMBTs'] and option['MCTRouting']:
+                    ChanQAvgDt_old = self.var.ChanQAvgDt.copy()
+
+                # Case 1: ChanQAvgDt too small relative to ChanQ (flood arrival)
+                mct_avg_too_small = (
+                    self.var.IsChannelMCT &
+                    (self.var.ChanQ > 0.1) &
+                    (self.var.ChanQAvgDt < 0.1 * self.var.ChanQ)
+                )
+                self.var.ChanQAvgDt = np.where(mct_avg_too_small, self.var.ChanQ, self.var.ChanQAvgDt)
+                # Case 2: ChanQAvgDt too large relative to ChanQ (flood recession / cold start)
+                mct_avg_too_large = (
+                    self.var.IsChannelMCT &
+                    (self.var.ChanQAvgDt > 0.1) &
+                    (self.var.ChanQ < 0.1 * self.var.ChanQAvgDt)
+                )
+                self.var.ChanQAvgDt = np.where(mct_avg_too_large, self.var.ChanQ, self.var.ChanQAvgDt)
+                # Check Q Differences due to clamping
+                if option['repMBTs'] and option['MCTRouting']:
+                    delta_avg = self.var.ChanQAvgDt - ChanQAvgDt_old
+                    self.var.delta_avg_total += delta_avg * self.var.DtRouting
+                    # averge outflow during model time step
+                    delta_avg2 = delta_avg.copy()
+                    delta_avg2[self.var.AtLastPointC == 0] = 0
+                    delta_outlet = np.take(np.bincount(self.var.Catchments,weights=delta_avg2 * self.var.DtRouting),self.var.Catchments)
+                    self.var.delta_outlet_total += delta_outlet
 
                 ##################################################################3
                 if flags['debug']:

@@ -169,7 +169,7 @@ class TestCatch(ETRS89TestCase):
         # init files from .../LF_ETRS89_UseCase/maps/safe_init
         # "AvgDis" value="$(PathRoot)/maps/safe_init/avgdis"
         # "LZAvInflowMap" value="$(PathRoot)/maps/safe_init/lzavin"
-        output_dir = mk_path_out(os.path.join(self.case_dir, 'out/test_results{}'.format(dt_sec)))
+        output_dir = mk_path_out(os.path.join(self.case_dir, 'out/test_results_wb{}'.format(dt_sec)))
         opts_to_unset = (
             'wateruse','riceIrrigation','groundwaterSmooth'
         )

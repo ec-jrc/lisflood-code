@@ -20,11 +20,13 @@ class MCTWave:
             dt,                         # computation time step for routing [s]
             river_router,               # class
             mapping_mct,                # MCT pixels mapping
+            CalibPointsIds,             # calibration points pixels ids
         ):
 
         # Process flow direction matrix: downstream and upstream lookups, and routing orders
         flow_dir = decodeFlowMatrix(rebuildFlowMatrix(compressed_encoded_ldd, land_mask))
         self.downstream_lookup, self.upstream_lookup = streamLookups(flow_dir, land_mask)
+        # Inside streamLookups each land_mask pixel is assigned a unique id from 0 to numpix-1, numbered by row
         self.num_upstream_pixels = (self.upstream_lookup != -1).sum(1).astype(int) # astype for cython import in windows (to avoid 'long long' buffer dtype mismatch)
         # Routing order: decompose domain into batches; within each batch, pixels can be routed in parallel
         self._setMCTRoutingOrders()
@@ -37,6 +39,7 @@ class MCTWave:
         self.dt = dt
         self.river_router = river_router
         self.mapping_mct = mapping_mct
+        self.CalibPointsIds = CalibPointsIds
 
 
     def _setMCTRoutingOrders(self):
@@ -103,6 +106,7 @@ class MCTWave:
             PrevCm0,            # Courant number in input: at time t; in output: at time t+dt
             PrevDm0,            # Reynolds number in input: at time t; in output: at time t+dt
             ChanM3,             # V11 as output
+            self.CalibPointsIds,# inflow points used by the calibration suite
         )
 
 
@@ -130,6 +134,7 @@ def mct_routing(
     PrevCm0,        # Courant number in input: at time t; in output: at time t+dt
     PrevDm0,        # Reynolds number in input: at time t; in output: at time t+dt
     ChanM3,         # V11 as output
+    CalibPointsIds, # inflow points used by the calibration suite
 ):
     """This function implements Muskingum-Cunge-Todini routing method
     MCT routing is calculated on MCT pixels only but gets inflow from both Kinematic/Split and MCT upstream pixels.
@@ -160,6 +165,7 @@ def mct_routing(
             mctpix = mct_pixels_ordered[index]
             # Find the corresponding pixel id in the full LDD
             kinpix = mapping_mct[mctpix]
+
             # Find id of upstream contributing pixels (from full LDD)
             upstream_pixels = upstream_lookup[kinpix]
 
@@ -167,11 +173,23 @@ def mct_routing(
             q00 = 0.0
             q0m = 0.0
             q01 = 0.0
+
+            ql = SideflowChanMCT[kinpix]   # ← ql defined BEFORE the loop
+
             for ups_ix in range(num_upstream_pixels[kinpix]):
                 ups_pix = upstream_pixels[ups_ix]   # upstream pixel id
-                q00 += ChanQ_0[ups_pix]     # Inflow (x) to the pixel at previous step t (instant)
-                q0m += ChanQAvgDt[ups_pix]  # Average inflow (x) to the pixel at previous step t (average)
-                q01 += ChanQ[ups_pix]       # Inflow (x) at current step t+dt (instant)
+                #####################################################################################################
+                # This is necessary for EFAS6/GloFAs5 calibration
+                if np.any(CalibPointsIds == ups_pix):
+                    # this upstream pixel is a calibration point - add to sideflow
+                    ql += ChanQAvgDt[ups_pix]   # avoid += 
+                    # Sideflow during step dt including contribution from calibration pixel
+                else:
+                    # not a calibration point - go as usual
+                    q00 += ChanQ_0[ups_pix]  # Inflow (x) to the pixel at previous step t (instant)
+                    q0m += ChanQAvgDt[ups_pix]  # Average inflow (x) to the pixel at previous step t (average)
+                    q01 += ChanQ[ups_pix]  # Inflow (x) at current step t+dt (instant)
+                #####################################################################################################
 
             # get outflow from the pixel at previous step t
             q10 = ChanQ_0[kinpix]   # Outflow (x+dx) from the pixel at previous step t (instant)
@@ -181,7 +199,7 @@ def mct_routing(
             Cm0 = PrevCm0[kinpix]   # Courant number at the end of previous step t
             Dm0 = PrevDm0[kinpix]   # Reynolds number at the end of previous step t
 
-            ql = SideflowChanMCT[kinpix]    # Sideflow during step dt
+            # ql = SideflowChanMCT[kinpix]    # Sideflow during step dt
 
             # static data
             xpix = ChanLength[kinpix]                   # Channel length
@@ -243,8 +261,8 @@ def MCTRouting_single(
 
     # check for negative and zero discharge values
     # zero outflow is not allowed
-    if q11 < 0:  # cmcheck <=0  #tpk
-        q11 = 0                 #tpk
+    if q11 < 0:  # cmcheck <=0  
+        q11 = 0                 
 
     # calc reference discharge at time t
     # qm0 = (I(t)+O(t))/2
@@ -255,14 +273,14 @@ def MCTRouting_single(
 
         # reference I discharge at x=0
         qmx0 = (q00 + q01) / 2.0
-        if qmx0 <= eps :  # cmcheck ==0   #tpk
-            qmx0 = eps                  #tpk
+        if qmx0 <= eps :  # cmcheck ==0   
+            qmx0 = eps                  
         hmx0 = hoq(qmx0, s0, Balv, ANalv, Nalv)
 
         # reference O discharge at x=1
         qmx1 = (q10 + q11) / 2.0
-        if qmx1 <= eps:  # cmcheck ==0    #tpk
-            qmx1 = eps                  #tpk
+        if qmx1 <= eps:  # cmcheck ==0    
+            qmx1 = eps                  
         hmx1 = hoq(qmx1, s0, Balv, ANalv, Nalv)
 
         # Calc riverbed slope correction factor
@@ -275,13 +293,13 @@ def MCTRouting_single(
         # Q(t+dt)=(I(t+dt)+O'(t+dt))/2
         qm1 = (q01 + q11) / 2.0
         # cm
-        if qm1 <= eps :  # cmcheck ==0     #tpk
-            qm1 = eps                   #tpk
+        if qm1 <= eps :  # cmcheck ==0     
+            qm1 = eps                   
         # cm
         hm1 = hoq(qm1, s0, Balv, ANalv, Nalv)
         dummy, Ax1, Bx1, Px1, ck1 = qoh(hm1, s0, Balv, ANalv, Nalv)
-        if ck1 <= eps:    #tpk
-            ck1 = eps   #tpk
+        if ck1 <= eps:    
+            ck1 = eps   
 
         # Calc correcting factor Beta at time t+dt
         Beta1 = ck1 / (qm1 / Ax1)
@@ -291,21 +309,38 @@ def MCTRouting_single(
         Cm1 = ck1 * dt / xpix / Beta1
 
         # Calc MCT parameters
+        # Guard Diffusivity
         den = 1 + Cm1 + Dm1
+
         c1 = (-1 + Cm1 + Dm1) / den
-        c2 = (1 + Cm0 - Dm0) / den * (Cm1 / Cm0)
-        c3 = (1 - Cm0 + Dm0) / den * (Cm1 / Cm0)
+
+        # Guard against Cm0 near zero (first timestep or after dry conditions)
+        if Cm0 > eps:
+            cm_ratio = Cm1 / Cm0
+            if cm_ratio > 3.0:
+                cm_ratio = 3.0
+            elif cm_ratio < 0.1:
+                cm_ratio = 0.1
+        else:
+            cm_ratio = 1.0
+
+        c2 = (1 + Cm0 - Dm0) / den * cm_ratio
+        c3 = (1 - Cm0 + Dm0) / den * cm_ratio
         c4 = (2 * Cm1) / den
 
-        # cmcheck
         # Calc outflow q11 at time t+1
         # Mass balance equation without lateral flow
         # q11 = c1 * q01 + c2 * q00 + c3 * q10
         # Mass balance equation that takes into consideration the lateral flow
         q11 = c1 * q01 + c2 * q00 + c3 * q10 + c4 * ql
+            
+        if q11 < 0:  
+            q11 = 0                 
 
-        if q11 < 0:  # cmcheck <=0  #tpk
-            q11 = 0                 #tpk
+        # mass-balance upper bound
+        max_q11 = q01 + q00 + abs(ql) + V00 / dt
+        if q11 > max_q11:
+            q11 = max_q11
 
         #### end of for loop
 
@@ -327,8 +362,8 @@ def MCTRouting_single(
         V11 = (1 - Dm1) * dt / (2 * Cm1) * q01 + (1 + Dm1) * dt / (2 * Cm1) * q11
         # V11 = k1 * (x1 * q01 + (1. - x1) * q11) # MUST be the same as above!
 
-    if V11 < 0 :    #tpk
-        V11 = 0     #tpk
+    if V11 < 0 :    
+        V11 = 0     
 
     ### calc integration on the control volume (pixel)
     # calc average discharge outflow q1m for MCT channels during routing sub step dt
