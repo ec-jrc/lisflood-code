@@ -14,10 +14,11 @@ A OS LISFLOOD simulation requires at least a prerun and a cold start. In some ca
 
 
 In this page we will:
-  1. [demonstrate the effect of the model's initial states on simulation results](../3_step5_model-initialisation/index.md#the-impact-of-the-model-initial-state-on-simulation-results)
-  2. [explain the theory of initialisation and the steady-state storage concept](../3_step5_model-initialisation/index.md#the-theory-of-initialisation-and-the-steady-state-storage-concept)
-  3. [explain how to run the pre-run (initialization) for kinematic (kinematic and diffusive) and split routing (split routing and diffusive) routing configurations](../3_step5_model-initialisation/index.md#set-up-of-a-lisflood-prerun)
-  4. [describe how to complete the initialisation in temporal chunks when needed](../3_step5_model-initialisation/index.md#set-up-of-a-lisflood-prerun-in-temporal-chunks)
+
+  1. [demonstrate the effect of the model's initial states on simulation results](../3_step4_model-initialisation/index.md#the-impact-of-the-model-initial-state-on-simulation-results)
+  2. [explain the theory of initialisation and the steady-state storage concept](../3_step4_model-initialisation/index.md#the-theory-of-initialisation-and-the-steady-state-storage-concept)
+  3. [explain how to run the pre-run (initialization) for kinematic (kinematic and diffusive) and split routing (split routing and diffusive) routing configurations](../3_step4_model-initialisation/index.md#setting-up-of-a-lisflood-prerun)
+  4. [describe how to complete the initialisation in temporal chunks when needed](../3_step4_model-initialisation/index.md#setting-up-of-a-lisflood-prerun-in-temporal-chunks)
  
  
 
@@ -61,7 +62,7 @@ To by-pass the need for excessively long spin-up periods, LISFLOOD is capable of
 
 The following paragraphs explain how the analytical solutions can be used to leverage on the **outputs of a OS LISFLOOD prerun** to adequately initialize volumetric soil moisture content and lower groundwater zone water content of a **OS LISFLOOD cold start**.
 
-The complete list of initial state values for a **OS LISFLOOD prerun** is presented [here](https://github.com/ec-jrc/lisflood-code/blob/feature/docs/docs/3_step3_preparing-setting-file/index.md#initial-conditions-os-lisflood-prerun-cold-start-warm-start). The only relevant outputs of the OS LISFLOOD prerun are:
+The complete list of initial state values for a **OS LISFLOOD prerun** is presented [here](../3_step2_preparing-setting-file/index.md#initial-conditions-os-lisflood-prerun-cold-start-warm-start). The only relevant outputs of the OS LISFLOOD prerun are:
 - end states of volumetric soil content and upper groundwater zone water content;
 - average fluxes values (from upper to lower soil layer, net inflow to the lower groundwater zone);
 - average discharge (when using SplitRouting).

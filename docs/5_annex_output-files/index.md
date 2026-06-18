@@ -172,7 +172,7 @@ To speed up the pre-run and to prevent that results are taken from the pre-run, 
 
 *LISFLOOD state maps* are the maps can be used to define the initial conditions of another simultion (warm start). These maps are written in output when 'repStateMaps' = 1.
 LISFLOOD writes the results for each computational time step.
-The complete list of state maps is available here https://ec-jrc.github.io/lisflood-code/5_annex_state-variables/ .
+The complete list of state maps is available [here](../5_annex_state-variables/index.md).
 
 The users should be aware that some state maps are generated only if the relevant option has been set to 1. For instance, LakePrevInflowState and LakePrevOutflowState can be generated only when 'simulateLakes' = 1. 
 

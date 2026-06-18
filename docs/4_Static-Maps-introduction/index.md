@@ -8,7 +8,7 @@ Maps can be elaborated with any GIS/remote sensing software. Examples in this gu
 
 ## Projection and file type
 
-All static input maps for LISFLOOD need to have the same model domain, projection, resolution – same number of columns and rows, and same grid of coordinates (i.e. all 4 corners of each pixel must have exactly the same coordinates in degrees or in meters, depending on the reference system). This is a strict requirement of the [LISFLOOD model](https://github.com/ec-jrc/lisflood-code) (here and below ‘the LISFLOOD model’ refers to the version 3.1.0) that at present cannot accept input maps at different spatial resolution or geographical extension.<br>
+All static input maps for LISFLOOD need to have the same model domain, projection, resolution – same number of columns and rows, and same grid of coordinates (i.e. all 4 corners of each pixel must have exactly the same coordinates in degrees or in meters, depending on the reference system). This is a strict requirement of the [LISFLOOD model](https://github.com/ec-jrc/lisflood-code).<br>
 All maps should be introduced in the model in NetCDF or PCRaster file format.
 This user guide provides the examples for the European and Global domains that are being used in EFAS and GloFAS models, respectively. The static fields structure for EFAS and GloFAS is the following:<br>
 

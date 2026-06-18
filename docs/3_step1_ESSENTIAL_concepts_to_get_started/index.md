@@ -15,15 +15,15 @@ In order the run a simulation you will need:
   -   An empty output directory where all model data can be written 
   -   OS LISFLOOD settings file in .xml format
 
-The section [Input files](../3_step4_preparing-input-files) provides a detailed description of input maps and tables.
+The section [Input files](../3_step3_preparing-input-files/index.md) provides a detailed description of input maps and tables.
 
-The settings file (settings.xml) allows the selection of input maps, modelling options, and output variables and storage folder. The settings .xml is the essential argument of OS LISFLOOD command line. The section below presents its main components, an in depth descrition is provided in the section [Step 2: Preparing the Settings file](..//3_step3_preparing-setting-file/).
+The settings file (settings.xml) allows the selection of input maps, modelling options, and output variables and storage folder. The settings .xml is the essential argument of OS LISFLOOD command line. The section below presents its main components, an in depth descrition is provided in the section [Step 2: Preparing the Settings file](../3_step2_preparing-setting-file/index.md).
 
 
 ## OS LISFLOOD settings file (settings.xml)
 
 
-All input files, output files, and parameter specifications are defined in a settings file. This file links variables and parameters in the model to in- and output files (maps, time series, tables) and numerical values. Moreover, the settings file can be used to specify the various model *options*. The settings file has a special (XML) structure. This page explains the general layout of the settings file; the section [Step 2: Preparing the Settings file](..//3_step3_preparing-setting-file/) provides an in-depth description of all the components of the file. 
+All input files, output files, and parameter specifications are defined in a settings file. This file links variables and parameters in the model to in- and output files (maps, time series, tables) and numerical values. Moreover, the settings file can be used to specify the various model *options*. The settings file has a special (XML) structure. This page explains the general layout of the settings file; the section [Step 2: Preparing the Settings file](../3_step2_preparing-setting-file/index.md) provides an in-depth description of all the components of the file. 
 
 A LISFLOOD settings file is made up of 3 elements, each of which has a specific function. 
 
@@ -55,7 +55,7 @@ The sections ‘lfuser’, ‘lfoptions’ and ‘lfbinding’' have different p
     If Users leave the ‘lfoptions’ element empty, LISFLOOD will simply run using default options (i.e. run model without optional modules; only report most basic output files). 
     However, the ‘lfoptions’ element itself (i.e. <lfoptions> </lfoptions>) has to be present, even if empty.
 
-    A comprehensive list of available options and default values is contained in the [Annex: settings and options](https://ec-jrc.github.io/lisflood-code/4_annex_settings_and_options/).
+    A comprehensive list of available options and default values is contained in the [Annex: settings and options](../5_annex_settings_and_options/index.md).
 
 
 + <span style="color:green"> **lfuser**</span> contains user-defined definition of **paths** to all in- and output files, and main model parameters (calibration + time-related).
@@ -114,7 +114,7 @@ In Settings file, three different keys are used to specify start date, end date 
 
 ### Using timestamps
 
-Timestamps  (dates) can be used to set start date and end date of LISFLOOD  simulation. Dates can be used for keys: StepStart, StepEnd and  timestepInit in Settings.xml file. ReportSteps can only be provided as time steps numbers and are referred to CalendarDayStart ([Step 2: Preparing the Settings file](..//3_step3_preparing-setting-file/) provides an in-depth description of the Settings.xml file). 
+Timestamps  (dates) can be used to set start date and end date of LISFLOOD  simulation. Dates can be used for keys: StepStart, StepEnd and  timestepInit in Settings.xml file. ReportSteps can only be provided as time steps numbers and are referred to CalendarDayStart ([Step 2: Preparing the Settings file](../3_step2_preparing-setting-file/index.md) provides an in-depth description of the Settings.xml file). 
 
 If hours:minutes are not specified, LISFLOOD will automatically set them to 00:00
 

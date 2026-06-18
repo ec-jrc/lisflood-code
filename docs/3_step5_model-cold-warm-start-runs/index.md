@@ -153,7 +153,7 @@ OS LISFLOOD "warm start" simulation resumes the computations from the end point 
 
 >Reminder: prerun, cold start, and warm start simulations must always share the same set of parameters.
 
-At the end of each model run, LISFLOOD writes maps of all internal state variables: the complete list of state variables is provided in [this Annex](../4_annex_state-variables). Two different sets of maps can be stored (simultaneously, in the output folder):
+At the end of each model run, LISFLOOD writes maps of all internal state variables: the complete list of state variables is provided in [this Annex](../5_annex_state-variables/index.md). Two different sets of maps can be stored (simultaneously, in the output folder):
 
 - End maps: NetCDF single maps containing internal state variables values for the last simulation timestep (*StepEnd*)
 - State maps: NetCDF stack maps containing internal state variables values for the *ReportSteps* period

@@ -18,7 +18,7 @@ The meteorological forcing variables are defined in *map stacks*. A *map stack* 
 
 Generally used prefixes for the meteorological forcings maps are: <br>
 + tp : total precipitation; units: mm/day.<br>
-+ ta : average temperature at 2m within the time computational step: degrees Celsius or Kelvin (the units must be specified in the [settings file](../3_step3_preparing-setting-file/))<br>
++ ta : average temperature at 2m within the time computational step: degrees Celsius or Kelvin (the units must be specified in the [settings file](../3_step2_preparing-setting-file/index.md))<br>
 + EW0 : reference value of evaporation from open water bodies; units: mm/day; these data can be prepared using [LISVAP](https://ec-jrc.github.io/lisflood-lisvap/).<br>
 + ES0 : reference value of evaporation from bare soil; units: mm/day; these data can be prepared using [LISVAP](https://ec-jrc.github.io/lisflood-lisvap/).<br>
 + ET0 : reference value of evapotranspiration; units: mm/day; these data can be prepared using [LISVAP](https://ec-jrc.github.io/lisflood-lisvap/).<br>
@@ -65,7 +65,7 @@ The values on both maps may vary in space. A limitation is that a pixel is alway
 <setoption choice="1" name="gridSizeUserDefined" \>
 ```
 
-LISFLOOD settings files and the use of options are explained in detail in a [dedicated chapter](https://ec-jrc.github.io/lisflood-code/3_step3_preparing-setting-file/) and [annex](https://ec-jrc.github.io/lisflood-code/4_annex_settings_and_options/) of this document.
+LISFLOOD settings files and the use of options are explained in detail in a [dedicated chapter](../3_step2_preparing-setting-file/index.md) and [annex](../5_annex_settings_and_options/index.md) of this document.
 
 
 #### Leaf area index maps 

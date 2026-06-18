@@ -62,7 +62,7 @@ Essential information are:
 
 1. reservoir unique identifier, selected by the user or taken from external datasets;
 2. Geographic oordinates of the reservoir outlet;
-3. Coordinates of the reservoir outlet mapped on OS LISFLOOD local drainage direction map  ([ldd](https://ec-jrc.github.io/lisflood-code/4_Static-Maps_topography/));
+3. Coordinates of the reservoir outlet mapped on OS LISFLOOD local drainage direction map  ([ldd](../4_Static-Maps_topography/index.md));
 4. Reservoir storage capacity;
 5. Reservoir normal outflow;
 6. Reservoir minimum ouflow;
@@ -82,7 +82,7 @@ Optional metadata are:
 
 The following paragraphs provide guidelines for the generation of the reservoir map and tables.
 
-Reservoir unique identifier (1) and coordinates of the outlet mapped on the OS LISFLOOD local drainage direction map  ([ldd](https://ec-jrc.github.io/lisflood-code/4_Static-Maps_topography/)) (3) are required to generate the reservoirs map. Geographic oordinates of the reservoirs outlet (2) and OS LISFLOOD local drainage direction map  ([ldd](https://ec-jrc.github.io/lisflood-code/4_Static-Maps_topography/)) are essential to generate (3). Adequate model representation requires the agreement between reservoir catchment area (7) and OS LISFLOOD [upstream area map](https://ec-jrc.github.io/lisflood-code/4_Static-Maps_topography/).
+Reservoir unique identifier (1) and coordinates of the outlet mapped on the OS LISFLOOD local drainage direction map  ([ldd](../4_Static-Maps_topography/index.md)) (3) are required to generate the reservoirs map. Geographic oordinates of the reservoirs outlet (2) and OS LISFLOOD local drainage direction map  ([ldd](../4_Static-Maps_topography/index.md)) are essential to generate (3). Adequate model representation requires the agreement between reservoir catchment area (7) and OS LISFLOOD [upstream area map](../4_Static-Maps_topography/index.md).
 
 Reservoir storage capcaity can be retrieved from local datasets or global datasets such as [GDW](https://www.globaldamwatch.org/grand).
 
@@ -119,7 +119,7 @@ Essential information are:
 
 1. Lake unique identifier, selected by the user or taken from external datasets;
 2. Geographic oordinates of the lake outlet;
-3. Coordinates of the lake outlet mapped on OS LISFLOOD local drainage direction map  ([ldd](https://ec-jrc.github.io/lisflood-code/4_Static-Maps_topography/));
+3. Coordinates of the lake outlet mapped on OS LISFLOOD local drainage direction map  ([ldd](../4_Static-Maps_topography/index.md));
 4. Lake surface area;
 5. Lake outlet width;
 6. Average inflow to the lake.
@@ -135,7 +135,7 @@ Optional metadata are:
 
 The following paragraphs provide guidelines for the generation of the lake map and tables.
 
-Lake unique identifier (1) and coordinates of the outlet mapped on the OS LISFLOOD local drainage direction map  ([ldd](https://ec-jrc.github.io/lisflood-code/4_Static-Maps_topography/)) (3) are required to generate the lake map. Geographic oordinates of the lake outlet (2) and OS LISFLOOD local drainage direction map  ([ldd](https://ec-jrc.github.io/lisflood-code/4_Static-Maps_topography/)) are essential to generate (3). Adequate model representation requires the agreement between lake catchment area (7) and OS LISFLOOD [upstream area map](https://ec-jrc.github.io/lisflood-code/4_Static-Maps_topography/).
+Lake unique identifier (1) and coordinates of the outlet mapped on the OS LISFLOOD local drainage direction map  ([ldd](../4_Static-Maps_topography/index.md)) (3) are required to generate the lake map. Geographic oordinates of the lake outlet (2) and OS LISFLOOD local drainage direction map  ([ldd](../4_Static-Maps_topography/index.md)) are essential to generate (3). Adequate model representation requires the agreement between lake catchment area (7) and OS LISFLOOD [upstream area map](../4_Static-Maps_topography/index.md).
 
 Lake surface area can be retrieved from local datasets or global datasets such as HydroLAKES](https://www.hydrosheds.org/products/hydrolakes), [GLWD](https://www.hydrosheds.org/products/glwd), [GRAND](https://www.globaldamwatch.org/grand).
 

@@ -78,12 +78,12 @@ The 'lfuser' section starts with a number of constants that are related to the s
 
 - **DtSecChannel** is the simulation time interval used by the kinematic wave channel routing (in seconds). Using a value that is smaller than **DtSec** may result in a better simulation of the overall shape the calculated hydrograph (at the expense of requiring more computing time).
 
-- **StepStart** is the date of the first time step in your simulation (defined according to [OS LISFLOOD time stamp convention](/2_ESSENTIAL_time-management/index.md)).
+- **StepStart** is the date of the first time step in your simulation (defined according to [OS LISFLOOD time stamp convention](../3_step1_ESSENTIAL_concepts_to_get_started/index.md#time-convention-within-os-lisflood-model)).
 
-- **StepEnd** is the date of the last time step in your simulation (defined according to [OS LISFLOOD time stamp convention](/2_ESSENTIAL_time-management/index.md)).
+- **StepEnd** is the date of the last time step in your simulation (defined according to [OS LISFLOOD time stamp convention](../3_step1_ESSENTIAL_concepts_to_get_started/index.md#time-convention-within-os-lisflood-model)).
 
 **ReportSteps** defines the time step number(s) at which the model state (i.e. all maps that you would need to define the initial conditions of a succeeding model run) is written. 
-Note that this option only impacts the output frequency of the model state variables (activated by the "repStateMaps" option), not to the auxiliary variables. The full list of the affected variables is [here](../4_annex_state-variables). You can define this parameter in the following ways:
+Note that this option only impacts the output frequency of the model state variables (activated by the "repStateMaps" option), not to the auxiliary variables. The full list of the affected variables is [here](../5_annex_state-variables/index.md). You can define this parameter in the following ways:
 
 1) **At specific time steps**. If you like to have the state maps being written at certain time steps you can define those in a (comma separated) list. For example if you like to have the state maps for the time steps 10, 20 and 40, you need to write:
 
@@ -520,7 +520,7 @@ OS LISFLOOD cold start run takes as input the OS LISFLOOD prerun output for the 
 
 OS LISFLOOD warm start resumes the computations from the end states of a preceeding simulation (cold start or warm start).
 
-A dedicated chapter about [model initialization](https://ec-jrc.github.io/lisflood-code/3_step5_model-initialisation/) provides more in-depth explanations of model prerun (initialization), cold start, and warm start.
+A dedicated chapter about [model initialization](../3_step4_model-initialisation/index.md) provides more in-depth explanations of model prerun (initialization), cold start, and warm start.
 
 This page has the purpose to provide an overview of the variables requiring an initial value. Initial values shown in this page refer to a model prerrun simulation.
 
@@ -665,7 +665,7 @@ This page has the purpose to provide an overview of the variables requiring an i
 
 - **CumIntSealedInitValue** is the initial value of the depression storage for the sealed part of a pixel $[mm]$
 
-- **LZInitValue** is the initial storage in the lower groundwater zone $[mm]$. In order to avoid initialization problems it is possible to let the model calculate a 'steady state' storage. Users are recommended to refer to the chapter on [model initialization](https://ec-jrc.github.io/lisflood-code/3_step5_model-initialisation/)
+- **LZInitValue** is the initial storage in the lower groundwater zone $[mm]$. In order to avoid initialization problems it is possible to let the model calculate a 'steady state' storage. Users are recommended to refer to the chapter on [model initialization](../3_step4_model-initialisation/index.md)
 
 - **TotalCrossSectionAreaInitValue** is the initial cross-sectional area $[m^2]$ of the water in the river channels (a substitute for initial discharge, which is directly dependent on this). A value of **-9999 ** sets the initial amount of water in the channel to half bankfull.
 
@@ -726,7 +726,7 @@ CumIntForestInitValue, UZForestInitValue, DSLRForestInitValue, ThetaForestInit1V
 
 ### Using options
 
-The 'lfoptions' element (explained in [this page](../2_ESSENTIAL_setting-file/)) allows to activate or deactivate optional modules (e.g. the simulation of reservoirs), as well as to select the list of output files.
+The 'lfoptions' element (explained in [this page](../3_step1_ESSENTIAL_concepts_to_get_started/index.md#os-lisflood-settings-file-settingsxml)) allows to activate or deactivate optional modules (e.g. the simulation of reservoirs), as well as to select the list of output files.
 
 The [LISFLOOD model documentation](https://ec-jrc.github.io/lisflood-model/) explains standard and optional modules.  
 Optional modules and output variables are selected using switches: 1= on, 0=off. 
@@ -736,7 +736,7 @@ For instance, using the inflow hydrograph option requires an input map and time 
 If you want to report discharge maps at each time step, you will first have to specify the writing path and desired file name. 
 
 The [refernce xml settings file](https://github.com/ec-jrc/lisflood-code/blob/master/src/lisfloodSettings_reference.xml) includes definitions for most of the optional output maps and time series. 
-The use of the *output* options is described in detail in [a dedicated section](../4_annex_output-files/).
+The use of the *output* options is described in detail in [a dedicated section](../5_annex_output-files/index.md).
 
 Within the 'lfoptions' element of the settings file, each option is defined using a 'setoption' element, which has the attributes 'name' and 'choice' (i.e. the actual value). For example:
 
