@@ -1,4 +1,4 @@
-## Step 1: Installation of the LISFLOOD model
+## How to install OS LISFLOOD
 
 There are several ways to get lisflood model and to run it on your machines: 
 

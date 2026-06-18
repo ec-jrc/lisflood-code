@@ -152,7 +152,7 @@ pytest tests/ -m "slow"
 
 These tests could take 30 minutes or several hours, depending on your machine.
 
-You can find full description and implementation details at [Test documentation](https://ec-jrc.github.io/lisflood-code/4_annex_tests/) page.
+You can find full description and implementation details at [Test documentation](/docs/5_annex_tests/index.md) page.
 
 **Note**: If yuor pull request is about a new feature you may want to integrate in LISFLOOD,
 ensure to include tests with good coverage for it.

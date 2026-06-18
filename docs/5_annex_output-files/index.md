@@ -14,7 +14,6 @@ LISFLOOD can generate a wide variety of outputs. Output files can be time series
 | **NUMERICAL CHECKS**                                             |                  |                       |
 | $^2$ cumulative mass balance error                           | $m^3$            | mbError.tss           |
 | $^2$ cumulative mass balance error, expressed as mm water slice (average over catchment) | $mm$             | mbErrorMm.tss         |
-| $^2$ number of sub-steps needed for channel routing          | -                | NoSubStepsChannel.tss |
 
 $^1$ Output only if option  'InitLisflood' = 1  (pre-run)  
 $^2$ Output only if option  'InitLisflood' = 0  
@@ -32,35 +31,6 @@ Output time series can be classified in the following categories:
 
 | Description                                                  | Units                      | Settings variable      | Default name           |
 | ------------------------------------------------------------ | -------------------------- | ---------------------- | ---------------------- |
-| **STATE VARIABLES AT SITES** (option *repStateSites*)     |                            |                        |                        |
-| depth of snow cover on soil surface (pixel-average)          | $mm$                       | SnowCoverTS            | snowCover.tss          |
-| depth of interception storage                                | $mm$                       | CumInterceptionTS      | cumInt.tss             |
-| soil moisture content superficial layer                            | $\frac{mm^3}{mm^3}$        | Theta1TS               | th1a.tss              |
-| soil moisture content upper layer                            | $\frac{mm^3}{mm^3}$        | Theta2TS               | th1b.tss              |
-| soil moisture layer bottom layer                                        | $\frac{mm^3}{mm^3}$        | Theta3TS               | th2.tss              |
-| storage in upper groundwater zone                            | $mm$                       | UZTS                   | uz.tss                 |
-| storage in lower groundwater zone                            | $mm$                       | LZTS                   | lz.tss                 |
-| number of days since last rain                               | $days$                     | DSLRTS                 | dslr.tss               |
-| frost index                                                  | $\frac{°C}{days}$          | FrostIndexTS           | frost.tss              |
-| **RATE VARIABLES AT SITES** (option *repRateSites*)       |                            |                        |                        |
-| rain (excluding snow)                                        | $\frac{mm}{timestep}$      | RainTS                 | rain.tss               |
-| Snow                                                         | $\frac{mm}{timestep}$      | SnowTS                 | snow.tss               |
-| snow melt                                                    | $\frac{mm}{timestep}$      | SnowmeltTS             | snowMelt.tss           |
-| actual evaporation                                           | $\frac{mm}{timestep}$      | ESActTS                | esAct.tss              |
-| actual transpiration                                         | $\frac{mm}{timestep}$      | TaTS                   | tAct.tss               |
-| rainfall interception                                        | $\frac{mm}{timestep}$      | InterceptionTS         | interception.tss       |
-| evaporation of intercepted water                             | $\frac{mm}{timestep}$      | EWIntTS                | ewIntAct.tss           |
-| leaf drainage                                                | $\frac{mm}{timestep}$      | LeafDrainageTS         | leafDrainage.tss       |
-| infiltration                                                 | $\frac{mm}{timestep}$      | InfiltrationTS         | infiltration.tss       |
-| preferential (bypass) flow                                   | $\frac{mm}{timestep}$      | PrefFlowTS             | prefFlow.tss           |
-| percolation upper to lower soil layer                        | $\frac{mm}{timestep}$      | PercolationTS          | dTopToSub.tss          |
-| percolation lower soil layer to subsoil                      | $\frac{mm}{timestep}$      | SeepSubToGWTS          | dSubToUz.tss           |
-| surface runoff                                               | $\frac{mm}{timestep}$      | SurfaceRunoffTS        | surfaceRunoff.tss      |
-| outflow from upper zone                                      | $\frac{mm}{timestep}$      | UZOutflowTS            | qUz.tss                |
-| outflow from lower zone                                      | $\frac{mm}{timestep}$      | LZOutflowTS            | qLz.tss                |
-| total runoff                                                 | $\frac{mm}{timestep}$      | TotalRunoffTS          | totalRunoff.tss        |
-| percolation from upper to lower zone                         | $\frac{mm}{timestep}$      | GwPercUZLZTS           | percUZLZ.tss           |
-| loss from lower zone                                         | $\frac{mm}{timestep}$      | GwLossTS               | loss.tss               |
 | **TIME SERIES, AVERAGE UPSTREAM OF GAUGES**                  |                            |                        |                        |
 | **METEOROLOGICAL INPUT VARIABLES** (option *repMeteoUpsGauges*) |                            |                        |                        |
 | precipitation                                                | $\frac{mm}{timestep}$      | PrecipitationAvUpsTS   | precipUps.tss          |
@@ -98,11 +68,35 @@ Output time series can be classified in the following categories:
 | total runoff                                                 | $\frac{mm}{timestep}$      | TotalRunoffAvUpsTS     | totalRunoffUps.tss     |
 | percolation upper to lower zone                              | $\frac{mm}{timestep}$      | GwPercUZLZAvUpsTS      | percUZLZUps.tss        |
 | loss from lower zone                                         | $\frac{mm}{timestep}$      | GwLossTS               | lossUps.tss            |
-| **WATER LEVEL IN CHANNEL** (option *repWaterLevelTs*)          |                            |                        |                        |
-| water level in channel                                       | $m$ (above channel bottom) | WaterLevelTS           | waterLevel.tss         |
-| **OUTPUT RELATED TO LOWER ZONE INITIALISATION** (option *repLZAvInflowSites* and *repLZAvInflowUpsGauges*) |                            |                        |                        |
-| average inflow into lower zone                               | $\frac{mm^3}{day}$         | LZAvInflowTS           | lzAvIn.tss             |
-| average inflow into lower zone                               | $\frac{mm^3}{day}$         | LZAvInflowAvUpsTS      | lzAvInUps.tss          |
+| **STATE VARIABLES AT SITES** (option *repStateSites*)     |                            |                        |                        |
+| depth of snow cover on soil surface (pixel-average)          | $mm$                       | SnowCoverTS            | snowCover.tss          |
+| depth of interception storage                                | $mm$                       | CumInterceptionTS      | cumInt.tss             |
+| soil moisture content superficial layer                            | $\frac{mm^3}{mm^3}$        | Theta1TS               | th1a.tss              |
+| soil moisture content upper layer                            | $\frac{mm^3}{mm^3}$        | Theta2TS               | th1b.tss              |
+| soil moisture layer bottom layer                                        | $\frac{mm^3}{mm^3}$        | Theta3TS               | th2.tss              |
+| storage in upper groundwater zone                            | $mm$                       | UZTS                   | uz.tss                 |
+| storage in lower groundwater zone                            | $mm$                       | LZTS                   | lz.tss                 |
+| number of days since last rain                               | $days$                     | DSLRTS                 | dslr.tss               |
+| frost index                                                  | $\frac{°C}{days}$          | FrostIndexTS           | frost.tss              |
+| **RATE VARIABLES AT SITES** (option *repRateSites*)       |                            |                        |                        |
+| rain (excluding snow)                                        | $\frac{mm}{timestep}$      | RainTS                 | rain.tss               |
+| Snow                                                         | $\frac{mm}{timestep}$      | SnowTS                 | snow.tss               |
+| snow melt                                                    | $\frac{mm}{timestep}$      | SnowmeltTS             | snowMelt.tss           |
+| actual evaporation                                           | $\frac{mm}{timestep}$      | ESActTS                | esAct.tss              |
+| actual transpiration                                         | $\frac{mm}{timestep}$      | TaTS                   | tAct.tss               |
+| rainfall interception                                        | $\frac{mm}{timestep}$      | InterceptionTS         | interception.tss       |
+| evaporation of intercepted water                             | $\frac{mm}{timestep}$      | EWIntTS                | ewIntAct.tss           |
+| leaf drainage                                                | $\frac{mm}{timestep}$      | LeafDrainageTS         | leafDrainage.tss       |
+| infiltration                                                 | $\frac{mm}{timestep}$      | InfiltrationTS         | infiltration.tss       |
+| preferential (bypass) flow                                   | $\frac{mm}{timestep}$      | PrefFlowTS             | prefFlow.tss           |
+| percolation upper to lower soil layer                        | $\frac{mm}{timestep}$      | PercolationTS          | dTopToSub.tss          |
+| percolation lower soil layer to subsoil                      | $\frac{mm}{timestep}$      | SeepSubToGWTS          | dSubToUz.tss           |
+| surface runoff                                               | $\frac{mm}{timestep}$      | SurfaceRunoffTS        | surfaceRunoff.tss      |
+| outflow from upper zone                                      | $\frac{mm}{timestep}$      | UZOutflowTS            | qUz.tss                |
+| outflow from lower zone                                      | $\frac{mm}{timestep}$      | LZOutflowTS            | qLz.tss                |
+| total runoff                                                 | $\frac{mm}{timestep}$      | TotalRunoffTS          | totalRunoff.tss        |
+| percolation from upper to lower zone                         | $\frac{mm}{timestep}$      | GwPercUZLZTS           | percUZLZ.tss           |
+| loss from lower zone                                         | $\frac{mm}{timestep}$      | GwLossTS               | loss.tss               |
 
 
 
@@ -121,7 +115,7 @@ In addition, some additional maps and time series may be reported for debugging 
 <u>Note</u> the domains for which variables are valid: all *rate variables* are reported as pixel-average values. Soil moisture and groundwater storage are reported for the permeable fraction of each pixel only. The reported snow cover is the average of the snow depths in snow zones A, B and C.
 
 
-***Table:*** *LISFLOOD initialization default output maps (Output only if option 'InitLisflood' = 1).*          
+***Table:*** *LISFLOOD initialization output maps (Output only if option 'InitLisflood' = 1).*          
 
 | Description                                                  | Units               | File name         | Domain                               |
 | ------------------------------------------------------------ | ------------------- | ----------------- | ------------------------------------ |
@@ -129,14 +123,8 @@ In addition, some additional maps and time series may be reported for debugging 
 | average inflow to lower zone                            | $mm$  | lzavin.nc        | whole pixel                      |
 | average channel discharge (if option 'SplitRouting' = 1)                  | $\frac{m}{s}$  | avgdis.nc| channel                      |
 
-LISFLOOD can also generate optional output end-files to allow the initialization of the soil moisture of the three soil layers and the water content of the upper groundwater zone. To achieve this aim is necessary to set 'repEndMaps' = 1 (with 'InitLisflood' = 1). More details are provided here  https://ec-jrc.github.io/lisflood-code/3_step5_model-initialisation/
-To speed up the pre-run and to prevent that results are taken from the pre-run, all additional output is disabled if option 'InitLisflood' = 1 is chosen. 
-
-### *LISFLOOD state maps. These maps can be used to define the initial conditions of another simulation.* 
-These maps are written in output when 'repStateMaps' = 1.
-LISFLOOD writes the results for each computational time step.
-The complete list of state maps is available here https://ec-jrc.github.io/lisflood-code/4_annex_state-variables/ .
-The users should be aware that some state maps are generated only if the relevant option has been set to 1. For instance, LakePrevInflowState and LakePrevOutflowState can be generated only when 'simulateLakes' = 1. 
+LISFLOOD can also generate output end-files to allow the initialization of the soil moisture of the three soil layers and the water content of the upper groundwater zone, as well as maps of the average seppage flow from the second to the third soil layer. More details are provided in the chapter dedicated to [model initialization](../3_step4_model-initialisation).
+To speed up the pre-run and to prevent that results are taken from the pre-run, not necessary outputs are disabled if option 'InitLisflood' = 1 is chosen. 
 
 
 ***Table:*** *LISFLOOD optional output maps* 
@@ -152,7 +140,7 @@ The users should be aware that some state maps are generated only if the relevan
 | potential open water evaporation        | repEWRefMaps           | $mm$                       | EWRefMaps                                          | ew              |
 | average daily temperature               | repTavgMaps            | $mm$                       | TavgMaps                                           | tav             |
 | **VOLUME VARIABLES**                 |                        |                            |                                                    |                 |
-| depth of water on soil surface          | repWaterDepthMaps      | $mm$                       | WaterDepthMaps                                     | wdep            |
+| depth of water on soil surface (overland flow)         | repWaterDepthMaps      | $mm$                       | WaterDepthMaps                                     | wdep            |
 | depth of snow cover on soil surface     | repSnowCoverMaps       | $mm$                       | SnowCoverMaps                                      | scov            |
 | depth of interception storage           | repCumInterceptionMaps | $mm$                       | CumInterceptionMaps (other fraction) <br> CumInterceptionForestMaps <br> CumInterceptionIrrigationMaps <br> CumIntSealedMaps  | cum <br> cumf  <br> cumi <br> cums |
 | soil moisture content of the three soil layers      | repThetaMaps          | $\frac{mm^3}{mm^3}$        | Theta1Maps <br> Theta1ForestMaps  <br> Theta1IrrigationMaps  <br> Theta2Maps <br> Theta2ForestMaps  <br> Theta2IrrigationMaps <br> Theta3Maps <br> Theta3ForestMaps  <br> Theta3IrrigationMaps                 | tha <br> thfa <br> thia <br> thb <br> thfb <br> thib <br> thc <br> thfc <br> thic|
@@ -180,6 +168,16 @@ The users should be aware that some state maps are generated only if the relevan
 | total runoff                            | repTotalRunoffMaps     | $\frac{mm}{timestep}$      | TotalRunoffMaps                                    | trun            |
 | percolation upper to lower zone         | repGwPercUZLZMaps      | $\frac{mm}{timestep}$      | GwPercUZLZMaps <br> GwPercUZLZOtherMaps <br> GwPercUZLZForestMaps <br> GwPercUZLZIrrigationMaps                                     | uz2lzPixel <br> uz2lz <br> uz2lzF <br> uz2lzi           |
 | loss from lower zone                    | repGwLossMaps          | $\frac{mm}{timestep}$      | GwLossMaps                                         | loss            |
+
+
+*LISFLOOD state maps* are the maps can be used to define the initial conditions of another simultion (warm start). These maps are written in output when 'repStateMaps' = 1.
+LISFLOOD writes the results for each computational time step.
+The complete list of state maps is available [here](../5_annex_state-variables/index.md).
+
+The users should be aware that some state maps are generated only if the relevant option has been set to 1. For instance, LakePrevInflowState and LakePrevOutflowState can be generated only when 'simulateLakes' = 1. 
+
+
+
 
 **Note**
 

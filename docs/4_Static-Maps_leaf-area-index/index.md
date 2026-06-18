@@ -21,7 +21,7 @@ In LISFLOOD LAI has an important role in water interception and evapotranspirati
 | :---| :--- | :--- | :--- |
 | Copernicus Global Land Service LAI Collection Version 2 | https://land.copernicus.eu/global/products/lai | 1 January 2010 - 31 December 2019 | Global, 1 km|
 | Fraction of forest | It can be prepared by using [this methodology](../4_Static-Maps_land-use#fraction-of-forest)| NA | Global, 1' and 3'|
-| Fraction of irrigated crops | It can be prepared by using [this methodology](../4_Static-Maps_land-use#fraction-of-irrigated-crops)| NA | Global, 1' and 3'|
+| Fraction of irrigated crops | It can be prepared by using [this methodology](../4_Static-Maps_land-use#fraction-of-irrigated-crops)| 1 January 2010 - 31 December 2020 | Global, 1' and 3'|
 | Fraction of other land cover type | It can be prepared by using [this methodology](../4_Static-Maps_land-use#fraction-of-other-land-use-type)|NA | Global, 1' and 3'|
 
 #### Methodology
