@@ -49,7 +49,7 @@ def mask_array(data, mask, crop, core_dims, name, valid_min, valid_max, func_x, 
                                  exclude_dims=set(core_dims),
                                  output_dtypes=[data.dtype],
                                  output_core_dims=[['z']],
-                                 dask_gufunc_kwargs = dict(output_sizes={'z': n_data}),
+                                 dask_gufunc_kwargs = dict(output_sizes={'z': n_data}, allow_rechunk=True),
                                  kwargs={'mask': mask, 'crop': crop, 'name': name, 
                                          'valid_min': valid_min, 'valid_max': valid_max,
                                          'func_x': func_x, 'func_y':func_y})

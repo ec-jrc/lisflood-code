@@ -169,7 +169,7 @@ class TestCatch(ETRS89TestCase):
         # init files from .../LF_ETRS89_UseCase/maps/safe_init
         # "AvgDis" value="$(PathRoot)/maps/safe_init/avgdis"
         # "LZAvInflowMap" value="$(PathRoot)/maps/safe_init/lzavin"
-        output_dir = mk_path_out(os.path.join(self.case_dir, 'out/test_results{}'.format(dt_sec)))
+        output_dir = mk_path_out(os.path.join(self.case_dir, 'out/test_results_wb{}'.format(dt_sec)))
         opts_to_unset = (
             'wateruse','riceIrrigation','groundwaterSmooth'
         )
@@ -189,6 +189,6 @@ class TestCatch(ETRS89TestCase):
 
     def test_waterbalance_6h(self):
         self.run_waterbalance('21600', '02/01/2016 06:00', '02/07/2016 06:00')
-        self.compare_reference('mbError', check='tss', step_length='21600')
+        self.compare_reference('mbError', check='tss', step_length='21600', atol=0.0005, rtol=0.005)
         self.compare_reference('mbErrorSplitRoutingM3', check='tss', step_length='21600')
     

@@ -114,10 +114,10 @@ class Reservoir(HydroModule):
             
             # Add reservoir locations to structures map 
             # (used to modify LddKinematic and to calculate LddStructuresKinematic)
-            self.var.IsStructureKinematic = np.where(self.var.ReservoirSitesC > 0, np.bool8(1), self.var.IsStructureKinematic)
+            self.var.IsStructureKinematic = np.where(self.var.ReservoirSitesC > 0, np.bool(1), self.var.IsStructureKinematic)
             # Add reservoir locations to structures map (used to modify LddKinematic
             # and to calculate LddStructuresKinematic)
-            self.var.IsStructureChan = np.where(self.var.ReservoirSitesC > 0, np.bool8(1), self.var.IsStructureChan)
+            self.var.IsStructureChan = np.where(self.var.ReservoirSitesC > 0, np.bool(1), self.var.IsStructureChan)
             # Add reservoir locations to structures map (used to modify LddChan
             # and to calculate LddStructuresChan)
             

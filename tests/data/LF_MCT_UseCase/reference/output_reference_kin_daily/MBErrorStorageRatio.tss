@@ -1,4 +1,4 @@
-timeseries valuescale.scalar settingsfile: /hdd2/releases/lisflood_newinit/lisflood-code/tests/data/LF_MCT_UseCase/settings/mct_cold.xml_c1618a06-b618-4a36-8b57-c24198e1e439.xml date: Tue Feb 18 15:49:53 2025
+timeseries valuescale.scalar settingsfile: /scratch/schafti/00_LISFDLOOD_Dev/02_mct_routing/lisflood-code/tests/data/LF_MCT_UseCase/settings/mct_cold.xml_571445cf-12cf-456a-a1c8-ef81cfd1bcf1.xml date: Fri Jun 12 14:30:12 2026
 2
 timestep
 1
@@ -134,7 +134,7 @@ timestep
       130   -1.07346e-11
       131   -5.72241e-11
       132    -4.7186e-11
-      133   -1.16976e-13
+      133   -1.16977e-13
       134   -2.47787e-16
       135   -7.74103e-14
       136   -2.27565e-13

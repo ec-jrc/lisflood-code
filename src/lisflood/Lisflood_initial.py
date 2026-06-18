@@ -189,10 +189,12 @@ class LisfloodModel_ini(DynamicModel):
 
         self.snow_module.initial()
         self.frost_module.initial()
-        self.leafarea_module.initial()
-        self.soilloop_module.initial()
 
+        self.leafarea_module.initial()
+
+        self.soilloop_module.initial()
         self.soil_module.initial()
+
         self.routing_module.initial()
 
         self.groundwater_module.initial()
@@ -200,6 +202,8 @@ class LisfloodModel_ini(DynamicModel):
 
         self.inflow_module.initial()
         self.surface_routing_module.initial()
+
+        # At this point LddChan and LddKinematic do not have any structure reservoirs/lakes MCT confluence
 
         self.reservoir_module.initial()
         self.lakes_module.initial()
@@ -209,6 +213,7 @@ class LisfloodModel_ini(DynamicModel):
 
         self.structures_module.initial()
         # Structures such as reservoirs and lakes are modelled by interrupting the channel flow paths
+        # At this point LddKinematic and LddChan have pits upstream of (structures) reservoirs and lakes
 
         # ----------------------------------------------------------------------
         # ----------------------------------------------------------------------
@@ -217,9 +222,15 @@ class LisfloodModel_ini(DynamicModel):
         # CHANNEL INITIAL SPLIT UP IN SECOND CHANNEL
         self.surface_routing_module.initialSecond()
 
+        # MCT confluence must be in the LddKinematic when I get here
+        self.routing_module.initialKinematicWave()
+
         if option.get('MCTRouting'):
             self.routing_module.initialMCT()
             # initialising Muskingum-Cunge-Todini routing for channel
+
+        # self.routing_module.initialKinematicWave()
+        # this cannot be here because I need river_router in the MCT initialization
 
         self.evapowater_module.initial()
         self.riceirrigation_module.initial()
