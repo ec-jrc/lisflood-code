@@ -117,7 +117,6 @@ class waterbalance(object):
 
     def storage_channel(self, option):
         ChannelStoredM3 = self.var.ChanM3.copy()
-        print(np.sum(ChannelStoredM3))
         if option['simulateLakes']:
             ChannelStoredM3 += self.var.LakeStorageM3Balance
         if option['simulateReservoirs']:
