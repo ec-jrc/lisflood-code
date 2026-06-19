@@ -1,0 +1,105 @@
+{
+  "title": "ec-jrc/lisflood-code: OS LISFLOOD - a distributed hydrological rainfall-runoff model",
+  "description": "OS Lisflood is a spatially distributed water resources model, developed by the Joint Research Centre (JRC) of the European Commission since 1997.",
+  "creators": [
+    {
+      "name": "De Roo, Ad",
+      "affiliation": "Joint Research Centre"
+    },
+    {
+      "name": "Gelati, Emiliano",
+      "affiliation": "Norwegian Water Resources and Energy Directorate",
+      "orcid": "0000-0002-8972-8561"
+    },
+    {
+      "name": "Burek, Peter",
+      "affiliation": "International Institute for Applied Systems Analysis",
+      "orcid": "0000-0001-6390-8487"
+    },
+    {
+      "name": "Van der Knijff, Johan",
+      "affiliation": "Joint Research Centre",
+      "orcid": "0000-0003-3686-337X"
+    },
+    {
+      "name": "Wanders, Niko",
+      "affiliation": "Universiteit Utrecht",
+      "orcid": "0000-0002-7102-5454"
+    },
+    {
+      "name": "Grimaldi, Stefania",
+      "affiliation": "Joint Research Centre",
+      "orcid": "0000-0002-7025-7624"
+    },
+    {
+      "name": "Russo, Carlo",
+      "affiliation": "Joint Research Centre",
+      "orcid": "0000-0001-8296-4345"
+    },
+    {
+      "name": "Schaffhauser, Timo",
+      "affiliation": "Joint Research Centre",
+      "orcid": "0000-0002-2553-0089"
+    },
+    {
+      "name": "Gomes, Gonçalo",
+      "affiliation": "Joint Research Centre",
+      "orcid": "0000-0001-8536-6623"
+    },
+    {
+      "name": "Nappo, Domenico",
+      "affiliation": "AM-FLOW"
+    },
+    {
+      "name": "Lorini, Valerio",
+      "affiliation": "European Parliament",
+      "orcid": "0000-0003-2148-5476"
+    },
+    {
+      "name": "Casado Rodríguez, Jesus",
+      "affiliation": "KAJO Services",
+      "orcid": "0000-0002-6607-1413"
+    },
+    {
+      "name": "Carton de Wiart, Corentin",
+      "affiliation": "European Centre for Medium-Range Weather Forecasts",
+      "orcid": "0000-0002-0681-2224"
+    },
+    {
+      "name": "Mazzetti, Cinzia",
+      "affiliation": "European Centre for Medium-Range Weather Forecasts",
+      "orcid": "0000-0003-3622-1967"
+    },
+    {
+      "name": "Decremer, Damien",
+      "affiliation": "European Centre for Medium-Range Weather Forecasts",
+      "orcid": "0000-0003-3191-1731"
+    },
+    {
+      "name": "Mastrantonas, Nikolaos",
+      "affiliation": "European Centre for Medium-Range Weather Forecasts",
+      "orcid": "0000-0002-2430-3634"
+    },
+    {
+        "name": "Jensen, Laura",
+        "affiliation": "GFZ Helmholtz Centre for Geosciences",
+        "orcid": "0000-0002-8318-791X"
+    },
+    {
+      "name": "Morrison, Oisin",
+      "affiliation": "European Centre for Medium-Range Weather Forecasts",
+      "orcid": "0000-0002-6098-9362"
+    },
+    {
+      "name": "Moschini, Francesca",
+      "affiliation": "Joint Research Centre",
+      "orcid": "0000-0001-5068-8497"
+    },
+    {
+      "name": "Alfieri, Lorenzo",
+      "affiliation": "CIMA Research Foundation",
+      "orcid": "0000-0002-3616-386X"
+    }
+  ],
+  "upload_type": "software"
+}
