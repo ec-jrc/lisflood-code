@@ -49,13 +49,13 @@ The table below shows the PTFs developed in [Toth et al. (2015)](https://onlinel
 
 | Parameter | Pedotransfer function* | Condition |
 | :---| :--- | :--- | 
-|Theta saturated |$Thetas = (0.83080 - 0.28217 \cdot D + 0.0002728 \cdot C + 0.000187 \cdot S)$ |$Thetas <1$ (hurdle) | 
+|Theta saturated |$Thetas = (0.83080 - 0.28217 \cdot BD + 0.0002728 \cdot C + 0.000187 \cdot S)$ |$Thetas <1$ (hurdle) | 
 |Theta residual |$Sand = 100 -S-C$ <br> $Thetar=0.179$    if  Sand<2.0 <br> $Thetar=0.041$    if Sand≥2.0 |Thetar < Thetas (hurdle) | 
 |Lambda |$log10(λ) =$ <br> $ 0.22236 - 0.30189 \cdot  BD - 0.05558 \cdot  T - 0.005306 \cdot  C - 0.003084 \cdot  S - 0.01072 \cdot  OC$  |lambda≤0.42 (recommended)| 
-|Genu Alpha | $log10(Alpha) =$ <br> $ -0.43348 - 0.41729 \cdot  D - 0.04762 \cdot  OC + 0.21810 \cdot  T - 0.01581 \cdot  C - 0.01207 \cdot  S$ |alpha≤0.055(recommended)| 
+|Genu Alpha | $log10(Alpha) =$ <br> $ -0.43348 - 0.41729 \cdot  BD - 0.04762 \cdot  OC + 0.21810 \cdot  T - 0.01581 \cdot  C - 0.01207 \cdot  S$ |alpha≤0.055(recommended)| 
 |K saturated** | $log10(KSat) =$ <br> $ 0.40220 + 0.26122 \cdot  pH + 0.44565 \cdot  T - 0.02329 \cdot  C - 0.01265 \cdot  S - 0.01038 \cdot  CEC $| Ksat>0 (hurdle) | 
 
-*where D is bulk density, C - % of clay, S - % of silt, OC - organic content, CEC - cation exchange capacity, pH - soil pH, and T is the topsoil and subsoil distinction. FAO_2008 (link) defines topsoil as 0-30 cm layer and subsoil as 30-100 cm layer. When soil depth is within the definition of topsoil then T = 1, otherwise T = 0. 
+*where BD is bulk density, C - % of clay, S - % of silt, OC - organic content, CEC - cation exchange capacity, pH - soil pH, and T is the topsoil and subsoil distinction. FAO_2008 (link) defines topsoil as 0-30 cm layer and subsoil as 30-100 cm layer. When soil depth is within the definition of topsoil then T = 1, otherwise T = 0. 
 **K saturated results for Toth equation are in cm/day, the LISFLOOD model requires mm/day.
 
 
