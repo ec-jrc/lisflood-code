@@ -110,15 +110,15 @@ Note: Forest fraction field should be checked for consistency with all other fra
 
 | Source data| Reference/preparation | Temporal coverage | Spatial information |
 | :---| :--- | :--- | :--- |
-|Spatial Production Allocation Model (SPAM) - Global Spatially-Disaggregated Crop Production Statistics Data for 2010 (V 1.0)  |[Spatial Production Allocation Model](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/PRFF8V)   |2018        |Global, 5 arcmin (approx 10 km)|
+|FAO Global Map of Irrigation Areas v5.0  |[Siebert et al, 2013](https://openknowledge.fao.org/server/api/core/bitstreams/02e5f498-eb5d-4a08-b501-b3e05fdefc57/content)     |2005        |Global, 5arcmin|
 |CORINE Land Cover 2018 CLC2018   |[CLC2018 ](https://land.copernicus.eu/pan-european/corine-land-cover)     |2018        |European, 100 m|
 
 ### Methodology
 
 To create the fraction of irrigated crops map, multiple data sources can be used, for example when more accurate information could be found regionally compared with a global dataset. We describe here the process when using two datasets.<br>
-For a global coverage, the 'spam2010v1r0_global_physical-area_CROP_i' files from the SPAM dataset are used. They describe the area (in hectares) where each crop is grown (one file per crop), not considering how often its production is harvested, with 'i' denoting a portion of the crop is irrigated. The area of all irrigated crops globally (except rice – modelled separately) is summed and resulting values translated from hectares to fractions per grid-cell, and the native resolution is changed to the highest resolution of all datasets used, here CORINE dataset 100 m resolution.<br>
+For global coverage, the FAO Global Map of Irrigation Areas v5.0 showig the amount of area equipped for irrigation around the year 2005 in percentage of the total area could be used.
 For a regional coverage (here Europe), the '212' - ‘Permanently irrigated land, excluding rice’ value from the CORINE dataset is used (discrete classification where each grid-cell is fully covered with a certain land cover), assigning grid-cells covered with irrigated crops fraction 1.<br>
-Finally, the generated fields are merged, with priority given to the high quality dataset (here from CORINE) over its geographical domain (here over the European domain), and the merged field resolution is reduced to the needed resolution, e.g. 1 arc min, with mean() reducer.<br>
+The generated fields are merged, with priority given to the high quality dataset (here from CORINE) over its geographical domain (here over the European domain), and the merged field resolution is reduced to the needed resolution, e.g. 1 arc min, with mean() reducer.<br>
 Note: Irrigated crops fraction field should be checked for consistency with all other fractions.
 
 ### Results (example)
