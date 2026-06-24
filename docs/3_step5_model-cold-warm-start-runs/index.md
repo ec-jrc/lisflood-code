@@ -2,13 +2,13 @@
 
 > **!Reminder!** Types of OS LISFLOOD model runs and their purpose:
 
->**OS LISFLOOD prerun** simulation has the purpose to adequately initialize the state of the slow storages, namely grounwater zone and soil. OS LISFLOOD prerun constitutes the **initialization run**. OS LISFLOOD prerun output is used as input to the OS LISFLOOD cold start run.
+>**OS LISFLOOD prerun** simulation has the purpose to adequately initialize the state of the slow storages, namely groundwater zone and soil. OS LISFLOOD prerun constitutes the **initialization run**. OS LISFLOOD prerun output is used as input to the OS LISFLOOD cold start run.
 
->OS LISFLOOD cold start run and warm start run deliver the actual model outputs to be usef for analysis/forecasts.
+>OS LISFLOOD cold start run and warm start run deliver the actual model outputs to be used for analysis/forecasts.
 
->**OS LISFLOOD cold start** run takes as input the OS LISFLOOD prerun output to initialize the slow storages (soil and groundwater). Initial values of fast(er) respoding storages (e.g. channel volume) are set to bogus values. It is always recommended to discard the initial (3) years of the OS LISFLOOD cold start to allow adequate initialization of fast(er) respoding storages.
+>**OS LISFLOOD cold start** run takes as input the OS LISFLOOD prerun output to initialize the slow storages (soil and groundwater). Initial values of fast(er) responding storages (e.g. channel volume) are set to bogus values. It is always recommended to discard the initial (3) years of the OS LISFLOOD cold start to allow adequate initialization of fast(er) responding storages.
 
->**OS LISFLOOD warm start** resumes the computations from the end states of a preceeding simulation. 
+>**OS LISFLOOD warm start** resumes the computations from the end states of a preceding simulation. 
 
 ## Setting-up a OS LISFLOOD cold start simulation
 
@@ -17,7 +17,7 @@ Running a OS LISFLOOD cold start simulation requires the following settings:
 ```xml
     <setoption choice="0" name="InitLisfloodwithoutsplit"/>
     <setoption choice="0" name="InitLisflood"/>
-    <setoption choice="1" name="ColdStart/>
+    <setoption choice="1" name="ColdStart"/>
 ```
 > Note that the option <setoption choice="1" name="ColdStart/> was introduced with LISFLOOD v5.
 
@@ -117,7 +117,7 @@ INITIAL CONDITIONS OTHER/FOREST/IRRIGATION
 >Users must be aware that values of internal state variables of the model** (especially lower zone storage) strongly dependent on the parameterisation used. Hence, suppose we have 'end maps' and 'average flux maps' that were created using parameter set *A*, then these maps should **not** be used as initial conditions for a model run with a different parameter set *B*. Mixing parameter sets will likely lead to serious initialisation problems (but these may not be immediately visible in the output!).
 
 
-### Verify the correct exectution of model initialization
+### Verify the correct execution of model initialization
 
 Before proceeding to analyse the fluxes and states of interest (e.g. discharge, soil moisture, reservoir storage), it is strongly recommended to carefully verify the successful execution of model states initialization. A non correct initialization is likely to result in spurious trends in soil moisture, groundwater, and river flow variables.
 
@@ -140,16 +140,16 @@ Users are encouraged to plot the time series and verify the absence of temporal 
 
 OS LISFLOOD prerun is devoted to the initialization of the slow storages (volumetric soil moisture content, groudwater water content). 
 
-Within the cold start simulation, an adequate spin-up period allows the adequate initialization of fast(er) storages such as channels water volume. The length of the spin-up period can be indentified empirically by the user as it depends on catchments morphological and climatological features. Experiments based on the global and european model set-ups suggest a spin-up period of 3 years. For example, the OS LISFLOOD cold start of a study aiming to analyse hydrological states and fluxes conditions from 02/01/2000 00:00 should have simulation start date 02/01/1997 00:00 (OS LISFLOOD output results from 02/01/1997 00:00 to 02/01/2000 00:00 will be discarded). As a reminder, the duration of the prerun should cover at least a few decades to enable the computation of reliable average values. 
+Within the cold start simulation, an adequate spin-up period allows the adequate initialization of fast(er) storages such as channels water volume. The length of the spin-up period can be identified empirically by the user as it depends on catchments morphological and climatological features. Experiments based on the global and european model set-ups suggest a spin-up period of 3 years. For example, the OS LISFLOOD cold start of a study aiming to analyse hydrological states and fluxes conditions from 02/01/2000 00:00 should have simulation start date 02/01/1997 00:00 (OS LISFLOOD output results from 02/01/1997 00:00 to 02/01/2000 00:00 will be discarded). As a reminder, the duration of the prerun should cover at least a few decades to enable the computation of reliable average values. 
 
-Depending on the available computational resources and on the purpose of the modelling excercise, the cold start simulation can cover the entire period of interest (i.e. the end step of the cold start can be the last time step for which OS LISFLOOD output results are needed).
+Depending on the available computational resources and on the purpose of the modelling exercise, the cold start simulation can cover the entire period of interest (i.e. the end step of the cold start can be the last time step for which OS LISFLOOD output results are needed).
 
-Conversely, where the required duration of the simulation exceeded the available computational resources (e.g. timewall of computational facilities), or in case of specific applications such as forecast generation, data assimilation studies, or in-deppth analysis of specific flood events (within a long term simulation), the sequence cold start and warm start is required.
+Conversely, where the required duration of the simulation exceeded the available computational resources (e.g. timewall of computational facilities), or in case of specific applications such as forecast generation, data assimilation studies, or in-depth analysis of specific flood events (within a long term simulation), the sequence cold start and warm start is required.
 
 
 ## Setting-up a OS LISFLOOD warm start simulation
 
-OS LISFLOOD "warm start" simulation resumes the computations from the end point of a cold start simulation (or of a warm start simulation focusing on a preceeding period). The warm start uses all internal state variables ('end maps') generated by the preceeding run as initial conditions. 
+OS LISFLOOD "warm start" simulation resumes the computations from the end point of a cold start simulation (or of a warm start simulation focusing on a preceding period). The warm start uses all internal state variables ('end maps') generated by the preceding run as initial conditions. 
 
 >Reminder: prerun, cold start, and warm start simulations must always share the same set of parameters.
 

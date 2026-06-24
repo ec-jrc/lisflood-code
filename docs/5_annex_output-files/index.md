@@ -42,9 +42,9 @@ Output time series can be classified in the following categories:
 | depth of water on soil surface                               | $mm$                       | WaterDepthAvUpsTS      | wdepthUps.tss          |
 | depth of snow cover on                                       | $mm$                       | SnowCoverAvUpsTS       | snowCoverUps.tss       |
 | depth of interception storage                                | $mm$                       | CumInterceptionAvUpsTS | cumInterceptionUps.tss |
-| soil moisture upper layer                                    | $\frac{mm^3}{mm^3}$        | Theta1AvUpsTS          | th1aAvUps.tss           |
-| soil moisture lower layer                                    | $\frac{mm^3}{mm^3}$        | Theta2AvUpsTS          | th1bAvUps.tss           |
-| soil moisture layer 2                                        | $\frac{mm^3}{mm^3}$        | Theta3AvUpsTS          | th2AvUps.tss           |
+| soil moisture superficial layer                                    | $\frac{mm^3}{mm^3}$        | Theta1AvUpsTS          | th1aAvUps.tss           |
+| soil moisture upper layer                                    | $\frac{mm^3}{mm^3}$        | Theta2AvUpsTS          | th1bAvUps.tss           |
+| soil moisture lower layer                                        | $\frac{mm^3}{mm^3}$        | Theta3AvUpsTS          | th2AvUps.tss           |
 | groundwater upper zone                                       | $mm$                       | UZAvUpsTS              | uzUps.tss              |
 | groundwater lower zone                                       | $mm$                       | LZAvUpsTS              | lzUps.tss              |
 | number of days since last rain                               | $days$                     | DSLRAvUpsTS            | dslrUps.tss            |
@@ -121,7 +121,7 @@ In addition, some additional maps and time series may be reported for debugging 
 | ------------------------------------------------------------ | ------------------- | ----------------- | ------------------------------------ |
 | **AVERAGE RECHARGE MAP (for lower groundwater zone and channel discharge)** (option *InitLisflood*) |                     |                   |                                      |
 | average inflow to lower zone                            | $mm$  | lzavin.nc        | whole pixel                      |
-| average channel discharge (if option 'SplitRouting' = 1)                  | $\frac{m}{s}$  | avgdis.nc| channel                      |
+| average channel discharge (if option 'SplitRouting' = 1)                  | $\frac{m^3}{s}$  | avgdis.nc| channel                      |
 
 LISFLOOD can also generate output end-files to allow the initialization of the soil moisture of the three soil layers and the water content of the upper groundwater zone, as well as maps of the average seppage flow from the second to the third soil layer. More details are provided in the chapter dedicated to [model initialization](../3_step4_model-initialisation).
 To speed up the pre-run and to prevent that results are taken from the pre-run, not necessary outputs are disabled if option 'InitLisflood' = 1 is chosen. 
@@ -138,7 +138,7 @@ To speed up the pre-run and to prevent that results are taken from the pre-run, 
 | potential reference evapotranspiration  | repETRefMaps           | $mm$                       | ETRefMaps                                          | et              |
 | potential evaporation from soil         | repESRefMaps           | $mm$                       | ESRefMaps                                          | es              |
 | potential open water evaporation        | repEWRefMaps           | $mm$                       | EWRefMaps                                          | ew              |
-| average daily temperature               | repTavgMaps            | $mm$                       | TavgMaps                                           | tav             |
+| average daily temperature               | repTavgMaps            | $°C$                       | TavgMaps                                           | tav             |
 | **VOLUME VARIABLES**                 |                        |                            |                                                    |                 |
 | depth of water on soil surface (overland flow)         | repWaterDepthMaps      | $mm$                       | WaterDepthMaps                                     | wdep            |
 | depth of snow cover on soil surface     | repSnowCoverMaps       | $mm$                       | SnowCoverMaps                                      | scov            |
@@ -160,7 +160,7 @@ To speed up the pre-run and to prevent that results are taken from the pre-run, 
 | leaf drainage                           | repLeafDrainageMaps    | $\frac{mm}{timestep}$      | LeafDrainageMaps <br> LeafDrainageForestMaps                                   | ldra <br> draF            |
 | infiltration                            | repInfiltrationMaps    | $\frac{mm}{timestep}$      | InfiltrationMaps <br> InfiltrationForestMaps                                   | inf <br> infF             |
 | preferential (bypass) flow              | repPrefFlowMaps        | $\frac{mm}{timestep}$      | PrefFlowMaps <br> PrefFlowtherMaps <br> PrefFlowForestMaps <br> PrefFlowIrrigationMaps                                       | pflowpixel <br> pflow <br> pflowF <br> pflowi           |
-| percolation upper to lower soil layer   | repPercolationMaps     | $\frac{mm}{timestep}$      | Percolation1ato1bOtherMaps <br> Percolation1ato1bForestMaps <br> Percolation1ato1bIrrigationMaps <br> Percolation1bto2OtherMaps <br> Percolation1bto2ForestMaps <br> Percolation1bto2IrrigationMaps                                    | Percolation1ato1bOther <br> Percolation1ato1bForest <br> Percolation1ato1bIrrigation <br> Percolation1bto2Other <br> Percolation1bto2Forest <br> Percolation1bto2Irrigation           |
+| percolation upper to lower soil layer   | repPercolationMaps     | $\frac{mm}{timestep}$      | Percolation1ato1bOtherMaps <br> Percolation1to1bForestMaps <br> Percolation1ato1bIrrigationMaps <br> Percolation1bto2OtherMaps <br> Percolation1bto2ForestMaps <br> Percolation1bto2IrrigationMaps                                    | Percolation1ato1bOther <br> Percolation1ato1bForest <br> Percolation1to2Irrigation <br> Percolation1bto2Other <br> Percolation1bto2Forest <br> Percolation1bto2Irrigation           |
 | percolation lower soil layer to subsoil | repSeepSubToGWMaps     | $\frac{mm}{timestep}$      | SeepSubToGWMaps <br> SeepSubToGWotherMaps <br> SeepSubToGWforestMaps <br> SeepSubToGWoirrigationMaps                                    | sgwPixel <br> sgwOther <br> sgwForest <br> sgwIrrigation          |
 | surface runoff                          | repSurfaceRunoffMaps   | $\frac{mm}{timestep}$      | SurfaceRunoffMaps                                  | srun            |
 | outflow from upper zone | repUZOutflowMaps       | $\frac{mm}{timestep}$      | UZOutflowMaps, UZOutflowForestMaps <br> UZOutflowIrrigationMaps                                      | quzPixel <br>  quz <br> quzF <br> quzi             |
@@ -181,8 +181,8 @@ The users should be aware that some state maps are generated only if the relevan
 
 **Note**
 
-Some cumulative stoarges and volumes are computed internally by LISFLOOD. Some relevant exmaple is described below:
-- Total Water Storage is the total water volume stored in channels, lakes, reservoirs, snow cover, sealed surfaces depressions, surface runoff, canopy interception, uppper and lower groundwater zones. 
+Some cumulative storages and volumes are computed internally by LISFLOOD. Some relevant example is described below:
+- Total Water Storage is the total water volume stored in channels, lakes, reservoirs, snow cover, sealed surfaces depressions, surface runoff, canopy interception, upper and lower groundwater zones. 
 - Surface runoff is the sum of direct runoff (from sealed and water fractions) and runoff generated by the pervious land cover fractions (forest, irrigation, other).
 - Total runoff is the sum of surface runoff and sub-surface runoff. Sub-surface runoff is the outflow from upper and lower groundwater zones.
 

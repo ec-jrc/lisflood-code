@@ -30,8 +30,8 @@
 | UZForestState                  | uzf                | UZ[1]                 | mm   | Reported storage in upper groundwater zone, forest fraction                                       |
 | UZIrrigationState              | uzi                | UZ[2]                 | mm   | Reported storage in upper groundwater zone, irrigation fraction                                   |
 | LZState                        | lz                 | LZ                    | mm   | Reported storage in lower groundwater zone                                                        |
-| ChanQState                     | chanq              | ChanQ                 | m3/s | Reported istantaneous discarge at end of the model time step                                      |
-| ChanQAvgDtState *L             | chanqavgdt         | ChanQAvgDt            | m3/s | Reported average discarge for the last routing sub-step                                           |
+| ChanQState                     | chanq              | ChanQ                 | m3/s | Reported instantaneous discharge at end of the model time step                                      |
+| ChanQAvgDtState *L             | chanqavgdt         | ChanQAvgDt            | m3/s | Reported average discharge for the last routing sub-step                                           |
 | LakeLevelState *L              | lakeh              | LakeLevel             | m    | Output map(s) with lake level                                                                     |
 | LakePrevInflowState *L         | lakeprevinq        | LakeInflowOld         | m3/s | Output map with lake average inflow at previous routing sub-step (ChanQ(t-1))                     |
 | LakePrevOutflowState *L        | lakeprevoutq       | LakeOutflow           | m3/s | Output map with lake average outflow at previous routing sub-step (ChanQ(t-1))                    |

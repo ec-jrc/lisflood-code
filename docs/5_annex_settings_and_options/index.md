@@ -3,14 +3,14 @@ This annex presents a nearly comprehensive list of setting options, inputs, and 
 The content is organized in the following tables:
 
 - [**lfoptions**](../5_annex_settings_and_options/index.md#table-lfoptions-section-in-os-lisflood-settings-xml): list of available switches to activate optional modules and optional outputs (time series and map formats)
-- [**luser**](../5_annex_settings_and_options/index.md#table-lfuser-in-os-lisflood-settings-xml): list of variables which are generally defined by the users.
-- [**lfbinding**](../5_annex_settings_and_options/index.md#table-lfbinging-section-in-os-lisflood-settings-xml): list of model variables.
+- [**lfuser**](../5_annex_settings_and_options/index.md#table-lfuser-in-os-lisflood-settings-xml): list of variables which are generally defined by the users.
+- [**lfbinding**](../5_annex_settings_and_options/index.md#table-lfbinding-section-in-os-lisflood-settings-xml): list of model variables.
 - [**initial variables**](../5_annex_settings_and_options/index.md#table-variables-required-for-model-initialization): list of variables required for model initialization. The table indicates values/maps required by the cold and warm start of both prerun and run)
 
 
 ## **Table:** *lfoptions section in OS LISFLOOD settings xml*
 
-The table below presents the ist of available switches to activate optional modules and optional outputs (time series and map formats). For each option, 1 = ON; 0 = OFF. Deault staus is 0 = OFF, unless otherwise indicated in the table. 
+The table below presents the list of available switches to activate optional modules and optional outputs (time series and map formats). For each option, 1 = ON; 0 = OFF. Default status is 0 = OFF, unless otherwise indicated in the table. 
 
 |   module                                   |   KEY                                   |   Type                                |   I/O                          |   Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 |:-------------------------------------------|:----------------------------------------|:--------------------------------------|:-------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|

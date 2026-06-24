@@ -21,7 +21,7 @@ This user guide provides the examples for the European and Global domains that a
 
 ## References
 
-Readers of this user guide are encouarged to cite the scinetific publications listed below.
+Readers of this user guide are encouraged to cite the scientific publications listed below.
 
 - LISFLOOD Static Maps: Choulga, M., Moschini, F., Mazzetti, C., Grimaldi, S., Disperati, J., Beck, H., Salamon, P., and Prudhomme, C.: Technical note: Surface fields for global environmental modelling, Hydrol. Earth Syst. Sci., 28, 2991–3036, https://doi.org/10.5194/hess-28-2991-2024, 2024.
 
@@ -40,6 +40,6 @@ OS LISFLOOD static input maps and tables for the operational versions of the [Co
 
 - EC-JRC Data Catalogue, [LISFLOOD static and parameter maps for GloFAS](https://data.jrc.ec.europa.eu/dataset/68050d73-9c06-499c-a441-dc5053cb0c86)
 
-The European Meteorological Observations (EMO) 1 arcmin-resolution, (sub-)daily, multi-variable gridded meteorological dataset includes precipitation, temperatuure, wind speed,solar radiation and water vapour pressure for the pan-European EFAS computational domain, and it can be downloaded from:
+The European Meteorological Observations (EMO) 1 arcmin-resolution, (sub-)daily, multi-variable gridded meteorological dataset includes precipitation, temperature, wind speed,solar radiation and water vapour pressure for the pan-European EFAS computational domain, and it can be downloaded from:
 
 - EC-JRC Data Catalogue, [EMO: A high-resolution multi-variable gridded meteorological data set for Europe](https://data.jrc.ec.europa.eu/dataset/0bd84be4-cec8-4180-97a6-8b3adaac4d26)

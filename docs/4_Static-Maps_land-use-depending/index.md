@@ -149,7 +149,7 @@ The LISFLOOD model does not accept missing values for Kc, Kg and Km thus all zer
 
 | Map name | File name*;type | Units; range | Description |
 | :---| :--- | :--- | :--- |
-|Soil depth|soildeoth**N_T**.nc; <br> Type: Float32| Units: mm;<br>Range: ≥ 50**|Forested/ other (non-forested) area soil depth <br>for soil layer 1 (surface layer)/ 2 (middle layer)/ 3 (bottom layer)|
+|Soil depth|soildepth**N_T**.nc; <br> Type: Float32| Units: mm;<br>Range: ≥ 50**|Forested/ other (non-forested) area soil depth <br>for soil layer 1 (surface layer)/ 2 (middle layer)/ 3 (bottom layer)|
 
 *where **N** is the number of soil depth layer (**N**= ’1’ for surface layer, **N** = ’2’ for middle layer, **N** = ’3’ for bottom layer), and **T** is the landcover type (**T** = ’f’ for forested areas, **T** = ’o’ for non-forested areas or others).
 **where range for soil layer 1 (surface layer) equals 50 mm, and for soil layer 2 (middle layer) and 3 (bottom layer) equals ≥ 50 mm.

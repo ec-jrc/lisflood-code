@@ -10,7 +10,7 @@ He was a scientist and educator to his core. During an exceptional career, he pu
 Ad’s ability to push the boundaries of science and to see the applications of said science has been at the heart of the LISFLOOD model that serves hydrologists  and the wider academic community worldwide for their research. LISFLOOD is also the core of the European and Global Flood Awareness Systems. Whilst these started as research projects under his leadership and guidance, they have become cornerstones of the operational Copernicus Emergency Management service. As such, Ad’s science regularly serves to improve Europeans abilities to tackle flood related disasters.
 
 Ad provided a safe space for his students and early-career colleagues, helping them to flourish and make the best of their skills for our institution. He provided scientific advice to peers, and was always a highly professional, dependable, reliable and much valued colleague.
-Enyone who's ever met Ad remembers him with a smile, with kind words and easy going attitude. We pledge to continue working on his Lisflood legacy.<br>
+Everyone who's ever met Ad remembers him with a smile, with kind words and easy going attitude. We pledge to continue working on his Lisflood legacy.<br>
 ------------------------------------
 <span style="color:black; font-family:Georgia; font-size:1em;">LISFLOOD User Guide</span>
 

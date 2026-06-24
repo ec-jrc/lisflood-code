@@ -1,16 +1,16 @@
-# Step 4: LISFLOOD initializion or prerun
+# Step 4: LISFLOOD initialization or prerun
 
 Just as any other hydrological model, LISFLOOD needs to know the initial state (i.e. amount of water stored in the groundwater zone, soil, channels) of its internal state variables in order to start a simulation. However, in practice we hardly ever know the initial state of all state variables at a given time. Hence, the state of the initial storages must be estimated: this phase is the initialisation of a hydrological model.
 
 A OS LISFLOOD simulation requires at least a prerun and a cold start. In some cases, performing warm start simulations might be convenient. The types of OS LISFLOOD runs are explained below. This page focuses on the OS LISFLOOD prerun, the next page is dedicated to the cold start and the warm start.
 
->**OS LISFLOOD prerun** simulation has the purpose to adequately initialize the state of the slow storages, namely grounwater zone and soil. OS LISFLOOD prerun constitutes the **initialization run**. OS LISFLOOD prerun output is used as input to the OS LISFLOOD cold start run.
+>**OS LISFLOOD prerun** simulation has the purpose to adequately initialize the state of the slow storages, namely groundwater zone and soil. OS LISFLOOD prerun constitutes the **initialization run**. OS LISFLOOD prerun output is used as input to the OS LISFLOOD cold start run.
 
->OS LISFLOOD cold start run and warm start run deliver the actual model outputs to be usef for analysis/forecasts.
+>OS LISFLOOD cold start run and warm start run deliver the actual model outputs to be used for analysis/forecasts.
 
->**OS LISFLOOD cold start** run takes as input the OS LISFLOOD prerun output to initialize the slow storages (soil and groundwater). Initial values of fast(er) respoding storages (e.g. channel volume) are set to bogus values. It is always recommended to discard the initial (3) years of the OS LISFLOOD cold start to allow adequate initialization of fast(er) respoding storages.
+>**OS LISFLOOD cold start** run takes as input the OS LISFLOOD prerun output to initialize the slow storages (soil and groundwater). Initial values of fast(er) responding storages (e.g. channel volume) are set to bogus values. It is always recommended to discard the initial (3) years of the OS LISFLOOD cold start to allow adequate initialization of fast(er) responding storages.
 
->**OS LISFLOOD warm start** resumes the computations from the end states of a preceeding simulation. 
+>**OS LISFLOOD warm start** resumes the computations from the end states of a preceding simulation. 
 
 
 In this page we will:
@@ -70,7 +70,7 @@ The complete list of initial state values for a **OS LISFLOOD prerun** is presen
 
 ### Initialization of volumetric soil moisture content 
 
-> An improved initialization scheme has been implemented in OS-LISFLOOD v5, allowing to remove non-realistic trends in the thrid soil layer volumetric soil moisture content and consequent fictitious discharge values in the channels. There were previously observed, for example, in arid climates. Albeit the former initialization strategy with bogus values is still feasibile, the use of the methodology explained here is highly recommended, for all modelling excercises.
+> An improved initialization scheme has been implemented in OS-LISFLOOD v5, allowing to remove non-realistic trends in the third soil layer volumetric soil moisture content and consequent fictitious discharge values in the channels. There were previously observed, for example, in arid climates. Albeit the former initialization strategy with bogus values is still feasible, the use of the methodology explained here is highly recommended, for all modelling exercises.
 
 OS LISFLOOD prerun provides in output end states and average fluxes. The end states are the volumetric soil moisture content for the three soil layers and the three land covers (9 maps). The average fluxes represent the average infiltration (over the simulation period) from the soil layer 2 to soil layer 3, for the three land cover fractions (3 maps indicated as *SeepTopToSubBAverageOther/Forest/Irrigated*). In the cold run, the end states are used to initialise the volumetric soil moisture content of soil layers 1 and 2. The initialisation of the volumetric soil moisture content of soil layer 3 makes use of the relevant end state and of the fluxes.
 Specifically, according to the steady-state approach, the model tries to enable long term equilibrium conditions between average inflow and outflow fluxes in the third soil layer. 
@@ -80,7 +80,7 @@ $$
 q_{soil2to3,fraction} = SeepTopToSubBAverageFraction
 $$
 
-The prerun must include a sufficiently long simulation period (a few decades) to allow the computation of representative valuse of  *SeepTopToSubBAverageOther/Forest/Irrigated*. Furthermore, accounting for an adequate spin-up period of the prerun allows is recommended to compute realistic average fluxes values. This latter outcome can be achieved by adequately setting the value of *NumDaysSpinUp* (recommended value: 1095 days, i.e. 3 years). 
+The prerun must include a sufficiently long simulation period (a few decades) to allow the computation of representative values of  *SeepTopToSubBAverageOther/Forest/Irrigated*. Furthermore, accounting for an adequate spin-up period of the prerun allows is recommended to compute realistic average fluxes values. This latter outcome can be achieved by adequately setting the value of *NumDaysSpinUp* (recommended value: 1095 days, i.e. 3 years). 
 
 Within OS LISFLOOD, the outflow from the third soil layer to the upper groundwater zone is defined by the equations explained in the chapter [Soil moisture redistribution](https://ec-jrc.github.io/lisflood-model/2_12_stdLISFLOOD_soilmoisture-redistribution/) of the [Model Documentation](https://ec-jrc.github.io/lisflood-model/).
 
@@ -101,12 +101,12 @@ Prerun end states of volumetric soil moisture of layer 3 are used as initial gue
 
 
 ### Initialization of the upper groundwater zone water content
-To initialize the upper groudwater zone water content it is recommended to use the end state generated by the prerun. <br>
+To initialize the upper groundwater zone water content it is recommended to use the end state generated by the prerun. <br>
 
 
 ### Initialisation of the lower groundwater zone water content
 
-According to the steady-state approach, the condition in which *the lower groundwater zone storage is constant over time means that the in- and outflow terms balance each other out*. OS LISFLOOD approach for the computation of inflow, outflow, and storage variation is explained in the chapter [Groudwater](https://ec-jrc.github.io/lisflood-model/2_13_stdLISFLOOD_groundwater/) of the [Model Documentation](https://ec-jrc.github.io/lisflood-model/).
+According to the steady-state approach, the condition in which *the lower groundwater zone storage is constant over time means that the in- and outflow terms balance each other out*. OS LISFLOOD approach for the computation of inflow, outflow, and storage variation is explained in the chapter [Groundwater](https://ec-jrc.github.io/lisflood-model/2_13_stdLISFLOOD_groundwater/) of the [Model Documentation](https://ec-jrc.github.io/lisflood-model/).
 
 The prerun computes the average net inflow $LZavin$ over the simulation period. For this purpose, the prerun must include a sufficiently long simulation period (a few decades) to achieve representative $LZavin$ values.
 
@@ -166,7 +166,7 @@ $$
        <comment>
        Number of days to be discarded when computing the average fluxes in the initialization (prerun) simulation.
        The use of NumDaysSpinUp avoids spurious large fluxes values driven by bogus initial conditions.
-       Recommended value when performing the initialiaztion (prerun) in one chunk or the cold start of the initialization (prerun) >= 1095 (3 years)  
+       Recommended value when performing the initialization (prerun) in one chunk or the cold start of the initialization (prerun) >= 1095 (3 years)  
        Value for lisflood cold run, warm start prerun/run: 0
        </comment>
        </textvar> 
@@ -217,7 +217,7 @@ Similarly, set the name of the reporting map for the end states in <lfuser> sect
 ```xml
     <setoption choice="0" name="InitLisfloodwithoutsplit"/>
     <setoption choice="1" name="InitLisflood"/>
-    <setoption choice="0" name="ColdStart/>
+    <setoption choice="0" name="ColdStart"/>
 ```
 
 3) Activate reporting maps (in NetCDF format) in <lfoptions> section of Settings.XML file using:

@@ -19,8 +19,8 @@ The lake mask map represents the area covered by lakes and reservoirs, it is use
 | Source data| Reference/preparation | Temporal coverage | Spatial information |
 | :---| :--- | :--- | :--- |
 |Global Lakes and Wetlands Database (GLWD): <br>Large Lake Polygons (Level 1) |[GLWD leve1](https://www.worldwildlife.org/publications/global-lakes-and-wetlands-database-large-lake-polygons-level-1)|2004|Global, 1:1 to 1:3 million resolution|
-|Global Lakes and Wetlands Database (GLWD): <br>Small Lake Polygons (Level 3) |[GLWD leve1](https://www.worldwildlife.org/publications/global-lakes-and-wetlands-database-large-lake-polygons-level-2)|2004|Global, 1:1 to 1:3 million resolution|
-|Fraction of inland water| It can be prepared by using<br> the methodology explained [here](../4_Static-Maps_land-use#lend-use)|NA|Global|
+|Global Lakes and Wetlands Database (GLWD): <br>Small Lake Polygons (Level 2) |[GLWD leve1](https://www.worldwildlife.org/publications/global-lakes-and-wetlands-database-large-lake-polygons-level-2)|2004|Global, 1:1 to 1:3 million resolution|
+|Fraction of inland water| It can be prepared by using<br> the methodology explained [here](../4_Static-Maps_land-use#land-use)|NA|Global|
 
 ### Methodology
 
@@ -42,7 +42,7 @@ If a grid-cell has any fraction of inland water and is inside the GLWD Level 1 a
 ## Reservoirs map and tables 
 
 Reservoirs are identified using a unique integer number (ID).
-The reservoirs map shows the outflow location of each reservoir: each outflow point has the ID of the relevant reservoir. Modelling of reservoirs within OS LISFLOOD then requires the following pieces of information: reservoir storage, minimum reservoir outflow, normal reservoir outflow, flood reservoir outflow (connected to 100 year return period discharge). The latter information is provuided to the code in .txt format (these txt files are traditionally called OS LISFLOOD tables).
+The reservoirs map shows the outflow location of each reservoir: each outflow point has the ID of the relevant reservoir. Modelling of reservoirs within OS LISFLOOD then requires the following pieces of information: reservoir storage, minimum reservoir outflow, normal reservoir outflow, flood reservoir outflow (connected to 100 year return period discharge). The latter information is provided to the code in .txt format (these txt files are traditionally called OS LISFLOOD tables).
 
 ### General map and tables information and possible source data
 
@@ -51,8 +51,8 @@ The reservoirs map shows the outflow location of each reservoir: each outflow po
 |Reservoirs|res.nc; <br>Type: Float32|Units: -; <br>Range: integer  ID number to identify each lake |Reservoir outflow location <br> (stores lake ID number in the metadata file)|
 |Reservoir Total Storage| res_storage.txt; <br>2 columms: ID VALUE; 1 row for each reservoir|Units: m3|Reservoir capacity|
 |Reservoir Flood outflow| res_flood_outflow.txt; <br>2 columms: ID VALUE; 1 row for each reservoir|Units: m3/s|Reservoir Flood outflow|
-|Reseervoir normal outflow| res_normal_outflow.txt; <br>2 columms: ID VALUE; 1 row for each reservoir|Units: m3/s|Normal outflow|
-|Reseervoir minimum outflow| res_min_outflow.txt; <br>2 columms: ID VALUE; 1 row for each reservoire|Units: m3/s|Minimum outlfow|
+|Reservoir normal outflow| res_normal_outflow.txt; <br>2 columms: ID VALUE; 1 row for each reservoir|Units: m3/s|Normal outflow|
+|Reseervoir minimum outflow| res_min_outflow.txt; <br>2 columms: ID VALUE; 1 row for each reservoir|Units: m3/s|Minimum outflow|
 
 The well-known Global Reservoir and Dam Database[GDW](https://www.globaldamwatch.org/grand) now superseeded by the Global Dam Watch [GDW](https://www.globaldamwatch.org/database) is a relevant example of source of data for lakes map and tables.
 
@@ -61,7 +61,7 @@ As a first step, it is recommended to create a file including all reservoir info
 Essential information are:
 
 1. reservoir unique identifier, selected by the user or taken from external datasets;
-2. Geographic oordinates of the reservoir outlet;
+2. Geographic coordinates of the reservoir outlet;
 3. Coordinates of the reservoir outlet mapped on OS LISFLOOD local drainage direction map  ([ldd](../4_Static-Maps_topography/index.md));
 4. Reservoir storage capacity;
 5. Reservoir normal outflow;
@@ -82,23 +82,23 @@ Optional metadata are:
 
 The following paragraphs provide guidelines for the generation of the reservoir map and tables.
 
-Reservoir unique identifier (1) and coordinates of the outlet mapped on the OS LISFLOOD local drainage direction map  ([ldd](../4_Static-Maps_topography/index.md)) (3) are required to generate the reservoirs map. Geographic oordinates of the reservoirs outlet (2) and OS LISFLOOD local drainage direction map  ([ldd](../4_Static-Maps_topography/index.md)) are essential to generate (3). Adequate model representation requires the agreement between reservoir catchment area (7) and OS LISFLOOD [upstream area map](../4_Static-Maps_topography/index.md).
+Reservoir unique identifier (1) and coordinates of the outlet mapped on the OS LISFLOOD local drainage direction map  ([ldd](../4_Static-Maps_topography/index.md)) (3) are required to generate the reservoirs map. Geographic coordinates of the reservoirs outlet (2) and OS LISFLOOD local drainage direction map  ([ldd](../4_Static-Maps_topography/index.md)) are essential to generate (3). Adequate model representation requires the agreement between reservoir catchment area (7) and OS LISFLOOD [upstream area map](../4_Static-Maps_topography/index.md).
 
-Reservoir storage capcaity can be retrieved from local datasets or global datasets such as [GDW](https://www.globaldamwatch.org/grand).
+Reservoir storage capacity can be retrieved from local datasets or global datasets such as [GDW](https://www.globaldamwatch.org/grand).
 
-Reservoir normal outflow, minimum outflow, flood outflow can also be derived from in situ observations, local datasets or global datasets. Where such information is not avaible, users can implement the following approximations: reservoir normal outflow can be approximated by river average discharge (from measurements or numerical simulations); reservoir minimum outflow can be approximated by environmental discharge (from regulations or numerical approximation); resrervoir flood outflow can be approaximated by 100-year return period of river discharge discharge.
+Reservoir normal outflow, minimum outflow, flood outflow can also be derived from in situ observations, local datasets or global datasets. Where such information is not avaible, users can implement the following approximations: reservoir normal outflow can be approximated by river average discharge (from measurements or numerical simulations); reservoir minimum outflow can be approximated by environmental discharge (from regulations or numerical approximation); reservoir flood outflow can be approximated by 100-year return period of river discharge discharge.
 
 The degree of regulation can be computes as the quotient between reservoir capacity (Units: MCM) and normal reservoir outflow (units: m3/s). It is recommented to model reservoirs with low degree of regulation (e.g. lower than 0.08) as lakes.
 
 Reservoir maps and tables of the European 1arcmin domain and global 3arcmin domain are mainly based on information from [GDW](https://www.globaldamwatch.org/grand).
 Reservoirs included in the European 1arcmin domain had a minimum volume of 10 hm3, a minimum upstream catchment area of 50 km2, degree of regulation larger or equal to 0.08.
 Lakes included in the global 3arcmin domain had a minimum volume of 100 hm3, a minimum upstream catchment area of 250 km2, degree of regulation larger or equal to 0.08.
-Reservoir normal, nminimum, flood outflow were computed using OS LISFLOOD CEMS EFAS and CEMS GloFAS discharge reanalysis (GloFASv4 reanalysis upstream of the reservoir for GloFASv5 tables; EFASv5 naturalized flow simulation for EFASv6 tables).
+Reservoir normal, minimum, flood outflow were computed using OS LISFLOOD CEMS EFAS and CEMS GloFAS discharge reanalysis (GloFASv4 reanalysis upstream of the reservoir for GloFASv5 tables; EFASv5 naturalized flow simulation for EFASv6 tables).
 
 ## Lakes map and tables 
 
 Lakes are identified using a unique integer number (ID).
-The lakes map shows the outflow location of each lake: each outflow point has the ID of the relevant lake. Modelling of lakes within OS LISFLOOD then requires the following pieces of information: lake surface area, average inflow to the lake, width of the lake outlet. The latter information is provuided to the code in .txt format (these txt files are traditionally called OS LISFLOOD tables).
+The lakes map shows the outflow location of each lake: each outflow point has the ID of the relevant lake. Modelling of lakes within OS LISFLOOD then requires the following pieces of information: lake surface area, average inflow to the lake, width of the lake outlet. The latter information is provided to the code in .txt format (these txt files are traditionally called OS LISFLOOD tables).
 
 
 ### General map and tables information and possible source data
@@ -118,7 +118,7 @@ As a first step, it is recommended to create a file including all lakes informat
 Essential information are:
 
 1. Lake unique identifier, selected by the user or taken from external datasets;
-2. Geographic oordinates of the lake outlet;
+2. Geographic coordinates of the lake outlet;
 3. Coordinates of the lake outlet mapped on OS LISFLOOD local drainage direction map  ([ldd](../4_Static-Maps_topography/index.md));
 4. Lake surface area;
 5. Lake outlet width;
@@ -135,11 +135,11 @@ Optional metadata are:
 
 The following paragraphs provide guidelines for the generation of the lake map and tables.
 
-Lake unique identifier (1) and coordinates of the outlet mapped on the OS LISFLOOD local drainage direction map  ([ldd](../4_Static-Maps_topography/index.md)) (3) are required to generate the lake map. Geographic oordinates of the lake outlet (2) and OS LISFLOOD local drainage direction map  ([ldd](../4_Static-Maps_topography/index.md)) are essential to generate (3). Adequate model representation requires the agreement between lake catchment area (7) and OS LISFLOOD [upstream area map](../4_Static-Maps_topography/index.md).
+Lake unique identifier (1) and coordinates of the outlet mapped on the OS LISFLOOD local drainage direction map  ([ldd](../4_Static-Maps_topography/index.md)) (3) are required to generate the lake map. Geographic coordinates of the lake outlet (2) and OS LISFLOOD local drainage direction map  ([ldd](../4_Static-Maps_topography/index.md)) are essential to generate (3). Adequate model representation requires the agreement between lake catchment area (7) and OS LISFLOOD [upstream area map](../4_Static-Maps_topography/index.md).
 
 Lake surface area can be retrieved from local datasets or global datasets such as HydroLAKES](https://www.hydrosheds.org/products/hydrolakes), [GLWD](https://www.hydrosheds.org/products/glwd), [GRAND](https://www.globaldamwatch.org/grand).
 
-Where lake outlet width cannot be retrieved from external datdaset, it can be measured with GIS tools.
+Where lake outlet width cannot be retrieved from external dataset, it can be measured with GIS tools.
 
 Finally, lake average inflow can be retrieved from observed time series (where available) or numerical model results.
 
