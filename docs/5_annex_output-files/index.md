@@ -42,9 +42,9 @@ Output time series can be classified in the following categories:
 | depth of water on soil surface                               | $mm$                       | WaterDepthAvUpsTS      | wdepthUps.tss          |
 | depth of snow cover on                                       | $mm$                       | SnowCoverAvUpsTS       | snowCoverUps.tss       |
 | depth of interception storage                                | $mm$                       | CumInterceptionAvUpsTS | cumInterceptionUps.tss |
-| soil moisture superficial layer                                    | $\frac{mm^3}{mm^3}$        | Theta1AvUpsTS          | th1aAvUps.tss           |
-| soil moisture upper layer                                    | $\frac{mm^3}{mm^3}$        | Theta2AvUpsTS          | th1bAvUps.tss           |
-| soil moisture lower layer                                        | $\frac{mm^3}{mm^3}$        | Theta3AvUpsTS          | th2AvUps.tss           |
+| soil moisture superficial layer                                    | $\frac{mm^3}{mm^3}$        | Theta1AvUpsTS          | th1AvUps.tss           |
+| soil moisture upper layer                                    | $\frac{mm^3}{mm^3}$        | Theta2AvUpsTS          | th2AvUps.tss           |
+| soil moisture lower layer                                        | $\frac{mm^3}{mm^3}$        | Theta3AvUpsTS          | th3AvUps.tss           |
 | groundwater upper zone                                       | $mm$                       | UZAvUpsTS              | uzUps.tss              |
 | groundwater lower zone                                       | $mm$                       | LZAvUpsTS              | lzUps.tss              |
 | number of days since last rain                               | $days$                     | DSLRAvUpsTS            | dslrUps.tss            |
@@ -71,9 +71,9 @@ Output time series can be classified in the following categories:
 | **STATE VARIABLES AT SITES** (option *repStateSites*)     |                            |                        |                        |
 | depth of snow cover on soil surface (pixel-average)          | $mm$                       | SnowCoverTS            | snowCover.tss          |
 | depth of interception storage                                | $mm$                       | CumInterceptionTS      | cumInt.tss             |
-| soil moisture content superficial layer                            | $\frac{mm^3}{mm^3}$        | Theta1TS               | th1a.tss              |
-| soil moisture content upper layer                            | $\frac{mm^3}{mm^3}$        | Theta2TS               | th1b.tss              |
-| soil moisture layer bottom layer                                        | $\frac{mm^3}{mm^3}$        | Theta3TS               | th2.tss              |
+| soil moisture content superficial layer                            | $\frac{mm^3}{mm^3}$        | Theta1TS               | th1.tss              |
+| soil moisture content upper layer                            | $\frac{mm^3}{mm^3}$        | Theta2TS               | th2.tss              |
+| soil moisture layer lower layer                                        | $\frac{mm^3}{mm^3}$        | Theta3TS               | th3.tss              |
 | storage in upper groundwater zone                            | $mm$                       | UZTS                   | uz.tss                 |
 | storage in lower groundwater zone                            | $mm$                       | LZTS                   | lz.tss                 |
 | number of days since last rain                               | $days$                     | DSLRTS                 | dslr.tss               |
@@ -161,7 +161,7 @@ To speed up the pre-run and to prevent that results are taken from the pre-run, 
 | infiltration                            | repInfiltrationMaps    | $\frac{mm}{timestep}$      | InfiltrationMaps <br> InfiltrationForestMaps                                   | inf <br> infF             |
 | preferential (bypass) flow              | repPrefFlowMaps        | $\frac{mm}{timestep}$      | PrefFlowMaps <br> PrefFlowtherMaps <br> PrefFlowForestMaps <br> PrefFlowIrrigationMaps                                       | pflowpixel <br> pflow <br> pflowF <br> pflowi           |
 | percolation upper to lower soil layer   | repPercolationMaps     | $\frac{mm}{timestep}$      | Percolation1ato1bOtherMaps <br> Percolation1to1bForestMaps <br> Percolation1ato1bIrrigationMaps <br> Percolation1bto2OtherMaps <br> Percolation1bto2ForestMaps <br> Percolation1bto2IrrigationMaps                                    | Percolation1ato1bOther <br> Percolation1ato1bForest <br> Percolation1to2Irrigation <br> Percolation1bto2Other <br> Percolation1bto2Forest <br> Percolation1bto2Irrigation           |
-| percolation lower soil layer to subsoil | repSeepSubToGWMaps     | $\frac{mm}{timestep}$      | SeepSubToGWMaps <br> SeepSubToGWotherMaps <br> SeepSubToGWforestMaps <br> SeepSubToGWoirrigationMaps                                    | sgwPixel <br> sgwOther <br> sgwForest <br> sgwIrrigation          |
+| percolation lower soil layer to subsoil | repSeepSubToGWMaps     | $\frac{mm}{timestep}$      | SeepSubToGWMaps <br> SeepSubToGWotherMaps <br> SeepSubToGWforestMaps <br> SeepSubToGWirrigationMaps                                    | sgwPixel <br> sgwOther <br> sgwForest <br> sgwIrrigation          |
 | surface runoff                          | repSurfaceRunoffMaps   | $\frac{mm}{timestep}$      | SurfaceRunoffMaps                                  | srun            |
 | outflow from upper zone | repUZOutflowMaps       | $\frac{mm}{timestep}$      | UZOutflowMaps, UZOutflowForestMaps <br> UZOutflowIrrigationMaps                                      | quzPixel <br>  quz <br> quzF <br> quzi             |
 | outflow from lower zone                 | repLZOutflowMaps       | $\frac{mm}{timestep}$      | LZOutflowMaps                                      | qlz             |
@@ -170,7 +170,7 @@ To speed up the pre-run and to prevent that results are taken from the pre-run, 
 | loss from lower zone                    | repGwLossMaps          | $\frac{mm}{timestep}$      | GwLossMaps                                         | loss            |
 
 
-*LISFLOOD state maps* are the maps can be used to define the initial conditions of another simultion (warm start). These maps are written in output when 'repStateMaps' = 1.
+*LISFLOOD state maps* are the maps can be used to define the initial conditions of another simulation (warm start). These maps are written in output when 'repStateMaps' = 1.
 LISFLOOD writes the results for each computational time step.
 The complete list of state maps is available [here](../5_annex_state-variables/index.md).
 

@@ -42,8 +42,8 @@ Tests that are using Comparator classes are:
 | test_init_6h             | test_results.py          | NetCDFComparator(atol=0.0001, rtol=0.001), TSSComparator(atol=0.0001, rtol=0.001) |
 | test_warmstart_daily     | test_warmstart.py        | NetCDFComparator(atol=0.0001, rtol=0.001), TSSComparator(array_equal=True)        |
 | test_warmstart_6h        | test_warmstart.py        | NetCDFComparator(atol=0.0001, rtol=0.001), TSSComparator(array_equal=True)        |
-| test_subcacthment_daily  | test_subcatchments.py    | NetCDFComparator(array_equal=True)                                                |
-| test_subcacthment_6h     | test_subcatchments.py    | NetCDFComparator(array_equal=True)                                                |
+| test_subcatchment_daily  | test_subcatchments.py    | NetCDFComparator(array_equal=True)                                                |
+| test_subcatchment_6h     | test_subcatchments.py    | NetCDFComparator(array_equal=True)                                                |
 | test_reported_steps      | test_reported_steps.py   | NetCDFComparator(array_equal=True)                                                |
 | test_waterabstraction_24h| test_water_abstraction.py| NetCDFComparator(array_equal=True)                                                |
 | test_waterabstraction_6h | test_water_abstraction.py| NetCDFComparator(array_equal=True)                                                |
@@ -647,10 +647,10 @@ This test demonstrates that wateruse module introduces incongruities between run
 
 |Test case                                              | DtSec | Simulation period                  | Expected                       |
 |-------------------------------------------------------|-------|------------------------------------|--------------------------------|
-| test_subcacthment_daily                               | 86400 |02/01/2016 06:00 - 30/03/2016 06:00 | all netcdf are array equal     |
-| test_subcacthment_6h                                  | 21600 |01/03/2016 06:00 - 30/03/2016 06:00 | all netcdf are array equal     |
-| test_subcacthment_daily_wateruse_groundwatersmooth_OFF| 86400 |02/01/2016 06:00 - 30/01/2016 06:00 | all netcdf are array equal     |
-| test_subcacthment_daily_wateruse_groundwatersmooth_ON | 86400 |02/01/2016 06:00 - 30/01/2016 06:00 | the results are not identical  |
+| test_subcatchment_daily                               | 86400 |02/01/2016 06:00 - 30/03/2016 06:00 | all netcdf are array equal     |
+| test_subcatchment_6h                                  | 21600 |01/03/2016 06:00 - 30/03/2016 06:00 | all netcdf are array equal     |
+| test_subcatchment_daily_wateruse_groundwatersmooth_OFF| 86400 |02/01/2016 06:00 - 30/01/2016 06:00 | all netcdf are array equal     |
+| test_subcatchment_daily_wateruse_groundwatersmooth_ON | 86400 |02/01/2016 06:00 - 30/01/2016 06:00 | the results are not identical  |
 
 **Note:** This test doesn't use a reference dataset so it's not a black-box test. It ensures that simulations on domain and its subdomains are equivalent.
  
@@ -672,14 +672,14 @@ modules_to_unsetGW= [
     'groundwaterSmooth',
 ]
 
-def test_subcacthment_daily(self):
+def test_subcatchment_daily(self):
     step_start = '02/01/2016 06:00'
     step_end = '30/03/2016 06:00'
     dt_sec = 86400
     report_steps = '3650..4100'
     self.run_subcathmenttest_by_dtsec(dt_sec, step_end, step_start, report_steps=report_steps)
 
-def test_subcacthment_daily_wateruse_groundwatersmooth_ON(self):
+def test_subcatchment_daily_wateruse_groundwatersmooth_ON(self):
     step_start = '02/01/2016 06:00'
     step_end = '30/01/2016 06:00'
     dt_sec = 86400

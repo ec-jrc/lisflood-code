@@ -17,15 +17,15 @@
 | CumInterceptionForestState     | cumf               | CumInterception[1]    | mm   | Reported interception storage for forest                                                          |
 | CumInterceptionIrrigationState | cumi               | CumInterception[2]    | mm   | Reported interception storage for irrigation                                                      |
 | CumIntSealedState              | cseal              | CumInterSealed        | mm   | Reported cumulative depressions storage                                                           |
-| Theta1State                    | tha                | Theta1a[0]            | -    | Reported volumetric soil water content for superficial soil layer (1a), other fraction [V/V]      |
-| Theta1ForestState              | thfa               | Theta1a[1]            | -    | Reported volumetric soil water content for superficial soil layer (1a), forest fraction [V/V]     |
-| Theta1IrrigationState          | thia               | Theta1a[2]            | -    | Reported volumetric soil water content for superficial soil layer (1a), irrigation fraction [V/V] |
-| Theta2State                    | thb                | Theta1b[0]            | -    | Reported volumetric soil water content for upper soil layer (1b), other fraction [V/V]            |
-| Theta2ForestState              | thfb               | Theta1b[1]            | -    | Reported volumetric soil water content for upper soil layer (1b), forest fraction [V/V]           |
-| Theta2IrrigationState          | thib               | Theta1b[2]            | -    | Reported volumetric soil water content upper soil layer (1b), irrigation fraction [V/V]           |
-| Theta3State                    | thc                | Theta2[0]             | -    | Reported volumetric soil water content for lower soil layer (2), other fraction [V/V]             |
-| Theta3ForestState              | thfc               | Theta2[1]             | -    | Reported volumetric soil water content for lower soil layer (2), forest   fraction [V/V]          |
-| Theta3IrrigationState          | thic               | Theta2[2]             | -    | Reported volumetric soil water content for for lower soil layer (2), irrigation  fraction [V/V]   |
+| Theta1State                    | th1                | Theta1a[0]            | -    | Reported volumetric soil water content for superficial soil layer (1), other fraction [V/V]      |
+| Theta1ForestState              | thf1               | Theta1a[1]            | -    | Reported volumetric soil water content for superficial soil layer (1), forest fraction [V/V]     |
+| Theta1IrrigationState          | thi1               | Theta1a[2]            | -    | Reported volumetric soil water content for superficial soil layer (1), irrigation fraction [V/V] |
+| Theta2State                    | th2                | Theta1b[0]            | -    | Reported volumetric soil water content for upper soil layer (2), other fraction [V/V]            |
+| Theta2ForestState              | thf2               | Theta1b[1]            | -    | Reported volumetric soil water content for upper soil layer (2), forest fraction [V/V]           |
+| Theta2IrrigationState          | thi2               | Theta1b[2]            | -    | Reported volumetric soil water content upper soil layer (2), irrigation fraction [V/V]           |
+| Theta3State                    | th3                | Theta2[0]             | -    | Reported volumetric soil water content for lower soil layer (3), other fraction [V/V]             |
+| Theta3ForestState              | thf3               | Theta2[1]             | -    | Reported volumetric soil water content for lower soil layer (3), forest   fraction [V/V]          |
+| Theta3IrrigationState          | thi3               | Theta2[2]             | -    | Reported volumetric soil water content for for lower soil layer (3), irrigation  fraction [V/V]   |
 | UZState                        | uz                 | UZ[0]                 | mm   | Reported storage in upper groundwater zone, other fraction                                        |
 | UZForestState                  | uzf                | UZ[1]                 | mm   | Reported storage in upper groundwater zone, forest fraction                                       |
 | UZIrrigationState              | uzi                | UZ[2]                 | mm   | Reported storage in upper groundwater zone, irrigation fraction                                   |
