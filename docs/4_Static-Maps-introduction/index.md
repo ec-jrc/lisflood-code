@@ -28,7 +28,7 @@ Readers of this user guide are encouraged to cite the scientific publications li
 Nevertheless, it must be noted this user guide provides the most updated and complete documentation about the maps and tables required for the implementation of OS LISFLOOD simulations. 
 Users of OS LISFLOOD are encouraged to refer to this online documentation. Inaccuracies and errors can be reported by opening a [GitHub issue](https://github.com/ec-jrc/lisflood-code/issues).
 
-- Pan-European Meterological input data: Salamon, P., Sperzel, T., Gomes, G. R., Radke-Fretz, M., Lemke, C.-D., Russo, C., Schweim, C., Zsoter, E., Dosio, A., Vomero, M., Ziese, M., and Grimaldi, S.: EMO-1: an improved version of the high-resolution multi-variable gridded meteorological dataset for Europe, Earth Syst. Sci. Data Discuss. [preprint], https://doi.org/10.5194/essd-2025-723, in review, 2026
+- Pan-European Meteorological input data: Salamon, P., Sperzel, T., Gomes, G. R., Radke-Fretz, M., Lemke, C.-D., Russo, C., Schweim, C., Zsoter, E., Dosio, A., Vomero, M., Ziese, M., and Grimaldi, S.: EMO-1: an improved version of the high-resolution multi-variable gridded meteorological dataset for Europe, Earth Syst. Sci. Data Discuss. [preprint], https://doi.org/10.5194/essd-2025-723, in review, 2026
 
 
 

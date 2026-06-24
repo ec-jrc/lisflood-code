@@ -409,7 +409,7 @@ The following parameters are related to the [diffusive wave routing](https://ec-
 ```
 
 - **CalChanMan3** is a multiplier that is applied to the Manning’s roughness map of the [channel system](https://ec-jrc.github.io/lisflood-model/2_16_stdLISFLOOD_channel-routing/) [-] for the grid cells where MCT routing is used
-- **ChannelsMCT** is Bolean mask including the rivers grid cells using the MCT wave routing [-]
+- **ChannelsMCT** is oBolean mask including the rivers grid cells using the MCT wave routing [-]
 - **ChanGradMaxMCT** is a upper limit for the channel gradient used in the calculation of the MCT wave routing [m/m]
 
 
@@ -512,13 +512,13 @@ Here you can define the prefix that is used for each meteorological variable, LA
 
 ### Initial conditions: OS LISFLOOD prerun, cold start, warm start
 
-OS LISFLOOD prerun simulation has the purpose to adequately initialize the state of the slow storages, namely grounwater zone and soil. OS LISFLOOD prerun can also be referred to as initialization run. This simulation must always be performed. OS LISFLOOD prerun output must be used to initialize the OS LISFLOOD cold start run.
+OS LISFLOOD prerun simulation has the purpose to adequately initialize the state of the slow storages, namely groundwater zone and soil. OS LISFLOOD prerun can also be referred to as initialization run. This simulation must always be performed. OS LISFLOOD prerun output must be used to initialize the OS LISFLOOD cold start run.
 
-OS LISFLOOD cold start run and warm start run deliver the actual model outputs to be usef for analysis/forecasts. 
+OS LISFLOOD cold start run and warm start run deliver the actual model outputs to be used for analysis/forecasts. 
 
-OS LISFLOOD cold start run takes as input the OS LISFLOOD prerun output for the slow storages, while fast(er) respoding storages (e.g. channel volume) are set to bogus values. It is always recommended to discard the initial (3) years of the OS LISFLOOD cold start to allow adequate initialization of fast(er) respoding storages. 
+OS LISFLOOD cold start run takes as input the OS LISFLOOD prerun output for the slow storages, while fast(er) responding storages (e.g. channel volume) are set to bogus values. It is always recommended to discard the initial (3) years of the OS LISFLOOD cold start to allow adequate initialization of fast(er) responding storages. 
 
-OS LISFLOOD warm start resumes the computations from the end states of a preceeding simulation (cold start or warm start).
+OS LISFLOOD warm start resumes the computations from the end states of a preceding simulation (cold start or warm start).
 
 A dedicated chapter about [model initialization](../3_step4_model-initialisation/index.md) provides more in-depth explanations of model prerun (initialization), cold start, and warm start.
 
@@ -670,13 +670,13 @@ This page has the purpose to provide an overview of the variables requiring an i
 
 - **TotalCrossSectionAreaInitValue** is the initial cross-sectional area $[m^2]$ of the water in the river channels (a substitute for initial discharge, which is directly dependent on this). A value of **-9999 ** sets the initial amount of water in the channel to half bankfull.
 
-- **ThetaInit1Value** is the initial moisture content $[\frac{mm^3} {mm^3}]$ of the superficial soil layer (1a). A value of -**9999** will set the initial soil moisture content to field capacity.
+- **ThetaInit1Value** is the initial moisture content $[\frac{mm^3} {mm^3}]$ of the superficial soil layer (1). A value of -**9999** will set the initial soil moisture content to field capacity.
 
-- **ThetaInit2Value** is the initial moisture content $[\frac{mm^3} {mm^3}]$ of the upper soil layer (1b). A value of -**9999** will set the initial soil moisture content to field capacity.
+- **ThetaInit2Value** is the initial moisture content $[\frac{mm^3} {mm^3}]$ of the upper soil layer (2). A value of -**9999** will set the initial soil moisture content to field capacity.
 
-- **ThetaInit3Value** is the initial moisture content $[\frac{mm^3} {mm^3}]$ of the lower soil layer (2). A value of -**9999** will set the initial soil moisture content to field capacity.
+- **ThetaInit3Value** is the initial moisture content $[\frac{mm^3} {mm^3}]$ of the lower soil layer (3). A value of -**9999** will set the initial soil moisture content to field capacity.
 
-- **PrevDischarge** and **PrevDischargeAvg** are the initial discharge from previous run (instantaneous and average values in the last sub-roting step) $[\frac{m^3} {s}]$ used for lakes, reservoirs and transmission loss (only needed if option is on for lakes or reservoirs or transmission loss). A value of **-9999** sets the initial amount of discharge to equivalent of half bankfull.
+- **PrevDischarge** and **PrevDischargeAvg** are the initial discharge from previous run (instantaneous and average values in the last sub-routing step) $[\frac{m^3} {s}]$ used for lakes, reservoirs and transmission loss (only needed if option is on for lakes or reservoirs or transmission loss). A value of **-9999** sets the initial amount of discharge to equivalent of half bankfull.
 
 - **PrevCmMCTInitValue** is the Courant number at the end of the previous step and it is only used for MCT wave routing [-]. A value of -**9999 ** sets the initial value to 1.
 

@@ -107,7 +107,7 @@ For example:
 -   all **output** goes to one directory (e.g. 'out')
 
 
-Users might consider the example of sub-folders organization provided in the public datasets: [OS LISFLOOD static and parameter maps for GloFAS dataset](https://data.jrc.ec.europa.eu/dataset/68050d73-9c06-499c-a441-dc5053cb0c86) and [OS LISLOOD static and parameter maps for Europe](https://data.jrc.ec.europa.eu/dataset/f572c443-7466-4adf-87aa-c0847a169f23).
+Users might consider the example of sub-folders organization provided in the public datasets: [OS LISFLOOD static and parameter maps for GloFAS dataset](https://data.jrc.ec.europa.eu/dataset/68050d73-9c06-499c-a441-dc5053cb0c86) and [OS LISFLOOD static and parameter maps for Europe](https://data.jrc.ec.europa.eu/dataset/f572c443-7466-4adf-87aa-c0847a169f23).
 
 
 

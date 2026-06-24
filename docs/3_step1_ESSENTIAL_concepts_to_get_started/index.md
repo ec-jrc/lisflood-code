@@ -65,9 +65,9 @@ The sections ‘lfuser’, ‘lfoptions’ and ‘lfbinding’' have different p
      For example:
 
 ```xml
-     'lfuser' secttion: 
+     'lfuser' section: 
      <textvar name="IrrigationEfficiency" value="$(PathMaps)/irrigation_efficiency_baseline.nc"></textvar>
-     'lfbinding' secttion: 
+     'lfbinding' section: 
      <textvar name="IrrigationEfficiency" value="$(IrrigationEfficiency)"></textvar>
 ```
 

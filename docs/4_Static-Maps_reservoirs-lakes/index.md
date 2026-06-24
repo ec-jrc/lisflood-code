@@ -86,9 +86,9 @@ Reservoir unique identifier (1) and coordinates of the outlet mapped on the OS L
 
 Reservoir storage capacity can be retrieved from local datasets or global datasets such as [GDW](https://www.globaldamwatch.org/grand).
 
-Reservoir normal outflow, minimum outflow, flood outflow can also be derived from in situ observations, local datasets or global datasets. Where such information is not avaible, users can implement the following approximations: reservoir normal outflow can be approximated by river average discharge (from measurements or numerical simulations); reservoir minimum outflow can be approximated by environmental discharge (from regulations or numerical approximation); reservoir flood outflow can be approximated by 100-year return period of river discharge discharge.
+Reservoir normal outflow, minimum outflow, flood outflow can also be derived from in situ observations, local datasets or global datasets. Where such information is not available, users can implement the following approximations: reservoir normal outflow can be approximated by river average discharge (from measurements or numerical simulations); reservoir minimum outflow can be approximated by environmental discharge (from regulations or numerical approximation); reservoir flood outflow can be approximated by 100-year return period of river discharge.
 
-The degree of regulation can be computes as the quotient between reservoir capacity (Units: MCM) and normal reservoir outflow (units: m3/s). It is recommented to model reservoirs with low degree of regulation (e.g. lower than 0.08) as lakes.
+The degree of regulation can be computed as the quotient between reservoir capacity (Units: MCM) and normal reservoir outflow (units: m3/s). It is recommended to model reservoirs with low degree of regulation (e.g. lower than 0.08) as lakes.
 
 Reservoir maps and tables of the European 1arcmin domain and global 3arcmin domain are mainly based on information from [GDW](https://www.globaldamwatch.org/grand).
 Reservoirs included in the European 1arcmin domain had a minimum volume of 10 hm3, a minimum upstream catchment area of 50 km2, degree of regulation larger or equal to 0.08.
