@@ -16,7 +16,7 @@ LISFLOOD command line takes the following flags as additional arguments after th
 The flags are utility flags and do not change the behaviour/parameters of the model. Here are the operational details of each flag.
 
 - **-q --quiet       output progression given as .**
-    The default on-screen output of the lisflood command is the step count and the date/time of each computational step (each step being the run of all the activated modules in sequence for each time step). By setting this "-q" flag only a dot "." will be writtend on stdout for each computational step.
+    The default on-screen output of the lisflood command is the step count and the date/time of each computational step (each step being the run of all the activated modules in sequence for each time step). By setting this "-q" flag only a dot "." will be written on stdout for each computational step.
 
 - **-v --veryquiet   no output progression is given**
    The default on-screen output of the lisflood command is the step count and the date/time of each computational step (each step being the run of all the activated modules in sequence for each time step). By setting this "-v" flag there will be no output written on stdout showing the model progression. Warnings will still printed out.

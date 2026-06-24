@@ -291,7 +291,7 @@ Starting with LISFLOOD v5, the computation of the initialization run in temporal
                 <comment>
                     Number of days to be discarded when computing the average fluxes in the initialization (prerun) simulation.
                     The use of NumDaysSpinUp avoids spurious large fluxes values driven by bogus initial conditions.
-                    Recommended value when performing the initialiaztion (prerun) in one chunk or the cold start of the initialization (prerun) >= 1095 (3 years)  
+                    Recommended value when performing the initializtion (prerun) in one chunk or the cold start of the initialization (prerun) >= 1095 (3 years)  
                     Value for lisflood cold run, warm start prerun/run: 0
                 </comment>
     </textvar> 
@@ -379,7 +379,7 @@ Prerun (a) generates the following intermediate outputs:
                 <comment>
                     Number of days to be discarded when computing the average fluxes in the initialization (prerun) simulation.
                     The use of NumDaysSpinUp avoids spurious large fluxes values driven by bogus initial conditions.
-                    Recommended value when performing the initialiaztion (prerun) in one chunk or the cold start of the initialization (prerun) >= 1095 (3 years)  
+                    Recommended value when performing the initialization (prerun) in one chunk or the cold start of the initialization (prerun) >= 1095 (3 years)  
                     Value for lisflood cold run, warm start prerun/run: 0
                 </comment>
     </textvar> 
@@ -467,7 +467,7 @@ Prerun (b) uses the intermediate outputs of prerun(a) and generates an update of
        <comment>
        Number of days to be discarded when computing the average fluxes in the initialization (prerun) simulation.
        The use of NumDaysSpinUp avoids spurious large fluxes values driven by bogus initial conditions.
-       Recommended value when performing the initialiaztion (prerun) in one chunk or the cold start of the initialization (prerun) >= 1095 (3 years)  
+       Recommended value when performing the initialization (prerun) in one chunk or the cold start of the initialization (prerun) >= 1095 (3 years)  
        Value for lisflood cold run, warm start prerun/run: 0
        </comment>
        </textvar> 
