@@ -38,7 +38,7 @@ The initial amount of moisture in the upper soil layer only has a marked effect 
 
 This behaviour provides a convenient and simple way to initialise the soil moisture state of the upper soil layer. Suppose we want to do a simulation of the year 1995. We obviously don't know the state of the soil at the beginning of that year. However, we can get around this by starting the simulation a bit earlier than 1995, say one year. In that case we use the year 1994 as a *spin-up* period, assuming that by the start of 1995 the influence of the initial conditions (i.e. 1-1-1994) is negligible. 
 
-Even though the use of a sufficiently long spin-up period usually results in a correct initialisation of many state variables, the time needed to initialise any storage component of the model is dependent on its specific water average residence time. As briefly shown above, the moisture content of the upper soil layer tends to respond relatively quickly to meteorological forcing variables (precipitation, evapo(transpi)ration). As a result, relatively short spin-up periods are sufficient to initialise this storage component. At the other extreme, the response of the (thick) lower soil layers and of the lower groundwater zone is generally very slow. 
+Even though the use of a sufficiently long spin-up period usually results in a correct initialisation of many state variables, the time needed to initialise any storage component of the model is dependent on its specific average residence time of the water. As briefly shown above, the moisture content of the upper soil layer tends to respond relatively quickly to meteorological forcing variables (precipitation, evapo(transpi)ration). As a result, relatively short spin-up periods are sufficient to initialise this storage component. At the other extreme, the response of the (thick) lower soil layers and of the lower groundwater zone is generally very slow. 
 
 To explain the challenge of the adequate initialization of the lower groundwater zone, we resume here the content presented in [this chapter](https://ec-jrc.github.io/lisflood-model/2_13_stdLISFLOOD_groundwater/) of OS LISFLOOD Model Documentation. 
 
@@ -46,7 +46,7 @@ The Figure below shows the results of two numerical experiments. In the upper Fi
 
 <img src="../media/image39.png">
 
-**Figure** Two 10-year simulations of lower zone storage with constant inflow. Upper Figure: high initial storage, storage approaches steady-state storage
+**Figure:** Two 10-year simulations of lower zone storage with constant inflow. Upper Figure: high initial storage, storage approaches steady-state storage
 (dashed) after about 1500 days. Lower Figure: low initial storage, storage doesn’t reach steady-state within 10 years.
 
 At this point it should be clear that being able to know the ‘end’ storages in the Figure above in advance would be very helpful, because it would eliminate any trend in the water content of the lower groundwater zone. 
@@ -70,7 +70,7 @@ The complete list of initial state values for a **OS LISFLOOD prerun** is presen
 
 ### Initialization of volumetric soil moisture content 
 
-> An improved initialization scheme has been implemented in OS-LISFLOOD v5, allowing to remove non-realistic trends in the third soil layer volumetric soil moisture content and consequent fictitious discharge values in the channels. There were previously observed, for example, in arid climates. Albeit the former initialization strategy with bogus values is still feasible, the use of the methodology explained here is highly recommended, for all modelling exercises.
+> An improved initialization scheme has been implemented in OS-LISFLOOD v5, allowing to remove non-realistic trends in the third soil layer volumetric soil moisture content and consequent fictitious discharge values in the channels. These were previously observed, for example, in arid climates. Albeit the former initialization strategy with bogus values is still feasible, the use of the methodology explained here is highly recommended, for all modelling exercises.
 
 OS LISFLOOD prerun provides in output end states and average fluxes. The end states are the volumetric soil moisture content for the three soil layers and the three land covers (9 maps). The average fluxes represent the average infiltration (over the simulation period) from the soil layer 2 to soil layer 3, for the three land cover fractions (3 maps indicated as *SeepTopToSubBAverageOther/Forest/Irrigated*). In the cold run, the end states are used to initialise the volumetric soil moisture content of soil layers 1 and 2. The initialisation of the volumetric soil moisture content of soil layer 3 makes use of the relevant end state and of the fluxes.
 Specifically, according to the steady-state approach, the model tries to enable long term equilibrium conditions between average inflow and outflow fluxes in the third soil layer. 
@@ -80,7 +80,7 @@ $$
 q_{soil2to3,fraction} = SeepTopToSubBAverageFraction
 $$
 
-The prerun must include a sufficiently long simulation period (a few decades) to allow the computation of representative values of  *SeepTopToSubBAverageOther/Forest/Irrigated*. Furthermore, accounting for an adequate spin-up period of the prerun allows is recommended to compute realistic average fluxes values. This latter outcome can be achieved by adequately setting the value of *NumDaysSpinUp* (recommended value: 1095 days, i.e. 3 years). 
+The prerun must include a sufficiently long simulation period (a few decades) to allow the computation of representative values of  *SeepTopToSubBAverageOther/Forest/Irrigated*. Furthermore, accounting for an adequate spin-up period of the prerun is recommended to compute realistic average fluxes values. This latter outcome can be achieved by adequately setting the value of *NumDaysSpinUp* (recommended value: 1095 days, i.e. 3 years). 
 
 Within OS LISFLOOD, the outflow from the third soil layer to the upper groundwater zone is defined by the equations explained in the chapter [Soil moisture redistribution](https://ec-jrc.github.io/lisflood-model/2_12_stdLISFLOOD_soilmoisture-redistribution/) of the [Model Documentation](https://ec-jrc.github.io/lisflood-model/).
 
@@ -267,13 +267,14 @@ Similarly, set the name of the reporting map for the end states in <lfuser> sect
 
 
 
-
-
 ## Setting-up of a LISFLOOD prerun in temporal chunks
 
 Due to specific settings of the computational infrastructure (e.g. timewall that limits the maximum duration of a job), it might be necessary to complete the LISFLOOD initialization in chunks.
 
-As an example, the full initialization period 02/01/1980-01/01/2025 must be computed in three temporal chunks (a) 02/01/1980 00:00 - 01/01/1995 00:00, (b) 02/01/1995 00:00 - 01/01/2010 00:00, (c) 02/01/2010 00:00 - 01/01/2025 00:00 
+As an example, the full initialization period 02/01/1980-01/01/2025 must be computed in three temporal chunks:
+* (a) 02/01/1980 00:00 - 01/01/1995 00:00, 
+* (b) 02/01/1995 00:00 - 01/01/2010 00:00, 
+* (c) 02/01/2010 00:00 - 01/01/2025 00:00 
 
 Starting with LISFLOOD v5, the computation of the initialization run in temporal chunk can be performed by following the instructions below (the same instructions apply with SplitRouting on or off)
 
