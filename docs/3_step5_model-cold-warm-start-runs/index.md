@@ -26,39 +26,25 @@ The prerun generates a number (from 1 to 17, depending on the .xml settings) of 
 
 The following list enumerates the files required for the correct execution of the LISFLOOD Cold Start:
 
-    * lzavin.nc (strictly required)
-
-    * avgdis.nc (strictly required, but only when using SplitRouting)
-
-    * uz.end.nc, groundwater upper zone water content - other land cover fraction (strongly recommended)
-
-    * uzf.end.nc, groundwater upper zone water content - forest land cover fraction (strongly recommended)
-
-    * uzi.end.nc, groundwater upper zone water content - irrigation land cover fraction (strongly recommended)
-
-    * th1.end.nc, soil moisture - other land cover fraction - first layer (strongly recommended)
-
-    * th2.end.nc, soil moisture - other land cover fraction - second layer (strongly recommended)
-
-    * th3.end.nc, soil moisture - other land cover fraction - third layer (strongly recommended)
-
-    * thf1.end.nc, soil moisture - forest land cover fraction - first layer (strongly recommended)
-
-    * thf2.end.nc, soil moisture - forest land cover fraction - second layer (strongly recommended)
-
-    * thf3.end.nc, soil moisture - forest land cover fraction - third layer (strongly recommended)
-
-    * thi1.end.nc, soil moisture - irrigation land cover fraction - first layer (strongly recommended)
-
-    * thi2.end.nc, soil moisture - irrigation land cover fraction - second layer (strongly recommended)
-
-    * thi3.end.nc, soil moisture - irrigation land cover fraction - third layer (strongly recommended)
-
-    * SeepTopToSubBAverageOtherMap.nc, average flux from second to third soil layer - other land cover fraction (strongly recommended)
-
-    * SeepTopToSubBAverageForestMap.nc, average flux from second to third soil layer - forest land cover fraction (strongly recommended)
-
-    * SeepTopToSubBAverageIrrigationMap.nc, average flux from second to third soil layer - irrigation land cover fraction (strongly recommended)
+| File name | Description | Requirement |
+|-----------|-------------|-------------|
+| lzavin.nc | Average inflow to lower groundwater zone | Strictly required |
+| avgdis.nc | Average channel discharge | Strictly required (only with SplitRouting) |
+| uz.end.nc | Upper groundwater zone water content — other fraction | Strongly recommended |
+| uzf.end.nc | Upper groundwater zone water content — forest fraction | Strongly recommended |
+| uzi.end.nc | Upper groundwater zone water content — irrigation fraction | Strongly recommended |
+| th1.end.nc | Soil moisture — other fraction — layer 1 (superficial) | Strongly recommended |
+| th2.end.nc | Soil moisture — other fraction — layer 2 (upper) | Strongly recommended |
+| th3.end.nc | Soil moisture — other fraction — layer 3 (lower) | Strongly recommended |
+| thf1.end.nc | Soil moisture — forest fraction — layer 1 (superficial) | Strongly recommended |
+| thf2.end.nc | Soil moisture — forest fraction — layer 2 (upper) | Strongly recommended |
+| thf3.end.nc | Soil moisture — forest fraction — layer 3 (lower) | Strongly recommended |
+| thi1.end.nc | Soil moisture — irrigation fraction — layer 1 (superficial) | Strongly recommended |
+| thi2.end.nc | Soil moisture — irrigation fraction — layer 2 (upper) | Strongly recommended |
+| thi3.end.nc | Soil moisture — irrigation fraction — layer 3 (lower) | Strongly recommended |
+| SeepTopToSubBAverageOtherMap.nc | Average flux from layer 2 to layer 3 — other fraction | Strongly recommended |
+| SeepTopToSubBAverageForestMap.nc | Average flux from layer 2 to layer 3 — forest fraction | Strongly recommended |
+| SeepTopToSubBAverageIrrigationMap.nc | Average flux from layer 2 to layer 3 — irrigation fraction | Strongly recommended |
 
 
 
@@ -173,37 +159,37 @@ You can use either state maps or end maps as the initial conditions for a succee
     ```
   
 
-2) **Using state/end maps**
+**Using state/end maps**
 
 LISFLOOD warm start is managed by two keys in Settings XML file:
 
 - "StepStart" which is the first output step/date from LISFLOOD model (forecast);
 - "timestepInit" which is the step/date to use as the initial state (one model step before "StepStart").
 
-3) Two different settings are used to **warm start LISFLOOD** if using dates in Settings XML file; or if using steps numbers in Settings XML file:
+Two different settings are used to **warm start LISFLOOD** if using dates in Settings XML file; or if using steps numbers in Settings XML file:
 
-    **Option 1 - Using timestamps (dates) with State files:**
+**Option 1 - Using timestamps (dates) with State files:**
 
-    CalendarDayStart = any timestamp before or equal to first output timestamp (date) (forecast); it is usually the same as StepStart  (i.e. 2015-01-10 12:00)
+CalendarDayStart = any timestamp before or equal to first output timestamp (date) (forecast); it is usually the same as StepStart  (i.e. 2015-01-10 12:00)
 
-    StepStart= timestamp of first output (forecast) (i.e. 2015-01-10 12:00)
+StepStart= timestamp of first output (forecast) (i.e. 2015-01-10 12:00)
 
-    timestepInit= timestamp of the step just before first model output (forecast) (i.e. 2015-01-10 06:00)
+timestepInit= timestamp of the step just before first model output (forecast) (i.e. 2015-01-10 06:00)
 
-    If "CalendarDayStart" is set to 2015-01-10 12:00 and "StepStart" is set to 2015-01-10 12:00, the first output of the model will be marked 2015-01-10 12:00 and all netCDF state files will be stored using CalendarDayStart as time_unit with "time" array starting with [0].
+If "CalendarDayStart" is set to 2015-01-10 12:00 and "StepStart" is set to 2015-01-10 12:00, the first output of the model will be marked 2015-01-10 12:00 and all netCDF state files will be stored using CalendarDayStart as time_unit with "time" array starting with [0].
 
-    To warm start LISFLOOD for a 6-hourly simulation with first output on  2015-01-10 12:00, state variables values for 2015-01-10 06:00 must be used to initialize the model, so  "timestepInit" must be set to 2015-01-10 06:00.
+To warm start LISFLOOD for a 6-hourly simulation with first output on  2015-01-10 12:00, state variables values for 2015-01-10 06:00 must be used to initialize the model, so  "timestepInit" must be set to 2015-01-10 06:00.
 
-    **Option 2 - Using timesteps (step numbers) with State files:**
+**Option 2 - Using timesteps (step numbers) with State files:**
 
-    CalendarDayStart = timestamp of first model output (forecast)
+CalendarDayStart = timestamp of first model output (forecast)
 
-    StepStart=1
+StepStart=1
 
-    timestepInit=0
+timestepInit=0
 
-    Step numbers in LISFLOOD are always referred to "CalendarDayStart". If "CalendarDayStart" is 2015-01-10 12:00 and "StepStart" is 1, this means that the first output of the model will be at 2015-01-10 12:00 and all netCDF state files will be now stored using "hours since 2015-01-10 12:00" as time_unit and "time" array starting with [0]. The first step in NetCDF state files stored by this run, will be the same as CalendarDayStart, 2015-01-10 12:00.
+Step numbers in LISFLOOD are always referred to "CalendarDayStart". If "CalendarDayStart" is 2015-01-10 12:00 and "StepStart" is 1, this means that the first output of the model will be at 2015-01-10 12:00 and all netCDF state files will be now stored using "hours since 2015-01-10 12:00" as time_unit and "time" array starting with [0]. The first step in NetCDF state files stored by this run, will be the same as CalendarDayStart, 2015-01-10 12:00.
 
-    To warm start LISFLOOD for a 6-hourly simulation with first output on  2015-01-10 12:00 (step #1), state variables values for 2015-01-10 06:00 must be used to initialize the model, so "timestepInit" must be set to 0.
+To warm start LISFLOOD for a 6-hourly simulation with first output on  2015-01-10 12:00 (step #1), state variables values for 2015-01-10 06:00 must be used to initialize the model, so "timestepInit" must be set to 0.
 
 > NOTE: If State files are used to initialize LISFLOOD model run, LISFLOOD will automatically use timestamps in NetCDF files to get data for "timestepInit". If End files are used, LISFLOOD will automatically assign data from NetCDF to "timestepInit".

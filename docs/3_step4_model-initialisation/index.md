@@ -479,36 +479,22 @@ Prerun(c) uses the intermediate outputs of prerun(b) and returns the outputs for
 Therefore, Prerun(c) generates all the files to be used for the LISFLOOD Cold Start.
 These outputs are:
 
-    * lzavin.nc
-
-    * avgdis.nc 
-
-    * uz.end.nc, groundwater upper zone water content - other land cover fraction 
-
-    * uzf.end.nc, groundwater upper zone water content - forest land cover fraction 
-
-    * uzi.end.nc, groundwater upper zone water content - irrigation land cover fraction 
-
-    * th1.end.nc, soil moisture - other land cover fraction - first layer 
-
-    * th2.end.nc, soil moisture - other land cover fraction - second layer 
-
-    * th3.end.nc, soil moisture - other land cover fraction - third layer
-
-    * thf1.end.nc, soil moisture - forest land cover fraction - first layer 
-
-    * thf2.end.nc, soil moisture - forest land cover fraction - second layer 
-
-    * thf3.end.nc, soil moisture - forest land cover fraction - third layer  
-
-    * thi1.end.nc, soil moisture - irrigation land cover fraction - first layer  
-
-    * thi2.end.nc, soil moisture - irrigation land cover fraction - second layer 
-
-    * thi3.end.nc, soil moisture - irrigation land cover fraction - third layer 
-
-    * SeepTopToSubBAverageOtherMap.nc, average flux from second to third soil layer - other land cover fraction 
-
-    * SeepTopToSubBAverageForestMap.nc, average flux from second to third soil layer - forest land cover fraction  
-
-    * SeepTopToSubBAverageIrrigationMap.nc, average flux from second to third soil layer - irrigation land cover fraction  
+    | Output file | Description |
+|-------------|-------------|
+| lzavin.nc | Average percolation rate from upper to lower groundwater zone |
+| SeepTopToSubBAverageOtherMap.nc | Average flux from layer 2 to layer 3 — other fraction |
+| SeepTopToSubBAverageForestMap.nc | Average flux from layer 2 to layer 3 — forest fraction |
+| SeepTopToSubBAverageIrrigationMap.nc | Average flux from layer 2 to layer 3 — irrigation fraction |
+| avgdis.nc | Average discharge (only with SplitRouting) |
+| th1.end.nc | End state soil moisture — other — layer 1 |
+| th2.end.nc | End state soil moisture — other — layer 2 |
+| th3.end.nc | End state soil moisture — other — layer 3 |
+| thf1.end.nc | End state soil moisture — forest — layer 1 |
+| thf2.end.nc | End state soil moisture — forest — layer 2 |
+| thf3.end.nc | End state soil moisture — forest — layer 3 |
+| thi1.end.nc | End state soil moisture — irrigation — layer 1 |
+| thi2.end.nc | End state soil moisture — irrigation — layer 2 |
+| thi3.end.nc | End state soil moisture — irrigation — layer 3 |
+| uz.end.nc | End state upper groundwater zone — other |
+| uzf.end.nc | End state upper groundwater zone — forest |
+| uzi.end.nc | End state upper groundwater zone — irrigation |
