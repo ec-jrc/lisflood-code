@@ -606,29 +606,13 @@ class routing(HydroModule):
         # ************************************************************
         # ***** INITIALISATION FOR MCT ROUTING            ************
         # ************************************************************
-
-        # even if MCT is active, it should be deactivated if there is no MCT cell in the domain
-        if option['MCTRouting']:
-            self.var.IsChannelMCTPcr = boolean(loadmap('ChannelsMCT', pcr=True))   #pcr
-            self.var.IsChannelMCT = np.bool(compressArray(self.var.IsChannelMCTPcr))   #bool
-            if self.var.IsChannelMCT.sum()==0:
-                warnings.warn(LisfloodWarning('There are no MCT grid cell. MCT routing is deactivated'))
-                option['MCTRouting'] = False
-                # rebuild lists of reported files with MCTRouting = False
-                settings.build_reportedmaps_dicts()
         
         if option['MCTRouting'] and not option['InitLisflood']:
             maskinfo = MaskInfo.instance()
 
-            self.var.IsChannelMCTPcr = boolean(decompress(self.var.IsChannelMCT))       # pcr
-            # Identify channel pixels where Muskingum-Cunge-Todini is used
-
-            self.var.mctmask = np.bool(pcr2numpy(self.var.IsChannelMCTPcr,0))
-            # Create a mask with cells using MCT
-
-            self.var.IsChannelKinematicPcr = (self.var.IsChannelPcr == 1) & (self.var.IsChannelMCTPcr == 0)  #pcr
-            self.var.IsChannelKinematic = np.bool(compressArray(self.var.IsChannelKinematicPcr))   #np
-            # Identify channel pixels where Kinematic wave is used instead of MCT
+            # self.var.IsChannelKinematicPcr = (self.var.IsChannelPcr == 1) & (self.var.IsChannelMCTPcr == 0)  #pcr
+            # self.var.IsChannelKinematic = np.bool8(compressArray(self.var.IsChannelKinematicPcr))   #np
+            # # Identify channel pixels where Kinematic wave is used instead of MCT
 
             self.var.LddMCT = lddmask(self.var.LddChan, self.var.IsChannelMCTPcr)  #pcr
             # Ldd for MCT routing
