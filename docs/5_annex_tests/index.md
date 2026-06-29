@@ -436,7 +436,7 @@ def test_dates_steps_daily(self):
 The test verifies the use of the correct (closest, antecedent timestamp, and closest, antecedent day of the year) water demand information, unsing the following options:
 TransientWaterDemandChange = this option allows to read water demand information from a netcdf stack which includes simulation start and end dates. The water demand information for the closest, antecedent timestamp (dd/mm/yyyy) to the modelled time step is used in the computations.
 UseWaterDemandAveYear = this option allows to read water demand information from a netcdf stack with a single year temporal coverage. The water demand information for the closest, antecedent day of the year (dd/mm) to the modelled time step is used in the computations.
-For more information please refer to [Water use - LISFLOOD (ec-jrc.github.io)](https://ec-jrc.github.io/lisflood-model/2_18_stdLISFLOOD_water-use/)
+For more information please refer to [Water use - LISFLOOD (ec-jrc.github.io)](https://ec-jrc.github.io/lisflood-model/3_07_optLISFLOOD_water-use/index.md)
 
 #### Implementation
 [test_water_abstraction.py](https://github.com/ec-jrc/lisflood-code/blob/master/tests/test_water_abstraction.py)

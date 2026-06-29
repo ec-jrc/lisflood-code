@@ -18,7 +18,7 @@ Use python setup.y publish to publish versioned tags and pypi package
 IMPORTANT Note:
 To test pip installation:
 python setup.py testpypi
-pip install --index-url https://test.pypi.org/simple/ lisflood-model==2.8.14
+pip install --index-url https://test.pypi.org/simple/ lisflood-model==5.0.0
 
 To publish on PyPi:
 

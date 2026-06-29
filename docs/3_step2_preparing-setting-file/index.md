@@ -158,18 +158,18 @@ The following parameters are all related to the simulation of evapo(transpi)rati
 
 - **CalEvaporation** is a multiplier that is applied to the potential evapo(transpi)ration input ([**ET0**, **EW0** and **ES0**](https://ec-jrc.github.io/lisflood-lisvap/) [-]
 
-- **LeafDrainageTimeConstant** ([$T_{int}$](https://ec-jrc.github.io/lisflood-model/2_03_stdLISFLOOD_evaporation-intercepted-water/)) is the time constant for the interception store $[days]$
+- **LeafDrainageTimeConstant** ([$T_{int}$](https://ec-jrc.github.io/lisflood-model/2_03_stdLISFLOOD_evaporation-intercepted-water/index.md)) is the time constant for the interception store $[days]$
 
-- **kdf** is the average extinction for the diffuse radiation flux (Goudriaan, 1977). it is used to calculate the extinction coefficient for global radiation, $κ_{gb}$ ,which is used in Equations for [$EW_{max}$](https://ec-jrc.github.io/lisflood-model/2_03_stdLISFLOOD_evaporation-intercepted-water/), [$T_{max}$](https://ec-jrc.github.io/lisflood-model/2_07_stdLISFLOOD_plant-water-uptake/) and [$ES_{max}$](https://ec-jrc.github.io/lisflood-model/2_08_stdLISFLOOD_soil-evaporation/) [-]
+- **kdf** is the average extinction for the diffuse radiation flux (Goudriaan, 1977). it is used to calculate the extinction coefficient for global radiation, $κ_{gb}$ ,which is used in Equations for [$EW_{max}$](https://ec-jrc.github.io/lisflood-model/2_03_stdLISFLOOD_evaporation-intercepted-water/index.md), [$T_{max}$](https://ec-jrc.github.io/lisflood-model/2_07_stdLISFLOOD_plant-water-uptake/index.md) and [$ES_{max}$](https://ec-jrc.github.io/lisflood-model/2_08_stdLISFLOOD_soil-evaporation/index.md) [-]
 
-- **AvWaterRateThreshold** defines a critical amount of water that is used as a threshold for resetting the variable $D_{slr}$ in the Equation for[$ES_a$](https://ec-jrc.github.io/lisflood-model/2_08_stdLISFLOOD_soil-evaporation/). Because the equation was originally developed for daily timesteps only, the threshold is currently defined (somewhat confusingly) as an equivalent **intensity** in $[\frac{mm}{day}]$
+- **AvWaterRateThreshold** defines a critical amount of water that is used as a threshold for resetting the variable $D_{slr}$ in the Equation for[$ES_a$](https://ec-jrc.github.io/lisflood-model/2_08_stdLISFLOOD_soil-evaporation/index.md). Because the equation was originally developed for daily timesteps only, the threshold is currently defined (somewhat confusingly) as an equivalent **intensity** in $[\frac{mm}{day}]$
 
-- **SMaxSealed** is the maximum depression storage on impervious surface $[mm]$. This [storage](https://ec-jrc.github.io/lisflood-model/2_06_stdLISFLOOD_water_infiltration/) is emptied by evaporation (EW0).
+- **SMaxSealed** is the maximum depression storage on impervious surface $[mm]$. This [storage](https://ec-jrc.github.io/lisflood-model/2_06_stdLISFLOOD_water_infiltration/index.md) is emptied by evaporation (EW0).
 
 
 ### Parameters related to snow and frost
 
-The following parameters are all related to the simulation of [snow accumulation, snowmelt](https://ec-jrc.github.io/lisflood-model/2_04_stdLISFLOOD_snowmelt/) and [frost](https://ec-jrc.github.io/lisflood-model/2_05_stdLISFLOOD_frost-index/). All these parameters can be defined as either single values or maps. We recommend to start out by leaving them all at their default values. If prior data suggest major under- or overcatch problems in the observed snowfall, *SnowFactor* can be adjusted accordingly. *SnowMeltCoef* may be used as a calibration constant, but since snow observations are typically associated with large uncertainty bands, the calibration may effectively just be compensating for these input errors.
+The following parameters are all related to the simulation of [snow accumulation, snowmelt](https://ec-jrc.github.io/lisflood-model/2_04_stdLISFLOOD_snowmelt/index.md) and [frost](https://ec-jrc.github.io/lisflood-model/2_05_stdLISFLOOD_frost-index/index.md). All these parameters can be defined as either single values or maps. We recommend to start out by leaving them all at their default values. If prior data suggest major under- or overcatch problems in the observed snowfall, *SnowFactor* can be adjusted accordingly. *SnowMeltCoef* may be used as a calibration constant, but since snow observations are typically associated with large uncertainty bands, the calibration may effectively just be compensating for these input errors.
 
 ```xml
 	<textvar name="SnowFactor" value="1">                           
@@ -234,21 +234,21 @@ The following parameters are all related to the simulation of [snow accumulation
 
 - **SnowSeasonAdj** is the range [mm C-1 d-1] of the seasonal variation of snow melt. SnowMeltCoef is the average value.
 
-- **SnowMeltCoef** ([$C_m$](https://ec-jrc.github.io/lisflood-model/2_04_stdLISFLOOD_snowmelt/)) is the degree-day factor that controls the rate of snowmelt $[\frac{mm}{°C \cdot day}]$
+- **SnowMeltCoef** ([$C_m$](https://ec-jrc.github.io/lisflood-model/2_04_stdLISFLOOD_snowmelt/index.md)) is the degree-day factor that controls the rate of snowmelt $[\frac{mm}{°C \cdot day}]$
 
-- **TempMelt** ([$T_m$](https://ec-jrc.github.io/lisflood-model/2_04_stdLISFLOOD_snowmelt/)) is the average temperature above which snow starts to melt $[°C]$
+- **TempMelt** ([$T_m$](https://ec-jrc.github.io/lisflood-model/2_04_stdLISFLOOD_snowmelt/index.md)) is the average temperature above which snow starts to melt $[°C]$
 
 - **TempSnow** is the average temperature below which precipitation is assumed to be snow $[°C]$
 
-- **TemperatureLapseRate** (**L**) is the temperature lapse rate that is used to estimate average temperature at the centroid of each pixel's elevation zones  ([last Figure](https://ec-jrc.github.io/lisflood-model/2_04_stdLISFLOOD_snowmelt/))$[\frac{°C}{m}]$
+- **TemperatureLapseRate** (**L**) is the temperature lapse rate that is used to estimate average temperature at the centroid of each pixel's elevation zones  ([last Figure](https://ec-jrc.github.io/lisflood-model/2_04_stdLISFLOOD_snowmelt/index.md))$[\frac{°C}{m}]$
 
-- **Afrost** ([$A$](https://ec-jrc.github.io/lisflood-model/2_05_stdLISFLOOD_frost-index/)) is the frost index decay coefficient $[day^{-1}]$. It has a value in the range 0-1.
+- **Afrost** ([$A$](https://ec-jrc.github.io/lisflood-model/2_05_stdLISFLOOD_frost-index/index.md)) is the frost index decay coefficient $[day^{-1}]$. It has a value in the range 0-1.
 
-- **Kfrost** ([$K$](https://ec-jrc.github.io/lisflood-model/2_05_stdLISFLOOD_frost-index/)) is a snow depth reduction coefficient $[cm^{-1}]$
+- **Kfrost** ([$K$](https://ec-jrc.github.io/lisflood-model/2_05_stdLISFLOOD_frost-index/index.md)) is a snow depth reduction coefficient $[cm^{-1}]$
 
-- **SnowWaterEquivalent** ([$we_s$](https://ec-jrc.github.io/lisflood-model/2_05_stdLISFLOOD_frost-index/)) is the equivalent water depth of a given snow cover, expressed as a fraction [-]
+- **SnowWaterEquivalent** ([$we_s$](https://ec-jrc.github.io/lisflood-model/2_05_stdLISFLOOD_frost-index/index.md)) is the equivalent water depth of a given snow cover, expressed as a fraction [-]
 
-- **FrostIndexThreshold** is the critical value of the [frost index](https://ec-jrc.github.io/lisflood-model/2_05_stdLISFLOOD_frost-index/) above which the soil is considered frozen $[\frac{°C}{day}]$
+- **FrostIndexThreshold** is the critical value of the [frost index](https://ec-jrc.github.io/lisflood-model/2_05_stdLISFLOOD_frost-index/index.md) above which the soil is considered frozen $[\frac{°C}{day}]$
 
 
 ### Infiltration parameters
@@ -275,14 +275,14 @@ The following two parameters control the simulation of infiltration and preferen
 	</comment>                                                          	
 ```
 
-- **b\_Xinanjiang** (**b**) is the power in the [infiltration equation](https://ec-jrc.github.io/lisflood-model/2_10_stdLISFLOOD_infiltration/) [-]
+- **b\_Xinanjiang** (**b**) is the power in the [infiltration equation](https://ec-jrc.github.io/lisflood-model/2_10_stdLISFLOOD_infiltration/index.md) [-]
 
-- **PowerPrefFlow** ($c_{pref}$) is the power in the [preferential flow equation](https://ec-jrc.github.io/lisflood-model/2_09_stdLISFLOOD_preferential-bypass/) [-]
+- **PowerPrefFlow** ($c_{pref}$) is the power in the [preferential flow equation](https://ec-jrc.github.io/lisflood-model/2_09_stdLISFLOOD_preferential-bypass/index.md) [-]
 
 
 ### Groundwater parameters
 
-The following parameters control the [simulation of shallow and deeper groundwater](https://ec-jrc.github.io/lisflood-model/2_13_stdLISFLOOD_groundwater/). All these parameters can be defined as single values or maps.
+The following parameters control the [simulation of shallow and deeper groundwater](https://ec-jrc.github.io/lisflood-model/2_13_stdLISFLOOD_groundwater/index.md). All these parameters can be defined as single values or maps.
 
 ```xml
 	<comment>                                                           
@@ -318,18 +318,18 @@ The following parameters control the [simulation of shallow and deeper groundwat
 	</textvar>                                                          
 ```
 
-- **UpperZoneTimeConstant** ([$T_{uz}$](https://ec-jrc.github.io/lisflood-model/2_13_stdLISFLOOD_groundwater/)) is the time constant for the upper groundwater zone $[days]$
+- **UpperZoneTimeConstant** ([$T_{uz}$](https://ec-jrc.github.io/lisflood-model/2_13_stdLISFLOOD_groundwater/index.md)) is the time constant for the upper groundwater zone $[days]$
 
-- **LowerZoneTimeConstant** ([$T_{lz}$](https://ec-jrc.github.io/lisflood-model/2_13_stdLISFLOOD_groundwater/)) is the time constant for the lower groundwater zone $[days]$
+- **LowerZoneTimeConstant** ([$T_{lz}$](https://ec-jrc.github.io/lisflood-model/2_13_stdLISFLOOD_groundwater/index.md)) is the time constant for the lower groundwater zone $[days]$
 
-- **GwPercValue** ([$GW_{perc}$](https://ec-jrc.github.io/lisflood-model/2_13_stdLISFLOOD_groundwater/)) is the maximum rate of percolation going from the upper to the lower groundwater zone $[\frac{mm}{day}]$
+- **GwPercValue** ([$GW_{perc}$](https://ec-jrc.github.io/lisflood-model/2_13_stdLISFLOOD_groundwater/index.md)) is the maximum rate of percolation going from the upper to the lower groundwater zone $[\frac{mm}{day}]$
 
-- **GwLoss** ([$f_{loss}$](https://ec-jrc.github.io/lisflood-model/2_13_stdLISFLOOD_groundwater/)) is the maximum rate of percolation from the lower groundwater zone (groundwater loss) zone $[\frac{mm}{day}]$. A value of 0 (closed lower boundary) is recommended as a starting value.
+- **GwLoss** ([$f_{loss}$](https://ec-jrc.github.io/lisflood-model/2_13_stdLISFLOOD_groundwater/index.md)) is the maximum rate of percolation from the lower groundwater zone (groundwater loss) zone $[\frac{mm}{day}]$. A value of 0 (closed lower boundary) is recommended as a starting value.
 
 
 ### Routing parameters 
 
-These parameters are all related to the [routing of water in the channels](https://ec-jrc.github.io/lisflood-model/2_16_stdLISFLOOD_channel-routing/) as well as the [routing of surface runoff](https://ec-jrc.github.io/lisflood-model/2_14_stdLISFLOOD_surface-runnoff-routing/). The multiplier *CalChanMan* can be used to fine-tune the timing of the channel routing, and it may be defined as either a single value or a map. All other parameters should be kept at their default values.
+These parameters are all related to the [routing of water in the channels](https://ec-jrc.github.io/lisflood-model/2_15_stdLISFLOOD_channel-routing/index.md) as well as the [routing of surface runoff](https://ec-jrc.github.io/lisflood-model/2_14_stdLISFLOOD_surface-runnoff-routing/index.md). The multiplier *CalChanMan* can be used to fine-tune the timing of the channel routing, and it may be defined as either a single value or a map. All other parameters should be kept at their default values.
 
 ```xml
 	<comment>                                                           
@@ -367,11 +367,11 @@ These parameters are all related to the [routing of water in the channels](https
 	</textvar>                                                          
 ```
 
-- **CalChanMan** is a multiplier that is applied to the Manning's roughness maps of the [channel system](https://ec-jrc.github.io/lisflood-model/2_16_stdLISFLOOD_channel-routing/) [-]
+- **CalChanMan** is a multiplier that is applied to the Manning's roughness maps of the [channel system](https://ec-jrc.github.io/lisflood-model/2_15_stdLISFLOOD_channel-routing/index.md) [-]
 
-- **beta** is routing coefficient [$β_k$](https://ec-jrc.github.io/lisflood-model/2_14_stdLISFLOOD_surface-runnoff-routing/) [-]
+- **beta** is routing coefficient [$β_k$](https://ec-jrc.github.io/lisflood-model/2_14_stdLISFLOOD_surface-runnoff-routing/index.md) [-]
 
-- **OFDepRef** is a [reference flow depth](https://ec-jrc.github.io/lisflood-model/2_14_stdLISFLOOD_surface-runnoff-routing/) from which the flow velocity of the surface runoff is calculated $[mm]$
+- **OFDepRef** is a [reference flow depth](https://ec-jrc.github.io/lisflood-model/2_14_stdLISFLOOD_surface-runnoff-routing/index.md) from which the flow velocity of the surface runoff is calculated $[mm]$
 
 - **GradMin** is a lower limit for the slope gradient used in the calculation of the surface runoff flow velocity $[\frac{m}{m}]$
 
@@ -381,7 +381,7 @@ These parameters are all related to the [routing of water in the channels](https
 
 ### Diffusive wave routing parameters
 
-The following parameters are related to the [diffusive wave routing](https://ec-jrc.github.io/lisflood-model/3_14_optLISFLOOD_diffusive-wave/) in river channels. The multiplier *CalChanMan3* can be used to fine-tune the diffusive wave propagation when using the Muskingum-Cunge-Todini (MCT) routing, and it can be defined as either a single value or a map. The map *ChannelsMCT* is a Boolean map with the mask of rivers where MCT wave routing must be used. The parameter *ChanGradMaxMCT* defines the maximum riverbed slope for river grid cells using the MCT wave routing. The parameter is provided as a single number and it is recommended to set it to values < 0.001 and > *ChanGradMin*
+The following parameters are related to the [diffusive wave routing](https://ec-jrc.github.io/lisflood-model/3_05_optLISFLOOD_diffusive-wave-routing/index.md) in river channels. The multiplier *CalChanMan3* can be used to fine-tune the diffusive wave propagation when using the Muskingum-Cunge-Todini (MCT) routing, and it can be defined as either a single value or a map. The map *ChannelsMCT* is a Boolean map with the mask of rivers where MCT wave routing must be used. The parameter *ChanGradMaxMCT* defines the maximum riverbed slope for river grid cells using the MCT wave routing. The parameter is provided as a single number and it is recommended to set it to values < 0.001 and > *ChanGradMin*
 ```xml
 	<comment>
 	**************************************************************
@@ -408,7 +408,7 @@ The following parameters are related to the [diffusive wave routing](https://ec-
 	</textvar>                                                       
 ```
 
-- **CalChanMan3** is a multiplier that is applied to the Manning’s roughness map of the [channel system](https://ec-jrc.github.io/lisflood-model/2_16_stdLISFLOOD_channel-routing/) [-] for the grid cells where MCT routing is used
+- **CalChanMan3** is a multiplier that is applied to the Manning’s roughness map of the [channel system](https://ec-jrc.github.io/lisflood-model/2_15_stdLISFLOOD_channel-routing/index.md) [-] for the grid cells where MCT routing is used
 - **ChannelsMCT** is oBolean mask including the rivers grid cells using the MCT wave routing [-]
 - **ChanGradMaxMCT** is a upper limit for the channel gradient used in the calculation of the MCT wave routing [m/m]
 
@@ -433,7 +433,7 @@ This category only contains one parameter at the moment, which can only be a sin
 	</textvar>                                                          
 ```
 
-- **CourantCrit** ($C_{crit}$) is the critical Courant number which controls the numerical accuracy of the [simulated soil moisture fluxes](https://ec-jrc.github.io/lisflood-model/2_12_stdLISFLOOD_soilmoisture-redistribution/) [-]. Any value between 0 and 1 can be used, but using values that are too high can lead to unrealistic "jumps" in the simulated soil moisture, whereas very low values result in reduced computational performance (because many iterations will be necessary to obtain the required accuracy). Values above 1 should never be used, as they will result in a loss of mass balance. In most cases the default value of 0.4 results in sufficiently realistic simulations using just a few iterations.
+- **CourantCrit** ($C_{crit}$) is the critical Courant number which controls the numerical accuracy of the [simulated soil moisture fluxes](https://ec-jrc.github.io/lisflood-model/2_12_stdLISFLOOD_soilmoisture-redistribution/index.md) [-]. Any value between 0 and 1 can be used, but using values that are too high can lead to unrealistic "jumps" in the simulated soil moisture, whereas very low values result in reduced computational performance (because many iterations will be necessary to obtain the required accuracy). Values above 1 should never be used, as they will result in a loss of mass balance. In most cases the default value of 0.4 results in sufficiently realistic simulations using just a few iterations.
 
 
 
@@ -506,7 +506,7 @@ Here you can define the prefix that is used for each meteorological variable, LA
 
 - **PrefixLAI**, **PrefixLAIForest** ,**PrefixLAIIrrigation**  are the prefix of the Leaf Area Index maps for the three land cover fractions
 
-- **PrefixWaterUseDomestic** is the prefix of the domestic [water use maps](https://ec-jrc.github.io/lisflood-model/2_18_stdLISFLOOD_water-use/) (optional). Domestic use was indicated here as an example.
+- **PrefixWaterUseDomestic** is the prefix of the domestic [water use maps](https://ec-jrc.github.io/lisflood-model/3_07_optLISFLOOD_water-use/index.md) (optional). Domestic use was indicated here as an example.
 
 
 
@@ -656,13 +656,13 @@ This page has the purpose to provide an overview of the variables requiring an i
 
 - **SnowCoverCInitValue** is the initial snow cover on the soil surface in elevation zone **C** $[mm]$
 
-- **FrostIndexInitValue** ([**F**](https://ec-jrc.github.io/lisflood-model/2_05_stdLISFLOOD_frost-index/)) initial value of the frost index $[\frac{°C}{day}]$
+- **FrostIndexInitValue** ([**F**](https://ec-jrc.github.io/lisflood-model/2_05_stdLISFLOOD_frost-index/index.md)) initial value of the frost index $[\frac{°C}{day}]$
 
 - **CumIntInitValue** is the initial interception storage $[mm]$
 
 - **UZInitValue** is the initial storage in the upper groundwater zone $[mm]$
 
-- **DSLRInitValue** ([$D_{slr}$](https://ec-jrc.github.io/lisflood-model/2_08_stdLISFLOOD_soil-evaporation/)) is the initial number of days since the last rainfall event $[days]$
+- **DSLRInitValue** ([$D_{slr}$](https://ec-jrc.github.io/lisflood-model/2_08_stdLISFLOOD_soil-evaporation/index.md)) is the initial number of days since the last rainfall event $[days]$
 
 - **CumIntSealedInitValue** is the initial value of the depression storage for the sealed part of a pixel $[mm]$
 
