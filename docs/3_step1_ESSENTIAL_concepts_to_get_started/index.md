@@ -11,13 +11,13 @@ In order the run a simulation you will need:
 
   -   Meteo input maps 
   -   Static input maps 
-  -   Tables, only in case specific features such as reservoirs and lakes are included in the modeling excercis
+  -   Tables, only in case specific features such as reservoirs and lakes are included in the modeling exercise
   -   An empty output directory where all model data can be written 
   -   OS LISFLOOD settings file in .xml format
 
 The section [Input files](../3_step3_preparing-input-files/index.md) provides a detailed description of input maps and tables.
 
-The settings file (settings.xml) allows the selection of input maps, modelling options, and output variables and storage folder. The settings .xml is the essential argument of OS LISFLOOD command line. The section below presents its main components, an in depth descrition is provided in the section [Step 2: Preparing the Settings file](../3_step2_preparing-setting-file/index.md).
+The settings file (settings.xml) allows the selection of input maps, modelling options, and output variables and storage folder. The settings .xml is the essential argument of OS LISFLOOD command line. The section below presents its main components, an in depth description is provided in the section [Step 2: Preparing the Settings file](../3_step2_preparing-setting-file/index.md).
 
 
 ## OS LISFLOOD settings file (settings.xml)
@@ -65,9 +65,9 @@ The sections ‘lfuser’, ‘lfoptions’ and ‘lfbinding’' have different p
      For example:
 
 ```xml
-     'lfuser' secttion: 
+     'lfuser' section: 
      <textvar name="IrrigationEfficiency" value="$(PathMaps)/irrigation_efficiency_baseline.nc"></textvar>
-     'lfbinding' secttion: 
+     'lfbinding' section: 
      <textvar name="IrrigationEfficiency" value="$(IrrigationEfficiency)"></textvar>
 ```
 

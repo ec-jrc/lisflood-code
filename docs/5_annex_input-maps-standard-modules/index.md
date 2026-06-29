@@ -2,7 +2,7 @@
 
 LISFLOOD requires input files in map or text format (the latter are called *tables*). The detailed description is provided in [this chapter](../4_Static-Maps-introduction) of LISFLOOD User Guide.
 
-This Annex reiterates the guidelines for the prearation of meteorological varaibles and provides the list of LISFLOOD input maps required when only the standard modules are used.
+This Annex reiterates the guidelines for the preparation of meteorological variables and provides the list of LISFLOOD input maps required when only the standard modules are used.
 The description of the optional modules in the [OS LISFLOOD Model Documentation](https://ec-jrc.github.io/lisflood-model/) includes also the list of additional maps and tables.
 
 
@@ -114,7 +114,7 @@ $ET0$, $EW0$ and $ES0$ can be calculated using standard meteorological observati
 
 
 
-***Table:*** Maps that define grid size, always required when uisng geographic (lat/lon) coordinate system.* 
+***Table:*** Maps that define grid size, always required when using geographic (lat/lon) coordinate system.* 
 
 | Map             | Default name | Units, range             | Description           |
 | --------------- | ------------ | ------------------------ | --------------------- |

@@ -33,12 +33,12 @@ The table below lists the data required for the implementation of the PTFs propo
 
 | Source data| Reference/preparation | Temporal coverage | Spatial information |
 | :---| :--- | :--- | :--- |
-| % of Clay (C)|[ISRIC](https://files.isric.org/soilgrids/latest/data/clay/), mean value |2020|Global, 250 m available depths (cm):<br> 0-5, 5-15, 15-30, 30-60, 60-100, 100-200|
-| % of Silt (S)|[ISRIC](https://files.isric.org/soilgrids/latest/data/silt/), - |2020|Global, 250 m available depths (cm):<br> 0-5, 5-15, 15-30, 30-60, 60-100, 100-200|
-| % organic carbon (OC)|[ISRIC](https://files.isric.org/soilgrids/latest/data/soc/), mean value|2020|Global, 250 m available depths (cm):<br> 0-5, 5-15, 15-30, 30-60, 60-100, 100-200|
-| Bulk Density (BD)|[ISRIC](https://files.isric.org/soilgrids/latest/data/bdod/), median value (Q0.5)|2020|Global, 250 m available depths (cm):<br> 0-5, 5-15, 15-30, 30-60, 60-100, 100-200|
-| Soil PH |[ISRIC](https://files.isric.org/soilgrids/latest/data/phh2o/), mean value|2020|Global, 250 m available depths (cm):<br> 0-5, 5-15, 15-30, 30-60, 60-100, 100-200|
-| Cation exchange capacity (CEC)|[ISRIC](https://files.isric.org/soilgrids/latest/data/cec/), mean value|2020|Global, 250 m available depths (cm):<br> 0-5, 5-15, 15-30, 30-60, 60-100, 100-200|
+| % of Clay (C)|[ISRIC SoilGrids250 2.0](https://files.isric.org/soilgrids/latest/data/clay/), [Poggio et al. (2021)](https://soil.copernicus.org/articles/7/217/2021/soil-7-217-2021.html), mean value |2020|Global, 250 m available depths (cm):<br> 0-5, 5-15, 15-30, 30-60, 60-100, 100-200|
+| % of Silt (S)|[ISRIC SoilGrids250 2.0](https://files.isric.org/soilgrids/latest/data/silt/), [Poggio et al. (2021)](https://soil.copernicus.org/articles/7/217/2021/soil-7-217-2021.html), - |2020|Global, 250 m available depths (cm):<br> 0-5, 5-15, 15-30, 30-60, 60-100, 100-200|
+| % organic carbon (OC)|[ISRIC SoilGrids250 2.0](https://files.isric.org/soilgrids/latest/data/soc/), [Poggio et al. (2021)](https://soil.copernicus.org/articles/7/217/2021/soil-7-217-2021.html), mean value|2020|Global, 250 m available depths (cm):<br> 0-5, 5-15, 15-30, 30-60, 60-100, 100-200|
+| Bulk Density (BD)|ISRIC SoilGrids250 2.0](https://files.isric.org/soilgrids/latest/data/bdod/), [Poggio et al. (2021)](https://soil.copernicus.org/articles/7/217/2021/soil-7-217-2021.html), median value (Q0.5)|2020|Global, 250 m available depths (cm):<br> 0-5, 5-15, 15-30, 30-60, 60-100, 100-200|
+| Soil PH |[ISRIC](https://files.isric.org/soilgrids/latest/data/phh2o/), [Poggio et al. (2021)](https://soil.copernicus.org/articles/7/217/2021/soil-7-217-2021.html), mean value|2020|Global, 250 m available depths (cm):<br> 0-5, 5-15, 15-30, 30-60, 60-100, 100-200|
+| Cation exchange capacity (CEC)|[ISRIC SoilGrids250 2.0](https://files.isric.org/soilgrids/latest/data/cec/), [Poggio et al. (2021)](https://soil.copernicus.org/articles/7/217/2021/soil-7-217-2021.html), mean value|2020|Global, 250 m available depths (cm):<br> 0-5, 5-15, 15-30, 30-60, 60-100, 100-200|
 | Soil depth map | It can be prepared by using the <br>methodology explained [here](../4_Static-Maps_land-use-depending)| NA | Global, 250 m |
 | Fraction of forested<br> areas map | It can be prepared by using the <br>methodology explained [here](../4_Static-Maps_land-use)| NA| Global, 100 m |
 

@@ -2,7 +2,7 @@
 
 Allen, R. G., Pereira, L. S., Raes, D., and Smith, M.: FAO Irrigation and Drainage Paper No. 56: Crop Evapotranspiration (guidelines for computing crop water requirements), 1998. [available online: https://www.researchgate.net/publication/284300773_FAO_Irrigation_and_drainage_paper_No_56, last accessed: 13.05.2021.]
 
-Anderson, 2006Anderson, E., 2006. *Snow Accumulation and Ablation Model -- SNOW-17*. Technical report.
+Anderson, E., 2006. *Snow Accumulation and Ablation Model -- SNOW-17*. Technical report.
 
 Aston, A.R., 1979. Rainfall interception by eight small trees. Journal of Hydrology 42, 383-396.
 
@@ -38,7 +38,7 @@ Goudriaan, J., 1977. Crop micrometeorology: a simulation study. Simulation Monog
 
 Hanazaki, R., Yamazaki, D., & Yoshimura, K. (2022). Development of a reservoir flood control scheme for global flood models. Journal of Advances in Modeling Earth Systems, 14, e2021MS002944. https://doi.org/10.1029/2021MS002944
 
-Hock, 2003Hock, R., 2003. Temperature index melt modelling in mountain areas. *Journal of Hydrology*, 282(1-4), 104--115.
+Hock, R., 2003. Temperature index melt modelling in mountain areas. *Journal of Hydrology*, 282(1-4), 104--115.
 
 Laborte, A., Gutierrez, M., Balanza, J. et al. RiceAtlas, a spatial database of global rice calendars and production. Sci Data 4, 170074 (2017). https://doi.org/10.1038/sdata.2017.74
 
@@ -97,9 +97,9 @@ Van der Knijff, J. M., Younis, J. and de Roo, A. P. J.: LISFLOOD: A GIS-based di
 
 Van Genuchten, M.Th., 1980. A closed-form equation for predicting the hydraulic conductivity of unsaturated soils. Soil Science Society of America Journal 44, 892-898.
 
-Viviroli et al., 2009Viviroli, D., Zappa, M., Gurtz, J., & Weingartner, R., 2009. An introduction to the hydrological modelling system PREVAH and its pre- and post-processing-tools. *Environmental Modelling & Software*, 24(10), 1209--1222.
+Viviroli, D., Zappa, M., Gurtz, J., & Weingartner, R., 2009. An introduction to the hydrological modelling system PREVAH and its pre- and post-processing-tools. *Environmental Modelling & Software*, 24(10), 1209--1222.
 
-Vogt et al., 2007Vogt, J., Soille, P., de Jager, A., Rimaviciute, E., Mehl, W., Foisneau, S., Bodis, K., Dusart, M., Parachini, M., Hasstrup, P.,2007. *A pan-European River and Catchment Database*. JRC Reference Report EUR 22920 EN, Institute for Environment and Sustainability, Joint Research Centre of the European Commission.
+Vogt, J., Soille, P., de Jager, A., Rimaviciute, E., Mehl, W., Foisneau, S., Bodis, K., Dusart, M., Parachini, M., Hasstrup, P.,2007. *A pan-European River and Catchment Database*. JRC Reference Report EUR 22920 EN, Institute for Environment and Sustainability, Joint Research Centre of the European Commission.
 
 Von Hoyningen-Huene, J., 1981. Die Interzeption des Niederschlags in landwirtschaftlichen Pflanzenbeständen (Rainfall interception in agricultural plant stands). In: Arbeitsbericht Deutscher Verband für Wasserwirtschaft und Kulturbau, DVWK, Braunschweig, p.63.
 

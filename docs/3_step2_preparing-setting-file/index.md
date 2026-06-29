@@ -1,12 +1,12 @@
 # Step 2: Preparing the Settings file
 
-This page describes how to prepare your own settings file. Instead of writing the settings file completely from scratch, we suggest usinng the [reference settings file](https://github.com/ec-jrc/lisflood-code/tree/master/src/lisfloodSettings_reference.xml) as a starting point. 
+This page describes how to prepare your own settings file. Instead of writing the settings file completely from scratch, we suggest using the [reference settings file](https://github.com/ec-jrc/lisflood-code/tree/master/src/lisfloodSettings_reference.xml) as a starting point. 
 
 In order the run a simulation you will need:
 
   -   Meteo input maps
   -   Static input maps 
-  -   Tables (when reservoirs and lakes are included in the modeling excercise)
+  -   Tables (when reservoirs and lakes are included in the modeling exercise)
   -   An (empty) directory where all model data can be written exists
 
 If this is all true, the settings file can be prepared very quickly by editing the items in the 'lfuser' element. The following is a detailed description of the different sections of the 'lfuser' element. The present LISFLOOD version contains process-related parameters (not taking into account the parameters that are defined through the maps). These are all defined in the 'lfuser' element, and default values are given for each of them. Even though *any* of these parameters can be treated as calibration constants, doing so for *all* of them would lead to serious over-parameterisation problems. In the description of these parameters we will therefore provide some suggestions as to which parameters should be used for calibration, and which ones are better left untouched.
@@ -21,7 +21,7 @@ When using the  [reference settings .xml](https://github.com/ec-jrc/lisflood-cod
 
 >Please note that the template contains all the settings for a warm start run; the paths to the initial maps must be replaced with the initial bogus values in order to perform a pre-run or a cold start run.
 
-TIP:  *$(ProjectDir)* or *$(ProjectPath)* cab used as built-in variable in the XML settings, to refer the project folder.
+TIP:  *$(ProjectDir)* or *$(ProjectPath)* can used as built-in variable in the XML settings, to refer the project folder.
 
 ### Time-related constants
 
@@ -67,7 +67,7 @@ The 'lfuser' section starts with a number of constants that are related to the s
 ```
 
 
-- As a good practice, **CalendarDayStart** shoudl be set equal to the calendar day of the first timestep of input mapstacks. 
+- As a good practice, **CalendarDayStart** should be set equal to the calendar day of the first timestep of input mapstacks. 
 
   Format can be a date in several formats, as long as day number is in first position. eg:
     <br> *Value="02/01/1990" = $2^{nd}$ January 1990* 
@@ -362,7 +362,7 @@ These parameters are all related to the [routing of water in the channels](https
 	<textvar name="ChanGradMin" value="0.0001">                     
 	<comment>                                                           
 	Minimum channel gradient (for kin. wave: slope cannot be 0)
-    Coould be set to 0.00001 when using kinematic and diffusive wave modelling           
+    Could be set to 0.00001 when using kinematic and diffusive wave modelling           
 	</comment>                                                          
 	</textvar>                                                          
 ```
@@ -381,7 +381,7 @@ These parameters are all related to the [routing of water in the channels](https
 
 ### Diffusive wave routing parameters
 
-The following parameters are related to the [diffusive wave routing](https://ec-jrc.github.io/lisflood-model/3_14_optLISFLOOD_diffusive-wave/) in river channels. The multiplier *CalChanMan3* can be used to fine-tune the diffusive wave propagation when using the Muskingum-Cunge-Todini (MCT) routing, and it can be defined as either a single value or a map. The map *ChannelsMCT* is a Bolean map with the mask of rivers where MCT wave routing must be used. The parameter *ChanGradMaxMCT* defines the maximum riverbed slope for river grid cells using the MCT wave routing. The parameter is provided as a single number and it is recommended to set it to values < 0.001 and > *ChanGradMin*
+The following parameters are related to the [diffusive wave routing](https://ec-jrc.github.io/lisflood-model/3_14_optLISFLOOD_diffusive-wave/) in river channels. The multiplier *CalChanMan3* can be used to fine-tune the diffusive wave propagation when using the Muskingum-Cunge-Todini (MCT) routing, and it can be defined as either a single value or a map. The map *ChannelsMCT* is a Boolean map with the mask of rivers where MCT wave routing must be used. The parameter *ChanGradMaxMCT* defines the maximum riverbed slope for river grid cells using the MCT wave routing. The parameter is provided as a single number and it is recommended to set it to values < 0.001 and > *ChanGradMin*
 ```xml
 	<comment>
 	**************************************************************
@@ -409,7 +409,7 @@ The following parameters are related to the [diffusive wave routing](https://ec-
 ```
 
 - **CalChanMan3** is a multiplier that is applied to the Manning’s roughness map of the [channel system](https://ec-jrc.github.io/lisflood-model/2_16_stdLISFLOOD_channel-routing/) [-] for the grid cells where MCT routing is used
-- **ChannelsMCT** is Bolean mask including the rivers grid cells using the MCT wave routing [-]
+- **ChannelsMCT** is oBolean mask including the rivers grid cells using the MCT wave routing [-]
 - **ChanGradMaxMCT** is a upper limit for the channel gradient used in the calculation of the MCT wave routing [m/m]
 
 
@@ -504,7 +504,7 @@ Here you can define the prefix that is used for each meteorological variable, LA
 
 - **PrefixET0** is the prefix of the potential (reference) evapotranspiration maps
 
-- **PrefixLAI**, **PrefixLAIForest** ,**PrefixLAIIrrigated**  are the prefix of the Leaf Area Index maps for the three land cover fractions
+- **PrefixLAI**, **PrefixLAIForest** ,**PrefixLAIIrrigation**  are the prefix of the Leaf Area Index maps for the three land cover fractions
 
 - **PrefixWaterUseDomestic** is the prefix of the domestic [water use maps](https://ec-jrc.github.io/lisflood-model/2_18_stdLISFLOOD_water-use/) (optional). Domestic use was indicated here as an example.
 
@@ -512,13 +512,13 @@ Here you can define the prefix that is used for each meteorological variable, LA
 
 ### Initial conditions: OS LISFLOOD prerun, cold start, warm start
 
-OS LISFLOOD prerun simulation has the purpose to adequately initialize the state of the slow storages, namely grounwater zone and soil. OS LISFLOOD prerun can also be referred to as initialization run. This simulation must always be performed. OS LISFLOOD prerun output must be used to initialize the OS LISFLOOD cold start run.
+OS LISFLOOD prerun simulation has the purpose to adequately initialize the state of the slow storages, namely groundwater zone and soil. OS LISFLOOD prerun can also be referred to as initialization run. This simulation must always be performed. OS LISFLOOD prerun output must be used to initialize the OS LISFLOOD cold start run.
 
-OS LISFLOOD cold start run and warm start run deliver the actual model outputs to be usef for analysis/forecasts. 
+OS LISFLOOD cold start run and warm start run deliver the actual model outputs to be used for analysis/forecasts. 
 
-OS LISFLOOD cold start run takes as input the OS LISFLOOD prerun output for the slow storages, while fast(er) respoding storages (e.g. channel volume) are set to bogus values. It is always recommended to discard the initial (3) years of the OS LISFLOOD cold start to allow adequate initialization of fast(er) respoding storages. 
+OS LISFLOOD cold start run takes as input the OS LISFLOOD prerun output for the slow storages, while fast(er) responding storages (e.g. channel volume) are set to bogus values. It is always recommended to discard the initial (3) years of the OS LISFLOOD cold start to allow adequate initialization of fast(er) responding storages. 
 
-OS LISFLOOD warm start resumes the computations from the end states of a preceeding simulation (cold start or warm start).
+OS LISFLOOD warm start resumes the computations from the end states of a preceding simulation (cold start or warm start).
 
 A dedicated chapter about [model initialization](../3_step4_model-initialisation/index.md) provides more in-depth explanations of model prerun (initialization), cold start, and warm start.
 
@@ -529,16 +529,17 @@ This page has the purpose to provide an overview of the variables requiring an i
 	**************************************************************               
 	INITIAL CONDITIONS                                                    
 	(maps or single values)                                               
-	**************************************************************               
-	</comment>                                                          
+	**************************************************************                                                                        
 	<textvar name="OFDirectInitValue" value="0">                  	
 	<comment>                                                           
 	initial overland flow water volume, direct runoff fraction [m3]                              
-	</comment> 
+	</comment>
+	</textvar> 
 	<textvar name="OFOtherInitValue" value="0">                  	
 	<comment>                                                           
 	initial overland flow water volume, other + irrigated fraction [m3]                              
-	</comment>    
+	</comment>
+	</textvar>   
 	<textvar name="OFForestInitValue" value="0">                  	
 	<comment>                                                           
 	initial overland flow water volume, forest fraction [m3]                              
@@ -649,11 +650,11 @@ This page has the purpose to provide an overview of the variables requiring an i
 
 - **OFDirect/Other/ForestInitValue** is the initial amount of water on the soil surface $[m^3]$
 
-- **SnowCoverInitAValue** is the initial snow cover on the soil surface in elevation zone **A** $[mm]$
+- **SnowCoverAInitValue** is the initial snow cover on the soil surface in elevation zone **A** $[mm]$
 
-- **SnowCoverInitBValue** is the initial snow cover on the soil surface in elevation zone **B** $[mm]$
+- **SnowCoverBInitValue** is the initial snow cover on the soil surface in elevation zone **B** $[mm]$
 
-- **SnowCoverInitCValue** is the initial snow cover on the soil surface in elevation zone **C** $[mm]$
+- **SnowCoverCInitValue** is the initial snow cover on the soil surface in elevation zone **C** $[mm]$
 
 - **FrostIndexInitValue** ([**F**](https://ec-jrc.github.io/lisflood-model/2_05_stdLISFLOOD_frost-index/)) initial value of the frost index $[\frac{°C}{day}]$
 
@@ -669,17 +670,17 @@ This page has the purpose to provide an overview of the variables requiring an i
 
 - **TotalCrossSectionAreaInitValue** is the initial cross-sectional area $[m^2]$ of the water in the river channels (a substitute for initial discharge, which is directly dependent on this). A value of **-9999 ** sets the initial amount of water in the channel to half bankfull.
 
-- **ThetaInit1Value** is the initial moisture content $[\frac{mm^3} {mm^3}]$ of the superficial soil layer (1a). A value of -**9999** will set the initial soil moisture content to field capacity.
+- **ThetaInit1Value** is the initial moisture content $[\frac{mm^3} {mm^3}]$ of the superficial soil layer (1). A value of -**9999** will set the initial soil moisture content to field capacity.
 
-- **ThetaInit2Value** is the initial moisture content $[\frac{mm^3} {mm^3}]$ of the upper soil layer (1b). A value of -**9999** will set the initial soil moisture content to field capacity.
+- **ThetaInit2Value** is the initial moisture content $[\frac{mm^3} {mm^3}]$ of the upper soil layer (2). A value of -**9999** will set the initial soil moisture content to field capacity.
 
-- **ThetaInit3Value** is the initial moisture content $[\frac{mm^3} {mm^3}]$ of the lower soil layer (2). A value of -**9999** will set the initial soil moisture content to field capacity.
+- **ThetaInit3Value** is the initial moisture content $[\frac{mm^3} {mm^3}]$ of the lower soil layer (3). A value of -**9999** will set the initial soil moisture content to field capacity.
 
-- **PrevDischarge** and **PrevDischargeAvg** are the initial discharge from previous run (instantaneous and average values in the last sub-roting step) $[\frac{m^3} {s}]$ used for lakes, reservoirs and transmission loss (only needed if option is on for lakes or reservoirs or transmission loss). A value of **-9999** sets the initial amount of discharge to equivalent of half bankfull.
+- **PrevDischarge** and **PrevDischargeAvg** are the initial discharge from previous run (instantaneous and average values in the last sub-routing step) $[\frac{m^3} {s}]$ used for lakes, reservoirs and transmission loss (only needed if option is on for lakes or reservoirs or transmission loss). A value of **-9999** sets the initial amount of discharge to equivalent of half bankfull.
 
 - **PrevCmMCTInitValue** is the Courant number at the end of the previous step and it is only used for MCT wave routing [-]. A value of -**9999 ** sets the initial value to 1.
 
-- **PrevDmMCTInitValue** is the Reynols number at the end of the previous step and it is only used for MCT wave routing [-]. A value of -**9999 ** sets the initial value to 0.
+- **PrevDmMCTInitValue** is the Reynolds number at the end of the previous step and it is only used for MCT wave routing [-]. A value of -**9999 ** sets the initial value to 0.
 
 ```xml
 	<comment>                                                           
@@ -735,7 +736,7 @@ Users can set different combinations of optional modules and outputs (or none at
 For instance, using the inflow hydrograph option requires an input map and time series, which have to be specified in the settings file. 
 If you want to report discharge maps at each time step, you will first have to specify the writing path and desired file name. 
 
-The [refernce xml settings file](https://github.com/ec-jrc/lisflood-code/blob/master/src/lisfloodSettings_reference.xml) includes definitions for most of the optional output maps and time series. 
+The [reference xml settings file](https://github.com/ec-jrc/lisflood-code/blob/master/src/lisfloodSettings_reference.xml) includes definitions for most of the optional output maps and time series. 
 The use of the *output* options is described in detail in [a dedicated section](../5_annex_output-files/index.md).
 
 Within the 'lfoptions' element of the settings file, each option is defined using a 'setoption' element, which has the attributes 'name' and 'choice' (i.e. the actual value). For example:

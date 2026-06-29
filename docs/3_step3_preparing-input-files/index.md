@@ -4,7 +4,7 @@ In the current version of OS LISFLOOD, all the model inputs are provided as eith
 
 ### INPUT MAPS
 
-> Albeit OS LISFLOOD can still read maps in pcraster format, users are strongly recommended to prepare their own input maps in NetCDF format: pcraster format will be discarded in future versions of OS LISFLOOD (timeline not yet defined). Users interested in converting their existing pcraster maps into NetCDF format can refer to the [OS LISFLOOD untility pcr2nc](https://github.com/ec-jrc/lisflood-utilities#pcr2nc).
+> Albeit OS LISFLOOD can still read maps in pcraster format, users are strongly recommended to prepare their own input maps in NetCDF format: pcraster format will be discarded in future versions of OS LISFLOOD (timeline not yet defined). Users interested in converting their existing pcraster maps into NetCDF format can refer to the [OS LISFLOOD utility pcr2nc](https://github.com/ec-jrc/lisflood-utilities#pcr2nc).
 
 LISFLOOD requires that all maps must have *identical* location attributes (number of rows, columns, cellsize, upper x and y coordinates).
 
@@ -14,7 +14,7 @@ The input maps can be classified according to two main categories:<br>
 
 ### Meteorological forcings
 
-The meteorological forcing variables are defined in *map stacks*. A *map stack* is simply a series of maps, where each map represents the value of a variable at an individual time step.<br>It is recommented to use the netcdf format. <br> LISFLOOD is capable of reading meteorological forcings split into multiple files (e.g. yearly chuncks). To use this functionality, it is enough to add the symbol '\*' after the file name (e.g. ET0_\*).
+The meteorological forcing variables are defined in *map stacks*. A *map stack* is simply a series of maps, where each map represents the value of a variable at an individual time step.<br>It is recommended to use the netcdf format. <br> LISFLOOD is capable of reading meteorological forcings split into multiple files (e.g. yearly chunks). To use this functionality, it is enough to add the symbol '\*' after the file name (e.g. ET0_\*).
 
 Generally used prefixes for the meteorological forcings maps are: <br>
 + tp : total precipitation; units: mm/day.<br>
@@ -34,7 +34,7 @@ The section [Static Maps](../4_Static-Maps-introduction) provides detailed guide
 +   [general maps](../4_Static-Maps_general-maps/): area mask; landuse mask; grid-cell length; grid-cell area.
 +   [topography](../4_Static-Maps_topography/): local drain direction; gradient; standard deviation of elevation; upstream area.
 +   [land use maps](../4_Static-Maps_land-use/): fraction of forest; fraction of irrigated crops; fraction of rice crops; fraction of inland water; fraction of sealed surfaces; fraction of other land uses.
-+   [land use depending](../4_Static-Maps_land-use-depending/):crop coefficient; crop group number; Manning/s's surface roughness; soil depth.
++   [land use depending](../4_Static-Maps_land-use-depending/):crop coefficient; crop group number; Manning's surface roughness; soil depth.
 +   [soil hydraulic properties](../4_Static-Maps_soil-hydraulic-properties/): saturated hydraulic conductivity; soil water content at saturation; residual soil water content; parameters alpha and lambda of Van Genuchten's equations.
 +   [channel geometry](../4_Static-Maps_channel-geometry/): channels mask; channels side slope; channels length; channels gradient; Manning's rougheness coefficient of the channels; channels bottom width; floodplain width; bankfull channels depth; MCT diffusive wave routing channels.
 +   [leaf area index](../4_Static-Maps_leaf-area-index/): evolution of vegetation over time (leaf area index) for land covers forest, irrigated areas, others.
@@ -44,7 +44,7 @@ The section [Static Maps](../4_Static-Maps-introduction) provides detailed guide
 +   [sectoral water demand maps]: domestic, energetic, livestock, industrial water use. These maps represent the time series of spatially distributed values of water demand for domestic, energetic, livestock, and industrial water use. These maps  are required only when activating the [water use module](https://ec-jrc.github.io/lisflood-model/2_18_stdLISFLOOD_water-use/)
 + outlet points: locations and IDs of the points for which OS LISFLOOD provides the time series of discharge values.
 
-#### Role of "mask", "channels" ans "channelsMCT" maps 
+#### Role of "mask", "channels" and "channelsMCT" maps 
 
 The mask map (i.e. domain.nc, also called area.nc) defines the model domain. In order to avoid unexpected results, **it is vital that all maps that are related to topography, land use and soil are defined** (i.e. don't contain a missing value) for each pixel that is "true" (has a Boolean 1 value) on the mask map. The same applies for all meteorological input and the Leaf Area Index maps. Similarly, all pixels that are "true" on the channels map must have some valid (non-missing) value on each of the channel parameter maps. At the same time, all pixels that have value "true" in the MCT rivers mask must also belong to the "channels" map. Undefined pixels can lead to unexpected behaviour of the model, output that is full of missing values, loss of mass balance and possibly even model crashes. Some maps needs to have values in a defined range e.g. the gradient map has to be greater than 0. When preparing their own input maps, users are recommended to refer to [these guidelines](../4_Static-Maps-introduction/).
 
@@ -59,7 +59,7 @@ LISFLOOD needs to know the size properties of each grid cell (length, area) in o
 | PixelLengthUser | pixleng.map/nc     | Map with pixel length<br><br> Unit: $[m]$,<br> *Range *of values: map \> 0* |
 | PixelAreaUser   | pixarea.map/nc     | Map with pixel area<br><br>*Unit:* $[m^2]$,<br> *Range of values: map \> 0* |
 
-The values on both maps may vary in space. A limitation is that a pixel is always represented as a square, so length and width are considered equal (no rectangles). In order to tell LISFLOOD to use the maps a, you need to activate the special option "*gridSboveizeUserDefined*", which involves adding the following line to the LISFLOOD settings file:
+The values on both maps may vary in space. A limitation is that a pixel is always represented as a square, so length and width are considered equal (no rectangles). In order to tell LISFLOOD to use the maps a, you need to activate the special option "*gridSizeUserDefined*", which involves adding the following line to the LISFLOOD settings file:
 
 ```xml
 <setoption choice="1" name="gridSizeUserDefined" \>
@@ -75,9 +75,9 @@ Because Leaf area index maps follow a yearly circle, only a map stack of one yea
 
 #### Important technical note for the generation of the water regions map
 
-Water demand and water abstraction are spatially distributed within each water region. As detailed [here](../2_18_stdLISFLOOD_water-use/), the water resources (surface water bodies and groundwater) are shared inside the water region in order to meet the cumulative requirements of the water region area. For this reason, it is strongly recommended to include the entire water region(s) in the modelled area. If a portion of the water region is not included in the modelled area, then LISFLOOD cannot adequately compute the water demand and abstraction. In other words, LISFLOOD will not be able to account for sources of water outside of the computational domain (it is important to notice that LISFLOOD will not crush but the results will be affected by this discrepancy).
+Water demand and water abstraction are spatially distributed within each water region. As detailed [here](../2_18_stdLISFLOOD_water-use/), the water resources (surface water bodies and groundwater) are shared inside the water region in order to meet the cumulative requirements of the water region area. For this reason, it is strongly recommended to include the entire water region(s) in the modelled area. If a portion of the water region is not included in the modelled area, then LISFLOOD cannot adequately compute the water demand and abstraction. In other words, LISFLOOD will not be able to account for sources of water outside of the computational domain (it is important to notice that LISFLOOD will not crash but the results will be affected by this discrepancy).
 The inclusion of the complete water region in the computational domain becomes compulsory under the specific circumstances of model calibration.
-Calibrated parameters are optimised for a specific model set up. It is often required to calibrate the parameters of several subcatchments inside a basin. Each calibration subcatchment must include a finite number of water regions (each water region can belong to only one subctatchment). If this condition is met, the calibrated parameters can be correctly optimised. Conversely, when a water region belongs to one or more calibration sub-catchments, the water resources are allocated and abstracted in different quantities when modelling the calibration subcatchment only or the entire basin. Similarly, the option groundwater smooth leads to different  geometries of the cone of depression due to groundwater abstraction when modelling the subcatchment only or the entire basin. These two scenarios impede the correct calibration of the model parameters and must be avoided. The user is advised to switch off the groundwater smooth option and to ensure the consistency between water regions and calibration cacthments. The utility [waterregions](https://github.com/ec-jrc/lisflood-utilities/) can be used to 1) verify the consistency between calibration catchments and water regions or 2) create a water region map which is consistent with a set of calibration points.
+Calibrated parameters are optimised for a specific model set up. It is often required to calibrate the parameters of several subcatchments inside a basin. Each calibration subcatchment must include a finite number of water regions (each water region can belong to only one subcatchment). If this condition is met, the calibrated parameters can be correctly optimised. Conversely, when a water region belongs to one or more calibration sub-catchments, the water resources are allocated and abstracted in different quantities when modelling the calibration subcatchment only or the entire basin. Similarly, the option groundwater smooth leads to different  geometries of the cone of depression due to groundwater abstraction when modelling the subcatchment only or the entire basin. These two scenarios impede the correct calibration of the model parameters and must be avoided. The user is advised to switch off the groundwater smooth option and to ensure the consistency between water regions and calibration catchments. The utility [waterregions](https://github.com/ec-jrc/lisflood-utilities/) can be used to 1) verify the consistency between calibration catchments and water regions or 2) create a water region map which is consistent with a set of calibration points.
 
 
 ### INPUT TABLES
@@ -87,7 +87,7 @@ LISFLOOD requires additional information for the adequate modelling of [lakes](h
 
 ### Organisation of input data
 
-It is up to the user how the input data are organised. As an example, users might decide to organize base maps, meteorological maps, static maps, and tables in separate directories. It is strogly recommended to store output files in a separate directory.
+It is up to the user how the input data are organised. As an example, users might decide to organize base maps, meteorological maps, static maps, and tables in separate directories. It is strongly recommended to store output files in a separate directory.
 
 For example:
 
@@ -107,7 +107,7 @@ For example:
 -   all **output** goes to one directory (e.g. 'out')
 
 
-Users might consider the example of sub-folders organization provided in the public datasets: [OS LISLOOD static and parameter maps for GloFAS dataset](https://data.jrc.ec.europa.eu/dataset/68050d73-9c06-499c-a441-dc5053cb0c86) and [OS LISLOOD static and parameter maps for Europe](https://data.jrc.ec.europa.eu/dataset/f572c443-7466-4adf-87aa-c0847a169f23).
+Users might consider the example of sub-folders organization provided in the public datasets: [OS LISFLOOD static and parameter maps for GloFAS dataset](https://data.jrc.ec.europa.eu/dataset/68050d73-9c06-499c-a441-dc5053cb0c86) and [OS LISFLOOD static and parameter maps for Europe](https://data.jrc.ec.europa.eu/dataset/f572c443-7466-4adf-87aa-c0847a169f23).
 
 
 

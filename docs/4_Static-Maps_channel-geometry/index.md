@@ -36,7 +36,7 @@ Channel characteristics, explained above, are shown in the Figure 41 below.  <br
 | Source data| Reference/preparation | Temporal coverage | Spatial information |
 | :---| :--- | :--- | :--- |
 |Channel width        |[CaMa-Flood](https://global-hydrodynamics.github.io/CaMa-Flood/)          |2018         |Global, 1' and 3'|
-|River lenght        | [CaMa-Flood](https://global-hydrodynamics.github.io/CaMa-Flood/)         |2018          |Global, 1' and 3'|
+|River length        | [CaMa-Flood](https://global-hydrodynamics.github.io/CaMa-Flood/)         |2018          |Global, 1' and 3'|
 |MERIT DEM: Multi-Error-Removed Improved-Terrain DEM|[MERIT-DEM](https://global-hydrodynamics.github.io/MERIT_DEM/)        |2018          |Global, 3" (at about 90 m)|
 |Mask map        |Can be prepared following [these instructions](../4_Static-Maps_general-maps#area-mask-and-land-use-mask-maps)|NA          |Global, 1' and 3'|
 |Local drain direction (ldd)        |Can be prepared following [these instructions](../4_Static-Maps_topography#local-drain-direction-map)|NA          |Global, 1' and 3'|
@@ -59,7 +59,7 @@ The channel side slope map is calculated by dividing the horizontal distance (re
 
 *Figure 42: Zoom of Figure 41 with highlighted components dx and dy (in red) used to calculate the channel side slope (original figure is from [Burek et al., 2013](https://publications.jrc.ec.europa.eu/repository/handle/JRC78917)).*
 
-### Channel length (chanlenght)
+### Channel length (chanlength)
 The channel length map (in meters) can be created by using the 'rivlen' layers from the Catchment-based Macro-scale Floodplain Global River Hydrodynamics Model v4.0 maps ([CaMa-Flood](https://global-hydrodynamics.github.io/CaMa-Flood/); [Yamazaki et al, 2011](https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2010WR009726)), multiplied by the LISFLOOD model mask.
 
 ### Channel gradient (changrad)

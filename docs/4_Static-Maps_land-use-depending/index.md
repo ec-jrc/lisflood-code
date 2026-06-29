@@ -142,17 +142,17 @@ The LISFLOOD model does not accept missing values for Kc, Kg and Km thus all zer
 *Figure 23: Manning’s coefficient for other land cover type map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
 
 
-## Soil depth layers 1,2, and 3 for forested and non-forested areas
+## Soil depth layers 1, 2 and 3 for forested and non-forested areas
 
 ### General map information and possible source data
 
 
 | Map name | File name*;type | Units; range | Description |
 | :---| :--- | :--- | :--- |
-|Soil depth|soildeoth**N_T**.nc; <br> Type: Float32| Units: mm;<br>Range: ≥ 50**|Forested/ other (non-forested) area soil depth <br>for soil layer 1 (surface layer)/ 2 (middle layer)/ 3 (bottom layer)|
+|Soil depth|soildepth**N_T**.nc; <br> Type: Float32| Units: mm;<br>Range: ≥ 50**|Forested/ other (non-forested) area soil depth <br>for soil layer 1 (superficial layer)/ 2 (upper layer)/ 3 (lower layer)|
 
-*where **N** is the number of soil depth layer (**N**= ’1’ for surface layer, **N** = ’2’ for middle layer, **N** = ’3’ for bottom layer), and **T** is the landcover type (**T** = ’f’ for forested areas, **T** = ’o’ for non-forested areas or others).
-**where range for soil layer 1 (surface layer) equals 50 mm, and for soil layer 2 (middle layer) and 3 (bottom layer) equals ≥ 50 mm.
+*where **N** is the number of soil depth layer (**N**= ’1’ for superficial layer, **N** = ’2’ for upper layer, **N** = ’3’ for lower layer), and **T** is the landcover type (**T** = ’f’ for forested areas, **T** = ’o’ for non-forested areas or others).
+**where range for soil layer 1 (superficial layer) equals 50 mm, and for soil layer 2 (upper layer) and 3 (lower layer) equals ≥ 50 mm.
 
 | Source data| Access |Temporal coverage|Spatial information|
 | :---| :--- | :--- | :---|
@@ -163,16 +163,16 @@ The LISFLOOD model does not accept missing values for Kc, Kg and Km thus all zer
 
 ### Methodology
 
-The methodology for the computation of the depth of the three soil layers has been adapted from [Burek et al., 2014](https://ec-jrc.github.io/lisflood/pdfs/Dataset_hydro.pdf). Here, total soil depth is taken as the 'absolute depth to bedrock' from [SoilGrids250m (2017)](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0169748) and 'root depth' for the fractions forest and non-forest is computed following methodology explained [above](../4_Static-Maps_land-use-depending#crop-coefficient,-crop-group-number,-manning’s-surface-roughness-coefficient-for-forest,-irrigated-crops-and-other-land-use-type-maps). Soil depth is expressed in mm. <br>
-Soil depth layer 1 (surface) for forest/non-forest ($SD_1$) is assumed constant, equal to 50 mm all over the world:
+The methodology for the computation of the depth of the three soil layers has been adapted from [Burek et al., 2014](https://ec-jrc.github.io/lisflood/pdfs/Dataset_hydro.pdf). The total soil depth is taken as the minimum between the 'absolute depth to bedrock' from [SoilGrids250m (2017)](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0169748) and the groundwater table depth from [Fan et al.2013](https://www.science.org/doi/10.1126/science.1229881). The 'root depth' for the fractions forest and non-forest is computed following methodology explained [above](../4_Static-Maps_land-use-depending#crop-coefficient,-crop-group-number,-manning’s-surface-roughness-coefficient-for-forest,-irrigated-crops-and-other-land-use-type-maps). Soil depth is expressed in mm. <br>
+Soil depth layer 1 (superficial) for forest/non-forest ($SD_1$) is assumed constant, equal to 50 mm all over the world:
 
 $$
 SD_1 = 50 mm
 $$
 
-Soil depth layers 2 (middle, $SD_2$) and 3 (bottom, $SD_3$) for forest/non-forest are computed in several steps – first at native resolution of the input dataset, then at required resolution. First step is following:
+Soil depth layers 2 (upper, $SD_2$) and 3 (lower, $SD_3$) for forest/non-forest are computed in several steps – first at native resolution of the input dataset, then at required resolution. First step is following:
 
-+ for soil depth layer 2 (middle, $SD_2$)
++ for soil depth layer 2 (upper, $SD_2$)
 
 | Absolute depth to bedrock | Equation |
 | :---| :--- | 
@@ -181,7 +181,7 @@ Soil depth layers 2 (middle, $SD_2$) and 3 (bottom, $SD_3$) for forest/non-fores
 
 If the computed value of $SD_2$ is lower than 50mm, then it is used $SD_2$ = $50 mm$ (in order to account for data uncertainty).
 
-+ for soil depth layer 3 (bottom layer, $SD_3$)
++ for soil depth layer 3 (lower layer, $SD_3$)
 
 $$ 
 SD_3 = absolutedepth - (SD_1 +SD_2)
