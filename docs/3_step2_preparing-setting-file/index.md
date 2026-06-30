@@ -760,4 +760,4 @@ Within the 'lfoptions' element of the settings file, each option is defined usin
 ### Reference settings file
 In order to facilitate the preparation of the settings file, a complete example is provided [here](https://github.com/ec-jrc/lisflood-code/tree/master/src/lisfloodSettings_reference.xml). The user is encouraged to update the paths, the names of the maps and of the tables in the provided template.
 
-[:top:](#top)
+[🔝](#top)
