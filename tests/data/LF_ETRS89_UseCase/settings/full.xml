@@ -18,6 +18,7 @@
         <setoption choice="1" name="simulatePF"/>
         <setoption choice="1" name="SplitRouting"/>
         <setoption choice="0" name="InitLisflood"/>
+        <setoption choice="1" name="ColdStart"/>
         <setoption choice="0" name="cropsEPIC"/>
 
         # report end maps and state maps
@@ -85,7 +86,7 @@
             <comment>
 
             The option "OutputMapsChunks" may take the following values:
-                - "[positive integer number]"  : Dump outputs to disk every X steps (default 1) 
+                - "[positive integer number]"  : Dump outputs to disk every X steps (default 1)
             </comment>
             <textvar name="OutputMapsChunks" value="1"/>
 
@@ -98,13 +99,13 @@
 
             <comment>
                 **************************************************************
-                PARALLELISATION WITH NUMBA 
+                PARALLELISATION WITH NUMBA
                 **************************************************************
             </comment>
 
             <!-- Parallelisation of using Numba runtime compiled library .
             The option "numCPUs_parallelNumba" may take the following values:
-            - "0"           : set to NUMBA_NUM_THREADS Environment Variable 
+            - "0"           : set to NUMBA_NUM_THREADS Environment Variable
                       (if NUMBA_NUM_THREADS is not set, will take the number of CPU cores determined by python's multiprocessing.cpu_count())
             - "1"           : serial execution (not parallel)
             - "2", "3", ... : manual setting of the number of parallel threads.
@@ -226,6 +227,12 @@
                 </comment>
 
             </textvar>
+
+            <textvar name="NumDaysSpinUp" value="180">
+                <comment>
+                    low value to limit testing time
+              </comment>
+            </textvar>   
 
             <textvar name="ReportSteps" value="6000..7000">
                 <comment>
@@ -373,22 +380,22 @@
                 </comment>
             </textvar>
 
-            <textvar name="adjust_Normal_Flood" value="$(PathParams)/params_adjust_Normal_Flood.nc">
+            <textvar name="ReservoirFloodStorage" value="$(PathTables)/rflim.txt">
                 <comment>
-                    default: 0.8
-                    $(PathParams)/params_adjust_Normal_Flood.nc
-                    adjusting the balance between normal and flood storage
-                    big values (= closer to 1.0 = close to flood) results in keeping the outflow longer at rnormq
-                    Range 0.01 - 0.99
+                  Fraction of the total reservoir storage above which the reservoirs enters
+                  the flood control zone.
                 </comment>
             </textvar>
 
-            <textvar name="ReservoirRnormqMult" value="$(PathParams)/params_ReservoirRnormqMult.nc">
+            <textvar name="ReservoirFloodOutflowFactor" value="0.3">
                 <comment>
-                    default: 1.0
-                    $(PathParams)/params_ReservoirRnormqMult.nc
-                    Reservoir rnormq (normal outflow)
-                    fraction of the value in table rnormq.txt range: 0.5 - 2
+                    Factor of the 100-year return inflow (`ReservoirFloodOutflow`) that defines the inflow
+                    value that switches, when exceeded, the reservoir routine to flood control mode.
+                    It can be a map (NetCDF), a table (TXT) or a float. Negative values will be replaced by
+                    the default value of 0.3
+                      Units: -
+                      Range: 0.1 - 0.5
+                      Default: 0.3
                 </comment>
             </textvar>
 
@@ -611,7 +618,7 @@
             </textvar>
 
 
-            <textvar name="UZInitValue" value="0">
+            <textvar name="UZInitValue" value="$(PathRoot)/maps/safe_init/uz.end.nc">">
 
                 <comment>
 
@@ -680,7 +687,7 @@
             </textvar>
 
 
-            <textvar name="ThetaInit1Value" value="-9999">
+            <textvar name="ThetaInit1Value" value="$(PathRoot)/maps/safe_init/tha.end.nc">
 
                 <comment>
 
@@ -693,7 +700,7 @@
             </textvar>
 
 
-            <textvar name="ThetaInit2Value" value="-9999">
+            <textvar name="ThetaInit2Value" value="$(PathRoot)/maps/safe_init/thb.end.nc">
 
                 <comment>
 
@@ -706,7 +713,7 @@
             </textvar>
 
 
-            <textvar name="ThetaInit3Value" value="-9999">
+            <textvar name="ThetaInit3Value" value="$(PathRoot)/maps/safe_init/thc.end.nc">
 
                 <comment>
 
@@ -774,6 +781,13 @@
                 </comment>
             </textvar>
 
+            <textvar name="PrevDischargeAvg" value="-9999">
+                <comment>
+					Outflow average discharge on previous routing sub-step (average) [m3/s]
+					Cold start: -9999 sets initial value to 0
+                </comment>
+            </textvar>
+
         </group>
 
         <group>
@@ -802,7 +816,7 @@
             </textvar>
 
 
-            <textvar name="UZForestInitValue" value="0">
+            <textvar name="UZForestInitValue" value="$(PathRoot)/maps/safe_init/uzf.end.nc">
 
                 <comment>
 
@@ -824,7 +838,7 @@
             </textvar>
 
 
-            <textvar name="ThetaForestInit1Value" value="-9999">
+            <textvar name="ThetaForestInit1Value" value="$(PathRoot)/maps/safe_init/thfa.end.nc">
 
                 <comment>
 
@@ -837,7 +851,7 @@
             </textvar>
 
 
-            <textvar name="ThetaForestInit2Value" value="-9999">
+            <textvar name="ThetaForestInit2Value" value="$(PathRoot)/maps/safe_init/thfb.end.nc">
 
                 <comment>
 
@@ -850,7 +864,7 @@
             </textvar>
 
 
-            <textvar name="ThetaForestInit3Value" value="-9999">
+            <textvar name="ThetaForestInit3Value" value="$(PathRoot)/maps/safe_init/thfc.end.nc">
 
                 <comment>
 
@@ -892,7 +906,7 @@
             </textvar>
 
 
-            <textvar name="UZIrrigationInitValue" value="0">
+            <textvar name="UZIrrigationInitValue" value="$(PathRoot)/maps/safe_init/uzi.end.nc">
 
                 <comment>
 
@@ -914,7 +928,7 @@
             </textvar>
 
 
-            <textvar name="ThetaIrrigationInit1Value" value="-9999">
+            <textvar name="ThetaIrrigationInit1Value" value="$(PathRoot)/maps/safe_init/thia.end.nc">
 
                 <comment>
 
@@ -927,7 +941,7 @@
             </textvar>
 
 
-            <textvar name="ThetaIrrigationInit2Value" value="-9999">
+            <textvar name="ThetaIrrigationInit2Value" value="$(PathRoot)/maps/safe_init/thib.end.nc">
 
                 <comment>
 
@@ -940,7 +954,7 @@
             </textvar>
 
 
-            <textvar name="ThetaIrrigationInit3Value" value="-9999">
+            <textvar name="ThetaIrrigationInit3Value" value="$(PathRoot)/maps/safe_init/thic.end.nc">
 
                 <comment>
 
@@ -1393,27 +1407,27 @@
                 </comment>
 
             </textvar>
-            
-            
+
+
             <textvar name="IrrigationWaterReUseM3" value="0.0">
-            
+
             <comment>
-            
+
                   Annual amount (m3) of treated wastewater reused for irrigation
-                  
+
             </comment>
-            
+
             </textvar>
-            
-            
+
+
             <textvar name="IrrigationWaterReUseNumDays" value="143">
-            
+
             <comment>
-            
+
                   Number of days over which the annual amount of treated wastewater for irrigation is used
-                  
+
             </comment>
-            
+
             </textvar>
 
 
@@ -1528,19 +1542,6 @@
                     Fraction of water re-used in industry (e.g. 50% = 0.5 = half of the water is re-used, used twice (baseline=0, maximum=1
 
                     scenruse.map
-
-                </comment>
-
-            </textvar>
-
-
-            <textvar name="FirstDayOfMonth" value="$(PathTables)/firstdayofmonth.txt">
-
-                <comment>
-
-                    table with days for each water use maps
-
-                    1st column: range of days; 2nd column: suffix of wuse map
 
                 </comment>
 
@@ -1837,7 +1838,7 @@
             </textvar>
 
 
-            <textvar name="UpAreaTrans" value="$(PathMaps)/ec_upArea">
+            <textvar name="UpAreaTrans" value="$(PathMaps)/ec_upArea.nc">
 
                 <comment>
 
@@ -1897,6 +1898,13 @@
 
             </textvar>
 
+            <textvar name="BankFullPerc" value="0.5">
+                <comment>
+                    Percentage [-] used to compute the TotalCrossSectionAreaHalfBankFull in the initialisation of the
+                    total cross-sectional area
+                    default: 0.5
+                </comment>
+            </textvar>
 
             <textvar name="GradMin" value="0.001">
 
@@ -2007,7 +2015,7 @@
                 </textvar>
 
 
-                <textvar name="ReservoirInitialFillValue" value="-9999">
+                <textvar name="ReservoirInitialFill" value="-9999">
 
                     <comment>
 
@@ -2412,6 +2420,11 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
             </textvar>
 
+           <textvar name="NumDaysSpinUp" value="$(NumDaysSpinUp)">
+                <comment>
+                    Number of days used for internal spin-up (fluxes computations during prerun)
+                </comment>
+            </textvar>  
 
         </group>
 
@@ -3047,6 +3060,13 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
             </textvar>
 
+            <textvar name="BankFullPerc" value="$(BankFullPerc)">
+                <comment>
+                    Percentage [-] used to compute the TotalCrossSectionAreaHalfBankFull in the initialisation of the
+                    total cross-sectional area
+                    default: 0.5
+                </comment>
+            </textvar>
 
             <textvar name="GradMin" value="$(GradMin)">
 
@@ -3161,7 +3181,24 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
 
             </textvar>
-
+                      
+            <textvar name="SeepTopToSubBAverageOtherMap" value= "$(PathMaps)/safe_init/SeepTopToSubBAverageOtherMap">
+                <comment>
+                     Reported infiltration from the soil layer 2 to soil layer 3, other land cover fraction, average flux over the simulation period [mm]
+            </comment>
+            </textvar>
+          
+            <textvar name="SeepTopToSubBAverageForestMap" value= "$(PathMaps)/safe_init/SeepTopToSubBAverageForestMap">
+                 <comment>
+                        Reported infiltration from the soil layer 2 to soil layer 3, forest land cover fraction, average flux over the simulation period [mm]
+                 </comment>
+            </textvar>
+          
+            <textvar name="SeepTopToSubBAverageIrrigationMap" value= "$(PathMaps)/safe_init/SeepTopToSubBAverageIrrigationMap">
+                 <comment>
+                         Reported infiltration from the soil layer 2 to soil layer 3, irrigated land cover fraction, average flux over the simulation period [mm]
+                  </comment>
+            </textvar>     
 
             <textvar name="timestepInit" value="$(timestepInit)">
 
@@ -3386,7 +3423,13 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     only needed for lakes reservoirs and transmission loss
 
                     -9999: use 0
+                </comment>
+            </textvar>
 
+            <textvar name="PrevDischargeAvg" value="$(PrevDischargeAvg)">
+                <comment>
+					Outflow average discharge on previous routing sub-step (average) [m3/s]
+					Cold start: -9999 sets initial value to 0
                 </comment>
 
             </textvar>
@@ -3587,6 +3630,61 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
         </group>
 
+    <group>
+    <comment>
+    **************************************************************
+    CUMULATIVE FLUXES REQUIRED WHEN COMPUTING THE PRE-RUN IN CHUNKS
+    **************************************************************
+    </comment>
+    <textvar name="LZInflowCUMInit" value="$(LZInflowCUMInit)">
+                <comment>
+                    Cumulative inflow to the lower groundwater zone
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    LZInflowCumEnd: required for the warm start of the pre-run
+                </comment>
+     </textvar>   
+       
+     <textvar name="cumSeepTopToSubBOtherInit" value="$(cumSeepTopToSubBOtherInit)">
+                <comment>
+                    Cumulative flow from second to third soil layer, other land cover fraction
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    cumSeepTopToSubBOtherEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>
+       
+     <textvar name="cumSeepTopToSubBForestInit" value="$(cumSeepTopToSubBForestInit)">
+                <comment>
+                    Cumulative flow from second to third soil layer, forest land cover fraction
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    cumSeepTopToSubBForestEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>
+       
+     <textvar name="cumSeepTopToSubBIrrigationInit" value="$(cumSeepTopToSubBIrrigationInit)">
+                <comment>
+                    Cumulative flow from second to third soil layer, irrigation land cover fraction
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    cumSeepTopToSubBIrrigationEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>
+       
+     <textvar name="CumQInit" value="$(CumQInit)">
+                <comment>
+                    Cumulative discharge
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    CumQEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>           
+                            
+     <textvar name="TimeSinceStartPrerunChunkInit" value="$(TimeSinceStartPrerunChunkInit)">
+                <comment>
+                    Cumulative number of days from the start of the prerun
+                    0: this is appropriate for the cold start of the pre-run, the cold start of the run, the warm start of the run
+                    NetTimeSinceStartPrerunChunkEnd: required for the warm start of the pre-run
+                </comment>       
+     </textvar>
+       
+    </group> 
 
         <group>
 
@@ -3688,20 +3786,6 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
             </textvar>
 
-
-            <textvar name="LAIOfDay" value="$(PathTables)/laiofday.txt">
-
-                <comment>
-
-                    table with days for each LAI maps
-
-                    1st column: range of days; 2nd column: suffix of LAI map
-
-                </comment>
-
-            </textvar>
-
-
         </group>
 
 
@@ -3717,19 +3801,6 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 **************************************************************
 
             </comment>
-
-
-            <textvar name="FirstDayOfMonth" value="$(PathTables)/firstdayofmonth.txt">
-
-                <comment>
-
-                    table with days for each water use maps
-
-                    1st column: range of days; 2nd column: suffix of wuse map
-
-                </comment>
-
-            </textvar>
 
 
             <textvar name="DomesticDemandMaps" value="$(PathWaterUse)/$(PrefixWaterUseDomestic)">
@@ -3937,26 +4008,26 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
             </textvar>
 
-            
+
             <textvar name="IrrigationWaterReUseM3" value="$(IrrigationWaterReUseM3)">
-            
+
             <comment>
-            
+
                   Annual amount (m3) of treated wastewater reused for irrigation
-                  
+
             </comment>
-            
+
             </textvar>
-            
-            
+
+
             <textvar name="IrrigationWaterReUseNumDays" value="$(IrrigationWaterReUseNumDays)">
-            
+
             <comment>
-            
+
                   Number of days over which the annual amount of treated wastewater for irrigation is used
-                  
+
             </comment>
-            
+
 
             </textvar>
 
@@ -4125,7 +4196,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
             </textvar>
 
 
-            <textvar name="RicePlantingDay1" value="$(PathMapsTables)/riceplantingday1.map">
+            <textvar name="RicePlantingDay1" value="$(PathMapsTables)/riceplantingday1">
 
                 <comment>
 
@@ -4136,7 +4207,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
             </textvar>
 
 
-            <textvar name="RiceHarvestDay1" value="$(PathMapsTables)/riceharvestday1.map">
+            <textvar name="RiceHarvestDay1" value="$(PathMapsTables)/riceharvestday1">
 
                 <comment>
 
@@ -4147,7 +4218,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
             </textvar>
 
 
-            <textvar name="RicePlantingDay2" value="$(PathMapsTables)/riceplantingday2.map">
+            <textvar name="RicePlantingDay2" value="$(PathMapsTables)/riceplantingday2">
 
                 <comment>
 
@@ -4158,7 +4229,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
             </textvar>
 
 
-            <textvar name="RiceHarvestDay2" value="$(PathMapsTables)/riceharvestday2.map">
+            <textvar name="RiceHarvestDay2" value="$(PathMapsTables)/riceharvestday2">
 
                 <comment>
 
@@ -4437,6 +4508,12 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 <textvar name="ChanQState" value="$(PathOut)/chanq">
                     <comment>
                         Reported istantaneous discharge at end of computation step [cu m/s] ChanQ
+                    </comment>
+                </textvar>
+
+                <textvar name="ChanQAvgDtState" value="$(PathOut)/chanqavgdt">
+                    <comment>
+                        Reported average discharge over last routing sub-step used to initialise lakes [cu m/s] ChanQAvgDt
                     </comment>
                 </textvar>
 
@@ -4814,6 +4891,17 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
                 </textvar>
 
+                <textvar name="ChanQEnd" value="$(PathOut)/chanq.end">
+                    <comment>
+                        Reported istantaneous discharge at end of computation step [cu m/s] ChanQ
+                    </comment>
+                </textvar>
+
+                <textvar name="ChanQAvgDtEnd" value="$(PathOut)/chanqavgdt.end">
+                    <comment>
+                        Reported average discharge over last routing sub-step used to initialise lakes [cu m/s] ChanQAvgDt
+                    </comment>
+                </textvar>
 
                 <textvar name="DischargeEnd" value="$(PathOut)/dis.end">
 
@@ -4973,6 +5061,41 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
                 </textvar>
 
+      <textvar name="LZInflowCUMEnd" value="$(PathOut)/LZInflowCUMEnd">
+      <comment>
+      Reported cumulative inflow to the lower groundwater zone [mm]
+      </comment>      
+      </textvar>
+      
+      <textvar name="CumQEnd" value="$(PathOut)/CumQEnd">
+      <comment>
+      Reported cumulative discharge [m3/s] (required only when the prerun is performed in chunks)
+      </comment>        
+      </textvar>
+      
+      <textvar name="cumSeepTopToSubBOtherEnd" value="$(PathOut)/cumSeepTopToSubBOtherEnd">
+      <comment>
+      Reported cumulative flux from second to third soil layer, other land cover fraction [mm] (required only when the prerun is performed in chunks)
+      </comment>         
+      </textvar>
+      
+      <textvar name="cumSeepTopToSubBForestEnd" value="$(PathOut)/cumSeepTopToSubBForestEnd">
+      <comment>
+      Reported cumulative flux from second to third soil layer, forest land cover fraction [mm] (required only when the prerun is performed in chunks)
+      </comment>          
+      </textvar>
+      
+      <textvar name="cumSeepTopToSubBIrrigationEnd" value="$(PathOut)/cumSeepTopToSubBIrrigationEnd">
+      <comment>
+      Reported cumulative flux from second to third soil layer, irrigation land cover fraction [mm] (required only when the prerun is performed in chunks)
+      </comment>             
+      </textvar>
+      
+      <textvar name="TimeSinceStartPrerunChunkEnd" value="$(PathOut)/TimeSinceStartPrerunChunkEnd">
+      <comment>
+      Reported total number of days since the start of the prerun (required only when the prerun is performed in chunks)
+      </comment>        
+      </textvar>
 
             </group>
 
@@ -5405,7 +5528,12 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     <comment>
 
                         Reported actual evapotranspiration [mm]
+                    </comment>
+                </textvar>
 
+                <textvar name="ETActBudykoMaps" value="$(PathOut)/etactBUDYKO">
+                    <comment>
+                        Reported actual evapotranspiration onfly from forest and others [mm]
                     </comment>
 
                 </textvar>
@@ -5464,7 +5592,6 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
 
                 </textvar>
-
 
                 <textvar name="AvailGWMaps" value="$(PathOut)/agw">
 
@@ -5905,6 +6032,11 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
             </textvar>
 
+            <textvar name="ChanqavgdtTS" value="$(PathOut)/chanqavgdt.tss">
+                <comment>
+                    Reported average discharge on the last routing sub-step [cu m/s]
+                </comment>
+            </textvar>
 
             <textvar name="WaterLevelTS" value="$(PathOut)/waterLevel.tss">
 
@@ -6048,6 +6180,11 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
                 </textvar>
 
+                <textvar name="actETPBUDYKOUpsTS" value="$(PathOut)/actETPBUDYKOUpsTS.tss">
+                    <comment>
+                       actual evapotranspiration (Budyko) [mm]
+                    </comment>
+                </textvar>
 
             </group>
 
@@ -6257,7 +6394,15 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
 
                 </textvar>
-
+           <textvar name="withdrawalCHactualTS" value="$(PathOut)/withdrawalCHactualTS.tss"></textvar>
+           <textvar name="withdrawalReservoirsTS" value="$(PathOut)/withdrawalReservoirsTS.tss"></textvar>
+           <textvar name="withdrawalLakesTS" value="$(PathOut)/withdrawalLakesTS.tss"></textvar>
+           <textvar name="abstractionGWactualTS" value="$(PathOut)/abstractionGWactualTS.tss"></textvar>
+           <textvar name="returnflowGwAbs2ChannelTS" value="$(PathOut)/returnflowGwAbs2ChannelTS.tss"></textvar>  
+           <textvar name="areatotalshortageSWTS" value="$(PathOut)/areatotalshortageSWTS.tss"></textvar>     
+           <textvar name="withdrawalSWactualTS" value="$(PathOut)/withdrawalSWactualTS.tss"></textvar>  
+           <textvar name="TransLossQAvgTS" value="$(PathOut)/TransLossQAvgTS"></textvar> 
+           <textvar name="TransLossTS" value="$(PathOut)/TransLossTS"></textvar> 
 
             </group>
 
@@ -6328,8 +6473,11 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
 
                 </textvar>
-
-
+                <textvar name="actETPBUDYKOUpsTS" value="$(PathOut)/actETPBUDYKOUpsTS.tss">                
+                    <comment>
+                        ESActPixel+self.var.TaPixel+self.var.TaInterceptionAll+self.var.EvaAddM3*self.var.M3toMM
+                    </comment>
+                </textvar>  
             </group>
 
 
@@ -6670,6 +6818,17 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
                 </textvar>
 
+				<textvar name="MCTOutletErrorTSS" value="$(PathOut)/mctClampOutletErrorM3.tss">
+				    <comment>
+					Volume error at catchment outlets introduced by MCT ChanQAvgDt clamping [m3]
+				    </comment>
+				</textvar>
+
+				<textvar name="MCTCatchmentErrorTSS" value="$(PathOut)/mctClampCatchmentErrorM3.tss">
+				    <comment>
+					Spatially distributed volume error introduced by MCT ChanQAvgDt clamping, summed per catchment [m3]
+				    </comment>
+				</textvar>
 
                 <textvar name="MassBalanceMMTSS" value="$(PathOut)/mbErrorMm.tss">
 
@@ -6685,7 +6844,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     <comment>
                         Reported mass balance error due to the split routing module, for each catchment [m3]
                     </comment>
-                </textvar>  
+                </textvar>
 
                 <textvar name="OutletDischargeErrorSplitRoutingTSS" value="$(PathOut)/OutletDischargeErrorSplitRoutingM3S.tss">
                     <comment>
@@ -6801,7 +6960,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="Grad" value="$(PathMaps)/gradient.map">
+                <textvar name="Grad" value="$(PathMaps)/gradient">
 
                     <comment>
 
@@ -6812,7 +6971,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="ElevationStD" value="$(PathMaps)/elvstd.map">
+                <textvar name="ElevationStD" value="$(PathMaps)/elvstd">
 
                     <comment>
 
@@ -6903,7 +7062,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
 
 
-                <textvar name="SoilDepth1" value="$(PathMapsTables)/soildepth1_o.map">
+                <textvar name="SoilDepth1" value="$(PathMapsTables)/soildepth1_o">
 
                     <comment>
 
@@ -6920,7 +7079,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="SoilDepth2" value="$(PathMapsTables)/soildepth2_o.map">
+                <textvar name="SoilDepth2" value="$(PathMapsTables)/soildepth2_o">
 
                     <comment>
 
@@ -6933,7 +7092,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="SoilDepth3" value="$(PathMapsTables)/soildepth3_o.map">
+                <textvar name="SoilDepth3" value="$(PathMapsTables)/soildepth3_o">
 
                     <comment>
 
@@ -6946,7 +7105,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="SoilDepth1Forest" value="$(PathMapsTables)/soildepth1_f.map">
+                <textvar name="SoilDepth1Forest" value="$(PathMapsTables)/soildepth1_f">
 
                     <comment>
 
@@ -6963,7 +7122,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="SoilDepth2Forest" value="$(PathMapsTables)/soildepth2_f.map">
+                <textvar name="SoilDepth2Forest" value="$(PathMapsTables)/soildepth2_f">
 
                     <comment>
 
@@ -6976,7 +7135,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="SoilDepth3Forest" value="$(PathMapsTables)/soildepth3_f.map">
+                <textvar name="SoilDepth3Forest" value="$(PathMapsTables)/soildepth3_f">
 
                     <comment>
 
@@ -7005,11 +7164,11 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
 
 
-                <textvar name="DirectRunoffFraction" value="$(PathMapsLanduse)/fracsealed.map">
+                <textvar name="DirectRunoffFraction" value="$(PathMapsLanduse)/fracsealed">
 
                     <comment>
 
-                        $(PathMapsLanduse)/fracsealed.map
+                        $(PathMapsLanduse)/fracsealed
 
                         urban area (0-1)
 
@@ -7029,11 +7188,11 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="ForestFraction" value="$(PathMapsLanduse)/fracforest.map">
+                <textvar name="ForestFraction" value="$(PathMapsLanduse)/fracforest">
 
                     <comment>
 
-                        $(PathMapsLanduse)/fracforest.map
+                        $(PathMapsLanduse)/fracforest
 
                         forest fraction of a pixel (0-1)
 
@@ -7055,11 +7214,11 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="WaterFraction" value="$(PathMapsLanduse)/fracwater.map">
+                <textvar name="WaterFraction" value="$(PathMapsLanduse)/fracwater">
 
                     <comment>
 
-                        $(PathMapsLanduse)/fracwater.map
+                        $(PathMapsLanduse)/fracwater
 
                         forest fraction of a pixel (0-1)
 
@@ -7081,11 +7240,11 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="OtherFraction" value="$(PathMapsLanduse)/fracother.map">
+                <textvar name="OtherFraction" value="$(PathMapsLanduse)/fracother">
 
                     <comment>
 
-                        $(PathMapsLanduse)/fracother.map
+                        $(PathMapsLanduse)/fracother
 
                         forest fraction of a pixel (0-1)
 
@@ -7107,11 +7266,11 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="IrrigationFraction" value="$(PathMapsLanduse)/fracirrigated.map">
+                <textvar name="IrrigationFraction" value="$(PathMapsLanduse)/fracirrigated">
 
                     <comment>
 
-                        $(PathMapsLanduse)/fracirrigated.map
+                        $(PathMapsLanduse)/fracirrigated
 
                         irrigated area fraction of a pixel (0-1)
 
@@ -7146,7 +7305,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="RiceFraction" value="$(PathMapsLanduse)/fracrice.map">
+                <textvar name="RiceFraction" value="$(PathMapsLanduse)/fracrice">
 
                     <comment>
 
@@ -7168,7 +7327,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="FractionGroundwaterUsed" value="$(PathMapsLanduse)/fracgwusedNew.map">
+                <textvar name="FractionGroundwaterUsed" value="$(PathMapsLanduse)/fracgwusedNew">
 
                     <comment>
 
@@ -7179,7 +7338,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="FractionNonConventionalWaterUsed" value="$(PathMapsLanduse)/fracncused.map">
+                <textvar name="FractionNonConventionalWaterUsed" value="$(PathMapsLanduse)/fracncused">
 
                     <comment>
 
@@ -7216,7 +7375,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapCropCoef" value="$(PathMapsTables)/cropcoef_o.map">
+                <textvar name="MapCropCoef" value="$(PathMapsTables)/cropcoef_o">
 
                     <comment>
 
@@ -7229,7 +7388,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapCropGroupNumber" value="$(PathMapsTables)/cropgrpn_o.map">
+                <textvar name="MapCropGroupNumber" value="$(PathMapsTables)/cropgrpn_o">
 
                     <comment>
 
@@ -7240,7 +7399,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapN" value="$(PathMapsTables)/mannings_o.map">
+                <textvar name="MapN" value="$(PathMapsTables)/mannings_o">
 
                     <comment>
 
@@ -7253,7 +7412,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapForestCropCoef" value="$(PathMapsTables)/cropcoef_f.map">
+                <textvar name="MapForestCropCoef" value="$(PathMapsTables)/cropcoef_f">
 
                     <comment>
 
@@ -7266,7 +7425,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapForestCropGroupNumber" value="$(PathMapsTables)/cropgrpn_f.map">
+                <textvar name="MapForestCropGroupNumber" value="$(PathMapsTables)/cropgrpn_f">
 
                     <comment>
 
@@ -7277,7 +7436,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapForestN" value="$(PathMapsTables)/mannings_f.map">
+                <textvar name="MapForestN" value="$(PathMapsTables)/mannings_f">
 
                     <comment>
 
@@ -7340,7 +7499,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
 
 
-                <textvar name="Channels" value="$(PathMaps)/chan.map">
+                <textvar name="Channels" value="$(PathMaps)/chan">
 
                     <comment>
 
@@ -7357,7 +7516,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="ChanGrad" value="$(PathMaps)/changrad.map">
+                <textvar name="ChanGrad" value="$(PathMaps)/changrad">
 
                     <comment>
 
@@ -7379,7 +7538,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="ChanLength" value="$(PathMaps)/chanlength.map">
+                <textvar name="ChanLength" value="$(PathMaps)/chanlength">
 
                     <comment>
 
@@ -7401,7 +7560,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="ChanSdXdY" value="$(PathMaps)/chans.map">
+                <textvar name="ChanSdXdY" value="$(PathMaps)/chans">
 
                     <comment>
 
@@ -7456,7 +7615,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
 
 
-                <textvar name="MapThetaSat1" value="$(PathSoilHyd)/thetas1_o.map">
+                <textvar name="MapThetaSat1" value="$(PathSoilHyd)/thetas1_o">
 
                     <comment>
 
@@ -7467,7 +7626,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapThetaSat2" value="$(PathSoilHyd)/thetas2_o.map">
+                <textvar name="MapThetaSat2" value="$(PathSoilHyd)/thetas2_o">
 
                     <comment>
 
@@ -7478,7 +7637,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapThetaSat3" value="$(PathSoilHyd)/thetas3.map">
+                <textvar name="MapThetaSat3" value="$(PathSoilHyd)/thetas3">
 
                     <comment>
 
@@ -7489,7 +7648,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapThetaRes1" value="$(PathSoilHyd)/thetar1.map">
+                <textvar name="MapThetaRes1" value="$(PathSoilHyd)/thetar1">
 
                     <comment>
 
@@ -7500,7 +7659,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapThetaRes2" value="$(PathSoilHyd)/thetar2.map">
+                <textvar name="MapThetaRes2" value="$(PathSoilHyd)/thetar2">
 
                     <comment>
 
@@ -7511,7 +7670,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapThetaRes3" value="$(PathSoilHyd)/thetar3.map">
+                <textvar name="MapThetaRes3" value="$(PathSoilHyd)/thetar3">
 
                     <comment>
 
@@ -7522,7 +7681,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapLambda1" value="$(PathSoilHyd)/lambda1_o.map">
+                <textvar name="MapLambda1" value="$(PathSoilHyd)/lambda1_o">
 
                     <comment>
 
@@ -7535,7 +7694,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapLambda2" value="$(PathSoilHyd)/lambda2_o.map">
+                <textvar name="MapLambda2" value="$(PathSoilHyd)/lambda2_o">
 
                     <comment>
 
@@ -7548,7 +7707,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapLambda3" value="$(PathSoilHyd)/lambda3.map">
+                <textvar name="MapLambda3" value="$(PathSoilHyd)/lambda3">
 
                     <comment>
 
@@ -7561,7 +7720,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapGenuAlpha1" value="$(PathSoilHyd)/genua1_o.map">
+                <textvar name="MapGenuAlpha1" value="$(PathSoilHyd)/genua1_o">
 
                     <comment>
 
@@ -7572,7 +7731,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapGenuAlpha2" value="$(PathSoilHyd)/genua2_o.map">
+                <textvar name="MapGenuAlpha2" value="$(PathSoilHyd)/genua2_o">
 
                     <comment>
 
@@ -7583,7 +7742,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapGenuAlpha3" value="$(PathSoilHyd)/genua3.map">
+                <textvar name="MapGenuAlpha3" value="$(PathSoilHyd)/genua3">
 
                     <comment>
 
@@ -7594,7 +7753,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapKSat1" value="$(PathSoilHyd)/ksat1_o.map">
+                <textvar name="MapKSat1" value="$(PathSoilHyd)/ksat1_o">
 
                     <comment>
 
@@ -7605,7 +7764,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapKSat2" value="$(PathSoilHyd)/ksat2_o.map">
+                <textvar name="MapKSat2" value="$(PathSoilHyd)/ksat2_o">
 
                     <comment>
 
@@ -7616,7 +7775,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapKSat3" value="$(PathSoilHyd)/ksat3.map">
+                <textvar name="MapKSat3" value="$(PathSoilHyd)/ksat3">
 
                     <comment>
 
@@ -7647,7 +7806,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
 
 
-                <textvar name="MapThetaSat1Forest" value="$(PathSoilHyd)/thetas1_f.map">
+                <textvar name="MapThetaSat1Forest" value="$(PathSoilHyd)/thetas1_f">
 
                     <comment>
 
@@ -7658,7 +7817,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapThetaSat2Forest" value="$(PathSoilHyd)/thetas2_f.map">
+                <textvar name="MapThetaSat2Forest" value="$(PathSoilHyd)/thetas2_f">
 
                     <comment>
 
@@ -7669,7 +7828,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapThetaRes1Forest" value="$(PathSoilHyd)/thetar1.map">
+                <textvar name="MapThetaRes1Forest" value="$(PathSoilHyd)/thetar1">
 
                     <comment>
 
@@ -7680,7 +7839,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapThetaRes2Forest" value="$(PathSoilHyd)/thetar2.map">
+                <textvar name="MapThetaRes2Forest" value="$(PathSoilHyd)/thetar2">
 
                     <comment>
 
@@ -7691,7 +7850,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapLambda1Forest" value="$(PathSoilHyd)/lambda1_f.map">
+                <textvar name="MapLambda1Forest" value="$(PathSoilHyd)/lambda1_f">
 
                     <comment>
 
@@ -7704,7 +7863,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapLambda2Forest" value="$(PathSoilHyd)/lambda2_f.map">
+                <textvar name="MapLambda2Forest" value="$(PathSoilHyd)/lambda2_f">
 
                     <comment>
 
@@ -7717,7 +7876,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapGenuAlpha1Forest" value="$(PathSoilHyd)/genua1_f.map">
+                <textvar name="MapGenuAlpha1Forest" value="$(PathSoilHyd)/genua1_f">
 
                     <comment>
 
@@ -7728,7 +7887,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapGenuAlpha2Forest" value="$(PathSoilHyd)/genua2_f.map">
+                <textvar name="MapGenuAlpha2Forest" value="$(PathSoilHyd)/genua2_f">
 
                     <comment>
 
@@ -7739,7 +7898,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapKSat1Forest" value="$(PathSoilHyd)/ksat1_f.map">
+                <textvar name="MapKSat1Forest" value="$(PathSoilHyd)/ksat1_f">
 
                     <comment>
 
@@ -7750,7 +7909,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="MapKSat2Forest" value="$(PathSoilHyd)/ksat2_f.map">
+                <textvar name="MapKSat2Forest" value="$(PathSoilHyd)/ksat2_f">
 
                     <comment>
 
@@ -7803,7 +7962,7 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
 
-                <textvar name="ReservoirInitialFillValue" value="$(ReservoirInitialFillValue)">
+                <textvar name="ReservoirInitialFill" value="$(ReservoirInitialFill)">
 
                     <comment>
 
@@ -7821,87 +7980,39 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </comment>
 
 
-                <textvar name="TabTotStorage" value="$(PathTables)/rtstor.txt">
-
+                <textvar name="ReservoirTotalStorage" value="$(PathTables)/rtstor.txt">
                     <comment>
-
-                        Total reservoir storage capacity [cu m]
-
+                      Total reservoir storage capacity
+                        Units: m³
                     </comment>
-
                 </textvar>
 
-
-                <textvar name="TabConservativeStorageLimit" value="$(PathTables)/rclim.txt">
-
+                <textvar name="ReservoirFloodOutflow" value="$(PathTables)/rndq.txt">
                     <comment>
-
-                        Conservative reservoir storage (fraction, typically 0.07)
-
+                      Reservoir inflow associated with the 100-year return period.
+                      It is modified by a calibration parameter (`ReservoirFloodOutflowFactor`) to
+                      define the inflow above which the reservoir switches to flood control mode
+                          Units: m³/s
                     </comment>
-
                 </textvar>
 
-
-                <textvar name="TabNormalStorageLimit" value="$(PathTables)/rnlim.txt">
-
+                <textvar name="ReservoirNormalOutflow" value="$(PathTables)/rnormq.txt">
                     <comment>
-
-                        Normal reservoir storage limit (fraction, typically 0.65)
-
+                      NReservoir average inflow used to define the normal reservoir release
+                            Units: m³/s
                     </comment>
-
                 </textvar>
 
-
-                <textvar name="TabFloodStorageLimit" value="$(PathTables)/rflim.txt">
-
+                <textvar name="ReservoirMinOutflow" value="$(PathTables)/rminq.txt">
                     <comment>
-
-                        Flood reservoir storage limit (fraction, typically 0.90)
-
+                      Minimum reservoir release:
+                          Units: m³/s
                     </comment>
-
-                </textvar>
-
-
-                <textvar name="TabNonDamagingOutflowQ" value="$(PathTables)/rndq.txt">
-
-                    <comment>
-
-                        Non damaging reservoir outflow Q [cu m / s]
-
-                    </comment>
-
-                </textvar>
-
-
-                <textvar name="TabNormalOutflowQ" value="$(PathTables)/rnormq.txt">
-
-                    <comment>
-
-                        Normal outflow Q [cu m / s]
-
-                    </comment>
-
-                </textvar>
-
-
-                <textvar name="TabMinOutflowQ" value="$(PathTables)/rminq.txt">
-
-                    <comment>
-
-                        Minimum reservoir outflow Q [cu m / s]
-
-                    </comment>
-
                 </textvar>
 
 
                 <comment>
-
                     Output time series
-
                 </comment>
 
 
@@ -7959,30 +8070,18 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
                 </textvar>
 
-
-                <textvar name="adjust_Normal_Flood" value="$(adjust_Normal_Flood)">
-
+                <textvar name="ReservoirFloodStorage" value="$(ReservoirFloodStorage)">
                     <comment>
-
-                        adjusting the balance between normal and flood storage
-
-                        big values (= closer to 1.0 = close to flood) results in keeping the outflow longer at rnormq
-
+                      Fraction of the total reservoir storage above which the reservoirs enters
+                      the flood control zone.
                     </comment>
-
                 </textvar>
 
-
-                <textvar name="ReservoirRnormqMult" value="$(ReservoirRnormqMult)">
-
+                <textvar name="ReservoirFloodOutflowFactor" value="$(ReservoirFloodOutflowFactor)">
                     <comment>
-
-                        Reservoir rnormq (normal outflow)
-
-                        fraction of the value in table rnormq.txt range: 0.5 - 2
-
+                      Factor of the 100-year return inflow that defines a flood event, i.e., the
+                      reservoir routine switches to flood control mode.
                     </comment>
-
                 </textvar>
 
 
@@ -8686,9 +8785,9 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                         **************************************************************
 
                     <textvar name="UpstreamInflowUsedM3" value="$(PathOut)/upstreamInflowUsedMonReg"/>
-                    
+
                     <textvar name="abstraction_allSources_actual_irrigation_M3MonthRegion" value="$(PathOut)/absAllSrcActIrrM3MonReg"/>
-                    
+
                     </comment>
 
 
@@ -9341,4 +9440,3 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
 
 </lfsettings>
-

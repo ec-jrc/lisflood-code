@@ -25,3 +25,5 @@ lisflood_model.egg-info
 .coverage
 *.tox.ini
 .vscode/
+*.ipynb
+.ipynb_checkpoints/

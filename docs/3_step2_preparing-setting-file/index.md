@@ -1,0 +1,763 @@
+# Step 2: Preparing the Settings file
+
+This page describes how to prepare your own settings file. Instead of writing the settings file completely from scratch, we suggest using the [reference settings file](https://github.com/ec-jrc/lisflood-code/tree/master/src/lisfloodSettings_reference.xml) as a starting point. 
+
+In order the run a simulation you will need:
+
+  -   Meteo input maps
+  -   Static input maps 
+  -   Tables (when reservoirs and lakes are included in the modeling exercise)
+  -   An (empty) directory where all model data can be written exists
+
+If this is all true, the settings file can be prepared very quickly by editing the items in the 'lfuser' element. The following is a detailed description of the different sections of the 'lfuser' element. The present LISFLOOD version contains process-related parameters (not taking into account the parameters that are defined through the maps). These are all defined in the 'lfuser' element, and default values are given for each of them. Even though *any* of these parameters can be treated as calibration constants, doing so for *all* of them would lead to serious over-parameterisation problems. In the description of these parameters we will therefore provide some suggestions as to which parameters should be used for calibration, and which ones are better left untouched.
+
+For simplicity reasons, we suggest to follow the following steps:
+1)	specify the file path
+2)	time related specifications
+3) 	parameter options
+4)	chose optional model routines (which ones are available; what they do; and how to “activate” them)
+
+When using the  [reference settings .xml](https://github.com/ec-jrc/lisflood-code/tree/master/src/lisfloodSettings_reference.xml), the user is encouraged to update paths, names of maps and of  tables. For instance, users can decide to organize static, meteo, parameter maps in sub-folders or include all maps (and even tables) in one folder.
+
+>Please note that the template contains all the settings for a warm start run; the paths to the initial maps must be replaced with the initial bogus values in order to perform a pre-run or a cold start run.
+
+TIP:  *$(ProjectDir)* or *$(ProjectPath)* can used as built-in variable in the XML settings, to refer the project folder.
+
+### Time-related constants
+
+The 'lfuser' section starts with a number of constants that are related to the simulation period and the time interval used. These are all defined as single values.
+
+```xml
+	<comment>                                                           	
+	**************************************************************               
+	TIME-RELATED CONSTANTS                                                
+	**************************************************************               
+	</comment>                                                          
+	<textvar name="CalendarDayStart" value="02/01/1990 06:00">        
+	<comment>                                                           
+	Calendar day used as reference for reporting steps                                                                
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="DtSec" value="86400">                            
+	<comment>                                                           
+	timestep [seconds]                                                  
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="DtSecChannel" value="14400">                     
+	<comment>                                                           
+	Sub time step used for kinematic wave channel routing [seconds]     
+	Within the model,the smallest out of DtSecChannel and DtSec is used   
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="StepStart" value="02/01/1990 06:00">                            
+	<comment>                                                           
+	First time stamp in simulation                               
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="StepEnd" value="15/01/1990 06:00">                  
+	<comment>                                                           
+	Last time stamp in simulation                                
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="ReportSteps" value="1..9999999">                    
+	<comment>                                                           
+	Time steps at which to write model state maps (in the example above all steps are written)                                             
+	</comment>                                                          
+	</textvar>                                                          
+```
+
+
+- As a good practice, **CalendarDayStart** should be set equal to the calendar day of the first timestep of input mapstacks. 
+
+  Format can be a date in several formats, as long as day number is in first position. eg:
+    <br> *Value="02/01/1990" = $2^{nd}$ January 1990* 
+    <br> *Value="05.07.1990" = $5^{th}$July 1990*
+    <br> *Value="15-11-1990" = $15^{th}$ November 1990*
+
+- **DtSec** is the simulation time interval in seconds. It has a value of 86400 for a daily time interval, 3600 for an hourly interval, etcetera.
+
+- **DtSecChannel** is the simulation time interval used by the kinematic wave channel routing (in seconds). Using a value that is smaller than **DtSec** may result in a better simulation of the overall shape the calculated hydrograph (at the expense of requiring more computing time).
+
+- **StepStart** is the date of the first time step in your simulation (defined according to [OS LISFLOOD time stamp convention](../3_step1_ESSENTIAL_concepts_to_get_started/index.md#time-convention-within-os-lisflood-model)).
+
+- **StepEnd** is the date of the last time step in your simulation (defined according to [OS LISFLOOD time stamp convention](../3_step1_ESSENTIAL_concepts_to_get_started/index.md#time-convention-within-os-lisflood-model)).
+
+**ReportSteps** defines the time step number(s) at which the model state (i.e. all maps that you would need to define the initial conditions of a succeeding model run) is written. 
+Note that this option only impacts the output frequency of the model state variables (activated by the "repStateMaps" option), not to the auxiliary variables. The full list of the affected variables is [here](../5_annex_state-variables/index.md). You can define this parameter in the following ways:
+
+1) **At specific time steps**. If you like to have the state maps being written at certain time steps you can define those in a (comma separated) list. For example if you like to have the state maps for the time steps 10, 20 and 40, you need to write:
+
+```xml
+    <textvar name="ReportSteps" value="10,20,40" />
+```
+
+2) If you like to have the state maps for the **last time step** of a model run you can use the special     'endtime' keyword, e.g.:
+
+```xml
+    <textvar name="ReportSteps" value="endtime" />
+```
+
+3) Alternatively, in some cases you may need the state maps **at regular intervals**. In that case you can use the following syntax:
+
+```xml
+    <textvar name="ReportSteps" value="start+increment..end" />
+```
+
+For instance, in the following example state maps are written every $5^{st}$ time step, starting at time step 10, until the last time step:
+
+```xml
+    <textvar name="ReportSteps" value="10+5..endtime" />
+```
+
+### Parameters related to evapo(transpi)ration and interception
+
+The following parameters are all related to the simulation of evapo(transpi)ration and rainfall interception. Although they can all be defined as either a single value or as a map, we recommend using the single values that are included in the template. We do not recommend using any of these parameters as calibration constants.
+
+```xml
+	<comment>                                                           
+	**************************************************************               
+	PARAMETERS RELATED TO EVAPO(TRANSPI)RATION AND INTERCEPTION           
+	**************************************************************               
+	</comment>                                                          
+	<textvar name="PrScaling" value="1">                            
+	<comment>                                                           
+	Multiplier applied to potential precipitation rates                   
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="CalEvaporation" value="1">                       
+	<comment>                                                           
+	Multiplier applied to potential evapo(transpi)ration rates            
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="LeafDrainageTimeConstant" value="1">             
+	<comment>                                                           
+	Time constant for water in interception store [days]                
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="kdf" value="0.72">                               
+	<comment>                                                           
+	Average extinction coefficient for the diffuse radiation flux         
+	varies with crop from 0.4 to 1.1 (Goudriaan (1977))                   
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="AvWaterRateThreshold" value="5">                 
+	<comment>                                                           
+	Critical amount of available water (expressed in [mm/day]!), above  
+	which 'Days Since Last Rain' parameter is set to 1                  
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="SMaxSealed" value="1.0">                         
+	<comment>                                                           
+	maximum depression storage for water on impervious surface            
+	which is not immediately causing surface runoff [mm]                 
+	</comment>                                                          
+	</textvar>                                                          
+```
+
+- **PrScaling** is a multiplier that is applied to precipitation input (pr) [-]
+
+- **CalEvaporation** is a multiplier that is applied to the potential evapo(transpi)ration input ([**ET0**, **EW0** and **ES0**](https://ec-jrc.github.io/lisflood-lisvap/) [-]
+
+- **LeafDrainageTimeConstant** ([$T_{int}$](https://ec-jrc.github.io/lisflood-model/2_03_stdLISFLOOD_evaporation-intercepted-water/index.md)) is the time constant for the interception store $[days]$
+
+- **kdf** is the average extinction for the diffuse radiation flux (Goudriaan, 1977). it is used to calculate the extinction coefficient for global radiation, $κ_{gb}$ ,which is used in Equations for [$EW_{max}$](https://ec-jrc.github.io/lisflood-model/2_03_stdLISFLOOD_evaporation-intercepted-water/index.md), [$T_{max}$](https://ec-jrc.github.io/lisflood-model/2_07_stdLISFLOOD_plant-water-uptake/index.md) and [$ES_{max}$](https://ec-jrc.github.io/lisflood-model/2_08_stdLISFLOOD_soil-evaporation/index.md) [-]
+
+- **AvWaterRateThreshold** defines a critical amount of water that is used as a threshold for resetting the variable $D_{slr}$ in the Equation for[$ES_a$](https://ec-jrc.github.io/lisflood-model/2_08_stdLISFLOOD_soil-evaporation/index.md). Because the equation was originally developed for daily timesteps only, the threshold is currently defined (somewhat confusingly) as an equivalent **intensity** in $[\frac{mm}{day}]$
+
+- **SMaxSealed** is the maximum depression storage on impervious surface $[mm]$. This [storage](https://ec-jrc.github.io/lisflood-model/2_06_stdLISFLOOD_water_infiltration/index.md) is emptied by evaporation (EW0).
+
+
+### Parameters related to snow and frost
+
+The following parameters are all related to the simulation of [snow accumulation, snowmelt](https://ec-jrc.github.io/lisflood-model/2_04_stdLISFLOOD_snowmelt/index.md) and [frost](https://ec-jrc.github.io/lisflood-model/2_05_stdLISFLOOD_frost-index/index.md). All these parameters can be defined as either single values or maps. We recommend to start out by leaving them all at their default values. If prior data suggest major under- or overcatch problems in the observed snowfall, *SnowFactor* can be adjusted accordingly. *SnowMeltCoef* may be used as a calibration constant, but since snow observations are typically associated with large uncertainty bands, the calibration may effectively just be compensating for these input errors.
+
+```xml
+	<textvar name="SnowFactor" value="1">                           
+	<comment>                                                           
+	Multiplier applied to precipitation that falls as snow                
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="SnowSeasonAdj" value="1.0">                      
+	<comment>                                                           
+	range [mm C-1 d-1] of the seasonal variation                        
+	SnowMeltCoef is the average value                                     
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="SnowMeltCoef" value="4.5">                       
+	<comment>                                                           
+	Snowmelt coefficient [mm/deg C /day]                                
+	See also Martinec et al., 1998.   
+    Often used as calibration parameter.                                    
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="TempMelt" value="0.0">                           
+	<comment>                                                           
+	Average temperature at which snow melts                               
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="TempSnow" value="1.0">                           
+	<comment>                                                           
+	Average temperature below which precipitation is snow                 
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="TemperatureLapseRate" value="0.0065">            
+	<comment>                                                           
+	Temperature lapse rate with altitude [deg C / m]                    
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="Afrost" value="0.97">                            
+	<comment>                                                           
+	Daily decay coefficient, (Handbook of Hydrology, p. 7.28)             
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="Kfrost" value="0.57">                            
+	<comment>                                                           
+	Snow depth reduction coefficient, [cm-1], (HH, p. 7.28)             
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="SnowWaterEquivalent" value="0.45">               
+	<comment>                                                           
+	Snow water equivalent, (based on snow density of 450 kg/m3) (e.g.     
+	Tarboton and Luce, 1996)                                              
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="FrostIndexThreshold" value="56">                 
+	<comment>                                                           
+	Degree Days Frost Threshold (stops infiltration, percolation and      
+	capillary rise)                                                       
+	Molnau and Bissel found a value 56-85 for NW USA.                     
+	</comment>                                                          
+	</textvar>                                                          
+```
+
+- **SnowFactor** is a multiplier that is applied to the rate of precipitation in case the precipitation falls as snow. Since snow is commonly underestimated in meteorological observation data, setting this multiplier to some value greater than 1 can counteract for this [-]
+
+- **SnowSeasonAdj** is the range [mm C-1 d-1] of the seasonal variation of snow melt. SnowMeltCoef is the average value.
+
+- **SnowMeltCoef** ([$C_m$](https://ec-jrc.github.io/lisflood-model/2_04_stdLISFLOOD_snowmelt/index.md)) is the degree-day factor that controls the rate of snowmelt $[\frac{mm}{°C \cdot day}]$
+
+- **TempMelt** ([$T_m$](https://ec-jrc.github.io/lisflood-model/2_04_stdLISFLOOD_snowmelt/index.md)) is the average temperature above which snow starts to melt $[°C]$
+
+- **TempSnow** is the average temperature below which precipitation is assumed to be snow $[°C]$
+
+- **TemperatureLapseRate** (**L**) is the temperature lapse rate that is used to estimate average temperature at the centroid of each pixel's elevation zones  ([last Figure](https://ec-jrc.github.io/lisflood-model/2_04_stdLISFLOOD_snowmelt/index.md))$[\frac{°C}{m}]$
+
+- **Afrost** ([$A$](https://ec-jrc.github.io/lisflood-model/2_05_stdLISFLOOD_frost-index/index.md)) is the frost index decay coefficient $[day^{-1}]$. It has a value in the range 0-1.
+
+- **Kfrost** ([$K$](https://ec-jrc.github.io/lisflood-model/2_05_stdLISFLOOD_frost-index/index.md)) is a snow depth reduction coefficient $[cm^{-1}]$
+
+- **SnowWaterEquivalent** ([$we_s$](https://ec-jrc.github.io/lisflood-model/2_05_stdLISFLOOD_frost-index/index.md)) is the equivalent water depth of a given snow cover, expressed as a fraction [-]
+
+- **FrostIndexThreshold** is the critical value of the [frost index](https://ec-jrc.github.io/lisflood-model/2_05_stdLISFLOOD_frost-index/index.md) above which the soil is considered frozen $[\frac{°C}{day}]$
+
+
+### Infiltration parameters
+
+The following two parameters control the simulation of infiltration and preferential flow. Both are empirical parameters that are treated as calibration constants, and both can be defined as single values or maps.
+
+```xml
+	<comment>                                                           
+	**************************************************************               
+	INFILTRATION PARAMETERS                                               
+	**************************************************************               
+	</comment>                                                          
+	<textvar name="b\_Xinanjiang" value="0.1">                      
+	<comment>                                                           
+	Power in Xinanjiang distribution function. 
+    Often used as calibration parameter.                            
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="PowerPrefFlow" value="3">                        
+	<comment>                                                           
+	Power that controls increase of proportion of preferential            
+	flow with increased soil moisture storage.
+    Often used as calibration parameter.                           
+	</comment>                                                          	
+```
+
+- **b\_Xinanjiang** (**b**) is the power in the [infiltration equation](https://ec-jrc.github.io/lisflood-model/2_10_stdLISFLOOD_infiltration/index.md) [-]
+
+- **PowerPrefFlow** ($c_{pref}$) is the power in the [preferential flow equation](https://ec-jrc.github.io/lisflood-model/2_09_stdLISFLOOD_preferential-bypass/index.md) [-]
+
+
+### Groundwater parameters
+
+The following parameters control the [simulation of shallow and deeper groundwater](https://ec-jrc.github.io/lisflood-model/2_13_stdLISFLOOD_groundwater/index.md). All these parameters can be defined as single values or maps.
+
+```xml
+	<comment>                                                           
+	**************************************************************               
+	GROUNDWATER RELATED PARAMETERS                                        
+	**************************************************************               
+	</comment>                                                          	
+	<textvar name="UpperZoneTimeConstant" value="10">               
+	<comment>                                                           
+	Time constant for water in upper zone [days]  
+    Often used as calibration parameter.                      
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="LowerZoneTimeConstant" value="1000">             
+	<comment>                                                           
+	Time constant for water in lower zone [days]                        
+	Often used as calibration parameter.       
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="GwPercValue" value="0.5">                        
+	<comment>                                                           
+	Maximum rate of percolation going from the Upper to the Lower         
+	response box [mm/day] 
+    Often used as calibration parameter.                                              
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="GwLoss" value="0">                               
+	<comment>                                                           
+	Maximum rate of percolation from the Lower response box (groundwater  
+	loss) [mm/day].                                                     
+    Often used as calibration parameter.                                                              
+	</comment>                                                          
+	</textvar>                                                          
+```
+
+- **UpperZoneTimeConstant** ([$T_{uz}$](https://ec-jrc.github.io/lisflood-model/2_13_stdLISFLOOD_groundwater/index.md)) is the time constant for the upper groundwater zone $[days]$
+
+- **LowerZoneTimeConstant** ([$T_{lz}$](https://ec-jrc.github.io/lisflood-model/2_13_stdLISFLOOD_groundwater/index.md)) is the time constant for the lower groundwater zone $[days]$
+
+- **GwPercValue** ([$GW_{perc}$](https://ec-jrc.github.io/lisflood-model/2_13_stdLISFLOOD_groundwater/index.md)) is the maximum rate of percolation going from the upper to the lower groundwater zone $[\frac{mm}{day}]$
+
+- **GwLoss** ([$f_{loss}$](https://ec-jrc.github.io/lisflood-model/2_13_stdLISFLOOD_groundwater/index.md)) is the maximum rate of percolation from the lower groundwater zone (groundwater loss) zone $[\frac{mm}{day}]$. A value of 0 (closed lower boundary) is recommended as a starting value.
+
+
+### Routing parameters 
+
+These parameters are all related to the [routing of water in the channels](https://ec-jrc.github.io/lisflood-model/2_15_stdLISFLOOD_channel-routing/index.md) as well as the [routing of surface runoff](https://ec-jrc.github.io/lisflood-model/2_14_stdLISFLOOD_surface-runnoff-routing/index.md). The multiplier *CalChanMan* can be used to fine-tune the timing of the channel routing, and it may be defined as either a single value or a map. All other parameters should be kept at their default values.
+
+```xml
+	<comment>                                                           
+	**************************************************************               
+	ROUTING PARAMETERS                                                    
+	**************************************************************               
+	</comment>                                                          
+	<textvar name="CalChanMan" value="1">                           
+	<comment>                                                           
+	Multiplier applied to Channel Manning's n 
+    Often used as calibration parameter.                           
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="beta" value="0.6">                               
+	<comment>                                                           
+	kinematic wave parameter: 0.6 is for broad sheet flow                 
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="OFDepRef" value="5">                             
+	<comment>                                                           
+	Reference depth of overland flow [mm], used to compute              
+	overland flow Alpha for kin. wave                                     
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="GradMin" value="0.001">                          
+	<comment>                                                           
+	Minimum slope gradient (for kin. wave: slope cannot be 0)             
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="ChanGradMin" value="0.0001">                     
+	<comment>                                                           
+	Minimum channel gradient (for kin. wave: slope cannot be 0)
+    Could be set to 0.00001 when using kinematic and diffusive wave modelling           
+	</comment>                                                          
+	</textvar>                                                          
+```
+
+- **CalChanMan** is a multiplier that is applied to the Manning's roughness maps of the [channel system](https://ec-jrc.github.io/lisflood-model/2_15_stdLISFLOOD_channel-routing/index.md) [-]
+
+- **beta** is routing coefficient [$β_k$](https://ec-jrc.github.io/lisflood-model/2_14_stdLISFLOOD_surface-runnoff-routing/index.md) [-]
+
+- **OFDepRef** is a [reference flow depth](https://ec-jrc.github.io/lisflood-model/2_14_stdLISFLOOD_surface-runnoff-routing/index.md) from which the flow velocity of the surface runoff is calculated $[mm]$
+
+- **GradMin** is a lower limit for the slope gradient used in the calculation of the surface runoff flow velocity $[\frac{m}{m}]$
+
+- **ChanGradMin** is a lower limit for the channel gradient used in the calculation of the channel flow velocity $[\frac{m}{m}]$
+
+
+
+### Diffusive wave routing parameters
+
+The following parameters are related to the [diffusive wave routing](https://ec-jrc.github.io/lisflood-model/3_05_optLISFLOOD_diffusive-wave-routing/index.md) in river channels. The multiplier *CalChanMan3* can be used to fine-tune the diffusive wave propagation when using the Muskingum-Cunge-Todini (MCT) routing, and it can be defined as either a single value or a map. The map *ChannelsMCT* is a Boolean map with the mask of rivers where MCT wave routing must be used. The parameter *ChanGradMaxMCT* defines the maximum riverbed slope for river grid cells using the MCT wave routing. The parameter is provided as a single number and it is recommended to set it to values < 0.001 and > *ChanGradMin*
+```xml
+	<comment>
+	**************************************************************
+	MUSKINGUM-CUNGE-TODINI ROUTING PARAMETERS
+	**************************************************************
+	</comment>
+	<textvar name="CalChanMan3" value="$(PathParams)/params_CalChanMan3">
+	<comment>
+	default: 3.0 [-]
+	Multiplier [-] applied to Channel Manning's n for MCT routing
+	</comment>
+	</textvar>
+	<textvar name="ChannelsMCT" value="$(PathRoot)/maps/chanmct">
+	<comment>
+	Boolean map with value 1 at channel pixels where MCT is
+	used, and 0 at all other pixels
+	</comment>
+	</textvar>
+	<textvar name="ChanGradMaxMCT" value="0.001">
+	<comment>
+	Maximum channel gradient for channels using MCT routing [-] (for MCT wave: slope cannot be 0)
+	Default: 0.001
+	</comment>
+	</textvar>                                                       
+```
+
+- **CalChanMan3** is a multiplier that is applied to the Manning’s roughness map of the [channel system](https://ec-jrc.github.io/lisflood-model/2_15_stdLISFLOOD_channel-routing/index.md) [-] for the grid cells where MCT routing is used
+- **ChannelsMCT** is oBolean mask including the rivers grid cells using the MCT wave routing [-]
+- **ChanGradMaxMCT** is a upper limit for the channel gradient used in the calculation of the MCT wave routing [m/m]
+
+
+
+### Parameters related to numerics 
+
+This category only contains one parameter at the moment, which can only be a single value. We strongly recommend keeping this parameter at its default value.
+
+```xml
+	<comment>                                                           
+	********************************** 
+	****************************               
+	PARAMETERS RELATED TO NUMERICS                                        
+	********************************** 
+	****************************               
+	</comment>                                                          
+	<textvar name="CourantCrit" value="0.4">                        
+	<comment>                                                           
+	Minimum value for Courant condition in soil moisture routine          
+	</comment>                                                          	
+	</textvar>                                                          
+```
+
+- **CourantCrit** ($C_{crit}$) is the critical Courant number which controls the numerical accuracy of the [simulated soil moisture fluxes](https://ec-jrc.github.io/lisflood-model/2_12_stdLISFLOOD_soilmoisture-redistribution/index.md) [-]. Any value between 0 and 1 can be used, but using values that are too high can lead to unrealistic "jumps" in the simulated soil moisture, whereas very low values result in reduced computational performance (because many iterations will be necessary to obtain the required accuracy). Values above 1 should never be used, as they will result in a loss of mass balance. In most cases the default value of 0.4 results in sufficiently realistic simulations using just a few iterations.
+
+
+
+
+### Prefixes of meteo, vegetation, and water use related variables
+
+Here you can define the prefix that is used for each meteorological variable, LAI and water use.
+
+```xml
+	<comment>                                                           
+	**************************************************************               
+	PREFIXES OF METEO AND VEGETATION RELATED VARIABLES                    
+	**************************************************************               
+	</comment>                                                          	
+	<textvar name="PrefixPrecipitation" value="pr">                 
+	<comment>                                                           
+	prefix precipitation maps                                             
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="PrefixTavg" value="ta">                          
+	<comment>                                                           
+	prefix average temperature maps                                       
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="PrefixE0" value="e">                             
+	<comment>                                                           
+	prefix E0 maps                                                        
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="PrefixES0" value="es">                           
+	<comment>                                                           
+	prefix ES0 maps                                                       
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="PrefixET0" value="et">                           
+	<comment>                                                           
+	prefix ET0 maps                                                       
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="PrefixLAI" value="laio">                         
+	<comment>                                                           
+	prefix LAI maps                                                       
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="PrefixLAIForest" value="laif">                   
+	<comment>                                                           
+	prefix forest LAI maps                                                
+	</comment>   
+	<textvar name="PrefixLAIIrrigation" value="laii">                   
+	<comment>                                                           
+	prefix irrigated fraction LAI maps                                                
+	</comment>                                                         
+	</textvar>                                                          
+	<textvar name="PrefixWaterUseDomestic" value="dom">                  
+	<comment>                                                           
+	prefix water use maps                                                 
+	</comment>                                                          
+	</textvar>                                                          
+```
+
+- **PrefixPrecipitation** is the prefix of the precipitation maps
+
+- **PrefixTavg** is the prefix of the daily average temperature maps
+
+- **PrefixE0** is the prefix of the potential open-water evaporation maps
+
+- **PrefixES0** is the prefix of the potential bare-soil evaporation maps
+
+- **PrefixET0** is the prefix of the potential (reference) evapotranspiration maps
+
+- **PrefixLAI**, **PrefixLAIForest** ,**PrefixLAIIrrigation**  are the prefix of the Leaf Area Index maps for the three land cover fractions
+
+- **PrefixWaterUseDomestic** is the prefix of the domestic [water use maps](https://ec-jrc.github.io/lisflood-model/3_07_optLISFLOOD_water-use/index.md) (optional). Domestic use was indicated here as an example.
+
+
+
+### Initial conditions: OS LISFLOOD prerun, cold start, warm start
+
+OS LISFLOOD prerun simulation has the purpose to adequately initialize the state of the slow storages, namely groundwater zone and soil. OS LISFLOOD prerun can also be referred to as initialization run. This simulation must always be performed. OS LISFLOOD prerun output must be used to initialize the OS LISFLOOD cold start run.
+
+OS LISFLOOD cold start run and warm start run deliver the actual model outputs to be used for analysis/forecasts. 
+
+OS LISFLOOD cold start run takes as input the OS LISFLOOD prerun output for the slow storages, while fast(er) responding storages (e.g. channel volume) are set to bogus values. It is always recommended to discard the initial (3) years of the OS LISFLOOD cold start to allow adequate initialization of fast(er) responding storages. 
+
+OS LISFLOOD warm start resumes the computations from the end states of a preceding simulation (cold start or warm start).
+
+A dedicated chapter about [model initialization](../3_step4_model-initialisation/index.md) provides more in-depth explanations of model prerun (initialization), cold start, and warm start.
+
+This page has the purpose to provide an overview of the variables requiring an initial value. Initial values shown in this page refer to a model prerrun simulation.
+
+```xml
+	<comment>                                                           
+	**************************************************************               
+	INITIAL CONDITIONS                                                    
+	(maps or single values)                                               
+	**************************************************************                                                                        
+	<textvar name="OFDirectInitValue" value="0">                  	
+	<comment>                                                           
+	initial overland flow water volume, direct runoff fraction [m3]                              
+	</comment>
+	</textvar> 
+	<textvar name="OFOtherInitValue" value="0">                  	
+	<comment>                                                           
+	initial overland flow water volume, other + irrigated fraction [m3]                              
+	</comment>
+	</textvar>   
+	<textvar name="OFForestInitValue" value="0">                  	
+	<comment>                                                           
+	initial overland flow water volume, forest fraction [m3]                              
+	</comment>                                                             
+	</textvar>                                                          
+	<textvar name="SnowCoverAInitValue" value="0">                  
+	<comment>                                                           
+	initial snow depth in snow zone A [mm]                              
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="SnowCoverBInitValue" value="0">                  
+	<comment>                                                           
+	initial snow depth in snow zone B [mm]                              
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="SnowCoverCInitValue" value="0">                  
+	<comment>                                                           
+	initial snow depth in snow zone C [mm]                              
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="FrostIndexInitValue" value="0">                  
+	<comment>                                                           
+	initial Frost Index value                                             
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="CumIntInitValue" value="0">                      
+	<comment>                                                           
+	cumulative interception [mm]                                        
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="UZInitValue" value="0">                          
+	<comment>                                                           
+	water in upper store [mm]                                           
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="DSLRInitValue" value="1">                        
+	<comment>                                                           
+	days since last rainfall                                              
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="CumIntSealedInitValue" value="0">                
+	<comment>                                                           
+	cumulative depression storage [mm]                                  
+	</comment>                                                          
+	</textvar>                                                          
+	<comment>                                                           
+	**************************************************************               
+	The following variables can also be initialized in the model internally. If you want this to happen set them to bogus value of -9999                                                                 
+	**************************************************************               
+	</comment>                                                          
+	<textvar name="LZInitValue" value="-9999">                      
+	<comment>                                                           
+	water in lower store [mm]                                           
+	-9999: use steady-state storage                                       
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="TotalCrossSectionAreaInitValue" value="-9999">   
+	<comment>                                                           
+	initial cross-sectional area of flow in channel[m2]                 
+	-9999: use half bankfull                                              
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="ThetaInit1Value" value="-9999">                  
+	<comment>                                                           
+	initial soil moisture content layer 1                                 
+	-9999: use field capacity values                                      
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="ThetaInit2Value" value="-9999">                  
+	<comment>                                                           
+	initial soil moisture content layer 2                                 
+	-9999: use field capacity values                                      
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="ThetaInit3Value" value="-9999">                  
+	<comment>                                                           
+	initial soil moisture content layer 3                                
+	-9999: use field capacity values                                      
+	</comment>                                                        
+	</textvar>  
+	<textvar name="PrevDischarge" value="-9999">                    
+	<comment>                                                           
+	initial discharge from previous run for lakes, reservoirs and         
+	transmission loss                                                     
+	only needed for lakes reservoirs and transmission loss                
+	-9999: use discharge of half bankfull                                 
+	</comment>                                                          
+	</textvar>
+        <textvar name="PrevDischargeAvg" value="$(PathInit)/chanqavgdt.end.nc">
+        <comment>
+        Outflow average discharge on previous routing sub-step (average) [m3/s]
+        -9999: use discharge of half bankfull 
+        </comment>
+        </textvar>
+	<textvar name="PrevCmMCTInitValue" value="-9999">
+	<comment>
+	Courant number at previous step for MCT routing
+	Cold start: -9999: use 1
+	</comment>
+	</textvar>
+	<textvar name="PrevDmMCTInitValue" value="-9999">
+	<comment>
+	Reynolds number at previous step for MCT routing
+	Cold start: -9999: use 0
+	</comment>
+	</textvar>		                                                          
+```
+
+- **OFDirect/Other/ForestInitValue** is the initial amount of water on the soil surface $[m^3]$
+
+- **SnowCoverAInitValue** is the initial snow cover on the soil surface in elevation zone **A** $[mm]$
+
+- **SnowCoverBInitValue** is the initial snow cover on the soil surface in elevation zone **B** $[mm]$
+
+- **SnowCoverCInitValue** is the initial snow cover on the soil surface in elevation zone **C** $[mm]$
+
+- **FrostIndexInitValue** ([**F**](https://ec-jrc.github.io/lisflood-model/2_05_stdLISFLOOD_frost-index/index.md)) initial value of the frost index $[\frac{°C}{day}]$
+
+- **CumIntInitValue** is the initial interception storage $[mm]$
+
+- **UZInitValue** is the initial storage in the upper groundwater zone $[mm]$
+
+- **DSLRInitValue** ([$D_{slr}$](https://ec-jrc.github.io/lisflood-model/2_08_stdLISFLOOD_soil-evaporation/index.md)) is the initial number of days since the last rainfall event $[days]$
+
+- **CumIntSealedInitValue** is the initial value of the depression storage for the sealed part of a pixel $[mm]$
+
+- **LZInitValue** is the initial storage in the lower groundwater zone $[mm]$. In order to avoid initialization problems it is possible to let the model calculate a 'steady state' storage. Users are recommended to refer to the chapter on [model initialization](../3_step4_model-initialisation/index.md)
+
+- **TotalCrossSectionAreaInitValue** is the initial cross-sectional area $[m^2]$ of the water in the river channels (a substitute for initial discharge, which is directly dependent on this). A value of **-9999 ** sets the initial amount of water in the channel to half bankfull.
+
+- **ThetaInit1Value** is the initial moisture content $[\frac{mm^3} {mm^3}]$ of the superficial soil layer (1). A value of -**9999** will set the initial soil moisture content to field capacity.
+
+- **ThetaInit2Value** is the initial moisture content $[\frac{mm^3} {mm^3}]$ of the upper soil layer (2). A value of -**9999** will set the initial soil moisture content to field capacity.
+
+- **ThetaInit3Value** is the initial moisture content $[\frac{mm^3} {mm^3}]$ of the lower soil layer (3). A value of -**9999** will set the initial soil moisture content to field capacity.
+
+- **PrevDischarge** and **PrevDischargeAvg** are the initial discharge from previous run (instantaneous and average values in the last sub-routing step) $[\frac{m^3} {s}]$ used for lakes, reservoirs and transmission loss (only needed if option is on for lakes or reservoirs or transmission loss). A value of **-9999** sets the initial amount of discharge to equivalent of half bankfull.
+
+- **PrevCmMCTInitValue** is the Courant number at the end of the previous step and it is only used for MCT wave routing [-]. A value of -**9999 ** sets the initial value to 1.
+
+- **PrevDmMCTInitValue** is the Reynolds number at the end of the previous step and it is only used for MCT wave routing [-]. A value of -**9999 ** sets the initial value to 0.
+
+```xml
+	<comment>                                                           
+	**************************************************************               
+	INITIAL CONDITIONS FOREST                                             
+	(maps or single values)                                               
+	**************************************************************               
+	</comment>                                                          
+	<textvar name="CumIntForestInitValue" value="0">                
+	<comment>                                                           
+	cumulative interception [mm]                                        
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="UZForestInitValue" value="0">                    
+	<comment>                                                           
+	water in upper store [mm]                                           
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="DSLRForestInitValue" value="1">                  
+	<comment>                                                           
+	days since last rainfall                                              
+	</comment>                                                          
+	</textvar>                                                                                                                                                                            
+	<textvar name="ThetaForestInit1Value" value="-9999">            
+	<comment>                                                           
+	initial soil moisture content layer 1                                 
+	-9999: use field capacity values                                      
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="ThetaForestInit2Value" value="-9999">            
+	<comment>                                                           
+	initial soil moisture content layer 2                                 
+	-9999: use field capacity values                                      
+	</comment>                                                          
+	</textvar>                                                          
+	<textvar name="ThetaForestInit3Value" value="-9999">            
+	<comment>                                                           
+	initial soil moisture content layer 3                                
+	-9999: use field capacity values                                      
+	</comment>                                                            
+```
+CumIntForestInitValue, UZForestInitValue, DSLRForestInitValue, ThetaForestInit1Value, ThetaForestInit2Value, ThetaForestInit3Value are the initial values for the forest part of a pixel when performing a **cold start**.
+
+
+### Using options
+
+The 'lfoptions' element (explained in [this page](../3_step1_ESSENTIAL_concepts_to_get_started/index.md#os-lisflood-settings-file-settingsxml)) allows to activate or deactivate optional modules (e.g. the simulation of reservoirs), as well as to select the list of output files.
+
+The [LISFLOOD model documentation](https://ec-jrc.github.io/lisflood-model/) explains standard and optional modules.  
+Optional modules and output variables are selected using switches: 1= on, 0=off. 
+Users can set different combinations of optional modules and outputs (or none at all). Each optional module generally requires additional items in the settings file. 
+
+For instance, using the inflow hydrograph option requires an input map and time series, which have to be specified in the settings file. 
+If you want to report discharge maps at each time step, you will first have to specify the writing path and desired file name. 
+
+The [reference xml settings file](https://github.com/ec-jrc/lisflood-code/blob/master/src/lisfloodSettings_reference.xml) includes definitions for most of the optional output maps and time series. 
+The use of the *output* options is described in detail in [a dedicated section](../5_annex_output-files/index.md).
+
+Within the 'lfoptions' element of the settings file, each option is defined using a 'setoption' element, which has the attributes 'name' and 'choice' (i.e. the actual value). For example:
+
+```xml
+	<lfoptions>                            
+	<setoption choice="1" name="inflow" /> 
+	</lfoptions>                           	
+```
+
+### Options to manage input files
+
++ **NetCDFTimeChunks**: chunking size in the time dimension. This option was implemented to optimize the loading of the meteo maps. Recommended value is “auto" but chunking size can be specified manually (e.g. "10") or set to “-1" to load the whole time series into memory (very fast but expensive in terms of memory). 
++ **MapsCaching** (True or False): option designed for lisflood calibration. If set to True, all the static maps and forcings will be stored in a cache so that they don't have to be loaded by each lisflood instance. This option sets the value of NetCDFTimeChunks to "-1", meaning that the whole time series in the NetCDF inputs is loaded into memory. 
+
+### Options to manage output files
+
++ **OutputMapsChunks**: this option is used to write output maps every X steps (default 1).  
++ **OutputMapsDataType**: this option sets the output data type and may take the following values: "float64" or "float32" (default float64). This option applies to all output maps.
+
+### Reference settings file
+In order to facilitate the preparation of the settings file, a complete example is provided [here](https://github.com/ec-jrc/lisflood-code/tree/master/src/lisfloodSettings_reference.xml). The user is encouraged to update the paths, the names of the maps and of the tables in the provided template.
+
+[🔝](#top)

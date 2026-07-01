@@ -95,6 +95,27 @@ class groundwater(HydroModule):
         self.var.LZ = np.where(LZInitValue == -9999, LZSteady, LZInitValue)
         # Initialise lower store with steady-state value
         # if LZInitValue is set to -9999
+        
+        if option['InitLisflood']:
+            self.var.LZInflowCUM = loadmap('LZInflowCUMInit') 
+            self.var.TimeSinceStartPrerunChunkInit = loadmap('TimeSinceStartPrerunChunkInit')        
+            if isinstance(self.var.TimeSinceStartPrerunChunkInit, float):
+               MAP = []
+               MAP = maskinfo.in_zero() +   self.var.TimeSinceStartPrerunChunkInit
+               self.var.TimeSinceStartPrerunChunkInit= []
+               self.var.TimeSinceStartPrerunChunkInit = MAP       
+            # Cumulative lower zone inflow [mm]
+            # Needed for calculation of average LZ inflow (initialisation)
+            # Added the option to read LZInflowCUM from settings file: this is needed when the prerun is completed in separate chunks (e.g. 1990-200 and 2000-2010).
+        else:
+           self.var.NumDaysSpinUp = 0.0 # this allows to write lzavin in the model run, recommended ONLY when the run is done in 1 chunk
+           self.var.TimeSinceStartPrerunChunkInit = 0.0 # this allows to write lzavin in the model run, recommended ONLY when the run is done in 1 chunk
+           if isinstance(self.var.TimeSinceStartPrerunChunkInit, float):
+               MAP = []
+               MAP = maskinfo.in_zero() +   self.var.TimeSinceStartPrerunChunkInit
+               self.var.TimeSinceStartPrerunChunkInit= []
+               self.var.TimeSinceStartPrerunChunkInit = MAP              
+           self.var.LZInflowCUM = maskinfo.in_zero() # this allows to write lzavin in the model run, recommended ONLY when the run is done in 1 chunk        
 
         # Water in lower store [mm]
         self.var.LZThreshold = loadmap('LZThreshold')
@@ -119,9 +140,6 @@ class groundwater(HydroModule):
 
         self.var.GwLossCUM = maskinfo.in_zero()
         # Cumulative groundwater loss [mm]
-        self.var.LZInflowCUM = maskinfo.in_zero()
-        # Cumulative lower zone inflow [mm]
-        # Needed for calculation of average LZ inflow (initialisation)
 
         self.var.GwPercUZLZ = self.var.allocateVariableAllVegetation()
         self.var.GwLossLZ = maskinfo.in_zero()
@@ -136,7 +154,6 @@ class groundwater(HydroModule):
         # LZ can be below its threshold because of water abstractions
         self.var.LZOutflow = np.minimum(self.var.LowerZoneK * self.var.LZ, self.var.LZ - self.var.LZThreshold)
         # Outflow out of lower zone [mm per model timestep]
-
         self.var.LZOutflow = np.maximum(self.var.LZOutflow, 0)
         # No outflow if LZ is below threshold
         self.var.LZOutflowToChannel = self.var.LZOutflow
@@ -162,19 +179,22 @@ class groundwater(HydroModule):
         self.var.LZ = self.var.LZ - self.var.GwLossLZ
         # (ground)water in lower response box [mm]
 
-        self.var.LZInflowCUM += (self.var.GwPercUZLZPixel - self.var.GwLossLZ)
-        # cumulative inflow into lower zone (can be used to improve
-        self.var.LZInflowCUM = np.maximum(self.var.LZInflowCUM, 0.0)
-        # LZInflowCUM would become negativ, if LZInit is set to high
-        # therefore this line is preventing LZInflowCUM getting negativ
-
         self.var.GwLossPixel = self.var.GwLossLZ
         # from GROUNDWATER TRANSFER to here
         # Compute pixel-average fluxes
         self.var.GwLossCUM += self.var.GwLossPixel
         self.var.GwLossWB = self.var.GwLossPixel
         # Accumulated groundwater loss over simulation period [mm]
-        self.var.LZAvInflow = (self.var.LZInflowCUM * self.var.InvDtDay) / self.var.TimeSinceStart
-        # Average inflow into lower zone over executed time steps [mm/day]
+        
+        if  (self.var.TimeSinceStart > np.round(self.var.NumDaysSpinUp/self.var.DtDay)) : 
+            self.var.LZInflowCUM += (self.var.GwPercUZLZPixel - self.var.GwLossLZ)
+            # cumulative inflow into lower zone (can be used to improve
+            self.var.LZInflowCUM = np.maximum(self.var.LZInflowCUM, 0.0)
+            # LZInflowCUM would become negativ, if LZInit is set to high
+            # therefore this line is preventing LZInflowCUM getting negativ
+            self.var.LZAvInflow = (self.var.LZInflowCUM * self.var.InvDtDay) / ( self.var.TimeSinceStart + self.var.TimeSinceStartPrerunChunkInit[0] - np.round(self.var.NumDaysSpinUp/self.var.DtDay))
+            # Average inflow into lower zone over executed time steps [mm/day]
+            self.var.TimeSinceStartPrerunChunk = self.var.TimeSinceStartPrerunChunkInit + self.var.TimeSinceStart - np.round(self.var.NumDaysSpinUp/self.var.DtDay)
+       
 
         self.var.LZOutflowToChannelPixel = self.var.LZOutflowToChannel

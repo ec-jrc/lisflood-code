@@ -243,13 +243,14 @@ def loadsetclone(name):
         raise LisfloodError("Maskmap: {} is not a valid mask map nor valid coordinates".format(name))
     _ = MaskAttrs(uuid.uuid4())  # init maskattrs
     # convert numpy map to 8bit
-    maskarea = np.bool8(mapnp)
+    maskarea = np.bool(mapnp)
     #check ldd map by maskchkarea map
     maskchkarea = np.logical_not(maskarea)
     _ = MaskAreaInfo(maskchkarea, map_out)  # MaskAreaInfo init here
     # put in the ldd map
     # if there is no ldd at a cell, this cell should be excluded from modelling
-    ldd = loadmap('Ldd', pcr=True)
+    # set "skip_mask_info" to True, as MaskInfo is initialized only later in the code
+    ldd = loadmap('Ldd', pcr=True, skip_mask_info = True)
     # convert ldd to numpy
     maskldd = pcr2numpy(ldd, np.nan)
 
@@ -265,20 +266,26 @@ def loadsetclone(name):
     return map_out
 
 
-def compressArray(map, pcr=True, name=None):
+def compressArray(map, pcr=True, name=None, force_load_with_nans=False):
     maskinfo = MaskInfo.instance()
     if pcr:
         mapnp = pcr2numpy(map,np.nan)
         mapnp1 = np.ma.masked_array(mapnp, maskinfo.info.mask)
     else:
+        if map.mask is not np.bool_(0):
+            if (map.mask[maskinfo.info.mask==False].any()==True):
+                # warning: fill values masking is different from the area mask map, and some values in the area mask map contains invalid fill values
+                warnings.warn(LisfloodWarning("Warning in compress array: map '{}' has fill values inside the area mask map!".format(name)))
         mapnp1 = np.ma.masked_array(map, maskinfo.info.mask)
     mapC = np.ma.compressed(mapnp1)
 
-    if name is not None:
-        if np.max(np.isnan(mapC)):
-            msg = name + " has less valid pixels than area or ldd \n"
-            raise LisfloodError(msg)
-            # test if map has less valid pixel than area.map (or ldd)
+
+    if force_load_with_nans==False:
+        if name is not None:
+            if np.max(np.isnan(mapC)):
+                msg = name + " has less valid pixels than area or ldd \n"
+                raise LisfloodError(msg)
+                # test if map has less valid pixel than area.map (or ldd)
     return mapC.astype(float)
 
 
@@ -338,7 +345,7 @@ def loadmap_cached(*args, **kwargs):
     return loadmap_base(*args, **kwargs)
 
 
-def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averageyearflag=False, value=None):
+def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averageyearflag=False, value=None, force_load_with_nans=False, skip_mask_info=False):
     """ Load a static map either value or pcraster map or netcdf (single or stack)
     
     Load a static map either value or pcraster map or netcdf (single or stack)
@@ -353,6 +360,11 @@ def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averagey
     :param lddflag: flag for local drain direction map (CM??)
     :param timestampflag: look for exact time stamp in netcdf file ('exact') or for the closest (left) time stamp available ('closest')
     :param averageyearflag: if True, use "average year" netcdf file over the entire model simulation period
+    :param force_load_with_nans: if True, loads the map without checking for nan values inside area Map. 
+                                Warning: this flag should be used ONLY when managing and manipulating incomplete maps
+                                (maps should be completed before using into actual simulations, otherwise Lisflood will fail)
+    :param skip_mask_info: if True do not use MaskInfo instance to mask values 
+                                (this is only used in loadsetclone when MaskInfo is not available yet)
     :return: map or mapC
     :except: pcr: maps must have the same size of clone.map
              netCDF: time step timestepInit must be included into the stack 
@@ -394,7 +406,8 @@ def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averagey
     # if failed before try reading from netCDF map format
     if not load:
         # read a netcdf  (single one not a stack)
-        filename = os.path.splitext(value)[0] + '.nc'
+        # here we already tried to load the map as PCRaster and failed, thus try as NetCDF (with or without .nc extension)
+        filename = value if value.lower().endswith('.nc') or value.lower().endswith('.map') else value + '.nc'
         # get mapextend of netcdf map and calculate the cutting
         cut0, cut1, cut2, cut3 = mapattrNetCDF(filename)
         # load netcdf map but only the rectangle needed
@@ -488,8 +501,13 @@ def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averagey
 
         # masking
         try:
-            maskinfo = MaskInfo.instance()
-            mapnp.mask = maskinfo.info.mask
+            if skip_mask_info is False:
+                maskinfo = MaskInfo.instance()
+                if mapnp.mask is not np.bool_(0):
+                    if (mapnp.mask[maskinfo.info.mask==False].any()==True):
+                        ## warning: fill values masking is different from the area mask map, and some values in the area mask map contains invalid fill values
+                        warnings.warn(LisfloodWarning("Warning: map {} (binding: '{}') has fill values inside the area mask map!".format(filename, name)))
+                mapnp.mask = maskinfo.info.mask
         except (KeyError, AttributeError):
             pass
         nf1.close()
@@ -502,8 +520,11 @@ def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averagey
                 mapnp[mapnp.mask] = -9999
                 map = numpy2pcr(Nominal, mapnp, -9999)
             elif checkint == "int8":
-                mapnp[mapnp < 0] = -9999
-                map = numpy2pcr(Nominal, mapnp, -9999)
+                mapnp[mapnp < 0] = -99
+                map = numpy2pcr(Nominal, mapnp, -99)
+            elif checkint == "uint8":
+                mapnp[np.isnan(mapnp)] = 255
+                map = numpy2pcr(Scalar, mapnp, 255)
             else:
                 mapnp[np.isnan(mapnp)] = -9999
                 map = numpy2pcr(Scalar, mapnp, -9999)
@@ -511,11 +532,13 @@ def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averagey
             if lddflag:
                 map = pcraster.ldd(pcraster.nominal(map))
         else:
-            mapC = compressArray(mapnp, pcr=False, name=filename)
+            assert(not skip_mask_info)
+            mapC = compressArray(mapnp, pcr=False, name=filename, force_load_with_nans = force_load_with_nans)
         flagmap = True
 
     # pcraster map but it has to be an array
     if pcrmap and not pcr:
+        assert(not skip_mask_info)
         mapC = compressArray(map, name=filename)
 
     if flags['checkfiles']:
@@ -527,6 +550,7 @@ def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averagey
         else:
             #print(name, mapC.size)
             if mapC.size > 0:
+                assert(not skip_mask_info)
                 map= decompress(mapC)
                 checkmap(name, filename, map, flagmap, 0)
     if pcr:

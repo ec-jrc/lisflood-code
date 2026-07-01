@@ -3,9 +3,9 @@
 Crop coefficient, crop group number, and Manning's surface roughness are the land cover depending maps which are calculated considering geographical distribution of each land cover type.<br>
 The LISFLOOD hydrological model can distinguish dependencies for the forested (and also non-forested), irrigated crops (excluding rice), and other land cover type areas. Forest includes evergreen and deciduous needle leaf and broad leaf trees, irrigated crops - all possible crops excluding rice (is modelled separately), and other land cover type - agricultural areas, non-forested natural area, pervious surface of urban areas. Non-forest (also referred to as ’others‘) refers to any other land cover types apart from forest. <br>
 + **Crop coefficient** for forest, irrigated crops and other land use type maps
-Crop coefficient is a simple ratio between the potential (reference) evapotranspiration rate, in mm/day, and the potential evaporation rate of a specific crop. In the LISFLOOD model the crop coefficient for forest, irrigated crops and other land cover type maps are used in the computation of the transpiration rate for the forest, irrigated agriculture and other land cover type fractions respectively, e.g. in the computation of the [roots water uptake](https://ec-jrc.github.io/lisflood-model/2_07_stdLISFLOOD_plant-water-uptake/) to support plant transpiration.)
+Crop coefficient is a simple ratio between the potential (reference) evapotranspiration rate, in mm/day, and the potential evaporation rate of a specific crop. In the LISFLOOD model the crop coefficient for forest, irrigated crops and other land cover type maps are used in the computation of the transpiration rate for the forest, irrigated agriculture and other land cover type fractions respectively, e.g. in the computation of the [roots water uptake](https://ec-jrc.github.io/lisflood-model/2_07_stdLISFLOOD_plant-water-uptake/index.md) to support plant transpiration.)
 + **Crop group number** for forest, irrigated crops and other land use type maps
-The crop group number represents a vegetation type and is an indicator of its adaptation to dry climate. In the LISFLOOD model the crop group number for forest, irrigated crops and other land cover type maps are used in the computation of the critical amount of soil moisture [$wcrit$](https://ec-jrc.github.io/lisflood-model/2_07_stdLISFLOOD_plant-water-uptake/) below which water uptake from plants is reduced as they start closing their stomata. The crop group number for forest, irrigated crops and other land cover type are applied to the forest, irrigated agriculture and other land cover type fractions respectively.
+The crop group number represents a vegetation type and is an indicator of its adaptation to dry climate. In the LISFLOOD model the crop group number for forest, irrigated crops and other land cover type maps are used in the computation of the critical amount of soil moisture [$wcrit$](https://ec-jrc.github.io/lisflood-model/2_07_stdLISFLOOD_plant-water-uptake/index.md) below which water uptake from plants is reduced as they start closing their stomata. The crop group number for forest, irrigated crops and other land cover type are applied to the forest, irrigated agriculture and other land cover type fractions respectively.
 + **Manning’s surface roughness coefficient** for forest, irrigated crops and other land cover type maps
 Manning's surface roughness coefficient represents the roughness or friction applied to the flow by the surface on which water is flowing. In the LISFLOOD model the Manning's surface roughness coefficients for forest, irrigated crops and other land cover type maps are used to compute surface runoff routing for the forest, irrigated agriculture and other [land cover type fractions](../4_Static-Maps_land-use/) respectively.
 + **Soil depth layers 1, 2 and 3** for forested and non-forested areas maps
@@ -142,17 +142,17 @@ The LISFLOOD model does not accept missing values for Kc, Kg and Km thus all zer
 *Figure 23: Manning’s coefficient for other land cover type map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
 
 
-## Soil depth layers 1,2, and 3 for forested and non-forested areas
+## Soil depth layers 1, 2 and 3 for forested and non-forested areas
 
 ### General map information and possible source data
 
 
 | Map name | File name*;type | Units; range | Description |
 | :---| :--- | :--- | :--- |
-|Soil depth|soildeoth**N_T**.nc; <br> Type: Float32| Units: mm;<br>Range: ≥ 50**|Forested/ other (non-forested) area soil depth <br>for soil layer 1 (surface layer)/ 2 (middle layer)/ 3 (bottom layer)|
+|Soil depth|soildepth**N_T**.nc; <br> Type: Float32| Units: mm;<br>Range: ≥ 50**|Forested/ other (non-forested) area soil depth <br>for soil layer 1 (superficial layer)/ 2 (upper layer)/ 3 (lower layer)|
 
-*where **N** is the number of soil depth layer (**N**= ’1’ for surface layer, **N** = ’2’ for middle layer, **N** = ’3’ for bottom layer), and **T** is the landcover type (**T** = ’f’ for forested areas, **T** = ’o’ for non-forested areas or others).
-**where range for soil layer 1 (surface layer) equals 50 mm, and for soil layer 2 (middle layer) and 3 (bottom layer) equals ≥ 50 mm.
+*where **N** is the number of soil depth layer (**N**= ’1’ for superficial layer, **N** = ’2’ for upper layer, **N** = ’3’ for lower layer), and **T** is the landcover type (**T** = ’f’ for forested areas, **T** = ’o’ for non-forested areas or others).
+**where range for soil layer 1 (superficial layer) equals 50 mm, and for soil layer 2 (upper layer) and 3 (lower layer) equals ≥ 50 mm.
 
 | Source data| Access |Temporal coverage|Spatial information|
 | :---| :--- | :--- | :---|
@@ -163,16 +163,16 @@ The LISFLOOD model does not accept missing values for Kc, Kg and Km thus all zer
 
 ### Methodology
 
-The methodology for the computation of the depth of the three soil layers has been adapted from [Burek et al., 2014](https://ec-jrc.github.io/lisflood/pdfs/Dataset_hydro.pdf). Here, total soil depth is taken as the 'absolute depth to bedrock' from [SoilGrids250m (2017)](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0169748) and 'root depth' for the fractions forest and non-forest is computed following methodology explained [above](../4_Static-Maps_land-use-depending#crop-coefficient,-crop-group-number,-manning’s-surface-roughness-coefficient-for-forest,-irrigated-crops-and-other-land-use-type-maps). Soil depth is expressed in mm. <br>
-Soil depth layer 1 (surface) for forest/non-forest ($SD_1$) is assumed constant, equal to 50 mm all over the world:
+The methodology for the computation of the depth of the three soil layers has been adapted from [Burek et al., 2014](https://ec-jrc.github.io/lisflood/pdfs/Dataset_hydro.pdf). The total soil depth is taken as the minimum between the 'absolute depth to bedrock' from [SoilGrids250m (2017)](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0169748) and the groundwater table depth from [Fan et al.2013](https://www.science.org/doi/10.1126/science.1229881). The 'root depth' for the fractions forest and non-forest is computed following methodology explained [above](../4_Static-Maps_land-use-depending#crop-coefficient,-crop-group-number,-manning’s-surface-roughness-coefficient-for-forest,-irrigated-crops-and-other-land-use-type-maps). Soil depth is expressed in mm. <br>
+Soil depth layer 1 (superficial) for forest/non-forest ($SD_1$) is assumed constant, equal to 50 mm all over the world:
 
 $$
 SD_1 = 50 mm
 $$
 
-Soil depth layers 2 (middle, $SD_2$) and 3 (bottom, $SD_3$) for forest/non-forest are computed in several steps – first at native resolution of the input dataset, then at required resolution. First step is following:
+Soil depth layers 2 (upper, $SD_2$) and 3 (lower, $SD_3$) for forest/non-forest are computed in several steps – first at native resolution of the input dataset, then at required resolution. First step is following:
 
-+ for soil depth layer 2 (middle, $SD_2$)
++ for soil depth layer 2 (upper, $SD_2$)
 
 | Absolute depth to bedrock | Equation |
 | :---| :--- | 
@@ -181,7 +181,7 @@ Soil depth layers 2 (middle, $SD_2$) and 3 (bottom, $SD_3$) for forest/non-fores
 
 If the computed value of $SD_2$ is lower than 50mm, then it is used $SD_2$ = $50 mm$ (in order to account for data uncertainty).
 
-+ for soil depth layer 3 (bottom layer, $SD_3$)
++ for soil depth layer 3 (lower layer, $SD_3$)
 
 $$ 
 SD_3 = absolutedepth - (SD_1 +SD_2)

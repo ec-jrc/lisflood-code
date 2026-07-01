@@ -18,7 +18,7 @@ Use python setup.y publish to publish versioned tags and pypi package
 IMPORTANT Note:
 To test pip installation:
 python setup.py testpypi
-pip install --index-url https://test.pypi.org/simple/ lisflood-model==2.8.14
+pip install --index-url https://test.pypi.org/simple/ lisflood-model==5.0.0
 
 To publish on PyPi:
 
@@ -134,7 +134,9 @@ def _get_gdal_version():
 gdal_version = _get_gdal_version()
 req_file = 'requirements.txt'
 requirements = [l for l in open(req_file).readlines() if l and not l.startswith('#')]
-requirements += ['GDAL=={}'.format(gdal_version)]
+# GDAL requirement is commented to avoid fixing GDAL version in pypi package
+# requirements += ['GDAL=={}'.format(gdal_version)]
+
 setup(
     name='lisflood-model',
     version=version,

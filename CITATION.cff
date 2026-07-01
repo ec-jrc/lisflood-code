@@ -1,0 +1,106 @@
+cff-version: 1.2.0
+title: OS LISFLOOD - a distributed hydrological rainfall-runoff model
+message: "If you use this software, please cite it using the information below."
+
+type: software
+
+authors:
+  - family-names: De Roo
+    given-names: Ad
+    affiliation: Joint Research Centre
+
+  - family-names: Gelati
+    given-names: Emiliano
+    orcid: https://orcid.org/0000-0002-8972-8561
+    affiliation: Norwegian Water Resources and Energy Directorate
+
+  - family-names: Burek
+    given-names: Peter
+    orcid: https://orcid.org/0000-0001-6390-8487
+    affiliation: International Institute for Applied Systems Analysis
+
+  - family-names: Van der Knijff
+    given-names: Johan
+    orcid: https://orcid.org/0000-0003-3686-337X
+    affiliation: Joint Research Centre
+
+  - family-names: Wanders
+    given-names: Niko
+    orcid: https://orcid.org/0000-0002-7102-5454
+    affiliation: Universiteit Utrecht
+
+  - family-names: Grimaldi
+    given-names: Stefania
+    orcid: https://orcid.org/0000-0002-7025-7624
+    affiliation: Joint Research Centre
+
+  - family-names: Russo
+    given-names: Carlo
+    orcid: https://orcid.org/0000-0001-8296-4345
+    affiliation: Joint Research Centre
+
+  - family-names: Schaffhauser
+    given-names: Timo
+    orcid: https://orcid.org/0000-0002-2553-0089
+    affiliation: Joint Research Centre
+
+  - family-names: Gomes
+    given-names: Gonçalo
+    orcid: https://orcid.org/0000-0001-8536-6623
+    affiliation: Joint Research Centre
+
+  - family-names: Nappo
+    given-names: Domenico
+    affiliation: AM-FLOW
+
+  - family-names: Lorini
+    given-names: Valerio
+    orcid: https://orcid.org/0000-0003-2148-5476
+    affiliation: European Parliament
+
+  - family-names: Casado Rodríguez
+    given-names: Jesus
+    orcid: https://orcid.org/0000-0002-6607-1413
+    affiliation: KAJO Services
+
+  - family-names: Carton de Wiart
+    given-names: Corentin
+    orcid: https://orcid.org/0000-0002-0681-2224
+    affiliation: European Centre for Medium-Range Weather Forecasts
+
+  - family-names: Mazzetti
+    given-names: Cinzia
+    orcid: https://orcid.org/0000-0003-3622-1967
+    affiliation: European Centre for Medium-Range Weather Forecasts
+
+  - family-names: Decremer
+    given-names: Damien
+    orcid: https://orcid.org/0000-0003-3191-1731
+    affiliation: European Centre for Medium-Range Weather Forecasts
+
+  - family-names: Mastrantonas
+    given-names: Nikolaos
+    orcid: https://orcid.org/0000-0002-2430-3634
+    affiliation: European Centre for Medium-Range Weather Forecasts
+
+  - family-names: Jensen
+    given-names: Laura
+    orcid: https://orcid.org/0000-0002-8318-791X
+    affiliation: GFZ Helmholtz Centre for Geosciences
+
+  - family-names: Morrison
+    given-names: Oisin
+    orcid: https://orcid.org/0000-0002-6098-9362
+    affiliation: European Centre for Medium-Range Weather Forecasts
+
+  - family-names: Moschini
+    given-names: Francesca
+    orcid: https://orcid.org/0000-0001-5068-8497
+    affiliation: Joint Research Centre
+
+  - family-names: Alfieri
+    given-names: Lorenzo
+    orcid: https://orcid.org/0000-0002-3616-386X
+    affiliation: CIMA Research Foundation
+
+repository-code: https://github.com/ec-jrc/lisflood-code

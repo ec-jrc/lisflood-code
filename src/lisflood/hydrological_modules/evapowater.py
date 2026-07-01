@@ -60,7 +60,8 @@ class evapowater(HydroModule):
         maskinfo = MaskInfo.instance()
         if option['openwaterevapo']:
             LakeMask = loadmap('LakeMask', pcr=True)
-            lmask = ifthenelse(LakeMask != 0, self.var.LddStructuresKinematic, 5)
+            # lmask = ifthenelse(LakeMask != 0, self.var.LddStructuresKinematic, 5)
+            lmask = ifthenelse(LakeMask != 0, self.var.LddStructuresChan, 5)
             LddEva = lddrepair(lmask)
             lddC = compressArray(LddEva)
             inAr = decompress(np.arange(maskinfo.info.mapC[0], dtype="int32"))
@@ -90,7 +91,11 @@ class evapowater(HydroModule):
                     self.var.varW1.append(j)
 
                 for i in range(12):
-                    varWName = generateName(binding['WFractionMaps'], varWNo[i])
+                    try:    # for backward compatibility, in case we want to take WFract maps in PCRaster format
+                        varWName = generateName(binding['WFractionMaps'], varWNo[i])
+                    except:
+                        varWName = None
+                        pass
                     self.var.varW.append(loadLAI(binding['WFractionMaps'], varWName, i))
 
     def dynamic_init(self):
@@ -132,13 +137,21 @@ class evapowater(HydroModule):
             UpstreamEva = self.var.EWRef * self.var.MMtoM3 * self.var.WaterFraction
             # evaporation for loop is amount of water per timestep [cu m]
             # Volume of potential evaporation from water surface  per time step (conversion to [m3])
-            ChanMIter = self.var.ChanM3Kin.copy()
+
+            if (not (option['InitLisflood'])) and (option['SplitRouting']):
+                ChanMIter = self.var.ChanM3Kin.copy()
             # for Iteration loop: First value is amount of water in the channel
             # amount of water in bankful (first line of routing)
+            else:
+                ChanMIter = self.var.ChanM3.copy() # generates error in mBE
+            # for Iteration loop: First value is amount of water in the channel
+            # amount of water in channel
+
             ChanLeft = ChanMIter * 0.1
-            # 10% of the discharge must stay in the river
+            # 10% of the volume must stay in the river
+
             self.var.EvaAddM3 = MaskInfo.instance().in_zero()
-            #   real water consumption is set to 0
+            # real water consumption is set to 0
 
             for NoEvaExe in range(self.var.maxNoEva):
                 ChanHelp = np.maximum(ChanMIter - UpstreamEva, ChanLeft)
@@ -154,6 +167,7 @@ class evapowater(HydroModule):
 
             self.var.EvaAddM3Dt = self.var.EvaAddM3 * self.var.InvNoRoutSteps
             # splitting water use per timestep into water use per sub time step
+
             self.var.EvaCumM3 += self.var.EvaAddM3
             self.var.EvaWBM3 = self.var.EvaAddM3 
             # summing up for water balance calculation

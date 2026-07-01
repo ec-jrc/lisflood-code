@@ -198,26 +198,24 @@ defaults:
       - section_title: "Installation"
         items:
         - title: "Installation and testing"
-          url: 3_step2_installation         
+          url: 2_installation         
 
       - section_title: "Step-by-step user guide"
         items:
-        - title: "Step 0: Essential before getting started"
-          url: 2_ESSENTIAL_setting-file
-        - title: "Step 1: Time convention within LISFLOOD model"
-          url: 2_ESSENTIAL_time-management
+        - title: "Step 1: Essential concepts to get started"
+          url: 3_step1_ESSENTIAL_concepts_to_get_started
         - title: "Step 2: Preparing the settings file"
-          url: 3_step3_preparing-setting-file
+          url: 3_step2_preparing-setting-file
         - title: "Step 3: Preparing input files"
-          url: 3_step4_preparing-input-files
+          url: 3_step3_preparing-input-files
         - title: "Step 4: Initialisation of LISFLOOD"
-          url: 3_step5_model-initialisation
+          url: 3_step4_model-initialisation
         - title: "Step 5: Running LISFLOOD"
-          url: 3_step6_running-LISFLOOD
+          url: 3_step5_model-cold-warm-start-runs
         - title: "Step 6: model output"
           url: 3_step6_model-output
-        - title: "Step 7: commmand line flags"
-          url: 3_step7_commmand-line-flags
+        - title: "Step 7: command line flags"
+          url: 3_step7_command-line-flags
           
       - section_title: "Static maps"
         items:
@@ -241,23 +239,25 @@ defaults:
           url: 4_Static-Maps_reservoirs-lakes   
         - title: "Rice calendar maps"
           url: 4_Static-Maps_rice-calendar  
+        - title: "Water use and water use related maps"
+          url: 4_Static-Maps_water-use            
         - title: "Static maps: appendix"
           url: 4_Static-Maps_appendix   
                                                                        
       - section_title: "Annex"
         items:
-        - title: "LISFLOOD input files"
-          url: 4_annex_input-files
+        - title: "LISFLOOD standard modules input maps "
+          url: 5_annex_input-maps-standard-modules
         - title: "LISFLOOD output files"
-          url: 4_annex_output-files
+          url: 5_annex_output-files
         - title: "LISFLOOD settings and options"
-          url: 4_annex_settings_and_options
+          url: 5_annex_settings_and_options
         - title: "LISFLOOD state variables"
-          url: 4_annex_state-variables
+          url: 5_annex_state-variables
         - title: "LISFLOOD parameters range and default values"
-          url: 4_annex_parameters
+          url: 5_annex_parameters
         - title: "LISFLOOD Tests documentation"
-          url: 4_annex_tests
+          url: 5_annex_tests
 
       - section_title: "Not to forget"
         items:

@@ -2,9 +2,11 @@
 
 Allen, R. G., Pereira, L. S., Raes, D., and Smith, M.: FAO Irrigation and Drainage Paper No. 56: Crop Evapotranspiration (guidelines for computing crop water requirements), 1998. [available online: https://www.researchgate.net/publication/284300773_FAO_Irrigation_and_drainage_paper_No_56, last accessed: 13.05.2021.]
 
-Anderson, 2006Anderson, E., 2006. *Snow Accumulation and Ablation Model -- SNOW-17*. Technical report.
+Anderson, E., 2006. *Snow Accumulation and Ablation Model -- SNOW-17*. Technical report.
 
 Aston, A.R., 1979. Rainfall interception by eight small trees. Journal of Hydrology 42, 383-396.
+
+Bisselink, B., Bernhard, J., Gelati, E., Adamovic, M., Jacobs, C., Mentaschi, L., Lavalle, C. and De Roo, A., Impact of a changing climate, land use, and water usage on water resources in the Danube river basin, EUR 29228 EN, Publications Office of the European Union, Luxembourg, 2018, ISBN 978-92-79-85888-8, doi:10.2760/561327, JRC111817, https://publications.jrc.ec.europa.eu/repository/handle/JRC111817 
 
 Bódis, K., 2009. *Development of a data set for continental hydrologic modelling*. Technical Report EUR 24087 EN JRC Catalogue number: LB-NA-24087-EN-C, Institute for Environment and Sustainability, Joint Research Centre of the European Commission Land Management and Natural Hazards Unit Action FLOOD. Input layers related to topography, channel geometry, land cover and soil characteristics of European and African river basins.
 
@@ -18,17 +20,25 @@ Büttner, G., Kosztra, B., Maucha, G., Pataki, R., Kleeschulte, S., Hazeu, G., V
 
 Carneiro Freire, S., Macmanus, K., Pesaresi, M., Doxsey-Whitfield, E., and Mills, J.: Development of new open and free multi-temporal global population grids at 250 m resolution. Geospatial Data in a Changing World; Association of Geographic Information Laboratories in Europe (AGILE) (Organiser). AGILE; 2016. JRC100523
 
+**Choulga, M., Moschini, F., Mazzetti, C., Grimaldi, S., Disperati, J., Beck, H., Salamon, P., and Prudhomme, C.: Technical note: Surface fields for global environmental modelling, Hydrol. Earth Syst. Sci., 28, 2991–3036, https://doi.org/10.5194/hess-28-2991-2024, 2024.**
+
 Chow, V.T., Maidment, D.R., Mays, L.M., 1988. Applied Hydrology, McGraw-Hill, Singapore, 572 pp.
+
+De Roo, A., Bisselink, B., Guenther, S., Gelati, E. and Adamovic, M., Assessing the effects of water saving measures on Europe`s water resources, EUR 30361 EN, Publications Office of the European Union, Luxembourg, 2020, ISBN 978-92-76-21537-0, doi:10.2760/739798, JRC120388, https://publications.jrc.ec.europa.eu/repository/handle/JRC120388
 
 De Roo, A., Thielen, J., Gouweleeuw, B., 2003. LISFLOOD, a Distributed Water-Balance, Flood Simulation, and Flood Inundation Model, User Manual version 1.2. Internal report, Joint Research Center of the European Communities, Ispra, Italy, 74 pp.
 
-de Sousa, L. M., Poggio, L., Batjes, N. H., Heuvelink, G. B. M., Kempen, B., Riberio, E., and Rossiter, D.: SoilGrids 2.0: producing quality-assessed soil information for the globe, SOIL Discuss. [preprint], https://doi.org/10.5194/soil-2020-65, in review, 2020.
+Poggio, L., de Sousa, L. M., Batjes, N. H., Heuvelink, G. B. M., Kempen, B., Ribeiro, E., and Rossiter, D.: SoilGrids 2.0: producing soil information for the globe with quantified spatial uncertainty, SOIL, 7, 217–240, https://doi.org/10.5194/soil-7-217-2021, 2021. 
 
 Fröhlich, W., 1996. Wasserstandsvorhersage mit dem Prgramm ELBA. Wasserwirtschaft Wassertechnik, ISSN: 0043-0986, Nr. 7, 1996, 34-37.
 
+Gelati, E., Zajac, Z., Ceglar, A., Bassu, S., Bisselink, B., Adamovic, M., Bernhard, J., Malagó, A., Pastori, M., Bouraoui, F., and de Roo, A.: Assessing groundwater irrigation sustainability in the Euro-Mediterranean region with an integrated agro-hydrologic model, Adv. Sci. Res., 17, 227–253, https://doi.org/10.5194/asr-17-227-2020, 2020. 
+
 Goudriaan, J., 1977. Crop micrometeorology: a simulation study. Simulation Monographs. Pudoc, Wageningen.
 
-Hock, 2003Hock, R., 2003. Temperature index melt modelling in mountain areas. *Journal of Hydrology*, 282(1-4), 104--115.
+Hanazaki, R., Yamazaki, D., & Yoshimura, K. (2022). Development of a reservoir flood control scheme for global flood models. Journal of Advances in Modeling Earth Systems, 14, e2021MS002944. https://doi.org/10.1029/2021MS002944
+
+Hock, R., 2003. Temperature index melt modelling in mountain areas. *Journal of Hydrology*, 282(1-4), 104--115.
 
 Laborte, A., Gutierrez, M., Balanza, J. et al. RiceAtlas, a spatial database of global rice calendars and production. Sci Data 4, 170074 (2017). https://doi.org/10.1038/sdata.2017.74
 
@@ -48,6 +58,10 @@ Molnau, M., Bissell, V.C., 1983. A continuous frozen ground index for flood fore
 
 Rao, C.X. and Maurer, E.P., 1996. A simplified model for predicting daily transmission losses in a stream channel. Water Resources Bulletin, Vol. 31, No. 6., 1139-1146.
 
+Reggiani, P., Todini, E., Meißner, D., 2014a. A conservative flow routing formulation: Déjà vu and the variable-parameter Muskingum method revisited. Journal of Hydrology, 519, 1506–1515. https://doi.org/10.1016/j.jhydrol.2014.08.057
+
+Reggiani, P., Todini, E., Meißner, D., 2014b. Analytical solution of a kinematic wave approximation for channel routing. Hydrological Research, 45(1), 43–57. https://doi.org/10.2166/nh.2013.157
+
 Schiavina, M., Freire, S., and MacManus, K.:  GHS-POP R2019A - GHS population grid multitemporal (1975-1990-2000-2015). European Commission, Joint Research Centre (JRC), 2019. [Dataset] doi:10.2905/0C6B9751-A71F-4062-830B-43C9F432370F PID: http://data.europa.eu/89h/0c6b9751-a71f-4062-830b-43c9f432370f
 
 Smets, B., Verger, A., Camacho, F., Van der Goten, R., and Jacobs, T.: Copernicus Global Land Operations ”Vegetation and Energy”: Product User Manual, Issue 1.33, 2019 [available online: https://land.copernicus.eu/global/sites/cgls.vito.be/files/products/CGLOPS1_PUM_LAI1km-V2_I1.33.pdf, last accessed: 13.05.2021.].
@@ -62,7 +76,13 @@ Supit, I., Hoojer, A.A., and Van Diepen, C.A.: System description of the Wofost 
 
 Supit, I. , van der Goot, E. (eds.), 2003. Updated System Description of the WOFOST Crop Growth Simulation Model as Implemented in the Crop Growth Monitoring System Applied by the European Commission, Treemail, Heelsum, The Netherlands, 120 pp.
 
-Todini, E., 1996. The ARNO rainfall-runoff model. Journal of Hydrology 175, 339-382.
+Tang, X., Samuels, P.G., 1999. Variable parameter Muskingum-Cunge method for flood routing in a compound channel. Journal of Hydraulic Research, 37, 591–614. https://doi.org/10.1080/00221689909498519
+
+Todini, E., 1996. The ARNO rainfall----runoff model. Journal of Hydrology 175, 339-382.
+
+Todini, E., 2007a. A mass conservative and water storage consistent variable parameter Muskingum-Cunge approach. Hydrology and Earth System Sciences, 11, 1645–1659. https://doi.org/10.5194/hess-11-1645-2007
+
+Todini, E., 2007b. Corrigendum to "A mass conservative and water storage consistent variable parameter Muskingum-Cunge approach" published in Hydrology and Earth System Sciences, 11, 1645–1659. Hydrology and Earth System Sciences, 11, 1783–1783. https://doi.org/10.5194/hess-11-1783-2007
 
 Tóth, B., Weynants, M., Nemes, A., Makó, A., Bilas, G., and Toth, G.: New generation of hydraulic pedotransfer functions for Europe. EUROPEAN JOURNAL OF SOIL SCIENCE 66 (1); 2015. p. 226-238. JRC91453
 
@@ -77,9 +97,9 @@ Van der Knijff, J. M., Younis, J. and de Roo, A. P. J.: LISFLOOD: A GIS-based di
 
 Van Genuchten, M.Th., 1980. A closed-form equation for predicting the hydraulic conductivity of unsaturated soils. Soil Science Society of America Journal 44, 892-898.
 
-Viviroli et al., 2009Viviroli, D., Zappa, M., Gurtz, J., & Weingartner, R., 2009. An introduction to the hydrological modelling system PREVAH and its pre- and post-processing-tools. *Environmental Modelling & Software*, 24(10), 1209--1222.
+Viviroli, D., Zappa, M., Gurtz, J., & Weingartner, R., 2009. An introduction to the hydrological modelling system PREVAH and its pre- and post-processing-tools. *Environmental Modelling & Software*, 24(10), 1209--1222.
 
-Vogt et al., 2007Vogt, J., Soille, P., de Jager, A., Rimaviciute, E., Mehl, W., Foisneau, S., Bodis, K., Dusart, M., Parachini, M., Hasstrup, P.,2007. *A pan-European River and Catchment Database*. JRC Reference Report EUR 22920 EN, Institute for Environment and Sustainability, Joint Research Centre of the European Commission.
+Vogt, J., Soille, P., de Jager, A., Rimaviciute, E., Mehl, W., Foisneau, S., Bodis, K., Dusart, M., Parachini, M., Hasstrup, P.,2007. *A pan-European River and Catchment Database*. JRC Reference Report EUR 22920 EN, Institute for Environment and Sustainability, Joint Research Centre of the European Commission.
 
 Von Hoyningen-Huene, J., 1981. Die Interzeption des Niederschlags in landwirtschaftlichen Pflanzenbeständen (Rainfall interception in agricultural plant stands). In: Arbeitsbericht Deutscher Verband für Wasserwirtschaft und Kulturbau, DVWK, Braunschweig, p.63.
 

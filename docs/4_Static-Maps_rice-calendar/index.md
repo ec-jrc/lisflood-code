@@ -48,7 +48,7 @@ Then, the rice planting and harvesting fields for season 1 and 2 are created bas
   <img src="../media/Static-Maps/riceplantingday2_Global_03min.png" width="513" /> 
 </p>
 
-*Figure 55: Rice planting day 2 (season 2) map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
+*Figure 56: Rice planting day 2 (season 2) map at 1 arc min horizontal resolution for European domain (left) and at 3 arc min horizontal resolution for Global domain (right).*
 
 
 

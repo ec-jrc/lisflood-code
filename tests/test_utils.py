@@ -1,3 +1,4 @@
+from lxml import etree
 
 import os
 import sys
@@ -22,6 +23,15 @@ def setoptions(settings_file, opts_to_set=None, opts_to_unset=None, vars_to_set=
     opts_to_set = [] if opts_to_set is None else opts_to_set
     opts_to_unset = [] if opts_to_unset is None else opts_to_unset
     vars_to_set = {} if vars_to_set is None else vars_to_set
+    with open(settings_file) as filetocheck:
+        try:
+            # Attempt to parse the XML file
+            etree.parse(filetocheck)
+        except etree.XMLSyntaxError as e:
+            # If a syntax error is encountered, print the error and exit
+            print(f"XMLSyntaxError: {e}")
+            raise e
+
     with open(settings_file) as tpl:
         soup = BeautifulSoup(tpl, 'lxml-xml')
         for opt in opts_to_set:
@@ -62,7 +72,8 @@ def mk_path_out(p):
     path_out = os.path.join(os.path.dirname(__file__), p)
     if os.path.exists(path_out):
         shutil.rmtree(path_out)
-    os.mkdir(path_out)
+    if not os.path.exists(path_out):
+        os.mkdir(path_out)
     return path_out
 
 
@@ -94,6 +105,18 @@ class ETRS89TestCase(object):
                 'tss': os.path.join(ref_dir, 'output_reference_6h/chanqWin.tss'),
             },
         },
+        # 'chanqavgdt': {
+        #     'report_map': None,
+        #     'report_tss': 'ChanqavgdtTS',
+        #     '86400': {
+        #         'map': None,
+        #         'tss': os.path.join(ref_dir, 'output_reference_daily/chanqavgdt.tss'),
+        #     },
+        #     '21600': {
+        #         'map': None,
+        #         'tss': os.path.join(ref_dir, 'output_reference_6h/chanqavgdt.tss'),
+        #     },
+        # },
         'thia': {
             'report_map': 'Theta1IrrigationState',
             'report_tss': None,
@@ -214,6 +237,56 @@ class ETRS89TestCase(object):
                 'tss': None,
             },
         },
+        'SeepTopToSubBAverageOtherMap': {
+            'report_map': 'SeepTopToSubBAverageOtherMap',
+            'report_tss': None,
+            '86400': {
+                'map': os.path.join(ref_dir, 'init_daily/SeepTopToSubBAverageOtherMap.nc'),
+                'tss': None,
+            },
+            '21600': {
+                'map': os.path.join(ref_dir, 'init_6h/SeepTopToSubBAverageOtherMap.nc'),
+                'tss': None,
+            },
+        },
+         'SeepTopToSubBAverageForestMap': {
+            'report_map': 'SeepTopToSubBAverageForestMap',
+            'report_tss': None,
+            '86400': {
+                'map': os.path.join(ref_dir, 'init_daily/SeepTopToSubBAverageForestMap.nc'),
+                'tss': None,
+            },
+            '21600': {
+                'map': os.path.join(ref_dir, 'init_6h/SeepTopToSubBAverageForestMap.nc'),
+                'tss': None,
+            },
+        },    
+           
+        'SeepTopToSubBAverageIrrigationMap': {
+            'report_map': 'SeepTopToSubBAverageIrrigationMap',
+            'report_tss': None,
+            '86400': {
+                'map': os.path.join(ref_dir, 'init_daily/SeepTopToSubBAverageIrrigationMap.nc'),
+                'tss': None,
+            },
+            '21600': {
+                'map': os.path.join(ref_dir, 'init_6h/SeepTopToSubBAverageIrrigationMap.nc'),
+                'tss': None,
+            },
+        },        
+
+        'UZForestEnd': {
+            'report_map': 'UZForestEnd',
+            'report_tss': None,
+            '86400': {
+                'map': os.path.join(ref_dir, 'init_daily/uzf.end.nc'),
+                'tss': None,
+            },
+            '21600': {
+                'map': os.path.join(ref_dir, 'init_6h/uzf.end.nc'),
+                'tss': None,
+            },
+        },        
         'mbError': {
             'report_map': None,
             'report_tss': 'WaterMassBalanceTSS',
@@ -239,11 +312,110 @@ class ETRS89TestCase(object):
             },
         },
     }
+    def teardown_method(self):
+        settings = LisSettings.instance()
+        output_dir = settings.output_dir
+        if os.path.exists(output_dir):
+            shutil.rmtree(output_dir)
+
+    @classmethod
+    def compare_reference(cls, variable='dis', check='map', step_length='86400', atol=0.0001, rtol=0.001):
+        """
+        :param variable: variable to check. Default 'dis' (Discharge)
+        :param check: either 'map' or 'tss'. Default 'map'
+        :param step_length: DtSec (86400 for daily and 21600 for 6h run)
+        """
+
+        settings = LisSettings.instance()
+        binding = settings.binding
+        reference = cls.reference_files[variable][step_length][check]
+
+        if check == 'map':
+            output_map = os.path.normpath(binding[cls.reference_files[variable]['report_map']]) + '.nc'
+            comparator = NetCDFComparator(settings.maskpath, atol=atol, rtol=rtol)
+            comparator.compare_files(reference, output_map)
+        elif check == 'tss':
+            output_tss = binding[cls.reference_files[variable]['report_tss']]
+            comparator = TSSComparator(atol=atol, rtol=rtol)
+            comparator.compare_files(reference, output_tss)
+        # If there are differences, test fails before reaching this line (AssertionError(s) in comparator methods)
+        assert True
+
+class MCTTestCase(object):
+    case_dir = os.path.join(os.path.dirname(__file__), 'data', 'LF_MCT_UseCase')
+    ref_dir = os.path.join(case_dir, 'reference')
+    reference_files = {
+        'dis': {
+            'report_map': 'DischargeMaps',
+            'report_tss': 'DisTS',
+            '86400-3600': {
+                'map': os.path.join(ref_dir, 'output_reference_daily/dis.nc'),
+                'tss': os.path.join(ref_dir, 'output_reference_daily/disX.tss'),
+            },
+            '21600-21600': {
+                'map': os.path.join(ref_dir, 'output_reference_6h_6h/dis.nc'),
+                'tss': os.path.join(ref_dir, 'output_reference_6h_6h/disX.tss'),
+            },
+            '21600-3600': {
+                'map': os.path.join(ref_dir, 'output_reference_6h_1h/dis.nc'),
+                'tss': os.path.join(ref_dir, 'output_reference_6h_1h/disX.tss'),
+            },
+        },
+        'chanq': {
+            'report_map': None,
+            'report_tss': 'ChanqTS',
+            '86400-3600': {
+                'map': None,
+                'tss': os.path.join(ref_dir, 'output_reference_daily/chanqX.tss'),
+            },
+            '21600-21600': {
+                'map': None,
+                'tss': os.path.join(ref_dir, 'output_reference_6h_6h/chanqX.tss'),
+            },
+            '21600-3600': {
+                'map': None,
+                'tss': os.path.join(ref_dir, 'output_reference_6h_1h/chanqX.tss'),
+            },
+        },
+        # 'chanqavgdt': {
+        #     'report_map': None,
+        #     'report_tss': 'ChanqavgdtTS',
+        #     '86400-3600': {
+        #         'map': None,
+        #         'tss': os.path.join(ref_dir, 'output_reference_daily/chanqavgdt.tss'),
+        #     },
+        #     '21600-21600': {
+        #         'map': None,
+        #         'tss': os.path.join(ref_dir, 'output_reference_6h_6h/chanqavgdt.tss'),
+        #     },
+        #     '21600-3600': {
+        #         'map': None,
+        #         'tss': os.path.join(ref_dir, 'output_reference_6h_1h/chanqavgdt.tss'),
+        #     },
+        # },
+        'mbError': {
+            'report_map': None,
+            'report_tss': 'WaterMassBalanceTSS',
+            '86400-3600': {
+                'map': None,
+                'tss': os.path.join(ref_dir, 'output_reference_daily/mbError.tss'),
+            },
+            '21600-21600': {
+                'map': None,
+                'tss': os.path.join(ref_dir, 'output_reference_6h_6h/mbError.tss'),
+            },
+            '21600-3600': {
+                'map': None,
+                'tss': os.path.join(ref_dir, 'output_reference_6h_1h/mbError.tss'),
+            },
+        },
+    }
 
     def teardown_method(self):
         settings = LisSettings.instance()
         output_dir = settings.output_dir
-        shutil.rmtree(output_dir)
+        if os.path.exists(output_dir):
+            shutil.rmtree(output_dir)
 
     @classmethod
     def compare_reference(cls, variable='dis', check='map', step_length='86400'):

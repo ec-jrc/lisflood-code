@@ -41,7 +41,7 @@ class TestWarmStart():
     
     def test_warmstart_daily(self):
         step_start = '02/01/2016 06:00'
-        step_end = '31/12/2016 06:00'
+        step_end =  '31/12/2016 06:00' 
         dt_sec = 86400
         report_steps = '9496..9861'
         self.run_warmstart_by_dtsec(dt_sec, step_end, step_start, report_steps=report_steps)
@@ -59,9 +59,15 @@ class TestWarmStart():
             'repsimulateReservoirs',
         ]
         check_every = 13  # steps
+
+        case_dir = os.path.join(os.path.dirname(__file__), 'data', 'LF_ETRS89_UseCase')
+        out_dir = os.path.join(case_dir, 'out')
+        mk_path_out(out_dir)
+        
         # init
-        path_out_init = mk_path_out('data/LF_ETRS89_UseCase/out/init{}'.format(dt_sec))
-        settings_prerun = setoptions(self.settings_files['prerun'], opts_to_unset=modules_to_unset,
+        path_out_init = mk_path_out(os.path.join(out_dir,'init{}'.format(dt_sec)))
+        settings_prerun = setoptions(self.settings_files['prerun'],
+                                     opts_to_unset=modules_to_unset,
                                      vars_to_set={'DtSec': dt_sec,
                                                   'PathOut': path_out_init,
                                                   'StepStart': step_start,
@@ -74,13 +80,22 @@ class TestWarmStart():
         # long run
         lzavin_path = settings_prerun.binding['LZAvInflowMap']
         avgdis_path = settings_prerun.binding['AvgDis']
-        path_out_reference = mk_path_out('data/LF_ETRS89_UseCase/out/longrun_reference{}'.format(dt_sec))
-        settings_longrun = setoptions(self.settings_files['cold'], opts_to_unset=modules_to_unset,
+        SeepTopToSubBAverageOtherMap_path = settings_prerun.binding['SeepTopToSubBAverageOtherMap']
+        SeepTopToSubBAverageForestMap_path = settings_prerun.binding['SeepTopToSubBAverageForestMap']
+        SeepTopToSubBAverageIrrigationMap_path = settings_prerun.binding['SeepTopToSubBAverageIrrigationMap']
+        print(lzavin_path)
+        print(avgdis_path)
+        path_out_reference = mk_path_out(os.path.join(out_dir,'longrun_reference{}'.format(dt_sec)))
+        settings_longrun = setoptions(self.settings_files['cold'],
+                                      opts_to_unset=modules_to_unset,
                                       vars_to_set={'StepStart': step_start,
                                                    'StepEnd': step_end,
                                                    'LZAvInflowMap': lzavin_path,
                                                    'PathOut': path_out_reference,
                                                    'AvgDis': avgdis_path,
+                                                   'SeepTopToSubBAverageOtherMap': SeepTopToSubBAverageOtherMap_path,
+                                                   'SeepTopToSubBAverageForestMap': SeepTopToSubBAverageForestMap_path,
+                                                   'SeepTopToSubBAverageIrrigationMap': SeepTopToSubBAverageIrrigationMap_path,
                                                    'ReportSteps': report_steps,
                                                    'DtSec': dt_sec})
         # ** execute
@@ -89,13 +104,17 @@ class TestWarmStart():
         # warm run (1. Cold start)
         run_number = 1
         cold_start_step_end = step_start
-        path_out = mk_path_out('data/LF_ETRS89_UseCase/out/run{}_{}'.format(dt_sec, run_number))
-        settings_coldstart = setoptions(self.settings_files['cold'], opts_to_unset=modules_to_unset,
+        path_out = mk_path_out(os.path.join(out_dir,'run{}_{}'.format(dt_sec, run_number)))
+        settings_coldstart = setoptions(self.settings_files['cold'],
+                                        opts_to_unset=modules_to_unset,
                                         vars_to_set={'StepStart': step_start,
                                                      'StepEnd': cold_start_step_end,
                                                      'LZAvInflowMap': lzavin_path,
                                                      'PathOut': path_out,
                                                      'AvgDis': avgdis_path,
+                                                     'SeepTopToSubBAverageOtherMap': SeepTopToSubBAverageOtherMap_path,
+                                                     'SeepTopToSubBAverageForestMap': SeepTopToSubBAverageForestMap_path,
+                                                     'SeepTopToSubBAverageIrrigationMap': SeepTopToSubBAverageIrrigationMap_path,                                                     
                                                      'ReportSteps': report_steps,
                                                      'DtSec': dt_sec})
         # ** execute
@@ -116,12 +135,13 @@ class TestWarmStart():
         while warm_step_start <= step_limit:
             run_number += 1
             path_init = prev_settings.output_dir
-            path_out = mk_path_out('data/LF_ETRS89_UseCase/out/run{}_{}'.format(dt_sec, run_number))
+            path_out = mk_path_out(os.path.join(out_dir,'run{}_{}'.format(dt_sec, run_number)))
 
-            settings_warmstart = setoptions(self.settings_files['warm'], opts_to_unset=modules_to_unset,
+            settings_warmstart = setoptions(self.settings_files['warm'],
+                                            opts_to_unset=modules_to_unset,
                                             vars_to_set={'StepStart': warm_step_start.strftime('%d/%m/%Y %H:%M'),
                                                          'StepEnd': warm_step_end.strftime('%d/%m/%Y %H:%M'),
-                                                         'LZAvInflowMap': lzavin_path,
+                                                         ######################'LZAvInflowMap': lzavin_path,
                                                          'PathOut': path_out,
                                                          'PathInit': path_init,
                                                          'timestepInit': timestep_init,
@@ -146,9 +166,11 @@ class TestWarmStart():
             warm_step_end = warm_step_start
             timestep_init = prev_settings.step_end_dt.strftime('%d/%m/%Y %H:%M')
 
+    
     def teardown_method(self):
         folders_list = glob.glob(os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/run*')) + \
             glob.glob(os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/longrun_reference*')) + \
             glob.glob(os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/init*'))
         for folder in folders_list:
             shutil.rmtree(folder)
+    

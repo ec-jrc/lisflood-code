@@ -24,7 +24,7 @@ You can use conda environment to easily install dependencies.
 * Create a conda env named "lisflood" and install dependencies:
 
 ```bash
-conda create --name lisflood python=3.7 -c conda-forge
+conda create --name lisflood "python>=3.10,<3.13" -c conda-forge
 conda activate lisflood
 conda install -c conda-forge pcraster gdal
 ```
@@ -51,7 +51,7 @@ git clone --single-branch --branch master https://github.com/ec-jrc/lisflood-cod
 * **Install requirements into a python 3 conda env**
 
 ```bash
-conda create --name lisflood python=3.7 -c conda-forge
+conda create --name lisflood "python>=3.10,<3.13" -c conda-forge
 conda activate lisflood
 conda install -c conda-forge pcraster gdal
 cd lisflood-code
@@ -70,7 +70,7 @@ mkdir tests/data/LF_ETRS89_UseCase/out
 python src/lisf1.py tests/data/LF_ETRS89_UseCase/settings/cold.xml
 ```
 
-If the command above successed without errors, producing dis.nc into tests/data/LF_ETRS89_UseCase/out folder, your lisflood installation was correct.
+If the command above succeeded without errors, producing dis.nc into tests/data/LF_ETRS89_UseCase/out folder, your lisflood installation was correct.
 
 ### Docker image
 
@@ -152,9 +152,9 @@ pytest tests/ -m "slow"
 
 These tests could take 30 minutes or several hours, depending on your machine.
 
-You can find full description and implementation details at [Test documentation](https://ec-jrc.github.io/lisflood-code/4_annex_tests/) page.
+You can find full description and implementation details at [Test documentation](/docs/5_annex_tests/index.md) page.
 
-**Note**: If yuor pull request is about a new feature you may want to integrate in LISFLOOD,
+**Note**: If your pull request is about a new feature you may want to integrate in LISFLOOD,
 ensure to include tests with good coverage for it.
 
 For more info about pytest, see [official website](https://docs.pytest.org/en/latest/).

@@ -19,6 +19,8 @@ from __future__ import absolute_import, print_function
 
 import numpy as np
 
+from lisflood.global_modules.errors import LisfloodError
+
 from ..global_modules.settings import LisSettings, MaskInfo
 from ..global_modules.add1 import loadmap
 from . import HydroModule
@@ -51,20 +53,21 @@ class transmission(HydroModule):
             # downstream area taking into account for transmission loss
             self.var.UpAreaTrans = loadmap('UpAreaTrans')
             # upstream area
-            self.var.UpTrans = np.where(self.var.UpAreaTrans >= TransArea,np.bool8(1),np.bool8(0))
+            self.var.UpTrans = np.where(self.var.UpAreaTrans >= TransArea,np.bool(1),np.bool(0))
             # Downstream taking into accound for transmission loss
             # if upstream area (the total one) is bigger than a threshold us
             # transmission loss
             self.var.TransPower1 = loadmap('TransPower1')
-            self.var.TransPower2 = 1.0 / self.var.TransPower1
+            # self.var.TransPower2 = 1.0 / self.var.TransPower1
             # transmission loss function
             maskinfo = MaskInfo.instance()
             self.var.TransCum = maskinfo.in_zero()
+            self.var.TransLossWBM3 = maskinfo.in_zero()
         # Cumulative transmission loss
         # self.var.TransLossM3Dt = maskinfo.in_zero()
         # substep amount of transmission loss
 
-    def dynamic_inloop(self):
+    def dynamic_inloop(self, NoRoutingExecuted):
         """ dynamic part of the transmission loss routine
            inside the sub time step routing routine
         """
@@ -74,16 +77,42 @@ class transmission(HydroModule):
         # ************************************************************
         settings = LisSettings.instance()
         option = settings.options
-        if option['TransLoss']:
+        maskinfo = MaskInfo.instance()
+        if option['TransLoss']:   
+             
+            if option['SplitRouting']:
+                # flag with an error message and STOP:
+                # TransLoss in combination with SplitRouting leads to mass balance errors. These two options cannot be used at thhe same time, until we fix the mass balance error.
+                msg = "TransLoss cannot be used in combination with SplitRouting"
+                raise LisfloodError(msg)
 
+            #TransOut = np.where(self.var.UpTrans,
+            #            (self.var.ChanQAvgDt ** self.var.TransPower2 - self.var.TransSub)
+            #            ** self.var.TransPower1, self.var.ChanQAvgDt)
             TransOut = np.where(self.var.UpTrans,
-                        (self.var.ChanQ ** self.var.TransPower2 - self.var.TransSub)
-                        ** self.var.TransPower1, self.var.ChanQ)
+                        (self.var.ChanQAvgDt ** (1.0 / self.var.TransPower1) - self.var.TransSub)
+                        ** self.var.TransPower1, self.var.ChanQAvgDt)                                         
             # transmission loss (equation: Rao and Maurer 1996, Water Resources
             # Bulletin Vol 32, No.6)
 
-            self.var.TransLossM3Dt = (self.var.ChanQ - TransOut) * self.var.DtRouting
-            #self.var.TransLossM3Dt = cover((self.var.ChanQ - TransOut) * self.var.DtRouting, scalar(0.0))
+            TransOut = np.where(self.var.TransSub>1e-6,TransOut,self.var.ChanQAvgDt)     
+            self.var.TransLossM3Dt =  np.where((self.var.ChanQAvgDt - TransOut)>0.0, (self.var.ChanQAvgDt - TransOut) * self.var.DtRouting,0.0)
+            #self.var.TransLossM3Dt = cover((self.var.ChanQAvgDt - TransOut) * self.var.DtRouting, scalar(0.0))
             # Loss is Q - transmission outflow
-            self.var.TransCum += self.var.TransLossM3Dt
+            
+            if NoRoutingExecuted == 0:
+             self.var.TransLossWBM3 = maskinfo.in_zero() 
+             self.var.TransLossM3 = maskinfo.in_zero()  # only for reporting
+             self.var.TransLossQAvg = maskinfo.in_zero()  # only for reporting
+             self.var.TransLossQ  = maskinfo.in_zero()  # only for reporting
+             
+            
+            self.var.TransLossWBM3 += self.var.TransLossM3Dt 
             # for mass balance
+            
+            self.var.TransCum += self.var.TransLossM3Dt
+            
+            self.var.TransLossQ += self.var.TransLossM3Dt /  self.var.DtRouting       # only for reporting        
+            if NoRoutingExecuted == (self.var.NoRoutSteps-1): 
+             self.var.TransLossQAvg = self.var.TransLossQ/self.var.NoRoutSteps   # only for reporting
+             self.var.TransLossM3 = self.var.TransLossWBM3      # only for reporting 

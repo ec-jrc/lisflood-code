@@ -36,7 +36,7 @@ class readmeteo(object):
         # initialise xarray readers
         if option['readNetcdfStack']:
             self.forcings = {}
-            for data in ['PrecipitationMaps', 'TavgMaps', 'ET0Maps', 'E0Maps']:
+            for data in ['PrecipitationMaps', 'TavgMaps', 'ET0Maps', 'ES0Maps', 'E0Maps']:
                 self.forcings[data] = xarray_reader(data)
 
 # --------------------------------------------------------------------------
@@ -61,6 +61,7 @@ class readmeteo(object):
             self.var.Precipitation = self.forcings['PrecipitationMaps'][step] * self.var.DtDay * self.var.PrScaling
             self.var.Tavg = self.forcings['TavgMaps'][step]
             self.var.ETRef = self.forcings['ET0Maps'][step] * self.var.DtDay * self.var.CalEvaporation
+            self.var.ESRef = self.forcings['ES0Maps'][step] * self.var.DtDay * self.var.CalEvaporation
             self.var.EWRef =self.forcings['E0Maps'][step] * self.var.DtDay * self.var.CalEvaporation
 
         else:
@@ -71,11 +72,11 @@ class readmeteo(object):
             # average DAILY temperature (even if you are running the model on say an hourly time step) [degrees C]
             self.var.ETRef = readmapsparse(binding['ET0Maps'], self.var.currentTimeStep(), self.var.ETRef) * self.var.DtDay * self.var.CalEvaporation
             # daily reference evapotranspiration (conversion to [mm] per time step)
+            self.var.ESRef = readmapsparse(binding['ES0Maps'], self.var.currentTimeStep(), self.var.ESRef) * self.var.DtDay * self.var.CalEvaporation
             # potential evaporation rate from a bare soil surface (conversion to [mm] per time step)
             self.var.EWRef = readmapsparse(binding['E0Maps'], self.var.currentTimeStep(), self.var.EWRef) * self.var.DtDay * self.var.CalEvaporation
             # potential evaporation rate from water surface (conversion to [mm] per time step)
 
-        self.var.ESRef = (self.var.EWRef + self.var.ETRef)/2
 
         if option['TemperatureInKelvin']:
             self.var.Tavg -= 273.15

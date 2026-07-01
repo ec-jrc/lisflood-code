@@ -1,26 +1,35 @@
 name: Lisflood OS Unit Tests
 
-on: [push]
+# Controls when the workflow will run
+on:
+  push:
+    branches: [ "master", "development" ]
+  pull_request:
+    branches: [ "master", "development" ]
 
 jobs:
   tests:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       max-parallel: 5
+      matrix:
+        python-version: [ "3.10", "3.11", "3.12"]
 
     steps:
-    - uses: actions/checkout@v3
-    - uses: conda-incubator/setup-miniconda@v2
+    - name: Checkout github repo
+      uses: actions/checkout@v4
+    - name: Setup Miniconda
+      uses: conda-incubator/setup-miniconda@v3
       with:
         auto-update-conda: true
-        python-version: 3.7
+        python-version: ${{ matrix.python-version }}
+        miniforge-version: latest
     - name: Conda info
       shell: bash -el {0}
       run: conda info
     - name: Install python and gcc
       shell: bash -el {0}
       run: |
-        conda install -c conda-forge python=3.7
         conda install -c conda-forge gcc=12.1.0
     - name: Install gdal and pcraster
       shell: bash -el {0}
@@ -44,4 +53,4 @@ jobs:
       shell: bash -el {0}
       run: |
         pip install pytest pytest-cov
-        pytest
+        pytest -m "slow or not slow"

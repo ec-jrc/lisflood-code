@@ -9,9 +9,9 @@ with open(version_file, 'r') as f:
     version = f.read().strip()
 
 __version__ = version
-__authors__ = "Ad de Roo, Emiliano Gelati, Peter Burek, Johan van der Knijff, Niko Wanders"
-__date__ = "23/01/2024"
-__copyright__ = "Copyright 2019-2024, European Commission - Joint Research Centre"
-__maintainer__ = "Stefania Grimaldi, Cinzia Mazzetti, Carlo Russo, Damien Decremer, Corentin Carton De Wiart, Valerio Lorini, Ad de Roo"
+__authors__ = "Ad de Roo, Emiliano Gelati, Peter Burek, Johan van der Knijff"
+__date__ = "30/06/2026"
+__copyright__ = "Copyright 2019-2026, European Commission - Joint Research Centre"
+__maintainer__ = "Stefania Grimaldi, Timo Schaffhauser, Carlo Russo, Cinzia Mazzetti, Corentin Carton De Wiart"
 __status__ = "Operation"
 __institution__ = "European Commission DG Joint Research Centre (JRC) - E1, D2 Units"

@@ -230,7 +230,7 @@ class TimeoutputTimeseries(TimeoutputTimeseries):
         if not re.search("\.tss", tail):
             # content,sep,comment = filename.partition("-")
             # filename = content + "Tss" + sep + comment + ".tss"
-            filename = tail + ".tss"
+            filename = filename + ".tss"
 
         # for stochastic add sample directory
         if hasattr(self._userModel, "nrSamples"):
