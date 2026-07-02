@@ -2,7 +2,7 @@
 # docker push jrce1/lisflood
 
 FROM continuumio/miniconda3
-LABEL maintainer="Stefania Grimaldi, Cinzia Mazzetti, Carlo Russo, Valerio Lorini, Ad de Roo"
+LABEL maintainer="Stefania Grimaldi, Timo Schaffhauser, Carlo Russo, Cinzia Mazzetti, Corentin Carton De Wiart"
 
 ENV DEBIAN_FRONTEND=noninteractive
 
