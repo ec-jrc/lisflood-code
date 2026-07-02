@@ -27,3 +27,4 @@ lisflood_model.egg-info
 .vscode/
 *.ipynb
 .ipynb_checkpoints/
+*.diff

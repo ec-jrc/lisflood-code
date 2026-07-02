@@ -20,7 +20,6 @@ class MCTWave:
             dt,                         # computation time step for routing [s]
             river_router,               # class
             mapping_mct,                # MCT pixels mapping
-            CalibPointsIds,             # calibration points pixels ids
         ):
 
         # Process flow direction matrix: downstream and upstream lookups, and routing orders
@@ -39,8 +38,6 @@ class MCTWave:
         self.dt = dt
         self.river_router = river_router
         self.mapping_mct = mapping_mct
-        self.CalibPointsIds = CalibPointsIds
-
 
     def _setMCTRoutingOrders(self):
         """Compute the MCT wave routing order. Pixels are grouped in sets with the same order.
@@ -76,12 +73,14 @@ class MCTWave:
             ChanQ_0,            # -> used to calc q00
             ChanM3_0,           # V00
             SideflowChanMCT,    # sideflow for MCT pixels [m3/s]
+            QInflow_0,          # point inflow at previous step [m3/s]
+            QInflow,            # point inflow at current step [m3/s]
             # THESE ARE USED AS INPUTS AND OUTPUTS
             ChanQ,              # -> in input: used to calc q01; in output: q11 outflow (x+dx) at time t+dt (instant)
             ChanQAvgDt,         # -> in input: used to calculate q0m; in output: q1m outflow (x+dx) at time t+dt (average)
-            PrevCm0,            # Courant number at the end of previous routing step t
-            PrevDm0,            # Reynolds number at the end of previous routing step t
-            ChanM3,             # Channel storage volume. In input: at time t V00; in output: at time t+dt V11
+            PrevCm0,            # Courant number in input: at time t; in output: at time t+dt
+            PrevDm0,            # Reynolds number in input: at time t; in output: at time t+dt
+            ChanM3,             # V11 as output
         ):
 
 
@@ -100,13 +99,14 @@ class MCTWave:
             ChanQ_0,            # -> used to calc q00
             ChanM3_0,           # V00
             SideflowChanMCT,    # sideflow for MCT pixels [m3/s]
+            QInflow_0,          # point inflow at previous step [m3/s]
+            QInflow,            # point inflow at current step [m3/s]
             # THESE ARE USED AS INPUTS AND OUTPUTS
             ChanQ,              # -> in input: used to calc q01; in output: q11 outflow (x+dx) at time t+dt (instant)
             ChanQAvgDt,         # -> in input: used to calculate q0m; in output: q1m outflow (x+dx) at time t+dt (average)
             PrevCm0,            # Courant number in input: at time t; in output: at time t+dt
             PrevDm0,            # Reynolds number in input: at time t; in output: at time t+dt
             ChanM3,             # V11 as output
-            self.CalibPointsIds,# inflow points used by the calibration suite
         )
 
 
@@ -128,13 +128,14 @@ def mct_routing(
     ChanQ_0,                # -> used to calc q00
     ChanM3_0,               # V00
     SideflowChanMCT,        # sideflow for MCT pixels [m3/s]
+    QInflow_0,          # point inflow at previous step [m3/s]
+    QInflow,            # point inflow at current step [m3/s]
     # THESE ARE USED AS INPUTS AND OUTPUTS
     ChanQ,          # -> in input: used to calc q01; in output: q11 outflow (x+dx) at time t+dt (instant)
     ChanQAvgDt,     # -> in input: used to calculate q0m; in output: q1m outflow (x+dx) at time t+dt (average)
     PrevCm0,        # Courant number in input: at time t; in output: at time t+dt
     PrevDm0,        # Reynolds number in input: at time t; in output: at time t+dt
     ChanM3,         # V11 as output
-    CalibPointsIds, # inflow points used by the calibration suite
 ):
     """This function implements Muskingum-Cunge-Todini routing method
     MCT routing is calculated on MCT pixels only but gets inflow from both Kinematic/Split and MCT upstream pixels.
@@ -174,22 +175,16 @@ def mct_routing(
             q0m = 0.0
             q01 = 0.0
 
-            ql = SideflowChanMCT[kinpix]   # ← ql defined BEFORE the loop
-
             for ups_ix in range(num_upstream_pixels[kinpix]):
                 ups_pix = upstream_pixels[ups_ix]   # upstream pixel id
-                #####################################################################################################
-                # This is necessary for EFAS6/GloFAs5 calibration
-                if np.any(CalibPointsIds == ups_pix):
-                    # this upstream pixel is a calibration point - add to sideflow
-                    ql += ChanQAvgDt[ups_pix]   # avoid += 
-                    # Sideflow during step dt including contribution from calibration pixel
-                else:
-                    # not a calibration point - go as usual
-                    q00 += ChanQ_0[ups_pix]  # Inflow (x) to the pixel at previous step t (instant)
-                    q0m += ChanQAvgDt[ups_pix]  # Average inflow (x) to the pixel at previous step t (average)
-                    q01 += ChanQ[ups_pix]  # Inflow (x) at current step t+dt (instant)
-                #####################################################################################################
+                q00 += ChanQ_0[ups_pix]     # Inflow (x) to the pixel at previous step t (instant)
+                q0m += ChanQAvgDt[ups_pix]  # Average inflow (x) to the pixel at previous step t (average)
+                q01 += ChanQ[ups_pix]       # Inflow (x) at current step t+dt (instant)
+
+            # Add point inflow at this pixel (inflow hydrograph) as upstream channel inflow (not ql as formerly)
+            q00 += QInflow_0[kinpix]
+            q01 += QInflow[kinpix]
+            q0m += (QInflow_0[kinpix] + QInflow[kinpix]) / 2.0
 
             # get outflow from the pixel at previous step t
             q10 = ChanQ_0[kinpix]   # Outflow (x+dx) from the pixel at previous step t (instant)
@@ -199,7 +194,7 @@ def mct_routing(
             Cm0 = PrevCm0[kinpix]   # Courant number at the end of previous step t
             Dm0 = PrevDm0[kinpix]   # Reynolds number at the end of previous step t
 
-            # ql = SideflowChanMCT[kinpix]    # Sideflow during step dt
+            ql = SideflowChanMCT[kinpix]    # Sideflow during step dt
 
             # static data
             xpix = ChanLength[kinpix]                   # Channel length

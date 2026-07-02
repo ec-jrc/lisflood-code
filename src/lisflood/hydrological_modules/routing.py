@@ -50,8 +50,7 @@ class routing(HydroModule):
                                 'ChanBottomWMult', 'ChanDepthTMult', 'ChanSMult'],
                         'SplitRouting': ['CrossSection2AreaInitValue', 'PrevSideflowInitValue', 'CalChanMan2'],
                         'dynamicWave': ['ChannelsDynamic'],
-                        'MCTRouting': ['ChannelsMCT', 'ChanGradMaxMCT', 'PrevCmMCTInitValue', 'PrevDmMCTInitValue', 'CalChanMan3'],
-                        'simulateCalibrationPoints': ['CalibrationPoints']}
+                        'MCTRouting': ['ChannelsMCT', 'ChanGradMaxMCT', 'PrevCmMCTInitValue', 'PrevDmMCTInitValue', 'CalChanMan3']}
     module_name = 'Routing'
 
     def __init__(self, routing_variable):
@@ -613,6 +612,7 @@ class routing(HydroModule):
             # self.var.IsChannelKinematicPcr = (self.var.IsChannelPcr == 1) & (self.var.IsChannelMCTPcr == 0)  #pcr
             # self.var.IsChannelKinematic = np.bool8(compressArray(self.var.IsChannelKinematicPcr))   #np
             # # Identify channel pixels where Kinematic wave is used instead of MCT
+            self.var.QInflow_MCT_prev = maskinfo.in_zero()
 
             self.var.LddMCT = lddmask(self.var.LddChan, self.var.IsChannelMCTPcr)  #pcr
             # Ldd for MCT routing
@@ -637,21 +637,7 @@ class routing(HydroModule):
             # Courant numnber (Cm) for MCT at previous time step t0
             PrevDmMCT = loadmap('PrevDmMCTInitValue')
             self.var.PrevDm0 = np.where(PrevDmMCT == -9999, maskinfo.in_zero(), PrevDmMCT) #np
-            # Reynolds number (Dm) for MCT at previous time step t0
-
-            # ************************************************************
-            # ***** CALIBRATION POINTS                            ********
-            # ************************************************************
-            CalibPoints = maskinfo.in_zero()
-            if option['simulateCalibrationPoints']:
-                CalibPoints = loadmap('CalibrationPoints')  # 1D array size all catchment pixels
-                # read location of calibration points
-
-            inAr = np.arange(maskinfo.info.mapC[0], dtype="int32")  # np
-            # Assign a number to each non-missing pixel as cell id, by row starting from 0
-            CalibPointsIds = inAr[CalibPoints > 0]
-            # pixel id of calibration points
-
+            # Reynolds number (Dm) for MCT at previous time step t
 
             # ************************************************************
             # ***** INITIALISE MUSKINGUM-CUNGE-TODINI WAVE ROUTER ********
@@ -676,7 +662,6 @@ class routing(HydroModule):
                 self.var.DtRouting,         # computation time step for routing [s]
                 self.river_router,          # class
                 mapping_mct,                 # MCT pixels mapping
-                CalibPointsIds,                # id of calibrationn points in full LDD
             )
 
 
@@ -840,21 +825,40 @@ class routing(HydroModule):
                 ChanQ_0 = self.var.ChanQ.copy()     # Outflow (x+dx) at time t (end of previous routing step) (instant)  -> used to calc q00
                 ChanM3_0 = self.var.ChanM3.copy()   # Channel storage at time t (end of previous routing step) (instant) V00
 
+                # Build MCT inflow array [m3/s] - inflow hydrographs as point inflow, not lateral flow
+                maskinfo = MaskInfo.instance()
+                QInflow_MCT = maskinfo.in_zero()
+                if option['inflow']:
+                    QInflow_MCT = np.where(self.var.IsChannelMCT,
+                                            self.var.QInDt * self.var.InvDtRouting,
+                                            0.0)
+                    # Remove inflow hydrograph from MCT sideflow - handled as point inflow instead
+                    SideflowChanM3_mct = np.where(self.var.IsChannelMCT,
+                                                SideflowChanM3 - self.var.QInDt,
+                                                SideflowChanM3)
+                else:
+                    SideflowChanM3_mct = SideflowChanM3
+
                 # Grab outflow at the end of step t+dt for Kinematic/Split (all pixels) -> this is used to calc contribution from kin/split pixels to MCT pixels
                 # Put results of Kinematic/Split routing at the end of the routing step dt into MCT points
                 self.var.ChanQ = ChanQ              # -> used to calc q01
                 self.var.ChanM3 = ChanM3
                 self.var.ChanQAvgDt = ChanQAvgDt    # -> used to calc q0m
 
+                QInflow_MCT_0 = self.var.QInflow_MCT_prev.copy()
+                self.var.QInflow_MCT_prev = QInflow_MCT.copy()
+
                 # Sideflow contribution to MCT grid cells expressed in [m3/s]
-                SideflowChanMCT = np.where(self.var.IsChannelMCT, SideflowChanM3 * self.var.InvDtRouting, 0)  #Ql
-                # SideflowChanMCTM3 = np.where(self.var.IsChannelMCT, SideflowChanM3, 0)
+                SideflowChanMCT = np.where(self.var.IsChannelMCT,
+                                            SideflowChanM3_mct * self.var.InvDtRouting, 0)  #Ql -> without upstream Qin from Channel
 
                 # Solve MCT routing and update current state at MCT pixels
                 self.mct_river_router.routing(
                     ChanQ_0,                # -> used to calc q00
                     ChanM3_0,               # V00
                     SideflowChanMCT,        # sideflow for MCT pixels [m3/s]
+                    QInflow_MCT_0,          # point inflow at previous step [m3/s]
+                    QInflow_MCT,            # point inflow at current step [m3/s]
                     # THESE ARE BOTH INPUTS AND OUTPUTS
                     self.var.ChanQ,         # -> in input: used to calc q01; in output: q11 outflow (x+dx) at time t+dt (instant)
                     self.var.ChanQAvgDt,    # -> in input: used to calculate q0m; in output: q1m outflow (x+dx) at time t+dt (average)
