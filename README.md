@@ -1,3 +1,5 @@
+[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.21107672-blue.svg)](https://doi.org/10.5281/zenodo.21107672)
+
 # Lisflood OS
 
 This repository hosts source code of LISFLOOD model.
