@@ -105,21 +105,39 @@ Note: Forest fraction field should be checked for consistency with all other fra
 
 | Map name | File name;type | Units; range | Description |
 | :---| :--- | :--- | :--- |
-|Fraction of irrigated crops      | fracirrigated.nc; <br> Type: Float32          | Units: -;<br> Range: [0-1]         |Irrigated crop (except rice) fraction for each grid-cell; <br>values range from 0 (grid-cell has no irrigated crops) to 1 (grid-cell is fully covered with irrigated crops)|
-
-
-| Source data| Reference/preparation | Temporal coverage | Spatial information |
+| Fraction of irrigated crops | fracirrigated.nc; <br> Type: Float32 | Units: -;<br> Range: [0-1] | Irrigated crop (except rice) fraction for each grid-cell; <br>values range from 0 (grid-cell has no irrigated crops) to 1 (grid-cell is fully covered with irrigated crops) |
+ 
+| Source data | Reference/preparation | Temporal coverage | Spatial information |
 | :---| :--- | :--- | :--- |
-|FAO Global Map of Irrigation Areas v5.0  |[Siebert et al, 2013](https://openknowledge.fao.org/server/api/core/bitstreams/02e5f498-eb5d-4a08-b501-b3e05fdefc57/content)     |2005        |Global, 5arcmin|
-|CORINE Land Cover 2018 CLC2018   |[CLC2018 ](https://land.copernicus.eu/pan-european/corine-land-cover)     |2018        |European, 100 m|
-
-### Methodology
+| European Irrigation Map 2010 (EIM2010) | [Zajac et al., 2022](https://www.sciencedirect.com/science/article/pii/S0378377422000749); data available from the [AGRI4CAST Resources Portal](https://agri4cast.jrc.ec.europa.eu/DataPortal/Index.aspx) | 2010 | European, 10 km |
+| CORINE Land Cover 2018 CLC2018 | [CLC2018](https://land.copernicus.eu/pan-european/corine-land-cover) | 2018 | European, 100 m |
+| FAO Global Map of Irrigation Areas v5.0 (GMIA) | [Siebert et al., 2013](https://openknowledge.fao.org/server/api/core/bitstreams/02e5f498-eb5d-4a08-b501-b3e05fdefc57/content) | 2005 | Global, 5 arcmin |
+| Eurostat irrigated area statistics (validation only) | [ef_poirrig](https://ec.europa.eu/eurostat/databrowser/view/ef_poirrig/default/map?lang=en) | 2010 census | European, NUTS2 regions |
+ 
+### Methodology OLD
 
 To create the fraction of irrigated crops map, multiple data sources can be used, for example when more accurate information could be found regionally compared with a global dataset. We describe here the process when using two datasets.<br>
 For global coverage, the FAO Global Map of Irrigation Areas v5.0 showig the amount of area equipped for irrigation around the year 2005 in percentage of the total area could be used.
 For a regional coverage (here Europe), the '212' - ‘Permanently irrigated land, excluding rice’ value from the CORINE dataset is used (discrete classification where each grid-cell is fully covered with a certain land cover), assigning grid-cells covered with irrigated crops fraction 1.<br>
 The generated fields are merged, with priority given to the high quality dataset (here from CORINE) over its geographical domain (here over the European domain), and the merged field resolution is reduced to the needed resolution, e.g. 1 arc min, with mean() reducer.<br>
 Note: Irrigated crops fraction field should be checked for consistency with all other fractions.
+
+### Methodology
+Note: this is an updated version of the irrigation fraction as described in [Choulga et al., 2024](https://hess.copernicus.org/articles/28/2991/2024/).
+
+Multiple data sources can be used to create the fraction of irrigated crops map, giving priority to more accurate regional information where available over a global dataset. Two workflows are described here: a European workflow based on EIM2010 downscaled with CORINE land cover (used for the European 1 arcmin domain, e.g. EFAS), and a global workflow based on the FAO GMIA v5.0 (used for the global 3 arcmin domain, e.g. GloFAS).
+ 
+In both workflows, the maximum extent available for irrigated crops in each grid-cell is defined as the sum of the current "other" and "irrigated" land-use fractions (i.e. forest, rice, water, and sealed fractions cannot be converted to irrigated land).
+ 
+#### European domain (EIM2010 + CORINE downscaling)
+ 
+EIM2010 (Zajac et al., 2022) provides irrigated areas at 10 km resolution for 14 crop classes, together with the total irrigable area (TIA) and the irrigated area (IA), derived from the 2010 EU agricultural census.
+The crop-specific irrigated areas of the EIM2010 shapefile are summed per 10 km cell for the irrigated area (IA in the Zajac dataset) . Cells with IA = 0 are discarded.
+The IA of each 10 km EIM2010 cell is distributed to the model grid-cells inside it using the CLC2018 agricultural classes as spatial proxy. For each cell, a priority list of CORINE classes is built: class 212 ("Permanently irrigated land") is used first; then the CORINE classes corresponding to the cell's irrigated crop composition, ordered by decreasing irrigated area (arable-land crops (211), grass (231), vineyards (221), fruit trees and citrus (222), olive groves (223)); finally the generic agricultural classes 241, 231, 242, 243 and 244. CORINE area is accumulated within the cell, class by class, until it equals or exceeds the cell's IA; the IA is then distributed over the selected pixels proportionally to their CORINE agricultural area.
+The irrigated area assigned to each model grid-cell is capped at the maximum available extent (fraction of "other" + "irrigated" - as calculated in [Choulga et al., 2024](https://hess.copernicus.org/articles/28/2991/2024/)- and multiplied by the pixel area). Any excess area is redistributed to neighbouring pixels of the same 10 km EIM2010 cell that still have available capacity, so that the cell total is preserved wherever physically possible.
+The resulting field is converted to a per-pixel fraction and merged with the current fracirrigated map by taking, for each grid-cell, the maximum of the two values. This preserves irrigated areas in countries not covered by EIM2010.
+The "other" fraction is recomputed as the residual, fracother = 1 − (fracforest + fracrice + fracwater + fracsealed + fracirrigated). Where this residual would be negative (due to rounding of the new irrigated fraction), the irrigated fraction is reduced accordingly, ensuring that the sum of all fractions equals 1 in every grid-cell. 
+The final data was evaluated against the Eurostat irrigated area statistics ([ef_poirrig](https://ec.europa.eu/eurostat/databrowser/view/ef_poirrig/default/map?lang=en), including irrigated greenhouse areas), by summing the mapped irrigated area (including rice) over NUTS regions and comparing country totals against the reported values.
 
 ### Results (example)
 
@@ -182,6 +200,7 @@ Note: Irrigated rice fraction field should be checked for consistency with all o
 |Fraction of rice|It can be prepared by implementing [this methodology](../4_Static-Maps_land-use#fraction-of-rice-crops)|NA|Global|
 
 ### Methodology
+Note: This map was updated using the new irrigated fraction map. Hence even if the following methodology is generally valid to calculate the "other fraction", the layer was updated using the formula: fracother = 1 − (fracforest + fracrice + fracwater + fracsealed + fracirrigated), as described in the "Fraction of irrigated" crops section
 
 Here the other land cover type map is created based on all other fraction maps required by LISFLOOD model. It should be noted that: i) all fraction maps together (including fraction of other land cover type) should sum up to 1 in each grid-cell, and ii) consistency check for all fractions must be done because data come from different sources and it can happen that fractions summed can result to more than 1. <br>
 The following procedures are recommended to check consistency between fraction maps. All fractions are summed up to compute the other land cover type fraction map. If the fraction sum is less than 1, then the other land cover type fraction is calculated as 1 minus all fraction sum, else other land cover type fraction is 0. For cases when the sum is greater than 1, a correction for forest, irrigated crops, rice, and sealed surface fractions is computed: <br>
