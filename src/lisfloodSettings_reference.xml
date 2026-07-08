@@ -211,6 +211,17 @@ You can use builtin path variables in this template and reference to other paths
         </comment>
 		</textvar>
 
+    <textvar name="OutputPacking" value="False">
+    <comment>
+    The option "OutputPacking" enables CF-convention scale_factor/add_offset packing
+    of output maps into int16 (2 bytes per value instead of 4 or 8).
+        - "False" (default): write raw floating-point values (dtype from OutputMapsDataType)
+        - "True": pack into signed 16-bit integers using per-variable scale/offset
+                  Readers automatically unpack using: value = packed * scale_factor + add_offset
+    Note: State/end maps used for warm starts are NEVER packed (always full precision).
+    </comment>
+    </textvar>
+
         <comment>
             **************************************************************
             PARALLELISATION WITH NUMBA (USED IN ROUTING AND SOILLOOP)
@@ -1839,6 +1850,7 @@ You can use builtin path variables in this template and reference to other paths
 
       <textvar name="OutputMapsChunks" value="$(OutputMapsChunks)"/>
       <textvar name="OutputMapsDataType" value="$(OutputMapsDataType)"/>
+      <textvar name="OutputPacking" value="$(OutputPacking)"/>
       <textvar name="NetCDFTimeChunks" value="$(NetCDFTimeChunks)"/>
       <textvar name="MapsCaching" value="$(MapsCaching)"/>
 

@@ -95,7 +95,7 @@ class NetcdfWriter(Writer):
         if self.data is not None:
             nf1 = write_netcdf_header(self.settings, self.map_name, self.map_path, self.var.DtDay,
                                     self.map_key, self.map_value.output_var, self.map_value.unit,
-                                    start_date, rep_steps, self.frequency)
+                                    start_date, rep_steps, self.frequency, map_value=self.map_value)
 
             map_np = uncompress_array(self.data)
 
@@ -151,15 +151,35 @@ class NetcdfStepsWriter(NetcdfWriter):
                 if self.step_range[0] == 0:
                     nf1 = write_netcdf_header(self.settings, self.map_name, self.map_path, self.var.DtDay,
                                             self.map_key, self.map_value.output_var, self.map_value.unit,
-                                            start_date, rep_steps, self.frequency)
+                                            start_date, rep_steps, self.frequency, map_value=self.map_value)
                 else:
                     nf1 = iterOpenNetcdf(self.map_path, "", 'a', format='NETCDF4')
 
                 for step, data in zip(self.step_range, self.data_steps):
-                    nf1.variables[self.map_name][step, :, :] = uncompress_array(data)
+                    map_np = uncompress_array(data)
+                    nc_var = nf1.variables[self.map_name]       # same as before, just stored in a variable
+                    if nc_var.dtype == np.int16:
+                        scale = nc_var.scale_factor
+                        offset = nc_var.add_offset
+                        packed = np.round((map_np - offset) / scale).astype(np.float64)
+                        # --- WARNING CHECK ---
+                        clipped = ((packed < -32767) | (packed > 32767)) & (map_np != -9999)
+                        if clipped.any():
+                            vmin = offset + scale * (-32767)
+                            vmax = offset + scale * 32767
+                            warnings.warn(LisfloodWarning(
+                                f"OutputPacking: {clipped.sum()} values in '{self.map_name}' outside "
+                                f"packing range [{vmin:.4g}, {vmax:.4g}] and will be clipped."
+                            ))                       
+                        packed = np.clip(packed, -32767, 32767)
+                        packed[map_np == -9999] = -32768
+                        nc_var.set_auto_maskandscale(False)
+                        nc_var[step, :, :] = packed.astype(np.int16)
+                    else:
+                        nc_var[step, :, :] = map_np 
 
                 nf1.close()
-
+                
                 # clear lists for next chunk
                 self.step_range.clear()
                 self.data_steps.clear()
