@@ -113,14 +113,6 @@ Note: Forest fraction field should be checked for consistency with all other fra
 | CORINE Land Cover 2018 CLC2018 | [CLC2018](https://land.copernicus.eu/pan-european/corine-land-cover) | 2018 | European, 100 m |
 | FAO Global Map of Irrigation Areas v5.0 (GMIA) | [Siebert et al., 2013](https://openknowledge.fao.org/server/api/core/bitstreams/02e5f498-eb5d-4a08-b501-b3e05fdefc57/content) | 2005 | Global, 5 arcmin |
 | Eurostat irrigated area statistics (validation only) | [ef_poirrig](https://ec.europa.eu/eurostat/databrowser/view/ef_poirrig/default/map?lang=en) | 2010 census | European, NUTS2 regions |
- 
-### Methodology OLD
-
-To create the fraction of irrigated crops map, multiple data sources can be used, for example when more accurate information could be found regionally compared with a global dataset. We describe here the process when using two datasets.<br>
-For global coverage, the FAO Global Map of Irrigation Areas v5.0 showig the amount of area equipped for irrigation around the year 2005 in percentage of the total area could be used.
-For a regional coverage (here Europe), the '212' - ‘Permanently irrigated land, excluding rice’ value from the CORINE dataset is used (discrete classification where each grid-cell is fully covered with a certain land cover), assigning grid-cells covered with irrigated crops fraction 1.<br>
-The generated fields are merged, with priority given to the high quality dataset (here from CORINE) over its geographical domain (here over the European domain), and the merged field resolution is reduced to the needed resolution, e.g. 1 arc min, with mean() reducer.<br>
-Note: Irrigated crops fraction field should be checked for consistency with all other fractions.
 
 ### Methodology
 Note: this is an updated version of the irrigation fraction as described in [Choulga et al., 2024](https://hess.copernicus.org/articles/28/2991/2024/).
@@ -138,6 +130,13 @@ The irrigated area assigned to each model grid-cell is capped at the maximum ava
 The resulting field is converted to a per-pixel fraction and merged with the current fracirrigated map by taking, for each grid-cell, the maximum of the two values. This preserves irrigated areas in countries not covered by EIM2010.
 The "other" fraction is recomputed as the residual, fracother = 1 − (fracforest + fracrice + fracwater + fracsealed + fracirrigated). Where this residual would be negative (due to rounding of the new irrigated fraction), the irrigated fraction is reduced accordingly, ensuring that the sum of all fractions equals 1 in every grid-cell. 
 The final data was evaluated against the Eurostat irrigated area statistics ([ef_poirrig](https://ec.europa.eu/eurostat/databrowser/view/ef_poirrig/default/map?lang=en), including irrigated greenhouse areas), by summing the mapped irrigated area (including rice) over NUTS regions and comparing country totals against the reported values.
+
+#### Global Domamin
+The global workflow (used for the global 3 arcmin domain, e.g. GloFAS) is based on the FAO Global Map of Irrigation Areas v5.0 (Siebert et al., 2013), provided at 5 arcmin resolution. Two GMIA layers are used: the area equipped for irrigation (AEI) in hectares per grid-cell (gmia_v5_aei_ha), and the area actually irrigated expressed as a percentage of the area equipped for irrigation (gmia_v5_aai_pct_aei).
+The area actually irrigated in each 5 arcmin cell is obtained by scaling the equipped area by the actually-irrigated percentage, AAI [ha] = AEI × (AAI% / 100). This is divided by the grid-cell area (converted from m² to hectares) to give the fraction of the cell that is actually irrigated: fracirrigated = (AEI × AAI% / 100) / (cell_area / 10000). By construction this fraction lies in [0, 1]; cells with no equipped area are set to 0.
+The resulting field is interpolated from the 5 arcmin FAO grid onto the model grid (3 arcmin) by bilinear interpolation, and any negative or missing values produced by the interpolation are set to 0.
+As in the European workflow, the irrigated fraction assigned to each grid-cell is capped at the maximum available extent, defined as the sum of the current "other" and "irrigated" fractions (forest, rice, water and sealed fractions cannot be converted to irrigated land). Where the interpolated irrigated fraction exceeds this maximum, it is set to the maximum, and the new irrigated fraction is rounded to three decimals.
+The "other" fraction is then recomputed as the residual, fracother = 1 − (fracsealed + fracwater + fracforest + fracrice + fracirrigated). Where this residual would be negative (because the sum of the fixed fractions plus the new irrigated fraction exceeds 1), the irrigated fraction is reduced by the amount of the overshoot so that the residual becomes zero and all fractions sum to 1. Any remaining negative values in the irrigated and other fractions are set to 0.
 
 ### Results (example)
 
