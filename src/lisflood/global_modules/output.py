@@ -18,6 +18,7 @@ import os
 import numpy as np
 from pcraster import ifthen, catchmenttotal, mapmaximum
 import sys
+import warnings
 
 from .zusatz import TimeoutputTimeseries
 from .add1 import decompress, valuecell, loadmap, compressArray
