@@ -155,14 +155,18 @@ class NetcdfStepsWriter(NetcdfWriter):
                 else:
                     nf1 = iterOpenNetcdf(self.map_path, "", 'a', format='NETCDF4')
 
+                nc_var = nf1.variables[self.map_name]
+                nc_var.set_auto_maskandscale(False)
+                is_packed = nc_var.dtype == np.int16
+                if is_packed:
+                    nc_var.set_auto_maskandscale(False)
+                    scale = nc_var.scale_factor
+                    offset = nc_var.add_offset
+
                 for step, data in zip(self.step_range, self.data_steps):
                     map_np = uncompress_array(data)
-                    nc_var = nf1.variables[self.map_name]       # same as before, just stored in a variable
-                    if nc_var.dtype == np.int16:
-                        scale = nc_var.scale_factor
-                        offset = nc_var.add_offset
+                    if is_packed:
                         packed = np.round((map_np - offset) / scale).astype(np.float64)
-                        # --- WARNING CHECK ---
                         clipped = ((packed < -32767) | (packed > 32767)) & (map_np != -9999)
                         if clipped.any():
                             vmin = offset + scale * (-32767)
@@ -170,17 +174,15 @@ class NetcdfStepsWriter(NetcdfWriter):
                             warnings.warn(LisfloodWarning(
                                 f"OutputPacking: {clipped.sum()} values in '{self.map_name}' outside "
                                 f"packing range [{vmin:.4g}, {vmax:.4g}] and will be clipped."
-                            ))                       
+                            ))
                         packed = np.clip(packed, -32767, 32767)
                         packed[map_np == -9999] = -32768
-                        nc_var.set_auto_maskandscale(False)
                         nc_var[step, :, :] = packed.astype(np.int16)
                     else:
-                        nc_var[step, :, :] = map_np 
+                        nc_var[step, :, :] = map_np
 
                 nf1.close()
-                
-                # clear lists for next chunk
+
                 self.step_range.clear()
                 self.data_steps.clear()
             else:
