@@ -26,6 +26,13 @@ from .netcdf import write_netcdf_header, iterOpenNetcdf, nanCheckMap, uncompress
 from .errors import LisfloodFileError, LisfloodWarning
 from .settings import inttodate, CDFFlags, LisSettings
 
+# ------------------------------------------------------------------------
+# Packing constants for int16 CF scale/offset encoding
+# ------------------------------------------------------------------------
+_INT16_INFO = np.iinfo(np.int16)
+PACK_FILL = np.int16(_INT16_INFO.min)      # -32768
+PACK_MIN = _INT16_INFO.min + 1             # -32767
+PACK_MAX = _INT16_INFO.max                 #  32767
 
 # ------------------------------------------------------------------------
 # Writer classes
@@ -176,8 +183,8 @@ class NetcdfStepsWriter(NetcdfWriter):
                                 f"OutputPacking: {clipped.sum()} values in '{self.map_name}' outside "
                                 f"packing range [{vmin:.4g}, {vmax:.4g}] and will be clipped."
                             ))
-                        packed = np.clip(packed, -32767, 32767)
-                        packed[map_np == -9999] = -32768
+                        packed = np.clip(packed, PACK_MIN, PACK_MAX)
+                        packed[map_np == -9999] = PACK_FILL
                         nc_var[step, :, :] = packed.astype(np.int16)
                     else:
                         nc_var[step, :, :] = map_np
