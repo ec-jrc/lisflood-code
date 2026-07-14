@@ -25,14 +25,15 @@ from .add1 import decompress, valuecell, loadmap, compressArray
 from .netcdf import write_netcdf_header, iterOpenNetcdf, nanCheckMap, uncompress_array
 from .errors import LisfloodFileError, LisfloodWarning
 from .settings import inttodate, CDFFlags, LisSettings
+from netCDF4 import default_fillvals
+
 
 # ------------------------------------------------------------------------
 # Packing constants for int16 CF scale/offset encoding
 # ------------------------------------------------------------------------
-_INT16_INFO = np.iinfo(np.int16)
-PACK_FILL = np.int16(_INT16_INFO.min)      # -32768
-PACK_MIN = _INT16_INFO.min + 1             # -32767
-PACK_MAX = _INT16_INFO.max                 #  32767
+PACK_FILL = np.int16(default_fillvals['i2'])      # -32767
+PACK_MIN = PACK_FILL + 1                          # -32766
+PACK_MAX = np.iinfo(np.int16).max                 #  32767
 
 # ------------------------------------------------------------------------
 # Writer classes
@@ -170,6 +171,7 @@ class NetcdfStepsWriter(NetcdfWriter):
                     nc_var.set_auto_maskandscale(False)
                     scale = nc_var.scale_factor
                     offset = nc_var.add_offset
+                    nodata_mask = MaskInfo.instance().info.mask
 
                 for step, data in zip(self.step_range, self.data_steps):
                     map_np = uncompress_array(data)
@@ -184,7 +186,7 @@ class NetcdfStepsWriter(NetcdfWriter):
                                 f"packing range [{vmin:.4g}, {vmax:.4g}] and will be clipped."
                             ))
                         packed = np.clip(packed, PACK_MIN, PACK_MAX)
-                        packed[map_np == -9999] = PACK_FILL
+                        packed[nodata_mask] = PACK_FILL
                         nc_var[step, :, :] = packed.astype(np.int16)
                     else:
                         nc_var[step, :, :] = map_np
