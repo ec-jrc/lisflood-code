@@ -24,7 +24,7 @@ from .zusatz import TimeoutputTimeseries
 from .add1 import decompress, valuecell, loadmap, compressArray
 from .netcdf import write_netcdf_header, iterOpenNetcdf, nanCheckMap, uncompress_array
 from .errors import LisfloodFileError, LisfloodWarning
-from .settings import inttodate, CDFFlags, LisSettings
+from .settings import inttodate, CDFFlags, LisSettings, MaskInfo
 from netCDF4 import default_fillvals
 
 
