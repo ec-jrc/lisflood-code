@@ -581,7 +581,7 @@ def write_netcdf_header(settings,
                        and getattr(map_value, 'add_offset', None) is not None)
         if packing_enabled and has_packing:
             value = nf1.createVariable(var_name, 'i2', ('time', dim_lat_y, dim_lon_x),
-                                       zlib=True, fill_value=np.int16(-32768),
+                                       zlib=True, fill_value=default_fillvals['i2'],
                                        chunksizes=(1, nrow, ncol))
             value.scale_factor = np.float64(map_value.scale_factor)
             value.add_offset = np.float64(map_value.add_offset)
