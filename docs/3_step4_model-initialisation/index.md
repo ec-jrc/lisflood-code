@@ -479,7 +479,7 @@ Prerun(c) uses the intermediate outputs of prerun(b) and returns the outputs for
 Therefore, Prerun(c) generates all the files to be used for the LISFLOOD Cold Start.
 These outputs are:
 
-    | Output file | Description |
+| Output file | Description |
 |-------------|-------------|
 | lzavin.nc | Average percolation rate from upper to lower groundwater zone |
 | SeepTopToSubBAverageOtherMap.nc | Average flux from layer 2 to layer 3 — other fraction |
