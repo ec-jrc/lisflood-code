@@ -413,6 +413,72 @@ class MapOutputAll(MapOutput):
     def _rep_steps(self):
         return self._rep_steps_val
 
+
+class MapOutputAggregated(MapOutput):
+    """Handles temporal aggregation (monthly/yearly mean/sum) for a variable."""
+
+    def __init__(self, var, map_key, map_value, frequency, operation):
+        out_type = 'all'  # accumulates every timestep
+        settings = LisSettings.instance()
+        binding = settings.binding
+        self._start_date_val = var.CalendarDayStart
+        self._rep_steps_val = range(binding['StepStartInt'], binding['StepEndInt'] + 1)
+        
+        self._operation = operation  # 'mean' or 'sum'
+        self._accum_buffer = None
+        self._accum_count = 0
+
+        super().__init__(var, out_type, frequency, map_key, map_value)
+        
+        # Force immediate write for aggregated outputs (one slice per period)
+        if hasattr(self, 'writer') and hasattr(self.writer, 'chunks'):
+            self.writer.chunks = 1
+            
+    def _output_checkpoint(self):
+        """Always True — we accumulate every timestep."""
+        return True
+
+    @property
+    def _start_date(self):
+        return self._start_date_val
+
+    @property
+    def _rep_steps(self):
+        return self._rep_steps_val
+
+    def stage(self):
+        """Accumulate instead of storing instantaneous values."""
+        self.step = self.var.currentTimeStep()
+        map_np = self.writer._extract_map()
+
+        if self._accum_buffer is None:
+            self._accum_buffer = np.zeros_like(map_np)
+
+        self._accum_buffer += map_np
+        self._accum_count += 1
+
+    def write(self):
+        """Write only at period boundary (month-end or year-end)."""
+        cdfflags = CDFFlags.instance()
+        is_boundary = cdfflags.frequency_check(self.var, self.frequency)
+
+        if is_boundary and self._accum_buffer is not None:
+            # Finalize
+            if self._operation == 'mean':
+                result = self._accum_buffer / self._accum_count
+            else:  # sum
+                result = self._accum_buffer
+
+            # Stage the aggregated result into the writer
+            self.writer.data_steps.append(result)
+            cdf = CDFFlags.instance()
+            self.writer.step_range.append(cdf[self.writer.flag])
+            self.writer.write(self._start_date, self._rep_steps)
+
+            # Reset accumulator
+            self._accum_buffer = None
+            self._accum_count = 0
+
 # ------------------------------------------------------------------------
 # Output factory
 # ------------------------------------------------------------------------
@@ -460,11 +526,38 @@ class OutputMapsFactory():
             if out.is_valid():
                 outputs.append(out)
 
-        check_duplicates = []
+        # --- Temporal aggregation outputs ---
+        binding = settings.binding
+        aggregation_configs = {
+            'OutputMonthlyMean': ('monthly', 'mean'),
+            'OutputMonthlySum': ('monthly', 'sum'),
+            'OutputYearlyMean': ('yearly', 'mean'),
+            'OutputYearlySum': ('yearly', 'sum'),
+        }
+        aggregated_vars = set()  # track which vars are aggregated
+
+        reportedmaps = settings.options['reportedmaps']
+        for setting_key, (frequency, operation) in aggregation_configs.items():
+            var_list = binding.get(setting_key, '').split(';')
+            for var_name in var_list:
+                var_name = var_name.strip()
+                if var_name and var_name in reportedmaps:
+                    map_value = reportedmaps[var_name]
+                    out = MapOutputAggregated(var, var_name, map_value, frequency, operation)
+                    if out.is_valid():
+                        outputs.append(out)
+                        aggregated_vars.add(var_name)
+
+        # Remove normal outputs for variables that are now aggregated
         outputs_clean = []
+        check_duplicates = []
         for out in outputs:
+            # Skip normal Maps/All output if variable is aggregated
+            if hasattr(out, 'map_key') and out.map_key in aggregated_vars:
+                if not isinstance(out, (MapOutputEnd, MapOutputAggregated)):
+                    continue
             if out.map_path in check_duplicates:
-                print(f'Warning! Output map {out.map_path} is duplicated, check list of outputs')
+                print(f'Warning! Output map {out.map_path} is duplicated')
             else:
                 check_duplicates.append(out.map_path)
                 outputs_clean.append(out)

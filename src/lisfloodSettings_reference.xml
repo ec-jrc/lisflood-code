@@ -355,6 +355,33 @@ You can use builtin path variables in this template and reference to other paths
         </comment>
         </textvar>
 
+        <textvar name="OutputMonthlyMean" value="">
+        <comment>
+        Semicolon-separated list of variable names to output as monthly mean.
+        Variables listed here are excluded from normal ReportSteps output.
+        Example: "DischargeMaps;Theta1Maps;UZMaps"
+        Leave empty to disable.
+        </comment>
+        </textvar>
+
+        <textvar name="OutputMonthlySum" value=""/>
+        <comment>
+        See OutputMonthlyMean
+        </comment>
+        </textvar>
+
+        <textvar name="OutputYearlyMean" value=""/>
+        <comment>
+        See OutputMonthlyMean
+        </comment>
+        </textvar>
+
+        <textvar name="OutputYearlySum" value=""/>
+        <comment>
+        See OutputMonthlyMean
+        </comment>
+        </textvar>
+
     </group>
 
     <group>
@@ -1926,7 +1953,26 @@ You can use builtin path variables in this template and reference to other paths
       Number of days used for internal spin-up (fluxes computations during prerun)
       </comment>
       </textvar>
-      
+
+      <textvar name="OutputMonthlyMean" value="$(OutputMonthlyMean)"/>
+      <comment>
+      Semicolon-separated list of variable names to output as monthly mean.
+      Variables listed here are excluded from normal ReportSteps output.
+      Example: "DischargeMaps;Theta1Maps;UZMaps"
+      Leave empty to disable.
+      </comment>
+      <textvar name="OutputMonthlySum" value="$(OutputMonthlySum)"/>
+      <comment>
+      See OutputMonthlyMean
+      </comment>
+      <textvar name="OutputYearlyMean" value="$(OutputYearlyMean)"/>
+      <comment>
+      See OutputMonthlyMean
+      </comment>
+      <textvar name="OutputYearlySum" value="$(OutputYearlySum)"/>
+      <comment>
+      See OutputMonthlyMean
+      </comment>
       </group>
 
       <group>

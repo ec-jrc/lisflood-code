@@ -2,7 +2,7 @@ from collections import namedtuple
 
 TimeSeries = namedtuple('TimeSeries', 'name, output_var, where, repoption, restrictoption, operation')
 ReportedMap = namedtuple('ReportedMap', 'name, output_var, unit, end, steps, all, restrictoption, monthly, yearly, scale_factor, add_offset')
-ReportedMap.__new__.__defaults__ = (None, None) # sets scale and offset per default to None and as optionally
+ReportedMap.__new__.__defaults__ = (None, None)  # scale_factor, add_offset
 
 default_options = {'EnKF': False,
                    'InitLisflood': False,
