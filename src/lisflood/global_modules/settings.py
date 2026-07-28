@@ -841,8 +841,6 @@ class LisfloodRunInfo(Warning):
         msg += "\t[X] The simulation output as specified in the settings file can be found in {}\n".format(out_dir)
         msg += "\t[X] Activated modules: {}\n".format(activated_options)
         msg += "\t[X] Report options: {}\n".format(activated_rep)
-        msg += "\t[X] Activated modules: {}\n".format(activated_options)
-        msg += "\t[X] Report options: {}\n".format(activated_rep)
         # Packing and aggregation info
         binding = settings.binding
         if binding.get('OutputPacking', 'False') == 'True':
