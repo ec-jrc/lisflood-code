@@ -417,6 +417,11 @@ class MapOutputAll(MapOutput):
 class MapOutputAggregated(MapOutput):
     """Handles temporal aggregation (monthly/yearly mean/sum) for a variable."""
 
+    def write(self):
+        cdfflags = CDFFlags.instance()
+        is_boundary = cdfflags.frequency_check(self.var, self.frequency)
+        print(f"AGG WRITE CHECK: step={self.var.currentTimeStep()}, is_boundary={is_boundary}, accum_count={self._accum_count}, buffer_exists={self._accum_buffer is not None}")
+
     def __init__(self, var, map_key, map_value, frequency, operation):
         out_type = 'all'  # accumulates every timestep
         settings = LisSettings.instance()
@@ -555,7 +560,6 @@ class OutputMapsFactory():
             # Skip normal Maps/All output if variable is aggregated
             if hasattr(out, 'map_key') and out.map_key in aggregated_vars:
                 if not isinstance(out, (MapOutputEnd, MapOutputAggregated)):
-                    print(f"DEBUG EXCLUDING: {out.map_key} (type={type(out).__name__})")
                     continue
             if out.map_path in check_duplicates:
                 print(f'Warning! Output map {out.map_path} is duplicated')
