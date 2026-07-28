@@ -1961,18 +1961,26 @@ You can use builtin path variables in this template and reference to other paths
       Example: "DischargeMaps;Theta1Maps;UZMaps"
       Leave empty to disable.
       </comment>
+      
+      </textvar>
       <textvar name="OutputMonthlySum" value="$(OutputMonthlySum)"/>
       <comment>
       See OutputMonthlyMean
       </comment>
+      </textvar>
+
       <textvar name="OutputYearlyMean" value="$(OutputYearlyMean)"/>
       <comment>
       See OutputMonthlyMean
       </comment>
+      </textvar>
+
       <textvar name="OutputYearlySum" value="$(OutputYearlySum)"/>
       <comment>
       See OutputMonthlyMean
       </comment>
+      </textvar>
+
       </group>
 
       <group>
