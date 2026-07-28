@@ -547,7 +547,6 @@ class OutputMapsFactory():
                     if out.is_valid():
                         outputs.append(out)
                         aggregated_vars.add(var_name)
-        print(f"DEBUG aggregated_vars: {aggregated_vars}")
 
         # Remove normal outputs for variables that are now aggregated
         outputs_clean = []
@@ -556,6 +555,7 @@ class OutputMapsFactory():
             # Skip normal Maps/All output if variable is aggregated
             if hasattr(out, 'map_key') and out.map_key in aggregated_vars:
                 if not isinstance(out, (MapOutputEnd, MapOutputAggregated)):
+                    print(f"DEBUG EXCLUDING: {out.map_key} (type={type(out).__name__})")
                     continue
             if out.map_path in check_duplicates:
                 print(f'Warning! Output map {out.map_path} is duplicated')
