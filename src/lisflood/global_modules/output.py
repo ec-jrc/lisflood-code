@@ -15,6 +15,7 @@ See the Licence for the specific language governing permissions and limitations 
 
 """
 import os
+import datetime
 import numpy as np
 from pcraster import ifthen, catchmenttotal, mapmaximum
 import sys
@@ -427,6 +428,7 @@ class MapOutputAggregated(MapOutput):
         self._operation = operation  # 'mean' or 'sum'
         self._accum_buffer = None
         self._accum_count = 0
+        self._write_step = 0  # own step counter for NetCDF time dimension
 
         super().__init__(var, out_type, frequency, map_key, map_value)
         
@@ -459,9 +461,14 @@ class MapOutputAggregated(MapOutput):
 
     def write(self):
         """Write only at period boundary (month-end or year-end)."""
-        cdfflags = CDFFlags.instance()
-        is_boundary = cdfflags.frequency_check(self.var, self.frequency)
-        print(f"AGG WRITE CHECK: step={self.var.currentTimeStep()}, is_boundary={is_boundary}, accum_count={self._accum_count}, buffer_exists={self._accum_buffer is not None}")
+        current_date = self.var.CalendarDate
+        next_date = current_date + datetime.timedelta(days=self.var.DtDay)
+        if self.frequency == 'monthly':
+            is_boundary = current_date.month != next_date.month
+        elif self.frequency == 'yearly':
+            is_boundary = current_date.year != next_date.year
+        else:
+            is_boundary = True
 
         if is_boundary and self._accum_buffer is not None:
             # Finalize
@@ -472,11 +479,11 @@ class MapOutputAggregated(MapOutput):
 
             # Stage the aggregated result into the writer
             self.writer.data_steps.append(result)
-            cdf = CDFFlags.instance()
-            self.writer.step_range.append(cdf[self.writer.flag])
+            self.writer.step_range.append(self._write_step)
             self.writer.write(self._start_date, self._rep_steps)
 
-            # Reset accumulator
+            # Increment own step counter and reset accumulator
+            self._write_step += 1
             self._accum_buffer = None
             self._accum_count = 0
 
@@ -564,7 +571,6 @@ class OutputMapsFactory():
                 outputs_clean.append(out)
 
         self.output_maps = outputs_clean
-        print(f"DEBUG FINAL outputs: {[(type(o).__name__, getattr(o, 'map_key', '?')) for o in self.output_maps]}")
 
     def write(self):
         # synchronous approach, no real need to stage and then write
