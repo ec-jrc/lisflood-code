@@ -430,7 +430,11 @@ class MapOutputAggregated(MapOutput):
         self._accum_count = 0
         self._write_step = 0  # own step counter for NetCDF time dimension
 
-        super().__init__(var, out_type, frequency, map_key, map_value)
+        # Disable int16 packing for aggregated outputs — scale/offset ranges
+        # are calibrated for daily values and don't apply to monthly/yearly aggregates
+        map_value_no_pack = map_value._replace(scale_factor=None, add_offset=None)
+
+        super().__init__(var, out_type, frequency, map_key, map_value_no_pack)
         
         # Force immediate write for aggregated outputs (one slice per period)
         if hasattr(self, 'writer') and hasattr(self.writer, 'chunks'):
