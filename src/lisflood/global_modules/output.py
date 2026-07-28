@@ -568,6 +568,7 @@ class OutputMapsFactory():
                 outputs_clean.append(out)
 
         self.output_maps = outputs_clean
+        print(f"DEBUG FINAL outputs: {[(type(o).__name__, getattr(o, 'map_key', '?')) for o in self.output_maps]}")
 
     def write(self):
         # synchronous approach, no real need to stage and then write
