@@ -547,6 +547,7 @@ class OutputMapsFactory():
                     if out.is_valid():
                         outputs.append(out)
                         aggregated_vars.add(var_name)
+        print(f"DEBUG aggregated_vars: {aggregated_vars}")
 
         # Remove normal outputs for variables that are now aggregated
         outputs_clean = []
