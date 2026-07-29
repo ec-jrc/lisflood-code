@@ -165,7 +165,6 @@ You can use builtin path variables in this template and reference to other paths
       <setoption choice="0" name="repTotalAbs"/>
       <setoption choice="0" name="repTotalWUse"/>
       <setoption choice="0" name="repWIndex"/>
-      <setoption choice="0" name="repTotalWaterStorageMaps"/>
 
       <setoption choice="1" name="repTWSMaps"/>
       <setoption choice="1" name="repStorageMaps"/>
@@ -3735,12 +3734,6 @@ You can use builtin path variables in this template and reference to other paths
       <textvar name="LZMaps" value="$(PathOut)/lz">
       <comment>
       Reported storage in lower response box [mm]
-      </comment>
-      </textvar>
-
-      <textvar name="TotalWaterStorageMaps" value="$(PathOut)/tws">
-      <comment>
-      Reported total water storage [mm]
       </comment>
       </textvar>
 

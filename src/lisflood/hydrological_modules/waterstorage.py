@@ -17,12 +17,12 @@ See the Licence for the specific language governing permissions and limitations 
 from __future__ import absolute_import, print_function
 
 import warnings
-warnings.formatwarning = lambda msg, args, *kwargs: f'{msg}\n'
+# warnings.formatwarning = lambda msg, args, *kwargs: f'{msg}\n'
 
 import numpy as np
 from ..global_modules.add1 import loadmap
 from ..global_modules.settings import LisSettings, MaskInfo
-from ..global_modules.errors import LisfloodError, LisfloodWarning
+from ..global_modules.errors import LisfloodWarning
 from . import HydroModule
 
 
@@ -42,8 +42,8 @@ class waterstorage(HydroModule):
     def __init__(self, waterstorage_variable):
         self.var = waterstorage_variable
 
-    # --------------------------------------------------------------------------
-    # --------------------------------------------------------------------------
+# --------------------------------------------------------------------------
+# --------------------------------------------------------------------------
 
     def initial(self):
         """ initial part of the water storage module
@@ -79,9 +79,31 @@ class waterstorage(HydroModule):
                 if self.var.ReservoirSitesCC.size != number_of_reservoirIDs:
                     warnings.warn(LisfloodWarning('Number of reservoir IDs in map ReservoirExtent ('+str(number_of_reservoirIDs)+') not equal to number of reservoir sites defined in map ReservoirSites ('+str(self.var.ReservoirSitesCC.size)+').'))
 
+            # Precompute lake extent masks and areas (static, don't change during simulation)
+            self.var.lake_extent_masks = {}    # dict: lake_id -> pixel indices
+            self.var.lake_extent_areas = {}    # dict: lake_id -> total grid area [m2]
+            if option['simulateLakes']:
+                lake_extent = self.var.LakeDistribution
+                for n in np.unique(lake_extent[~np.isnan(lake_extent)]).astype(int):
+                    if n != 0:
+                        mask = np.nonzero(lake_extent == n)
+                        self.var.lake_extent_masks[n] = mask
+                        self.var.lake_extent_areas[n] = np.nansum(self.var.PixelArea[mask])
+
+            # Precompute reservoir extent masks and areas (static)
+            self.var.reservoir_extent_masks = {}
+            self.var.reservoir_extent_areas = {}
+            if option['simulateReservoirs']:
+                reservoir_extent = self.var.ReservoirDistribution
+                for n in np.unique(reservoir_extent[~np.isnan(reservoir_extent)]).astype(int):
+                    if n != 0:
+                        mask = np.nonzero(reservoir_extent == n)
+                        self.var.reservoir_extent_masks[n] = mask
+                        self.var.reservoir_extent_areas[n] = np.nansum(self.var.PixelArea[mask])
+
 
 # --------------------------------------------------------------------------
-# -------------------------------------------------------------------------
+# --------------------------------------------------------------------------
 
     def dynamic(self):
         """ dynamic part of the water storage module
@@ -120,34 +142,28 @@ class waterstorage(HydroModule):
                 tws_lakeM3 = self.var.LakeLevel * LakeArea
 
                 # [m3] -> [m] distribute lake/river/oflow over lake areas
-                lake_extent = self.var.LakeDistribution
-                for n in np.unique(lake_extent[~np.isnan(lake_extent)]).astype(int):
-                    if n != 0:
-                        lake_mask = np.nonzero(lake_extent == n)
-                        grid_area_lake = np.nansum(self.var.PixelArea[lake_mask])
-                        tws_lakeM[lake_mask] = tws_lakeM3[self.var.LakeSitesC2==n] / grid_area_lake
-                        tws_riverM[lake_mask] = np.nansum(tws_riverM3[lake_mask]) / grid_area_lake
-                        tws_oflowM[lake_mask] = np.nansum(tws_oflowM3[lake_mask]) / grid_area_lake
+                for n, lake_mask in self.var.lake_extent_masks.items():
+                    grid_area_lake = self.var.lake_extent_areas[n]
+                    tws_lakeM[lake_mask] = tws_lakeM3[self.var.LakeSitesC2==n] / grid_area_lake
+                    tws_riverM[lake_mask] = np.nansum(tws_riverM3[lake_mask]) / grid_area_lake
+                    tws_oflowM[lake_mask] = np.nansum(tws_oflowM3[lake_mask]) / grid_area_lake[lake_mask] = np.nansum(tws_oflowM3[lake_mask]) / grid_area_lake
             
             # reservoir water storage [m3]
             tws_reservoirM3 = np.zeros(tws_riverM3.shape, dtype=np.float32)
             # reservoir water storage [m]
             tws_reservoirM = np.zeros(tws_riverM.shape, dtype=np.float32)
 
-            if option['simulateReservoirs']:  
+            if option['simulateReservoirs']:
                 TotalReservoirStorage = maskinfo.in_zero()
                 np.put(TotalReservoirStorage, self.var.ReservoirIndex, self.var.TotalReservoirStorageM3CC)
                 tws_reservoirM3 = self.var.ReservoirFill * TotalReservoirStorage
 
                 # [m3] -> [m] distribute reservoir/river/oflow over reservoir areas
-                reservoir_extent = self.var.ReservoirDistribution
-                for n in np.unique(reservoir_extent[~np.isnan(reservoir_extent)]).astype(int):
-                    if n != 0:
-                        reservoir_mask = np.nonzero(reservoir_extent == n)
-                        grid_area_reservoir = np.nansum(self.var.PixelArea[reservoir_mask])
-                        tws_reservoirM[reservoir_mask] = tws_reservoirM3[self.var.ReservoirSitesC==n] / grid_area_reservoir
-                        tws_riverM[reservoir_mask] = np.nansum(tws_riverM3[reservoir_mask]) / grid_area_reservoir
-                        tws_oflowM[reservoir_mask] = np.nansum(tws_oflowM3[reservoir_mask]) / grid_area_reservoir
+                for n, reservoir_mask in self.var.reservoir_extent_masks.items():
+                    grid_area_reservoir = self.var.reservoir_extent_areas[n]
+                    tws_reservoirM[reservoir_mask] = tws_reservoirM3[self.var.ReservoirSitesC==n] / grid_area_reservoir
+                    tws_riverM[reservoir_mask] = np.nansum(tws_riverM3[reservoir_mask]) / grid_area_reservoir
+                    tws_oflowM[reservoir_mask] = np.nansum(tws_oflowM3[reservoir_mask]) / grid_area_reservoir
          
             # soil water storage [mm] -> [m]
             tws_soil1M  = ((self.var.Theta1a[0] * self.var.SoilDepth1a[0]) * self.var.OtherFraction     +

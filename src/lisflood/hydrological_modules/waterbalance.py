@@ -141,11 +141,7 @@ class waterbalance(object):
         option = settings.options        
         maskinfo = MaskInfo.instance()
 
-        if (not(option['InitLisflood'])) and option['repTotalWaterStorageMaps']:
-            ChannelStoredM3 = self.storage_channel(option)
-            HillslopeStoredM3 = self.storage_hillslope()
-            self.var.TotalWaterStorageMM = (ChannelStoredM3 + HillslopeStoredM3) * self.var.M3toMM
-        
+
         if (not(option['InitLisflood'])) and option['repMBTs']:
 
             # ************************************************************
