@@ -41,7 +41,7 @@
         <setoption choice="0" name="repsimulateReservoirs"/>
         <setoption choice="0" name="repSnowMaps"/>
         <setoption choice="0" name="repPFMaps"/>
-        <setoption choice="0" name="repTotalWaterStorageMaps"/>
+        <!-- <setoption choice="0" name="repTotalWaterStorageMaps"/> -->
 
         <setoption choice="0" name="repLZMaps"/>
 
@@ -65,6 +65,9 @@
 
         <setoption choice="0" name="repWIndex"/>
 
+        <setoption choice="0" name="repTWSMaps"/>
+        <setoption choice="0" name="repStorageMaps"/>
+        <setoption choice="0" name="repFlowMomMaps"/>
 
     </lfoptions>
 
@@ -240,8 +243,9 @@ The option "numCPUs_parallelNumba" may take the following values:
               </comment>
             </textvar>   
             
-            <textvar name="ReportSteps" value="6000..9999">
+            <textvar name="ReportSteps" value="1..99999">
                 <comment>
+                    was 6000..9999
                     Time steps at which to write model state maps (i.e. only
                     those maps that would be needed to define initial conditions
                     for succeeding model run)
@@ -1521,6 +1525,30 @@ The option "numCPUs_parallelNumba" may take the following values:
                 </textvar>
 
             </group>
+			
+			<!-- begin added by GFZ -->
+            <group>
+
+                <comment>
+                    **************************************************************
+                    TWS OPTION
+                    **************************************************************
+                </comment>
+
+                <textvar name="LakeExtent" value="$(PathRoot)/maps/lake_extent.nc">
+                    <comment>
+                        Map containing the lake ID for each pixel of its extent
+                    </comment>
+                </textvar>
+
+                <textvar name="ReservoirExtent" value="$(PathRoot)/maps/res_extent.nc">
+                    <comment>
+                        Map containing the reservoir ID for each pixel of its extent
+                    </comment>
+                </textvar>
+
+            </group>
+            <!-- end added by GFZ -->
 
 
             <group>
@@ -3418,11 +3446,68 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                     </comment>
                 </textvar>
 
-                <textvar name="TotalWaterStorageMaps" value="$(PathOut)/tws">
+                <!-- <textvar name="TotalWaterStorageMaps" value="$(PathOut)/tws"> -->
+                    <!-- <comment> -->
+                        <!-- Reported total water storage [mm] -->
+                    <!-- </comment> -->
+                <!-- </textvar> -->
+				
+                <textvar name="TWSMaps" value="$(PathOut)/TWS">
                     <comment>
-                        Reported total water storage [mm]
+                        Reported total water storage storage [m]
+                        added by GFZ
                     </comment>
                 </textvar>
+
+                <textvar name="LakeSMaps" value="$(PathOut)/Lakestor">
+                    <comment>
+                        Reported lake and reservoir storage [m]
+                        added by GFZ
+                    </comment>
+                </textvar>
+
+                <textvar name="RiverSMaps" value="$(PathOut)/Riverstor">
+                    <comment>
+                        Reported river storage [m]
+                        added by GFZ
+                    </comment>
+                </textvar>
+
+                <textvar name="SoilSMaps" value="$(PathOut)/Soilstor">
+                    <comment>
+                        Reported soil storage [m]
+                        added by GFZ
+                    </comment>
+                </textvar>
+
+                <textvar name="GWSMaps" value="$(PathOut)/GWstor">
+                    <comment>
+                        Reported groundwater storage [m]
+                        added by GFZ
+                    </comment>
+                </textvar>
+
+                <textvar name="SnowSMaps" value="$(PathOut)/Snowstor">
+                    <comment>
+                        Reported snow storage [m]
+                        added by GFZ
+                    </comment>
+                </textvar>
+
+                <textvar name="CumSMaps" value="$(PathOut)/Cumstor">
+                    <comment>
+                        Reported cumulative interception and depression storage storage [m]
+                        added by GFZ
+                    </comment>
+                </textvar>
+
+                <textvar name="FlowMomMaps" value="$(PathOut)/FlowMomentum">
+                    <comment>
+                        Reported riverflow momentum for HAM motion term [kgm/s]
+                        added by GFZ
+                    </comment>
+                </textvar>
+				
 
                 <textvar name="DSLRMaps" value="$(PathOut)/dslr">
                     <comment>
@@ -5233,6 +5318,30 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                 </textvar>
 
             </group>
+			
+			<!-- begin added by GFZ -->
+            <group>
+
+                <comment>
+                    **************************************************************
+                    TWS OPTION
+                    **************************************************************
+                </comment>
+
+                <textvar name="LakeExtent" value="$(LakeExtent)">
+                    <comment>
+                        Map containing the lake ID for each pixel of its extent
+                    </comment>
+                </textvar>
+
+                <textvar name="ReservoirExtent" value="$(ReservoirExtent)">
+                    <comment>
+                        Map containing the reservoir ID for each pixel of its extent
+                    </comment>
+                </textvar>
+
+            </group>
+            <!-- end added by GFZ -->
 
 
             <group>

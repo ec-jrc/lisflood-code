@@ -64,7 +64,7 @@ class TestCatch(ETRS89TestCase):
                               opts_to_set=('repDischargeTs', 'repDischargeMaps',
                                             "repThetaMaps", "repThetaForestMaps",
                                             "repThetaIrrigationMaps", "repE2O2",
-                                            "repTotalWaterStorageMaps") + self.modules_to_set,
+                                            "repTWSMaps", "repStorageMaps", "repFlowMomMaps") + self.modules_to_set,
                               opts_to_unset=opts_to_unset,
                               vars_to_set={'StepStart': step_start,
                                            'StepEnd': step_end,
@@ -72,7 +72,7 @@ class TestCatch(ETRS89TestCase):
                                            'PathOut': output_dir})
         mk_path_out(output_dir)
         lisfloodexe(settings)
-
+        
     def test_output_daily(self):
         self.run('86400', '02/01/2016 06:00', '02/07/2016 06:00')
         self.compare_reference('dis', check='map', step_length='86400')
@@ -85,7 +85,14 @@ class TestCatch(ETRS89TestCase):
         self.compare_reference('tha', check='map', step_length='86400')
         self.compare_reference('thc', check='map', step_length='86400')
         self.compare_reference('lz', check='map', step_length='86400')
-        self.compare_reference('tws', check='map', step_length='86400')
+        self.compare_reference('TWS', check='map', step_length='86400')
+        self.compare_reference('GWstor', check='map', step_length='86400')
+        self.compare_reference('Soilstor', check='map', step_length='86400')
+        self.compare_reference('Riverstor', check='map', step_length='86400')
+        self.compare_reference('Lakestor', check='map', step_length='86400')
+        self.compare_reference('Snowstor', check='map', step_length='86400')
+        self.compare_reference('Cumstor', check='map', step_length='86400')
+        self.compare_reference('FlowMomentum', check='map', step_length='86400')
 
     def test_output_6h(self):
         self.run('21600', '02/01/2016 06:00', '02/07/2016 06:00')
@@ -99,7 +106,14 @@ class TestCatch(ETRS89TestCase):
         self.compare_reference('tha', check='map', step_length='21600')
         self.compare_reference('thc', check='map', step_length='21600')
         self.compare_reference('lz', check='map', step_length='21600')
-        self.compare_reference('tws', check='map', step_length='21600')
+        self.compare_reference('TWS', check='map', step_length='21600')
+        self.compare_reference('GWstor', check='map', step_length='21600')
+        self.compare_reference('Soilstor', check='map', step_length='21600')
+        self.compare_reference('Riverstor', check='map', step_length='21600')
+        self.compare_reference('Lakestor', check='map', step_length='21600')
+        self.compare_reference('Snowstor', check='map', step_length='21600')
+        self.compare_reference('Cumstor', check='map', step_length='21600')
+        self.compare_reference('FlowMomentum', check='map', step_length='21600')
 
     def test_initvars(self):
         output_dir = mk_path_out(os.path.join(self.case_dir, 'out/test_results_initvars'))

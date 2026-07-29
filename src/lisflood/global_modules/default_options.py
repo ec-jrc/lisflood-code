@@ -1608,3 +1608,12 @@ default_options = {'EnKF': False,
                    'wateruseRegion': False,
                    'writeNetcdf': False,
                    'writeNetcdfStack': False}
+
+default_options['reportedmaps'].update({'TWSMaps'     : ReportedMap(name='TWSMaps',    output_var='twsstor',       unit='m',     end=[], steps=['repTWSMaps'],                      all=[], restrictoption=[], monthly=False, yearly=False)})
+default_options['reportedmaps'].update({'LakeSMaps'   : ReportedMap(name='LakeSMaps',  output_var='lakestor',      unit='m3',    end=[], steps=['repStorageMaps'],                  all=[], restrictoption=[], monthly=False, yearly=False)})
+default_options['reportedmaps'].update({'RiverSMaps'  : ReportedMap(name='RiverSMaps', output_var='riverstor',     unit='m3',    end=[], steps=['repStorageMaps','repFlowMomMaps'], all=[], restrictoption=[], monthly=False, yearly=False)})
+default_options['reportedmaps'].update({'SoilSMaps'   : ReportedMap(name='SoilSMaps',  output_var='soilstor',      unit='m',     end=[], steps=['repStorageMaps'],                  all=[], restrictoption=[], monthly=False, yearly=False)})
+default_options['reportedmaps'].update({'GWSMaps'     : ReportedMap(name='GWSMaps',    output_var='gwstor',        unit='m',     end=[], steps=['repStorageMaps'],                  all=[], restrictoption=[], monthly=False, yearly=False)})
+default_options['reportedmaps'].update({'SnowSMaps'   : ReportedMap(name='SnowSMaps',  output_var='snowstor',      unit='m',     end=[], steps=['repStorageMaps'],                  all=[], restrictoption=[], monthly=False, yearly=False)})
+default_options['reportedmaps'].update({'CumSMaps '   : ReportedMap(name='CumSMaps',   output_var='cumstor',       unit='m',     end=[], steps=['repStorageMaps'],                  all=[], restrictoption=[], monthly=False, yearly=False)})
+default_options['reportedmaps'].update({'FlowMomMaps' : ReportedMap(name='FlowMomMaps', output_var='FlowMomentum', unit='kgm/s', end=[], steps=['repFlowMomMaps'],                  all=[], restrictoption=[], monthly=False, yearly=False)})
