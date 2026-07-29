@@ -1962,7 +1962,7 @@ You can use builtin path variables in this template and reference to other paths
       Leave empty to disable.
       </comment>
       </textvar>
-      
+
       <textvar name="OutputMonthlySum" value="$(OutputMonthlySum)">
       <comment>
       See OutputMonthlyMean
@@ -5226,8 +5226,8 @@ You can use builtin path variables in this template and reference to other paths
       <comment>
       **************************************************************
       TABLES WITH TOPSOIL SOIL PHYSICAL PARAMETERS (HYPRES)
-      Each parameter is defined for upper (1a and 1b) and
-      lower (2) soil layers
+      Each parameter is defined for upper (1 and 2) and
+      lower (3) soil layers
       **************************************************************
       </comment>
 
@@ -5331,7 +5331,7 @@ You can use builtin path variables in this template and reference to other paths
       <comment>
       **************************************************************
       TABLES WITH TOPSOIL SOIL PHYSICAL PARAMETERS (HYPRES) for Forest
-      Each parameter is defined for 1a and 1b
+      Each parameter is defined for 1 and 2
       Normal parameter is taken for the lower soil layer
       **************************************************************
       </comment>
