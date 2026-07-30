@@ -33,10 +33,7 @@ class waterstorage(HydroModule):
     # ************************************************************
     # Sum up water storage in individual compartements 
     """
-    input_files_keys = {
-        'repTWSMaps': ['LakeExtent','ReservoirExtent'],
-        'repStorageMaps': ['LakeExtent','ReservoirExtent']
-    }
+    input_files_keys = {'all': []}
     module_name = 'WaterStorage'
 
     def __init__(self, waterstorage_variable):

@@ -5497,6 +5497,14 @@ You can use builtin path variables in this template and reference to other paths
               reservoir routine switches to flood control mode.
             </comment>
         </textvar>
+      
+        <textvar name="ReservoirExtent" value="$(PathMaps)/res_extent.nc">
+            <comment>
+            Map containing the reservoir ID for each pixel of its spatial extent.
+            Required when simulateReservoirs is active and repTWSMaps or repStorageMaps is enabled.
+            </comment>
+        </textvar>
+      
       </group>
 
       <group>
@@ -5542,6 +5550,14 @@ You can use builtin path variables in this template and reference to other paths
           is set to -9999
           </comment>
         </textvar>
+
+        <textvar name="LakeExtent" value="$(PathMaps)/lake_extent.nc">
+          <comment>
+          Map containing the lake ID for each pixel of its spatial extent.
+          Required when simulateLakes is active and repTWSMaps or repStorageMaps is enabled.
+          </comment>
+        </textvar>
+
 
         <comment>
         **************************************************************

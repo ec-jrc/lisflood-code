@@ -4,6 +4,8 @@ Lakes and reservoirs can be defined as a significant volume of water, which occu
 
 The modelling of lakes and reservoirs requires three maps and a set of txt files.
 
+For the generation of total water storage output (option `repTWSMaps`), two additional maps are needed to distribute the storage mass over the extent of the lakes/reservoirs (see [Lake and reservoir extent maps](#lake-and-reservoir-extent-maps) below).
+
  
 ## Lake mask map
 
@@ -147,3 +149,31 @@ Lake maps and tables of the European 1arcmin domain and global 3arcmin domain ar
 Lakes included in the European 1arcmin domain had a minimum volume of 10 hm3, a minimum lake surface area of 5 km2, a minimum upstream catchment area of 50 km2.
 Lakes included in the global 3arcmin domain had a minimum volume of 100 hm3, a minimum lake surface area of 50 km2, a minimum upstream catchment area of 250 km2.
 Lake outlet width was generally measured with GIS tools; lake average inflow was computed using OS LISFLOOD CEMS EFAS and CEMS GloFAS discharge reanalysis (GloFASv4 reanalysis for GloFASv5 tables; EFASv5 naturalized flow for EFASv6 tables).
+
+
+## Lake and reservoir extent maps
+
+The lake and reservoir modules output lake/reservoir levels at the outlet locations (output files `lakeh.nc` for locations in `lakes.nc` and `res.nc`). For the generation of total water storage maps (option `repTWSMaps`), these levels have to be converted to mass changes and spatially distributed over the extent of the lakes/reservoirs. For this, two additional maps are needed that contain the lake/reservoir ID for each pixel belonging to the area covered by the respective lake/reservoir.
+
+### General map information
+
+| Map/table name | File name; type | Units; range | Description |
+| :--- | :--- | :--- | :--- |
+| Lake extent | lake_extent.nc; <br>Type: Float32 | Units: -; <br>Range: integer ID number to identify each lake | Lake ID (ID of outflow location) for each pixel belonging to the surface extent of the lake |
+| Reservoir extent | res_extent.nc; <br>Type: Float32 | Units: -; <br>Range: integer ID number to identify each reservoir | Reservoir ID (ID of outflow location) for each pixel belonging to the surface extent of the reservoir |
+
+### Methodology
+
+The creation of the lake extent map requires:
+
+1. Lake outflow location with unique lake identifier (e.g., `lakes.nc`)
+2. External local or global dataset containing the vectorized polygons of the lake outlines (e.g., in shapefile format), such as [HydroLAKES](https://www.hydrosheds.org/products/hydrolakes), as well as the surface area of the lake
+3. Table relating the unique lake identifier of OS LISFLOOD to the lake identifier in the external data set
+
+The creation of a raster file fulfilling the criteria for a consistent lake extent map (e.g., lakes with an area smaller than the grid cell size must not be neglected; lakes assigned to only one grid cell must not be overwritten by other lakes) is not straight forward, thus a standard rasterize command is not appropriate. A dedicated script should loop over each lake defined in the outlet location file and perform the following actions:
+
+- If the total lake area is too small in comparison to the grid cell area (e.g., smaller than 5% of the cell area), the outlet location pixel is set as the lake extent.
+- Otherwise, the corresponding polygon from the shapefile is intersected with the grid cells and each grid cell containing a fraction of the lake extent is checked. If the lake covers a sufficiently large fraction (e.g., more than 7%) of the grid cell, it is assigned the lake ID, else it is neglected.
+- If no intersection fraction is large enough (e.g., if the lake is very thin but long), the outlet location pixel is set as the lake extent.
+
+The creation of the reservoir extent map can be done analogously to the lake extent map using the same methodology.
