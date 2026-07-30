@@ -58,31 +58,17 @@ class waterstorage(HydroModule):
         # load water map and separate into maps of lake and reservoir distribution
         if (not(option['InitLisflood'])) and (option['repStorageMaps'] or option['repTWSMaps']):
 
-            self.var.LakeDistribution = loadmap('LakeExtent')
-            self.var.ReservoirDistribution = loadmap('ReservoirExtent')
-
-            # check number of IDs in lake/res extent map with number of sites
-            lake_ids = np.unique(self.var.LakeDistribution[~np.isnan(self.var.LakeDistribution)]).astype(int)
-            number_of_lakeIDs = len(lake_ids[lake_ids != 0]) # ID must not be zero
-            res_ids = np.unique(self.var.ReservoirDistribution[~np.isnan(self.var.ReservoirDistribution)]).astype(int)
-            number_of_reservoirIDs = len(res_ids[res_ids != 0]) # ID must not be zero
-
-            if (number_of_lakeIDs == 0):
-                warnings.warn(LisfloodWarning('LakeExtent map contains no lake IDs. Please check consistency between LakeExtent map and model domain.'))
-            if (number_of_reservoirIDs == 0):
-                warnings.warn(LisfloodWarning('ReservoirExtent map contains no reservoir IDs. Please check consistency between ReservoirExtent map and model domain.'))
-
-            if option['simulateLakes']:
-                if self.var.LakeSitesCC.size != number_of_lakeIDs:
-                    warnings.warn(LisfloodWarning('Number of lake IDs in map LakeExtent ('+str(number_of_lakeIDs)+') not equal to number of lake sites defined in map LakeSites ('+str(self.var.LakeSitesCC.size)+').'))
-            if option['simulateReservoirs']:
-                if self.var.ReservoirSitesCC.size != number_of_reservoirIDs:
-                    warnings.warn(LisfloodWarning('Number of reservoir IDs in map ReservoirExtent ('+str(number_of_reservoirIDs)+') not equal to number of reservoir sites defined in map ReservoirSites ('+str(self.var.ReservoirSitesCC.size)+').'))
-
             # Precompute lake extent masks and areas (static, don't change during simulation)
             self.var.lake_extent_masks = {}    # dict: lake_id -> pixel indices
             self.var.lake_extent_areas = {}    # dict: lake_id -> total grid area [m2]
             if option['simulateLakes']:
+                self.var.LakeDistribution = loadmap('LakeExtent')
+                lake_ids = np.unique(self.var.LakeDistribution[~np.isnan(self.var.LakeDistribution)]).astype(int)
+                number_of_lakeIDs = len(lake_ids[lake_ids != 0])
+                if (number_of_lakeIDs == 0):
+                    warnings.warn(LisfloodWarning('LakeExtent map contains no lake IDs. Please check consistency between LakeExtent map and model domain.'))
+                if self.var.LakeSitesCC.size != number_of_lakeIDs:
+                    warnings.warn(LisfloodWarning('Number of lake IDs in map LakeExtent ('+str(number_of_lakeIDs)+') not equal to number of lake sites defined in map LakeSites ('+str(self.var.LakeSitesCC.size)+').'))
                 lake_extent = self.var.LakeDistribution
                 for n in np.unique(lake_extent[~np.isnan(lake_extent)]).astype(int):
                     if n != 0:
@@ -94,6 +80,13 @@ class waterstorage(HydroModule):
             self.var.reservoir_extent_masks = {}
             self.var.reservoir_extent_areas = {}
             if option['simulateReservoirs']:
+                self.var.ReservoirDistribution = loadmap('ReservoirExtent')
+                res_ids = np.unique(self.var.ReservoirDistribution[~np.isnan(self.var.ReservoirDistribution)]).astype(int)
+                number_of_reservoirIDs = len(res_ids[res_ids != 0])
+                if (number_of_reservoirIDs == 0):
+                    warnings.warn(LisfloodWarning('ReservoirExtent map contains no reservoir IDs. Please check consistency between ReservoirExtent map and model domain.'))
+                if self.var.ReservoirSitesCC.size != number_of_reservoirIDs:
+                    warnings.warn(LisfloodWarning('Number of reservoir IDs in map ReservoirExtent ('+str(number_of_reservoirIDs)+') not equal to number of reservoir sites defined in map ReservoirSites ('+str(self.var.ReservoirSitesCC.size)+').'))
                 reservoir_extent = self.var.ReservoirDistribution
                 for n in np.unique(reservoir_extent[~np.isnan(reservoir_extent)]).astype(int):
                     if n != 0:
