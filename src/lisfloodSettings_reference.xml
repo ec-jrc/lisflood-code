@@ -3286,7 +3286,7 @@ You can use builtin path variables in this template and reference to other paths
       </comment>
       </textvar>
 
-      <textvar name="TWSMaps" value="$(PathOut)/TWS">
+      <textvar name="TWSMaps" value="$(PathOut)/tws">
       <comment>
       Reported total water storage storage [m]
       </comment>
@@ -4581,6 +4581,11 @@ You can use builtin path variables in this template and reference to other paths
       </textvar>
       </group>
 
+      <textvar name="TWSAvUpsTS" value="$(PathOut)/twsUps.tss">
+      <comment>
+      Reported total water storage upstream average at gauges [m]
+      </comment>
+      </textvar>
 
       <group>
       <comment>
