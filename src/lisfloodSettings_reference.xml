@@ -3289,56 +3289,48 @@ You can use builtin path variables in this template and reference to other paths
       <textvar name="TWSMaps" value="$(PathOut)/TWS">
       <comment>
       Reported total water storage storage [m]
-      added by GFZ
       </comment>
       </textvar>
 
       <textvar name="LakeSMaps" value="$(PathOut)/Lakestor">
       <comment>
       Reported lake and reservoir storage [m]
-      added by GFZ
       </comment>
       </textvar>
 
       <textvar name="RiverSMaps" value="$(PathOut)/Riverstor">
       <comment>
       Reported river storage [m]
-      added by GFZ
       </comment>
       </textvar>
 
       <textvar name="SoilSMaps" value="$(PathOut)/Soilstor">
       <comment>
       Reported soil storage [m]
-      added by GFZ
       </comment>
       </textvar>
 
       <textvar name="GWSMaps" value="$(PathOut)/GWstor">
       <comment>
       Reported groundwater storage [m]
-      added by GFZ
       </comment>
       </textvar>
 
       <textvar name="SnowSMaps" value="$(PathOut)/Snowstor">
       <comment>
       Reported snow storage [m]
-      added by GFZ
       </comment>
       </textvar>
 
       <textvar name="CumSMaps" value="$(PathOut)/Cumstor">
       <comment>
-      Reported cumulative interception and depression storage storage [m]
-      added by GFZ
+      Reported cumulative interception and depression storage [m]
       </comment>
       </textvar>
 
       <textvar name="FlowMomMaps" value="$(PathOut)/FlowMomentum">
       <comment>
       Reported riverflow momentum for HAM motion term [kgm/s]
-      added by GFZ
       </comment>
       </textvar>
       </group>

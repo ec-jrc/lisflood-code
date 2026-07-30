@@ -146,7 +146,7 @@ class waterstorage(HydroModule):
                     grid_area_lake = self.var.lake_extent_areas[n]
                     tws_lakeM[lake_mask] = tws_lakeM3[self.var.LakeSitesC2==n] / grid_area_lake
                     tws_riverM[lake_mask] = np.nansum(tws_riverM3[lake_mask]) / grid_area_lake
-                    tws_oflowM[lake_mask] = np.nansum(tws_oflowM3[lake_mask]) / grid_area_lake[lake_mask] = np.nansum(tws_oflowM3[lake_mask]) / grid_area_lake
+                    tws_oflowM[lake_mask] = np.nansum(tws_oflowM3[lake_mask]) / grid_area_lake
             
             # reservoir water storage [m3]
             tws_reservoirM3 = np.zeros(tws_riverM3.shape, dtype=np.float32)
