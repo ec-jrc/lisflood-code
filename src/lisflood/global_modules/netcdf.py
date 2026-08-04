@@ -574,20 +574,23 @@ def write_netcdf_header(settings,
         nf1.variables["time"][:] = date2num(time_stamps, time.units, time.calendar)
 
         # value = nf1.createVariable(var_name, dtype, ('time', dim_lat_y, dim_lon_x), zlib=True, fill_value=-9999, chunksizes=(1, nrow, ncol))
-        # NEW packing:
+        # Packing: use int16 with CF scale/offset if enabled and variable has packing metadata
         packing_enabled = binding.get('OutputPacking', 'False') == 'True'
         has_packing = (map_value is not None
                        and getattr(map_value, 'scale_factor', None) is not None
                        and getattr(map_value, 'add_offset', None) is not None)
         if packing_enabled and has_packing:
-            value = nf1.createVariable(var_name, 'i2', ('time', dim_lat_y, dim_lon_x),
-                                       zlib=True, fill_value=default_fillvals['i2'],
-                                       chunksizes=(1, nrow, ncol))
+            var_dtype = 'i2'
+            var_fill = default_fillvals['i2']
+        else:
+            var_dtype = dtype
+            var_fill = -9999
+
+        value = nf1.createVariable(var_name, var_dtype, ('time', dim_lat_y, dim_lon_x),
+                                   zlib=True, fill_value=var_fill, chunksizes=(1, nrow, ncol))
+        if packing_enabled and has_packing:
             value.scale_factor = np.float64(map_value.scale_factor)
             value.add_offset = np.float64(map_value.add_offset)
-        else:
-            value = nf1.createVariable(var_name, dtype, ('time', dim_lat_y, dim_lon_x),
-                                       zlib=True, fill_value=-9999, chunksizes=(1, nrow, ncol))
 
     else:
         value = nf1.createVariable(var_name, dtype, (dim_lat_y, dim_lon_x), zlib=True, fill_value=-9999)

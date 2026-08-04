@@ -429,9 +429,13 @@ class MapOutputAggregated(MapOutput):
         self._accum_count = 0
         self._write_step = 0  # own step counter for NetCDF time dimension
 
-        # Disable int16 packing for aggregated outputs — scale/offset ranges
-        # are calibrated for daily values and don't apply to monthly/yearly aggregates
-        map_value_no_pack = map_value._replace(scale_factor=None, add_offset=None)
+        # Disable int16 packing for sum aggregates — monthly/yearly sums can exceed
+        # the int16 range calibrated for daily values. Mean aggregates stay within
+        # the same value range as daily output, so packing remains valid.
+        if operation == 'sum':
+            map_value_no_pack = map_value._replace(scale_factor=None, add_offset=None)
+        else:
+            map_value_no_pack = map_value
 
         super().__init__(var, out_type, frequency, map_key, map_value_no_pack)
         
