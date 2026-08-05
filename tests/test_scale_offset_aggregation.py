@@ -535,11 +535,11 @@ class TestTemporalAggregation:
 
         assert checked_count > 0, f"No aggregated variables were checked for {frequency} {operation}"
 
-    def test_aggregation_disables_packing(self):
-        """Aggregated outputs should NOT use int16 packing even when OutputPacking=True.
+    def test_aggregation_sum_disables_packing(self):
+        """Sum-aggregated outputs should NOT use int16 packing even when OutputPacking=True.
 
-        This is because scale/offset ranges are calibrated for instantaneous daily values,
-        not for accumulated monthly/yearly values.
+        Monthly/yearly sums can exceed the int16 range calibrated for daily values,
+        so packing is disabled for sum aggregates.
         """
         out_dir = self._run_lisflood(
             'test_agg_no_packing',
@@ -548,8 +548,8 @@ class TestTemporalAggregation:
             opts_to_set=['repThetaMaps', 'repE2O2'],
             new_vars={
                 'OutputPacking': 'True',
-                'OutputMonthlyMean': 'Theta1Maps',
-                'OutputMonthlySum': '',
+                'OutputMonthlyMean': '',
+                'OutputMonthlySum': 'Theta1Maps',
                 'OutputYearlyMean': '',
                 'OutputYearlySum': '',
             },
@@ -559,11 +559,11 @@ class TestTemporalAggregation:
         assert os.path.exists(nc_path), f"Output not found: {nc_path}"
 
         info = get_nc_packing_info(nc_path)
-        # Aggregated outputs should remain float (not packed)
+        # Sum-aggregated outputs should remain float (not packed)
         assert info['dtype'] != np.dtype('int16'), \
-            "Aggregated output should NOT be int16-packed"
+            "Sum-aggregated output should NOT be int16-packed"
         assert info['scale_factor'] is None, \
-            "Aggregated output should not have scale_factor attribute"
+            "Sum-aggregated output should not have scale_factor attribute"
 
     def teardown_method(self):
         """Clean up output directories."""
