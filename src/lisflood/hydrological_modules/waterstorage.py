@@ -67,11 +67,15 @@ class waterstorage(HydroModule):
                 if self.var.LakeSitesCC.size != number_of_lakeIDs:
                     warnings.warn(LisfloodWarning('Number of lake IDs in map LakeExtent ('+str(number_of_lakeIDs)+') not equal to number of lake sites defined in map LakeSites ('+str(self.var.LakeSitesCC.size)+').'))
                 lake_extent = self.var.LakeDistribution
+                valid_lake_ids = set(self.var.LakeSitesCC.astype(int))  # IDs that have outlets in domain
                 for n in np.unique(lake_extent[~np.isnan(lake_extent)]).astype(int):
-                    if n != 0:
+                    if n != 0 and n in valid_lake_ids:
                         mask = np.nonzero(lake_extent == n)
                         self.var.lake_extent_masks[n] = mask
                         self.var.lake_extent_areas[n] = np.nansum(self.var.PixelArea[mask])
+                    elif n != 0:
+                        warnings.warn(LisfloodWarning(
+                            f'Lake ID {n} found in LakeExtent map but has no outlet in the domain. Skipping.'))
 
             # Precompute reservoir extent masks and areas (static)
             self.var.reservoir_extent_masks = {}
@@ -85,12 +89,15 @@ class waterstorage(HydroModule):
                 if self.var.ReservoirSitesCC.size != number_of_reservoirIDs:
                     warnings.warn(LisfloodWarning('Number of reservoir IDs in map ReservoirExtent ('+str(number_of_reservoirIDs)+') not equal to number of reservoir sites defined in map ReservoirSites ('+str(self.var.ReservoirSitesCC.size)+').'))
                 reservoir_extent = self.var.ReservoirDistribution
+                valid_res_ids = set(self.var.ReservoirSitesCC.astype(int))
                 for n in np.unique(reservoir_extent[~np.isnan(reservoir_extent)]).astype(int):
-                    if n != 0:
+                    if n != 0 and n in valid_res_ids:
                         mask = np.nonzero(reservoir_extent == n)
                         self.var.reservoir_extent_masks[n] = mask
                         self.var.reservoir_extent_areas[n] = np.nansum(self.var.PixelArea[mask])
-
+                    elif n != 0:
+                        warnings.warn(LisfloodWarning(
+                            f'Reservoir ID {n} found in ReservoirExtent map but has no outlet in the domain. Skipping.'))
 
 # --------------------------------------------------------------------------
 # --------------------------------------------------------------------------
