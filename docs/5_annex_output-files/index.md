@@ -61,7 +61,7 @@ Output time series can be classified in the following categories:
 | infiltration                                                 | $\frac{mm}{timestep}$      | InfiltrationAvUpsTS    | infiltrationUps.tss    |
 | preferential (bypass) flow                                   | $\frac{mm}{timestep}$      | PrefFlowAvUpsTS        | prefFlowUps.tss        |
 | percolation upper to lower soil layer                        | $\frac{mm}{timestep}$      | PercolationAvUpsTS     | dTopToSubUps.tss       |
-| percolation lower soil layer to subsoil                      | $\frac{mm}{timestep}$      | SeepSubToGWAvUpsTS     | dSubToUzUps.tss        |
+| percolation lower soil layer to Upper Zone                   | $\frac{mm}{timestep}$      | SeepSubToGWAvUpsTS     | dSubToUzUps.tss        |
 | surface runoff                                               | $\frac{mm}{timestep}$      | SurfaceRunoffAvUpsTS   | surfaceRunoffUps.tss   |
 | outflow from upper zone                                      | $\frac{mm}{timestep}$      | UZOutflowAvUpsTS       | qUzUps.tss             |
 | outflow from lower zone                                      | $\frac{mm}{timestep}$      | LZOutflowAvUpsTS       | qLzUps.tss             |
