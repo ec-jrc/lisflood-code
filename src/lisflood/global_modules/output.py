@@ -166,9 +166,9 @@ class NetcdfStepsWriter(NetcdfWriter):
                     nf1 = iterOpenNetcdf(self.map_path, "", 'a', format='NETCDF4')
 
                 nc_var = nf1.variables[self.map_name]
+                nc_var.set_auto_maskandscale(False)
                 is_packed = nc_var.dtype == np.int16
                 if is_packed:
-                    nc_var.set_auto_maskandscale(False)
                     scale = nc_var.scale_factor
                     offset = nc_var.add_offset
                     nodata_mask = MaskInfo.instance().info.mask
@@ -189,6 +189,9 @@ class NetcdfStepsWriter(NetcdfWriter):
                         packed[nodata_mask] = PACK_FILL
                         nc_var[step, :, :] = packed.astype(np.int16)
                     else:
+                        # For non-packed: convert masked array to plain array with fill value
+                        if hasattr(map_np, 'filled'):
+                            map_np = map_np.filled(-9999)
                         nc_var[step, :, :] = map_np
 
                 nf1.close()
