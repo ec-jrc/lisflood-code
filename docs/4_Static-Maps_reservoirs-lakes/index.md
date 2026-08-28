@@ -54,7 +54,7 @@ The reservoirs map shows the outflow location of each reservoir: each outflow po
 |Reservoir normal outflow| res_normal_outflow.txt; <br>2 columms: ID VALUE; 1 row for each reservoir|Units: m3/s|Normal outflow|
 |Reseervoir minimum outflow| res_min_outflow.txt; <br>2 columms: ID VALUE; 1 row for each reservoir|Units: m3/s|Minimum outflow|
 
-The well-known Global Reservoir and Dam Database[GDW](https://www.globaldamwatch.org/grand) now superseeded by the Global Dam Watch [GDW](https://www.globaldamwatch.org/database) is a relevant example of source of data for lakes map and tables.
+The well-known Global Reservoir and Dam Database [GDW](https://www.globaldamwatch.org/grand) now superseeded by the Global Dam Watch [GDW](https://www.globaldamwatch.org/database) is a relevant example of source of data for lakes map and tables.
 
 ### Methodology
 As a first step, it is recommended to create a file including all reservoir information required by OS LISFLOOD and some relevant metadata that can help with model analysis and results description.
@@ -137,7 +137,7 @@ The following paragraphs provide guidelines for the generation of the lake map a
 
 Lake unique identifier (1) and coordinates of the outlet mapped on the OS LISFLOOD local drainage direction map  ([ldd](../4_Static-Maps_topography/index.md)) (3) are required to generate the lake map. Geographic coordinates of the lake outlet (2) and OS LISFLOOD local drainage direction map  ([ldd](../4_Static-Maps_topography/index.md)) are essential to generate (3). Adequate model representation requires the agreement between lake catchment area (7) and OS LISFLOOD [upstream area map](../4_Static-Maps_topography/index.md).
 
-Lake surface area can be retrieved from local datasets or global datasets such as HydroLAKES](https://www.hydrosheds.org/products/hydrolakes), [GLWD](https://www.hydrosheds.org/products/glwd), [GRAND](https://www.globaldamwatch.org/grand).
+Lake surface area can be retrieved from local datasets or global datasets such as [HydroLAKES](https://www.hydrosheds.org/products/hydrolakes), [GLWD](https://www.hydrosheds.org/products/glwd), [GRAND](https://www.globaldamwatch.org/grand).
 
 Where lake outlet width cannot be retrieved from external dataset, it can be measured with GIS tools.
 
