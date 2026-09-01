@@ -148,7 +148,9 @@ To speed up the pre-run and to prevent that results are taken from the pre-run, 
 | storage in lower groundwater zone       | repLZMaps              | $mm$                       | LZMaps                           | lz      |
 | number of days since last rain          | repDSLRMaps            | $days$                     | DSLRMaps <br> DSLRForestMaps                       | dslr <br> dslF  |
 | frost index                             | repFrostIndexMaps      | $\frac{°C}{days}$          | FrostIndexMaps                                     | frost           |
-| Total Water Storage                             | repTotalWaterStorageMaps      | $mm$          | TotalWaterStorageMaps                                     | tws           |
+| Total Water Storage                             | repTWSMaps      | $m$          | TWSMaps                                     | TotalWS           |
+| Individual Water Storage Compartments           | repStorageMaps  | $m$          | LakeSMaps <br> RiverSMaps <br> SoilSMaps <br> GWSMaps <br> SnowSMaps <br> CumSMaps | Lakestor <br> Riverstor <br> Soilstor <br> GWstor <br> Snowstor <br> Cumstor          |
+| Flow Momentum                           | repFlowMomMaps  | $\frac{kgm}{s}$          | FlowMomMaps                                 | FlowMomentum  |
 | **RATE VARIABLES**                 |                        |                            |                                                    |                 |
 | rain (excluding snow)                   | repRainMaps            | $\frac{mm}{timestep}$      | RainMaps                                           | rain            |
 | snow                                    | repSnowMaps            | $\frac{mm}{timestep}$      | SnowMaps                                           | snow            |

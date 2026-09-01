@@ -201,15 +201,15 @@ class ETRS89TestCase(object):
                 'tss': None,
             },
         },
-        'TWS': {
+        'TotalWS': {
             'report_map': 'TWSMaps',
             'report_tss': None,
             '86400': {
-                'map': os.path.join(ref_dir, 'output_reference_daily/TWS.nc'),
+                'map': os.path.join(ref_dir, 'output_reference_daily/TotalWS.nc'),
                 'tss': None,
             },
             '21600': {
-                'map': os.path.join(ref_dir, 'output_reference_6h/TWS.nc'),
+                'map': os.path.join(ref_dir, 'output_reference_6h/TotalWS.nc'),
                 'tss': None,
             },
         },

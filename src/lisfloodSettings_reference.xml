@@ -3286,7 +3286,7 @@ You can use builtin path variables in this template and reference to other paths
       </comment>
       </textvar>
 
-      <textvar name="TWSMaps" value="$(PathOut)/tws">
+      <textvar name="TWSMaps" value="$(PathOut)/TotalWS">
       <comment>
       Reported total water storage storage [m]
       </comment>
