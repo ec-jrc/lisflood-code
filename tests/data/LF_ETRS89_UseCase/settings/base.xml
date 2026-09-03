@@ -41,7 +41,6 @@
         <setoption choice="0" name="repsimulateReservoirs"/>
         <setoption choice="0" name="repSnowMaps"/>
         <setoption choice="0" name="repPFMaps"/>
-        <!-- <setoption choice="0" name="repTotalWaterStorageMaps"/> -->
 
         <setoption choice="0" name="repLZMaps"/>
 
