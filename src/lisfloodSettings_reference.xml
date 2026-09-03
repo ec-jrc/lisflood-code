@@ -1665,7 +1665,27 @@ You can use builtin path variables in this template and reference to other paths
     </textvar>
     </group>
 
+    <group>
 
+        <comment>
+            **************************************************************
+            TWS OPTION
+            **************************************************************
+        </comment>
+
+        <textvar name="LakeExtent" value="$(PathRoot)/maps/lake_extent.nc">
+            <comment>
+                Map containing the lake ID for each pixel of its extent
+            </comment>
+        </textvar>
+
+        <textvar name="ReservoirExtent" value="$(PathRoot)/maps/res_extent.nc">
+            <comment>
+                Map containing the reservoir ID for each pixel of its extent
+            </comment>
+        </textvar>
+
+    </group>
     <group>
 
     <comment>
@@ -5503,10 +5523,10 @@ You can use builtin path variables in this template and reference to other paths
             </comment>
         </textvar>
       
-        <textvar name="ReservoirExtent" value="$(PathMaps)/res_extent.nc">
+        <textvar name="ReservoirExtent" value="$(ReservoirExtent)">
             <comment>
             Map containing the reservoir ID for each pixel of its spatial extent.
-            Required when simulateReservoirs is active and repTWSMaps or repStorageMaps is enabled.
+            Required when simulateReservoirs is active and repTWSMaps or repStorageMaps or repStateUpsGauges is enabled.
             </comment>
         </textvar>
       
@@ -5556,10 +5576,10 @@ You can use builtin path variables in this template and reference to other paths
           </comment>
         </textvar>
 
-        <textvar name="LakeExtent" value="$(PathMaps)/lake_extent.nc">
+        <textvar name="LakeExtent" value="$(LakeExtent)">
           <comment>
           Map containing the lake ID for each pixel of its spatial extent.
-          Required when simulateLakes is active and repTWSMaps or repStorageMaps is enabled.
+          Required when simulateLakes is active and repTWSMaps or repStorageMaps or repStateUpsGauges is enabled.
           </comment>
         </textvar>
 
