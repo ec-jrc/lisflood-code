@@ -2103,8 +2103,31 @@
 
                 </textvar>
 
+            </group>
+
+            <!-- begin added by GFZ -->
+            <group>
+
+                <comment>
+                    **************************************************************
+                    TWS OPTION
+                    **************************************************************
+                </comment>
+
+                <textvar name="LakeExtent" value="$(PathRoot)/maps/lake_extent.nc">
+                    <comment>
+                        Map containing the lake ID for each pixel of its extent
+                    </comment>
+                </textvar>
+
+                <textvar name="ReservoirExtent" value="$(PathRoot)/maps/res_extent.nc">
+                    <comment>
+                        Map containing the reservoir ID for each pixel of its extent
+                    </comment>
+                </textvar>
 
             </group>
+            <!-- end added by GFZ -->
 
 
             <group>
@@ -8392,8 +8415,31 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
                 </textvar>
 
+            </group>
+			
+			<!-- begin added by GFZ -->
+            <group>
+
+                <comment>
+                    **************************************************************
+                    TWS OPTION
+                    **************************************************************
+                </comment>
+
+                <textvar name="LakeExtent" value="$(LakeExtent)">
+                    <comment>
+                        Map containing the lake ID for each pixel of its extent
+                    </comment>
+                </textvar>
+
+                <textvar name="ReservoirExtent" value="$(ReservoirExtent)">
+                    <comment>
+                        Map containing the reservoir ID for each pixel of its extent
+                    </comment>
+                </textvar>
 
             </group>
+            <!-- end added by GFZ -->
 
 
             <group>
