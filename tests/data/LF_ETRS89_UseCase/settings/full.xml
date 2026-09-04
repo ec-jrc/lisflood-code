@@ -6607,6 +6607,12 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
 
                 </textvar>
 
+      
+                <textvar name="TWSAvUpsTS" value="$(PathOut)/twsUps.tss">
+                    <comment>
+                        Reported total water storage upstream average at gauges [m]
+                    </comment>
+                </textvar>
 
             </group>
 

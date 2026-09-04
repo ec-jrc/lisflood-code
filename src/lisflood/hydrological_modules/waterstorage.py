@@ -53,7 +53,7 @@ class waterstorage(HydroModule):
         option = settings.options
         
         # load water map and separate into maps of lake and reservoir distribution
-        if (not(option['InitLisflood'])) and (option['repStorageMaps'] or option['repTWSMaps'] or option['repStateUpsGauges']):
+        if (not(option['InitLisflood'])) and (option['repStorageMaps'] or option['repTWSMaps']):
 
             # Precompute lake extent masks and areas (static, don't change during simulation)
             self.var.lake_extent_masks = {}    # dict: lake_id -> pixel indices
@@ -110,7 +110,7 @@ class waterstorage(HydroModule):
         maskinfo = MaskInfo.instance()
             
         
-        if (not(option['InitLisflood'])) and (option['repStorageMaps'] or option['repTWSMaps'] or option['repStateUpsGauges']):
+        if (not(option['InitLisflood'])) and (option['repStorageMaps'] or option['repTWSMaps']):
 
             # ************************************************************
             # ***** WATER STORAGE 
