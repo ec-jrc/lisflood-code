@@ -249,6 +249,10 @@ class LisfloodModel_dyn(DynamicModel):
         self.waterlevel_module.dynamic()
 
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        # Calculate water storage
+        self.waterstorage_module.dynamic()        
+
+        # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
         # ************************************************************
         # *******  Calculate CUMULATIVE MASS BALANCE ERROR  **********

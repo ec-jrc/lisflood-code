@@ -201,18 +201,102 @@ class ETRS89TestCase(object):
                 'tss': None,
             },
         },
-        'tws': {
-            'report_map': 'TotalWaterStorageMaps',
+        'TotalWS': {
+            'report_map': 'TWSMaps',
             'report_tss': None,
             '86400': {
-                'map': os.path.join(ref_dir, 'output_reference_daily/tws.nc'),
+                'map': os.path.join(ref_dir, 'output_reference_daily/TotalWS.nc'),
                 'tss': None,
             },
             '21600': {
-                'map': os.path.join(ref_dir, 'output_reference_6h/tws.nc'),
+                'map': os.path.join(ref_dir, 'output_reference_6h/TotalWS.nc'),
                 'tss': None,
             },
-        },        
+        },
+        'GWstor': {
+            'report_map': 'GWSMaps',
+            'report_tss': None,
+            '86400': {
+                'map': os.path.join(ref_dir, 'output_reference_daily/GWstor.nc'),
+                'tss': None,
+            },
+            '21600': {
+                'map': os.path.join(ref_dir, 'output_reference_6h/GWstor.nc'),
+                'tss': None,
+            },
+        },
+        'Soilstor': {
+            'report_map': 'SoilSMaps',
+            'report_tss': None,
+            '86400': {
+                'map': os.path.join(ref_dir, 'output_reference_daily/Soilstor.nc'),
+                'tss': None,
+            },
+            '21600': {
+                'map': os.path.join(ref_dir, 'output_reference_6h/Soilstor.nc'),
+                'tss': None,
+            },
+        }, 
+        'Riverstor': {
+            'report_map': 'RiverSMaps',
+            'report_tss': None,
+            '86400': {
+                'map': os.path.join(ref_dir, 'output_reference_daily/Riverstor.nc'),
+                'tss': None,
+            },
+            '21600': {
+                'map': os.path.join(ref_dir, 'output_reference_6h/Riverstor.nc'),
+                'tss': None,
+            },
+        }, 
+        'Lakestor': {
+            'report_map': 'LakeSMaps',
+            'report_tss': None,
+            '86400': {
+                'map': os.path.join(ref_dir, 'output_reference_daily/Lakestor.nc'),
+                'tss': None,
+            },
+            '21600': {
+                'map': os.path.join(ref_dir, 'output_reference_6h/Lakestor.nc'),
+                'tss': None,
+            },
+        }, 
+        'Snowstor': {
+            'report_map': 'SnowSMaps',
+            'report_tss': None,
+            '86400': {
+                'map': os.path.join(ref_dir, 'output_reference_daily/Snowstor.nc'),
+                'tss': None,
+            },
+            '21600': {
+                'map': os.path.join(ref_dir, 'output_reference_6h/Snowstor.nc'),
+                'tss': None,
+            },
+        },
+        'Cumstor': {
+            'report_map': 'CumSMaps',
+            'report_tss': None,
+            '86400': {
+                'map': os.path.join(ref_dir, 'output_reference_daily/Cumstor.nc'),
+                'tss': None,
+            },
+            '21600': {
+                'map': os.path.join(ref_dir, 'output_reference_6h/Cumstor.nc'),
+                'tss': None,
+            },
+        }, 
+        'FlowMomentum': {
+            'report_map': 'FlowMomMaps',
+            'report_tss': None,
+            '86400': {
+                'map': os.path.join(ref_dir, 'output_reference_daily/FlowMomentum.nc'),
+                'tss': None,
+            },
+            '21600': {
+                'map': os.path.join(ref_dir, 'output_reference_6h/FlowMomentum.nc'),
+                'tss': None,
+            },
+        },           
         'avgdis': {
             'report_map': 'AvgDis',
             'report_tss': None,

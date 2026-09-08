@@ -616,6 +616,10 @@ class LisSettings(with_metaclass(ThreadSingleton)):
         # overwrite defaults
         options.update(option_setting)
         options['nonInit'] = not options['InitLisflood']
+        # Total Water Storage output is only meaningful when at least one
+        # storage/TWS map output is requested. Derived flag lets restrictoption
+        # (pure AND) express "repTWSMaps OR repStorageMaps".
+        options['repTWS'] = options['repTWSMaps'] or options['repStorageMaps']
         return options
 
     def _filter_steps(self, user_settings):

@@ -165,7 +165,10 @@ You can use builtin path variables in this template and reference to other paths
       <setoption choice="0" name="repTotalAbs"/>
       <setoption choice="0" name="repTotalWUse"/>
       <setoption choice="0" name="repWIndex"/>
-      <setoption choice="0" name="repTotalWaterStorageMaps"/>
+
+      <setoption choice="1" name="repTWSMaps"/>
+      <setoption choice="1" name="repStorageMaps"/>
+      <setoption choice="1" name="repFlowMomMaps"/>
 
   </lfoptions>
   <lfuser>
@@ -1700,7 +1703,27 @@ You can use builtin path variables in this template and reference to other paths
     </textvar>
     </group>
 
+    <group>
 
+        <comment>
+            **************************************************************
+            TWS OPTION
+            **************************************************************
+        </comment>
+
+        <textvar name="LakeExtent" value="$(PathRoot)/maps/lake_extent.nc">
+            <comment>
+                Map containing the lake ID for each pixel of its extent
+            </comment>
+        </textvar>
+
+        <textvar name="ReservoirExtent" value="$(PathRoot)/maps/res_extent.nc">
+            <comment>
+                Map containing the reservoir ID for each pixel of its extent
+            </comment>
+        </textvar>
+
+    </group>
     <group>
 
     <comment>
@@ -3343,6 +3366,59 @@ You can use builtin path variables in this template and reference to other paths
       </comment>
       </textvar>
 
+      <textvar name="TaPixelMaps" value="$(PathOut)/Ta_pixel">
+      <comment>
+      Reported transpiration maps, weighted sum over the fractions of each pixel [mm]
+      </comment>
+      </textvar>
+
+      <textvar name="TWSMaps" value="$(PathOut)/TotalWS">
+      <comment>
+      Reported total water storage storage [m]
+      </comment>
+      </textvar>
+
+      <textvar name="LakeSMaps" value="$(PathOut)/Lakestor">
+      <comment>
+      Reported lake and reservoir storage [m]
+      </comment>
+      </textvar>
+
+      <textvar name="RiverSMaps" value="$(PathOut)/Riverstor">
+      <comment>
+      Reported river storage [m]
+      </comment>
+      </textvar>
+
+      <textvar name="SoilSMaps" value="$(PathOut)/Soilstor">
+      <comment>
+      Reported soil storage [m]
+      </comment>
+      </textvar>
+
+      <textvar name="GWSMaps" value="$(PathOut)/GWstor">
+      <comment>
+      Reported groundwater storage [m]
+      </comment>
+      </textvar>
+
+      <textvar name="SnowSMaps" value="$(PathOut)/Snowstor">
+      <comment>
+      Reported snow storage [m]
+      </comment>
+      </textvar>
+
+      <textvar name="CumSMaps" value="$(PathOut)/Cumstor">
+      <comment>
+      Reported cumulative interception and depression storage [m]
+      </comment>
+      </textvar>
+
+      <textvar name="FlowMomMaps" value="$(PathOut)/FlowMomentum">
+      <comment>
+      Reported riverflow momentum for HAM motion term [kgm/s]
+      </comment>
+      </textvar>
       </group>
       <group>
       <comment>
@@ -3736,12 +3812,6 @@ You can use builtin path variables in this template and reference to other paths
       <textvar name="LZMaps" value="$(PathOut)/lz">
       <comment>
       Reported storage in lower response box [mm]
-      </comment>
-      </textvar>
-
-      <textvar name="TotalWaterStorageMaps" value="$(PathOut)/tws">
-      <comment>
-      Reported total water storage [mm]
       </comment>
       </textvar>
 
@@ -4597,6 +4667,11 @@ You can use builtin path variables in this template and reference to other paths
       </textvar>
       </group>
 
+      <textvar name="TWSAvUpsTS" value="$(PathOut)/twsUps.tss">
+      <comment>
+      Reported total water storage upstream average at gauges [m]
+      </comment>
+      </textvar>
 
       <group>
       <comment>
@@ -5513,6 +5588,14 @@ You can use builtin path variables in this template and reference to other paths
               reservoir routine switches to flood control mode.
             </comment>
         </textvar>
+      
+        <textvar name="ReservoirExtent" value="$(ReservoirExtent)">
+            <comment>
+            Map containing the reservoir ID for each pixel of its spatial extent.
+            Required when simulateReservoirs is active and repTWSMaps or repStorageMaps or repStateUpsGauges is enabled.
+            </comment>
+        </textvar>
+      
       </group>
 
       <group>
@@ -5558,6 +5641,14 @@ You can use builtin path variables in this template and reference to other paths
           is set to -9999
           </comment>
         </textvar>
+
+        <textvar name="LakeExtent" value="$(LakeExtent)">
+          <comment>
+          Map containing the lake ID for each pixel of its spatial extent.
+          Required when simulateLakes is active and repTWSMaps or repStorageMaps or repStateUpsGauges is enabled.
+          </comment>
+        </textvar>
+
 
         <comment>
         **************************************************************
