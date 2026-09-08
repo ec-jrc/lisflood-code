@@ -1,14 +1,18 @@
 import os
-current_dir = os.path.dirname(os.path.abspath(__file__))
 
-version_file = os.path.join(current_dir, '../../VERSION')
-if not os.path.exists(version_file):
-    version_file = os.path.join(current_dir, '../../../../VERSION')
+# Version is managed by setuptools_scm and written to _version.py at build time
+# (see pyproject.toml [tool.setuptools_scm]). The file is not tracked in git.
+try:
+    from ._version import __version__
+except ImportError:
+    # Not built yet (e.g. running from a fresh git checkout). Derive the
+    # version live from git; fall back to a sentinel if that also fails.
+    try:
+        from setuptools_scm import get_version
+        __version__ = get_version(root=os.path.join(os.path.dirname(__file__), '../..'))
+    except Exception:
+        __version__ = '0.0.0'
 
-with open(version_file, 'r') as f:
-    version = f.read().strip()
-
-__version__ = version
 __authors__ = "Ad de Roo, Emiliano Gelati, Peter Burek, Johan van der Knijff"
 __date__ = "30/06/2026"
 __copyright__ = "Copyright 2019-2026, European Commission - Joint Research Centre"
