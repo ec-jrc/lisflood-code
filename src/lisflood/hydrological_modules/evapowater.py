@@ -60,8 +60,6 @@ class evapowater(HydroModule):
         maskinfo = MaskInfo.instance()
         if option['openwaterevapo']:
             LakeMask = loadmap('LakeMask', pcr=True)
-            LakeMaskScalar = scalar(LakeMask)
-            LakeMask = ifthenelse((LakeMaskScalar<0)&(LakeMaskScalar!=-9999), 0, LakeMask)
             # lmask = ifthenelse(LakeMask != 0, self.var.LddStructuresKinematic, 5)
             lmask = ifthenelse(LakeMask != 0, self.var.LddStructuresChan, 5)
             LddEva = lddrepair(lmask)
