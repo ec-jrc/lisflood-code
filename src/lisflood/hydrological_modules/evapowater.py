@@ -17,7 +17,7 @@ See the Licence for the specific language governing permissions and limitations 
 from __future__ import absolute_import, print_function
 from nine import range
 
-from pcraster import ifthenelse, downstream, lddrepair, scalar
+from pcraster import ifthenelse, downstream, lddrepair
 import numpy as np
 
 from ..global_modules.add1 import loadmap, compressArray, decompress, generateName, loadLAI
