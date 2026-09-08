@@ -44,3 +44,95 @@ Time series file have *.tss* extension and they can be opened with any text edit
 It is important to be aware of the spatial domain for which each time series is computed. For instance, all *rate variables* are reported as pixel-average values. Soil moisture and groundwater storage are reported for the permeable fraction of each pixel only. The reported snow cover is the average of the snow depths in snow zones A, B and C. 
 
 This [**Annex**](../5_annex_output-files/index.md) summarises most of the options to report additional output maps. 
+
+## Output data compression (int16 packing)
+
+By default, output maps are written as floating-point values (`float32` or `float64`, controlled by the `OutputMapsDataType` setting). For large simulations (long time series, global domains, many variables) this can produce very large files.
+
+LISFLOOD offers an optional lossy compression that stores output maps as signed 16-bit integers (`int16`) using the CF-convention `scale_factor`/`add_offset` packing scheme. This roughly halves the file size compared to `float32` (2 bytes per value instead of 4) and reduces it fourfold compared to `float64`.
+
+### How to enable it
+
+Add the following to the settings file:
+
+```xml
+<textvar name="OutputPacking" value="True"/>
+```
+
+- `"False"` (default): output maps are written as raw floating-point values.
+- `"True"`: output maps are packed into `int16` using per-variable `scale_factor` and `add_offset`.
+
+No further user action is required. The `scale_factor` and `add_offset` for each variable are defined internally (see `default_options.py`). Standard netCDF readers (xarray, CDO, NCO, ncview, Panoply) automatically unpack the values on read, so from a user perspective the data appears as normal floating-point.
+
+### Packing and unpacking formulas
+
+When writing, each floating-point value is encoded into an integer:
+
+```
+packed_int = round( (value - add_offset) / scale_factor )
+```
+
+When reading, the CF-compliant reader restores the physical value:
+
+```
+value = packed_int * scale_factor + add_offset
+```
+
+The packed integer is stored in the range `[-32766, +32767]`. The value `-32767` is reserved as the fill value (`_FillValue`) for masked / outside-domain pixels, so it is never used for real data.
+
+### Precision and value range
+
+The `scale_factor` directly determines both the resolution and the representable range of a packed variable:
+
+- **Resolution (quantization step):** equal to `scale_factor`. A value read back can differ from the original by at most `scale_factor / 2`.
+- **Representable range:**
+  - minimum = `add_offset + scale_factor * (-32766)`
+  - maximum = `add_offset + scale_factor * (+32767)`
+
+For a target physical range `[min, max]`, the parameters are chosen as:
+
+```
+scale_factor = (max - min) / 65533
+add_offset   = (min + max) / 2
+```
+
+(65533 is the number of usable integer levels, i.e. `32767 - (-32766)`.)
+
+**Example** — actual soil evaporation (`ESActMaps`) uses `scale_factor = 3.1e-4`, `add_offset = 10.0`:
+- minimum = `10.0 + 3.1e-4 * (-32766)` ≈ `0.0 mm/day`
+- maximum = `10.0 + 3.1e-4 * (+32767)` ≈ `+20.2 mm/day`
+- resolution ≈ `3.1e-4 mm/day` (values accurate to about `±1.5e-4 mm/day`)
+
+The `add_offset` is placed at the centre of the target range (here 10.0, the midpoint of roughly 0–20 mm/day), so the available integer levels are distributed symmetrically around it.
+
+Values falling outside the representable range are clipped to the nearest bound, and a warning is issued once per variable during the run. Because packing is lossy, a tiny quantization error is expected: for instance an input of exactly `0.0` may be read back as a value on the order of `1e-4`. This is far below any hydrologically meaningful threshold and is normal for packed datasets (the same behaviour applies to ERA5, CMIP6, and other CF-packed products).
+
+### Variables that are never packed
+
+- **State and "end" maps** (used to initialise warm-start runs) are always written at full floating-point precision, regardless of the `OutputPacking` setting. This preserves the exact model state needed for a bit-reproducible restart.
+- Variables whose value range is too wide to pack meaningfully (for example **discharge**, which spans several orders of magnitude globally) are intentionally left unpacked to avoid an unacceptable loss of precision.
+
+## Temporal aggregation of output maps
+
+Instead of writing a value at every model time step, LISFLOOD can aggregate selected output variables to monthly or yearly means or sums. This dramatically reduces output volume for long simulations while retaining the climatologically relevant signal.
+
+Four settings control temporal aggregation, each taking a semicolon-separated list of output variable names:
+
+```xml
+<textvar name="OutputMonthlyMean" value="SnowCoverMaps;DischargeMaps;UZMaps;LZMaps"/>
+<textvar name="OutputMonthlySum"  value="ETActMaps;SurfaceRunoffMaps"/>
+<textvar name="OutputYearlyMean"  value="Theta1Maps;Theta2Maps"/>
+<textvar name="OutputYearlySum"   value="TotalRunoffMaps"/>
+```
+
+- **Mean** aggregation writes the average of all time steps within each period.
+- **Sum** aggregation writes the accumulated total over each period.
+- A value is written only at the end of a completed period (month-end or year-end). Partial periods at the end of a simulation are not written.
+- When a variable is listed for aggregation, its normal per-time-step output is suppressed to avoid duplication.
+
+The aggregation boundaries are detected directly from the calendar date and therefore work for daily as well as sub-daily time steps.
+
+**Interaction with packing:**
+
+- **Mean** aggregates stay within the same value range as the daily values, so `int16` packing (if `OutputPacking = True`) is applied as usual.
+- **Sum** aggregates can greatly exceed the daily value range (a monthly sum can be up to ~30× a daily value). To prevent overflow, packing is automatically disabled for sum-aggregated outputs, which are always written as floating-point.
