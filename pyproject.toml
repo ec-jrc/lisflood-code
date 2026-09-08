@@ -1,0 +1,91 @@
+[build-system]
+requires = ["setuptools>=65", "setuptools_scm[toml]>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lisflood-model"
+description = "LISFLOOD model python module"
+authors = [
+    { name = "Ad de Roo" },
+    { name = "Emiliano Gelati" },
+    { name = "Peter Burek" },
+    { name = "Johan van der Knijff" },
+]
+maintainers = [
+    { name = "Stefania Grimaldi" },
+    { name = "Timo Schaffhauser" },
+    { name = "Carlo Russo" },
+    { name = "Cinzia Mazzetti" },
+    { name = "Corentin Carton De Wiart" },
+]
+license = "EUPL-1.2"
+keywords = ["lisflood", "lisvap", "efas", "glofas", "copernicus", "ecmwf"]
+requires-python = ">=3.10"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "Intended Audience :: Financial and Insurance Industry",
+    "Intended Audience :: Other Audience",
+    "Intended Audience :: Science/Research",
+    "Operating System :: Unix",
+    "Operating System :: POSIX",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: MacOS :: MacOS X",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Physics",
+]
+# version is derived from git by setuptools_scm; readme and (runtime)
+# dependencies are resolved from README.md and requirements.txt
+# (see [tool.setuptools.dynamic]).
+dynamic = ["version", "readme", "dependencies"]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=6.2.5",
+    "pytest-cov>=3.0.0",
+    "pytest-mock>=3.6.1",
+    "coverage>=6.0",
+]
+
+[project.urls]
+homepage = "https://github.com/ec-jrc/lisflood-code"
+repository = "https://github.com/ec-jrc/lisflood-code"
+documentation = "https://ec-jrc.github.io/lisflood-code/"
+issues = "https://github.com/ec-jrc/lisflood-code/issues"
+
+# ---------------------------------------------------------------------------
+# Versioning
+# ----------
+# The package version is managed by setuptools_scm and derived from git tags.
+# - On branches/dev: version is auto-generated (e.g. 5.0.1.dev61), so every
+#   commit produces a distinct version number.
+# - For releases: the publish/testpypi commands in setup.py accept a --version
+#   argument to create the git tag and build the package with that exact version.
+# ---------------------------------------------------------------------------
+[tool.setuptools_scm]
+version_file = "src/lisflood/_version.py"
+version_file_template = '''# Do not change! Do not track in version control!
+__version__ = "{version}"
+'''
+# get version from GitHub-like tarballs (e.g. lisflood-code-5.0.0.tar.gz)
+parentdir_prefix_version = 'lisflood-code-'
+# used when building outside a git checkout with no version file present
+fallback_version = '5.0.0'
+# omit the local +g<hash> segment so builds are uploadable to PyPI
+local_scheme = "no-local-version"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.dynamic]
+readme = { file = ["README.md"], content-type = "text/markdown" }
+dependencies = { file = ["requirements.txt"] }

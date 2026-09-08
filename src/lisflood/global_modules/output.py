@@ -15,16 +15,26 @@ See the Licence for the specific language governing permissions and limitations 
 
 """
 import os
+import datetime
 import numpy as np
 from pcraster import ifthen, catchmenttotal, mapmaximum
 import sys
+import warnings
 
 from .zusatz import TimeoutputTimeseries
 from .add1 import decompress, valuecell, loadmap, compressArray
 from .netcdf import write_netcdf_header, iterOpenNetcdf, nanCheckMap, uncompress_array
 from .errors import LisfloodFileError, LisfloodWarning
-from .settings import inttodate, CDFFlags, LisSettings
+from .settings import inttodate, CDFFlags, LisSettings, MaskInfo
+from netCDF4 import default_fillvals
 
+
+# ------------------------------------------------------------------------
+# Packing constants for int16 CF scale/offset encoding
+# ------------------------------------------------------------------------
+PACK_FILL = np.int16(default_fillvals['i2'])      # -32767
+PACK_MIN = PACK_FILL + 1                          # -32766
+PACK_MAX = np.iinfo(np.int16).max                 #  32767
 
 # ------------------------------------------------------------------------
 # Writer classes
@@ -95,7 +105,7 @@ class NetcdfWriter(Writer):
         if self.data is not None:
             nf1 = write_netcdf_header(self.settings, self.map_name, self.map_path, self.var.DtDay,
                                     self.map_key, self.map_value.output_var, self.map_value.unit,
-                                    start_date, rep_steps, self.frequency)
+                                    start_date, rep_steps, self.frequency, map_value=self.map_value)
 
             map_np = uncompress_array(self.data)
 
@@ -151,16 +161,41 @@ class NetcdfStepsWriter(NetcdfWriter):
                 if self.step_range[0] == 0:
                     nf1 = write_netcdf_header(self.settings, self.map_name, self.map_path, self.var.DtDay,
                                             self.map_key, self.map_value.output_var, self.map_value.unit,
-                                            start_date, rep_steps, self.frequency)
+                                            start_date, rep_steps, self.frequency, map_value=self.map_value)
                 else:
                     nf1 = iterOpenNetcdf(self.map_path, "", 'a', format='NETCDF4')
 
+                nc_var = nf1.variables[self.map_name]
+                nc_var.set_auto_maskandscale(False)
+                is_packed = nc_var.dtype == np.int16
+                if is_packed:
+                    scale = nc_var.scale_factor
+                    offset = nc_var.add_offset
+                    nodata_mask = MaskInfo.instance().info.mask
+
                 for step, data in zip(self.step_range, self.data_steps):
-                    nf1.variables[self.map_name][step, :, :] = uncompress_array(data)
+                    map_np = uncompress_array(data)
+                    if is_packed:
+                        packed = np.round((map_np - offset) / scale).astype(np.float64)
+                        clipped = ((packed < -32767) | (packed > 32767)) & (map_np != -9999)
+                        if clipped.any():
+                            vmin = offset + scale * (-32767)
+                            vmax = offset + scale * 32767
+                            warnings.warn(LisfloodWarning(
+                                f"OutputPacking: {clipped.sum()} values in '{self.map_name}' outside "
+                                f"packing range [{vmin:.4g}, {vmax:.4g}] and will be clipped."
+                            ))
+                        packed = np.clip(packed, PACK_MIN, PACK_MAX)
+                        packed[nodata_mask] = PACK_FILL
+                        nc_var[step, :, :] = packed.astype(np.int16)
+                    else:
+                        # For non-packed: convert masked array to plain array with fill value
+                        if hasattr(map_np, 'filled'):
+                            map_np = map_np.filled(-9999)
+                        nc_var[step, :, :] = map_np
 
                 nf1.close()
 
-                # clear lists for next chunk
                 self.step_range.clear()
                 self.data_steps.clear()
             else:
@@ -381,6 +416,87 @@ class MapOutputAll(MapOutput):
     def _rep_steps(self):
         return self._rep_steps_val
 
+
+class MapOutputAggregated(MapOutput):
+    """Handles temporal aggregation (monthly/yearly mean/sum) for a variable."""
+
+    def __init__(self, var, map_key, map_value, frequency, operation):
+        out_type = 'all'  # accumulates every timestep
+        settings = LisSettings.instance()
+        binding = settings.binding
+        self._start_date_val = var.CalendarDayStart
+        self._rep_steps_val = range(binding['StepStartInt'], binding['StepEndInt'] + 1)
+        
+        self._operation = operation  # 'mean' or 'sum'
+        self._accum_buffer = None
+        self._accum_count = 0
+        self._write_step = 0  # own step counter for NetCDF time dimension
+
+        # Disable int16 packing for sum aggregates — monthly/yearly sums can exceed
+        # the int16 range calibrated for daily values. Mean aggregates stay within
+        # the same value range as daily output, so packing remains valid.
+        if operation == 'sum':
+            map_value_no_pack = map_value._replace(scale_factor=None, add_offset=None)
+        else:
+            map_value_no_pack = map_value
+
+        super().__init__(var, out_type, frequency, map_key, map_value_no_pack)
+        
+        # Force immediate write for aggregated outputs (one slice per period)
+        if hasattr(self, 'writer') and hasattr(self.writer, 'chunks'):
+            self.writer.chunks = 1
+            
+    def _output_checkpoint(self):
+        """Always True — we accumulate every timestep."""
+        return True
+
+    @property
+    def _start_date(self):
+        return self._start_date_val
+
+    @property
+    def _rep_steps(self):
+        return self._rep_steps_val
+
+    def stage(self):
+        """Accumulate instead of storing instantaneous values."""
+        self.step = self.var.currentTimeStep()
+        map_np = self.writer._extract_map()
+
+        if self._accum_buffer is None:
+            self._accum_buffer = np.zeros_like(map_np)
+
+        self._accum_buffer += map_np
+        self._accum_count += 1
+
+    def write(self):
+        """Write only at period boundary (month-end or year-end)."""
+        current_date = self.var.CalendarDate
+        next_date = current_date + datetime.timedelta(days=self.var.DtDay)
+        if self.frequency == 'monthly':
+            is_boundary = current_date.month != next_date.month
+        elif self.frequency == 'yearly':
+            is_boundary = current_date.year != next_date.year
+        else:
+            is_boundary = True
+
+        if is_boundary and self._accum_buffer is not None:
+            # Finalize
+            if self._operation == 'mean':
+                result = self._accum_buffer / self._accum_count
+            else:  # sum
+                result = self._accum_buffer
+
+            # Stage the aggregated result into the writer
+            self.writer.data_steps.append(result)
+            self.writer.step_range.append(self._write_step)
+            self.writer.write(self._start_date, self._rep_steps)
+
+            # Increment own step counter and reset accumulator
+            self._write_step += 1
+            self._accum_buffer = None
+            self._accum_count = 0
+
 # ------------------------------------------------------------------------
 # Output factory
 # ------------------------------------------------------------------------
@@ -428,11 +544,38 @@ class OutputMapsFactory():
             if out.is_valid():
                 outputs.append(out)
 
-        check_duplicates = []
+        # --- Temporal aggregation outputs ---
+        binding = settings.binding
+        aggregation_configs = {
+            'OutputMonthlyMean': ('monthly', 'mean'),
+            'OutputMonthlySum': ('monthly', 'sum'),
+            'OutputYearlyMean': ('yearly', 'mean'),
+            'OutputYearlySum': ('yearly', 'sum'),
+        }
+        aggregated_vars = set()  # track which vars are aggregated
+
+        reportedmaps = settings.options['reportedmaps']
+        for setting_key, (frequency, operation) in aggregation_configs.items():
+            var_list = binding.get(setting_key, '').split(';')
+            for var_name in var_list:
+                var_name = var_name.strip()
+                if var_name and var_name in reportedmaps:
+                    map_value = reportedmaps[var_name]
+                    out = MapOutputAggregated(var, var_name, map_value, frequency, operation)
+                    if out.is_valid():
+                        outputs.append(out)
+                        aggregated_vars.add(var_name)
+
+        # Remove normal outputs for variables that are now aggregated
         outputs_clean = []
+        check_duplicates = []
         for out in outputs:
+            # Skip normal Maps/All output if variable is aggregated
+            if hasattr(out, 'map_key') and out.map_key in aggregated_vars:
+                if not isinstance(out, (MapOutputEnd, MapOutputAggregated)):
+                    continue
             if out.map_path in check_duplicates:
-                print(f'Warning! Output map {out.map_path} is duplicated, check list of outputs')
+                print(f'Warning! Output map {out.map_path} is duplicated')
             else:
                 check_duplicates.append(out.map_path)
                 outputs_clean.append(out)

@@ -2,6 +2,7 @@ import os
 import glob
 import warnings
 import xarray as xr
+import dask
 import numpy as np
 import datetime
 import pcraster
@@ -260,9 +261,20 @@ class XarrayChunked():
         self.ichunk += 1
         begin = self.chunk_indexes[self.ichunk]
         end = self.chunk_indexes[self.ichunk+1]
-        
+
         chunk = self.dataset.isel(time=range(begin, end))
-        self.dataset_chunk = chunk.load()  # triggers xarray computation
+        # Force the single-threaded (synchronous) dask scheduler for this read.
+        # The netCDF4/HDF5 libraries shipped by conda-forge are built without
+        # thread-safety (nompi). Under dask's default threaded scheduler, several
+        # worker threads read from the same HDF5 file concurrently while, at the
+        # same time, garbage collection in another thread may close a netCDF file
+        # handle (NetCDF4DataStore.__del__ -> close). Concurrent read/close on a
+        # non-threadsafe HDF5 corrupts its global state and aborts the process
+        # (Fatal Python error: Aborted / SIGABRT). Reads were already serialized
+        # by xarray's HDF5 lock, so running synchronously removes the crash with
+        # negligible performance impact.
+        with dask.config.set(scheduler='synchronous'):
+            self.dataset_chunk = chunk.load()  # triggers xarray computation
 
     def __getitem__(self, step):
 
@@ -439,7 +451,7 @@ def write_netcdf_header(settings,
                         start_date,
                         rep_steps,
                         frequency,
-                        ):
+                        map_value=None):
     
     """ Writes a netcdf header without the data inside
     
@@ -465,7 +477,11 @@ def write_netcdf_header(settings,
         list of reporting steps
     frequency:
         output frequency (all, monthly or yearly)
-    
+    map_value: ReportedMap namedtuple or None, optional
+        Output variable metadata from default_options.py. When provided and OutputPacking is
+        enabled, its scale_factor and add_offset attributes are used for int16 packing.
+        If None (default), no packing is applied.
+
     Returns
     -------
     object
@@ -569,7 +585,25 @@ def write_netcdf_header(settings,
             time.units = 'minutes since %s' % start_date.strftime("%Y-%m-%d %H:%M:%S.0")
         nf1.variables["time"][:] = date2num(time_stamps, time.units, time.calendar)
 
-        value = nf1.createVariable(var_name, dtype, ('time', dim_lat_y, dim_lon_x), zlib=True, fill_value=-9999, chunksizes=(1, nrow, ncol))
+        # value = nf1.createVariable(var_name, dtype, ('time', dim_lat_y, dim_lon_x), zlib=True, fill_value=-9999, chunksizes=(1, nrow, ncol))
+        # Packing: use int16 with CF scale/offset if enabled and variable has packing metadata
+        packing_enabled = binding.get('OutputPacking', 'False') == 'True'
+        has_packing = (map_value is not None
+                       and getattr(map_value, 'scale_factor', None) is not None
+                       and getattr(map_value, 'add_offset', None) is not None)
+        if packing_enabled and has_packing:
+            var_dtype = 'i2'
+            var_fill = default_fillvals['i2']
+        else:
+            var_dtype = dtype
+            var_fill = -9999
+
+        value = nf1.createVariable(var_name, var_dtype, ('time', dim_lat_y, dim_lon_x),
+                                   zlib=True, fill_value=var_fill, chunksizes=(1, nrow, ncol))
+        if packing_enabled and has_packing:
+            value.scale_factor = np.float64(map_value.scale_factor)
+            value.add_offset = np.float64(map_value.add_offset)
+
     else:
         value = nf1.createVariable(var_name, dtype, (dim_lat_y, dim_lon_x), zlib=True, fill_value=-9999)
     

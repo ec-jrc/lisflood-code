@@ -61,7 +61,7 @@ Output time series can be classified in the following categories:
 | infiltration                                                 | $\frac{mm}{timestep}$      | InfiltrationAvUpsTS    | infiltrationUps.tss    |
 | preferential (bypass) flow                                   | $\frac{mm}{timestep}$      | PrefFlowAvUpsTS        | prefFlowUps.tss        |
 | percolation upper to lower soil layer                        | $\frac{mm}{timestep}$      | PercolationAvUpsTS     | dTopToSubUps.tss       |
-| percolation lower soil layer to subsoil                      | $\frac{mm}{timestep}$      | SeepSubToGWAvUpsTS     | dSubToUzUps.tss        |
+| percolation lower soil layer to Upper Zone                   | $\frac{mm}{timestep}$      | SeepSubToGWAvUpsTS     | dSubToUzUps.tss        |
 | surface runoff                                               | $\frac{mm}{timestep}$      | SurfaceRunoffAvUpsTS   | surfaceRunoffUps.tss   |
 | outflow from upper zone                                      | $\frac{mm}{timestep}$      | UZOutflowAvUpsTS       | qUzUps.tss             |
 | outflow from lower zone                                      | $\frac{mm}{timestep}$      | LZOutflowAvUpsTS       | qLzUps.tss             |
@@ -159,7 +159,7 @@ To speed up the pre-run and to prevent that results are taken from the pre-run, 
 | actual transpiration                    | repTaMaps              | $\frac{mm}{timestep}$      | TaMaps                                             | tact            |
 | rainfall interception                   | repInterceptionMaps    | $\frac{mm}{timestep}$      | InterceptionMaps <br> InterceptionForestMaps                                   | int <br> intF            |
 | evaporation of intercepted water        | repEWIntMaps           | $\frac{mm}{timestep}$      | EWIntMaps                                          | ewint           |
-| leaf drainage                           | repLeafDrainageMaps    | $\frac{mm}{timestep}$      | LeafDrainageMaps <br> LeafDrainageForestMaps                                   | ldra <br> draF            |
+| leaf drainage                           | repLeafDrainageMaps    | $\frac{mm}{timestep}$      | LeafDrainageMaps <br> LeafDrainageForestMaps                     no              | ldra <br> draF            |
 | infiltration                            | repInfiltrationMaps    | $\frac{mm}{timestep}$      | InfiltrationMaps <br> InfiltrationForestMaps                                   | inf <br> infF             |
 | preferential (bypass) flow              | repPrefFlowMaps        | $\frac{mm}{timestep}$      | PrefFlowMaps <br> PrefFlowtherMaps <br> PrefFlowForestMaps <br> PrefFlowIrrigationMaps                                       | pflowpixel <br> pflow <br> pflowF <br> pflowi           |
 | percolation upper to lower soil layer   | repPercolationMaps     | $\frac{mm}{timestep}$      | Percolation1ato1bOtherMaps <br> Percolation1to1bForestMaps <br> Percolation1ato1bIrrigationMaps <br> Percolation1bto2OtherMaps <br> Percolation1bto2ForestMaps <br> Percolation1bto2IrrigationMaps                                    | Percolation1ato1bOther <br> Percolation1ato1bForest <br> Percolation1to2Irrigation <br> Percolation1bto2Other <br> Percolation1bto2Forest <br> Percolation1bto2Irrigation           |
