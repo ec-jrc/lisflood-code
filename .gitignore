@@ -1,6 +1,7 @@
 *.gem
 *.sublime-project
 *.sublime-workspace
+.kiro
 .bundle
 .DS_Store
 .jekyll-metadata
@@ -27,3 +28,6 @@ lisflood_model.egg-info
 .vscode/
 *.ipynb
 .ipynb_checkpoints/
+implementation_guide_scale_offset_packing.md
+lisflood_optimization_report.md
+lisflood_optimization_report_v2.md

@@ -211,6 +211,17 @@ You can use builtin path variables in this template and reference to other paths
         </comment>
 		</textvar>
 
+    <textvar name="OutputPacking" value="False">
+    <comment>
+    The option "OutputPacking" enables CF-convention scale_factor/add_offset packing
+    of output maps into int16 (2 bytes per value instead of 4 or 8).
+        - "False" (default): write raw floating-point values (dtype from OutputMapsDataType)
+        - "True": pack into signed 16-bit integers using per-variable scale/offset
+                  Readers automatically unpack using: value = packed * scale_factor + add_offset
+    Note: State/end maps used for warm starts are NEVER packed (always full precision).
+    </comment>
+    </textvar>
+
         <comment>
             **************************************************************
             PARALLELISATION WITH NUMBA (USED IN ROUTING AND SOILLOOP)
@@ -341,6 +352,33 @@ You can use builtin path variables in this template and reference to other paths
         those maps that would be needed to define initial conditions
         for succeeding model run)
 
+        </comment>
+        </textvar>
+
+        <textvar name="OutputMonthlyMean" value="">
+        <comment>
+        Semicolon-separated list of variable names to output as monthly mean.
+        Variables listed here are excluded from normal ReportSteps output.
+        Example: "DischargeMaps;Theta1Maps;UZMaps"
+        Leave empty to disable.
+        </comment>
+        </textvar>
+
+        <textvar name="OutputMonthlySum" value="">
+        <comment>
+        See OutputMonthlyMean
+        </comment>
+        </textvar>
+
+        <textvar name="OutputYearlyMean" value="">
+        <comment>
+        See OutputMonthlyMean
+        </comment>
+        </textvar>
+
+        <textvar name="OutputYearlySum" value="">
+        <comment>
+        See OutputMonthlyMean
         </comment>
         </textvar>
 
@@ -1839,6 +1877,7 @@ You can use builtin path variables in this template and reference to other paths
 
       <textvar name="OutputMapsChunks" value="$(OutputMapsChunks)"/>
       <textvar name="OutputMapsDataType" value="$(OutputMapsDataType)"/>
+      <textvar name="OutputPacking" value="$(OutputPacking)"/>
       <textvar name="NetCDFTimeChunks" value="$(NetCDFTimeChunks)"/>
       <textvar name="MapsCaching" value="$(MapsCaching)"/>
 
@@ -1914,7 +1953,34 @@ You can use builtin path variables in this template and reference to other paths
       Number of days used for internal spin-up (fluxes computations during prerun)
       </comment>
       </textvar>
-      
+
+      <textvar name="OutputMonthlyMean" value="$(OutputMonthlyMean)">
+      <comment>
+      Semicolon-separated list of variable names to output as monthly mean.
+      Variables listed here are excluded from normal ReportSteps output.
+      Example: "DischargeMaps;Theta1Maps;UZMaps"
+      Leave empty to disable.
+      </comment>
+      </textvar>
+
+      <textvar name="OutputMonthlySum" value="$(OutputMonthlySum)">
+      <comment>
+      See OutputMonthlyMean
+      </comment>
+      </textvar>
+
+      <textvar name="OutputYearlyMean" value="$(OutputYearlyMean)">
+      <comment>
+      See OutputMonthlyMean
+      </comment>
+      </textvar>
+
+      <textvar name="OutputYearlySum" value="$(OutputYearlySum)">
+      <comment>
+      See OutputMonthlyMean
+      </comment>
+      </textvar>
+
       </group>
 
       <group>
@@ -5160,8 +5226,8 @@ You can use builtin path variables in this template and reference to other paths
       <comment>
       **************************************************************
       TABLES WITH TOPSOIL SOIL PHYSICAL PARAMETERS (HYPRES)
-      Each parameter is defined for upper (1a and 1b) and
-      lower (2) soil layers
+      Each parameter is defined for upper (1 and 2) and
+      lower (3) soil layers
       **************************************************************
       </comment>
 
@@ -5265,7 +5331,7 @@ You can use builtin path variables in this template and reference to other paths
       <comment>
       **************************************************************
       TABLES WITH TOPSOIL SOIL PHYSICAL PARAMETERS (HYPRES) for Forest
-      Each parameter is defined for 1a and 1b
+      Each parameter is defined for 1 and 2
       Normal parameter is taken for the lower soil layer
       **************************************************************
       </comment>

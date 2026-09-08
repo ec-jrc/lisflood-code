@@ -841,6 +841,14 @@ class LisfloodRunInfo(Warning):
         msg += "\t[X] The simulation output as specified in the settings file can be found in {}\n".format(out_dir)
         msg += "\t[X] Activated modules: {}\n".format(activated_options)
         msg += "\t[X] Report options: {}\n".format(activated_rep)
+        # Packing and aggregation info
+        binding = settings.binding
+        if binding.get('OutputPacking', 'False') == 'True':
+            msg += "\t[X] Output Packing: int16 scale/offset enabled\n"
+        for agg_key in ['OutputMonthlyMean', 'OutputMonthlySum', 'OutputYearlyMean', 'OutputYearlySum']:
+            agg_val = binding.get(agg_key, '').strip()
+            if agg_val:
+                msg += "\t[X] {}: {}\n".format(agg_key, agg_val)
         self._msg = '{}{}'.format(header, msg)
 
     def __str__(self):
