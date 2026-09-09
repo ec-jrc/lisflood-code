@@ -611,7 +611,7 @@ class routing(HydroModule):
             maskinfo = MaskInfo.instance()
 
             # self.var.IsChannelKinematicPcr = (self.var.IsChannelPcr == 1) & (self.var.IsChannelMCTPcr == 0)  #pcr
-            # self.var.IsChannelKinematic = np.bool8(compressArray(self.var.IsChannelKinematicPcr))   #np
+            # self.var.IsChannelKinematic = np.bool(compressArray(self.var.IsChannelKinematicPcr))   #np
             # # Identify channel pixels where Kinematic wave is used instead of MCT
 
             self.var.LddMCT = lddmask(self.var.LddChan, self.var.IsChannelMCTPcr)  #pcr

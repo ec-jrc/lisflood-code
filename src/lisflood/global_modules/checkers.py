@@ -43,7 +43,7 @@ def lakes_present(lake_type):
 
     # Get rid of any lakes/reservoirs that are not part of the channel network
     IsChannelPcr = boolean(loadmap('Channels', pcr=True))
-    IsChannel = np.bool8(compressArray(IsChannelPcr))
+    IsChannel = np.bool(compressArray(IsChannelPcr))
     LakeSitesC[IsChannel == 0] = 0
 
     LakeSitesCC = np.compress(LakeSitesC > 0, LakeSitesC)
