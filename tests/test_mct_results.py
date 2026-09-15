@@ -17,8 +17,18 @@ class TestTSSResults():
 
     case_dir = os.path.join(os.path.dirname(__file__), 'data', 'LF_MCT_UseCase')
 
+    def _mk_tracked_out(self, path):
+        """Create an output folder and record it so the teardown removes only
+        the folders this test created (never the shared 'out/' directory or
+        folders created by other tests)."""
+        if not hasattr(self, '_created_out_dirs'):
+            self._created_out_dirs = []
+        mk_path_out(path)
+        self._created_out_dirs.append(path)
+        return path
+
     def run_mct(self, date_start, date_end, dtsec, dtsec_chan, type):
-        mk_path_out(os.path.join(self.case_dir, 'out'))
+        os.makedirs(os.path.join(self.case_dir, 'out'), exist_ok=True)
         # generate lisflood results
         out_path_ref = os.path.join(self.case_dir, 'reference', 'output_reference_mct_'+type)
         self.out_path_run = os.path.join(self.case_dir, 'out', 'output_mct_'+type)
@@ -40,7 +50,7 @@ class TestTSSResults():
                                            'PathOut': self.out_path_run})
 
 
-        mk_path_out(self.out_path_run)
+        self._mk_tracked_out(self.out_path_run)
         lisfloodexe(settings)
 
         # set precision for the test
@@ -64,7 +74,7 @@ class TestTSSResults():
         comparator.compare_files(reference, output_tss)
 
     def run_mcts(self, date_start, date_end, dtsec, dtsec_chan, type):
-        mk_path_out(os.path.join(self.case_dir, 'out'))
+        os.makedirs(os.path.join(self.case_dir, 'out'), exist_ok=True)
         # generate lisflood results
         out_path_ref = os.path.join(self.case_dir, 'reference', 'output_reference_mcts_'+type)
         self.out_path_run = os.path.join(self.case_dir, 'out', 'output_mcts_'+type)
@@ -85,7 +95,7 @@ class TestTSSResults():
                                            'DtSecChannel' : dtsec_chan,        # single routing step
                                            'PathOut': self.out_path_run})
 
-        mk_path_out(self.out_path_run)
+        self._mk_tracked_out(self.out_path_run)
         lisfloodexe(settings)
 
         # set precisioon for the test
@@ -119,7 +129,7 @@ class TestTSSResults():
         comparator.compare_files(reference, output_tss)
 
     def run_kin(self, date_start, date_end, dtsec, dtsec_chan, type):
-        mk_path_out(os.path.join(self.case_dir, 'out'))
+        os.makedirs(os.path.join(self.case_dir, 'out'), exist_ok=True)
         # generate lisflood results
         out_path_ref = os.path.join(self.case_dir, 'reference', 'output_reference_kin_'+type)
         self.out_path_run = os.path.join(self.case_dir, 'out', 'output_kin_'+type)
@@ -134,7 +144,7 @@ class TestTSSResults():
                                            'DtSecChannel' : dtsec_chan,        # single routing step
                                            'PathOut': self.out_path_run})
 
-        mk_path_out(self.out_path_run)
+        self._mk_tracked_out(self.out_path_run)
         lisfloodexe(settings)
 
         # set precisioon for the test
@@ -158,7 +168,7 @@ class TestTSSResults():
         comparator.compare_files(reference, output_tss)
 
     def run_split(self, date_start, date_end, dtsec, dtsec_chan, type):
-        mk_path_out(os.path.join(self.case_dir, 'out'))
+        os.makedirs(os.path.join(self.case_dir, 'out'), exist_ok=True)
         # generate lisflood results
         out_path_ref = os.path.join(self.case_dir, 'reference', 'output_reference_split_'+type)
         self.out_path_run = os.path.join(self.case_dir, 'out', 'output_split_'+type)
@@ -173,7 +183,7 @@ class TestTSSResults():
                                            'DtSecChannel' : dtsec_chan,        # single routing step
                                            'PathOut': self.out_path_run})
 
-        mk_path_out(self.out_path_run)
+        self._mk_tracked_out(self.out_path_run)
         lisfloodexe(settings)
 
         # set precision for the test
@@ -207,7 +217,7 @@ class TestTSSResults():
         comparator.compare_files(reference, output_tss)
 
     def run_prerun_mct_test(self, date_start, date_end, dtsec, dtsec_chan, type):
-        mk_path_out(os.path.join(self.case_dir, 'out'))
+        os.makedirs(os.path.join(self.case_dir, 'out'), exist_ok=True)
         # generate lisflood results        
         path_out_a = os.path.join(self.case_dir, 'out', 'prerunMCTON_'+type)
         self.out_path_run = path_out_a
@@ -225,7 +235,7 @@ class TestTSSResults():
         nc_comparator = NetCDFComparator(settings.maskpath, array_equal=True)
         tss_comparator = TSSComparator(array_equal=True)
 
-        mk_path_out(self.out_path_run)
+        self._mk_tracked_out(self.out_path_run)
         lisfloodexe(settings)
 
         path_out_b = os.path.join(self.case_dir, 'out', 'prerunMCTOFF_'+type)
@@ -242,7 +252,7 @@ class TestTSSResults():
                                            'PathOut': self.out_path_run})
 
 
-        mk_path_out(self.out_path_run)
+        self._mk_tracked_out(self.out_path_run)
         lisfloodexe(settings)
 
 
@@ -251,9 +261,12 @@ class TestTSSResults():
 
     def teardown_method(self):
         print('Cleaning directories')
-        out_path = os.path.join(self.case_dir, 'out')
-        if os.path.exists(out_path) and os.path.isdir(out_path):
-            shutil.rmtree(out_path, ignore_errors=True)
+        # Remove only the folders this test created, leaving the shared 'out/'
+        # directory and any folders created by other tests untouched.
+        for path in getattr(self, '_created_out_dirs', []):
+            if os.path.exists(path) and os.path.isdir(path):
+                shutil.rmtree(path, ignore_errors=True)
+        self._created_out_dirs = []
 
 
 # do_not_run

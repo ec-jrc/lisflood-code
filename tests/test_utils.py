@@ -72,8 +72,10 @@ def mk_path_out(p):
     path_out = os.path.join(os.path.dirname(__file__), p)
     if os.path.exists(path_out):
         shutil.rmtree(path_out)
-    if not os.path.exists(path_out):
-        os.mkdir(path_out)
+    # Use makedirs (not mkdir) so a missing parent - e.g. when another test's
+    # teardown removed the shared 'out/' directory - does not raise
+    # FileNotFoundError. This makes tests independent of execution order.
+    os.makedirs(path_out)
     return path_out
 
 

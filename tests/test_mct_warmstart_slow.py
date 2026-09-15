@@ -115,7 +115,7 @@ class TestWarmStartLong():
 
     def run_warmstart_by_dtsec(self, mct_case, dt_sec, dt_sec_channel, step_end, step_start, calendar_day_start,report_steps='1..9999'):
 
-        mk_path_out(os.path.join(self.case_dir, 'out'))
+        os.makedirs(os.path.join(self.case_dir, 'out'), exist_ok=True)
 
         check_every = 13  # steps
 

@@ -30,7 +30,8 @@ from .test_utils import setoptions, mk_path_out, ETRS89TestCase
 @pytest.mark.slow
 class TestCatch(ETRS89TestCase):
     case_dir = os.path.join(os.path.dirname(__file__), 'data', 'LF_ETRS89_UseCase')
-    mk_path_out(os.path.join(case_dir, 'out'))
+    # Ensure the shared 'out/' exists without wiping it (would clobber other tests).
+    os.makedirs(os.path.join(case_dir, 'out'), exist_ok=True)
 
     modules_to_set = (
         'SplitRouting',
