@@ -28,10 +28,9 @@ time than wall time on a benchmark catchment, while actually running *slower*
 than a single-threaded execution.
 
 This module reads a small set of settings and applies consistent, explicit
-thread limits to numexpr and the BLAS/OpenMP pools. numba itself is configured
-separately (``set_num_threads`` in ``Lisflood_initial``) using the same
-``numCPUs_parallelNumba`` setting; this module reads that value only to derive
-sensible defaults and to report a single coherent summary.
+thread limits to all three pools: numba (``set_num_threads``), numexpr and the
+BLAS/OpenMP backend. It is the single place that governs thread counts;
+``Lisflood_initial`` simply calls :func:`configure_parallelism` once at startup.
 
 Thread counts affect performance only, never results: LISFLOOD discharge output
 is bitwise-identical across thread configurations (verified on the test and Ob
