@@ -21,20 +21,14 @@ import uuid
 from collections import OrderedDict
 
 import numpy as np
-try:
-    from numba import njit, set_num_threads, get_num_threads, config as numba_config
-    numba_full = True
-except ImportError:
-    import numba
-    print('WARNING! Numba version is probably too old. Only limited functionalities will be available for Numba')
-    print('Numba version: {}'.format(numba.__version__))
-    from numba import njit, config as numba_config
-    numba_full = False
+from numba import njit
+# Thread-pool governance (numba/numexpr/BLAS) lives in parallelization.py.
 
 
 from .global_modules.settings import CutMap, LisSettings, NetCDFMetadata, EPICSettings, MaskInfo
 from .global_modules.zusatz import DynamicModel
 from .global_modules.add1 import loadsetclone, mapattrNetCDF
+from .global_modules.parallelization import configure_parallelism
 from .hydrological_modules.miscInitial import miscInitial
 
 from .hydrological_modules.readmeteo import readmeteo
@@ -98,11 +92,14 @@ class LisfloodModel_ini(DynamicModel):
         flags = self.settings.flags
         report_steps = self.settings.report_steps
 
-        # set the maximum number of threads that numba should use (now used in soilloop only)
-        num_threads = int(binding["numCPUs_parallelNumba"])
-        if (num_threads>0):
-            if num_threads<=numba_config.NUMBA_NUM_THREADS:
-                set_num_threads(num_threads)
+        # Centrally govern the numba, numexpr and BLAS/OpenMP thread pools to
+        # avoid oversubscription. Nested thread pools each sized to the host
+        # core count cause heavy context-switching and can make runs slower
+        # than serial, especially on small/narrow domains. Thread counts affect
+        # performance only, not results.
+        num_pixels = int(self.maskinfo.info.mapC[0]) if self.maskinfo.info.mapC else None
+        configure_parallelism(binding, num_pixels=num_pixels,
+                              verbose=not flags.get('veryquiet'))
 
         # Mapping of vegetation types to land use fractions (and the other way around)
         ##global VEGETATION_LANDUSE, LANDUSE_VEGETATION, PRESCRIBED_VEGETATION, PRESCRIBED_LAI

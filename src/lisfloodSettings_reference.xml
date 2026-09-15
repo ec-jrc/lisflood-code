@@ -243,6 +243,30 @@ You can use builtin path variables in this template and reference to other paths
 		</comment>
 		</textvar>
 
+		<textvar name="numCPUs_parallelNumexpr" value="1">
+		<comment>
+        !-- Number of threads used by the numexpr library (vectorized math in
+        the kinematic-wave routing). On typical catchment sizes numexpr on the
+        small routing arrays gives no speedup and causes thread oversubscription,
+        so the default is serial (1). Values:
+            - "1"                 : serial (recommended default)
+            - "0" / "all" / "auto": use all available cores
+            - "2", "3", ...       : manual thread count -->
+		</comment>
+		</textvar>
+
+		<textvar name="numCPUs_BLAS" value="1">
+		<comment>
+        !-- Number of threads used by the BLAS/OpenMP backend of numpy/scipy
+        (e.g. the SVD in the soil-hydraulics least-squares fit during
+        initialization). Defaults to serial (1) to avoid oversubscription that
+        can make runs slower than single-threaded. Values:
+            - "1"                 : serial (recommended default)
+            - "0" / "all" / "auto": use all available cores
+            - "2", "3", ...       : manual thread count -->
+		</comment>
+		</textvar>
+
         <comment>
           **************************************************************
           AREA AND OUTLETS
@@ -1891,6 +1915,8 @@ You can use builtin path variables in this template and reference to other paths
       -->
       <group>
       <textvar name="numCPUs_parallelNumba" value="$(numCPUs_parallelNumba)"/>
+      <textvar name="numCPUs_parallelNumexpr" value="$(numCPUs_parallelNumexpr)"/>
+      <textvar name="numCPUs_BLAS" value="$(numCPUs_BLAS)"/>
 
       <textvar name="proj4_params" value="$(proj4_params)">
       <comment>
