@@ -76,6 +76,64 @@ def potentialTranspiration(TranspirMax, TaInterception):
 
 
 @njit(parallel=True, fastmath=False, cache=True)
+def soilWaterStressAndTranspiration(swdf, WFC1, WWP1, WFC1a, WWP1a, WFC1b, WWP1b,
+                                    W1, W1a, W1b, potential_transpiration,
+                                    isFrozenSoil, RWS, Ta):
+    """Per-pixel soil-water-stress and actual-transpiration computation for one
+    prescribed vegetation fraction.
+
+    This is a fused, parallel rewrite of the per-vegetation numpy block in
+    ``dynamic_canopy`` (critical moisture -> stress factor RWS -> actual
+    transpiration Ta -> layer-wise abstraction from W1a/W1b). It reproduces the
+    original arithmetic exactly, pixel by pixel, to avoid allocating ~30
+    intermediate full-domain arrays per vegetation type.
+
+    ``swdf`` (soil water depletion fraction) is precomputed by the caller in
+    numpy to preserve the original float32 precision of the ETRef term.
+
+    RWS, Ta, W1a, W1b, W1 are updated in place (1D pixel arrays for this veg).
+    """
+    num_pix = W1.shape[0]
+    for pix in prange(num_pix):
+        # Critical soil moisture per layer. NOTE: the wcrit1a/wcrit1b formula is
+        # also computed in dynamic_canopy (for the Irrigated WFilla/WFillb); keep
+        # the two in sync if this changes.
+        one_minus_swdf = 1.0 - swdf[pix]
+        wcrit1 = one_minus_swdf * (WFC1[pix] - WWP1[pix]) + WWP1[pix]
+        wcrit1a = one_minus_swdf * (WFC1a[pix] - WWP1a[pix]) + WWP1a[pix]
+        wcrit1b = one_minus_swdf * (WFC1b[pix] - WWP1b[pix]) + WWP1b[pix]
+
+        # Transpiration reduction factor (0..1); no stress (=1) if WCrit1 == WWP1
+        denom = wcrit1 - WWP1[pix]
+        rws = (W1[pix] - WWP1[pix]) / denom if denom > 0 else 1.0
+        rws = min(max(rws, 0.0), 1.0)
+        RWS[pix] = rws
+
+        # actual transpiration, capped by transpirable water and zero if frozen
+        transpirable_water = max(W1[pix] - WWP1[pix], 0.0)
+        ta = 0.0 if isFrozenSoil[pix] else min(rws * potential_transpiration[pix], transpirable_water)
+        Ta[pix] = ta
+
+        # distribute abstraction: 1st unstressed layer 1a, 2nd unstressed 1b,
+        # 3rd remainder proportional to stressed availability of each layer
+        wc1a = max(W1a[pix] - wcrit1a, 0.0)
+        wc1b = max(W1b[pix] - wcrit1b, 0.0)
+        ta1a = min(ta, wc1a)
+        rest_ta = max(ta - ta1a, 0.0)
+        ta1b = min(rest_ta, wc1b)
+        rest_ta = max(rest_ta - ta1b, 0.0)
+        avail_1a = max(W1a[pix] - ta1a - WWP1a[pix], 0.0)
+        avail_1b = max(W1b[pix] - ta1b - WWP1b[pix], 0.0)
+        avail_tot = avail_1a + avail_1b
+        if avail_tot > 0:
+            ta1a += (avail_1a / avail_tot) * rest_ta
+            ta1b += (avail_1b / avail_tot) * rest_ta
+        W1a[pix] -= ta1a
+        W1b[pix] -= ta1b
+        W1[pix] = W1a[pix] + W1b[pix]
+
+
+@njit(parallel=True, fastmath=False, cache=True)
 def soilColumnsWaterBalance(index_landuse_all, is_irrigated, is_paddy_irrig, paddy_inactive, DtDay,
                             AvailableWaterForInfiltration, Rain, SnowMelt,
                             LeafDrainage, Interception, DSLR,
@@ -565,67 +623,49 @@ class soilloop(HydroModule):
         for veg in self.var.prescribed_vegetation:
             iveg, ilanduse, landuse = self.var.get_landuse_and_indexes_from_vegetation_epic(veg)
 
+            # Soil water depletion fraction (Van Diepen et al., 1988). Computed
+            # in numpy (not in the kernel) so the arithmetic matches the original
+            # bit-for-bit: ETRef is float32, and numpy keeps float32 precision
+            # through this expression whereas numba would promote to float64.
             swdf = 1 / (0.76 + 1.5 * np.minimum(0.1 * self.var.ETRef * self.var.InvDtDay, 1.0)) - 0.10 * (5 - self.var.CropGroupNumber.values[ilanduse])
-            # soil water depletion fraction (easily available soil water)
-            # Van Diepen et al., 1988: WOFOST 6.0, p.87
-            # to avoid a strange behaviour of the p-formula's, ETRef is set to a maximum of
-            # 10 mm/day. Thus, p will range from 0.15 to 0.45 at ETRef eq 10 and
-            # CropGroupNumber 1-5
             swdf = np.where(self.var.CropGroupNumber.values[ilanduse] <= 2.5, swdf + (np.minimum(0.1 * self.var.ETRef * self.var.InvDtDay, 1.0) - 0.6) / (
                 self.var.CropGroupNumber.values[ilanduse] * (self.var.CropGroupNumber.values[ilanduse] + 3)), swdf)
-            # correction for crop groups 1 and 2 (Van Diepen et al, 1988)
             swdf = np.maximum(np.minimum(swdf, 1.0), 0)
-            # p is between 0 and 1
-            WCrit1 = ((1 - swdf) * (self.var.WFC1.values[ilanduse] - self.var.WWP1.values[ilanduse])) + self.var.WWP1.values[ilanduse]
-            WCrit1a = ((1 - swdf) * (self.var.WFC1a.values[ilanduse] - self.var.WWP1a.values[ilanduse])) + self.var.WWP1a.values[ilanduse]
-            WCrit1b = ((1 - swdf) * (self.var.WFC1b.values[ilanduse] - self.var.WWP1b.values[ilanduse])) + self.var.WWP1b.values[ilanduse]
-            # critical moisture amount ([mm] water slice) for all layers
-            if option['wateruse']:
-                if landuse == "Irrigated":
-                    #CR: using the original xarray variables WPF3a and WPF3a to keep WFilla and WFillb as xarrays
-                    #N.B: WPF3a and WPF3b values are not changed in this function, so I can use the original
-                    self.var.WFilla = np.minimum(WCrit1a, self.var.WPF3a.values[ilanduse])
-                    self.var.WFillb = np.minimum(WCrit1b, self.var.WPF3b.values[ilanduse])
-                    # if water use is calculated, get the filling of the soil layer for either pF3 or WCrit1
-                    # that is the amount of water the soil gets filled by water from irrigation
-               #  bc the divisor can have 0 -> this calculation is done first and raise a warning - zero encountered - even if it is catched afterwards
-            self.var.RWS.values[iveg] = np.where((WCrit1 - self.var.WWP1.values[ilanduse]) > 0,\
-                                             (self.var.W1.values[ilanduse] - self.var.WWP1.values[ilanduse]) / (WCrit1 - self.var.WWP1.values[ilanduse]), 1)
-            # Transpiration reduction factor (in case of water stress)
-            # if WCrit1 = WWP1, RWS is zero there is no water stress in that case
-            self.var.RWS.values[iveg] = np.maximum(np.minimum(self.var.RWS.values[iveg], 1), 0)
-            # Transpiration reduction factor (in case of water stress)
+
+            if option['wateruse'] and landuse == "Irrigated":
+                # WFilla/WFillb (irrigation target filling) is consumed later by
+                # the water-abstraction module, so it must still be computed here.
+                # NOTE: the critical-moisture formula below is intentionally
+                # mirrored inside soilWaterStressAndTranspiration (wcrit1a/wcrit1b),
+                # which needs it for every vegetation fraction. Here it is only
+                # needed for the Irrigated fraction's WFilla/WFillb. If you
+                # change this formula, update the kernel too.
+                WCrit1a = ((1 - swdf) * (self.var.WFC1a.values[ilanduse] - self.var.WWP1a.values[ilanduse])) + self.var.WWP1a.values[ilanduse]
+                WCrit1b = ((1 - swdf) * (self.var.WFC1b.values[ilanduse] - self.var.WWP1b.values[ilanduse])) + self.var.WWP1b.values[ilanduse]
+                #CR: using the original xarray variables WPF3a and WPF3a to keep WFilla and WFillb as xarrays
+                #N.B: WPF3a and WPF3b values are not changed in this function, so I can use the original
+                self.var.WFilla = np.minimum(WCrit1a, self.var.WPF3a.values[ilanduse])
+                self.var.WFillb = np.minimum(WCrit1b, self.var.WPF3b.values[ilanduse])
+
+            # Fused per-pixel computation of soil water stress (RWS), actual
+            # transpiration (Ta) and the layer-wise abstraction from W1a/W1b.
+            # Updates RWS/Ta/W1a/W1b/W1 rows in place (parallel over pixels).
+            # Soil properties (WFC*/WWP*) are indexed per land-use class
+            # (ilanduse); soil-moisture state and outputs (W1/W1a/W1b/Ta/RWS)
+            # are indexed per vegetation (iveg), matching how each is allocated.
+            soilWaterStressAndTranspiration(
+                swdf,
+                self.var.WFC1.values[ilanduse], self.var.WWP1.values[ilanduse],
+                self.var.WFC1a.values[ilanduse], self.var.WWP1a.values[ilanduse],
+                self.var.WFC1b.values[ilanduse], self.var.WWP1b.values[ilanduse],
+                self.var.W1.values[iveg], self.var.W1a.values[iveg], self.var.W1b.values[iveg],
+                self.var.potential_transpiration[iveg], self.var.isFrozenSoil,
+                self.var.RWS.values[iveg], self.var.Ta.values[iveg])
+
             if option['repStressDays']:
                 self.var.SoilMoistureStressDays.values[iveg] = np.where(self.var.RWS.values[iveg] < 1, self.var.DtDay, 0)
                 # Count number of days with soil water stress, RWS is between 0 and 1
                 # no reduction of Transpiration at RWS=1, at RWS=0 there is no Transpiration at all
-
-            transpirable_water = np.maximum(self.var.W1.values[ilanduse] - self.var.WWP1.values[ilanduse], 0)
-            self.var.Ta.values[iveg] = np.minimum(self.var.RWS.values[iveg] * self.var.potential_transpiration[iveg], transpirable_water)
-            # actual transpiration based on both layers 1a and 1b
-            self.var.Ta.values[iveg] = np.where(self.var.isFrozenSoil, 0, self.var.Ta.values[iveg])
-            # transpiration is 0 when soil is frozen
-            # calculate distribution where to take Ta from:
-            # 1st: above wCrit from layer 1a
-            # 2nd: above Wcrit from layer 1b
-            # 3rd:  distribute take off according to soil moisture availability below wcrit
-            wc1a = np.maximum(self.var.W1a.values[ilanduse] - WCrit1a, 0) # unstressed water availability from layer 1a without stress (above critical soil moisture)
-            wc1b = np.maximum(self.var.W1b.values[ilanduse] - WCrit1b, 0) # (same as above but for layer 1b)
-            Ta1a = np.minimum(self.var.Ta.values[iveg], wc1a)         # temporary transpiration from layer 1a (<= unstressed layer 1a availability)
-            restTa = np.maximum(self.var.Ta.values[iveg] - Ta1a, 0)   # transpiration left after layer 1a unstressed water has been abstracted
-            Ta1b = np.minimum(restTa, wc1b)                       # temporary transpiration from layer 1b (<= unstressed layer 1b availability)
-            restTa = np.maximum(restTa - Ta1b, 0)                 # transpiration left after layers 1a and 1b unstressed water have been abstracted
-            stressed_availability_1a = np.maximum(self.var.W1a.values[ilanduse] - Ta1a - self.var.WWP1a.values[ilanduse], 0) #|
-            stressed_availability_1b = np.maximum(self.var.W1b.values[ilanduse] - Ta1b - self.var.WWP1b.values[ilanduse], 0) #|
-            stressed_availability_tot = stressed_availability_1a + stressed_availability_1b                      #|> distribution of abstractions of
-            available = stressed_availability_tot > 0                                                            #|> soil moisture below the critical value
-            fraction_rest_1a = np.where(available, stressed_availability_1a / stressed_availability_tot, 0)      #|> proportionally to each root-zone layer (1a and 1b)
-            fraction_rest_1b = np.where(available, stressed_availability_1b / stressed_availability_tot, 0)      #|> "stressed" availability
-            Ta1a += fraction_rest_1a * restTa                                                                    #|
-            Ta1b += fraction_rest_1b * restTa                                                                    #|
-            self.var.W1a.values[ilanduse] -= Ta1a
-            self.var.W1b.values[ilanduse] -= Ta1b
-            self.var.W1.values[iveg] = self.var.W1a.values[ilanduse] + self.var.W1b.values[ilanduse]
 
 
     def dynamic_soil(self):
