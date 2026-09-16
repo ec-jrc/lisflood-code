@@ -98,8 +98,10 @@ class LisfloodModel_ini(DynamicModel):
         # than serial, especially on small/narrow domains. Thread counts affect
         # performance only, not results.
         num_pixels = int(self.maskinfo.info.mapC[0]) if self.maskinfo.info.mapC else None
-        configure_parallelism(binding, num_pixels=num_pixels,
-                              verbose=not flags.get('veryquiet'))
+        # verbose=False: the effective thread counts are reported once, in the
+        # LisfloodRunInfo startup banner (see LisfloodRunInfo in settings.py),
+        # to keep the startup output in a single coherent block.
+        configure_parallelism(binding, num_pixels=num_pixels, verbose=False)
 
         # Mapping of vegetation types to land use fractions (and the other way around)
         ##global VEGETATION_LANDUSE, LANDUSE_VEGETATION, PRESCRIBED_VEGETATION, PRESCRIBED_LAI

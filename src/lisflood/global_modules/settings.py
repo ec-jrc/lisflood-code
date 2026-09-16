@@ -845,6 +845,24 @@ class LisfloodRunInfo(Warning):
         msg += "\t[X] The simulation output as specified in the settings file can be found in {}\n".format(out_dir)
         msg += "\t[X] Activated modules: {}\n".format(activated_options)
         msg += "\t[X] Report options: {}\n".format(activated_rep)
+        # Thread-pool governance (numba/numexpr/BLAS) plus the soil-init worker
+        # process count. Affects performance only, not results. "all" means every
+        # available core is used.
+        from .parallelization import get_effective_parallelism
+        _par = get_effective_parallelism()
+        if _par is not None:
+            def _fmt_threads(v):
+                return "all" if v is None else str(v)
+            # numCPUs_soilInit governs the ColdStart least_squares process pool
+            # (see resolve_soilinit_workers); it is a separate mechanism from the
+            # numba/numexpr/BLAS thread pools. resolve_soilinit_workers already
+            # resolves 0/"all"/"auto" to the host core count, so report the
+            # resolved worker-process count directly.
+            from ..hydrological_modules.soil import resolve_soilinit_workers
+            _soilinit = resolve_soilinit_workers(settings.binding)
+            msg += "\t[X] Parallelization: numba={}, numexpr={}, BLAS={}, soilInit={} (host cores={})\n".format(
+                _fmt_threads(_par.get('numba')), _fmt_threads(_par.get('numexpr')),
+                _fmt_threads(_par.get('blas')), _soilinit, _par.get('host'))
         # Packing and aggregation info
         binding = settings.binding
         if binding.get('OutputPacking', 'False') == 'True':

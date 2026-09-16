@@ -82,6 +82,20 @@ except ImportError:  # pragma: no cover - older numba without set_num_threads
 # not garbage-collected (and thus reverted) during the model run.
 _blas_limiter = None
 
+# Last-applied effective thread counts, so the startup banner can report the
+# same numbers that were actually applied (see get_effective_parallelism).
+_effective = None
+
+
+def get_effective_parallelism():
+    """Return the last-applied effective thread counts, or None if parallelism
+    has not been configured yet.
+
+    The dict is keyed 'numba', 'numexpr', 'blas'; a value of None means
+    "all available cores". Also includes 'host' (host core count).
+    """
+    return _effective
+
 
 def _parse_thread_count(value):
     """Interpret a settings value as a thread count.
@@ -169,7 +183,7 @@ def configure_parallelism(binding, num_pixels=None, verbose=False):
         The effective thread counts, keyed 'numba', 'numexpr', 'blas'
         (None means "all cores").
     """
-    global _blas_limiter
+    global _blas_limiter, _effective
 
     numba_threads = resolve_numba_threads(binding, num_pixels)
 
@@ -220,7 +234,9 @@ def configure_parallelism(binding, num_pixels=None, verbose=False):
         "numba": numba_threads,       # applied in Lisflood_initial
         "numexpr": numexpr_threads,
         "blas": blas_threads,
+        "host": host,
     }
+    _effective = effective
 
     if verbose:
         def fmt(v):
