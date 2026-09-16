@@ -267,6 +267,24 @@ You can use builtin path variables in this template and reference to other paths
 		</comment>
 		</textvar>
 
+		<textvar name="numCPUs_soilInit" value="1">
+		<comment>
+        !-- Number of worker PROCESSES used for the cold-start soil-layer-2
+        saturation solve (a per-pixel scipy least-squares that can dominate
+        initialization time on large/global domains). This is process-based
+        parallelism, independent of the numba/numexpr/BLAS thread pools; results
+        are identical regardless of the value. Values:
+            - "1"                 : serial (default; unchanged behaviour)
+            - "0" / "all" / "auto": use all available cores
+            - "2", "3", ...       : manual process count
+        Keep this at "1" when an outer tool already parallelizes LISFLOOD runs
+        (e.g. lisflood-calibration runs one LISFLOOD per DEAP individual): each
+        instance must stay single-process to avoid oversubscription. As a
+        safeguard, this parallelism auto-disables when LISFLOOD detects it is
+        running inside a forked/daemon worker. -->
+		</comment>
+		</textvar>
+
         <comment>
           **************************************************************
           AREA AND OUTLETS
@@ -1917,6 +1935,7 @@ You can use builtin path variables in this template and reference to other paths
       <textvar name="numCPUs_parallelNumba" value="$(numCPUs_parallelNumba)"/>
       <textvar name="numCPUs_parallelNumexpr" value="$(numCPUs_parallelNumexpr)"/>
       <textvar name="numCPUs_BLAS" value="$(numCPUs_BLAS)"/>
+      <textvar name="numCPUs_soilInit" value="$(numCPUs_soilInit)"/>
 
       <textvar name="proj4_params" value="$(proj4_params)">
       <comment>

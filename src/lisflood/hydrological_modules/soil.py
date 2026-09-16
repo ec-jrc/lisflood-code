@@ -17,6 +17,8 @@ See the Licence for the specific language governing permissions and limitations 
 
 from __future__ import absolute_import, print_function
 
+import os
+import multiprocessing
 import numpy as np
 import warnings
 import xarray as xr
@@ -35,6 +37,79 @@ from scipy.optimize import least_squares
 def function_estimate(satdegrthetastart,*data):       
         SeepTopToSubBAv, KSat2,GenuInvM2, GenuM2 = data
         return SeepTopToSubBAv - KSat2 * np.sqrt(satdegrthetastart) * (1. - (1. - satdegrthetastart ** GenuInvM2) ** GenuM2) ** 2
+
+
+def _solve_saturation_chunk(args):
+    """Solve the layer-2 saturation for a chunk of pixels with the exact same
+    per-pixel scipy least_squares call as the original serial loop, so results
+    are bit-identical. Module-level (picklable) for use with multiprocessing.
+
+    args = (x0, seep, ksat, genu_inv_m, genu_m) - 1D arrays for the chunk.
+    Returns the solved saturation degree array for the chunk.
+    """
+    x0, seep, ksat, genu_inv_m, genu_m = args
+    solved = np.empty(x0.shape[0])
+    for i in range(x0.shape[0]):
+        res = least_squares(function_estimate, x0[i], bounds=(0.0, 1.0),
+                            gtol=10e-12, args=(seep[i], ksat[i], genu_inv_m[i], genu_m[i]))
+        solved[i] = res.x[0]
+    return solved
+
+
+def resolve_soilinit_workers(binding):
+    """Number of worker processes for the ColdStart soil-init solve.
+
+    Controlled by the dedicated 'numCPUs_soilInit' setting (process-based
+    parallelism for the per-pixel scipy least_squares solve; unrelated to the
+    numba/numexpr/BLAS thread pools). Values: a positive integer, or
+    0 / "" / "all" / "auto" for all available cores. Defaults to 1 (serial) when
+    unset, so behaviour is unchanged unless the user opts in.
+    """
+    from ..global_modules.parallelization import _parse_thread_count
+    val = binding.get('numCPUs_soilInit') if binding is not None else None
+    if val in (None, ""):
+        return 1
+    workers = _parse_thread_count(val)  # int>=1, or None meaning "all cores"
+    if workers is None:
+        workers = os.cpu_count() or 1
+    return workers
+
+
+def _running_in_child_process():
+    """True if we are inside a forked/daemon worker (e.g. a LISFLOOD instance
+    launched by lisflood-calibration's multiprocessing Pool). Python forbids a
+    daemonic process from having children, so a nested Pool here would crash;
+    detecting this lets us fall back to serial instead."""
+    proc = multiprocessing.current_process()
+    return proc.daemon or proc.name != 'MainProcess'
+
+
+def solve_saturation_degree(x0, seep, ksat, genu_inv_m, genu_m, num_workers=1):
+    """Solve layer-2 saturation for all pixels. Identical numerics to the
+    original per-pixel scipy loop; only the *iteration* is parallelized across
+    processes when num_workers > 1 (each worker runs the exact same loop over a
+    contiguous chunk). Falls back to serial for small arrays, num_workers<=1, or
+    when already running inside a forked/daemon worker (nested pools are unsafe;
+    this is the lisflood-calibration case, where each LISFLOOD instance must stay
+    single-process)."""
+    n = x0.shape[0]
+    serial = (num_workers is None or num_workers <= 1 or n < 2 * num_workers
+              or _running_in_child_process())
+    if serial:
+        return _solve_saturation_chunk((x0, seep, ksat, genu_inv_m, genu_m))
+
+    # split into a few chunks per worker to balance load; use an explicit 'fork'
+    # context (fast, no re-import) and BLAS already pinned to 1 thread per worker.
+    n_chunks = min(n, num_workers * 4)
+    idx_chunks = np.array_split(np.arange(n), n_chunks)
+    tasks = [(x0[ix], seep[ix], ksat[ix], genu_inv_m[ix], genu_m[ix]) for ix in idx_chunks]
+    ctx = multiprocessing.get_context('fork')
+    with ctx.Pool(num_workers) as pool:
+        parts = pool.map(_solve_saturation_chunk, tasks)
+    solved = np.empty(n)
+    for ix, part in zip(idx_chunks, parts):
+        solved[ix] = part
+    return solved
 
 def pressure2SoilMoistureFun(residual_sm, sat_sm, GenuA, GenuN, GenuM):
     """Generate a function to compute soil moisture values corresponding to characteristic pressure head levels [cm].
@@ -287,6 +362,10 @@ class soil(HydroModule):
              self.var.SeepTopToSubBAv[1] = loadmap('SeepTopToSubBAverageForestMap')
              self.var.SeepTopToSubBAv[2] = loadmap('SeepTopToSubBAverageIrrigationMap')
 
+        # number of worker processes for the ColdStart layer-2 saturation solve
+        # (per-pixel least_squares); set via 'numCPUs_soilInit' (default 1 = serial).
+        soilinit_workers = resolve_soilinit_workers(binding)
+
         for veg, luse in self.var.VEGETATION_LANDUSE.items():
             iveg = self.var.vegetation.index(veg)
             iluse = self.var.SOIL_USES.index(luse)
@@ -307,13 +386,17 @@ class soil(HydroModule):
              if check_prerun_results < 0.0:   
                warnings.warn(LisfloodWarning('WARNING: soil moisture end state for bottom layer OR average fluxes not provided/erroneous. Soil moisture states are initialized at field capacity')) 
              else:                        
-               SOLVED = ((ThetaInit2Value[iveg] * self.var.SoilDepth2[iluse])-self.var.WRes2[iluse])/(self.var.WS2[iluse]-self.var.WRes2[iluse])                          
-               for ii in np.arange(len(ThetaInit2Value[iveg])):
-                 data = []
-                 analyticalcheckzero = []
-                 data=(self.var.SeepTopToSubBAv[iluse][ii], self.var.KSat2[iluse][ii], self.var.GenuInvM2[iluse][ii], self.var.GenuM2[iluse][ii])           
-                 analyticalcheckzero = least_squares(function_estimate,((ThetaInit2Value[iveg][ii] * self.var.SoilDepth2[iluse][ii])-self.var.WRes2[iluse][ii])/(self.var.WS2[iluse][ii]-self.var.WRes2[iluse][ii]),bounds=(self.var.WFC2[iluse][ii]*0,self.var.WFC2[iluse][ii]*0+1.0), gtol = 10e-12, args = data)
-                 SOLVED[ii]=analyticalcheckzero.x
+               # x0 for each pixel = initial saturation degree from ThetaInit2
+               x0 = ((ThetaInit2Value[iveg] * self.var.SoilDepth2[iluse]) - self.var.WRes2[iluse]) / (self.var.WS2[iluse] - self.var.WRes2[iluse])
+               # Solve K(s)=SeepTopToSubBAv per pixel (same scipy least_squares as
+               # before, bit-identical), parallelized over processes for speed.
+               SOLVED = solve_saturation_degree(
+                   np.asarray(x0, dtype=float),
+                   np.asarray(self.var.SeepTopToSubBAv[iluse], dtype=float),
+                   np.asarray(self.var.KSat2[iluse], dtype=float),
+                   np.asarray(self.var.GenuInvM2[iluse], dtype=float),
+                   np.asarray(self.var.GenuM2[iluse], dtype=float),
+                   num_workers=soilinit_workers)
                ini_2 = SOLVED*(self.var.WS2[iluse]-self.var.WRes2[iluse])+self.var.WRes2[iluse]           
                self.var.W2[iveg] = np.where(self.var.PoreSpaceNotZero2[iluse], ini_2, 0)
         
