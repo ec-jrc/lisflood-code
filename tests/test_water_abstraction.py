@@ -5,7 +5,7 @@ from lisfloodutilities.compare.nc import NetCDFComparator
 
 from lisflood.main import lisfloodexe
 
-from .test_utils import setoptions, mk_path_out, ETRS89TestCase
+from .test_utils import setoptions, mk_path_out, ETRS89TestCase, worker_out
 
 
 class TestWaterAbstraction(ETRS89TestCase):
@@ -23,13 +23,16 @@ class TestWaterAbstraction(ETRS89TestCase):
         os.makedirs(out_dir, exist_ok=True)
 
         settings_file = os.path.join(case_dir, 'settings', 'full.xml')
-        out_dir_a = os.path.join(case_dir, 'out', 'a')
-        out_dir_b = os.path.join(case_dir, 'out', 'b')
-        
+        # Output dirs isolated per xdist worker (worker_out -> 'out/<gwN>/a' in
+        # parallel, 'out/a' serially) so this file's 'out/a','out/b' do not
+        # clobber the identically named dirs in test_chunking / test_caching.
+        out_dir_a = os.path.join(case_dir, worker_out('a'))
+        out_dir_b = os.path.join(case_dir, worker_out('b'))
+
         settings_a = setoptions(settings_file,
                                 opts_to_set=('TransientWaterDemandChange', 'useWaterDemandAveYear'),
                                 vars_to_set={'StepStart': '30/07/2016 00:00', 'StepEnd': '01/08/2016 00:00',
-                                             'DtSec': dt_sec, 'PathOut': '$(PathRoot)/out/a',
+                                             'DtSec': dt_sec, 'PathOut': '$(PathRoot)/' + worker_out('a'),
                                              'PathWaterUse': '$(PathRoot)/maps/waterdemand'
                                              })
         mk_path_out(out_dir_a)
@@ -39,7 +42,7 @@ class TestWaterAbstraction(ETRS89TestCase):
                                 opts_to_set=('TransientWaterDemandChange'),
                                 opts_to_unset=('useWaterDemandAveYear'),
                                 vars_to_set={'StepStart': '30/07/2016 00:00', 'StepEnd': '01/08/2016 00:00',
-                                             'DtSec': dt_sec, 'PathOut': '$(PathRoot)/out/b',
+                                             'DtSec': dt_sec, 'PathOut': '$(PathRoot)/' + worker_out('b'),
                                              'PathWaterUse': '$(PathRoot)/maps/waterdemand19902019'})
         mk_path_out(out_dir_b)
         lisfloodexe(settings_b)

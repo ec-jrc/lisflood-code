@@ -28,7 +28,7 @@ from lisfloodutilities.compare.pcr import TSSComparator
 
 from lisflood.main import lisfloodexe
 
-from .test_utils import setoptions, mk_path_out
+from .test_utils import setoptions, mk_path_out, worker_out
 
 
 @pytest.mark.slow
@@ -119,7 +119,7 @@ class TestWarmStartLong():
 
         check_every = 13  # steps
 
-        self.path_out_reference = os.path.join(self.case_dir, 'out', 'longrun_reference{}'.format(dt_sec))
+        self.path_out_reference = mk_path_out(os.path.join(self.case_dir, 'out', 'longrun_reference{}'.format(dt_sec)))
 
         if mct_case == 'mct':
             opts_to_set = ['repStateMaps','repDischargeMaps',
@@ -168,8 +168,7 @@ class TestWarmStartLong():
                                                    'DtSec': dt_sec,
                                                    'DtSecChannel': dt_sec_channel,
                                                    'TransSub': 0.3})
-        # ** execute
-        mk_path_out(self.path_out_reference)
+        # ** execute (path already created by mk_path_out above)
         lisfloodexe(settings_longrun)
 
 
@@ -177,7 +176,7 @@ class TestWarmStartLong():
         run_number = 1
         cold_start_step_end = step_start
 
-        self.path_out = os.path.join(self.case_dir, 'out', 'run{}_{}'.format(dt_sec, run_number))
+        self.path_out = mk_path_out(os.path.join(self.case_dir, 'out', 'run{}_{}'.format(dt_sec, run_number)))
 
         settings_coldstart = setoptions(self.settings_files['cold'],
                                         opts_to_set=opts_to_set,
@@ -190,8 +189,7 @@ class TestWarmStartLong():
                                                         'DtSec': dt_sec,
                                                         'DtSecChannel': dt_sec_channel,
                                                         'TransSub': 0.3})
-        # ** execute
-        mk_path_out(self.path_out)
+        # ** execute (path already created by mk_path_out above)
         lisfloodexe(settings_coldstart)
 
         # warm run (2. single step warm start/stop with initial conditions from previous run)
@@ -209,7 +207,7 @@ class TestWarmStartLong():
         while warm_step_start <= step_limit:
             run_number += 1
             path_init = prev_settings.output_dir
-            self.path_out = (os.path.join(self.case_dir, 'out', 'run{}_{}'.format(dt_sec, run_number)))
+            self.path_out = mk_path_out(os.path.join(self.case_dir, 'out', 'run{}_{}'.format(dt_sec, run_number)))
 
             settings_warmstart = setoptions(self.settings_files['warm'],
                                             opts_to_set=opts_to_set,
@@ -224,8 +222,7 @@ class TestWarmStartLong():
                                                             'DtSec': dt_sec,
                                                             'DtSecChannel': dt_sec_channel,
                                                             'TransSub': 0.3})
-            # ** execute
-            mk_path_out(self.path_out)
+            # ** execute (path already created by mk_path_out above)
             lisfloodexe(settings_warmstart)
 
             # checking values at current timestep (using datetime)
@@ -245,8 +242,11 @@ class TestWarmStartLong():
 
     def teardown_method(self):
         print('Cleaning directories')
-        folders_list = glob.glob(os.path.join(os.path.dirname(__file__), self.case_dir, 'out/run*')) + \
-            glob.glob(os.path.join(os.path.dirname(__file__), self.case_dir, 'out/longrun_reference*')) 
+        # Clean only this worker's output subtree (worker_out() -> 'out' serially,
+        # 'out/<gwN>' under xdist) to avoid removing another worker's dirs.
+        base = os.path.join(os.path.dirname(__file__), self.case_dir, worker_out())
+        folders_list = glob.glob(os.path.join(base, 'run*')) + \
+            glob.glob(os.path.join(base, 'longrun_reference*'))
         for folder in folders_list:
             shutil.rmtree(folder)
 

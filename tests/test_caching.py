@@ -10,7 +10,7 @@ from lisflood.main import lisfloodexe
 from lisflood.global_modules.decorators import Cache
 from lisflood.global_modules.settings import LisSettings
 
-from .test_utils import setoptions, mk_path_out, ETRS89TestCase
+from .test_utils import setoptions, mk_path_out, ETRS89TestCase, worker_out
 
 
 class TestCaching(ETRS89TestCase):
@@ -18,9 +18,14 @@ class TestCaching(ETRS89TestCase):
     settings_file = os.path.join(case_dir, 'settings', 'full.xml')
     path_out = os.path.join(case_dir, 'out')
     if not os.path.exists(path_out):
-        os.mkdir(path_out)
-    out_dir_a = os.path.join(case_dir, 'out', 'a')
-    out_dir_b = os.path.join(case_dir, 'out', 'b')
+        os.makedirs(path_out, exist_ok=True)
+    # Output dirs isolated per xdist worker (see worker_out): 'out/<gwN>/a' in
+    # parallel, 'out/a' serially, so this file's 'out/a' does not clobber the
+    # identically named dir used by test_chunking / test_water_abstraction.
+    out_dir_a = os.path.join(case_dir, worker_out('a'))
+    out_dir_b = os.path.join(case_dir, worker_out('b'))
+    pathout_a = '$(PathRoot)/' + worker_out('a')
+    pathout_b = '$(PathRoot)/' + worker_out('b')
 
     def test_caching_24h(self):
       dt_sec = 86400
@@ -38,7 +43,7 @@ class TestCaching(ETRS89TestCase):
 
         settings_a = setoptions(self.settings_file,
                                 vars_to_set={'StepStart': '30/07/2016 06:00', 'StepEnd': '01/08/2016 06:00',
-                                             'DtSec': dt_sec, 'PathOut': '$(PathRoot)/out/a',
+                                             'DtSec': dt_sec, 'PathOut': self.pathout_a,
                                              'MapsCaching': 'True'})
         mk_path_out(self.out_dir_a)
         lisfloodexe(settings_a)
@@ -59,7 +64,7 @@ class TestCaching(ETRS89TestCase):
 
         settings_b = setoptions(self.settings_file,
                                 vars_to_set={'StepStart': '30/07/2016 06:00', 'StepEnd': '01/08/2016 06:00',
-                                             'DtSec': dt_sec, 'PathOut': '$(PathRoot)/out/b',
+                                             'DtSec': dt_sec, 'PathOut': self.pathout_b,
                                              'MapsCaching': 'True'})
         mk_path_out(self.out_dir_b)
         lisfloodexe(settings_b)

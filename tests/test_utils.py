@@ -68,8 +68,59 @@ def setoptions(settings_file, opts_to_set=None, opts_to_unset=None, vars_to_set=
     return settings
 
 
+def xdist_worker_segment():
+    """Return a per-worker path segment for parallel (pytest-xdist) test runs,
+    or '' when running serially.
+
+    pytest-xdist runs each worker in its own process and exposes its id (e.g.
+    'gw0', 'gw1', ...) via the PYTEST_XDIST_WORKER environment variable. Several
+    tests write to fixed output directories under a shared case dir (e.g.
+    'LF_ETRS89_UseCase/out/a'); different test files reuse the same names, so
+    running them concurrently would clobber each other. Inserting the worker id
+    into the output path gives each worker its own tree ('out/gw0/a', ...).
+    When not under xdist the variable is unset and this returns '', so serial
+    runs keep the exact same paths as before (no behaviour change)."""
+    return os.environ.get('PYTEST_XDIST_WORKER', '')
+
+
+def worker_out(*subpath):
+    """Build an output-relative path that is isolated per xdist worker.
+
+    Returns e.g. 'out/gw0/a' under xdist, or 'out/a' when serial. Use this both
+    for the LISFLOOD ``PathOut`` setting (prefixed with ``$(PathRoot)/``) and
+    for the matching :func:`mk_path_out` filesystem path so they stay in sync."""
+    worker = xdist_worker_segment()
+    parts = ['out'] + ([worker] if worker else []) + list(subpath)
+    return os.path.join(*parts)
+
+
+def _insert_worker_segment(path):
+    """Insert the xdist worker id into a path right after its 'out' segment, so
+    parallel workers get separate output trees. Serial runs (worker id '') are
+    returned unchanged. Example: '.../LF_ETRS89_UseCase/out/test_results86400'
+    -> '.../LF_ETRS89_UseCase/out/gw0/test_results86400' under xdist."""
+    worker = xdist_worker_segment()
+    if not worker:
+        return path
+    parts = path.split(os.sep)
+    # find the last 'out' segment and insert the worker id after it, unless it
+    # is already worker-scoped (idempotent).
+    for i in range(len(parts) - 1, -1, -1):
+        if parts[i] == 'out':
+            if i + 1 < len(parts) and parts[i + 1] == worker:
+                break  # already scoped
+            parts.insert(i + 1, worker)
+            break
+    return os.sep.join(parts)
+
+
 def mk_path_out(p):
     path_out = os.path.join(os.path.dirname(__file__), p)
+    # Under pytest-xdist, give each worker its own subtree beneath 'out/' so
+    # tests that write to identically named dirs (e.g. 'out/a', 'out/test_results86400')
+    # in different files do not clobber each other when run concurrently. Serial
+    # runs are unaffected (worker id is empty).
+    path_out = _insert_worker_segment(path_out)
     if os.path.exists(path_out):
         shutil.rmtree(path_out)
     # Use makedirs (not mkdir) so a missing parent - e.g. when another test's

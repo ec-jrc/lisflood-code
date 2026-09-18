@@ -20,18 +20,23 @@ class TestTSSResults():
     def _mk_tracked_out(self, path):
         """Create an output folder and record it so the teardown removes only
         the folders this test created (never the shared 'out/' directory or
-        folders created by other tests)."""
+        folders created by other tests). Returns the actually-created path,
+        which under pytest-xdist is worker-scoped (e.g. 'out/gw0/...'); callers
+        must use this return value for PathOut so the created dir and the
+        LISFLOOD output dir stay in sync."""
         if not hasattr(self, '_created_out_dirs'):
             self._created_out_dirs = []
-        mk_path_out(path)
-        self._created_out_dirs.append(path)
-        return path
+        created = mk_path_out(path)
+        self._created_out_dirs.append(created)
+        return created
 
     def run_mct(self, date_start, date_end, dtsec, dtsec_chan, type):
         os.makedirs(os.path.join(self.case_dir, 'out'), exist_ok=True)
         # generate lisflood results
         out_path_ref = os.path.join(self.case_dir, 'reference', 'output_reference_mct_'+type)
-        self.out_path_run = os.path.join(self.case_dir, 'out', 'output_mct_'+type)
+        # Create the (worker-scoped) output dir first and use the returned path for
+        # PathOut so the created dir and the LISFLOOD output dir match under xdist.
+        self.out_path_run = self._mk_tracked_out(os.path.join(self.case_dir, 'out', 'output_mct_'+type))
         settings_file = os.path.join(self.case_dir, 'settings', 'mct_cold.xml')
         if "_calib" in type:
             opts_to_set = ['MCTRouting','simulateCalibrationPoints']
@@ -49,8 +54,6 @@ class TestTSSResults():
                                            'DtSecChannel' : dtsec_chan,        # single routing step
                                            'PathOut': self.out_path_run})
 
-
-        self._mk_tracked_out(self.out_path_run)
         lisfloodexe(settings)
 
         # set precision for the test
@@ -77,7 +80,7 @@ class TestTSSResults():
         os.makedirs(os.path.join(self.case_dir, 'out'), exist_ok=True)
         # generate lisflood results
         out_path_ref = os.path.join(self.case_dir, 'reference', 'output_reference_mcts_'+type)
-        self.out_path_run = os.path.join(self.case_dir, 'out', 'output_mcts_'+type)
+        self.out_path_run = self._mk_tracked_out(os.path.join(self.case_dir, 'out', 'output_mcts_'+type))
         settings_file = os.path.join(self.case_dir, 'settings', 'mct_cold.xml')
         if "_calib" in type:
             opts_to_set = ['MCTRouting','SplitRouting','simulateCalibrationPoints']
@@ -132,7 +135,7 @@ class TestTSSResults():
         os.makedirs(os.path.join(self.case_dir, 'out'), exist_ok=True)
         # generate lisflood results
         out_path_ref = os.path.join(self.case_dir, 'reference', 'output_reference_kin_'+type)
-        self.out_path_run = os.path.join(self.case_dir, 'out', 'output_kin_'+type)
+        self.out_path_run = self._mk_tracked_out(os.path.join(self.case_dir, 'out', 'output_kin_'+type))
         settings_file = os.path.join(self.case_dir, 'settings', 'mct_cold.xml')
         settings = setoptions(settings_file,
                               opts_to_unset=['MCTRouting',
@@ -171,7 +174,7 @@ class TestTSSResults():
         os.makedirs(os.path.join(self.case_dir, 'out'), exist_ok=True)
         # generate lisflood results
         out_path_ref = os.path.join(self.case_dir, 'reference', 'output_reference_split_'+type)
-        self.out_path_run = os.path.join(self.case_dir, 'out', 'output_split_'+type)
+        self.out_path_run = self._mk_tracked_out(os.path.join(self.case_dir, 'out', 'output_split_'+type))
         settings_file = os.path.join(self.case_dir, 'settings', 'mct_cold.xml')
         settings = setoptions(settings_file,
                               opts_to_set = ['SplitRouting'],
@@ -183,7 +186,6 @@ class TestTSSResults():
                                            'DtSecChannel' : dtsec_chan,        # single routing step
                                            'PathOut': self.out_path_run})
 
-        self._mk_tracked_out(self.out_path_run)
         lisfloodexe(settings)
 
         # set precision for the test
@@ -219,7 +221,7 @@ class TestTSSResults():
     def run_prerun_mct_test(self, date_start, date_end, dtsec, dtsec_chan, type):
         os.makedirs(os.path.join(self.case_dir, 'out'), exist_ok=True)
         # generate lisflood results        
-        path_out_a = os.path.join(self.case_dir, 'out', 'prerunMCTON_'+type)
+        path_out_a = self._mk_tracked_out(os.path.join(self.case_dir, 'out', 'prerunMCTON_'+type))
         self.out_path_run = path_out_a
         settings_file = os.path.join(self.case_dir, 'settings', 'mct_prerun_test_only.xml')
         settings = setoptions(settings_file,
@@ -238,7 +240,7 @@ class TestTSSResults():
         self._mk_tracked_out(self.out_path_run)
         lisfloodexe(settings)
 
-        path_out_b = os.path.join(self.case_dir, 'out', 'prerunMCTOFF_'+type)
+        path_out_b = self._mk_tracked_out(os.path.join(self.case_dir, 'out', 'prerunMCTOFF_'+type))
         self.out_path_run = path_out_b
         settings_file = os.path.join(self.case_dir, 'settings', 'mct_prerun_test_only.xml')
         settings = setoptions(settings_file,
