@@ -17,6 +17,7 @@ from pcraster import boolean, nominal, ifthen, defined, areamaximum, downstream,
     scalar, accuflux, celllength, windowtotal, areaaverage
 from pcraster.operators import pcrDiv
 import numpy as np
+from numba import njit, prange
 from netCDF4 import Dataset
 
 from ..global_modules.add1 import loadmap, decompress, compressArray, readnetcdf, readmapsparse
@@ -24,6 +25,90 @@ from ..global_modules.settings import get_calendar_type, calendar_inconsistency_
 from . import HydroModule
 from ..global_modules.netcdf import xarray_reader
 from ..global_modules.errors import LisfloodError
+
+
+@njit(parallel=True, fastmath=False, cache=True)
+def computeLivestockDemand(LivestockDemandMM, LivestockConsumptiveUseFraction,
+                           FractionGroundwaterUsed, FractionSurfaceWaterUseDomLivInd,
+                           FractionNonConventionalWaterUsed, MMtoM3):
+    """Per-pixel livestock water demand (LIVESTOCK section of waterabstraction.dynamic).
+
+    Numba-parallel port of the original elementwise numpy block; the arithmetic
+    is line-for-line identical (array expressions, auto-parallelized by numba's
+    parallel=True). Governed by the numCPUs_parallelNumba thread setting
+    (numba.set_num_threads, applied centrally at startup).
+    """
+    consumption_required_livestock_MM = LivestockDemandMM * LivestockConsumptiveUseFraction
+    consumption_GW_livestock_MM = consumption_required_livestock_MM * FractionGroundwaterUsed
+    consumption_SW_required_livestock_MM = consumption_required_livestock_MM * FractionSurfaceWaterUseDomLivInd
+    # consumption_NC_required_livestock_MM = consumption_required_livestock_MM * FractionNonConventionalWaterUsed  # (dead local in the original; never consumed downstream)
+    abstraction_required_livestock_M3 = LivestockDemandMM * MMtoM3
+    abstraction_GW_livestock_M3 = FractionGroundwaterUsed * abstraction_required_livestock_M3
+    abstraction_NC_livestock_M3 = FractionNonConventionalWaterUsed * abstraction_required_livestock_M3
+    abstraction_SW_required_livestock_M3 = abstraction_required_livestock_M3 - abstraction_GW_livestock_M3 - abstraction_NC_livestock_M3
+    return (consumption_GW_livestock_MM, consumption_SW_required_livestock_MM,
+            abstraction_required_livestock_M3, abstraction_GW_livestock_M3,
+            abstraction_SW_required_livestock_M3)
+
+
+@njit(parallel=True, fastmath=False, cache=True)
+def computeDomesticDemand(DomesticDemandMM, DomesticWaterSavingConstant, leak_demand_fraction,
+                          DomesticConsumptiveUseFraction, FractionGroundwaterUsed,
+                          FractionSurfaceWaterUseDomLivInd, FractionNonConventionalWaterUsed, MMtoM3):
+    """Per-pixel domestic water demand (DOMESTIC section of waterabstraction.dynamic).
+
+    Numba-parallel port of the original elementwise numpy block; the arithmetic
+    is line-for-line identical (array expressions, auto-parallelized by numba's
+    parallel=True). Governed by the numCPUs_parallelNumba thread setting.
+    """
+    demand_reduced_domestic_MM = DomesticDemandMM * DomesticWaterSavingConstant
+    leakage_domestic_MM = leak_demand_fraction * demand_reduced_domestic_MM  # Leakage in mm per day
+    abstraction_required_domestic_MM = demand_reduced_domestic_MM + leakage_domestic_MM
+    abstraction_required_domestic_M3 = abstraction_required_domestic_MM * MMtoM3
+    consumption_required_domestic_MM = demand_reduced_domestic_MM * DomesticConsumptiveUseFraction
+    consumption_GW_domestic_MM = consumption_required_domestic_MM * FractionGroundwaterUsed
+    consumption_SW_required_domestic_MM = consumption_required_domestic_MM * FractionSurfaceWaterUseDomLivInd
+    abstraction_GW_domestic_M3 = FractionGroundwaterUsed * abstraction_required_domestic_M3
+    abstraction_NC_domestic_M3 = FractionNonConventionalWaterUsed * abstraction_required_domestic_M3
+    abstraction_SW_required_domestic_M3 = abstraction_required_domestic_M3 - abstraction_GW_domestic_M3 - abstraction_NC_domestic_M3
+    return (abstraction_required_domestic_M3, consumption_GW_domestic_MM,
+            consumption_SW_required_domestic_MM, abstraction_GW_domestic_M3,
+            abstraction_SW_required_domestic_M3)
+
+
+@njit(parallel=True, fastmath=False, cache=True)
+def computeIndustryDemand(IndustrialDemandMM, IndustryConsumptiveUseFraction, FractionGroundwaterUsed,
+                          FractionSurfaceWaterUseDomLivInd, FractionNonConventionalWaterUsed, MMtoM3):
+    """Per-pixel industrial water demand (INDUSTRY section of waterabstraction.dynamic).
+
+    Numba-parallel port of the original elementwise numpy block; the arithmetic
+    is line-for-line identical (array expressions, auto-parallelized by numba's
+    parallel=True). Governed by the numCPUs_parallelNumba thread setting.
+    """
+    abstraction_required_industry_M3 = IndustrialDemandMM * MMtoM3
+    consumption_required_industry_MM = IndustrialDemandMM * IndustryConsumptiveUseFraction
+    consumption_GW_industry_MM = consumption_required_industry_MM * FractionGroundwaterUsed
+    consumption_SW_required_industry_MM = consumption_required_industry_MM * FractionSurfaceWaterUseDomLivInd
+    abstraction_GW_industry_M3 = FractionGroundwaterUsed * abstraction_required_industry_M3
+    abstraction_NC_industry_M3 = FractionNonConventionalWaterUsed * abstraction_required_industry_M3
+    abstraction_SW_required_industry_M3 = abstraction_required_industry_M3 - abstraction_GW_industry_M3 - abstraction_NC_industry_M3
+    return (abstraction_required_industry_M3, consumption_GW_industry_MM,
+            consumption_SW_required_industry_MM, abstraction_GW_industry_M3,
+            abstraction_SW_required_industry_M3)
+
+
+@njit(parallel=True, fastmath=False, cache=True)
+def computeEnergyDemand(EnergyDemandMM, EnergyConsumptiveUseFraction, MMtoM3):
+    """Per-pixel energy water demand (ENERGY section of waterabstraction.dynamic).
+
+    Numba-parallel port of the original elementwise numpy block; the arithmetic
+    is line-for-line identical (array expressions, auto-parallelized by numba's
+    parallel=True). Governed by the numCPUs_parallelNumba thread setting.
+    All energy abstraction is taken from surface water.
+    """
+    consumption_required_energy_MM = EnergyDemandMM * EnergyConsumptiveUseFraction
+    abstraction_SW_required_energy_M3 = EnergyDemandMM * MMtoM3
+    return consumption_required_energy_MM, abstraction_SW_required_energy_M3
 
 
 class waterabstraction(HydroModule):
@@ -295,29 +380,23 @@ class waterabstraction(HydroModule):
             # ***** LIVESTOCK ********************************************
             # ************************************************************
 
-            consumption_required_livestock_MM = self.var.LivestockDemandMM * self.var.LivestockConsumptiveUseFraction  
-            consumption_GW_livestock_MM = consumption_required_livestock_MM * self.var.FractionGroundwaterUsed   
-            consumption_SW_required_livestock_MM = consumption_required_livestock_MM * self.FractionSurfaceWaterUseDomLivInd  
-            consumption_NC_required_livestock_MM = consumption_required_livestock_MM * self.var.FractionNonConventionalWaterUsed   
-            abstraction_required_livestock_M3 = self.var.LivestockDemandMM  * self.var.MMtoM3 
-            abstraction_GW_livestock_M3 = self.var.FractionGroundwaterUsed * abstraction_required_livestock_M3  
-            abstraction_NC_livestock_M3 = self.var.FractionNonConventionalWaterUsed * abstraction_required_livestock_M3  
-            abstraction_SW_required_livestock_M3 = abstraction_required_livestock_M3 - abstraction_GW_livestock_M3 - abstraction_NC_livestock_M3  
+            (consumption_GW_livestock_MM, consumption_SW_required_livestock_MM,
+             abstraction_required_livestock_M3, abstraction_GW_livestock_M3,
+             abstraction_SW_required_livestock_M3) = computeLivestockDemand(
+                self.var.LivestockDemandMM, self.var.LivestockConsumptiveUseFraction,
+                self.var.FractionGroundwaterUsed, self.FractionSurfaceWaterUseDomLivInd,
+                self.var.FractionNonConventionalWaterUsed, self.var.MMtoM3)
 
             # ************************************************************
             # ***** DOMESTIC *********************************************
             # ************************************************************
 
-            demand_reduced_domestic_MM = self.var.DomesticDemandMM  * self.var.DomesticWaterSavingConstant  
-            leakage_domestic_MM = self.leak_demand_fraction * demand_reduced_domestic_MM # Leakage in mm per day  
-            abstraction_required_domestic_MM = demand_reduced_domestic_MM + leakage_domestic_MM 
-            abstraction_required_domestic_M3 = abstraction_required_domestic_MM * self.var.MMtoM3  
-            consumption_required_domestic_MM = demand_reduced_domestic_MM * self.var.DomesticConsumptiveUseFraction
-            consumption_GW_domestic_MM = consumption_required_domestic_MM * self.var.FractionGroundwaterUsed 
-            consumption_SW_required_domestic_MM = consumption_required_domestic_MM * self.FractionSurfaceWaterUseDomLivInd 
-            abstraction_GW_domestic_M3 = self.var.FractionGroundwaterUsed * abstraction_required_domestic_M3 
-            abstraction_NC_domestic_M3 = self.var.FractionNonConventionalWaterUsed * abstraction_required_domestic_M3 
-            abstraction_SW_required_domestic_M3 = abstraction_required_domestic_M3 - abstraction_GW_domestic_M3 - abstraction_NC_domestic_M3             
+            (abstraction_required_domestic_M3, consumption_GW_domestic_MM,
+             consumption_SW_required_domestic_MM, abstraction_GW_domestic_M3,
+             abstraction_SW_required_domestic_M3) = computeDomesticDemand(
+                self.var.DomesticDemandMM, self.var.DomesticWaterSavingConstant, self.leak_demand_fraction,
+                self.var.DomesticConsumptiveUseFraction, self.var.FractionGroundwaterUsed,
+                self.FractionSurfaceWaterUseDomLivInd, self.var.FractionNonConventionalWaterUsed, self.var.MMtoM3)
 
             # ************************************************************
             # ***** INDUSTRY *********************************************
@@ -327,20 +406,18 @@ class waterabstraction(HydroModule):
             # self.var.IndustrialConsumptiveUseMM = self.var.IndustrialAbstractionMM * self.var.IndustryConsumptiveUseFraction  ## QUESTION ABOVE ###
             # Industrial Water Demand (mm per day) ## QUESTION ABOVE ###
             # WaterReUseFraction: Fraction of water re-used in industry (e.g. 50% = 0.5 = half of the water is re-used, used twice (baseline=0, maximum=1) ## QUESTION ABOVE ###
-            abstraction_required_industry_M3 = self.var.IndustrialDemandMM * self.var.MMtoM3 
-            consumption_required_industry_MM = self.var.IndustrialDemandMM * self.var.IndustryConsumptiveUseFraction 
-            consumption_GW_industry_MM = consumption_required_industry_MM * self.var.FractionGroundwaterUsed 
-            consumption_SW_required_industry_MM = consumption_required_industry_MM * self.FractionSurfaceWaterUseDomLivInd  
-            abstraction_GW_industry_M3 = self.var.FractionGroundwaterUsed * abstraction_required_industry_M3  
-            abstraction_NC_industry_M3 = self.var.FractionNonConventionalWaterUsed * abstraction_required_industry_M3  
-            abstraction_SW_required_industry_M3 = abstraction_required_industry_M3 - abstraction_GW_industry_M3 - abstraction_NC_industry_M3  
+            (abstraction_required_industry_M3, consumption_GW_industry_MM,
+             consumption_SW_required_industry_MM, abstraction_GW_industry_M3,
+             abstraction_SW_required_industry_M3) = computeIndustryDemand(
+                self.var.IndustrialDemandMM, self.var.IndustryConsumptiveUseFraction, self.var.FractionGroundwaterUsed,
+                self.FractionSurfaceWaterUseDomLivInd, self.var.FractionNonConventionalWaterUsed, self.var.MMtoM3)
             
             # ************************************************************
             # ***** ENERGY ***********************************************
             # ************************************************************
             # EnergyConsumptiveUseMM is the amount that evaporates etc
-            consumption_required_energy_MM = self.var.EnergyDemandMM * self.var.EnergyConsumptiveUseFraction
-            abstraction_SW_required_energy_M3 = self.var.EnergyDemandMM* self.var.MMtoM3 
+            consumption_required_energy_MM, abstraction_SW_required_energy_M3 = computeEnergyDemand(
+                self.var.EnergyDemandMM, self.var.EnergyConsumptiveUseFraction, self.var.MMtoM3)
             # all taken from surface water
 
             # ************************************************************
