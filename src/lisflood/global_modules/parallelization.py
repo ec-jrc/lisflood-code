@@ -123,6 +123,74 @@ def _parse_thread_count(value):
 
 
 def _host_cpu_count():
+    """
+    Return the number of logical CPUs that the current job is permitted to use.
+
+    The routine recognises two common HPC workload managers:
+
+    * **SLURM** – uses the environment variables
+      `SLURM_TASKS_PER_NODE` (tasks per node) and `SLURM_CPUS_PER_TASK`
+      (CPUs allocated to each task).  If only `SLURM_NTASKS` is defined
+      (single‑node jobs without `--ntasks-per-node`), it is used as a fallback.
+
+    * **PBS** – uses `PBS_NP` (total number of allocated CPUs) or,
+      when a node‑wise layout is requested, the combination of
+      `PBS_NUM_NODES` and `PBS_NUM_PPN` (processes per node).
+
+    If none of the above variables are present, the function returns
+    `os.cpu_count()` (the total logical cores on the node).
+
+    The return value is always an ``int`` ≥ 1.
+    """
+    import os
+
+    # --------------------------------------------------------------
+    # 1. SLURM – most detailed information available
+    # --------------------------------------------------------------
+    try:
+        # SLURM may expose a comma‑separated list when heterogeneous
+        # allocations are used (e.g. "28(x2),14").
+        tasks_per_node = os.getenv("SLURM_TASKS_PER_NODE")
+        cpus_per_task  = os.getenv("SLURM_CPUS_PER_TASK")
+        ntasks         = os.getenv("SLURM_NTASKS")          # fallback
+
+        if tasks_per_node:
+            # Keep the first numeric entry before any '(' or ','.
+            first_entry = tasks_per_node.split(',')[0].split('(')[0]
+            tasks_per_node = int(first_entry)
+            cpus_per_task = int(cpus_per_task) if cpus_per_task else 1
+            return max(1, tasks_per_node * cpus_per_task)
+
+        if ntasks:
+            # When only SLURM_NTASKS is set (e.g. a simple `srun` without
+            # explicit per‑node control) we assume one CPU per task.
+            return max(1, int(ntasks))
+    except Exception:
+        # Any parsing problem – fall through to the next detector.
+        pass
+
+    # --------------------------------------------------------------
+    # 2. PBS
+    # --------------------------------------------------------------
+    try:
+        # PBS_NP provides the total number of processors allocated to the job.
+        pbs_np = os.getenv("PBS_NP")
+        if pbs_np:
+            return max(1, int(pbs_np))
+
+        # When PBS_NP is not set, the classic layout variables can be used.
+        # PBS_NUM_NODES = number of allocated nodes
+        # PBS_NUM_PPN   = processes (CPUs) per node
+        num_nodes = os.getenv("PBS_NUM_NODES")
+        ppn       = os.getenv("PBS_NUM_PPN")
+        if num_nodes and ppn:
+            return max(1, int(num_nodes) * int(ppn))
+    except Exception:
+        pass
+
+    # --------------------------------------------------------------
+    # 3. Fallback – physical core count of the node
+    # --------------------------------------------------------------
     return os.cpu_count() or 1
 
 
@@ -185,10 +253,10 @@ def configure_parallelism(binding, num_pixels=None, verbose=False):
     """
     global _blas_limiter, _effective
 
-    numba_threads = resolve_numba_threads(binding, num_pixels)
-
     # --- numba (soilloop + kinematic-wave/MCT routing kernels) ---
     # None means "leave numba at its default" (all cores); a concrete N caps it.
+    numba_threads = resolve_numba_threads(binding, num_pixels)
+
     if numba_threads is not None and _HAVE_NUMBA_THREADCTL:
         if 0 < numba_threads <= _numba_config.NUMBA_NUM_THREADS:
             _numba_set_num_threads(numba_threads)
@@ -203,15 +271,31 @@ def configure_parallelism(binding, num_pixels=None, verbose=False):
 
     # --- numexpr ---
     if _HAVE_NUMEXPR:
+        # Desired number of threads from the settings (None → “all cores”)
         target = numexpr_threads if numexpr_threads is not None else host
-        # numexpr requires at least 1; cap at host cores.
-        target = max(1, min(target, host))
+
+        # Hard limit imposed by NumExpr (defaults to 64 when the variable
+        # is not defined).
+        try:
+            max_threads = int(os.getenv("NUMEXPR_MAX_THREADS"))
+        except (TypeError, ValueError):
+            max_threads = 64
+
+        # Ensure a sensible value: ≥1, ≤ host cores and ≤ NumExpr limit.
+        target = max(1, min(target, host, max_threads))
+
+        # Apply and keep the environment variable in sync for any child
+        # processes that might import numexpr later.
         try:
             numexpr.set_num_threads(target)
-            # Also set the env so any re-detection stays consistent.
             os.environ["NUMEXPR_NUM_THREADS"] = str(target)
         except Exception:  # pragma: no cover - defensive
             pass
+
+        # *** store the *effective* value that was really set ***
+        effective_numexpr = target
+    else:
+        effective_numexpr = None
 
     # --- BLAS / OpenMP (numpy, scipy) ---
     if blas_threads is not None:
@@ -231,8 +315,8 @@ def configure_parallelism(binding, num_pixels=None, verbose=False):
                 _blas_limiter = None
 
     effective = {
-        "numba": numba_threads,       # applied in Lisflood_initial
-        "numexpr": numexpr_threads,
+        "numba": numba_threads,       
+        "numexpr": effective_numexpr,
         "blas": blas_threads,
         "host": host,
     }
@@ -242,6 +326,6 @@ def configure_parallelism(binding, num_pixels=None, verbose=False):
         def fmt(v):
             return "all" if v is None else str(v)
         print("[X] Parallelization: numba={}, numexpr={}, BLAS={} (host cores={})".format(
-            fmt(numba_threads), fmt(numexpr_threads), fmt(blas_threads), host))
+            fmt(numba_threads), fmt(effective_numexpr), fmt(blas_threads), host))
 
     return effective
