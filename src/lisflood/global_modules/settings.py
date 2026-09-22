@@ -822,6 +822,7 @@ class LisfloodRunInfo(Warning):
         header = "\n\n ========================== LISFLOOD Simulation Information and Setting =============================\n"
         msg = ''
         settings = LisSettings.instance()
+        binding = settings.binding
         option = settings.options
         out_dir = settings.output_dir
         ens_members = settings.ens_members[0]
@@ -851,20 +852,10 @@ class LisfloodRunInfo(Warning):
         from .parallelization import get_effective_parallelism
         _par = get_effective_parallelism()
         if _par is not None:
-            def _fmt_threads(v):
-                return "all" if v is None else str(v)
-            # numCPUs_soilInit governs the ColdStart least_squares process pool
-            # (see resolve_soilinit_workers); it is a separate mechanism from the
-            # numba/numexpr/BLAS thread pools. resolve_soilinit_workers already
-            # resolves 0/"all"/"auto" to the host core count, so report the
-            # resolved worker-process count directly.
-            from ..hydrological_modules.soil import resolve_soilinit_workers
-            _soilinit = resolve_soilinit_workers(settings.binding)
             msg += "\t[X] Parallelization: numba={}, numexpr={}, BLAS={}, soilInit={} (host cores={})\n".format(
-                _fmt_threads(_par.get('numba')), _fmt_threads(_par.get('numexpr')),
-                _fmt_threads(_par.get('blas')), _soilinit, _par.get('host'))
+                _par.get('numba'), _par.get('numexpr'),
+                _par.get('blas'), _par.get('soilinit'), _par.get('host'))
         # Packing and aggregation info
-        binding = settings.binding
         if binding.get('OutputPacking', 'False') == 'True':
             msg += "\t[X] Output Packing: int16 scale/offset enabled\n"
         for agg_key in ['OutputMonthlyMean', 'OutputMonthlySum', 'OutputYearlyMean', 'OutputYearlySum']:

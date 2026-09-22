@@ -48,7 +48,8 @@ working):
                                    speedup and causes oversubscription).
   * ``numCPUs_BLAS``            - BLAS/OpenMP thread count for numpy/scipy.
                                   Default: 1.
-
+  * ``numCPUs_soilInit``        - soilInit thread count for soil initialization.
+                                  Default: 1.
 A value of 0 (or empty/"all") means "use all available cores".
 """
 
@@ -92,8 +93,7 @@ def get_effective_parallelism():
     """Return the last-applied effective thread counts, or None if parallelism
     has not been configured yet.
 
-    The dict is keyed 'numba', 'numexpr', 'blas'; a value of None means
-    "all available cores". Also includes 'host' (host core count).
+    The dict is keyed 'numba', 'numexpr', 'blas', 'soilinit'; Also includes 'host' (host core count).
     """
     return _effective
 
@@ -143,8 +143,6 @@ def _host_cpu_count():
 
     The return value is always an ``int`` ≥ 1.
     """
-    import os
-
     # --------------------------------------------------------------
     # 1. SLURM – most detailed information available
     # --------------------------------------------------------------
@@ -229,8 +227,21 @@ def resolve_numba_threads(binding, num_pixels=None):
         return 1
     return None
 
+def resolve_soilinit_workers(binding, real_cpu_count):
+    """Number of worker processes for the ColdStart soil-init solve.
 
-def configure_parallelism(binding, num_pixels=None, verbose=False):
+    Controlled by the dedicated 'numCPUs_soilInit' setting (process-based
+    parallelism for the per-pixel scipy least_squares solve; unrelated to the
+    numba/numexpr/BLAS thread pools). Values: a positive integer, or
+    0 / "all" / "auto" for all available cores. Defaults to 1 (serial) when
+    unset, so behaviour is unchanged unless the user opts in.
+    """
+    explicit =  _resolve(binding, "numCPUs_soilInit", 1)
+    if explicit is not None:
+        return explicit
+    return real_cpu_count if real_cpu_count is not None else _host_cpu_count()
+
+def configure_parallelism(binding, num_pixels=None):
     """Apply thread-pool limits for numba, numexpr and BLAS/OpenMP.
 
     numba's thread count is decided here (including the small-domain auto-tune)
@@ -243,13 +254,11 @@ def configure_parallelism(binding, num_pixels=None, verbose=False):
         LISFLOOD settings binding. May be None (defaults are used).
     num_pixels : int or None
         Number of valid land pixels in the domain, used for numba auto-tune.
-    verbose : bool
-        If True, print a one-line summary of the applied thread counts.
 
     Returns
     -------
     dict
-        The effective thread counts, keyed 'numba', 'numexpr', 'blas'
+        The effective thread counts, keyed 'numba', 'numexpr', 'blas', 'soilinit'
         (None means "all cores").
     """
     global _blas_limiter, _effective
@@ -311,32 +320,31 @@ def configure_parallelism(binding, num_pixels=None, verbose=False):
     # --- BLAS / OpenMP (numpy, scipy) ---
     if blas_threads is not None:
         target = max(1, min(blas_threads, host))
-        # Set env vars too (helps subprocesses and any pools not yet created).
-        for var in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS",
-                    "MKL_NUM_THREADS", "VECLIB_MAXIMUM_THREADS",
-                    "BLIS_NUM_THREADS"):
-            os.environ[var] = str(target)
-        if _HAVE_THREADPOOLCTL:
-            try:
-                # limit_num_threads returns a controller object; keep a ref so
-                # the limits persist for the lifetime of the run.
-                _blas_limiter = threadpoolctl.threadpool_limits(
-                    limits=target, user_api="blas")
-            except Exception:  # pragma: no cover - defensive
-                _blas_limiter = None
+    else:
+        target = host
+    effective_blas = target
+    # Set env vars too (helps subprocesses and any pools not yet created).
+    for var in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS",
+                "MKL_NUM_THREADS", "VECLIB_MAXIMUM_THREADS",
+                "BLIS_NUM_THREADS"):
+        os.environ[var] = str(target)
+    if _HAVE_THREADPOOLCTL:
+        try:
+            # limit_num_threads returns a controller object; keep a ref so
+            # the limits persist for the lifetime of the run.
+            _blas_limiter = threadpoolctl.threadpool_limits(
+                limits=target, user_api="blas")
+        except Exception:  # pragma: no cover - defensive
+            _blas_limiter = None
+
+    soilinit_workers = resolve_soilinit_workers(binding, host)
 
     effective = {
         "numba": effective_numba,       
         "numexpr": effective_numexpr,
-        "blas": blas_threads,
+        "blas": effective_blas,
+        "soilinit": soilinit_workers,
         "host": host,
     }
     _effective = effective
-
-    if verbose:
-        def fmt(v):
-            return "all" if v is None else str(v)
-        print("[X] Parallelization: numba={}, numexpr={}, BLAS={} (host cores={})".format(
-            fmt(effective_numba), fmt(effective_numexpr), fmt(blas_threads), host))
-
     return effective

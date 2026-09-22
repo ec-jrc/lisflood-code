@@ -55,26 +55,6 @@ def _solve_saturation_chunk(args):
         solved[i] = res.x[0]
     return solved
 
-
-def resolve_soilinit_workers(binding):
-    """Number of worker processes for the ColdStart soil-init solve.
-
-    Controlled by the dedicated 'numCPUs_soilInit' setting (process-based
-    parallelism for the per-pixel scipy least_squares solve; unrelated to the
-    numba/numexpr/BLAS thread pools). Values: a positive integer, or
-    0 / "" / "all" / "auto" for all available cores. Defaults to 1 (serial) when
-    unset, so behaviour is unchanged unless the user opts in.
-    """
-    from ..global_modules.parallelization import _parse_thread_count
-    val = binding.get('numCPUs_soilInit') if binding is not None else None
-    if val in (None, ""):
-        return 1
-    workers = _parse_thread_count(val)  # int>=1, or None meaning "all cores"
-    if workers is None:
-        workers = os.cpu_count() or 1
-    return workers
-
-
 def _running_in_child_process():
     """True if we are inside a forked/daemon worker (e.g. a LISFLOOD instance
     launched by lisflood-calibration's multiprocessing Pool). Python forbids a
@@ -364,7 +344,9 @@ class soil(HydroModule):
 
         # number of worker processes for the ColdStart layer-2 saturation solve
         # (per-pixel least_squares); set via 'numCPUs_soilInit' (default 1 = serial).
-        soilinit_workers = resolve_soilinit_workers(binding)
+        from .parallelization import get_effective_parallelism
+        _par = get_effective_parallelism()
+        soilinit_workers = _par.get('soilinit')
 
         for veg, luse in self.var.VEGETATION_LANDUSE.items():
             iveg = self.var.vegetation.index(veg)

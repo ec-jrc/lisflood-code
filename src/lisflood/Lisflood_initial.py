@@ -101,7 +101,7 @@ class LisfloodModel_ini(DynamicModel):
         # verbose=False: the effective thread counts are reported once, in the
         # LisfloodRunInfo startup banner (see LisfloodRunInfo in settings.py),
         # to keep the startup output in a single coherent block.
-        configure_parallelism(binding, num_pixels=num_pixels, verbose=False)
+        configure_parallelism(binding, num_pixels=num_pixels)
 
         # Mapping of vegetation types to land use fractions (and the other way around)
         ##global VEGETATION_LANDUSE, LANDUSE_VEGETATION, PRESCRIBED_VEGETATION, PRESCRIBED_LAI
