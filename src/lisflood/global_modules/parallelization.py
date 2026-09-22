@@ -73,10 +73,11 @@ except ImportError:  # pragma: no cover - numexpr is a hard dep but be defensive
 try:
     from numba import set_num_threads as _numba_set_num_threads
     from numba import config as _numba_config
+    # get_num_threads returns the number of threads Numba will actually use.
+    from numba import get_num_threads as _numba_get_num_threads
     _HAVE_NUMBA_THREADCTL = True
-except ImportError:  # pragma: no cover - older numba without set_num_threads
+except ImportError:          # pragma: no cover – defensive
     _HAVE_NUMBA_THREADCTL = False
-
 
 # Keep a reference to any threadpoolctl limiter so the applied BLAS limits are
 # not garbage-collected (and thus reverted) during the model run.
@@ -256,10 +257,20 @@ def configure_parallelism(binding, num_pixels=None, verbose=False):
     # --- numba (soilloop + kinematic-wave/MCT routing kernels) ---
     # None means "leave numba at its default" (all cores); a concrete N caps it.
     numba_threads = resolve_numba_threads(binding, num_pixels)
-
-    if numba_threads is not None and _HAVE_NUMBA_THREADCTL:
-        if 0 < numba_threads <= _numba_config.NUMBA_NUM_THREADS:
-            _numba_set_num_threads(numba_threads)
+    
+    if _HAVE_NUMBA_THREADCTL:
+        # If the user asked for a concrete value, try to set it; otherwise
+        # leave Numba at its default (which may already be “all cores”).
+        if numba_threads is not None:
+            # Numba cannot be asked for more threads than its own hard limit.
+            if 0 < numba_threads <= _numba_config.NUMBA_NUM_THREADS:
+                _numba_set_num_threads(numba_threads)
+            # If the request is larger than the limit we simply ignore it –
+            # Numba will keep its previous (default) setting.
+        # *** query the **actual** number of threads Numba will use ***
+        effective_numba = _numba_get_num_threads()
+    else:
+        effective_numba = None            # Numba not available
 
     # numexpr and BLAS default to serial: on typical LISFLOOD domains their
     # pools cause oversubscription without a throughput benefit. Users can
@@ -315,7 +326,7 @@ def configure_parallelism(binding, num_pixels=None, verbose=False):
                 _blas_limiter = None
 
     effective = {
-        "numba": numba_threads,       
+        "numba": effective_numba,       
         "numexpr": effective_numexpr,
         "blas": blas_threads,
         "host": host,
@@ -326,6 +337,6 @@ def configure_parallelism(binding, num_pixels=None, verbose=False):
         def fmt(v):
             return "all" if v is None else str(v)
         print("[X] Parallelization: numba={}, numexpr={}, BLAS={} (host cores={})".format(
-            fmt(numba_threads), fmt(effective_numexpr), fmt(blas_threads), host))
+            fmt(effective_numba), fmt(effective_numexpr), fmt(blas_threads), host))
 
     return effective
