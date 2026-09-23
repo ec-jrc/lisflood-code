@@ -344,7 +344,7 @@ class soil(HydroModule):
 
         # number of worker processes for the ColdStart layer-2 saturation solve
         # (per-pixel least_squares); set via 'numCPUs_soilInit' (default 1 = serial).
-        from .parallelization import get_effective_parallelism
+        from ..global_modules.parallelization import get_effective_parallelism
         _par = get_effective_parallelism()
         soilinit_workers = _par.get('soilinit')
 
