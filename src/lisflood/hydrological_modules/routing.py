@@ -1046,7 +1046,8 @@ class routing(HydroModule):
 
             ####### added by Robert Dill, 2025/03/13
             # calculate momentum map flow velocity * rivermass [kgm/s]
-            self.var.FlowMomentum = self.var.TotalCrossSectionArea * self.var.ChanLength * 1000 * self.var.FlowVelocity
+            if option("repFlowMomMaps"):
+                self.var.FlowMomentum = self.var.TotalCrossSectionArea * self.var.ChanLength * 1000 * self.var.FlowVelocity
             #######
 
 

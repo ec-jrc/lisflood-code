@@ -103,19 +103,22 @@ def soilWaterStressAndTranspiration(swdf, WFC1, WWP1, WFC1a, WWP1a, WFC1b, WWP1b
         wcrit1a = one_minus_swdf * (WFC1a[pix] - WWP1a[pix]) + WWP1a[pix]
         wcrit1b = one_minus_swdf * (WFC1b[pix] - WWP1b[pix]) + WWP1b[pix]
 
-        # Transpiration reduction factor (0..1); no stress (=1) if WCrit1 == WWP1
+        # Transpiration reduction factor (in case of water stress)
+        # if WCrit1 = WWP1, RWS is 1, there is no water stress in that case
         denom = wcrit1 - WWP1[pix]
         rws = (W1[pix] - WWP1[pix]) / denom if denom > 0 else 1.0
         rws = min(max(rws, 0.0), 1.0)
         RWS[pix] = rws
 
-        # actual transpiration, capped by transpirable water and zero if frozen
         transpirable_water = max(W1[pix] - WWP1[pix], 0.0)
+        # actual transpiration based on both layers 1a and 1b
         ta = 0.0 if isFrozenSoil[pix] else min(rws * potential_transpiration[pix], transpirable_water)
         Ta[pix] = ta
-
-        # distribute abstraction: 1st unstressed layer 1a, 2nd unstressed 1b,
-        # 3rd remainder proportional to stressed availability of each layer
+        # transpiration is 0 when soil is frozen
+        # calculate distribution where to take Ta from:
+        # 1st: above wCrit from layer 1a
+        # 2nd: above Wcrit from layer 1b
+        # 3rd:  distribute take off according to soil moisture availability below wcrit
         wc1a = max(W1a[pix] - wcrit1a, 0.0)
         wc1b = max(W1b[pix] - wcrit1b, 0.0)
         ta1a = min(ta, wc1a)
@@ -623,14 +626,17 @@ class soilloop(HydroModule):
         for veg in self.var.prescribed_vegetation:
             iveg, ilanduse, landuse = self.var.get_landuse_and_indexes_from_vegetation_epic(veg)
 
-            # Soil water depletion fraction (Van Diepen et al., 1988). Computed
-            # in numpy (not in the kernel) so the arithmetic matches the original
-            # bit-for-bit: ETRef is float32, and numpy keeps float32 precision
-            # through this expression whereas numba would promote to float64.
+            # soil water depletion fraction (easily available soil water)
+            # Van Diepen et al., 1988: WOFOST 6.0, p.87
+            # to avoid a strange behaviour of the p-formula's, ETRef is set to a maximum of
+            # 10 mm/day. Thus, p will range from 0.15 to 0.45 at ETRef eq 10 and
+            # CropGroupNumber 1-5
             swdf = 1 / (0.76 + 1.5 * np.minimum(0.1 * self.var.ETRef * self.var.InvDtDay, 1.0)) - 0.10 * (5 - self.var.CropGroupNumber.values[ilanduse])
             swdf = np.where(self.var.CropGroupNumber.values[ilanduse] <= 2.5, swdf + (np.minimum(0.1 * self.var.ETRef * self.var.InvDtDay, 1.0) - 0.6) / (
                 self.var.CropGroupNumber.values[ilanduse] * (self.var.CropGroupNumber.values[ilanduse] + 3)), swdf)
+            # correction for crop groups 1 and 2 (Van Diepen et al, 1988)
             swdf = np.maximum(np.minimum(swdf, 1.0), 0)
+            # p is between 0 and 1
 
             if option['wateruse'] and landuse == "Irrigated":
                 # WFilla/WFillb (irrigation target filling) is consumed later by
@@ -661,7 +667,8 @@ class soilloop(HydroModule):
                 self.var.W1.values[iveg], self.var.W1a.values[iveg], self.var.W1b.values[iveg],
                 self.var.potential_transpiration[iveg], self.var.isFrozenSoil,
                 self.var.RWS.values[iveg], self.var.Ta.values[iveg])
-
+            
+            # Transpiration reduction factor (in case of water stress)
             if option['repStressDays']:
                 self.var.SoilMoistureStressDays.values[iveg] = np.where(self.var.RWS.values[iveg] < 1, self.var.DtDay, 0)
                 # Count number of days with soil water stress, RWS is between 0 and 1
