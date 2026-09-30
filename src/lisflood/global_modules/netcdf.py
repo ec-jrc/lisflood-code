@@ -271,10 +271,11 @@ class XarrayChunked():
         # handle (NetCDF4DataStore.__del__ -> close). Concurrent read/close on a
         # non-threadsafe HDF5 corrupts its global state and aborts the process
         # (Fatal Python error: Aborted / SIGABRT). Reads were already serialized
-        # by xarray's HDF5 lock, so running synchronously removes the crash with
-        # negligible performance impact.
-        with dask.config.set(scheduler='synchronous'):
-            self.dataset_chunk = chunk.load()  # triggers xarray computation
+        # by xarray's HDF5 lock, so running synchronously removes the crash.
+        # TODO: check the synchronous issue, as actually this slows down the loading of chunks
+        #       so it is commented right now
+        #with dask.config.set(scheduler='synchronous'):
+        self.dataset_chunk = chunk.load()  # triggers xarray computation
 
     def __getitem__(self, step):
 
