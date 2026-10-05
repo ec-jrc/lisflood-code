@@ -716,7 +716,20 @@ class outputTssMap(object):
                 if how == 'total':
                     changed = compressArray(catchmenttotal(decompress(eval(what)) * self.var.PixelAreaPcr, self.var.Ldd) * self.var.InvUpArea)
                     what = 'changed'
-                self.var.Tss[tss].sample(decompress(eval(what)))
+                tss_obj = self.var.Tss[tss]
+                value_1d = eval(what)
+                # Fast path: when every gauge is a single cell, the inherited
+                # .sample()'s per-zone areaaverage equals the gauge-cell value,
+                # so read it straight from the 1D array and skip the
+                # decompress -> numpy2pcr full-map conversion (~50-136 ms/call on
+                # a global grid). Only for Scalar series (the areaaverage branch);
+                # a 1D numpy array implies Scalar/Directional here. Falls back to
+                # the exact PCRaster path otherwise (e.g. multi-cell gauge zones,
+                # non-spatial gauges, or non-ndarray values).
+                if getattr(tss_obj, '_compressed_sampling_ok', False) and isinstance(value_1d, np.ndarray):
+                    tss_obj.sample_compressed(value_1d)
+                else:
+                    tss_obj.sample(decompress(value_1d))
 
         # ************************************************************
         # ***** WRITING RESULTS: MAPS   ******************************

@@ -291,25 +291,39 @@ def compressArray(map, pcr=True, name=None, force_load_with_nans=False):
 
 def decompress(map):
     maskinfo = MaskInfo.instance()
-    dmap = maskinfo.info.maskall.copy()
-    dmap[~maskinfo.info.maskflat] = map[:]
-    dmap = dmap.reshape(maskinfo.info.shape)
     # check if integer map (like outlets, lakes etc)
     try:
         checkint = str(map.dtype)
     except:
         checkint = None
 
-    if checkint in ("int16", "int32", "int64"):
-        dmap[dmap.mask] = -9999
-        map = numpy2pcr(Nominal, dmap, -9999)
-    elif checkint == "int8":
+    if checkint == "int8":
+        # Rare, special-cased branch: the original relied on np.ma semantics
+        # (dmap[dmap < 0] excludes masked cells, leaving their uninitialized
+        # masked_all .data untouched). Keep the exact original implementation
+        # here to preserve behaviour bit-for-bit; it is not on any hot path
+        # (compressArray returns float, so decompress almost always hits the
+        # Scalar branch below).
+        dmap = maskinfo.info.maskall.copy()
+        dmap[~maskinfo.info.maskflat] = map[:]
+        dmap = dmap.reshape(maskinfo.info.shape)
         dmap[dmap < 0] = -9999
-        map = numpy2pcr(Nominal, dmap, -9999)
-    else:
-        dmap[dmap.mask] = -9999
-        map = numpy2pcr(Scalar, dmap, -9999)
-    return map
+        return numpy2pcr(Nominal, dmap, -9999)
+
+    # Fast path (float / int16 / int32 / int64): build the full-domain array
+    # with a plain numpy buffer instead of copying the masked `maskall` and
+    # operating on it through the np.ma machinery. `maskall` is float64 and the
+    # result handed to numpy2pcr is simply: valid cells = map values,
+    # outside-domain cells = -9999 (the missing-value marker). This avoids the
+    # full-domain masked-array copy and the np.ma wrapped-method overhead that
+    # dominate decompress on large/global domains. Verified bit-identical to the
+    # original masked-array path for all these dtype branches.
+    dmap = np.full(maskinfo.info.shapeflat, -9999.0, dtype=np.float64)
+    dmap[~maskinfo.info.maskflat] = map[:]
+    dmap = dmap.reshape(maskinfo.info.shape)
+    if checkint in ("int16", "int32", "int64"):
+        return numpy2pcr(Nominal, dmap, -9999)
+    return numpy2pcr(Scalar, dmap, -9999)
 
 
 def makenumpy(map):

@@ -364,20 +364,83 @@ class TimeoutputTimeseries(TimeoutputTimeseries):
             self._sampleAddresses = [-9999 for i in range(self._ncodesId)]
             # init with the left/top cell - could also be 0 but then you have to catch it in
             # the sample routine and put an exeption in
-            # number of cells in map
-            nrCells = pcraster.clone().nrRows() * pcraster.clone().nrCols()
-            for cell in range(1, nrCells + 1):
-                if (pcraster.cellvalue(self._spatialId, cell)[1]):
-                    # get point code from outlets map for pixel cell
-                    outlet_code = pcraster.cellvalue(self._spatialId, cell)[0]
-                    # get index of the point code in the sorted list of outlets codes
-                    outlet_idx = np.where(codesId == outlet_code)[0][0]
-                    # store point code
-                    self._codesId[outlet_idx] = outlet_code
-                    # store outlets location (cell)
-                    self._sampleAddresses[outlet_idx] = cell
+            #
+            # Vectorized replacement for the former per-cell loop:
+            #     for cell in range(1, nrCells + 1):
+            #         if pcraster.cellvalue(self._spatialId, cell)[1]:
+            #             outlet_code = pcraster.cellvalue(self._spatialId, cell)[0]
+            #             outlet_idx  = np.where(codesId == outlet_code)[0][0]
+            #             self._codesId[outlet_idx]        = outlet_code
+            #             self._sampleAddresses[outlet_idx] = cell
+            # which called pcraster.cellvalue twice for EVERY cell of the (full,
+            # uncropped) clone grid, once per time-series object. 
+            # Optimized version to avoid the big loop:
+            if self._spatialId.isSpatial():
+                # 1-based row-major linear index for every grid cell
+                flat_codes = outletsmapnp.ravel(order='C')
+                flat_index = np.arange(1, flat_codes.size + 1, dtype=np.int64)
+                valid = np.isfinite(flat_codes) & (flat_codes > 0)
+                codes_valid = flat_codes[valid].astype(codesId.dtype)
+                index_valid = flat_index[valid]
+                # map each gauge code to its position in the sorted-unique codesId
+                code_to_idx = {code: i for i, code in enumerate(codesId)}
+                for code, cell in zip(codes_valid, index_valid):
+                    outlet_idx = code_to_idx[code]
+                    # keep the last (largest linear index) occurrence, as the
+                    # original ascending-cell loop did
+                    self._codesId[outlet_idx] = code
+                    self._sampleAddresses[outlet_idx] = int(cell)
 
             self._spatialIdGiven = True
+
+            # --- Fast 1D sampling support (see sample_compressed) -------------
+            # The inherited .sample() builds a full 2D PCRaster map (via
+            # decompress -> numpy2pcr, ~50-136 ms/call on a global grid) only so
+            # pcraster.areaaverage(expression, spatialId) can average the value
+            # over each gauge zone and read it at the gauge cell. When every
+            # gauge id occupies a SINGLE cell, that zone-average is exactly the
+            # value at that cell, so we can read it directly from the 1D
+            # compressed state array and skip the map conversion entirely.
+            # We precompute, per gauge (in _codesId order), the index into the
+            # 1D compressed array; and a flag that is True only when all gauge
+            # zones are single-cell (otherwise callers must use the PCRaster
+            # path to preserve the areaaverage/areamajority semantics).
+            self._compressed_sampling_ok = False
+            self._sample_compressed_idx = None
+            if self._spatialId.isSpatial():
+                try:
+                    maskinfo = MaskInfo.instance()
+                    maskflat = maskinfo.info.maskflat  # True = masked/outside domain
+                    gauge_flat = outletsmapnp.ravel(order='C')
+                    # codes at the valid (compressed) cells, in compressed order
+                    gauge_compressed = gauge_flat[~maskflat]
+                    ncomp = gauge_compressed.shape[0]
+                    # count cells per gauge code and map code -> compressed index
+                    code_to_comp = {}
+                    counts = {}
+                    for i in range(ncomp):
+                        c = gauge_compressed[i]
+                        if np.isfinite(c) and c > 0:
+                            counts[c] = counts.get(c, 0) + 1
+                            # keep LAST occurrence to mirror _sampleAddresses
+                            code_to_comp[c] = i
+                    all_single_cell = all(v == 1 for v in counts.values()) and len(counts) > 0
+                    # also require every reported gauge code to be present in the
+                    # compressed (in-domain) cells
+                    idx = []
+                    ok = all_single_cell
+                    for code in self._codesId:
+                        if code in code_to_comp:
+                            idx.append(code_to_comp[code])
+                        else:
+                            ok = False
+                            idx.append(-1)
+                    if ok:
+                        self._sample_compressed_idx = np.asarray(idx, dtype=np.int64)
+                        self._compressed_sampling_ok = True
+                except Exception:
+                    self._compressed_sampling_ok = False
+                    self._sample_compressed_idx = None
 
             nrCols = self._ncodesId
             self._sampleValues = [
@@ -398,6 +461,44 @@ class TimeoutputTimeseries(TimeoutputTimeseries):
         except:
             value = Decimal("NaN")
         return value
+
+    def sample_compressed(self, array_1d):
+        """Fast equivalent of .sample() that reads gauge values directly from the
+        1D compressed state array, avoiding the decompress -> numpy2pcr full-map
+        conversion.
+
+        Only valid when self._compressed_sampling_ok is True, i.e. every gauge
+        id occupies a single cell (so the inherited .sample()'s per-zone
+        pcraster.areaaverage reduces to that cell's value). The caller
+        (output.py) is responsible for checking _compressed_sampling_ok and
+        falling back to .sample(decompress(...)) otherwise, and for using this
+        path only for Scalar/Directional (areaaverage) series.
+
+        Values are cast to float32 before storing, matching PCRaster's Scalar
+        precision so the %14g tss formatting is identical to the .sample() path.
+        Invalid / NaN values are stored as Decimal('NaN') (written as 1e31),
+        exactly as .sample() does for an invalid cellvalue.
+        """
+        arrayRowPos = self._userModel.currentTimeStep() - self._userModel.firstTimeStep()
+        # tss header datatype: the .sample() path records the expression's
+        # PCRaster dataType; for the Scalar series routed here it is 'VALUESCALE.Scalar'.
+        if self._spatialDatatype is None:
+            self._spatialDatatype = 'VALUESCALE.Scalar'
+        vals = np.asarray(array_1d, dtype=np.float32)
+        row = self._sampleValues[arrayRowPos]
+        # Gather all gauge values and test finiteness with two vectorized ops,
+        # then do the lean per-gauge assignment. The loop stays because row[col]
+        # must hold a Python float (valid) or Decimal('NaN') (invalid) so that
+        # _writeTssFile can distinguish them (1e31 vs %14g) - exactly as the
+        # inherited .sample() stores them.
+        gathered = vals[self._sample_compressed_idx]
+        finite = np.isfinite(gathered)
+        nan = Decimal("NaN")
+        for col in range(self._ncodesId):
+            row[col] = float(gathered[col]) if finite[col] else nan
+        # Write the tss on the final step, mirroring the inherited .sample().
+        if self._userModel.currentTimeStep() == self._userModel.nrTimeSteps():
+            self._writeTssFile()
 
 
 #####################################################################################################################
