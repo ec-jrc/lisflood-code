@@ -26,7 +26,7 @@ from pcraster.operations import ifthen, boolean, defined, lookupscalar
 import numpy as np
 
 from ..global_modules.settings import LisSettings, MaskInfo
-from ..global_modules.add1 import loadmap, compressArray, decompress, makenumpy
+from ..global_modules.add1 import loadmap, compressArray, decompress, makenumpy, lookup_table_values
 from ..global_modules.errors import LisfloodWarning
 from . import HydroModule
 
@@ -130,10 +130,18 @@ class Reservoir(HydroModule):
             # RESERVOIR CHARACTERISTICS
             
             # reservoir storage capacity [m3]
-            total_storage = lookupscalar(str(binding['ReservoirTotalStorage']), ReservoirSitePcr)
-            total_storage = compressArray(total_storage)
-            self.var.TotalReservoirStorageM3C = np.where(np.isnan(total_storage), 0, total_storage)
-            self.var.TotalReservoirStorageM3CC = np.compress(self.var.ReservoirSitesC > 0, self.var.TotalReservoirStorageM3C)
+            # Direct numpy table lookup on the reservoir ids (ReservoirSitesCC),
+            # replacing the full-grid pcraster.lookupscalar + compressArray +
+            # np.compress (~30 s/call on the global domain). lookup_table_values
+            # returns NaN for ids absent from the table, matching lookupscalar's
+            # missing value (then zeroed below as before).
+            total_storage = lookup_table_values(str(binding['ReservoirTotalStorage']), self.var.ReservoirSitesCC)
+            # per-point array (same order as ReservoirSitesCC / ReservoirIndex)
+            self.var.TotalReservoirStorageM3CC = np.where(np.isnan(total_storage), 0, total_storage)
+            # full-domain compressed form (0 outside reservoir cells), still used
+            # by waterabstraction. Scatter the per-point values at reservoir cells.
+            self.var.TotalReservoirStorageM3C = maskinfo.in_zero()
+            np.put(self.var.TotalReservoirStorageM3C, self.var.ReservoirIndex, self.var.TotalReservoirStorageM3CC)
             
             # reservoir catchment area [m2]
             catchment_area = loadmap('UpAreaTrans')
@@ -143,23 +151,24 @@ class Reservoir(HydroModule):
             # MODEL PARAMETERS
 
             # flood storage limit (fraction of total storage [-])
+            # txt branch: direct per-point table lookup (replaces full-grid
+            # lookupscalar+compress+compress). non-txt branch unchanged.
             if str(binding['ReservoirFloodStorage']).endswith('txt'):
-                flood_storage = lookupscalar(str(binding['ReservoirFloodStorage']), ReservoirSitePcr)
-                flood_storage = compressArray(flood_storage)
+                self.var.FloodStorageLimit = lookup_table_values(str(binding['ReservoirFloodStorage']), self.var.ReservoirSitesCC)
             else:
                 flood_storage = loadmap('ReservoirFloodStorage')
                 flood_storage = makenumpy(flood_storage)
-            self.var.FloodStorageLimit = np.compress(self.var.ReservoirSitesC > 0, flood_storage)
+                self.var.FloodStorageLimit = np.compress(self.var.ReservoirSitesC > 0, flood_storage)
 
             # factor of the flood outflow
             if str(binding['ReservoirFloodOutflowFactor']).endswith('txt'):
-                factor_outflow = lookupscalar(str(binding['ReservoirFloodOutflowFactor']), ReservoirSitePcr)
-                factor_outflow = compressArray(factor_outflow)
+                factor_outflow = lookup_table_values(str(binding['ReservoirFloodOutflowFactor']), self.var.ReservoirSitesCC)
+                factor_outflow = np.where(factor_outflow <= 0, 0.3, factor_outflow)
             else:
                 factor_outflow = loadmap('ReservoirFloodOutflowFactor')
                 factor_outflow = makenumpy(factor_outflow)
-            factor_outflow = np.where(factor_outflow <= 0, 0.3, factor_outflow)
-            factor_outflow = np.compress(self.var.ReservoirSitesC > 0, factor_outflow)
+                factor_outflow = np.where(factor_outflow <= 0, 0.3, factor_outflow)
+                factor_outflow = np.compress(self.var.ReservoirSitesC > 0, factor_outflow)
 
             # STORAGE LIMITS
             
@@ -174,19 +183,11 @@ class Reservoir(HydroModule):
             # RELEASE ATTRIBUTES
             
             # minimum reservoir outflow [m3/s]
-            MinReservoirOutflow = lookupscalar(str(binding['ReservoirMinOutflow']), ReservoirSitePcr)
-            MinReservoirOutflowC = compressArray(MinReservoirOutflow)
-            self.var.MinReservoirOutflow = np.compress(self.var.ReservoirSitesC > 0, MinReservoirOutflowC)
-            
+            self.var.MinReservoirOutflow = lookup_table_values(str(binding['ReservoirMinOutflow']), self.var.ReservoirSitesCC)
             # normal outflow [m3/s]
-            normal_outflow = lookupscalar(str(binding['ReservoirNormalOutflow']), ReservoirSitePcr)
-            normal_outflow = compressArray(normal_outflow)
-            self.var.NormalReservoirOutflow = np.compress(self.var.ReservoirSitesC > 0, normal_outflow)
-            
+            self.var.NormalReservoirOutflow = lookup_table_values(str(binding['ReservoirNormalOutflow']), self.var.ReservoirSitesCC)
             # flood-control outflow [m3/s]
-            flood_outflow = lookupscalar(str(binding['ReservoirFloodOutflow']), ReservoirSitePcr)
-            flood_outflow = compressArray(flood_outflow)
-            flood_outflow = np.compress(self.var.ReservoirSitesC > 0, flood_outflow)
+            flood_outflow = lookup_table_values(str(binding['ReservoirFloodOutflow']), self.var.ReservoirSitesCC)
             self.var.FloodReservoirOutflow = np.maximum(self.var.NormalReservoirOutflow, factor_outflow * flood_outflow)
             
             # INITIAL CONDITIONS

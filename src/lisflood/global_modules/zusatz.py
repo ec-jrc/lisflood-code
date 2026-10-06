@@ -414,16 +414,19 @@ class TimeoutputTimeseries(TimeoutputTimeseries):
                     gauge_flat = outletsmapnp.ravel(order='C')
                     # codes at the valid (compressed) cells, in compressed order
                     gauge_compressed = gauge_flat[~maskflat]
-                    ncomp = gauge_compressed.shape[0]
-                    # count cells per gauge code and map code -> compressed index
+                    # Only iterate over gauge cells (codes > 0), not ALL valid
+                    # pixels. On a global grid ncomp is millions but gauges are
+                    # only thousands — the old per-pixel Python loop was O(ncomp)
+                    # × n_series and caused ~200 s of init overhead.
+                    gauge_mask = np.isfinite(gauge_compressed) & (gauge_compressed > 0)
+                    gauge_positions = np.nonzero(gauge_mask)[0]  # ascending compressed indices
+                    gauge_codes_at = gauge_compressed[gauge_positions]
+                    # count cells per code and keep LAST (largest) compressed index
                     code_to_comp = {}
                     counts = {}
-                    for i in range(ncomp):
-                        c = gauge_compressed[i]
-                        if np.isfinite(c) and c > 0:
-                            counts[c] = counts.get(c, 0) + 1
-                            # keep LAST occurrence to mirror _sampleAddresses
-                            code_to_comp[c] = i
+                    for pos, c in zip(gauge_positions, gauge_codes_at):
+                        counts[c] = counts.get(c, 0) + 1
+                        code_to_comp[c] = int(pos)
                     all_single_cell = all(v == 1 for v in counts.values()) and len(counts) > 0
                     # also require every reported gauge code to be present in the
                     # compressed (in-domain) cells

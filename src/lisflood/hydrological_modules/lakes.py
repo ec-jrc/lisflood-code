@@ -22,7 +22,7 @@ import numpy as np
 import pcraster
 
 from ..global_modules.errors import LisfloodWarning
-from ..global_modules.add1 import loadmap, compressArray, decompress
+from ..global_modules.add1 import loadmap, compressArray, decompress, lookup_table_values
 from ..global_modules.settings import LisSettings, MaskInfo
 from . import HydroModule
 
@@ -96,16 +96,19 @@ class lakes(HydroModule):
             # Get all pixels just upstream of lakes
             # -----------------------
 
-            LakeArea = pcraster.lookupscalar(str(binding['TabLakeArea']), LakeSitePcr)
-            LakeAreaC = compressArray(LakeArea)
-            self.var.LakeAreaCC = np.compress(LakeSitesC > 0, LakeAreaC)
-                                 
-            self.var.LakeSitesC2 = LakeSitesC   # additional var 
+            # Direct per-point table lookup on the lake ids (LakeSitesCC),
+            # replacing the full-grid pcraster.lookupscalar+compressArray+
+            # np.compress (~25 s/call on the global domain).
+            self.var.LakeAreaCC = lookup_table_values(str(binding['TabLakeArea']), self.var.LakeSitesCC)
+
+            self.var.LakeSitesC2 = LakeSitesC   # additional var
 
             # Surface area of each lake [m2]
-            LakeA = pcraster.lookupscalar(str(binding['TabLakeA']), LakeSitePcr)
-            LakeAC = compressArray(LakeA) * loadmap('LakeMultiplier')
-            self.var.LakeACC = np.compress(LakeSitesC > 0, LakeAC)
+            # LakeMultiplier is a (full-domain) calibration parameter map, so
+            # extract its per-point values before multiplying, matching the
+            # original full-domain multiply-then-compress.
+            lake_multiplier_cc = np.compress(LakeSitesC > 0, loadmap('LakeMultiplier'))
+            self.var.LakeACC = lookup_table_values(str(binding['TabLakeA']), self.var.LakeSitesCC) * lake_multiplier_cc
             # Lake parameter A (suggested  value equal to outflow width in [m])
             # multiplied with the calibration parameter LakeMultiplier
 
@@ -113,9 +116,7 @@ class lakes(HydroModule):
             LakeInitialLevelValue  = loadmap('LakeInitialLevelValue')
             if np.max(LakeInitialLevelValue) == -9999:
                 # 'cold' start
-                LakeAvNetInflowEstimate = pcraster.lookupscalar(str(binding['TabLakeAvNetInflowEstimate']), LakeSitePcr)
-                LakeAvNetC = compressArray(LakeAvNetInflowEstimate)
-                self.var.LakeAvNetCC = np.compress(LakeSitesC > 0, LakeAvNetC)
+                self.var.LakeAvNetCC = lookup_table_values(str(binding['TabLakeAvNetInflowEstimate']), self.var.LakeSitesCC)
                 LakeStorageIniM3CC = self.var.LakeAreaCC * np.sqrt(self.var.LakeAvNetCC / self.var.LakeACC)
                 # Initial lake storage [m3] S1  based on: S = LakeArea * H = LakeArea * sqrt(Q/a)
                 self.var.LakeLevelCC = LakeStorageIniM3CC / self.var.LakeAreaCC

@@ -649,23 +649,32 @@ class outputTssMap(object):
         # output for single column eg mapmaximum
         self.var.Tss = {}
 
+        # Resolve each distinct output-point location ("where": Gauges, Sites,
+        # LakeSites, Catchments, ...) only ONCE. The resolved map is used read-only by
+        # TimeoutputTimeseries.__init__, so sharing one object per `where` is safe.
+        outpoints_by_where = {}
+
         for tss in report_time_serie_act:
             where = report_time_serie_act[tss].where
-            outpoints = binding[where]
-            if where == "Catchments":
-                outpoints = decompress(outpoints)
+            if where in outpoints_by_where:
+                outpoints = outpoints_by_where[where]
             else:
-                coord = binding[where].split()  # could be gauges, sites, lakeSites etc.
-                if len(coord) % 2 == 0:
-                    outpoints = valuecell(self.var.MaskMap, coord, outpoints)
+                outpoints = binding[where]
+                if where == "Catchments":
+                    outpoints = decompress(outpoints)
                 else:
-                    try:
-                        outpoints = loadmap(where, pcr=True)
-                        outpoints = ifthen(outpoints != 0, outpoints)
-                        # this is necessary if netcdf maps are loaded !! otherwise strange dis.tss
-                    except Exception as e:
-                        msg = "Setting output points\n {}".format(str(e))
-                        raise LisfloodFileError(outpoints, msg)
+                    coord = binding[where].split()  # could be gauges, sites, lakeSites etc.
+                    if len(coord) % 2 == 0:
+                        outpoints = valuecell(self.var.MaskMap, coord, outpoints)
+                    else:
+                        try:
+                            outpoints = loadmap(where, pcr=True)
+                            outpoints = ifthen(outpoints != 0, outpoints)
+                            # this is necessary if netcdf maps are loaded !! otherwise strange dis.tss
+                        except Exception as e:
+                            msg = "Setting output points\n {}".format(str(e))
+                            raise LisfloodFileError(outpoints, msg)
+                outpoints_by_where[where] = outpoints
 
             if option['MonteCarlo']:
                 if os.path.exists(os.path.split(binding[tss])[0]):
