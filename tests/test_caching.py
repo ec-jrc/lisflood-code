@@ -135,7 +135,7 @@ class TestCachingSlow(ETRS89TestCase):
         print('Cache size is {}'.format(cache_size_a))
         print('Items found: {}'.format(cache_found_a))
 
-        assert cache_found_a == 2  # here we used Gauges map 3 times (for DisTS, ChanqTS and ChanqAvgDtTS)
+        assert cache_found_a == 0  # now Gauges map is not used multiple times anymore
 
         lisfloodexe(settings)
 
@@ -146,7 +146,7 @@ class TestCachingSlow(ETRS89TestCase):
 
         Cache.info()
 
-        assert cache_found_b == cache_size_b + 4 # add 4 for the 2 additional calls of Gauges map
+        assert cache_found_b == cache_size_b  # now Gauges map is not used multiple times anymore
         assert cache_size_a == cache_size_b
 
         self.compare_reference('dis', check='map', step_length=dt_sec)
