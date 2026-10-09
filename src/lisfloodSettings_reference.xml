@@ -243,27 +243,38 @@ You can use builtin path variables in this template and reference to other paths
 		</comment>
 		</textvar>
 
-		<textvar name="numCPUs_parallelNumexpr" value="1">
+		<textvar name="numCPUs_parallelNumexpr" value="auto">
 		<comment>
         !-- Number of threads used by the numexpr library (vectorized math in
-        the kinematic-wave routing). On typical catchment sizes numexpr on the
-        small routing arrays gives no speedup and causes thread oversubscription,
-        so the default is serial (1). Values:
-            - "1"                 : serial (recommended default)
-            - "0" / "all" / "auto": use all available cores
-            - "2", "3", ...       : manual thread count -->
+        the kinematic-wave routing). Small routing arrays on typical catchments
+        gain nothing from the pool and cause oversubscription, whereas on large/
+        global domains all-cores is measurably faster. Values:
+            - "auto"              : domain-size-aware default (recommended):
+                                    serial on small domains, all cores on large
+                                    ones (threshold = numba auto-tune pixels)
+            - "1"                 : force serial
+            - "0" / "all"         : force all available cores
+            - "2", "3", ...       : manual thread count
+        Set this to "1" when an outer tool already runs many LISFLOOD instances
+        in parallel (e.g. lisflood-calibration, one LISFLOOD per DEAP individual)
+        so each instance stays single-core and avoids oversubscription. -->
 		</comment>
 		</textvar>
 
-		<textvar name="numCPUs_BLAS" value="1">
+		<textvar name="numCPUs_BLAS" value="auto">
 		<comment>
         !-- Number of threads used by the BLAS/OpenMP backend of numpy/scipy
         (e.g. the SVD in the soil-hydraulics least-squares fit during
-        initialization). Defaults to serial (1) to avoid oversubscription that
-        can make runs slower than single-threaded. Values:
-            - "1"                 : serial (recommended default)
-            - "0" / "all" / "auto": use all available cores
-            - "2", "3", ...       : manual thread count -->
+        initialization). Values:
+            - "auto"              : domain-size-aware default (recommended):
+                                    serial on small domains, all cores on large
+                                    ones (threshold = numba auto-tune pixels)
+            - "1"                 : force serial
+            - "0" / "all"         : force all available cores
+            - "2", "3", ...       : manual thread count
+        Set this to "1" when an outer tool already runs many LISFLOOD instances
+        in parallel (e.g. lisflood-calibration) so each instance stays
+        single-core and avoids oversubscription. -->
 		</comment>
 		</textvar>
 

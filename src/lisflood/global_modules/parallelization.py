@@ -43,14 +43,16 @@ working):
 
   * ``numCPUs_parallelNumba``   - existing setting; numba thread count.
                                    0 or "" => all cores; N => N threads.
-  * ``numCPUs_parallelNumexpr`` - numexpr thread count. Default: 1
-                                  (numexpr on the small routing arrays gives no
-                                   speedup and causes oversubscription).
+  * ``numCPUs_parallelNumexpr`` - numexpr thread count. Default: "auto"
+                                  (domain-size-aware: serial on small domains,
+                                   all cores on large/global domains).
   * ``numCPUs_BLAS``            - BLAS/OpenMP thread count for numpy/scipy.
-                                  Default: 1.
+                                  Default: "auto" (domain-size-aware, as above).
   * ``numCPUs_soilInit``        - soilInit thread count for soil initialization.
                                   Default: 0 (all cores).
-A value of 0 (or empty/"all") means "use all available cores".
+A value of 0 (or empty/"all") means "use all available cores". For numexpr/BLAS,
+"auto" (or an absent setting) picks all cores only when the domain is large
+(>= NUMBA_AUTO_MIN_PIXELS valid pixels), else serial.
 """
 
 import os
@@ -227,6 +229,42 @@ def resolve_numba_threads(binding, num_pixels=None):
         return 1
     return None
 
+
+def resolve_pool_threads(binding, key, num_pixels=None):
+    """Decide the thread count for a shared library pool (numexpr / BLAS).
+
+    These pools help on large domains (big routing/linear-algebra arrays) but
+    cause oversubscription on small catchments, where their per-call arrays are
+    tiny and they merely fight numba/BLAS for cores. So the behaviour is:
+
+    * If the user set a concrete number, honor it verbatim (e.g. ``1``, written
+      by calibration templates to force a single-core instance; ``0``/``"all"``
+      => unconditionally all cores regardless of domain size).
+    * If the setting is **absent** or set to ``"auto"``, choose a domain-size-
+      aware default, mirroring the numba auto-tune: all cores for large domains
+      (``num_pixels >= NUMBA_AUTO_MIN_PIXELS``), serial (1) otherwise. This is
+      the recommended mode: small catchments avoid oversubscription, global
+      runs get the multi-core throughput they benefit from.
+    * If the domain size is unknown (and the mode is auto), stay conservative
+      and return 1 (serial) to avoid a surprise oversubscription.
+
+    Returns an int >= 1, or None meaning "all available cores".
+    """
+    raw = binding.get(key) if binding is not None else None
+    if isinstance(raw, str):
+        raw = raw.strip().lower()
+
+    auto = raw in (None, "", "auto")
+    if not auto:
+        # Explicit concrete number / "all" / "0": honor verbatim.
+        return _parse_thread_count(raw)
+
+    # auto (absent or "auto") -> domain-size-aware default
+    if num_pixels is not None and num_pixels >= NUMBA_AUTO_MIN_PIXELS:
+        return None   # large domain: all cores
+    return 1          # small/unknown domain: serial
+
+
 def resolve_soilinit_workers(binding, real_cpu_count):
     """Number of worker processes for the ColdStart soil-init solve.
 
@@ -281,11 +319,13 @@ def configure_parallelism(binding, num_pixels=None):
     else:
         effective_numba = None            # Numba not available
 
-    # numexpr and BLAS default to serial: on typical LISFLOOD domains their
-    # pools cause oversubscription without a throughput benefit. Users can
-    # raise these for large domains via the settings file.
-    numexpr_threads = _resolve(binding, "numCPUs_parallelNumexpr", 1)
-    blas_threads = _resolve(binding, "numCPUs_BLAS", 1)
+    # numexpr and BLAS: when the user does not set them, choose a domain-size-
+    # aware default (serial on small catchments to avoid oversubscription; all
+    # cores on large/global domains where the parallel pools pay off — measured
+    # on the global run, where numexpr=BLAS=1 is slightly slower than all-cores).
+    # An explicit value in the settings is always honored verbatim.
+    numexpr_threads = resolve_pool_threads(binding, "numCPUs_parallelNumexpr", num_pixels)
+    blas_threads = resolve_pool_threads(binding, "numCPUs_BLAS", num_pixels)
 
     host = _host_cpu_count()
 

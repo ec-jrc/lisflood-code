@@ -188,3 +188,70 @@ class TestAllCoresSentinel:
     def test_parse_thread_count(self, value, expected):
         assert par._parse_thread_count(value) == expected
 
+class TestPoolThreadsAutoDefault:
+    """resolve_pool_threads (numexpr / BLAS): domain-size-aware default when the
+    setting is absent or "auto"; explicit values always honored verbatim.
+
+    Measured basis: numexpr=BLAS=1 is right on small catchments (tiny routing
+    arrays, oversubscription) but slightly SLOWER than all-cores on the global
+    domain. So the default must flip with domain size, mirroring the numba
+    auto-tune threshold, while staying overridable (calibration forces "1")."""
+
+    SMALL = par.NUMBA_AUTO_MIN_PIXELS - 1
+    LARGE = par.NUMBA_AUTO_MIN_PIXELS
+
+    def test_explicit_value_wins_regardless_of_domain_size(self):
+        for pix in (self.SMALL, self.LARGE, 10_000_000):
+            assert par.resolve_pool_threads(
+                {"numCPUs_BLAS": "2"}, "numCPUs_BLAS", num_pixels=pix) == 2
+
+    def test_explicit_one_forces_serial_even_on_large_domain(self):
+        # the calibration escape hatch: force single-core on a big domain
+        assert par.resolve_pool_threads(
+            {"numCPUs_parallelNumexpr": "1"}, "numCPUs_parallelNumexpr",
+            num_pixels=10_000_000) == 1
+
+    def test_explicit_zero_forces_all_cores_even_on_small_domain(self):
+        assert par.resolve_pool_threads(
+            {"numCPUs_BLAS": "0"}, "numCPUs_BLAS", num_pixels=self.SMALL) is None
+        assert par.resolve_pool_threads(
+            {"numCPUs_BLAS": "all"}, "numCPUs_BLAS", num_pixels=self.SMALL) is None
+
+    def test_auto_token_is_domain_size_aware(self):
+        assert par.resolve_pool_threads(
+            {"numCPUs_BLAS": "auto"}, "numCPUs_BLAS", num_pixels=self.SMALL) == 1
+        assert par.resolve_pool_threads(
+            {"numCPUs_BLAS": "auto"}, "numCPUs_BLAS", num_pixels=self.LARGE) is None
+
+    def test_missing_setting_is_domain_size_aware(self):
+        # old settings files without the key: serial small, all-cores large
+        assert par.resolve_pool_threads({}, "numCPUs_BLAS",
+                                        num_pixels=self.SMALL) == 1
+        assert par.resolve_pool_threads({}, "numCPUs_BLAS",
+                                        num_pixels=self.LARGE) is None
+
+    def test_unknown_domain_size_stays_serial(self):
+        # Unlike numba (which keeps all-cores when size unknown), the numexpr/
+        # BLAS auto default is conservative: serial, to avoid oversubscription.
+        assert par.resolve_pool_threads({}, "numCPUs_BLAS", num_pixels=None) == 1
+        assert par.resolve_pool_threads(
+            {"numCPUs_BLAS": "auto"}, "numCPUs_BLAS", num_pixels=None) == 1
+
+    def test_configure_parallelism_large_domain_uses_all_cores(self, monkeypatch):
+        monkeypatch.setattr(par, "_host_cpu_count", lambda: 16)
+        # Keep numexpr's hard ceiling above the host so it does not clamp below.
+        monkeypatch.setenv("NUMEXPR_MAX_THREADS", "64")
+        # no numexpr/BLAS keys -> auto; large domain -> all cores (= host)
+        eff = par.configure_parallelism({}, num_pixels=par.NUMBA_AUTO_MIN_PIXELS)
+        assert eff["blas"] == eff["host"]        # all cores
+        if par._HAVE_NUMEXPR:
+            # numexpr is also capped by its own MAX_THREADS; it should request
+            # all host cores (bounded by that ceiling, which we raised to 64).
+            assert eff["numexpr"] == min(eff["host"], 64)
+
+    def test_configure_parallelism_small_domain_stays_serial(self, monkeypatch):
+        monkeypatch.setattr(par, "_host_cpu_count", lambda: 16)
+        eff = par.configure_parallelism({}, num_pixels=100)
+        assert eff["blas"] == 1
+        if par._HAVE_NUMEXPR:
+            assert eff["numexpr"] == 1
