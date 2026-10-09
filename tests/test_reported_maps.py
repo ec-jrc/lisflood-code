@@ -15,7 +15,8 @@ from .test_utils import setoptions, mk_path_out
 class TestReportedMaps():
 
     case_dir = os.path.join(os.path.dirname(__file__), 'data', 'LF_ETRS89_UseCase')
-    mk_path_out(os.path.join(case_dir, 'out'))
+    # Ensure the shared 'out/' exists without wiping it (would clobber other tests).
+    os.makedirs(os.path.join(case_dir, 'out'), exist_ok=True)
 
     settings_files = {
         # full.xml of LF_ETRS89_UseCase has simulateLakes and repsimulateLakes off

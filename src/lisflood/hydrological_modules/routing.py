@@ -1032,8 +1032,8 @@ class routing(HydroModule):
 
             # Legacy
             # TotalCrossSectionArea = np.maximum(self.var.ChanM3Kin * self.var.InvChanLength, 0.01)
-            TotalCrossSectionArea = np.maximum(self.var.ChanM3 * self.var.InvChanLength, 0.01)
-            self.var.FlowVelocity = np.minimum(self.var.ChanQKin/TotalCrossSectionArea, 0.36*self.var.ChanQKin**0.24)
+            tmpLocalVarTotalCrossSectionArea = np.maximum(self.var.ChanM3 * self.var.InvChanLength, 0.01)  # added prefix tmpLocalVar to avoid confusion with self.var.TotalCrossSectionArea
+            self.var.FlowVelocity = np.minimum(self.var.ChanQKin/tmpLocalVarTotalCrossSectionArea, 0.36*self.var.ChanQKin**0.24)
             # Channel velocity (m/s); dividing Q (m3/s) by CrossSectionArea (m2)
             # avoid extreme velocities by using the Wollheim 2006 equation
             # assume 0.1 for upstream areas (outside ChanLdd)
@@ -1046,7 +1046,8 @@ class routing(HydroModule):
 
             ####### added by Robert Dill, 2025/03/13
             # calculate momentum map flow velocity * rivermass [kgm/s]
-            self.var.FlowMomentum = self.var.TotalCrossSectionArea * self.var.ChanLength * 1000 * self.var.FlowVelocity
+            if option["repFlowMomMaps"]:
+                self.var.FlowMomentum = self.var.TotalCrossSectionArea * self.var.ChanLength * 1000 * self.var.FlowVelocity
             #######
 
 

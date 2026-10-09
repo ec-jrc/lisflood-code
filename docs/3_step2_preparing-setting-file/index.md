@@ -757,6 +757,25 @@ Within the 'lfoptions' element of the settings file, each option is defined usin
 + **OutputMapsChunks**: this option is used to write output maps every X steps (default 1).  
 + **OutputMapsDataType**: this option sets the output data type and may take the following values: "float64" or "float32" (default float64). This option applies to all output maps.
 
+### Options to control parallelization
+
+LISFLOOD uses several independent parallelization mechanisms. They all affect run time only, never results: model outputs are identical regardless of the values below. Each option accepts a positive integer (number of threads/processes), or `0` / `"all"` / `"auto"` meaning "use all available CPU cores".
+
+These are `lfuser`/`lfbinding` variables (add them like any other `textvar`), for example:
+
+```xml
+<textvar name="numCPUs_parallelNumba" value="0"/>
+<textvar name="numCPUs_parallelNumexpr" value="auto"/>
+<textvar name="numCPUs_BLAS" value="auto"/>
+<textvar name="numCPUs_soilInit" value="0"/>
+```
+
++ **numCPUs_parallelNumba**: number of threads used by the Numba just-in-time compiled kernels (the kinematic-wave / Muskingum-Cunge routing and the soil/vegetation loop). Value `0` uses all cores (or the `NUMBA_NUM_THREADS` environment variable if set). On small catchments, thread fork/join overhead can make multi-threaded execution slower than serial, so LISFLOOD auto-tunes this to 1 (serial) for small domains when left on `0`; large domains benefit from more threads.
++ **numCPUs_parallelNumexpr**: number of threads used by the `numexpr` library (vectorized array maths in the kinematic-wave routing). Default `auto`: a domain-size-aware choice that runs serial on small catchments (where `numexpr`'s pool gives no speedup and oversubscribes against Numba/BLAS) and uses all cores on large/global domains (where it is measurably faster). You can force a value: `1` (serial), `0`/`all` (all cores), or a specific number. The large/small cutoff is the same valid-pixel threshold used by the Numba auto-tune. **Set this to `1` under an outer parallel driver** (e.g. [lisflood-calibration](https://github.com/ec-jrc/lisflood-calibration), one LISFLOOD per DEAP individual) so each instance stays single-core.
++ **numCPUs_BLAS**: number of threads used by the BLAS/OpenMP backend of NumPy/SciPy (e.g. the linear algebra in the soil-hydraulics fitting during initialization). Default `auto`, with the same domain-size-aware behaviour and overrides as `numCPUs_parallelNumexpr`; set it to `1` under an outer parallel driver.
++ **numCPUs_soilInit**: number of worker **processes** used to solve the soil layer-2 saturation during a cold start. This is a per-pixel SciPy solve that can dominate initialization time on large/global domains (turning it from serial minutes/hours into a few minutes with many cores). This is process-based parallelism, independent of the thread options above. Default `0` (use all available cores); the solve is bit-identical regardless of the worker count.
+    - **Set `numCPUs_soilInit` to `1` when an outer tool already runs many LISFLOOD instances in parallel** — most importantly [lisflood-calibration](https://github.com/ec-jrc/lisflood-calibration), which runs one LISFLOOD per DEAP individual and expects each instance to use a single core. As a safeguard, this parallelization automatically disables itself (falls back to serial) when LISFLOOD detects it is running inside a forked/daemon worker, so an accidental high value cannot cause oversubscription under calibration.
+
 ### Reference settings file
 In order to facilitate the preparation of the settings file, a complete example is provided [here](https://github.com/ec-jrc/lisflood-code/tree/master/src/lisfloodSettings_reference.xml). The user is encouraged to update the paths, the names of the maps and of the tables in the provided template.
 

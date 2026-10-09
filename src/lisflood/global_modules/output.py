@@ -649,23 +649,32 @@ class outputTssMap(object):
         # output for single column eg mapmaximum
         self.var.Tss = {}
 
+        # Resolve each distinct output-point location ("where": Gauges, Sites,
+        # LakeSites, Catchments, ...) only ONCE. The resolved map is used read-only by
+        # TimeoutputTimeseries.__init__, so sharing one object per `where` is safe.
+        outpoints_by_where = {}
+
         for tss in report_time_serie_act:
             where = report_time_serie_act[tss].where
-            outpoints = binding[where]
-            if where == "Catchments":
-                outpoints = decompress(outpoints)
+            if where in outpoints_by_where:
+                outpoints = outpoints_by_where[where]
             else:
-                coord = binding[where].split()  # could be gauges, sites, lakeSites etc.
-                if len(coord) % 2 == 0:
-                    outpoints = valuecell(self.var.MaskMap, coord, outpoints)
+                outpoints = binding[where]
+                if where == "Catchments":
+                    outpoints = decompress(outpoints)
                 else:
-                    try:
-                        outpoints = loadmap(where, pcr=True)
-                        outpoints = ifthen(outpoints != 0, outpoints)
-                        # this is necessary if netcdf maps are loaded !! otherwise strange dis.tss
-                    except Exception as e:
-                        msg = "Setting output points\n {}".format(str(e))
-                        raise LisfloodFileError(outpoints, msg)
+                    coord = binding[where].split()  # could be gauges, sites, lakeSites etc.
+                    if len(coord) % 2 == 0:
+                        outpoints = valuecell(self.var.MaskMap, coord, outpoints)
+                    else:
+                        try:
+                            outpoints = loadmap(where, pcr=True)
+                            outpoints = ifthen(outpoints != 0, outpoints)
+                            # this is necessary if netcdf maps are loaded !! otherwise strange dis.tss
+                        except Exception as e:
+                            msg = "Setting output points\n {}".format(str(e))
+                            raise LisfloodFileError(outpoints, msg)
+                outpoints_by_where[where] = outpoints
 
             if option['MonteCarlo']:
                 if os.path.exists(os.path.split(binding[tss])[0]):
@@ -716,7 +725,20 @@ class outputTssMap(object):
                 if how == 'total':
                     changed = compressArray(catchmenttotal(decompress(eval(what)) * self.var.PixelAreaPcr, self.var.Ldd) * self.var.InvUpArea)
                     what = 'changed'
-                self.var.Tss[tss].sample(decompress(eval(what)))
+                tss_obj = self.var.Tss[tss]
+                value_1d = eval(what)
+                # Fast path: when every gauge is a single cell, the inherited
+                # .sample()'s per-zone areaaverage equals the gauge-cell value,
+                # so read it straight from the 1D array and skip the
+                # decompress -> numpy2pcr full-map conversion (~50-136 ms/call on
+                # a global grid). Only for Scalar series (the areaaverage branch);
+                # a 1D numpy array implies Scalar/Directional here. Falls back to
+                # the exact PCRaster path otherwise (e.g. multi-cell gauge zones,
+                # non-spatial gauges, or non-ndarray values).
+                if getattr(tss_obj, '_compressed_sampling_ok', False) and isinstance(value_1d, np.ndarray):
+                    tss_obj.sample_compressed(value_1d)
+                else:
+                    tss_obj.sample(decompress(value_1d))
 
         # ************************************************************
         # ***** WRITING RESULTS: MAPS   ******************************

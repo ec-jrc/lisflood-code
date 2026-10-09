@@ -28,7 +28,7 @@ from lisfloodutilities.compare.pcr import TSSComparator
 
 from lisflood.main import lisfloodexe
 
-from .test_utils import setoptions, mk_path_out
+from .test_utils import setoptions, mk_path_out, worker_out
 
 
 @pytest.mark.slow
@@ -62,7 +62,7 @@ class TestWarmStart():
 
         case_dir = os.path.join(os.path.dirname(__file__), 'data', 'LF_ETRS89_UseCase')
         out_dir = os.path.join(case_dir, 'out')
-        mk_path_out(out_dir)
+        os.makedirs(out_dir, exist_ok=True)
         
         # init
         path_out_init = mk_path_out(os.path.join(out_dir,'init{}'.format(dt_sec)))
@@ -168,9 +168,13 @@ class TestWarmStart():
 
     
     def teardown_method(self):
-        folders_list = glob.glob(os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/run*')) + \
-            glob.glob(os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/longrun_reference*')) + \
-            glob.glob(os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase/out/init*'))
+        # Clean only this worker's output subtree (worker_out() -> 'out' serially,
+        # 'out/<gwN>' under xdist) so a parallel worker never removes another
+        # worker's run*/longrun_reference*/init* directories.
+        base = os.path.join(os.path.dirname(__file__), 'data/LF_ETRS89_UseCase', worker_out())
+        folders_list = glob.glob(os.path.join(base, 'run*')) + \
+            glob.glob(os.path.join(base, 'longrun_reference*')) + \
+            glob.glob(os.path.join(base, 'init*'))
         for folder in folders_list:
             shutil.rmtree(folder)
     

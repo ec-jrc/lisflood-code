@@ -822,6 +822,7 @@ class LisfloodRunInfo(Warning):
         header = "\n\n ========================== LISFLOOD Simulation Information and Setting =============================\n"
         msg = ''
         settings = LisSettings.instance()
+        binding = settings.binding
         option = settings.options
         out_dir = settings.output_dir
         ens_members = settings.ens_members[0]
@@ -845,8 +846,16 @@ class LisfloodRunInfo(Warning):
         msg += "\t[X] The simulation output as specified in the settings file can be found in {}\n".format(out_dir)
         msg += "\t[X] Activated modules: {}\n".format(activated_options)
         msg += "\t[X] Report options: {}\n".format(activated_rep)
+        # Thread-pool governance (numba/numexpr/BLAS) plus the soil-init worker
+        # process count. Affects performance only, not results. "all" means every
+        # available core is used.
+        from .parallelization import get_effective_parallelism
+        _par = get_effective_parallelism()
+        if _par is not None:
+            msg += "\t[X] Parallelization: numba={}, numexpr={}, BLAS={}, soilInit={} (host cores={})\n".format(
+                _par.get('numba'), _par.get('numexpr'),
+                _par.get('blas'), _par.get('soilinit'), _par.get('host'))
         # Packing and aggregation info
-        binding = settings.binding
         if binding.get('OutputPacking', 'False') == 'True':
             msg += "\t[X] Output Packing: int16 scale/offset enabled\n"
         for agg_key in ['OutputMonthlyMean', 'OutputMonthlySum', 'OutputYearlyMean', 'OutputYearlySum']:

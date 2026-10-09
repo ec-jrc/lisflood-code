@@ -291,25 +291,39 @@ def compressArray(map, pcr=True, name=None, force_load_with_nans=False):
 
 def decompress(map):
     maskinfo = MaskInfo.instance()
-    dmap = maskinfo.info.maskall.copy()
-    dmap[~maskinfo.info.maskflat] = map[:]
-    dmap = dmap.reshape(maskinfo.info.shape)
     # check if integer map (like outlets, lakes etc)
     try:
         checkint = str(map.dtype)
     except:
         checkint = None
 
-    if checkint in ("int16", "int32", "int64"):
-        dmap[dmap.mask] = -9999
-        map = numpy2pcr(Nominal, dmap, -9999)
-    elif checkint == "int8":
+    if checkint == "int8":
+        # Rare, special-cased branch: the original relied on np.ma semantics
+        # (dmap[dmap < 0] excludes masked cells, leaving their uninitialized
+        # masked_all .data untouched). Keep the exact original implementation
+        # here to preserve behaviour bit-for-bit; it is not on any hot path
+        # (compressArray returns float, so decompress almost always hits the
+        # Scalar branch below).
+        dmap = maskinfo.info.maskall.copy()
+        dmap[~maskinfo.info.maskflat] = map[:]
+        dmap = dmap.reshape(maskinfo.info.shape)
         dmap[dmap < 0] = -9999
-        map = numpy2pcr(Nominal, dmap, -9999)
-    else:
-        dmap[dmap.mask] = -9999
-        map = numpy2pcr(Scalar, dmap, -9999)
-    return map
+        return numpy2pcr(Nominal, dmap, -9999)
+
+    # Fast path (float / int16 / int32 / int64): build the full-domain array
+    # with a plain numpy buffer instead of copying the masked `maskall` and
+    # operating on it through the np.ma machinery. `maskall` is float64 and the
+    # result handed to numpy2pcr is simply: valid cells = map values,
+    # outside-domain cells = -9999 (the missing-value marker). This avoids the
+    # full-domain masked-array copy and the np.ma wrapped-method overhead that
+    # dominate decompress on large/global domains. Verified bit-identical to the
+    # original masked-array path for all these dtype branches.
+    dmap = np.full(maskinfo.info.shapeflat, -9999.0, dtype=np.float64)
+    dmap[~maskinfo.info.maskflat] = map[:]
+    dmap = dmap.reshape(maskinfo.info.shape)
+    if checkint in ("int16", "int32", "int64"):
+        return numpy2pcr(Nominal, dmap, -9999)
+    return numpy2pcr(Scalar, dmap, -9999)
 
 
 def makenumpy(map):
@@ -320,6 +334,61 @@ def makenumpy(map):
         return out
     else:
         return map
+
+
+# Cache of parsed 2-column lookup tables: {abspath: {id(int): value(float)}}.
+_LOOKUP_TABLE_CACHE = {}
+
+
+def _read_lookup_table(table_path):
+    """Parse a PCRaster-style 2-column 'key value' lookup table into an
+    {int(key): float(value)} dict. Only the simple exact-match form used by the
+    reservoir/lake parameter tables is supported (no range/interval rows).
+    Cached by absolute path."""
+    key = os.path.abspath(str(table_path))
+    cached = _LOOKUP_TABLE_CACHE.get(key)
+    if cached is not None:
+        return cached
+    mapping = {}
+    with open(str(table_path)) as f:
+        for line in f:
+            parts = line.split()
+            if len(parts) < 2:
+                continue
+            # keys are integer point ids (reservoir/lake ids); skip non-numeric
+            # (e.g. accidental header lines) rather than crash.
+            try:
+                k = int(float(parts[0]))
+                v = float(parts[1])
+            except ValueError:
+                continue
+            mapping[k] = v
+    _LOOKUP_TABLE_CACHE[key] = mapping
+    return mapping
+
+
+def lookup_table_values(table_path, point_ids):
+    """Vectorized equivalent of
+        np.compress(sites>0, compressArray(pcraster.lookupscalar(table, siteMapPcr)))
+    for a simple exact-match 2-column lookup table.
+
+    For each id in `point_ids` (the compressed point ids, e.g.
+    ReservoirSitesCC / LakeSitesCC) return the table value for that id, or NaN if
+    the id is absent from the table -- exactly as pcraster.lookupscalar returns a
+    missing value (which compressArray turns into NaN). This replaces a full-grid
+    PCRaster table lookup (~30 s/call on the global domain) with an O(n_points)
+    dict lookup.
+    """
+    mapping = _read_lookup_table(table_path)
+    ids = np.asarray(point_ids)
+    out = np.empty(ids.shape[0], dtype=float)
+    for i in range(ids.shape[0]):
+        out[i] = mapping.get(int(ids[i]), np.nan)
+    # Cast to float32 then back, matching pcraster.lookupscalar's Scalar (float32)
+    # precision. Without this, the full float64 table values introduce ~1e-7
+    # per-value differences (visible as ~1e-4 in discharge after amplification
+    # through reservoir/lake routing), breaking bit-identical output.
+    return out.astype(np.float32).astype(np.float64)
 
 
 def loadmap(*args, **kwargs):

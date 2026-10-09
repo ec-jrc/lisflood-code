@@ -26,25 +26,31 @@ from lisflood.global_modules.settings import datetoint
 
 from lisflood.main import lisfloodexe
 
-from .test_utils import ETRS89TestCase, setoptions, mk_path_out
+from .test_utils import ETRS89TestCase, setoptions, mk_path_out, worker_out
 
 
 class TestRepStepMaps(ETRS89TestCase):
     case_dir = os.path.join(os.path.dirname(__file__), 'data', 'LF_ETRS89_UseCase')
     settings_file = os.path.join(case_dir, 'settings', 'cold.xml')
     out_dir = os.path.join(case_dir, 'out')
-    out_dir_a = os.path.join(case_dir, 'out', 'a')
-    out_dir_b = os.path.join(case_dir, 'out', 'b')
+    # Output dirs isolated per xdist worker (worker_out -> 'out/<gwN>/a' in
+    # parallel, 'out/a' serially) so this file's 'out/a','out/b' do not clobber
+    # the identically named dirs in other test files.
+    out_dir_a = os.path.join(case_dir, worker_out('a'))
+    out_dir_b = os.path.join(case_dir, worker_out('b'))
+    pathout_a = '$(PathRoot)/' + worker_out('a')
+    pathout_b = '$(PathRoot)/' + worker_out('b')
 
     def test_reported_steps(self):
 
         strReportStepA = 'starttime+10..endtime'
         settings_a = setoptions(self.settings_file,
                                 vars_to_set={'StepStart': '01/07/2016 00:00', 'StepEnd': '01/08/2016 00:00',
-                                             'PathOut': '$(PathRoot)/out/a',
+                                             'PathOut': self.pathout_a,
                                              'ReportSteps': strReportStepA, 
                                              })
-        mk_path_out(self.out_dir)
+        # Ensure the shared 'out/' base exists without wiping it (other workers/tests use it).
+        os.makedirs(self.out_dir, exist_ok=True)
         mk_path_out(self.out_dir_a)
         lisfloodexe(settings_a)
 
@@ -59,7 +65,7 @@ class TestRepStepMaps(ETRS89TestCase):
 
         settings_b = setoptions(self.settings_file,
                                 vars_to_set={'StepStart': '01/07/2016 00:00', 'StepEnd': '01/08/2016 00:00',
-                                             'PathOut': '$(PathRoot)/out/b',
+                                             'PathOut': self.pathout_b,
                                              'ReportSteps': strReportStepB,
                                              })
         mk_path_out(self.out_dir_b)
