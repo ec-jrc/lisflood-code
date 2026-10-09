@@ -49,7 +49,7 @@ working):
   * ``numCPUs_BLAS``            - BLAS/OpenMP thread count for numpy/scipy.
                                   Default: 1.
   * ``numCPUs_soilInit``        - soilInit thread count for soil initialization.
-                                  Default: 1.
+                                  Default: 0 (all cores).
 A value of 0 (or empty/"all") means "use all available cores".
 """
 
@@ -233,10 +233,10 @@ def resolve_soilinit_workers(binding, real_cpu_count):
     Controlled by the dedicated 'numCPUs_soilInit' setting (process-based
     parallelism for the per-pixel scipy least_squares solve; unrelated to the
     numba/numexpr/BLAS thread pools). Values: a positive integer, or
-    0 / "all" / "auto" for all available cores. Defaults to 1 (serial) when
-    unset, so behaviour is unchanged unless the user opts in.
+    0 / "all" / "auto" for all available cores. Defaults to 0 (all cores) when
+    unset; the solve is bit-identical regardless of the worker count.
     """
-    explicit =  _resolve(binding, "numCPUs_soilInit", 1)
+    explicit =  _resolve(binding, "numCPUs_soilInit", None)
     if explicit is not None:
         return explicit
     return real_cpu_count if real_cpu_count is not None else _host_cpu_count()

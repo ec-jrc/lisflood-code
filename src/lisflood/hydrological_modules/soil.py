@@ -343,7 +343,7 @@ class soil(HydroModule):
              self.var.SeepTopToSubBAv[2] = loadmap('SeepTopToSubBAverageIrrigationMap')
 
         # number of worker processes for the ColdStart layer-2 saturation solve
-        # (per-pixel least_squares); set via 'numCPUs_soilInit' (default 1 = serial).
+        # (per-pixel least_squares); set via 'numCPUs_soilInit' (default 0 = all cores).
         from ..global_modules.parallelization import get_effective_parallelism
         _par = get_effective_parallelism()
         soilinit_workers = _par.get('soilinit')

@@ -267,17 +267,17 @@ You can use builtin path variables in this template and reference to other paths
 		</comment>
 		</textvar>
 
-		<textvar name="numCPUs_soilInit" value="1">
+		<textvar name="numCPUs_soilInit" value="0">
 		<comment>
         !-- Number of worker PROCESSES used for the cold-start soil-layer-2
         saturation solve (a per-pixel scipy least-squares that can dominate
         initialization time on large/global domains). This is process-based
         parallelism, independent of the numba/numexpr/BLAS thread pools; results
         are identical regardless of the value. Values:
-            - "1"                 : serial (default; unchanged behaviour)
-            - "0" / "all" / "auto": use all available cores
+            - "0" / "all" / "auto": use all available cores (default)
+            - "1"                 : serial
             - "2", "3", ...       : manual process count
-        Keep this at "1" when an outer tool already parallelizes LISFLOOD runs
+        Set this to "1" when an outer tool already parallelizes LISFLOOD runs
         (e.g. lisflood-calibration runs one LISFLOOD per DEAP individual): each
         instance must stay single-process to avoid oversubscription. As a
         safeguard, this parallelism auto-disables when LISFLOOD detects it is

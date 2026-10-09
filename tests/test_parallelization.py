@@ -124,8 +124,8 @@ class TestEffectiveThreadCounts:
             assert eff["numba"] is None
 
         # ---- soil‑init ---------------------------------------------
-        # Missing setting → effective value equals the **default** (1)
-        assert eff["soilinit"] == 1
+        # Missing setting → default is now 0 (all cores) → host core count
+        assert eff["soilinit"] == 12
 
         # ---- host --------------------------------------------------
         assert eff["host"] == 12
