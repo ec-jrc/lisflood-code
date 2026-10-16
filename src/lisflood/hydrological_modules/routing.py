@@ -34,6 +34,7 @@ from .mct import MCTWave
 from ..global_modules.settings import LisSettings, MaskInfo
 from ..global_modules.errors import LisfloodWarning
 from ..global_modules.add1 import loadmap, loadmap_base, compressArray, decompress
+from ..global_modules.parallelization import resolve_routing_dtype
 from . import HydroModule
 
 
@@ -548,9 +549,12 @@ class routing(HydroModule):
         # Initialise parallel kinematic wave router: main channel-only routing if self.var.ChannelAlpha2 is None; else split-routing(main channel + floodplains)
         # Initialization includes LDD for kinematic routing
         maskinfo = MaskInfo.instance()
+        # Routing precision (opt-in float32); default resolves to float64 = unchanged.
+        self.var.routing_dtype = resolve_routing_dtype(settings.binding)
         self.river_router = kinematicWave(compressArray(self.var.LddKinematic), ~maskinfo.info.mask, self.var.ChannelAlpha,
                                            self.var.Beta, self.var.ChanLength, self.var.DtRouting,
-                                          alpha_floodplains=self.var.ChannelAlpha2, flagnancheck=flags['nancheck'])
+                                          alpha_floodplains=self.var.ChannelAlpha2, flagnancheck=flags['nancheck'],
+                                          routing_dtype=self.var.routing_dtype)
 
         # ************************************************************
         # ***** WATER BALANCE                             ************

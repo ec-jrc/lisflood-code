@@ -296,6 +296,24 @@ You can use builtin path variables in this template and reference to other paths
 		</comment>
 		</textvar>
 
+		<textvar name="routingPrecision" value="float64">
+		<comment>
+        !-- Floating-point precision of the kinematic-wave channel-routing numba
+        kernel. PERFORMANCE/precision lever (separate from the thread settings).
+        Values:
+            - "float64" (default) : historical path; bit-identical to previous
+                                    LISFLOOD versions. Use for calibration and any
+                                    bitwise-reproducibility need.
+            - "float32"           : faster routing kernel (halves its memory
+                                    traffic). NOT bit-identical but stays within the
+                                    LISFLOOD reference tolerance (atol=1e-4,
+                                    rtol=1e-3) on tested catchments. The
+                                    Muskingum-Cunge-Todini (MCT) routing and all
+                                    mass-balance reductions remain float64.
+        An unknown value falls back to "float64" (never silently degrades). -->
+		</comment>
+		</textvar>
+
         <comment>
           **************************************************************
           AREA AND OUTLETS
@@ -1947,6 +1965,7 @@ You can use builtin path variables in this template and reference to other paths
       <textvar name="numCPUs_parallelNumexpr" value="$(numCPUs_parallelNumexpr)"/>
       <textvar name="numCPUs_BLAS" value="$(numCPUs_BLAS)"/>
       <textvar name="numCPUs_soilInit" value="$(numCPUs_soilInit)"/>
+      <textvar name="routingPrecision" value="$(routingPrecision)"/>
 
       <textvar name="proj4_params" value="$(proj4_params)">
       <comment>

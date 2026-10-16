@@ -23,7 +23,13 @@ from builtins import max
 
 
 
-NEWTON_TOL = 1e-12 # Max allowed error in iterative solution
+NEWTON_TOL = 1e-12 # Max allowed error in iterative solution (float64 default)
+# float32 cannot represent a 1e-12 absolute tolerance (machine eps ~1.2e-7), so the
+# Newton solve would never satisfy fabs(error)<=1e-12 and would burn MAX_ITERS on
+# every pixel. The tolerance is therefore passed in per call (newton_tol) and chosen
+# by the dtype at the wrapper: 1e-12 for float64 (unchanged, bit-identical), a
+# float32-appropriate value otherwise. See kinematic_wave_parallel.py.
+NEWTON_TOL_FLOAT32 = 1e-6 # Max allowed error in iterative solution (float32 path)
 MAX_ITERS = 3000 # Max number of iterations
 MIN_DISCHARGE = 1e-30 # Minimum allowed discharge value to avoid numerical instability
 
@@ -34,7 +40,7 @@ MIN_DISCHARGE = 1e-30 # Minimum allowed discharge value to avoid numerical insta
 @njit(parallel=True, fastmath=False, cache=True)
 def kinematicRouting(discharge_avg, discharge, lateral_inflow, constant, upstream_lookup,\
                      num_upstream_pixels, ordered_pixels, start_stop, inv_time_delta, beta, inv_beta,\
-                     b_minus_1, a_dx_div_dt, b_a_dx_div_dt, a_dx):
+                     b_minus_1, a_dx_div_dt, b_a_dx_div_dt, a_dx, newton_tol):
     """
     This function performs the kinematic wave routing algorithm to simulate the movement of water through a network of interconnected channels.
     :param discharge_avg:
@@ -65,7 +71,7 @@ def kinematicRouting(discharge_avg, discharge, lateral_inflow, constant, upstrea
             pix = ordered_pixels[index]
             discharge_before = discharge[pix]
             if solve1Pixel(pix, discharge, constant[pix], upstream_lookup,\
-                        num_upstream_pixels, a_dx_div_dt[pix], b_a_dx_div_dt[pix], beta, inv_beta, b_minus_1):                        
+                        num_upstream_pixels, a_dx_div_dt[pix], b_a_dx_div_dt[pix], beta, inv_beta, b_minus_1, newton_tol):                        
                 solve1PixelAvg(pix, discharge_avg, discharge_before, discharge[pix], lateral_inflow[pix], upstream_lookup,\
                             num_upstream_pixels, inv_time_delta, beta, a_dx[pix])
 
@@ -74,7 +80,7 @@ def kinematicRouting(discharge_avg, discharge, lateral_inflow, constant, upstrea
 def solve1Pixel(
     pix, discharge, constant,
     upstream_lookup, num_upstream_pixels, a_dx_div_dt,
-    b_a_dx_div_dt, beta, inv_beta, b_minus_1):
+    b_a_dx_div_dt, beta, inv_beta, b_minus_1, newton_tol):
     """
     Te Chow et al. 1988 - Applied Hydrology - Chapter 9.6
     :param pix:
@@ -96,7 +102,7 @@ def solve1Pixel(
         upstream_inflow += discharge[upstream_lookup[pix,ups_ix]]
 
     # If old discharge, upstream inflow and lateral inflow are below accuracy: set discharge to 0 and exit
-    if upstream_inflow <= NEWTON_TOL:
+    if upstream_inflow <= newton_tol:
         discharge[pix] = 0
         return True
         
@@ -114,16 +120,16 @@ def solve1Pixel(
     count = 0
     previous_estimate = -1.0
     while count < MAX_ITERS:
-        if fabs(error) <= NEWTON_TOL or dis == previous_estimate:
+        if fabs(error) <= newton_tol or dis == previous_estimate:
             break
         previous_estimate = dis
         factor = (1 + b_a_dx_div_dt * dis**b_minus_1)
-        dis = max(dis - error / factor, NEWTON_TOL)
+        dis = max(dis - error / factor, newton_tol)
         error = dis + a_dx_div_dt * dis**beta - upstream_inflow
         count += 1
 
     # If iterations converge to NEWTON_TOL, set value to 0
-    if dis == NEWTON_TOL:
+    if dis == newton_tol:
         discharge[pix] = 0
         return True
 

@@ -56,6 +56,7 @@ A value of 0 (or empty/"all") means "use all available cores". For numexpr/BLAS,
 """
 
 import os
+import numpy as np
 
 # threadpoolctl can limit already-initialized BLAS/OpenMP pools at runtime,
 # which is more robust than relying on environment variables being set before
@@ -326,6 +327,31 @@ def resolve_soilinit_workers(binding, real_cpu_count):
     if explicit is not None:
         return explicit
     return real_cpu_count if real_cpu_count is not None else _host_cpu_count()
+
+def resolve_routing_dtype(binding):
+    """Decide the floating-point dtype for the kinematic-wave routing kernel.
+
+    Controlled by the optional ``routingPrecision`` setting (a string). This is a
+    PRECISION/perf lever, separate from the thread-count knobs:
+
+      * absent / "" / "float64" / "f64" / "double"  -> np.float64 (DEFAULT).
+        The historical, bit-identical path. The default MUST stay float64 so that
+        unchanged settings files reproduce today's output bit-for-bit (Task 8.2).
+      * "float32" / "f32" / "single"                -> np.float32.
+        Opt-in faster path (halves kinematic-kernel memory traffic; results stay
+        within the project reference tolerance, not bit-identical).
+      * any unknown value                           -> np.float64 (fail safe:
+        never silently degrade precision on a typo).
+
+    Returns a numpy dtype (np.float64 or np.float32).
+    """
+    raw = binding.get("routingPrecision") if binding is not None else None
+    if isinstance(raw, str):
+        raw = raw.strip().lower()
+    if raw in ("float32", "f32", "single"):
+        return np.float32
+    return np.float64
+
 
 def configure_parallelism(binding, num_pixels=None):
     """Apply thread-pool limits for numba, numexpr and BLAS/OpenMP.

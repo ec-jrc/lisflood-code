@@ -856,6 +856,17 @@ class LisfloodRunInfo(Warning):
                 _par.get('numba'), _par.get('numexpr'),
                 _par.get('blas'), _par.get('soilinit'),
                 _par.get('numba_threading_layer'), _par.get('host'))
+        # Routing precision (opt-in float32; default float64 == bit-identical).
+        try:
+            from .parallelization import resolve_routing_dtype
+            import numpy as _np
+            _rdt = resolve_routing_dtype(binding)
+            if _rdt == _np.float32:
+                msg += "\t[X] Routing precision: float32 (OPT-IN; default is float64/bit-identical)\n"
+            else:
+                msg += "\t[X] Routing precision: float64 (default, bit-identical)\n"
+        except Exception:
+            pass
         # Packing and aggregation info
         if binding.get('OutputPacking', 'False') == 'True':
             msg += "\t[X] Output Packing: int16 scale/offset enabled\n"

@@ -116,11 +116,19 @@ def topoDistFromSea(downstream_lookup, upstream_lookup):
 class kinematicWave:
     """"""
 
-    def __init__(self, compressed_encoded_ldd, land_mask, alpha_channel, beta, space_delta, time_delta, alpha_floodplains=None, flagnancheck=False):
+    def __init__(self, compressed_encoded_ldd, land_mask, alpha_channel, beta, space_delta, time_delta, alpha_floodplains=None, flagnancheck=False, routing_dtype=np.float64):
         """"""
         # variable to avoid printing repeated warning messages
         self.kinematic_wave_warning_printed=False
         self.flagnancheck=flagnancheck
+        # Routing precision for the kinematic numba kernel. float64 (default) is the
+        # historical, bit-identical path. float32 halves the kernel's memory traffic
+        # at the cost of a dtype-appropriate Newton tolerance (opt-in via the
+        # `routingPrecision` setting). The MCT path and all reductions/coupling stay
+        # float64; this flag only governs the narrow kinematic-kernel boundary.
+        self.routing_dtype = np.dtype(routing_dtype)
+        self.newton_tol = (kwpt.NEWTON_TOL if self.routing_dtype == np.float64
+                           else kwpt.NEWTON_TOL_FLOAT32)
         # Parameters for the solution of the discretised Kinematic wave continuity equation
         self.alpha_channel = alpha_channel
         self.space_delta = space_delta
@@ -172,7 +180,14 @@ class kinematicWave:
         # array containing all pixels organised by computation order
 
     def kinematicWaveRouting(self, discharge_avg, discharge, specific_lateral_inflow, section="main_channel"):
-        """Kinematic wave routing: wrapper around kinematic_wave_parallel_tools.kinematicWave"""
+        """Kinematic wave routing: wrapper around kinematic_wave_parallel_tools.kinematicWave
+
+        When ``routing_dtype`` is float64 (the default) this is the original,
+        bit-identical path. When it is float32 the Newton solve runs in float32
+        over float32 copies of the dynamic arrays, and the results are written
+        back into the caller's float64 ``discharge``/``discharge_avg`` arrays in
+        place (narrow boundary: everything outside the kernel stays float64).
+        """
         # Lateral inflow (m3 s-1)
         lateral_inflow = nx.evaluate("q * dx", local_dict={"q": specific_lateral_inflow, "dx": self.space_delta})
         # Choose between main channel and floodplain routing
@@ -186,13 +201,46 @@ class kinematicWave:
             a_dx = self.a_dx_floodplains
         else:
             raise Exception("The section parameter must be either 'main_channel' or 'floodplain'!")
-        # Constant term in f(x) evaluation for Newton-Raphson method
-        local_dict = {"a_dx_div_dt": a_dx_div_dt, "Qold": discharge, "b": self.beta, "lateral_inflow": lateral_inflow}
-        constant = nx.evaluate("a_dx_div_dt * Qold ** b + lateral_inflow", local_dict=local_dict)
-        # Solve the Kinematic wave equation
-        kwpt.kinematicRouting(discharge_avg, discharge, lateral_inflow, constant, self.upstream_lookup,\
-                              self.num_upstream_pixels, self.pixels_ordered, self.order_start_stop,\
-                              self.inv_time_delta,self.beta, self.inv_beta, self.b_minus_1, a_dx_div_dt, b_a_dx_div_dt, a_dx)
+
+        if self.routing_dtype == np.float64:
+            # Historical path - unchanged (bit-identical). Only addition: the
+            # Newton tolerance is now passed explicitly (== the former module
+            # constant NEWTON_TOL = 1e-12), so results are identical.
+            # Constant term in f(x) evaluation for Newton-Raphson method
+            local_dict = {"a_dx_div_dt": a_dx_div_dt, "Qold": discharge, "b": self.beta, "lateral_inflow": lateral_inflow}
+            constant = nx.evaluate("a_dx_div_dt * Qold ** b + lateral_inflow", local_dict=local_dict)
+            # Solve the Kinematic wave equation
+            kwpt.kinematicRouting(discharge_avg, discharge, lateral_inflow, constant, self.upstream_lookup,\
+                                  self.num_upstream_pixels, self.pixels_ordered, self.order_start_stop,\
+                                  self.inv_time_delta, self.beta, self.inv_beta, self.b_minus_1,\
+                                  a_dx_div_dt, b_a_dx_div_dt, a_dx, kwpt.NEWTON_TOL)
+        else:
+            # --- float32 narrow-boundary path (opt-in) ---
+            dt = self.routing_dtype
+            # float32 copies of the dynamic arrays; the kernel mutates these in place.
+            disch32 = discharge.astype(dt)
+            disch_avg32 = discharge_avg.astype(dt)
+            lat32 = lateral_inflow.astype(dt)
+            # Constants coherent in dtype so numexpr/numba do not upcast to float64.
+            a_dx_div_dt32 = a_dx_div_dt.astype(dt)
+            b_a_dx_div_dt32 = b_a_dx_div_dt.astype(dt)
+            a_dx32 = a_dx.astype(dt)
+            # Constant term in f(x) evaluation for Newton-Raphson method
+            constant = (a_dx_div_dt32 * disch32 ** dt.type(self.beta) + lat32).astype(dt)
+            # Solve the Kinematic wave equation
+            kwpt.kinematicRouting(disch_avg32, disch32, lat32, constant, self.upstream_lookup,\
+                                  self.num_upstream_pixels, self.pixels_ordered, self.order_start_stop,\
+                                  dt.type(self.inv_time_delta), dt.type(self.beta), dt.type(self.inv_beta),\
+                                  dt.type(self.b_minus_1), a_dx_div_dt32, b_a_dx_div_dt32, a_dx32,\
+                                  dt.type(self.newton_tol))
+            # Cast results back into the caller's float64 arrays in place, so the rest
+            # of routing.dynamic (storage recompute, MCT, mass balance, coupling) sees
+            # float64 exactly as before.
+            discharge[:] = disch32
+            discharge_avg[:] = disch_avg32
+
+        # NaN/Inf check runs for BOTH precision paths (the float64 path previously
+        # ran it unconditionally; keep that behaviour).
         if self.flagnancheck:
             if self.kinematic_wave_warning_printed==False:
                 if np.all(np.isfinite(discharge))==False:
