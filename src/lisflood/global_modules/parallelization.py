@@ -100,6 +100,31 @@ def _openmp_layer_available():
         return False
 
 
+def _lock_and_verify_layer(intended):
+    """Force numba to initialize its threading layer NOW (while we are still
+    before any model parallel kernel) by running a trivial prange kernel, then
+    return the layer numba actually locked. numba fixes the layer on first
+    parallel use and ignores later changes, so locking it here deterministically
+    prevents a stray earlier kernel (or the TBB-preferring default) from winning.
+    Returns the actual locked layer string, or ``intended`` if the probe/readback
+    is unavailable."""
+    try:
+        import numpy as _np
+        from numba import njit as _njit, prange as _prange, threading_layer as _tl
+
+        @_njit(parallel=True, cache=False)
+        def _probe(a):
+            s = 0.0
+            for i in _prange(a.size):
+                s += a[i]
+            return s
+
+        _probe(_np.ones(16))
+        return str(_tl())
+    except Exception:  # pragma: no cover - defensive; fall back to intent
+        return intended
+
+
 def select_numba_threading_layer():
     """Pin numba's threading layer to OpenMP when it is safe to do so.
 
@@ -122,14 +147,55 @@ def select_numba_threading_layer():
     """
     if not _HAVE_NUMBA_THREADCTL:
         return None
-    # Respect an explicit user override via the environment.
-    if os.environ.get("NUMBA_THREADING_LAYER"):
+
+    # Respect an explicit user override via the environment. numba reads
+    # NUMBA_THREADING_LAYER at import; mirror it into the live config so the
+    # value we report matches what numba will use, and honor it as-is.
+    env_layer = os.environ.get("NUMBA_THREADING_LAYER")
+    if env_layer:
+        try:
+            _numba_config.THREADING_LAYER = env_layer.strip().lower()
+        except Exception:  # pragma: no cover - defensive
+            pass
         return str(_numba_config.THREADING_LAYER)
+
+    # No explicit choice: pin OpenMP when its backend is available. numba's
+    # default resolution prefers TBB when TBB is installed (confirmed on
+    # Leonardo), but OpenMP is as fast or faster on LISFLOOD workloads and
+    # avoids TBB's fork fragility. This must run before the FIRST parallel
+    # kernel executes (configure_parallelism is called once in
+    # Lisflood_initial.__init__, before any module initial()/dynamic()), because
+    # numba locks the threading layer on first parallel use and ignores later
+    # changes.
+    intended = str(_numba_config.THREADING_LAYER)
     if _openmp_layer_available():
-        # Must be set before the first parallel kernel is compiled/run;
-        # configure_parallelism runs once at startup, before the dynamic loop.
-        _numba_config.THREADING_LAYER = "omp"
-    return str(_numba_config.THREADING_LAYER)
+        try:
+            _numba_config.THREADING_LAYER = "omp"
+        except Exception:  # pragma: no cover - defensive
+            pass
+        # Belt-and-braces: also export the env var so any numba (re)read or a
+        # forked worker that re-imports numba sees the same choice.
+        os.environ.setdefault("NUMBA_THREADING_LAYER", "omp")
+        intended = "omp"
+
+    # Lock the layer NOW (before any model parallel kernel) and read back what
+    # numba actually selected. This is the ground truth, not the intent: if a
+    # stray earlier parallel call or a build quirk already locked another layer
+    # (e.g. TBB, numba's default when TBB is installed as on Leonardo), we detect
+    # it here instead of silently running on the wrong layer.
+    actual = _lock_and_verify_layer(intended)
+    if actual != intended:
+        try:
+            import warnings
+            from .errors import LisfloodWarning
+            warnings.warn(LisfloodWarning(
+                "numba threading layer is '{}' but '{}' was requested; the layer "
+                "was already locked before it could be set. Set "
+                "NUMBA_THREADING_LAYER={} in the environment before launching to "
+                "force it.".format(actual, intended, intended)))
+        except Exception:  # pragma: no cover - defensive
+            pass
+    return actual
 
 # Keep a reference to any threadpoolctl limiter so the applied BLAS limits are
 # not garbage-collected (and thus reverted) during the model run.
