@@ -286,7 +286,17 @@ def compressArray(map, pcr=True, name=None, force_load_with_nans=False):
                 msg = name + " has less valid pixels than area or ldd \n"
                 raise LisfloodError(msg)
                 # test if map has less valid pixel than area.map (or ldd)
-    return mapC.astype(float)
+    # Cast to the resolved MODEL dtype (float64 by default -> bit-identical; the
+    # copy=False keeps the earlier no-op fast path when mapC is already that
+    # dtype). When modelPrecision=float32, compressed STATE arrays are born
+    # float32 here (the array-creation funnel), which is what avoids the
+    # mixed-dtype upcast trap downstream. Accuracy-critical consumers
+    # (mass-balance np.bincount weights, cumulative accumulators, MCT/reservoir
+    # coupling) cast back to float64 explicitly at their call sites. Integer
+    # topology callers (Catchments/downstruct) apply their own .astype(int32)
+    # afterwards, so the float dtype here is irrelevant to them.
+    from .parallelization import get_model_dtype
+    return mapC.astype(get_model_dtype(), copy=False)
 
 
 def decompress(map):
@@ -627,7 +637,8 @@ def loadmap_base(name, pcr=False, lddflag=False, timestampflag='exact', averagey
             nanCheckMap(map, filename, name)
         return map
     elif isinstance(mapC, np.ndarray):
-        return mapC.astype(float)
+        from .parallelization import get_model_dtype
+        return mapC.astype(get_model_dtype(), copy=False)
     else:
         if flags['nancheck'] and name != 'Ldd':
             nanCheckMap(mapC, filename, name)

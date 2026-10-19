@@ -245,12 +245,29 @@ class MaskInfo(with_metaclass(Singleton)):
         self.info = self.Info(mask, mask.shape, self.flat, self.flat.shape, self.mask_compressed.shape, self.mask_all)
         self._in_zero = np.zeros(self.mask_compressed.shape)
         self._in_one = np.ones(self.mask_compressed.shape)
+        # dtype of the cached templates; rebuilt lazily if the model dtype changes
+        self._template_dtype = self._in_zero.dtype
         self.maskmap = maskmap
 
+    def _sync_template_dtype(self):
+        """Rebuild the zero/one templates if the model precision (modelPrecision)
+        differs from their current dtype. float64 (default) is a no-op, so the
+        historical behaviour is bit-identical; float32 makes in_zero/in_one emit
+        float32 templates (half the memory traffic, and so the state arrays they
+        seed are born float32)."""
+        from .parallelization import get_model_dtype
+        want = np.dtype(get_model_dtype())
+        if want != self._template_dtype:
+            self._in_zero = np.zeros(self.mask_compressed.shape, dtype=want)
+            self._in_one = np.ones(self.mask_compressed.shape, dtype=want)
+            self._template_dtype = want
+
     def in_zero(self):
+        self._sync_template_dtype()
         return self._in_zero.copy()
 
     def in_one(self):
+        self._sync_template_dtype()
         return self._in_one.copy()
 
     def __iter__(self):
@@ -858,13 +875,13 @@ class LisfloodRunInfo(Warning):
                 _par.get('numba_threading_layer'), _par.get('host'))
         # Routing precision (opt-in float32; default float64 == bit-identical).
         try:
-            from .parallelization import resolve_routing_dtype
+            from .parallelization import resolve_model_dtype
             import numpy as _np
-            _rdt = resolve_routing_dtype(binding)
+            _rdt = resolve_model_dtype(binding)
             if _rdt == _np.float32:
-                msg += "\t[X] Routing precision: float32 (OPT-IN; default is float64/bit-identical)\n"
+                msg += "\t[X] Model precision: float32 (OPT-IN; default is float64/bit-identical)\n"
             else:
-                msg += "\t[X] Routing precision: float64 (default, bit-identical)\n"
+                msg += "\t[X] Model precision: float64 (default, bit-identical)\n"
         except Exception:
             pass
         # Packing and aggregation info

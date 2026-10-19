@@ -22,6 +22,33 @@ from netCDF4 import default_fillvals
 
 from .. import __authors__, __version__, __date__, __status__, __institution__
 
+_OUTPUT_DTYPE_WARNED = False
+
+
+def _coherent_output_dtype(binding, dtype):
+    """Return the output map dtype, downgrading float64 -> float32 (with a
+    one-time warning) when the model itself runs in float32 (modelPrecision).
+    Writing float64 maps for a float32 model stores non-existent precision and
+    doubles file size. Any non-float64 OutputMapsDataType (e.g. an explicit
+    float32) is left untouched."""
+    global _OUTPUT_DTYPE_WARNED
+    try:
+        from .parallelization import resolve_model_dtype
+        model_dt = resolve_model_dtype(binding)
+    except Exception:
+        return dtype
+    if model_dt == np.float32 and str(dtype).strip().lower() in ("float64", "f8", "double"):
+        if not _OUTPUT_DTYPE_WARNED:
+            warnings.warn(LisfloodWarning(
+                "OutputMapsDataType=float64 but modelPrecision=float32: the model "
+                "state is float32, so float64 output would store no extra precision. "
+                "Writing output as float32 instead. Set OutputMapsDataType=float32 "
+                "to silence this, or modelPrecision=float64 for full precision."))
+            _OUTPUT_DTYPE_WARNED = True
+        return "float32"
+    return dtype
+
+
 def mask_array_np(data, mask, crop, name, valid_min, valid_max, func_x, func_y):
     data_cut = func_x(func_y(data))[:, crop[2]:crop[3], crop[0]:crop[1]]
     if (valid_min is not None):
@@ -493,6 +520,11 @@ def write_netcdf_header(settings,
 
     binding = settings.binding
     dtype = binding['OutputMapsDataType']
+    # Coherence: writing float64 output while the model runs in float32 wastes
+    # space and implies a precision the model does not have. If modelPrecision is
+    # float32 but OutputMapsDataType is float64, switch the output to float32 and
+    # warn once (the state carries no more than float32 precision anyway).
+    dtype = _coherent_output_dtype(binding, dtype)
 
     # general Attributes
     nf1.settingsfile = os.path.realpath(settings.settings_path)

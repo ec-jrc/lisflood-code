@@ -139,6 +139,28 @@ _blas_limiter = None
 # same numbers that were actually applied (see get_effective_parallelism).
 _effective = None
 
+# Resolved model floating-point dtype (np.float64 default). Set once at startup
+# by configure_parallelism from the `modelPrecision` setting, and read by the
+# array-creation funnels (MaskInfo.in_zero/in_one, add1.compressArray/decompress/
+# loadmap_base) so that when modelPrecision=float32 the compressed state arrays
+# are *born* float32 (avoiding the mixed-dtype upcast trap). float64 keeps every
+# funnel bit-identical to today.
+_model_dtype = np.float64
+
+
+def get_model_dtype():
+    """Return the resolved model dtype (np.float64 by default; np.float32 when
+    modelPrecision=float32 was applied at startup)."""
+    return _model_dtype
+
+
+def set_model_dtype(dtype):
+    """Set the process-wide model dtype. Called by configure_parallelism; exposed
+    for tests. Only float32/float64 are meaningful."""
+    global _model_dtype
+    _model_dtype = np.dtype(dtype).type if not isinstance(dtype, type) else dtype
+    return _model_dtype
+
 
 def get_effective_parallelism():
     """Return the last-applied effective thread counts, or None if parallelism
@@ -328,28 +350,48 @@ def resolve_soilinit_workers(binding, real_cpu_count):
         return explicit
     return real_cpu_count if real_cpu_count is not None else _host_cpu_count()
 
-def resolve_routing_dtype(binding):
-    """Decide the floating-point dtype for the kinematic-wave routing kernel.
+def resolve_model_dtype(binding):
+    """Decide the floating-point dtype for LISFLOOD model state & kernels.
 
-    Controlled by the optional ``routingPrecision`` setting (a string). This is a
-    PRECISION/perf lever, separate from the thread-count knobs:
+    Controlled by the optional ``modelPrecision`` setting (a string). This is a
+    PRECISION/perf lever, separate from the thread-count knobs. It governs the
+    whole model: the compressed state arrays (via the add1/MaskInfo creation
+    funnels) and the kinematic-wave routing kernel.
 
       * absent / "" / "float64" / "f64" / "double"  -> np.float64 (DEFAULT).
         The historical, bit-identical path. The default MUST stay float64 so that
         unchanged settings files reproduce today's output bit-for-bit (Task 8.2).
       * "float32" / "f32" / "single"                -> np.float32.
-        Opt-in faster path (halves kinematic-kernel memory traffic; results stay
-        within the project reference tolerance, not bit-identical).
+        Opt-in faster path (halves memory traffic on the bandwidth-bound
+        elementwise module bodies and the routing kernel; results stay within the
+        project reference tolerance, not bit-identical).
       * any unknown value                           -> np.float64 (fail safe:
         never silently degrade precision on a typo).
 
     Returns a numpy dtype (np.float64 or np.float32).
     """
-    raw = binding.get("routingPrecision") if binding is not None else None
+    raw = binding.get("modelPrecision") if binding is not None else None
     if isinstance(raw, str):
         raw = raw.strip().lower()
     if raw in ("float32", "f32", "single"):
         return np.float32
+    return np.float64
+
+
+# Backwards-compatible alias (the flag was briefly called routingPrecision).
+def resolve_routing_dtype(binding):
+    """Deprecated name for :func:`resolve_model_dtype`; also accepts the old
+    ``routingPrecision`` key for settings files written against the earlier
+    name. ``modelPrecision`` takes precedence when both are present."""
+    if binding is not None:
+        mp = binding.get("modelPrecision")
+        if mp not in (None, ""):
+            return resolve_model_dtype(binding)
+        raw = binding.get("routingPrecision")
+        if isinstance(raw, str):
+            raw = raw.strip().lower()
+        if raw in ("float32", "f32", "single"):
+            return np.float32
     return np.float64
 
 
@@ -374,6 +416,11 @@ def configure_parallelism(binding, num_pixels=None):
         (None means "all cores").
     """
     global _blas_limiter, _effective
+
+    # --- model floating-point precision (state + kernels) ---
+    # Resolve once and publish so the array-creation funnels emit this dtype.
+    global _model_dtype
+    _model_dtype = resolve_model_dtype(binding)
 
     # --- numba threading layer ---
     # Pin OpenMP when the user has not overridden NUMBA_THREADING_LAYER and the

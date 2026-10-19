@@ -399,15 +399,22 @@ class LisfloodModel_ini(DynamicModel):
             iveg_list.append(self.vegetation.index(veg))
         return iveg_list,iveg_list_pres,ilanduse
 
-    def allocateVariableAllVegetation(self, dtype=float):
-        """Allocate xarray.DataArray filled by 0 with dimensions 'vegetation' and 'pixel'. It covers all vegetation types (including EPIC crops, if simulated)."""
+    def allocateVariableAllVegetation(self, dtype=None):
+        """Allocate xarray.DataArray filled by 0 with dimensions 'vegetation' and 'pixel'. It covers all vegetation types (including EPIC crops, if simulated).
+        dtype=None defers to the resolved model dtype (float64, or float32 when modelPrecision=float32)."""
         return self.allocateDataArray(self.coord_vegetation, dtype)
 
-    def allocateDataArray(self, dimensions, dtype=float):
+    def allocateDataArray(self, dimensions, dtype=None):
         """Allocate xarray.DataArray filled by 0 with input dimensions.
            Argument 'dimensions' is a list of tuples of the type ('dimension name', coordinate list/array)."""
         coords = OrderedDict(dimensions)
         option = self.settings.options
+        if dtype is None:
+            # Default to the resolved model dtype (float64 unless modelPrecision=
+            # float32), so vegetation/soil state stacks (UZ, W1, ...) are born in
+            # the model precision. An explicit dtype argument is honoured as-is.
+            from .global_modules.parallelization import get_model_dtype
+            dtype = get_model_dtype()
         if option.get('cropsEPIC'):
             return xr.DataArray(np.zeros([len(v) for v in coords.values()], dtype), coords=coords, dims=coords.keys())
         else:
