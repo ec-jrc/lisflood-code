@@ -205,12 +205,38 @@ class XarrayChunked():
         if time_chunk != 'auto' and time_chunk is not None:
             time_chunk = int(time_chunk)
         data_path = data_path + ".nc" if not data_path.endswith('.nc') else data_path
+        # Forcing decode precision. Default float64 keeps the historical
+        # mask_and_scale=True decode, bit-identical. When modelPrecision=float32
+        # (opt-in), decode the forcing NATIVELY in float32: open raw (no decode),
+        # retype the CF scale_factor/add_offset to float32, then xr.decode_cf ->
+        # xarray runs the WHOLE decode (scale/offset + fill mask) in float32,
+        # halving the per-element decode cost (_scale_offset_decoding/_apply_mask/
+        # astype) AND letting the forcing meet float32 model state with no upcast.
+        # decode_cf restores scale_factor/add_offset into .encoding, so the
+        # valid_min/max scaling below is unchanged; forcing is read-only input and
+        # the int16xscale packing carries far fewer significant digits than float32,
+        # so no real precision is lost (verified within reference tolerance).
+        from .parallelization import get_model_dtype
+        _f32_forcing = (get_model_dtype() == np.float32)
         try:
-            ds = xr.open_mfdataset(
-                data_path, engine='netcdf4', 
-                chunks={'time': time_chunk}, combine='by_coords',
-                mask_and_scale=True
-            )
+            if _f32_forcing:
+                ds = xr.open_mfdataset(
+                    data_path, engine='netcdf4',
+                    chunks={'time': time_chunk}, combine='by_coords',
+                    mask_and_scale=False
+                )
+                for _v in ds.data_vars:
+                    _a = ds[_v].attrs
+                    for _k in ('scale_factor', 'add_offset'):
+                        if _k in _a and np.issubdtype(np.asarray(_a[_k]).dtype, np.floating):
+                            _a[_k] = np.float32(_a[_k])
+                ds = xr.decode_cf(ds, mask_and_scale=True)
+            else:
+                ds = xr.open_mfdataset(
+                    data_path, engine='netcdf4',
+                    chunks={'time': time_chunk}, combine='by_coords',
+                    mask_and_scale=True
+                )
         except OSError:
             raise OSError(f"Could not open file {data_path}")
 
@@ -265,6 +291,7 @@ class XarrayChunked():
         if not flags['skipvalreplace']:
             valid_min_scaled = (da.attrs['valid_min']*scale_factor+add_offset) if 'valid_min' in da.attrs else None
             valid_max_scaled = (da.attrs['valid_max']*scale_factor+add_offset) if 'valid_max' in da.attrs else None
+
         self.dataset = compress_xarray(mask, crop, da, var_name, valid_min_scaled, valid_max_scaled, func_x, func_y) # final dataset to store
 
         # initialise class variables and load first chunk
