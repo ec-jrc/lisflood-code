@@ -19,6 +19,7 @@ import datetime
 import numpy as np
 from pcraster import ifthen, catchmenttotal, mapmaximum
 import sys
+import threading
 import warnings
 
 from .zusatz import TimeoutputTimeseries
@@ -592,36 +593,67 @@ class OutputMapsFactory():
 
 class OutputMapsFactoryThreads(OutputMapsFactory):
     """ Extension of the OutputMapsFactory class
-        Allows asynchronous writing on threads
-        NOT FULLY TESTED, USE AS A PROOF OF CONTEXT
+        Allows asynchronous writing on threads, overlapping NetCDF disk I/O
+        with the model computation of the next time step. Opt-in via the
+        'outputThreads' option (default off = synchronous writing).
+
+        Thread-safety contract (HDF5 is not thread-safe, single writer per
+        file):
+        - stage() runs on the MAIN thread: map extraction, decompression and
+          nancheck never race with writers.
+        - At most one flush generation is in flight: write() waits for the
+          previous map_async batch before staging the next step, so each
+          NetCDF file is touched by one worker thread at a time. The write
+          path per file is open -> write -> close within one worker call,
+          and iterOpenNetcdf/write_netcdf_header are stateless per call.
     """
+
+    # Upper bound on writer threads; the pool is anyway sized to the number
+    # of map outputs, so this only matters for very map-heavy configurations.
+    max_threads = 16
+
+    # Serialises all HDF5/netCDF Dataset access among worker threads. The HDF5
+    # library used in this build is not compiled --enable-threadsafe, so
+    # concurrent Dataset writes segfault even when they target *distinct*
+    # files. The lock removes parallel writes but keeps the feature's actual
+    # goal: background writing overlapping with main-thread computation of the
+    # next time step (the handshake already ensures only one flush generation
+    # is in flight).
+    hdf5_write_lock = threading.Lock()
 
     def __init__(self, var):
         super().__init__(var)
 
         from multiprocessing import pool
-        self.thread_pool = pool.ThreadPool(16)
+        # One thread per output map writer at most, capped at max_threads;
+        # avoids idle threads on small configurations (the prototype
+        # hardcoded 16 regardless of the actual map count).
+        self.thread_pool = pool.ThreadPool(min(len(self.output_maps), self.max_threads) or 1)
         self.thread_out = None
 
     def write(self):
         # make sure that previous step finished writing, then stage data
         if self.thread_out is not None:
             self.thread_out.wait()
-    
+
         for out in self.output_maps:
             out.stage()
 
         # quickly wraps OutputMaps write function to allow the use of map_async
         def write_output(output_map):
-            output_map.write()
-        
+            with OutputMapsFactoryThreads.hdf5_write_lock:
+                output_map.write()
+
         # write outputs using thread pool
         if self.output_maps:
             self.thread_out = self.thread_pool.map_async(write_output, self.output_maps)
 
-        # for last step, wait until everything is finished
+        # for last step, re-raise any exception the workers hit (get() propagates
+        # worker exceptions, wait() would silently swallow them and truncate the
+        # output files without failing the run)
         if self.var.currentTimeStep() == self.var.nrTimeSteps() and self.thread_out is not None:
-            self.thread_out.wait()
+            self.thread_out.get()
+
 
 # ------------------------------------------------------------------------
 # Output Module
@@ -689,8 +721,22 @@ class outputTssMap(object):
                     msg = "Checking output timeseries \n"
                     raise LisfloodFileError(str(binding[tss]), msg)
 
-        # initialise output objects
-        self.output_maps = OutputMapsFactory(self.var)
+        # initialise output objects. Threaded writer is opt-in via the
+        # 'outputThreads' option. With a single map output there is nothing to
+        # parallelise, so the (cheap) threaded factory is discarded and the
+        # synchronous one kept. OutputMapsChunks-driven mid-run flushes are
+        # handled by whichever factory is selected here.
+        if option['outputThreads']:
+            factory = OutputMapsFactoryThreads(self.var)
+            if len(factory.output_maps) > 1:
+                self.output_maps = factory
+            else:
+                # dispose of the idle pool and keep the synchronous factory
+                factory.thread_pool.close()
+                factory.thread_pool.join()
+                self.output_maps = OutputMapsFactory(self.var)
+        else:
+            self.output_maps = OutputMapsFactory(self.var)
 
     def dynamic(self):
         """ dynamic part of the output module

@@ -68,6 +68,11 @@ You can use builtin path variables in this template and reference to other paths
       <setoption choice="1"  name="writeNetcdfStack"/>
       <setoption choice="1"  name="writeNetcdf"/>
 
+      # option to write map output asynchronously on a thread pool, overlapping
+      # NetCDF disk I/O with the model computation of the next time step
+      # (helps map-heavy runs; default off = historical synchronous writing)
+      <setoption choice="0" name="outputThreads"/>
+
       # option to Report PaddyRiceDebug information in CSV file for debugging Paddy Rice Water Abstraction issue on dry Channels
 		  <setoption choice="0"  name="repPaddyRiceDebug"/>
 
