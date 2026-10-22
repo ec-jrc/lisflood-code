@@ -19,12 +19,12 @@ import datetime
 import numpy as np
 from pcraster import ifthen, catchmenttotal, mapmaximum
 import sys
-import threading
 import warnings
 
 from .zusatz import TimeoutputTimeseries
 from .add1 import decompress, valuecell, loadmap, compressArray
 from .netcdf import write_netcdf_header, iterOpenNetcdf, nanCheckMap, uncompress_array
+from .netcdf import hdf5_lock as _hdf5_lock
 from .errors import LisfloodFileError, LisfloodWarning
 from .settings import inttodate, CDFFlags, LisSettings, MaskInfo
 from netCDF4 import default_fillvals
@@ -601,6 +601,12 @@ class OutputMapsFactoryThreads(OutputMapsFactory):
         file):
         - stage() runs on the MAIN thread: map extraction, decompression and
           nancheck never race with writers.
+        - All Dataset access is serialised through netcdf.py's process-wide
+          hdf5_lock (imported below as _hdf5_lock), not a writer-local lock:
+          the dynamic loop's forcing readers (netcdf.py load_next_chunk under
+          dask's threaded scheduler) also touch HDF5, and concurrent read+write
+          on a non-threadsafe HDF5 build corrupts global state and aborts the
+          process.
         - At most one flush generation is in flight: write() waits for the
           previous map_async batch before staging the next step, so each
           NetCDF file is touched by one worker thread at a time. The write
@@ -619,7 +625,7 @@ class OutputMapsFactoryThreads(OutputMapsFactory):
     # goal: background writing overlapping with main-thread computation of the
     # next time step (the handshake already ensures only one flush generation
     # is in flight).
-    hdf5_write_lock = threading.Lock()
+    hdf5_write_lock = _hdf5_lock
 
     def __init__(self, var):
         super().__init__(var)

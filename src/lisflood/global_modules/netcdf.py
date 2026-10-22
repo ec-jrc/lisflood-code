@@ -1,6 +1,7 @@
 import os
 import glob
 import warnings
+import threading
 import xarray as xr
 import dask
 import numpy as np
@@ -19,6 +20,19 @@ from .zusatz import iterOpenNetcdf
 # from .add1 import *
 from .add1 import nanCheckMap, decompress
 from netCDF4 import default_fillvals
+
+# Global HDF5 lock shared by ALL netCDF4/HDF5 Dataset access in the process
+# (reads and writes). The conda-forge netCDF4/HDF5 libraries are not built
+# --enable-threadsafe, so *any* concurrent access -- even read+write on
+# DISTINCT files -- corrupts HDF5 global state and aborts the process
+# (SIGSEGV or Fatal Python error: Aborted). Concurrent reads among themselves
+# are serialised by xarray's own HDF5 lock, but xarray cannot see our writer
+# threads, so readers and writers must share one lock here. An RLock is used
+# so a thread that legitimately re-enters (e.g. a writer calling a helper that
+# also takes the lock) is not deadlocked.
+# NOTE: building netCDF4/HDF5 with --enable-threadsafe would make this lock unnecessary, 
+# at the cost of serialising reads inside the HDF5 library itself.
+hdf5_lock = threading.RLock()
 
 from .. import __authors__, __version__, __date__, __status__, __institution__
 
@@ -317,19 +331,23 @@ class XarrayChunked():
         end = self.chunk_indexes[self.ichunk+1]
 
         chunk = self.dataset.isel(time=range(begin, end))
-        # Force the single-threaded (synchronous) dask scheduler for this read.
-        # The netCDF4/HDF5 libraries shipped by conda-forge are built without
-        # thread-safety (nompi). Under dask's default threaded scheduler, several
-        # worker threads read from the same HDF5 file concurrently while, at the
-        # same time, garbage collection in another thread may close a netCDF file
-        # handle (NetCDF4DataStore.__del__ -> close). Concurrent read/close on a
-        # non-threadsafe HDF5 corrupts its global state and aborts the process
-        # (Fatal Python error: Aborted / SIGABRT). Reads were already serialized
-        # by xarray's HDF5 lock, so running synchronously removes the crash.
+        # Runs under dask's default THREADED scheduler (the synchronous-scheduler
+        # guard below is disabled for performance). The netCDF4/HDF5 libraries
+        # shipped by conda-forge are built without thread-safety (nompi), so this
+        # read MUST hold the process-wide hdf5_lock: dask worker threads touch
+        # HDF5 while the opt-in threaded map-output writer (output.py) touches
+        # HDF5 in parallel, and concurrent read+write -- even on distinct files
+        # -- corrupts HDF5 global state and aborts the process (SIGSEGV /
+        # Fatal Python error: Aborted). xarray's own HDF5 lock serialises reads
+        # among themselves but is invisible to our writer threads, hence the
+        # shared global lock. Holding it around the whole chunk load also keeps
+        # concurrent dask reads from interleaving with a GC-triggered close of a
+        # netCDF file handle (NetCDF4DataStore.__del__ -> close).
         # TODO: check the synchronous issue, as actually this slows down the loading of chunks
         #       so it is commented right now
         #with dask.config.set(scheduler='synchronous'):
-        self.dataset_chunk = chunk.load()  # triggers xarray computation
+        with hdf5_lock:
+            self.dataset_chunk = chunk.load()  # triggers xarray computation
 
     def __getitem__(self, step):
 
