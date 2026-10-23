@@ -104,15 +104,20 @@ class NetcdfWriter(Writer):
     
     def write(self, start_date, rep_steps):
         if self.data is not None:
-            nf1 = write_netcdf_header(self.settings, self.map_name, self.map_path, self.var.DtDay,
-                                    self.map_key, self.map_value.output_var, self.map_value.unit,
-                                    start_date, rep_steps, self.frequency, map_value=self.map_value)
+            # HDF5 lock only around the actual netCDF4 calls (open/header,
+            # slice write, close); everything else is pure numpy and runs
+            # outside the lock so writer threads can overlap on it.
+            with _hdf5_lock:
+                nf1 = write_netcdf_header(self.settings, self.map_name, self.map_path, self.var.DtDay,
+                                        self.map_key, self.map_value.output_var, self.map_value.unit,
+                                        start_date, rep_steps, self.frequency, map_value=self.map_value)
 
             map_np = uncompress_array(self.data)
 
-            nf1.variables[self.map_name][:, :] = map_np
+            with _hdf5_lock:
+                nf1.variables[self.map_name][:, :] = map_np
 
-            nf1.close()
+                nf1.close()
         else:
             raise Exception('You need to stage the variable data before writing!')
 
@@ -159,43 +164,65 @@ class NetcdfStepsWriter(NetcdfWriter):
     def write(self, start_date, rep_steps):
         if self._checkpoint():
             if self.data_steps:
-                if self.step_range[0] == 0:
-                    nf1 = write_netcdf_header(self.settings, self.map_name, self.map_path, self.var.DtDay,
-                                            self.map_key, self.map_value.output_var, self.map_value.unit,
-                                            start_date, rep_steps, self.frequency, map_value=self.map_value)
-                else:
-                    nf1 = iterOpenNetcdf(self.map_path, "", 'a', format='NETCDF4')
+                # Pre-compute all packed arrays OUTSIDE the HDF5 lock: the int16
+                # packing arithmetic (round/divide/clip/fill) is pure numpy and
+                # is the expensive part of compressed output. Only the actual
+                # netCDF4 calls (open/header, slice writes, close) are serialised.
+                # `prepared_steps` is thread-local to this writer instance, and
+                # the flush handshake guarantees one flush generation at a time
+                # per file, so no cross-thread data race is possible here.
+                # The packing parameters come from the staged step metadata and
+                # are identical for every step of one flush, so they can be read
+                # once before the loop. This mirrors exactly how
+                # write_netcdf_header decides the variable dtype: packing is
+                # int16 with CF scale/offset only when OutputPacking is enabled
+                # AND the map_value carries scale_factor/add_offset (as float64,
+                # matching the values stored in the header).
+                packing_enabled = self.settings.binding.get('OutputPacking', 'False') == 'True'
+                packed_scale = np.float64(self.map_value.scale_factor) if self.map_value is not None else None
+                packed_offset = np.float64(self.map_value.add_offset) if self.map_value is not None else None
+                is_packed = packing_enabled and packed_scale is not None and packed_offset is not None
+                nodata_mask = MaskInfo.instance().info.mask
 
-                nc_var = nf1.variables[self.map_name]
-                nc_var.set_auto_maskandscale(False)
-                is_packed = nc_var.dtype == np.int16
-                if is_packed:
-                    scale = nc_var.scale_factor
-                    offset = nc_var.add_offset
-                    nodata_mask = MaskInfo.instance().info.mask
-
+                prepared_steps = []
                 for step, data in zip(self.step_range, self.data_steps):
                     map_np = uncompress_array(data)
                     if is_packed:
-                        packed = np.round((map_np - offset) / scale).astype(np.float64)
+                        packed = np.round((map_np - packed_offset) / packed_scale).astype(np.float64)
                         clipped = ((packed < -32767) | (packed > 32767)) & (map_np != -9999)
                         if clipped.any():
-                            vmin = offset + scale * (-32767)
-                            vmax = offset + scale * 32767
+                            vmin = packed_offset + packed_scale * (-32767)
+                            vmax = packed_offset + packed_scale * 32767
                             warnings.warn(LisfloodWarning(
                                 f"OutputPacking: {clipped.sum()} values in '{self.map_name}' outside "
                                 f"packing range [{vmin:.4g}, {vmax:.4g}] and will be clipped."
                             ))
                         packed = np.clip(packed, PACK_MIN, PACK_MAX)
                         packed[nodata_mask] = PACK_FILL
-                        nc_var[step, :, :] = packed.astype(np.int16)
+                        packed = packed.astype(np.int16)
                     else:
                         # For non-packed: convert masked array to plain array with fill value
                         if hasattr(map_np, 'filled'):
                             map_np = map_np.filled(-9999)
-                        nc_var[step, :, :] = map_np
+                        packed = map_np
+                    prepared_steps.append((step, packed))
 
-                nf1.close()
+                # HDF5 lock around the actual netCDF4 calls only
+                with _hdf5_lock:
+                    if self.step_range[0] == 0:
+                        nf1 = write_netcdf_header(self.settings, self.map_name, self.map_path, self.var.DtDay,
+                                                self.map_key, self.map_value.output_var, self.map_value.unit,
+                                                start_date, rep_steps, self.frequency, map_value=self.map_value)
+                    else:
+                        nf1 = iterOpenNetcdf(self.map_path, "", 'a', format='NETCDF4')
+
+                    nc_var = nf1.variables[self.map_name]
+                    nc_var.set_auto_maskandscale(False)
+
+                    for step, packed in prepared_steps:
+                        nc_var[step, :, :] = packed
+
+                    nf1.close()
 
                 self.step_range.clear()
                 self.data_steps.clear()
@@ -601,12 +628,17 @@ class OutputMapsFactoryThreads(OutputMapsFactory):
         file):
         - stage() runs on the MAIN thread: map extraction, decompression and
           nancheck never race with writers.
-        - All Dataset access is serialised through netcdf.py's process-wide
+        - Every actual netCDF4/HDF5 library call (file open, variable slice
+          write, close) is serialised through netcdf.py's process-wide
           hdf5_lock (imported below as _hdf5_lock), not a writer-local lock:
           the dynamic loop's forcing readers (netcdf.py load_next_chunk under
-          dask's threaded scheduler) also touch HDF5, and concurrent read+write
-          on a non-threadsafe HDF5 build corrupts global state and aborts the
-          process.
+          dask's threaded scheduler) also touch HDF5, and concurrent access on
+          a non-threadsafe HDF5 build corrupts global state and aborts the
+          process. The lock is held ONLY around the HDF5 calls themselves --
+          metadata handling, uncompress_array and int16 packing arithmetic are
+          pure numpy and run OUTSIDE the lock, so compression/encoding cost is
+          not serialised. Holding several file handles open at once across
+          threads is fine: only non-overlapping *calls* matter.
         - At most one flush generation is in flight: write() waits for the
           previous map_async batch before staging the next step, so each
           NetCDF file is touched by one worker thread at a time. The write
@@ -618,13 +650,16 @@ class OutputMapsFactoryThreads(OutputMapsFactory):
     # of map outputs, so this only matters for very map-heavy configurations.
     max_threads = 16
 
-    # Serialises all HDF5/netCDF Dataset access among worker threads. The HDF5
-    # library used in this build is not compiled --enable-threadsafe, so
-    # concurrent Dataset writes segfault even when they target *distinct*
-    # files. The lock removes parallel writes but keeps the feature's actual
-    # goal: background writing overlapping with main-thread computation of the
-    # next time step (the handshake already ensures only one flush generation
-    # is in flight).
+    # Serialises the actual netCDF4/HDF5 library calls among worker threads and
+    # with the reader side (netcdf.py load_next_chunk). The HDF5 library used
+    # in this build is not compiled --enable-threadsafe, so concurrent Dataset
+    # calls segfault even when they target *distinct* files. The lock is held
+    # only around the HDF5 operations themselves (see NetcdfWriter.write /
+    # NetcdfStepsWriter.write), not around the whole per-map write, so numpy
+    # packing/encoding work overlaps across threads. This keeps the feature's
+    # actual goal: background writing overlapping with main-thread computation
+    # of the next time step (the handshake already ensures only one flush
+    # generation is in flight).
     hdf5_write_lock = _hdf5_lock
 
     def __init__(self, var):
@@ -645,10 +680,12 @@ class OutputMapsFactoryThreads(OutputMapsFactory):
         for out in self.output_maps:
             out.stage()
 
-        # quickly wraps OutputMaps write function to allow the use of map_async
+        # quickly wraps OutputMaps write function to allow the use of map_async.
+        # NOTE: the HDF5 lock is NOT taken here -- the writers acquire it
+        # themselves around the individual netCDF4 operations (open, slice
+        # write, close), leaving packing/encoding work outside the lock.
         def write_output(output_map):
-            with OutputMapsFactoryThreads.hdf5_write_lock:
-                output_map.write()
+            output_map.write()
 
         # write outputs using thread pool
         if self.output_maps:

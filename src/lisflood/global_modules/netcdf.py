@@ -23,15 +23,23 @@ from netCDF4 import default_fillvals
 
 # Global HDF5 lock shared by ALL netCDF4/HDF5 Dataset access in the process
 # (reads and writes). The conda-forge netCDF4/HDF5 libraries are not built
-# --enable-threadsafe, so *any* concurrent access -- even read+write on
-# DISTINCT files -- corrupts HDF5 global state and aborts the process
-# (SIGSEGV or Fatal Python error: Aborted). Concurrent reads among themselves
-# are serialised by xarray's own HDF5 lock, but xarray cannot see our writer
-# threads, so readers and writers must share one lock here. An RLock is used
-# so a thread that legitimately re-enters (e.g. a writer calling a helper that
-# also takes the lock) is not deadlocked.
-# NOTE: building netCDF4/HDF5 with --enable-threadsafe would make this lock unnecessary, 
-# at the cost of serialising reads inside the HDF5 library itself.
+# --enable-threadsafe, so *any* concurrent call into the HDF5 library -- even
+# on DISTINCT files -- corrupts HDF5 global state and aborts the process
+# (SIGSEGV or Fatal Python error: Aborted).
+# The lock is deliberately NARROW: it is held only around actual HDF5
+# library operations (file open, variable/attribute read, array write, close),
+# never around pure-numpy/dask work such as CF decoding, packing/unpacking or
+# array arithmetic. Readers pass it to xarray via `lock=hdf5_lock` on the
+# open_dataset/open_mfdataset calls, so xarray acquires it around every
+# C-level netCDF4 access (including the GC-triggered lazy close of cached
+# file handles). Writers (output.py) acquire it per operation around their
+# open/header, slice writes and close. Holding several file handles open at
+# once across threads is fine: only non-overlapping *calls* matter, and this
+# per-operation serialisation is the same model the reader side has always
+# used. An RLock is used so a thread that legitimately re-enters (e.g. a
+# writer calling a helper that also takes the lock) is not deadlocked.
+# NOTE: building netCDF4/HDF5 with --enable-threadsafe would make this lock
+# unnecessary.
 hdf5_lock = threading.RLock()
 
 from .. import __authors__, __version__, __date__, __status__, __institution__
@@ -134,9 +142,14 @@ def check_dataset_calendar_type(ds, path):
     # check calendar type
     # if using multiple files, the encoding will be droppped (bug in xarray), let's check the calendar fom the first file
     if '*' in path:
-        ds = xr.open_dataset(glob.glob(path)[0], chunks={'time': -1})
-    
-    calendar = ds.time.encoding['calendar']
+        # lock=hdf5_lock: every C-level netCDF4 access on this ad-hoc handle
+        # (open, header read, and its close when the with-block exits) must be
+        # serialised against the writer threads; closing it deterministically
+        # here also removes a GC-timed unlocked close from the dynamic phase.
+        with xr.open_dataset(glob.glob(path)[0], chunks={'time': -1}, lock=hdf5_lock) as ds:
+            calendar = ds.time.encoding['calendar']
+    else:
+        calendar = ds.time.encoding['calendar']
     if calendar != binding['calendar_type']:
         print('WARNING! Wrong calendar type in dataset {}, is \"{}\" and should be \"{}\"\n Please double check your forcing datasets and update them to use the correct calendar type'.format(path, ds.time.encoding['calendar'], binding['calendar_type']))
 
@@ -237,7 +250,8 @@ class XarrayChunked():
                 ds = xr.open_mfdataset(
                     data_path, engine='netcdf4',
                     chunks={'time': time_chunk}, combine='by_coords',
-                    mask_and_scale=False
+                    mask_and_scale=False,
+                    lock=hdf5_lock  # serialise C-level HDF5 access with the writer threads
                 )
                 for _v in ds.data_vars:
                     _a = ds[_v].attrs
@@ -249,7 +263,8 @@ class XarrayChunked():
                 ds = xr.open_mfdataset(
                     data_path, engine='netcdf4',
                     chunks={'time': time_chunk}, combine='by_coords',
-                    mask_and_scale=True
+                    mask_and_scale=True,
+                    lock=hdf5_lock  # serialise C-level HDF5 access with the writer threads
                 )
         except OSError:
             raise OSError(f"Could not open file {data_path}")
@@ -333,21 +348,24 @@ class XarrayChunked():
         chunk = self.dataset.isel(time=range(begin, end))
         # Runs under dask's default THREADED scheduler (the synchronous-scheduler
         # guard below is disabled for performance). The netCDF4/HDF5 libraries
-        # shipped by conda-forge are built without thread-safety (nompi), so this
-        # read MUST hold the process-wide hdf5_lock: dask worker threads touch
-        # HDF5 while the opt-in threaded map-output writer (output.py) touches
-        # HDF5 in parallel, and concurrent read+write -- even on distinct files
-        # -- corrupts HDF5 global state and aborts the process (SIGSEGV /
-        # Fatal Python error: Aborted). xarray's own HDF5 lock serialises reads
-        # among themselves but is invisible to our writer threads, hence the
-        # shared global lock. Holding it around the whole chunk load also keeps
-        # concurrent dask reads from interleaving with a GC-triggered close of a
-        # netCDF file handle (NetCDF4DataStore.__del__ -> close).
+        # shipped by conda-forge are built without thread-safety (nompi), so every
+        # C-level netCDF4 access MUST hold the process-wide hdf5_lock: dask worker
+        # threads touch HDF5 while the opt-in threaded map-output writer
+        # (output.py) touches HDF5 in parallel, and concurrent access -- even on
+        # distinct files -- corrupts HDF5 global state and aborts the process
+        # (SIGSEGV / Fatal Python error: Aborted).
+        # The datasets were opened with `lock=hdf5_lock` (see __init__), so xarray
+        # itself acquires the shared lock around each actual netCDF4 operation
+        # (array read, and the GC-triggered close of cached file handles via
+        # CachingFileManager.close). The lock is therefore NOT held around the
+        # whole chunk.load() below: dask graph execution, CF decoding and masking
+        # are pure numpy work that runs outside the lock, so several chunk loads
+        # can overlap on their compute phases and only serialise on the actual
+        # HDF5 reads.
         # TODO: check the synchronous issue, as actually this slows down the loading of chunks
         #       so it is commented right now
         #with dask.config.set(scheduler='synchronous'):
-        with hdf5_lock:
-            self.dataset_chunk = chunk.load()  # triggers xarray computation
+        self.dataset_chunk = chunk.load()  # triggers xarray computation
 
     def __getitem__(self, step):
 

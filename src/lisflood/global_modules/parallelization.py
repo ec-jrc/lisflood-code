@@ -160,13 +160,12 @@ def select_numba_threading_layer():
         return str(_numba_config.THREADING_LAYER)
 
     # No explicit choice: pin OpenMP when its backend is available. numba's
-    # default resolution prefers TBB when TBB is installed (confirmed on
-    # Leonardo), but OpenMP is as fast or faster on LISFLOOD workloads and
-    # avoids TBB's fork fragility. This must run before the FIRST parallel
-    # kernel executes (configure_parallelism is called once in
-    # Lisflood_initial.__init__, before any module initial()/dynamic()), because
-    # numba locks the threading layer on first parallel use and ignores later
-    # changes.
+    # default resolution prefers TBB when TBB is installed, but OpenMP is as
+    # fast or faster on LISFLOOD workloads and avoids TBB's fork fragility.
+    # This must run before the FIRST parallel kernel executes
+    # (configure_parallelism is called once in Lisflood_initial.__init__,
+    # before any module initial()/dynamic()), because numba locks the
+    # threading layer on first parallel use and ignores later changes.
     intended = str(_numba_config.THREADING_LAYER)
     if _openmp_layer_available():
         try:
@@ -181,8 +180,8 @@ def select_numba_threading_layer():
     # Lock the layer NOW (before any model parallel kernel) and read back what
     # numba actually selected. This is the ground truth, not the intent: if a
     # stray earlier parallel call or a build quirk already locked another layer
-    # (e.g. TBB, numba's default when TBB is installed as on Leonardo), we detect
-    # it here instead of silently running on the wrong layer.
+    # (e.g. TBB, numba's default when TBB is installed), we detect it here
+    # instead of silently running on the wrong layer.
     actual = _lock_and_verify_layer(intended)
     if actual != intended:
         try:
