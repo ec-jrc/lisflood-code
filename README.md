@@ -133,6 +133,22 @@ Windows users are recommended to execute LISFLOOD with a Docker image.
 
 The users are recommended to download the [reference settings xml](https://github.com/ec-jrc/lisflood-code/tree/master/src/lisfloodSettings_reference.xml) file and adapt it by inserting their own paths and modelling choices.
 
+## Settings Tool
+
+This package also installs `lisflood-settings`, a CLI utility to parse, lint and update LISFLOOD settings XML files while preserving comments.
+
+Examples:
+
+```bash
+# Validate only (no output file is written)
+lisflood-settings check -i in.xml
+
+# Clean/lint a settings file (no updates, writes formatted copy)
+lisflood-settings set -i in.xml -o out.xml
+
+# Update from file plus explicit overrides
+lisflood-settings set -i in.xml -o out.xml -f updates.yaml --lfoptions wateruse=1 TemperatureInKelvin=0 --lfuser PathRoot=/data/project NetCDFTimeChunks=10
+```
 
 
 ## Collaborate
