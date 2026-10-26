@@ -182,37 +182,51 @@ class NetcdfStepsWriter(NetcdfWriter):
                 packed_scale = np.float64(self.map_value.scale_factor) if self.map_value is not None else None
                 packed_offset = np.float64(self.map_value.add_offset) if self.map_value is not None else None
                 is_packed = packing_enabled and packed_scale is not None and packed_offset is not None
-                nodata_mask = MaskInfo.instance().info.mask
+                maskinfo = MaskInfo.instance()
 
                 prepared_steps = []
                 for step, data in zip(self.step_range, self.data_steps):
-                    map_np = uncompress_array(data)
                     if is_packed:
-                        packed = np.round((map_np - packed_offset) / packed_scale).astype(np.float64)
-                        clipped = ((packed < -32767) | (packed > 32767)) & (map_np != -9999)
+                        # Pack BEFORE uncompressing: operate on the staged
+                        # compressed in-domain vector (np.ma.getdata = the
+                        # positional raw buffer, as a plain ndarray) so np.ma
+                        # auto-masking can never hide NaN from the guard below
+                        # (isnan ignores masked entries, while astype(int16)
+                        # still casts the raw NaN buffer -> RuntimeWarning +
+                        # silent 0). The int16 result is then scattered into a
+                        # full-domain array pre-filled with PACK_FILL.
+                        map_in = np.ma.getdata(data).astype(np.float64)
+                        packed_in = np.round((map_in - packed_offset) / packed_scale)
+                        clipped = ((packed_in < PACK_MIN) | (packed_in > PACK_MAX)) & (map_in != -9999)
                         if clipped.any():
-                            vmin = packed_offset + packed_scale * (-32767)
-                            vmax = packed_offset + packed_scale * 32767
+                            vmin = packed_offset + packed_scale * PACK_MIN
+                            vmax = packed_offset + packed_scale * PACK_MAX
                             warnings.warn(LisfloodWarning(
                                 f"OutputPacking: {clipped.sum()} values in '{self.map_name}' outside "
                                 f"packing range [{vmin:.4g}, {vmax:.4g}] and will be clipped."
                             ))
-                        packed = np.clip(packed, PACK_MIN, PACK_MAX)
-                        packed[nodata_mask] = PACK_FILL
+                        packed_in = np.clip(packed_in, PACK_MIN, PACK_MAX)
                         # NaN cannot be represented in int16: after the clip it
                         # would silently cast to 0 (i.e. read back as add_offset,
                         # a plausible but wrong value). Store the fill value
                         # instead, so those cells read back as masked, and warn
                         # so the run reports which maps contain non-finite data.
-                        nonfinite = np.isnan(packed)
+                        nonfinite = np.isnan(packed_in)
                         if nonfinite.any():
                             warnings.warn(LisfloodWarning(
                                 f"OutputPacking: {nonfinite.sum()} non-finite (NaN) values in '{self.map_name}' "
                                 f"cannot be packed and are stored as _FillValue."
                             ))
-                            packed[nonfinite] = PACK_FILL
-                        packed = packed.astype(np.int16)
+                            packed_in[nonfinite] = PACK_FILL
+                        packed_in = packed_in.astype(np.int16)
+                        # Scatter into the full domain, pre-filled with the
+                        # packing fill value (outside-mask cells were written
+                        # as PACK_FILL before, and their uninitialised buffer
+                        # content never enters the arithmetic now).
+                        packed = np.full(maskinfo.info.shape, PACK_FILL, dtype=np.int16)
+                        packed.reshape(-1)[~maskinfo.info.maskflat] = packed_in
                     else:
+                        map_np = uncompress_array(data)
                         # For non-packed: convert masked array to plain array with fill value
                         if hasattr(map_np, 'filled'):
                             map_np = map_np.filled(-9999)
