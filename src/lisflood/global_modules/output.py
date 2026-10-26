@@ -199,6 +199,18 @@ class NetcdfStepsWriter(NetcdfWriter):
                             ))
                         packed = np.clip(packed, PACK_MIN, PACK_MAX)
                         packed[nodata_mask] = PACK_FILL
+                        # NaN cannot be represented in int16: after the clip it
+                        # would silently cast to 0 (i.e. read back as add_offset,
+                        # a plausible but wrong value). Store the fill value
+                        # instead, so those cells read back as masked, and warn
+                        # so the run reports which maps contain non-finite data.
+                        nonfinite = np.isnan(packed)
+                        if nonfinite.any():
+                            warnings.warn(LisfloodWarning(
+                                f"OutputPacking: {nonfinite.sum()} non-finite (NaN) values in '{self.map_name}' "
+                                f"cannot be packed and are stored as _FillValue."
+                            ))
+                            packed[nonfinite] = PACK_FILL
                         packed = packed.astype(np.int16)
                     else:
                         # For non-packed: convert masked array to plain array with fill value
