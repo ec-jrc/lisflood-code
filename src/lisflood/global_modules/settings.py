@@ -144,23 +144,26 @@ class CDFFlags(with_metaclass(Singleton)):
         if out_type == 'end':
             flag = 0
         elif out_type == 'steps':
-            if frequency == 'all':
+            # 'daily' is a temporal-aggregation frequency (MapOutputAggregated);
+            # it manages its own period boundary and always-True checkpoint, so
+            # it reuses the 'all' step counter rather than needing its own flag.
+            if frequency in ('all', 'daily'):
                 flag = 1
             elif frequency == 'monthly':
                 flag = 3
             elif frequency == 'yearly':
                 flag = 4
             else:
-                raise ValueError(f'Output frequency {frequency} not recognised! Valid values are: (all, monthly, yearly)')
+                raise ValueError(f'Output frequency {frequency} not recognised! Valid values are: (all, daily, monthly, yearly)')
         elif out_type == 'all':
-            if frequency == 'all':
+            if frequency in ('all', 'daily'):
                 flag = 2
             elif frequency == 'monthly':
                 flag = 5
             elif frequency == 'yearly':
                 flag = 6
             else:
-                raise ValueError(f'Output frequency {frequency} not recognised! Valid values are: (all, monthly, yearly)')
+                raise ValueError(f'Output frequency {frequency} not recognised! Valid values are: (all, daily, monthly, yearly)')
         else:
             raise ValueError(f'Output type {out_type} not recognised! Valid values are: (end, steps, all)')
        
@@ -200,14 +203,18 @@ class CDFFlags(with_metaclass(Singleton)):
             self.inc(6)
 
     def frequency_check(self, var, frequency):
-        if frequency == 'all':
+        # 'daily' is a temporal-aggregation frequency handled entirely by
+        # MapOutputAggregated (always-True checkpoint + own day boundary), so it
+        # never reaches here via the normal all/steps path; treat it like 'all'
+        # for defensiveness rather than raising.
+        if frequency in ('all', 'daily'):
             check = True
         elif frequency == 'monthly':
             check = var.monthend
         elif frequency == 'yearly':
             check = var.yearend
         else:
-            raise ValueError(f'Output frequency {frequency} not recognised! Valid values are: (all, monthly, yearly)')
+            raise ValueError(f'Output frequency {frequency} not recognised! Valid values are: (all, daily, monthly, yearly)')
         return check
 
 
@@ -887,7 +894,9 @@ class LisfloodRunInfo(Warning):
         # Packing and aggregation info
         if binding.get('OutputPacking', 'False') == 'True':
             msg += "\t[X] Output Packing: int16 scale/offset enabled\n"
-        for agg_key in ['OutputMonthlyMean', 'OutputMonthlySum', 'OutputYearlyMean', 'OutputYearlySum']:
+        for agg_key in ['OutputDailyMean', 'OutputDailySum',
+                        'OutputMonthlyMean', 'OutputMonthlySum',
+                        'OutputYearlyMean', 'OutputYearlySum']:
             agg_val = binding.get(agg_key, '').strip()
             if agg_val:
                 msg += "\t[X] {}: {}\n".format(agg_key, agg_val)

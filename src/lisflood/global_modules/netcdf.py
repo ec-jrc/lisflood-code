@@ -649,6 +649,14 @@ def write_netcdf_header(settings,
         if frequency == "all":
             steps = all_steps
             time_stamps = all_dates
+        elif frequency == 'daily':
+            # check next date (step+1) and see if we are still in the same day;
+            # selects one stamp per calendar day (the last sub-daily step of the
+            # day), matching MapOutputAggregated's daily period boundary.
+            next_date_times = np.array([j + datetime.timedelta(seconds=int(binding["DtSec"])) for j in all_dates])
+            days_end = np.array([all_dates[j].day != next_date_times[j].day for j in range(n_steps)])
+            steps = all_steps[days_end]
+            time_stamps = all_dates[days_end]
         elif frequency == 'monthly':
             # check next date (step+1) and see if we are still in the same month
             next_date_times = np.array([j + datetime.timedelta(seconds=int(binding["DtSec"])) for j in all_dates])
@@ -662,7 +670,7 @@ def write_netcdf_header(settings,
             steps = all_steps[years_end]
             time_stamps= all_dates[years_end]
         else:
-            raise ValueError(f'ERROR! Frequency {frequency} not supported! Value accepted: [all, monthly, yearly]')
+            raise ValueError(f'ERROR! Frequency {frequency} not supported! Value accepted: [all, daily, monthly, yearly]')
         
         nf1.createDimension('time', steps.size)
         time = nf1.createVariable('time', float, ('time'))

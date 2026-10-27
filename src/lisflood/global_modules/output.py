@@ -524,10 +524,12 @@ class MapOutputAggregated(MapOutput):
         self._accum_count += 1
 
     def write(self):
-        """Write only at period boundary (month-end or year-end)."""
+        """Write only at period boundary (day-end, month-end or year-end)."""
         current_date = self.var.CalendarDate
         next_date = current_date + datetime.timedelta(days=self.var.DtDay)
-        if self.frequency == 'monthly':
+        if self.frequency == 'daily':
+            is_boundary = current_date.day != next_date.day
+        elif self.frequency == 'monthly':
             is_boundary = current_date.month != next_date.month
         elif self.frequency == 'yearly':
             is_boundary = current_date.year != next_date.year
@@ -601,6 +603,8 @@ class OutputMapsFactory():
         # --- Temporal aggregation outputs ---
         binding = settings.binding
         aggregation_configs = {
+            'OutputDailyMean': ('daily', 'mean'),
+            'OutputDailySum': ('daily', 'sum'),
             'OutputMonthlyMean': ('monthly', 'mean'),
             'OutputMonthlySum': ('monthly', 'sum'),
             'OutputYearlyMean': ('yearly', 'mean'),
