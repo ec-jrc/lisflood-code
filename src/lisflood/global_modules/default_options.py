@@ -1653,4 +1653,5 @@ default_options = {'EnKF': False,
                    'wateruseRegion': False,
                    'writeNetcdf': False,
                    'writeNetcdfStack': False,
-                   'outputThreads': False}
+                   'outputThreads': False,
+                   'NetCDFTimeChunksPrefetch': False}

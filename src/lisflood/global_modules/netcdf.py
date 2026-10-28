@@ -226,7 +226,7 @@ class XarrayChunked():
     """ Class that handles the reading of netcdf files with temporal chunks
     """
 
-    def __init__(self, data_path, time_chunk, dates, indexer=None, climatology=False):
+    def __init__(self, data_path, time_chunk, dates, indexer=None, climatology=False, prefetch=False):
 
         # load dataset using xarray
         if time_chunk != 'auto' and time_chunk is not None:
@@ -324,7 +324,46 @@ class XarrayChunked():
         self.dataset = compress_xarray(mask, crop, da, var_name, valid_min_scaled, valid_max_scaled, func_x, func_y) # final dataset to store
 
         # initialise class variables and load first chunk
+        # (self.prefetch must exist before init_chunks: load_next_chunk reads it;
+        # it is switched on below, after the first synchronous chunk load)
+        self.prefetch = False
         self.init_chunks(self.dataset, time_chunk)
+
+        # Opt-in background prefetch of the next time chunk. The loaded chunk
+        # is held in _pf_ready and promoted to dataset_chunk by the model
+        # thread at the boundary, so only one next chunk is ever in flight.
+        if prefetch and len(self.chunk_indexes) > 2:
+            # no benefit with a single chunk (no next chunk to load)
+            self.prefetch = True
+            self._pf_cond = threading.Condition()
+            self._pf_state = 'idle'      # idle -> running -> ready | error -> (promoted) idle
+            self._pf_error = None
+            self._pf_ready = None             # prefetched chunk awaiting promotion
+            self._pf_scheduled_ichunk = None  # next-chunk index already in flight
+
+    # ------------------------------------------------------------------
+    # background chunk prefetch machinery
+    # ------------------------------------------------------------------
+    def _prefetch_worker(self, ichunk):
+        """Load chunk `ichunk` into the holding slot _pf_ready. Exceptions are
+        captured and re-raised in the model thread by load_next_chunk."""
+        try:
+            begin = self.chunk_indexes[ichunk]
+            end = self.chunk_indexes[ichunk + 1]
+            chunk = self.dataset.isel(time=range(begin, end))
+            # Same lock discipline as the synchronous path (see load_next_chunk):
+            # the chunk is never written to dataset_chunk here; the model thread
+            # promotes it at the boundary.
+            self._pf_ready = chunk.load()
+        except BaseException as e:  # re-raised in the model thread
+            self._pf_error = e
+        finally:
+            with self._pf_cond:
+                if self._pf_error is not None:
+                    self._pf_state = 'error'
+                else:
+                    self._pf_state = 'ready'
+                self._pf_cond.notify_all()
 
     def init_chunks(self, dataset, time_chunk):
         # compute chunks indexes in dataset
@@ -340,28 +379,59 @@ class XarrayChunked():
         self.ichunk = -1
         self.load_next_chunk()
 
+    def _schedule_prefetch(self, next_ichunk):
+        """Start loading chunk `next_ichunk` in the background if it is not
+        already in flight."""
+        with self._pf_cond:
+            if self._pf_state == 'running' or self._pf_scheduled_ichunk == next_ichunk:
+                return  # already loading this (or a later) chunk
+            self._pf_state = 'running'
+            self._pf_scheduled_ichunk = next_ichunk
+        t = threading.Thread(target=self._prefetch_worker, args=(next_ichunk,),
+                             name=f'lisflood-prefetch-{next_ichunk}', daemon=True)
+        t.start()
+
+    def _wait_prefetch_done(self):
+        """Block until any in-flight prefetch finishes; promote the prefetched
+        chunk, re-raising any worker error in the calling thread."""
+        with self._pf_cond:
+            while self._pf_state == 'running':
+                self._pf_cond.wait()
+            if self._pf_state == 'error':
+                self._pf_state = 'idle'
+                err = self._pf_error
+                self._pf_error = None
+                self._pf_scheduled_ichunk = None
+                raise err
+            # success: promote the prefetched chunk
+            self.ichunk += 1
+            self.dataset_chunk = self._pf_ready
+            self._pf_ready = None
+            self._pf_state = 'idle'
+            self._pf_scheduled_ichunk = None
+
     def load_next_chunk(self):
+        if self.prefetch:
+            # Boundary reached while the prefetch of this chunk is running or
+            # ready: promote it. Otherwise fall through to the synchronous load.
+            with self._pf_cond:
+                pf_active = self._pf_state in ('running', 'ready')
+            if pf_active:
+                self._wait_prefetch_done()
+                return
+
         self.ichunk += 1
         begin = self.chunk_indexes[self.ichunk]
         end = self.chunk_indexes[self.ichunk+1]
 
         chunk = self.dataset.isel(time=range(begin, end))
-        # Runs under dask's default THREADED scheduler (the synchronous-scheduler
-        # guard below is disabled for performance). The netCDF4/HDF5 libraries
-        # shipped by conda-forge are built without thread-safety (nompi), so every
-        # C-level netCDF4 access MUST hold the process-wide hdf5_lock: dask worker
-        # threads touch HDF5 while the opt-in threaded map-output writer
-        # (output.py) touches HDF5 in parallel, and concurrent access -- even on
-        # distinct files -- corrupts HDF5 global state and aborts the process
-        # (SIGSEGV / Fatal Python error: Aborted).
-        # The datasets were opened with `lock=hdf5_lock` (see __init__), so xarray
-        # itself acquires the shared lock around each actual netCDF4 operation
-        # (array read, and the GC-triggered close of cached file handles via
-        # CachingFileManager.close). The lock is therefore NOT held around the
-        # whole chunk.load() below: dask graph execution, CF decoding and masking
-        # are pure numpy work that runs outside the lock, so several chunk loads
-        # can overlap on their compute phases and only serialise on the actual
-        # HDF5 reads.
+        # The conda-forge netCDF4/HDF5 libraries are not thread-safe, so every
+        # C-level netCDF4 access must hold the process-wide hdf5_lock: the
+        # datasets are opened with `lock=hdf5_lock` (see __init__) and xarray
+        # acquires it around each netCDF4 operation. The lock is NOT held for
+        # the whole chunk.load(): decoding/masking run outside it, so chunk
+        # loads only serialise on the actual HDF5 reads (also with the
+        # prefetch thread and the threaded map-output writer).
         # TODO: check the synchronous issue, as actually this slows down the loading of chunks
         #       so it is commented right now
         #with dask.config.set(scheduler='synchronous'):
@@ -374,6 +444,14 @@ class XarrayChunked():
         # if at the end of chunk, load new chunk
         if dataset_index == self.chunk_indexes[self.ichunk+1]:
             self.load_next_chunk()
+
+        # Prefetch (opt-in): near the end of the current chunk, start loading
+        # the next one in the background.
+        if self.prefetch:
+            next_boundary = self.chunk_indexes[self.ichunk+1]
+            # schedule only if a next chunk exists (ichunk+1 <= last chunk index)
+            if dataset_index >= next_boundary - 2 and self.ichunk + 2 <= len(self.chunk_indexes) - 1:
+                self._schedule_prefetch(self.ichunk + 1)
 
         local_index = dataset_index - self.chunk_indexes[self.ichunk]
 
@@ -433,13 +511,17 @@ def xarray_reader(dataname, indexer=None, climatology=False):
     # extract chunk from bindings
     time_chunk = binding['NetCDFTimeChunks']  # -1 to load everything, 'auto' to let xarray decide
 
+    # opt-in background prefetch of the next time chunk (no effect with a
+    # single chunk: time_chunk=-1, MapsCaching, climatology)
+    prefetch = bool(settings.options.get('NetCDFTimeChunksPrefetch', False))
+
     if binding['MapsCaching'] == "True":
         data = XarrayCached(data_path, dates, indexer, climatology)
     else:
         if climatology:  # for climatology, load the entire dataset
             data = XarrayChunked(data_path, None, dates, indexer, climatology)
         else:
-            data = XarrayChunked(data_path, time_chunk, dates, indexer, climatology)
+            data = XarrayChunked(data_path, time_chunk, dates, indexer, climatology, prefetch=prefetch)
     
     return data
 

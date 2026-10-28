@@ -19,7 +19,7 @@ from netCDF4 import Dataset
 
 from lisflood.main import lisfloodexe
 from lisflood.global_modules.default_options import default_options
-from lisflood.global_modules.output import PACK_MIN, PACK_MAX
+from lisflood.global_modules.output import PACK_MIN, PACK_MAX, PACK_FILL
 
 
 # ---------------------------------------------------------------------------
@@ -325,6 +325,62 @@ class TestScaleOffsetPacking:
             checked_count += 1
 
         assert checked_count > 0, "No packed variables were checked"
+
+    @pytest.mark.parametrize('threaded', [False, True])
+    def test_packing_unpacked_map_not_corrupted(self, threaded):
+        """A reported map that carries no scale_factor/add_offset (e.g.
+        DischargeMaps 'dis') must be written as real float data when
+        OutputPacking=True, not replaced by the int16 fill value.
+
+        The on-disk variable dtype is chosen by the NetCDF header and the
+        per-step packing is chosen by the writer; both decisions must treat a
+        missing scale_factor/add_offset as "not packed". If they disagree for a
+        map without packing metadata, the writer packs into an int16 buffer that
+        is then written into a plain float variable as all-fill. This asserts
+        the written map holds real discharge instead.
+
+        Checked under both the synchronous and threaded writers, which share the
+        same packing decision in NetcdfStepsWriter.write().
+        """
+        # DischargeMaps ('dis') has scale_factor=None/add_offset=None.
+        assert getattr(default_options['reportedmaps']['DischargeMaps'],
+                       'scale_factor', None) is None, \
+            "test premise broken: DischargeMaps now carries packing metadata"
+
+        opts = ['repDischargeMaps']
+        thr = ['outputThreads'] if threaded else None
+
+        out_float = self._run_lisflood(
+            'test_packing_unpacked_float', packing=False, opts_to_set=opts)
+        out_packed = self._run_lisflood(
+            'test_packing_unpacked_int16', packing=True,
+            opts_to_set=(opts + (thr or [])))
+
+        fdis = os.path.join(out_float, 'dis.nc')
+        pdis = os.path.join(out_packed, 'dis.nc')
+        assert os.path.exists(fdis) and os.path.exists(pdis), \
+            f"dis.nc missing (float={os.path.exists(fdis)} packed={os.path.exists(pdis)})"
+
+        # Raw read of the packed file (no auto-unscale) to catch an all-fill map.
+        with Dataset(pdis, 'r') as ds:
+            vname = _find_data_var(ds)
+            raw = ds.variables[vname][:]
+            raw = np.asarray(raw.filled(raw.fill_value) if hasattr(raw, 'filled') else raw)
+        n_fill = int((raw == float(PACK_FILL)).sum())
+        assert n_fill != raw.size, \
+            f"dis.nc is entirely PACK_FILL ({PACK_FILL}): an unpacked map was " \
+            f"written through the packing branch"
+
+        # Physical values must match the non-packed float run (dis is unpacked,
+        # so the two should agree closely; allow a tiny float32 margin).
+        data_float, _ = read_nc_variable(fdis)
+        data_packed, _ = read_nc_variable(pdis)
+        valid = ~np.isnan(data_float) & ~np.isnan(data_packed)
+        assert valid.any(), "no jointly-valid dis cells to compare"
+        max_diff = np.max(np.abs(data_float[valid] - data_packed[valid]))
+        rel = max_diff / max(np.max(np.abs(data_float[valid])), 1e-9)
+        assert rel <= 1e-3, \
+            f"packed dis differs from float dis (max abs {max_diff:.4g}, rel {rel:.4g})"
 
     def teardown_method(self):
         """Clean up output directories."""

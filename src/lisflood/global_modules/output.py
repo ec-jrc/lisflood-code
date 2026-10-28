@@ -179,9 +179,18 @@ class NetcdfStepsWriter(NetcdfWriter):
                 # AND the map_value carries scale_factor/add_offset (as float64,
                 # matching the values stored in the header).
                 packing_enabled = self.settings.binding.get('OutputPacking', 'False') == 'True'
-                packed_scale = np.float64(self.map_value.scale_factor) if self.map_value is not None else None
-                packed_offset = np.float64(self.map_value.add_offset) if self.map_value is not None else None
-                is_packed = packing_enabled and packed_scale is not None and packed_offset is not None
+                # Decide packing from the RAW scale_factor/add_offset, testing
+                # for None BEFORE any coercion: np.float64(None) is nan, which
+                # `is not None`, so coercing first would enable packing for maps
+                # that carry no packing metadata. This predicate must stay
+                # identical to write_netcdf_header's `has_packing` (netcdf.py) so
+                # the on-disk variable dtype and the per-step packing decision
+                # agree for every map.
+                raw_scale = getattr(self.map_value, 'scale_factor', None) if self.map_value is not None else None
+                raw_offset = getattr(self.map_value, 'add_offset', None) if self.map_value is not None else None
+                is_packed = packing_enabled and raw_scale is not None and raw_offset is not None
+                packed_scale = np.float64(raw_scale) if is_packed else None
+                packed_offset = np.float64(raw_offset) if is_packed else None
                 maskinfo = MaskInfo.instance()
 
                 prepared_steps = []

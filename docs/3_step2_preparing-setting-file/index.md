@@ -751,6 +751,7 @@ Within the 'lfoptions' element of the settings file, each option is defined usin
 
 + **NetCDFTimeChunks**: chunking size in the time dimension. This option was implemented to optimize the loading of the meteo maps. Recommended value is “auto" but chunking size can be specified manually (e.g. "10") or set to “-1" to load the whole time series into memory (very fast but expensive in terms of memory). 
 + **MapsCaching** (True or False): option designed for lisflood calibration. If set to True, all the static maps and forcings will be stored in a cache so that they don't have to be loaded by each lisflood instance. This option sets the value of NetCDFTimeChunks to "-1", meaning that the whole time series in the NetCDF inputs is loaded into memory. 
++ **NetCDFTimeChunksPrefetch** (1 or 0, default 0): when set to 1, the next forcing time chunk is loaded in a background thread while the model is still computing with the current one, so the chunk boundary no longer stalls the run. This only helps when forcing reads are slow compared to the computation (e.g. forcings on a network file system); on fast local disks the benefit is negligible. It requires `readNetcdfStack=1` and has no effect when `NetCDFTimeChunks` results in a single chunk (e.g. `-1` or `MapsCaching=1`), because there is no next chunk to load. Model outputs are identical with the option on or off.
 
 ### Options to manage output files
 

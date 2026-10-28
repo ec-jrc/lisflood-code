@@ -73,6 +73,10 @@ You can use builtin path variables in this template and reference to other paths
       # (helps map-heavy runs; default off = historical synchronous writing)
       <setoption choice="0" name="outputThreads"/>
 
+      # option to prefetch the next NetCDF forcing time chunk in a background
+      # thread while the current one is consumed (needs NetCDFTimeChunks > 1)
+      <setoption choice="0" name="NetCDFTimeChunksPrefetch"/>
+
       # option to Report PaddyRiceDebug information in CSV file for debugging Paddy Rice Water Abstraction issue on dry Channels
 		  <setoption choice="0"  name="repPaddyRiceDebug"/>
 
