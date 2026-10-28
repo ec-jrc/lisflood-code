@@ -591,6 +591,137 @@ class TestTemporalAggregation:
 
         assert checked_count > 0, f"No aggregated variables were checked for {frequency} {operation}"
 
+    @pytest.mark.parametrize("operation", ["mean", "sum"])
+    def test_daily_aggregation_subdaily(self, operation):
+        """Daily aggregation of a SUB-DAILY run must equal the manual daily
+        aggregation of the within-day steps.
+
+        Runs at DtSec=21600 (6-hourly, 4 steps/day) and checks that
+        OutputDaily{Mean,Sum} writes one slice per calendar day equal to the
+        mean/sum of that day's 4 sub-daily steps. This is the behaviour that is
+        impossible with the pre-existing monthly/yearly-only aggregation.
+        """
+        # ~3 days of 6-hourly steps; start at 00:00 so each day has its full 4 steps
+        step_start = '02/07/2016 00:00'
+        step_end = '05/07/2016 00:00'
+
+        reportedmaps = default_options['reportedmaps']
+        packed_vars = {
+            name: rm for name, rm in reportedmaps.items()
+            if getattr(rm, "scale_factor", None) is not None and rm.all and not rm.steps
+        }
+        all_report_opts = set()
+        for rm in packed_vars.values():
+            all_report_opts.update(rm.all)
+        all_report_opts.discard('')
+        opts = list(all_report_opts)
+
+        agg_var_list = ';'.join(packed_vars.keys())
+        agg_setting = 'OutputDailyMean' if operation == 'mean' else 'OutputDailySum'
+
+        # Sub-daily all-steps output (no aggregation) -> 4 slices/day reference
+        out_subdaily = self._run_lisflood(
+            f'test_agg_daily_{operation}_subdaily',
+            dt_sec='21600',
+            step_start=step_start,
+            step_end=step_end,
+            opts_to_set=opts,
+            new_vars={
+                'OutputPacking': 'False',
+                'OutputDailyMean': '',
+                'OutputDailySum': '',
+                'OutputMonthlyMean': '',
+                'OutputMonthlySum': '',
+                'OutputYearlyMean': '',
+                'OutputYearlySum': '',
+            },
+        )
+
+        # Same run with daily aggregation enabled
+        out_agg = self._run_lisflood(
+            f'test_agg_daily_{operation}_agg',
+            dt_sec='21600',
+            step_start=step_start,
+            step_end=step_end,
+            opts_to_set=opts,
+            new_vars={
+                'OutputPacking': 'False',
+                'OutputDailyMean': agg_var_list if agg_setting == 'OutputDailyMean' else '',
+                'OutputDailySum': agg_var_list if agg_setting == 'OutputDailySum' else '',
+                'OutputMonthlyMean': '',
+                'OutputMonthlySum': '',
+                'OutputYearlyMean': '',
+                'OutputYearlySum': '',
+            },
+        )
+
+        agg_func = np.nanmean if operation == 'mean' else np.nansum
+
+        checked_count = 0
+        for filename in sorted(os.listdir(out_agg)):
+            if not filename.endswith('.nc'):
+                continue
+            nc_sub_path = os.path.join(out_subdaily, filename)
+            nc_agg_path = os.path.join(out_agg, filename)
+            if not os.path.exists(nc_sub_path):
+                continue
+
+            with Dataset(nc_sub_path, 'r') as ds:
+                time_var = ds.variables['time']
+                times = time_var[:]
+                from netCDF4 import num2date
+                dates = num2date(times, time_var.units, time_var.calendar)
+                var_name = _find_data_var(ds)
+                sub_data = ds.variables[var_name][:]
+
+            if hasattr(sub_data, 'filled'):
+                sub_data = sub_data.filled(np.nan).astype(np.float64)
+            sub_data[sub_data == -9999.0] = np.nan
+
+            # Group sub-daily steps by calendar day
+            period_groups = {}
+            for i, d in enumerate(dates):
+                key = (d.year, d.month, d.day)
+                period_groups.setdefault(key, []).append(sub_data[i])
+
+            # Only days whose boundary (day change) is crossed within the run
+            dt_day = 0.25
+            completed = set()
+            for i, d in enumerate(dates):
+                next_d = d + datetime.timedelta(days=dt_day)
+                if d.day != next_d.day:
+                    completed.add((d.year, d.month, d.day))
+
+            manual_agg = np.array([agg_func(np.array(period_groups[k]), axis=0)
+                                   for k in sorted(completed)])
+
+            data_agg, _ = read_nc_variable(nc_agg_path)
+
+            # Confirm aggregation actually reduced the step count
+            if data_agg.shape[0] >= sub_data.shape[0]:
+                continue
+            if data_agg.shape != manual_agg.shape:
+                continue
+
+            valid = ~np.isnan(manual_agg) & ~np.isnan(data_agg)
+            if not valid.any():
+                continue
+
+            if operation == 'mean':
+                max_diff = np.max(np.abs(data_agg[valid] - manual_agg[valid]))
+                assert max_diff < 1e-6, \
+                    f"{filename}: daily {operation} max difference {max_diff} exceeds tolerance 1e-6"
+            else:
+                max_rel_diff = np.max(np.abs(
+                    (data_agg[valid] - manual_agg[valid]) /
+                    np.where(manual_agg[valid] != 0, manual_agg[valid], 1.0)
+                ))
+                assert max_rel_diff < 1e-5, \
+                    f"{filename}: daily {operation} max relative difference {max_rel_diff} exceeds tolerance 1e-5"
+            checked_count += 1
+
+        assert checked_count > 0, f"No daily-aggregated variables were checked for {operation}"
+
     def test_aggregation_sum_disables_packing(self):
         """Sum-aggregated outputs should NOT use int16 packing even when OutputPacking=True.
 
