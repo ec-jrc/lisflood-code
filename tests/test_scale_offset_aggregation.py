@@ -20,6 +20,7 @@ from netCDF4 import Dataset
 from lisflood.main import lisfloodexe
 from lisflood.global_modules.default_options import default_options
 from lisflood.global_modules.output import PACK_MIN, PACK_MAX, PACK_FILL
+from lisflood.global_modules.settings import LisSettings
 
 
 # ---------------------------------------------------------------------------
@@ -721,6 +722,160 @@ class TestTemporalAggregation:
             checked_count += 1
 
         assert checked_count > 0, f"No daily-aggregated variables were checked for {operation}"
+
+    @pytest.mark.parametrize("operation", ["mean", "sum"])
+    def test_daily_aggregation_subdaily_unpacked(self, operation):
+        """Daily aggregation must also work for UNPACKED variables.
+
+        The packed-variable tests select only reportedmaps entries that carry
+        scale_factor/add_offset. Variables WITHOUT packing metadata (e.g.
+        DischargeMaps, TavgMapsOut, FrostIndexMaps) go through a different
+        branch of the writer (is_packed / has_packing predicates), and their
+        aggregated output must (a) be produced, (b) stay unpacked float, and
+        (c) equal the manual daily mean/sum of the sub-daily steps.
+        """
+        # ~3 days of 6-hourly steps; start at 00:00 so each day has its full 4 steps
+        step_start = '02/07/2016 00:00'
+        step_end = '05/07/2016 00:00'
+
+        reportedmaps = default_options['reportedmaps']
+        # Curated set of unpacked ('all'-type) variables: core quantities whose
+        # report options are simple flags and whose output_var is always
+        # computed in the EFAS use case.
+        target_names = ('DischargeMaps', 'TavgMapsOut', 'FrostIndexMaps')
+        unpacked_vars = {
+            name: rm for name, rm in reportedmaps.items()
+            if getattr(rm, "scale_factor", None) is None and rm.all and not rm.steps
+            and name in target_names
+        }
+        assert set(unpacked_vars) == set(target_names), \
+            f"Expected unpacked target variables missing from reportedmaps: " \
+            f"{set(target_names) - set(unpacked_vars)}"
+
+        all_report_opts = set()
+        for rm in unpacked_vars.values():
+            all_report_opts.update(rm.all)
+        all_report_opts.discard('')
+        opts = list(all_report_opts)
+
+        agg_var_list = ';'.join(unpacked_vars.keys())
+        agg_setting = 'OutputDailyMean' if operation == 'mean' else 'OutputDailySum'
+
+        # Sub-daily all-steps output (no aggregation) -> 4 slices/day reference
+        out_subdaily = self._run_lisflood(
+            f'test_agg_daily_{operation}_unpacked_subdaily',
+            dt_sec='21600',
+            step_start=step_start,
+            step_end=step_end,
+            opts_to_set=opts,
+            new_vars={
+                'OutputPacking': 'False',
+                'OutputDailyMean': '',
+                'OutputDailySum': '',
+                'OutputMonthlyMean': '',
+                'OutputMonthlySum': '',
+                'OutputYearlyMean': '',
+                'OutputYearlySum': '',
+            },
+        )
+
+        # Same run with daily aggregation enabled
+        out_agg = self._run_lisflood(
+            f'test_agg_daily_{operation}_unpacked_agg',
+            dt_sec='21600',
+            step_start=step_start,
+            step_end=step_end,
+            opts_to_set=opts,
+            new_vars={
+                'OutputPacking': 'False',
+                'OutputDailyMean': agg_var_list if agg_setting == 'OutputDailyMean' else '',
+                'OutputDailySum': agg_var_list if agg_setting == 'OutputDailySum' else '',
+                'OutputMonthlyMean': '',
+                'OutputMonthlySum': '',
+                'OutputYearlyMean': '',
+                'OutputYearlySum': '',
+            },
+        )
+
+        checked_count = 0
+        for var_name in unpacked_vars:
+            checked_count += self._check_unpacked_daily_agg(
+                operation, var_name, out_subdaily, out_agg)
+
+        assert checked_count == len(unpacked_vars), \
+            f"Only {checked_count}/{len(unpacked_vars)} unpacked variables were checked for {operation}"
+
+    def _check_unpacked_daily_agg(self, operation, var_name, out_subdaily, out_agg):
+        """Compare one unpacked variable's aggregated output against the manual
+        daily aggregation of its sub-daily steps. Returns 1 when checked."""
+        from netCDF4 import num2date
+
+        filename = os.path.basename(LisSettings.instance().binding[var_name]) + '.nc'
+        nc_sub_path = os.path.join(out_subdaily, filename)
+        nc_agg_path = os.path.join(out_agg, filename)
+        assert os.path.exists(nc_agg_path), \
+            f"Aggregated output missing for unpacked variable {var_name}: {nc_agg_path}"
+        if not os.path.exists(nc_sub_path):
+            return 0
+
+        with Dataset(nc_sub_path, 'r') as ds:
+            time_var = ds.variables['time']
+            times = time_var[:]
+            dates = num2date(times, time_var.units, time_var.calendar)
+            var_name_nc = _find_data_var(ds)
+            sub_data = ds.variables[var_name_nc][:]
+
+        if hasattr(sub_data, 'filled'):
+            sub_data = sub_data.filled(np.nan).astype(np.float64)
+        sub_data[sub_data == -9999.0] = np.nan
+
+        # Group sub-daily steps by calendar day
+        period_groups = {}
+        for i, d in enumerate(dates):
+            key = (d.year, d.month, d.day)
+            period_groups.setdefault(key, []).append(sub_data[i])
+
+        # Only days whose boundary (day change) is crossed within the run
+        dt_day = 0.25
+        completed = set()
+        for i, d in enumerate(dates):
+            next_d = d + datetime.timedelta(days=dt_day)
+            if d.day != next_d.day:
+                completed.add((d.year, d.month, d.day))
+
+        agg_func = np.nanmean if operation == 'mean' else np.nansum
+        manual_agg = np.array([agg_func(np.array(period_groups[k]), axis=0)
+                               for k in sorted(completed)])
+
+        data_agg, _ = read_nc_variable(nc_agg_path)
+
+        # Unpacked output must stay float (no int16 packing)
+        info = get_nc_packing_info(nc_agg_path)
+        assert info['dtype'] != np.dtype('int16'), \
+            f"{filename}: unpacked variable must NOT be int16-packed"
+
+        # Confirm aggregation actually reduced the step count
+        assert data_agg.shape[0] < sub_data.shape[0], \
+            f"{filename}: aggregation did not reduce the step count " \
+            f"({data_agg.shape[0]} >= {sub_data.shape[0]})"
+        assert data_agg.shape == manual_agg.shape, \
+            f"{filename}: aggregated shape {data_agg.shape} != manual {manual_agg.shape}"
+
+        valid = ~np.isnan(manual_agg) & ~np.isnan(data_agg)
+        assert valid.any(), f"{filename}: no valid values to compare"
+
+        if operation == 'mean':
+            max_diff = np.max(np.abs(data_agg[valid] - manual_agg[valid]))
+            assert max_diff < 1e-6, \
+                f"{filename}: daily {operation} (unpacked) max difference {max_diff} exceeds tolerance 1e-6"
+        else:
+            max_rel_diff = np.max(np.abs(
+                (data_agg[valid] - manual_agg[valid]) /
+                np.where(manual_agg[valid] != 0, manual_agg[valid], 1.0)
+            ))
+            assert max_rel_diff < 1e-5, \
+                f"{filename}: daily {operation} (unpacked) max relative difference {max_rel_diff} exceeds tolerance 1e-5"
+        return 1
 
     def test_aggregation_sum_disables_packing(self):
         """Sum-aggregated outputs should NOT use int16 packing even when OutputPacking=True.
