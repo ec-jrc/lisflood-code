@@ -1654,4 +1654,5 @@ default_options = {'EnKF': False,
                    'writeNetcdf': False,
                    'writeNetcdfStack': False,
                    'outputThreads': False,
-                   'NetCDFTimeChunksPrefetch': False}
+                   'NetCDFTimeChunksPrefetch': False,
+                   'useEarthkitHydro': False}

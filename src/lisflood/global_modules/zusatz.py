@@ -33,6 +33,7 @@ import numpy as np
 from .decorators import counted
 from .settings import datetoint, LisSettings, MaskInfo, MaskAreaInfo
 from .errors import LisfloodError, LisfloodFileError, LisfloodWarning
+from .earthkit_network import compute_gauge_zone_codes
 
 
 MAX_READ_TRIALS = 100 # max number of trial allowed re-read an input file: to avoid crashes due to temporary network interruptions
@@ -441,9 +442,33 @@ class TimeoutputTimeseries(TimeoutputTimeseries):
                     if ok:
                         self._sample_compressed_idx = np.asarray(idx, dtype=np.int64)
                         self._compressed_sampling_ok = True
+                    else:
+                        self._sample_compressed_idx = None
+                        self._compressed_sampling_ok = False
                 except Exception:
                     self._compressed_sampling_ok = False
                     self._sample_compressed_idx = None
+
+                # --- earthkit/numpy zone-mean support (useEarthkitHydro) -----
+                # Zone codes over the compressed cells (0 = not a gauge cell),
+                # used by earthkit_network.ek_sample_zone_means as the numpy
+                # equivalent of the inherited .sample()'s
+                # pcraster.areaaverage(expr, spatialId) fallback for multi-cell
+                # gauge zones (no 2D map round-trip). Checked against the
+                # engine in tests/test_earthkit_network.py.
+                try:
+                    if self._spatialId.isSpatial():
+                        maskinfo_ek = MaskInfo.instance()
+                        self._ek_zone_codes, self._ek_n_codes = (
+                            compute_gauge_zone_codes(outletsmapnp,
+                                                     maskinfo_ek.info.maskflat,
+                                                     self._ncodesId))
+                    else:
+                        self._ek_zone_codes = None
+                        self._ek_n_codes = 0
+                except Exception:
+                    self._ek_zone_codes = None
+                    self._ek_n_codes = 0
 
             nrCols = self._ncodesId
             self._sampleValues = [

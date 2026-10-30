@@ -17,7 +17,7 @@ See the Licence for the specific language governing permissions and limitations 
 import os
 import datetime
 import numpy as np
-from pcraster import ifthen, catchmenttotal, mapmaximum
+from pcraster import ifthen, catchmenttotal, mapmaximum, pcr2numpy
 import sys
 import warnings
 
@@ -28,6 +28,29 @@ from .netcdf import hdf5_lock as _hdf5_lock
 from .errors import LisfloodFileError, LisfloodWarning
 from .settings import inttodate, CDFFlags, LisSettings, MaskInfo
 from netCDF4 import default_fillvals
+
+# ------------------------------------------------------------------------
+# Optional earthkit-hydro acceleration of the PCRaster reductions
+# (opt-in via the `useEarthkitHydro` setoption; default False keeps the
+# historical PCRaster path bit-identical). See earthkit_network.py.
+# ------------------------------------------------------------------------
+try:
+    from .earthkit_network import (
+        earthkit_available,
+        get_earthkit_network,
+        ek_upstream_sum,
+        ek_upstream_mean,
+        model_precision,
+    )
+except ImportError:  # pragma: no cover - earthkit-hydro not installed
+    earthkit_available = staticmethod(lambda: False)
+    get_earthkit_network = None
+    ek_upstream_sum = None
+    ek_upstream_mean = None
+
+    def model_precision():
+        from .parallelization import get_model_dtype
+        return get_model_dtype()
 
 
 # ------------------------------------------------------------------------
@@ -750,6 +773,20 @@ class outputTssMap(object):
 
     def __init__(self, out_variable):
         self.var = out_variable
+        # earthkit-hydro RiverNetwork (lazily built in initial(), see below)
+        self._ek_net = None
+
+    def _ek_network(self):
+        """ Build (once) the earthkit RiverNetwork from the model Ldd for the
+        opt-in useEarthkitHydro reporting path. The network node order equals
+        LISFLOOD's compressed 1D order, so compressed arrays can be passed
+        directly. Raises if earthkit-hydro is unavailable (caller only calls
+        this when option['useEarthkitHydro'] and earthkit_available()).
+        """
+        if self._ek_net is None:
+            ldd_np = pcr2numpy(self.var.Ldd, 0)
+            self._ek_net = get_earthkit_network(ldd_np)
+        return self._ek_net
 
     def initial(self):
         """ initial part of the output module
@@ -759,9 +796,23 @@ class outputTssMap(object):
         flags = settings.flags
         binding = settings.binding
         report_time_serie_act = settings.report_timeseries
+        maskinfo = MaskInfo.instance()
         binding['Catchments'] = self.var.Catchments
         # output for single column eg mapmaximum
         self.var.Tss = {}
+
+        # --- opt-in earthkit-hydro acceleration of the reporting path --------
+        # Precompute the 1D arrays the earthkit path needs (upstream area and
+        # pixel area in compressed order), and the per-series zone-code arrays
+        # for multi-cell gauge zones. Nothing here touches the PCRaster path.
+        if option['useEarthkitHydro'] and earthkit_available():
+            net = self._ek_network()
+            pixelarea_1d = np.asarray(self.var.PixelArea, dtype=np.float64)
+            self.var.EkPixelArea = pixelarea_1d
+            # UpArea recomputed on the network (fast, parallel) instead of
+            # reusing the PCRaster map: same accumulation, compressed order.
+            uparea_1d = ek_upstream_sum(net, pixelarea_1d, node_weights=None)
+            self.var.EkInvUpArea = 1.0 / uparea_1d
 
         # Resolve each distinct output-point location ("where": Gauges, Sites,
         # LakeSites, Catchments, ...) only ONCE. The resolved map is used read-only by
@@ -831,7 +882,18 @@ class outputTssMap(object):
         settings = LisSettings.instance()
         option = settings.options
         flags = settings.flags
+        maskinfo = MaskInfo.instance()
         report_time_serie_act = settings.report_timeseries
+
+        # Opt-in reporting-path wall timers (LISFLOOD_EK_PROFILE=1).
+        # cProfile mis-attributes the PCRaster engine reductions here
+        # (recursion accounting), so these wall timers are the only
+        # trustworthy measurement of the reporting path.
+        import os as _os
+        _ek_prof = _os.environ.get('LISFLOOD_EK_PROFILE') == '1'
+        _ek_times = {'mapmaximum': 0.0, 'total': 0.0, 'sample': 0.0,
+                     'sample_compressed': 0.0, 'sample_zone_means': 0.0}
+        import time as _time
 
         if not(option['InitLisfloodwithoutSplit']):
 
@@ -847,12 +909,35 @@ class outputTssMap(object):
                 # report time series
                 what = 'self.var.' + report_time_serie_act[tss].output_var
                 how = report_time_serie_act[tss].operation[0] if len(report_time_serie_act[tss].operation) else ''
-                if how == 'mapmaximum':
-                    changed = compressArray(mapmaximum(decompress(eval(what))))
-                    what = 'changed'
-                if how == 'total':
-                    changed = compressArray(catchmenttotal(decompress(eval(what)) * self.var.PixelAreaPcr, self.var.Ldd) * self.var.InvUpArea)
-                    what = 'changed'
+                # earthkit/numpy fast path (opt-in useEarthkitHydro): operate on
+                # the 1D compressed arrays directly, never building 2D PCRaster
+                # maps (kills the decompress/numpy2pcr/pcr2numpy round-trips and
+                # the single-threaded PCRaster engine reductions). The historical
+                # PCRaster statements are kept verbatim in the else branches.
+                _t0 = _time.perf_counter() if _ek_prof else None
+                if option['useEarthkitHydro'] and earthkit_available():
+                    x_1d = eval(what)
+                    if how == 'mapmaximum':
+                        with np.errstate(invalid='ignore'):
+                            changed = np.full(maskinfo.info.mapC, np.nanmax(x_1d),
+                                              dtype=np.float64)
+                        what = 'changed'
+                    elif how == 'total':
+                        net = self._ek_network()
+                        tot = ek_upstream_sum(net, np.asarray(x_1d, dtype=np.float64),
+                                              node_weights=self.var.EkPixelArea)
+                        changed = (tot * self.var.EkInvUpArea).astype(
+                            model_precision(), copy=False)
+                        what = 'changed'
+                else:
+                    if how == 'mapmaximum':
+                        changed = compressArray(mapmaximum(decompress(eval(what))))
+                        what = 'changed'
+                    if how == 'total':
+                        changed = compressArray(catchmenttotal(decompress(eval(what)) * self.var.PixelAreaPcr, self.var.Ldd) * self.var.InvUpArea)
+                        what = 'changed'
+                if _ek_prof and how in _ek_times:
+                    _ek_times[how] += _time.perf_counter() - _t0
                 tss_obj = self.var.Tss[tss]
                 value_1d = eval(what)
                 # Fast path: when every gauge is a single cell, the inherited
@@ -863,17 +948,41 @@ class outputTssMap(object):
                 # a 1D numpy array implies Scalar/Directional here. Falls back to
                 # the exact PCRaster path otherwise (e.g. multi-cell gauge zones,
                 # non-spatial gauges, or non-ndarray values).
+                _t0 = _time.perf_counter() if _ek_prof else None
+                _sample_kind = 'sample'
                 if getattr(tss_obj, '_compressed_sampling_ok', False) and isinstance(value_1d, np.ndarray):
                     tss_obj.sample_compressed(value_1d)
+                    _sample_kind = 'sample_compressed'
+                elif option['useEarthkitHydro'] and earthkit_available() and \
+                        getattr(tss_obj, '_ek_zone_codes', None) is not None and \
+                        isinstance(value_1d, np.ndarray):
+                    # multi-cell gauge zones: numpy zone-mean (equivalent of the
+                    # .sample() -> pcraster.areaaverage fallback), still without
+                    # any 2D map round-trip
+                    from .earthkit_network import ek_sample_zone_means
+                    ek_sample_zone_means(tss_obj, value_1d)
+                    _sample_kind = 'sample_zone_means'
                 else:
                     tss_obj.sample(decompress(value_1d))
+                if _ek_prof:
+                    _ek_times[_sample_kind] += _time.perf_counter() - _t0
 
         # ************************************************************
         # ***** WRITING RESULTS: MAPS   ******************************
         # ************************************************************
 
-        self.output_maps.write()      
+        self.output_maps.write()
 
         # update local output steps
         cdfflags = CDFFlags.instance()
         cdfflags.update(self.var)
+
+        if _ek_prof and self.var.currentTimeStep() == self.var.nrTimeSteps():
+            sys.stdout.write(
+                '[ek-profile] reporting-path wall seconds '
+                'mapmaximum=%.2f total=%.2f sample=%.2f '
+                'sample_compressed=%.2f sample_zone_means=%.2f\n'
+                % (_ek_times['mapmaximum'], _ek_times['total'],
+                   _ek_times['sample'], _ek_times['sample_compressed'],
+                   _ek_times['sample_zone_means']))
+            sys.stdout.flush()

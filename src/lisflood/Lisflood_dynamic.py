@@ -32,7 +32,6 @@ from lisflood.global_modules.zusatz import checkmap
 
 from .global_modules.settings import CDFFlags, LisSettings, MaskInfo
 
-from pcraster import upstream
 from lisflood.global_modules.add1 import decompress, compressArray
 
 
