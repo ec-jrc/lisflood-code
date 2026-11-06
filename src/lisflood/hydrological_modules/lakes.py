@@ -75,7 +75,6 @@ class lakes(HydroModule):
                 settings.build_reportedmaps_dicts()
                 return
                 # break if no lakes
-            LakeSitePcr = loadmap('LakeSites', pcr=True)    # moved here to use the caching feature during calibration
 
         if option['simulateLakes'] and not option['InitLisflood']:            
 
@@ -86,15 +85,28 @@ class lakes(HydroModule):
             # Add lake locations to structures map (used to modify LddChan
             # and to calculate LddStructuresChan)
 
-            # PCRaster part
+            # numpy replacement of the PCRaster part
             # -----------------------
-            LakeSitePcr = pcraster.ifthen((pcraster.defined(LakeSitePcr) & pcraster.boolean(decompress(self.var.IsChannel))), LakeSitePcr)
-            IsStructureLake = pcraster.boolean(LakeSitePcr)
+            # IsStructureLake was pcraster.boolean(LakeSitePcr), i.e. True where
+            # a lake site is present in the channel network. LakeSitesC is
+            # already zeroed outside the channel network (above), so the
+            # compressed boolean is simply LakeSitesC > 0.
+            IsStructureLakeC = LakeSitesC > 0
             # additional structure map only for lakes to calculate water balance
-            # self.var.IsUpsOfStructureLake = pcraster.downstream(self.var.LddKinematic, pcraster.cover(IsStructureLake, 0))
-            self.var.IsUpsOfStructureLake = pcraster.downstream(self.var.LddChan, pcraster.cover(IsStructureLake, 0))
+            # (was: pcraster.downstream(LddChan, cover(IsStructureLake, 0))):
+            # each cell takes the boolean value of its downstream neighbour.
+            # PCRaster semantics at pit cells (no downstream neighbour): the
+            # result is the pit cell's OWN value (verified against pcraster.
+            # downstream on a synthetic d8 network). Uses the unmodified
+            # LddChan topology of self.var.downstruct (pits = sentinel
+            # mapC[0]), computed in routing.initial() before lakes.
             # Get all pixels just upstream of lakes
             # -----------------------
+            n_cells = maskinfo.info.mapC[0]
+            downs = self.var.downstruct
+            is_pit = downs >= n_cells
+            self.var.IsUpsOfStructureLakeC = np.where(
+                is_pit, IsStructureLakeC, IsStructureLakeC[np.minimum(downs, n_cells - 1)])
 
             # Direct per-point table lookup on the lake ids (LakeSitesCC),
             # replacing the full-grid pcraster.lookupscalar+compressArray+
