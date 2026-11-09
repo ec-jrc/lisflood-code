@@ -22,11 +22,10 @@ from nine import range
 
 import warnings
 
-from pcraster.operations import ifthen, boolean, defined, lookupscalar
 import numpy as np
 
 from ..global_modules.settings import LisSettings, MaskInfo
-from ..global_modules.add1 import loadmap, compressArray, decompress, makenumpy, lookup_table_values
+from ..global_modules.add1 import loadmap, compressArray, makenumpy, lookup_table_values
 from ..global_modules.errors import LisfloodWarning
 from . import HydroModule
 
@@ -108,7 +107,6 @@ class Reservoir(HydroModule):
                 # rebuild lists of reported files with simulateReservoirs and repsimulateReservoirs = False
                 settings.build_reportedmaps_dicts()
                 return
-            ReservoirSitePcr = loadmap('ReservoirSites', pcr=True)    # moved here to use the caching feature during calibration
 
         if option['simulateReservoirs'] and not option['InitLisflood']:
             
@@ -120,13 +118,7 @@ class Reservoir(HydroModule):
             self.var.IsStructureChan = np.where(self.var.ReservoirSitesC > 0, np.bool(1), self.var.IsStructureChan)
             # Add reservoir locations to structures map (used to modify LddChan
             # and to calculate LddStructuresChan)
-            
-            self.var.ReservoirSites = ReservoirSitePcr
-            # filter out reservoirs that are not part of the channel network
-            # (following logic of 'old' code the inflow into these reservoirs is
-            # always zero, so either change this or leave them out!)
-            ReservoirSitePcr = ifthen((defined(ReservoirSitePcr) & boolean(decompress(self.var.IsChannel))), ReservoirSitePcr)
-            
+
             # RESERVOIR CHARACTERISTICS
             
             # reservoir storage capacity [m3]
