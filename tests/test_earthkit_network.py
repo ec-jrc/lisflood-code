@@ -30,6 +30,7 @@ from lisflood.global_modules.earthkit_network import (
     earthkit_available,
     ek_sample_zone_means,
     ek_upstream_sum,
+    ek_upstream_sum_batch,
     ek_zone_mean_at_gauges,
     get_earthkit_network,
 )
@@ -77,6 +78,64 @@ class TestRiverNetworkAccumulation:
         pcraster.setclone(8, 8, 1.0, 0.0, 0.0)
         ldd = east_flow_ldd(8, 8)
         assert get_earthkit_network(ldd) is get_earthkit_network(ldd.copy())
+
+
+class TestUpstreamSumBatch:
+    """The batched helper must match stacked per-row scalar calls bit-for-bit
+    and reject a mis-shaped (non-2D / wrong-axis) input."""
+
+    @requires_earthkit
+    def test_batch_matches_per_row_bit_identical(self):
+        pcraster.setclone(10, 10, 1.0, 0.0, 0.0)
+        ldd = east_flow_ldd()
+        net = get_earthkit_network(ldd)
+        rng = np.random.default_rng(7)
+        n_nodes = ek_upstream_sum(net, compress_like_lisflood(
+            np.ones((10, 10)), ldd)).shape[0]
+        weights = rng.random(n_nodes)
+        fields = [rng.random(n_nodes) for _ in range(5)]
+        per_row = np.stack(
+            [ek_upstream_sum(net, f, node_weights=weights) for f in fields])
+        batched = ek_upstream_sum_batch(net, np.stack(fields),
+                                        node_weights=weights)
+        assert np.array_equal(batched, per_row)
+
+    @requires_earthkit
+    def test_batch_matches_per_row_unweighted(self):
+        pcraster.setclone(10, 10, 1.0, 0.0, 0.0)
+        ldd = east_flow_ldd()
+        net = get_earthkit_network(ldd)
+        rng = np.random.default_rng(11)
+        n_nodes = ek_upstream_sum(net, compress_like_lisflood(
+            np.ones((10, 10)), ldd)).shape[0]
+        fields = [rng.random(n_nodes) for _ in range(3)]
+        per_row = np.stack([ek_upstream_sum(net, f) for f in fields])
+        batched = ek_upstream_sum_batch(net, np.stack(fields))
+        assert np.array_equal(batched, per_row)
+
+    @requires_earthkit
+    def test_non_2d_input_raises(self):
+        pcraster.setclone(10, 10, 1.0, 0.0, 0.0)
+        ldd = east_flow_ldd()
+        net = get_earthkit_network(ldd)
+        n_nodes = ek_upstream_sum(net, compress_like_lisflood(
+            np.ones((10, 10)), ldd)).shape[0]
+        with pytest.raises(ValueError):
+            ek_upstream_sum_batch(net, np.ones(n_nodes))
+
+    @requires_earthkit
+    def test_wrong_axis_layout_raises(self):
+        # node axis must be last; a (n_nodes, n_series) array is rejected by
+        # the node_weights broadcast (trailing-axis mismatch).
+        pcraster.setclone(10, 10, 1.0, 0.0, 0.0)
+        ldd = east_flow_ldd()
+        net = get_earthkit_network(ldd)
+        n_nodes = ek_upstream_sum(net, compress_like_lisflood(
+            np.ones((10, 10)), ldd)).shape[0]
+        weights = np.ones(n_nodes)
+        transposed = np.ones((n_nodes, 3))
+        with pytest.raises(ValueError):
+            ek_upstream_sum_batch(net, transposed, node_weights=weights)
 
 
 class TestZoneMeans:

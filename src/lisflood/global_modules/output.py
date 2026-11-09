@@ -39,6 +39,7 @@ try:
         earthkit_available,
         get_earthkit_network,
         ek_upstream_sum,
+        ek_upstream_sum_batch,
         ek_upstream_mean,
         model_precision,
     )
@@ -46,6 +47,7 @@ except ImportError:  # pragma: no cover - earthkit-hydro not installed
     earthkit_available = staticmethod(lambda: False)
     get_earthkit_network = None
     ek_upstream_sum = None
+    ek_upstream_sum_batch = None
     ek_upstream_mean = None
 
     def model_precision():
@@ -905,6 +907,39 @@ class outputTssMap(object):
                     pass
                 sys.stdout.write("\n")
 
+            # earthkit/numpy fast path (opt-in useEarthkitHydro): the
+            # how=='total' series (the upstream-accumulation family) all share
+            # the same network and node_weights and differ only by field, so
+            # collect their fields in one pass and issue a SINGLE batched
+            # upstream accumulation for the whole step instead of one traversal
+            # per series. The batch axis is a pure outer vectorization, so each
+            # per-series result is bit-identical to the scalar path. The batched
+            # accumulation is timed under the 'total' bucket to keep the
+            # LISFLOOD_EK_PROFILE before/after comparison meaningful.
+            _fused_changed = {}
+            if option['useEarthkitHydro'] and earthkit_available():
+                _t0 = _time.perf_counter() if _ek_prof else None
+                _fused_fields = []
+                _fused_keys = []
+                for tss in report_time_serie_act:
+                    _how = report_time_serie_act[tss].operation[0] if len(report_time_serie_act[tss].operation) else ''
+                    if _how == 'total':
+                        _what = 'self.var.' + report_time_serie_act[tss].output_var
+                        _x_1d = eval(_what)
+                        _fused_fields.append(np.asarray(_x_1d, dtype=np.float64))
+                        _fused_keys.append(tss)
+                if _fused_fields:
+                    _net = self._ek_network()
+                    _stacked = np.stack(_fused_fields)
+                    _tot = ek_upstream_sum_batch(_net, _stacked,
+                                                 node_weights=self.var.EkPixelArea)
+                    _mp = model_precision()
+                    for _k, _key in enumerate(_fused_keys):
+                        _fused_changed[_key] = (_tot[_k] * self.var.EkInvUpArea).astype(
+                            _mp, copy=False)
+                if _ek_prof:
+                    _ek_times['total'] += _time.perf_counter() - _t0
+
             for tss in report_time_serie_act:
                 # report time series
                 what = 'self.var.' + report_time_serie_act[tss].output_var
@@ -916,18 +951,15 @@ class outputTssMap(object):
                 # PCRaster statements are kept verbatim in the else branches.
                 _t0 = _time.perf_counter() if _ek_prof else None
                 if option['useEarthkitHydro'] and earthkit_available():
-                    x_1d = eval(what)
                     if how == 'mapmaximum':
+                        x_1d = eval(what)
                         with np.errstate(invalid='ignore'):
                             changed = np.full(maskinfo.info.mapC, np.nanmax(x_1d),
                                               dtype=np.float64)
                         what = 'changed'
                     elif how == 'total':
-                        net = self._ek_network()
-                        tot = ek_upstream_sum(net, np.asarray(x_1d, dtype=np.float64),
-                                              node_weights=self.var.EkPixelArea)
-                        changed = (tot * self.var.EkInvUpArea).astype(
-                            model_precision(), copy=False)
+                        # distribute the pre-batched upstream sum for this series
+                        changed = _fused_changed[tss]
                         what = 'changed'
                 else:
                     if how == 'mapmaximum':

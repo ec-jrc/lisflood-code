@@ -154,6 +154,34 @@ def ek_upstream_sum(net, field_1d, node_weights=None):
     return np.asarray(out)
 
 
+def ek_upstream_sum_batch(net, fields_2d, node_weights=None):
+    """ Batched form of ek_upstream_sum: one topological traversal for a
+    stack of fields that share the same network and node_weights.
+
+    fields_2d     : 2D numpy array with the NODE AXIS LAST, i.e. shape
+                    (n_series, n_nodes) in LISFLOOD compressed order. The
+                    leading axis is the batch axis; each row is one field.
+    node_weights  : optional per-node weights (shape (n_nodes,)), broadcast
+                    across the batch (e.g. PixelArea for m3 sums).
+    returns       : 2D array of shape (n_series, n_nodes), one upstream-sum
+                    row per input field, in the same compressed order.
+
+    The batch axis is a pure outer vectorization: each node accumulates its
+    upstream contributions in the same topological order regardless of batch
+    width, so every row is bit-identical to the scalar ek_upstream_sum of
+    that field. The node axis MUST be last because node_weights broadcasts
+    against the trailing axis; a transposed array raises a broadcast error.
+    """
+    arr = np.asarray(fields_2d, dtype=np.float64)
+    if arr.ndim != 2:
+        raise ValueError(
+            'ek_upstream_sum_batch expects a 2D array with layout '
+            '(n_series, n_nodes) (node axis last); got ndim=%d' % arr.ndim)
+    out = _ekh.upstream.sum(net, arr, node_weights=node_weights,
+                            return_type=_EK_RETURN_TYPE)
+    return np.asarray(out)
+
+
 def model_precision():
     """ np dtype of the configured model precision
     (parallelization.get_model_dtype).
