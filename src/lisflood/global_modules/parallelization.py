@@ -50,6 +50,15 @@ working):
                                   Default: "auto" (domain-size-aware, as above).
   * ``numCPUs_soilInit``        - soilInit thread count for soil initialization.
                                   Default: 0 (all cores).
+  * ``numCPUs_earthkit``        - thread count for the earthkit-hydro upstream-
+                                  accumulation pool (a native pool inside the
+                                  Rust extension that reads its size once at
+                                  first use via ``RAYON_NUM_THREADS`` and
+                                  otherwise sizes itself to the host, thereby
+                                  oversubscribing the node against the routing
+                                  kernel). Only the opt-in earthkit reporting
+                                  path builds this pool. Default: 1 (capped);
+                                  0/"all"/"auto"/absent => uncapped (all cores).
 A value of 0 (or empty/"all") means "use all available cores". For numexpr/BLAS,
 "auto" (or an absent setting) picks all cores only when the domain is large
 (>= NUMBA_AUTO_MIN_PIXELS valid pixels), else serial.
@@ -231,7 +240,7 @@ def get_effective_parallelism():
     """Return the last-applied effective thread counts, or None if parallelism
     has not been configured yet.
 
-    The dict is keyed 'numba', 'numexpr', 'blas', 'soilinit'; Also includes 'host' (host core count).
+    The dict is keyed 'numba', 'numexpr', 'blas', 'soilinit', 'earthkit'; Also includes 'host' (host core count).
     """
     return _effective
 
@@ -415,6 +424,37 @@ def resolve_soilinit_workers(binding, real_cpu_count):
         return explicit
     return real_cpu_count if real_cpu_count is not None else _host_cpu_count()
 
+
+def resolve_earthkit_threads(binding):
+    """Thread count for the earthkit-hydro upstream-accumulation pool.
+
+    That pool is a native (rayon) pool inside the earthkit-hydro Rust
+    extension, sized once at first use from the ``RAYON_NUM_THREADS``
+    environment variable and otherwise to the host core count. It is only built
+    on the opt-in earthkit reporting path. Controlled by ``numCPUs_earthkit``:
+
+      * absent / "" / "auto"  -> 1 (DEFAULT: single-threaded accumulation pool).
+      * a positive integer    -> cap the pool to that many threads.
+      * 0 / "all"             -> None, meaning "all cores" (leave uncapped).
+
+    The accumulation is a depth-bounded topological traversal with little work
+    per node; a bounded pool avoids oversubscribing the node against the routing
+    kernel's OpenMP threads. Unlike :func:`resolve_pool_threads`, the default is
+    a flat 1 and is NOT domain-size-aware: the contention is about pool
+    coexistence with the routing kernel, not array size. Thread count affects
+    scheduling only, never the result (the traversal order is deterministic and
+    independent of the pool size).
+
+    Returns an int >= 1, or None meaning "all cores / leave uncapped".
+    """
+    raw = binding.get("numCPUs_earthkit") if binding is not None else None
+    if isinstance(raw, str):
+        raw = raw.strip().lower()
+    if raw in (None, "", "auto"):
+        return 1                      # default: single-threaded rayon
+    return _parse_thread_count(raw)   # int>0 => cap; 0/"all" => None
+
+
 def resolve_model_dtype(binding):
     """Decide the floating-point dtype for LISFLOOD model state & kernels.
 
@@ -572,11 +612,30 @@ def configure_parallelism(binding, num_pixels=None):
 
     soilinit_workers = resolve_soilinit_workers(binding, host)
 
+    # --- earthkit-hydro accumulation pool (rayon, native Rust extension) ---
+    # The rayon global pool reads RAYON_NUM_THREADS ONCE, when it is built on
+    # the first upstream accumulation in the dynamic loop, and ignores later
+    # changes. It must therefore be set here at startup, before the first
+    # earthkit call. Capping it stops the accumulation pool from oversubscribing
+    # the node against the routing kernel's OpenMP threads. The value is a
+    # validated integer string (no user string is interpolated unvalidated, and
+    # no shell is involved). Thread count affects scheduling only, never results.
+    earthkit_threads = resolve_earthkit_threads(binding)
+    if earthkit_threads is not None:
+        effective_earthkit = max(1, min(int(earthkit_threads), host))
+        os.environ["RAYON_NUM_THREADS"] = str(effective_earthkit)
+    else:
+        # Uncapped: leave RAYON_NUM_THREADS untouched so an operator who set it
+        # directly in the environment keeps control (mirrors the handling of
+        # NUMBA_THREADING_LAYER above).
+        effective_earthkit = None
+
     effective = {
         "numba": effective_numba,       
         "numexpr": effective_numexpr,
         "blas": effective_blas,
         "soilinit": soilinit_workers,
+        "earthkit": effective_earthkit,
         "numba_threading_layer": effective_threading_layer,
         "host": host,
     }

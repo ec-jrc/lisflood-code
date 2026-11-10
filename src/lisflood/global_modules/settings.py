@@ -876,9 +876,10 @@ class LisfloodRunInfo(Warning):
         from .parallelization import get_effective_parallelism
         _par = get_effective_parallelism()
         if _par is not None:
-            msg += "\t[X] Parallelization: numba={}, numexpr={}, BLAS={}, soilInit={}, numbaLayer={} (host cores={})\n".format(
+            msg += "\t[X] Parallelization: numba={}, numexpr={}, BLAS={}, soilInit={}, earthkit={}, numbaLayer={} (host cores={})\n".format(
                 _par.get('numba'), _par.get('numexpr'),
                 _par.get('blas'), _par.get('soilinit'),
+                _par.get('earthkit'),
                 _par.get('numba_threading_layer'), _par.get('host'))
         # Routing precision (opt-in float32; default float64 == bit-identical).
         try:

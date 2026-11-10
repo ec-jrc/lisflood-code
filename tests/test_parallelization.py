@@ -144,6 +144,64 @@ class TestEffectiveThreadCounts:
 
         assert workers == 6
 
+class TestEarthkitThreads:
+    """resolve_earthkit_threads + the RAYON_NUM_THREADS env-var application in
+    configure_parallelism. The earthkit accumulation pool (rayon, native) must
+    be capped by 'numCPUs_earthkit' so it stops oversubscribing against the
+    routing kernel. Default is 1; 0/"all"/"auto"/absent means uncapped (None).
+    This is a scheduling-only knob; it does not change any numerical result."""
+
+    def test_default_is_single_threaded(self):
+        assert par.resolve_earthkit_threads({}) == 1
+
+    def test_absent_binding_is_single_threaded(self):
+        assert par.resolve_earthkit_threads(None) == 1
+
+    def test_explicit_positive_value_caps(self):
+        assert par.resolve_earthkit_threads({"numCPUs_earthkit": "4"}) == 4
+
+    def test_zero_means_uncapped(self):
+        assert par.resolve_earthkit_threads({"numCPUs_earthkit": "0"}) is None
+
+    def test_all_means_uncapped(self):
+        assert par.resolve_earthkit_threads({"numCPUs_earthkit": "all"}) is None
+
+    def test_auto_is_single_threaded(self):
+        assert par.resolve_earthkit_threads({"numCPUs_earthkit": "auto"}) == 1
+
+    def test_configure_default_sets_rayon_to_one(self, monkeypatch):
+        monkeypatch.setattr(par, "_host_cpu_count", lambda: 16)
+        monkeypatch.delenv("RAYON_NUM_THREADS", raising=False)
+        eff = par.configure_parallelism({}, num_pixels=100)
+        assert eff["earthkit"] == 1
+        assert os.environ["RAYON_NUM_THREADS"] == "1"
+
+    def test_configure_explicit_value_is_reflected_and_applied(self, monkeypatch):
+        monkeypatch.setattr(par, "_host_cpu_count", lambda: 16)
+        monkeypatch.delenv("RAYON_NUM_THREADS", raising=False)
+        eff = par.configure_parallelism(
+            {"numCPUs_earthkit": "4"}, num_pixels=100)
+        assert eff["earthkit"] == 4
+        assert os.environ["RAYON_NUM_THREADS"] == "4"
+
+    def test_configure_caps_request_to_host(self, monkeypatch):
+        monkeypatch.setattr(par, "_host_cpu_count", lambda: 8)
+        monkeypatch.delenv("RAYON_NUM_THREADS", raising=False)
+        eff = par.configure_parallelism(
+            {"numCPUs_earthkit": "32"}, num_pixels=100)
+        assert eff["earthkit"] == 8
+        assert os.environ["RAYON_NUM_THREADS"] == "8"
+
+    def test_configure_uncapped_leaves_env_untouched(self, monkeypatch):
+        # 0/"all" => uncapped: do not overwrite an operator-set RAYON value.
+        monkeypatch.setattr(par, "_host_cpu_count", lambda: 16)
+        monkeypatch.setenv("RAYON_NUM_THREADS", "7")
+        eff = par.configure_parallelism(
+            {"numCPUs_earthkit": "0"}, num_pixels=100)
+        assert eff["earthkit"] is None
+        assert os.environ["RAYON_NUM_THREADS"] == "7"
+
+
 class TestNumbaAutoTune:
     """resolve_numba_threads: the core decision the performance change adds.
     Explicit setting wins; otherwise auto-tune on domain size."""
