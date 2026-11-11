@@ -63,6 +63,94 @@ PACK_MIN = PACK_FILL + 1                          # -32766
 PACK_MAX = np.iinfo(np.int16).max                 #  32767
 
 # ------------------------------------------------------------------------
+# Logarithmic int16 packing for discharge (OutputPackingDischarge)
+# ------------------------------------------------------------------------
+# Discharge spans several orders of magnitude on a global domain, so the
+# linear CF scale/offset packing used for the other variables would lose too
+# much precision. Instead we pack log10(discharge) linearly into int16, which
+# gives (near) constant RELATIVE precision across the whole range.
+#
+# This is a NON-CF encoding: readers cannot auto-decode it via the standard
+# scale_factor/add_offset attributes. Instead, the writer tags the variable
+# with explicit custom attributes (see LOG_PACK_ATTRS below) describing the
+# transform so a decoder can invert it:
+#
+#     stored = round((log10(q) - LOG_PACK_MIN) / LOG_PACK_SCALE) + PACK_MIN
+#     q      = 10 ** (LOG_PACK_MIN + LOG_PACK_SCALE * (stored - PACK_MIN))
+#
+# Discharge values below LOG_PACK_QMIN (0.01 m3/s) -- including zero and
+# negatives -- carry no useful information at this precision and are stored as
+# _FillValue (read back as masked). Values above LOG_PACK_QMAX are clipped.
+LOG_PACK_QMIN = 0.01        # m3/s, smallest resolved discharge
+LOG_PACK_QMAX = 500000.0    # m3/s, largest resolved discharge
+LOG_PACK_MIN = np.log10(LOG_PACK_QMIN)   # -2.0
+LOG_PACK_MAX = np.log10(LOG_PACK_QMAX)   # ~5.69897
+# Map [LOG_PACK_MIN, LOG_PACK_MAX] onto the usable int16 range
+# [PACK_MIN, PACK_MAX] (PACK_FILL is reserved as _FillValue).
+LOG_PACK_SCALE = (LOG_PACK_MAX - LOG_PACK_MIN) / float(PACK_MAX - PACK_MIN)
+
+# Custom attributes written on a log-packed discharge variable so downstream
+# tooling can invert the transform. These are NOT CF scale_factor/add_offset.
+LOG_PACK_ATTRS = {
+    'packing': 'log10',
+    'packing_log_min': np.float64(LOG_PACK_MIN),
+    'packing_log_scale': np.float64(LOG_PACK_SCALE),
+    'packing_int_offset': np.float64(PACK_MIN),
+    'packing_valid_min': np.float64(LOG_PACK_QMIN),
+    'packing_valid_max': np.float64(LOG_PACK_QMAX),
+}
+
+
+def pack_discharge_log(values):
+    """Pack a discharge array (float, physical m3/s) into int16 log space.
+
+    Parameters
+    ----------
+    values : numpy.ndarray
+        Discharge values in m3/s. May contain NaN / fill (-9999) / non-positive
+        entries; all of those are stored as PACK_FILL.
+
+    Returns
+    -------
+    numpy.ndarray (int16)
+        Log-packed discharge, same shape as `values`.
+    """
+    q = np.asarray(values, dtype=np.float64)
+    # Resolvable cells: finite and >= the minimum resolved discharge. Zero,
+    # negative, NaN, and the -9999 sentinel all fall out here and become fill.
+    resolved = np.isfinite(q) & (q >= LOG_PACK_QMIN)
+
+    packed = np.full(q.shape, PACK_FILL, dtype=np.int16)
+    if resolved.any():
+        qr = np.clip(q[resolved], LOG_PACK_QMIN, LOG_PACK_QMAX)
+        idx = np.round((np.log10(qr) - LOG_PACK_MIN) / LOG_PACK_SCALE) + PACK_MIN
+        idx = np.clip(idx, PACK_MIN, PACK_MAX)
+        packed[resolved] = idx.astype(np.int16)
+    return packed
+
+
+def unpack_discharge_log(packed):
+    """Invert :func:`pack_discharge_log`.
+
+    Parameters
+    ----------
+    packed : numpy.ndarray (int16)
+        Log-packed discharge as produced by `pack_discharge_log`.
+
+    Returns
+    -------
+    numpy.ndarray (float64)
+        Discharge in m3/s. Fill cells are returned as NaN.
+    """
+    stored = np.asarray(packed)
+    out = np.full(stored.shape, np.nan, dtype=np.float64)
+    valid = stored != PACK_FILL
+    if valid.any():
+        exponent = LOG_PACK_MIN + LOG_PACK_SCALE * (stored[valid].astype(np.float64) - PACK_MIN)
+        out[valid] = np.power(10.0, exponent)
+    return out
+
+# ------------------------------------------------------------------------
 # Writer classes
 # ------------------------------------------------------------------------
 class Writer():
@@ -161,6 +249,9 @@ class NetcdfStepsWriter(NetcdfWriter):
         self.end_step = end_step
         self.step_range = []
         self.data_steps = []
+        # Set True by MapOutputAggregated for SUM aggregates to suppress the
+        # logarithmic discharge packing (sums can exceed the calibrated range).
+        self.log_pack_disabled = False
 
         super().__init__(var, map_key, map_value, map_path, frequency)
 
@@ -216,11 +307,28 @@ class NetcdfStepsWriter(NetcdfWriter):
                 is_packed = packing_enabled and raw_scale is not None and raw_offset is not None
                 packed_scale = np.float64(raw_scale) if is_packed else None
                 packed_offset = np.float64(raw_offset) if is_packed else None
+                # Logarithmic discharge packing is a COMPLETELY separate opt-in
+                # (OutputPackingDischarge), independent of OutputPacking above.
+                # It only applies to the DischargeMaps output and uses the
+                # custom log10 int16 encoding (pack_discharge_log), never the
+                # linear CF scale/offset path. This predicate MUST stay in sync
+                # with write_netcdf_header's `is_log_packed`.
+                is_log_packed = (self.settings.binding.get('OutputPackingDischarge', 'False') == 'True'
+                                 and self.map_key == 'DischargeMaps'
+                                 and not self.log_pack_disabled)
                 maskinfo = MaskInfo.instance()
 
                 prepared_steps = []
                 for step, data in zip(self.step_range, self.data_steps):
-                    if is_packed:
+                    if is_log_packed:
+                        # Pack BEFORE uncompressing (same rationale as the
+                        # linear path): operate on the staged compressed
+                        # in-domain vector so masking can never hide NaN.
+                        map_in = np.ma.getdata(data).astype(np.float64)
+                        packed_in = pack_discharge_log(map_in)
+                        packed = np.full(maskinfo.info.shape, PACK_FILL, dtype=np.int16)
+                        packed.reshape(-1)[~maskinfo.info.maskflat] = packed_in
+                    elif is_packed:
                         # Pack BEFORE uncompressing: operate on the staged
                         # compressed in-domain vector (np.ma.getdata = the
                         # positional raw buffer, as a plain ndarray) so np.ma
@@ -272,7 +380,8 @@ class NetcdfStepsWriter(NetcdfWriter):
                     if self.step_range[0] == 0:
                         nf1 = write_netcdf_header(self.settings, self.map_name, self.map_path, self.var.DtDay,
                                                 self.map_key, self.map_value.output_var, self.map_value.unit,
-                                                start_date, rep_steps, self.frequency, map_value=self.map_value)
+                                                start_date, rep_steps, self.frequency, map_value=self.map_value,
+                                                log_packed=is_log_packed)
                     else:
                         nf1 = iterOpenNetcdf(self.map_path, "", 'a', format='NETCDF4')
 
@@ -529,7 +638,16 @@ class MapOutputAggregated(MapOutput):
             map_value_no_pack = map_value
 
         super().__init__(var, out_type, frequency, map_key, map_value_no_pack)
-        
+
+        # Same reasoning for the independent logarithmic discharge packing: a
+        # monthly/yearly SUM of discharge can exceed the calibrated log range
+        # (max 500000 m3/s), so disable log packing for sum aggregates. Mean
+        # aggregates stay in the daily value range and keep log packing. The
+        # linear _replace() trick above cannot express this (log packing does
+        # not use scale_factor/add_offset), so flag it on the writer directly.
+        if operation == 'sum' and hasattr(self, 'writer'):
+            self.writer.log_pack_disabled = True
+
         # Force immediate write for aggregated outputs (one slice per period)
         if hasattr(self, 'writer') and hasattr(self.writer, 'chunks'):
             self.writer.chunks = 1

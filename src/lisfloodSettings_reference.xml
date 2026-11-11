@@ -234,6 +234,26 @@ You can use builtin path variables in this template and reference to other paths
     </comment>
     </textvar>
 
+    <textvar name="OutputPackingDischarge" value="False">
+    <comment>
+    The option "OutputPackingDischarge" enables LOGARITHMIC int16 packing of the
+    DischargeMaps output only. It is COMPLETELY INDEPENDENT of "OutputPacking":
+    discharge is excluded from the linear scale/offset packing because its global
+    value range spans several orders of magnitude, which a linear int16 encoding
+    cannot represent without unacceptable precision loss.
+        - "False" (default): discharge written as raw floating-point values
+        - "True": pack discharge into signed 16-bit integers in log10 space,
+                  giving near-constant RELATIVE precision across the full range.
+    Encoding (custom, NON-CF attributes written on the variable):
+        stored = round((log10(q) - packing_log_min) / packing_log_scale) + packing_int_offset
+        q      = 10 ** (packing_log_min + packing_log_scale * (stored - packing_int_offset))
+    Resolved range: 0.01 to 500000 m3/s. Discharge below 0.01 m3/s (and zero,
+    negative or missing values) is stored as _FillValue; values above 500000 are
+    clipped. Because this encoding is non-CF, standard readers will NOT auto-unpack
+    it: use the packing_* attributes to invert the transform.
+    </comment>
+    </textvar>
+
         <comment>
             **************************************************************
             PARALLELISATION WITH NUMBA (USED IN ROUTING AND SOILLOOP)
@@ -1985,6 +2005,7 @@ You can use builtin path variables in this template and reference to other paths
       <textvar name="OutputMapsChunks" value="$(OutputMapsChunks)"/>
       <textvar name="OutputMapsDataType" value="$(OutputMapsDataType)"/>
       <textvar name="OutputPacking" value="$(OutputPacking)"/>
+      <textvar name="OutputPackingDischarge" value="$(OutputPackingDischarge)"/>
       <textvar name="NetCDFTimeChunks" value="$(NetCDFTimeChunks)"/>
       <textvar name="MapsCaching" value="$(MapsCaching)"/>
 
