@@ -764,13 +764,27 @@ class OutputMapsFactory():
         }
         aggregated_vars = set()  # track which vars are aggregated
 
+        # Match aggregation-list entries against ReportedMap.name, which is the
+        # identifier used everywhere else in the output system: the per-step/all
+        # outputs are keyed and path-resolved by rm.name (see
+        # settings._reported_maps), and the output settings textvars are named
+        # after rm.name too. The reportedmaps DICT KEY is only an internal dict
+        # handle and for a few entries differs from rm.name (e.g. key
+        # 'SeepSubToGWforestMaps' vs name 'SeepSubToGWForestMaps'). Matching the
+        # user's list against the dict key (as before) meant that for those
+        # entries no spelling worked: the dict-key spelling passed the lookup but
+        # then failed path resolution (aggregate dropped, per-step file kept at
+        # full resolution), while the rm.name spelling failed the lookup outright.
+        # Keying by rm.name makes the aggregate resolve to the right file AND
+        # match the surviving per-step output in the cleanup below.
         reportedmaps = settings.options['reportedmaps']
+        maps_by_name = {rm.name: rm for rm in reportedmaps.values()}
         for setting_key, (frequency, operation) in aggregation_configs.items():
             var_list = binding.get(setting_key, '').split(';')
             for var_name in var_list:
                 var_name = var_name.strip()
-                if var_name and var_name in reportedmaps:
-                    map_value = reportedmaps[var_name]
+                if var_name and var_name in maps_by_name:
+                    map_value = maps_by_name[var_name]
                     out = MapOutputAggregated(var, var_name, map_value, frequency, operation)
                     if out.is_valid():
                         outputs.append(out)
