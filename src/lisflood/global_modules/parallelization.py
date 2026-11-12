@@ -41,13 +41,29 @@ domains.
 Settings (all optional; read via ``binding.get`` so older settings files keep
 working):
 
-  * ``numCPUs_parallelNumba``   - existing setting; numba thread count.
-                                   0 or "" => all cores; N => N threads.
-  * ``numCPUs_parallelNumexpr`` - numexpr thread count. Default: "auto"
-                                  (domain-size-aware: serial on small domains,
-                                   all cores on large/global domains).
+  * ``numCPUs_parallelNumba``   - existing setting; land-phase numba thread
+                                   count. absent/"auto" => auto policy (all
+                                   cores on large domains, serial below
+                                   NUMBA_AUTO_MIN_PIXELS); "all"/0 => all cores;
+                                   N => N threads.
+  * ``numCPUs_routingNumba``    - routing-substep numba thread cap. absent/
+                                  "auto" => clamp(round(host/2), 8, 16);
+                                  "all"/0 => all cores (no cap); N => N threads.
+                                  Applied only around the routing substep loop
+                                  (small per-substep payload collapses above a
+                                  modest OpenMP worker count) and restored to
+                                  the land-phase count afterwards; never raises
+                                  the pool above the land count.
+  * ``numCPUs_parallelNumexpr`` - numexpr thread count. absent/"auto" => 1
+                                  (flat serial default on all domain sizes;
+                                  small per-call arrays, nested pools would only
+                                  oversubscribe against the numba pool);
+                                  "all"/0 => all cores; N => N threads.
   * ``numCPUs_BLAS``            - BLAS/OpenMP thread count for numpy/scipy.
-                                  Default: "auto" (domain-size-aware, as above).
+                                  absent/"auto" => 1 (flat serial default on all
+                                  domain sizes; the only BLAS consumer is the
+                                  cold soil-init scalar least_squares, idle in
+                                  the dynamic loop); "all"/0 => all cores; N => N.
   * ``numCPUs_soilInit``        - soilInit thread count for soil initialization.
                                   Default: 0 (all cores).
   * ``numCPUs_earthkit``        - thread count for the earthkit-hydro upstream-
@@ -60,8 +76,13 @@ working):
                                   path builds this pool. Default: 1 (capped);
                                   0/"all"/"auto"/absent => uncapped (all cores).
 A value of 0 (or empty/"all") means "use all available cores". For numexpr/BLAS,
-"auto" (or an absent setting) picks all cores only when the domain is large
-(>= NUMBA_AUTO_MIN_PIXELS valid pixels), else serial.
+"auto" (or an absent setting) is a flat serial default (1) on all domain sizes.
+
+OMP_WAIT_POLICY is NOT set by this module. It is an energy lever (it trades idle
+OpenMP worker spin for sleep at roughly equal wall time), not a speed lever, so
+the default runtime behaviour is left untouched. An operator who wants to cut
+CPU-hours at equal wall can export ``OMP_WAIT_POLICY=passive`` in the job
+environment before launching LISFLOOD.
 """
 
 import os
@@ -240,9 +261,48 @@ def get_effective_parallelism():
     """Return the last-applied effective thread counts, or None if parallelism
     has not been configured yet.
 
-    The dict is keyed 'numba', 'numexpr', 'blas', 'soilinit', 'earthkit'; Also includes 'host' (host core count).
+    The dict is keyed 'numba', 'routing_numba', 'numexpr', 'blas', 'soilinit',
+    'earthkit', 'numba_threading_layer', and 'host' (host core count). 'numba'
+    is the concrete land-phase numba count (the restore target after the routing
+    cap); 'routing_numba' is the applied routing-substep cap (an int), or None
+    when the routing pool is left at all cores.
     """
     return _effective
+
+
+def get_routing_numba_threads():
+    """Return the applied routing-substep numba cap (an int), or None when the
+    routing pool is left uncapped (explicit all/0) or parallelism has not been
+    configured. The routing substep window uses this as the capped count."""
+    if _effective is None:
+        return None
+    return _effective.get("routing_numba")
+
+
+def get_land_numba_threads():
+    """Return the concrete land-phase numba count published at startup, i.e. the
+    count the routing-substep window restores to on exit. None when parallelism
+    has not been configured or numba thread control is unavailable."""
+    if _effective is None:
+        return None
+    return _effective.get("numba")
+
+
+def set_numba_threads(n):
+    """Thin, guarded wrapper over ``numba.set_num_threads``.
+
+    Applies ``n`` only when numba thread control is available and
+    ``0 < n <= NUMBA_NUM_THREADS`` (the same guard the startup path uses). A
+    no-op when numba is unavailable or ``n`` is None/out of range, so the
+    routing-substep window never raises a new failure mode. Thread count affects
+    scheduling only, never results.
+    """
+    if not _HAVE_NUMBA_THREADCTL:
+        return
+    if n is None:
+        return
+    if 0 < n <= _numba_config.NUMBA_NUM_THREADS:
+        _numba_set_num_threads(n)
 
 
 def _parse_thread_count(value):
@@ -375,23 +435,80 @@ def resolve_numba_threads(binding, num_pixels=None):
     return None
 
 
+# Routing-kernel numba cap bounds. The per-substep routing kernels have a small
+# payload (one topological traversal of the river network per substep), so
+# beyond a modest OpenMP worker count the fork/join cost dominates and wall time
+# grows. The auto policy therefore caps the numba pool around the routing
+# substep loop to clamp(round(host/2), 8, 16): half the host cores, but never
+# fewer than 8 nor more than 16.
+ROUTING_NUMBA_MIN_THREADS = 8
+ROUTING_NUMBA_MAX_THREADS = 16
+
+
+def _routing_numba_auto(host):
+    """Auto policy value: clamp(round(host/2), MIN, MAX)."""
+    if host is None:
+        host = _host_cpu_count()
+    k = int(round(host / 2))
+    return min(max(k, ROUTING_NUMBA_MIN_THREADS), ROUTING_NUMBA_MAX_THREADS)
+
+
+def resolve_routing_numba_threads(binding, host=None):
+    """Decide the routing-kernel numba thread count (unified semantics).
+
+    Controlled by the optional ``numCPUs_routingNumba`` setting:
+
+      * absent / "" / "auto"  -> the auto policy
+        ``clamp(round(host/2), ROUTING_NUMBA_MIN_THREADS,
+        ROUTING_NUMBA_MAX_THREADS)`` (half the host cores, floored at 8, capped
+        at 16). ``round`` is Python banker's rounding, but the documented
+        anchors (host 16->8, 28->14, 56->16, 112->16) are all even so the
+        half-case never arises.
+      * "all" / "0"           -> None, meaning "all cores" (no routing-specific
+        cap; the land-phase numba count is left to stand).
+      * a positive integer N  -> that fixed count.
+      * a malformed token     -> the auto policy (fail safe).
+
+    ``host`` defaults to :func:`_host_cpu_count` when not supplied. Thread count
+    affects scheduling only, never results. Returns an int >= 1 (the auto clamp
+    result or an explicit N), or None meaning "all cores".
+    """
+    raw = binding.get("numCPUs_routingNumba") if binding is not None else None
+    if isinstance(raw, str):
+        raw = raw.strip().lower()
+
+    if raw in (None, "", "auto"):
+        return _routing_numba_auto(host)
+
+    # "all" / "0" -> all cores (None); positive int N -> N.
+    if raw in ("all", "0", 0):
+        return None
+    parsed = _parse_thread_count(raw)
+    if parsed is None:
+        # Unparseable token (e.g. "abc"): fail safe to the auto policy.
+        return _routing_numba_auto(host)
+    return parsed
+
+
 def resolve_pool_threads(binding, key, num_pixels=None):
     """Decide the thread count for a shared library pool (numexpr / BLAS).
 
-    These pools help on large domains (big routing/linear-algebra arrays) but
-    cause oversubscription on small catchments, where their per-call arrays are
-    tiny and they merely fight numba/BLAS for cores. So the behaviour is:
+    These pools work on per-call arrays that are small relative to the whole
+    domain, and they coexist with (and nest inside) the numba routing pool. A
+    full-core numexpr/BLAS pool therefore oversubscribes the node against the
+    numba OpenMP threads rather than adding useful throughput. The behaviour
+    is:
 
     * If the user set a concrete number, honor it verbatim (e.g. ``1``, written
       by calibration templates to force a single-core instance; ``0``/``"all"``
       => unconditionally all cores regardless of domain size).
-    * If the setting is **absent** or set to ``"auto"``, choose a domain-size-
-      aware default, mirroring the numba auto-tune: all cores for large domains
-      (``num_pixels >= NUMBA_AUTO_MIN_PIXELS``), serial (1) otherwise. This is
-      the recommended mode: small catchments avoid oversubscription, global
-      runs get the multi-core throughput they benefit from.
-    * If the domain size is unknown (and the mode is auto), stay conservative
-      and return 1 (serial) to avoid a surprise oversubscription.
+    * If the setting is **absent** or set to ``"auto"``, the default is a flat
+      ``1`` (serial) on ALL domain sizes. The per-call arrays are small and the
+      nested pools would merely contend with the numba routing pool for cores;
+      a single-threaded pool is the measured best on both small catchments and
+      large/global domains. ``num_pixels`` is accepted for signature
+      compatibility (the land-numba resolver still uses
+      ``NUMBA_AUTO_MIN_PIXELS``) but no longer influences this default.
 
     Returns an int >= 1, or None meaning "all available cores".
     """
@@ -404,10 +521,8 @@ def resolve_pool_threads(binding, key, num_pixels=None):
         # Explicit concrete number / "all" / "0": honor verbatim.
         return _parse_thread_count(raw)
 
-    # auto (absent or "auto") -> domain-size-aware default
-    if num_pixels is not None and num_pixels >= NUMBA_AUTO_MIN_PIXELS:
-        return None   # large domain: all cores
-    return 1          # small/unknown domain: serial
+    # auto (absent or "auto") -> flat serial default on all domain sizes.
+    return 1
 
 
 def resolve_soilinit_workers(binding, real_cpu_count):
@@ -517,8 +632,12 @@ def configure_parallelism(binding, num_pixels=None):
     Returns
     -------
     dict
-        The effective thread counts, keyed 'numba', 'numexpr', 'blas', 'soilinit'
-        (None means "all cores").
+        The effective thread counts, keyed 'numba', 'routing_numba', 'numexpr',
+        'blas', 'soilinit', 'earthkit', 'numba_threading_layer', and 'host'.
+        'numba' is the concrete land-phase count (the routing cap's restore
+        target); 'routing_numba' is the applied routing-substep cap (an int), or
+        None when the routing pool is left at all cores. For the thread-count
+        keys, None means "all cores".
     """
     global _blas_limiter, _effective
 
@@ -552,10 +671,10 @@ def configure_parallelism(binding, num_pixels=None):
     else:
         effective_numba = None            # Numba not available
 
-    # numexpr and BLAS: when the user does not set them, choose a domain-size-
-    # aware default (serial on small catchments to avoid oversubscription; all
-    # cores on large/global domains where the parallel pools pay off — measured
-    # on the global run, where numexpr=BLAS=1 is slightly slower than all-cores).
+    # numexpr and BLAS: when the user does not set them, the default is a flat
+    # serial 1 on all domain sizes. Their per-call arrays are small and the
+    # pools nest inside (and contend with) the numba routing pool, so a
+    # full-core pool only oversubscribes the node rather than adding throughput.
     # An explicit value in the settings is always honored verbatim.
     numexpr_threads = resolve_pool_threads(binding, "numCPUs_parallelNumexpr", num_pixels)
     blas_threads = resolve_pool_threads(binding, "numCPUs_BLAS", num_pixels)
@@ -630,8 +749,28 @@ def configure_parallelism(binding, num_pixels=None):
         # NUMBA_THREADING_LAYER above).
         effective_earthkit = None
 
+    # --- routing-substep numba cap ---
+    # The routing substep loop applies a lower numba count than the land phase
+    # (small per-substep payload collapses above a modest OpenMP worker count)
+    # and restores the land count afterwards. The land-phase numba count is the
+    # restore target (effective_numba). INVARIANT: the routing cap never RAISES
+    # the numba pool above the land count -- the apply-time min() clamps it to
+    # the land count (so on a small domain where the land policy chose serial,
+    # the window is a no-op), to the host core count, and to numba's hard limit.
+    raw_routing = resolve_routing_numba_threads(binding, host)
+    if raw_routing is None:
+        routing_applied = None            # explicit all/0: no cap; land stands
+    else:
+        bounds = [raw_routing, host]
+        if effective_numba is not None:
+            bounds.append(effective_numba)
+        if _HAVE_NUMBA_THREADCTL:
+            bounds.append(_numba_config.NUMBA_NUM_THREADS)
+        routing_applied = min(bounds)
+
     effective = {
-        "numba": effective_numba,       
+        "numba": effective_numba,
+        "routing_numba": routing_applied,
         "numexpr": effective_numexpr,
         "blas": effective_blas,
         "soilinit": soilinit_workers,

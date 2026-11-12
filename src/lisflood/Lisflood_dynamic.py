@@ -183,9 +183,29 @@ class LisfloodModel_dyn(DynamicModel):
             self.delta_avg_total    = maskinfo.in_zero()
             self.delta_outlet_total = maskinfo.in_zero()
         # sums up discharge of the sub steps
-        for NoRoutingExecuted in range(self.NoRoutSteps):
-            self.routing_module.dynamic(NoRoutingExecuted)
-            #   routing sub steps
+        # The routing substep kernels have a small per-substep payload (one
+        # topological traversal of the river network each), so beyond a modest
+        # OpenMP worker count the fork/join cost dominates. The governor caps
+        # the numba pool to a routing-specific count once around this loop and
+        # restores the land-phase count afterwards (try/finally => restored on
+        # every exit path, including an exception inside a routing substep). The
+        # land-phase kernels (soil loop, water abstraction, surface routing) all
+        # run before this loop and are therefore outside the capped window.
+        # Scheduling-only: the routing result is identical across thread counts.
+        from lisflood.global_modules.parallelization import (
+            get_routing_numba_threads, get_land_numba_threads, set_numba_threads,
+        )
+        _routing_k = get_routing_numba_threads()
+        _land_k = get_land_numba_threads()
+        if _routing_k is not None:
+            set_numba_threads(_routing_k)
+        try:
+            for NoRoutingExecuted in range(self.NoRoutSteps):
+                self.routing_module.dynamic(NoRoutingExecuted)
+                #   routing sub steps
+        finally:
+            if _routing_k is not None:
+                set_numba_threads(_land_k)
  
         # ----------------------------------------------------------------------
 

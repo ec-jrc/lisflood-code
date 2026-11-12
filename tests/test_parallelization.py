@@ -247,13 +247,15 @@ class TestAllCoresSentinel:
         assert par._parse_thread_count(value) == expected
 
 class TestPoolThreadsAutoDefault:
-    """resolve_pool_threads (numexpr / BLAS): domain-size-aware default when the
-    setting is absent or "auto"; explicit values always honored verbatim.
+    """resolve_pool_threads (numexpr / BLAS): flat serial (1) default on all
+    domain sizes when the setting is absent or "auto"; explicit values always
+    honored verbatim.
 
-    Measured basis: numexpr=BLAS=1 is right on small catchments (tiny routing
-    arrays, oversubscription) but slightly SLOWER than all-cores on the global
-    domain. So the default must flip with domain size, mirroring the numba
-    auto-tune threshold, while staying overridable (calibration forces "1")."""
+    Measured basis: the numexpr/BLAS per-call arrays are small and the pools
+    nest inside (and contend with) the numba routing pool, so a full-core pool
+    only oversubscribes the node. A single-threaded default is best on both
+    small catchments and large/global domains, while staying overridable
+    (calibration forces "1"; "0"/"all" forces all cores)."""
 
     SMALL = par.NUMBA_AUTO_MIN_PIXELS - 1
     LARGE = par.NUMBA_AUTO_MIN_PIXELS
@@ -275,37 +277,35 @@ class TestPoolThreadsAutoDefault:
         assert par.resolve_pool_threads(
             {"numCPUs_BLAS": "all"}, "numCPUs_BLAS", num_pixels=self.SMALL) is None
 
-    def test_auto_token_is_domain_size_aware(self):
+    def test_auto_token_is_flat_one(self):
+        # flat serial default: "auto" -> 1 on BOTH small and large domains
         assert par.resolve_pool_threads(
             {"numCPUs_BLAS": "auto"}, "numCPUs_BLAS", num_pixels=self.SMALL) == 1
         assert par.resolve_pool_threads(
-            {"numCPUs_BLAS": "auto"}, "numCPUs_BLAS", num_pixels=self.LARGE) is None
+            {"numCPUs_BLAS": "auto"}, "numCPUs_BLAS", num_pixels=self.LARGE) == 1
 
-    def test_missing_setting_is_domain_size_aware(self):
-        # old settings files without the key: serial small, all-cores large
+    def test_missing_setting_is_flat_one(self):
+        # old settings files without the key: serial on all domain sizes
         assert par.resolve_pool_threads({}, "numCPUs_BLAS",
                                         num_pixels=self.SMALL) == 1
         assert par.resolve_pool_threads({}, "numCPUs_BLAS",
-                                        num_pixels=self.LARGE) is None
+                                        num_pixels=self.LARGE) == 1
 
     def test_unknown_domain_size_stays_serial(self):
-        # Unlike numba (which keeps all-cores when size unknown), the numexpr/
-        # BLAS auto default is conservative: serial, to avoid oversubscription.
+        # The numexpr/BLAS auto default is a flat serial 1 regardless of size.
         assert par.resolve_pool_threads({}, "numCPUs_BLAS", num_pixels=None) == 1
         assert par.resolve_pool_threads(
             {"numCPUs_BLAS": "auto"}, "numCPUs_BLAS", num_pixels=None) == 1
 
-    def test_configure_parallelism_large_domain_uses_all_cores(self, monkeypatch):
+    def test_configure_parallelism_large_domain_stays_serial(self, monkeypatch):
         monkeypatch.setattr(par, "_host_cpu_count", lambda: 16)
         # Keep numexpr's hard ceiling above the host so it does not clamp below.
         monkeypatch.setenv("NUMEXPR_MAX_THREADS", "64")
-        # no numexpr/BLAS keys -> auto; large domain -> all cores (= host)
+        # no numexpr/BLAS keys -> auto; flat-1 default even on a large domain
         eff = par.configure_parallelism({}, num_pixels=par.NUMBA_AUTO_MIN_PIXELS)
-        assert eff["blas"] == eff["host"]        # all cores
+        assert eff["blas"] == 1
         if par._HAVE_NUMEXPR:
-            # numexpr is also capped by its own MAX_THREADS; it should request
-            # all host cores (bounded by that ceiling, which we raised to 64).
-            assert eff["numexpr"] == min(eff["host"], 64)
+            assert eff["numexpr"] == 1
 
     def test_configure_parallelism_small_domain_stays_serial(self, monkeypatch):
         monkeypatch.setattr(par, "_host_cpu_count", lambda: 16)
@@ -313,3 +313,107 @@ class TestPoolThreadsAutoDefault:
         assert eff["blas"] == 1
         if par._HAVE_NUMEXPR:
             assert eff["numexpr"] == 1
+
+
+class TestRoutingNumbaResolver:
+    """resolve_routing_numba_threads: the new routing-substep cap policy.
+    auto/absent -> clamp(round(host/2), 8, 16); all/0 -> None (all cores);
+    N -> N; malformed -> auto policy. Scheduling-only; never changes results."""
+
+    @pytest.mark.parametrize(
+        "host,expected",
+        [(16, 8), (28, 14), (56, 16), (112, 16)],
+    )
+    def test_auto_token_is_clamped_half_host(self, host, expected):
+        assert par.resolve_routing_numba_threads(
+            {"numCPUs_routingNumba": "auto"}, host=host) == expected
+        # absent key resolves to the same auto policy
+        assert par.resolve_routing_numba_threads({}, host=host) == expected
+
+    def test_small_host_hits_clamp_floor(self):
+        # host 4 -> round(2) = 2 -> floored to 8 by the resolver. The host-level
+        # cap (never exceed host) is applied at apply time in
+        # configure_parallelism, asserted in TestRoutingNumbaConfigure.
+        assert par.resolve_routing_numba_threads(
+            {"numCPUs_routingNumba": "auto"}, host=4) == 8
+
+    def test_malformed_token_falls_back_to_auto(self):
+        assert par.resolve_routing_numba_threads(
+            {"numCPUs_routingNumba": "abc"}, host=28) == 14
+
+
+class TestRoutingNumbaConfigure:
+    """configure_parallelism: apply-time clamp and publication of the routing
+    cap, plus the get_routing_numba_threads / get_land_numba_threads accessors.
+    The applied cap is min(raw, NUMBA_NUM_THREADS, host, land_count) so it never
+    raises the pool above the land-phase count."""
+
+    def _patch_host(self, monkeypatch, value):
+        monkeypatch.setattr(par, "_host_cpu_count", lambda: value)
+
+    def _expected_applied(self, raw, host, land):
+        bounds = [raw, host]
+        if land is not None:
+            bounds.append(land)
+        if par._HAVE_NUMBA_THREADCTL:
+            bounds.append(par._numba_config.NUMBA_NUM_THREADS)
+        return min(bounds)
+
+    @pytest.mark.parametrize("host,raw", [(16, 8), (28, 14), (56, 16)])
+    def test_large_domain_applies_clamped_cap(self, monkeypatch, host, raw):
+        self._patch_host(monkeypatch, host)
+        # large domain -> land numba is all cores (effective_numba == host when
+        # numba is available; None otherwise).
+        eff = par.configure_parallelism({}, num_pixels=par.NUMBA_AUTO_MIN_PIXELS)
+        land = eff["numba"]
+        assert eff["routing_numba"] == self._expected_applied(raw, host, land)
+        # accessors echo the published values
+        assert par.get_routing_numba_threads() == eff["routing_numba"]
+        assert par.get_land_numba_threads() == eff["numba"]
+
+    def test_all_token_leaves_pool_uncapped(self, monkeypatch):
+        self._patch_host(monkeypatch, 56)
+        eff = par.configure_parallelism(
+            {"numCPUs_routingNumba": "all"}, num_pixels=par.NUMBA_AUTO_MIN_PIXELS)
+        assert eff["routing_numba"] is None
+        assert par.get_routing_numba_threads() is None
+
+    def test_explicit_integer_is_applied(self, monkeypatch):
+        self._patch_host(monkeypatch, 56)
+        eff = par.configure_parallelism(
+            {"numCPUs_routingNumba": "5"}, num_pixels=par.NUMBA_AUTO_MIN_PIXELS)
+        land = eff["numba"]
+        assert eff["routing_numba"] == self._expected_applied(5, 56, land)
+
+    def test_small_domain_cap_is_noop(self, monkeypatch):
+        # Small domain: the land policy chooses serial (1) when numba thread
+        # control is available, so the routing cap clamps to 1 (a no-op window).
+        self._patch_host(monkeypatch, 56)
+        eff = par.configure_parallelism({}, num_pixels=100)
+        if par._HAVE_NUMBA_THREADCTL:
+            assert eff["numba"] == 1
+            assert eff["routing_numba"] == 1
+        else:
+            # numba unavailable: land count is None, cap clamped to host/limit.
+            assert eff["routing_numba"] == min(16, 56)
+
+
+class TestSetNumbaThreadsGuard:
+    """Proves the land count is restored after the routing-substep window
+    closes (the cap is scoped, not global) — the behavioural invariant the
+    try/finally in Lisflood_dynamic relies on."""
+
+    def test_land_count_restored_after_routing_window(self):
+        # Simulate the scoped window: land -> routing_k -> land, and assert the
+        # numba-reported count returns to the land count (the cap is scoped).
+        if not par._HAVE_NUMBA_THREADCTL:
+            pytest.skip("numba thread control unavailable")
+        hard = par._numba_config.NUMBA_NUM_THREADS
+        land = min(2, hard)
+        routing_k = 1
+        par.set_numba_threads(land)
+        assert par._numba_get_num_threads() == land
+        par.set_numba_threads(routing_k)
+        assert par._numba_get_num_threads() == routing_k
+        par.set_numba_threads(land)   # restore (the finally branch)
+        assert par._numba_get_num_threads() == land
