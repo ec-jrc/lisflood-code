@@ -248,42 +248,46 @@ You can use builtin path variables in this template and reference to other paths
                               (if NUMBA_NUM_THREADS is not set, will take the number of CPU cores determined by python's multiprocessing.cpu_count())
             - "1"           : serial execution (not parallel)
             - "2", "3", ... : manual setting of the number of parallel threads.
-                              (if exceeding NUMBA_NUM_THREADS, the value is set to NUMBA_NUM_THREADS) -->
+                              (if exceeding NUMBA_NUM_THREADS, the value is set to NUMBA_NUM_THREADS)
+        Value legend (shared by every numCPUs_* setting): absent or "auto" => the
+        automatic policy (the default); "all" or "0" => all available cores;
+        a positive integer => that fixed count. This key governs the LAND-PHASE
+        Numba kernels (soil/vegetation loop, water abstraction, surface routing);
+        its "auto" default is domain-size-aware (serial on small catchments where
+        thread fork/join dominates, all cores on large/global domains). -->
 		</comment>
 		</textvar>
 
-		<textvar name="numCPUs_parallelNumexpr" value="auto">
+		<textvar name="numCPUs_routingNumba" value="auto">
 		<comment>
-        !-- Number of threads used by the numexpr library (vectorized math in
-        the kinematic-wave routing). Small routing arrays on typical catchments
-        gain nothing from the pool and cause oversubscription, whereas on large/
-        global domains all-cores is measurably faster. Values:
-            - "auto"              : domain-size-aware default (recommended):
-                                    serial on small domains, all cores on large
-                                    ones (threshold = numba auto-tune pixels)
-            - "1"                 : force serial
-            - "0" / "all"         : force all available cores
-            - "2", "3", ...       : manual thread count
-        Set this to "1" when an outer tool already runs many LISFLOOD instances
-        in parallel (e.g. lisflood-calibration, one LISFLOOD per DEAP individual)
-        so each instance stays single-core and avoids oversubscription. -->
+        !-- Number of Numba threads used specifically for the channel-routing
+        SUBSTEP kernels (kinematic-wave / Muskingum-Cunge), which run many times
+        per model step. Each substep kernel has a small per-call payload, so
+        beyond a modest thread count the OpenMP fork/join cost dominates and more
+        threads make routing slower. This is capped INDEPENDENTLY of the
+        land-phase pool (numCPUs_parallelNumba), which keeps using all cores.
+        Values:
+            - "auto" (default)    : host-relative cap -- about half the cores,
+                                    clamped to the 8..16 band, and never above
+                                    the land-phase count
+            - "all" / "0"         : all available cores (no routing-specific cap)
+            - "1", "2", ...       : manual thread count for the routing kernels
+        Scheduling only: the routing result is identical for any thread count. -->
 		</comment>
 		</textvar>
 
 		<textvar name="numCPUs_BLAS" value="auto">
 		<comment>
-        !-- Number of threads used by the BLAS/OpenMP backend of numpy/scipy
-        (e.g. the SVD in the soil-hydraulics least-squares fit during
-        initialization). Values:
-            - "auto"              : domain-size-aware default (recommended):
-                                    serial on small domains, all cores on large
-                                    ones (threshold = numba auto-tune pixels)
-            - "1"                 : force serial
-            - "0" / "all"         : force all available cores
-            - "2", "3", ...       : manual thread count
-        Set this to "1" when an outer tool already runs many LISFLOOD instances
-        in parallel (e.g. lisflood-calibration) so each instance stays
-        single-core and avoids oversubscription. -->
+        !-- Number of threads used by the BLAS/OpenMP backend of numpy/scipy.
+        In LISFLOOD, BLAS is used only by the cold-start soil-hydraulics
+        least-squares solve (a scalar per-pixel fit with no matrix algebra) and
+        is idle during the dynamic loop, so extra BLAS threads do not speed the
+        model up; they only oversubscribe against the soil-init process pool.
+        Values (shared legend): absent or "auto" => the automatic policy default,
+        which is a single thread (1); "all" or "0" => all available cores;
+        a positive integer => that fixed count.
+        Leave at "auto" (=1); set a higher value only if a specific BLAS-bound
+        step is known to benefit. -->
 		</comment>
 		</textvar>
 
@@ -292,7 +296,7 @@ You can use builtin path variables in this template and reference to other paths
         !-- Number of worker PROCESSES used for the cold-start soil-layer-2
         saturation solve (a per-pixel scipy least-squares that can dominate
         initialization time on large/global domains). This is process-based
-        parallelism, independent of the numba/numexpr/BLAS thread pools; results
+        parallelism, independent of the numba/BLAS thread pools; results
         are identical regardless of the value. Values:
             - "0" / "all" / "auto": use all available cores (default)
             - "1"                 : serial
@@ -1971,7 +1975,7 @@ You can use builtin path variables in this template and reference to other paths
       -->
       <group>
       <textvar name="numCPUs_parallelNumba" value="$(numCPUs_parallelNumba)"/>
-      <textvar name="numCPUs_parallelNumexpr" value="$(numCPUs_parallelNumexpr)"/>
+      <textvar name="numCPUs_routingNumba" value="$(numCPUs_routingNumba)"/>
       <textvar name="numCPUs_BLAS" value="$(numCPUs_BLAS)"/>
       <textvar name="numCPUs_soilInit" value="$(numCPUs_soilInit)"/>
       <textvar name="modelPrecision" value="$(modelPrecision)"/>

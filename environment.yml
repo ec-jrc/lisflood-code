@@ -291,7 +291,6 @@ dependencies:
       - networkx==3.6.1
       - nine==1.2.0
       - numba==0.65.1
-      - numexpr==2.14.1
       - numpngw==0.1.4
       - numpy==2.2.6
       - odclib==1.6.3.19

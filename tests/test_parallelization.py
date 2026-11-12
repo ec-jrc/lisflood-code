@@ -42,13 +42,9 @@ class TestEffectiveThreadCounts:
         # 1. deterministic host size – 8 logical CPUs
         self._patch_host(monkeypatch, 8)
 
-        # 2. make sure NumExpr does not hit its default 64‑thread ceiling
-        monkeypatch.setenv("NUMEXPR_MAX_THREADS", "32")
-
-        # 3. binding with explicit values for every pool
+        # 2. binding with explicit values for every pool
         binding = {
             "numCPUs_parallelNumba":   "4",
-            "numCPUs_parallelNumexpr": "3",
             "numCPUs_BLAS":            "2",
             "numCPUs_soilInit":        "5",
         }
@@ -68,9 +64,6 @@ class TestEffectiveThreadCounts:
             assert 1 <= eff["numba"] <= 4
         else:
             assert eff["numba"] is None
-
-        # ---- numexpr -----------------------------------------------
-        assert eff["numexpr"] == 3   # explicit value, already bounded by host=8
 
         # ---- BLAS --------------------------------------------------
         assert eff["blas"] == 2      # exact value we asked for
@@ -247,12 +240,12 @@ class TestAllCoresSentinel:
         assert par._parse_thread_count(value) == expected
 
 class TestPoolThreadsAutoDefault:
-    """resolve_pool_threads (numexpr / BLAS): flat serial (1) default on all
+    """resolve_pool_threads (BLAS): flat serial (1) default on all
     domain sizes when the setting is absent or "auto"; explicit values always
     honored verbatim.
 
-    Measured basis: the numexpr/BLAS per-call arrays are small and the pools
-    nest inside (and contend with) the numba routing pool, so a full-core pool
+    Measured basis: the BLAS per-call arrays are small and the pool
+    nests inside (and contends with) the numba routing pool, so a full-core pool
     only oversubscribes the node. A single-threaded default is best on both
     small catchments and large/global domains, while staying overridable
     (calibration forces "1"; "0"/"all" forces all cores)."""
@@ -268,7 +261,7 @@ class TestPoolThreadsAutoDefault:
     def test_explicit_one_forces_serial_even_on_large_domain(self):
         # the calibration escape hatch: force single-core on a big domain
         assert par.resolve_pool_threads(
-            {"numCPUs_parallelNumexpr": "1"}, "numCPUs_parallelNumexpr",
+            {"numCPUs_BLAS": "1"}, "numCPUs_BLAS",
             num_pixels=10_000_000) == 1
 
     def test_explicit_zero_forces_all_cores_even_on_small_domain(self):
@@ -292,27 +285,21 @@ class TestPoolThreadsAutoDefault:
                                         num_pixels=self.LARGE) == 1
 
     def test_unknown_domain_size_stays_serial(self):
-        # The numexpr/BLAS auto default is a flat serial 1 regardless of size.
+        # The BLAS auto default is a flat serial 1 regardless of size.
         assert par.resolve_pool_threads({}, "numCPUs_BLAS", num_pixels=None) == 1
         assert par.resolve_pool_threads(
             {"numCPUs_BLAS": "auto"}, "numCPUs_BLAS", num_pixels=None) == 1
 
     def test_configure_parallelism_large_domain_stays_serial(self, monkeypatch):
         monkeypatch.setattr(par, "_host_cpu_count", lambda: 16)
-        # Keep numexpr's hard ceiling above the host so it does not clamp below.
-        monkeypatch.setenv("NUMEXPR_MAX_THREADS", "64")
-        # no numexpr/BLAS keys -> auto; flat-1 default even on a large domain
+        # no BLAS key -> auto; flat-1 default even on a large domain
         eff = par.configure_parallelism({}, num_pixels=par.NUMBA_AUTO_MIN_PIXELS)
         assert eff["blas"] == 1
-        if par._HAVE_NUMEXPR:
-            assert eff["numexpr"] == 1
 
     def test_configure_parallelism_small_domain_stays_serial(self, monkeypatch):
         monkeypatch.setattr(par, "_host_cpu_count", lambda: 16)
         eff = par.configure_parallelism({}, num_pixels=100)
         assert eff["blas"] == 1
-        if par._HAVE_NUMEXPR:
-            assert eff["numexpr"] == 1
 
 
 class TestRoutingNumbaResolver:

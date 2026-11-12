@@ -5,7 +5,6 @@ Several numerical libraries used by LISFLOOD each spin up their own thread
 pool sized to the host core count by default:
 
   * ``numba``   - the ``@njit(parallel=True)`` routing/soil kernels (``prange``).
-  * ``numexpr`` - vectorized expressions in the kinematic-wave routing.
   * BLAS/OpenMP - backing ``numpy``/``scipy`` linear algebra (e.g. the SVD in
     the soil-hydraulics ``least_squares`` fit during initialization).
 
@@ -28,8 +27,8 @@ time than wall time on a benchmark catchment, while actually running *slower*
 than a single-threaded execution.
 
 This module reads a small set of settings and applies consistent, explicit
-thread limits to all three pools: numba (``set_num_threads``), numexpr and the
-BLAS/OpenMP backend. It is the single place that governs thread counts;
+thread limits to both pools: numba (``set_num_threads``) and the BLAS/OpenMP
+backend. It is the single place that governs thread counts;
 ``Lisflood_initial`` simply calls :func:`configure_parallelism` once at startup.
 
 Thread counts affect performance only, never results: LISFLOOD discharge output
@@ -54,11 +53,6 @@ working):
                                   modest OpenMP worker count) and restored to
                                   the land-phase count afterwards; never raises
                                   the pool above the land count.
-  * ``numCPUs_parallelNumexpr`` - numexpr thread count. absent/"auto" => 1
-                                  (flat serial default on all domain sizes;
-                                  small per-call arrays, nested pools would only
-                                  oversubscribe against the numba pool);
-                                  "all"/0 => all cores; N => N threads.
   * ``numCPUs_BLAS``            - BLAS/OpenMP thread count for numpy/scipy.
                                   absent/"auto" => 1 (flat serial default on all
                                   domain sizes; the only BLAS consumer is the
@@ -75,7 +69,7 @@ working):
                                   kernel). Only the opt-in earthkit reporting
                                   path builds this pool. Default: 1 (capped);
                                   0/"all"/"auto"/absent => uncapped (all cores).
-A value of 0 (or empty/"all") means "use all available cores". For numexpr/BLAS,
+A value of 0 (or empty/"all") means "use all available cores". For BLAS,
 "auto" (or an absent setting) is a flat serial default (1) on all domain sizes.
 
 OMP_WAIT_POLICY is NOT set by this module. It is an energy lever (it trades idle
@@ -97,12 +91,6 @@ try:
     _HAVE_THREADPOOLCTL = True
 except ImportError:  # pragma: no cover - environment dependent
     _HAVE_THREADPOOLCTL = False
-
-try:
-    import numexpr
-    _HAVE_NUMEXPR = True
-except ImportError:  # pragma: no cover - numexpr is a hard dep but be defensive
-    _HAVE_NUMEXPR = False
 
 try:
     from numba import set_num_threads as _numba_set_num_threads
@@ -261,7 +249,7 @@ def get_effective_parallelism():
     """Return the last-applied effective thread counts, or None if parallelism
     has not been configured yet.
 
-    The dict is keyed 'numba', 'routing_numba', 'numexpr', 'blas', 'soilinit',
+    The dict is keyed 'numba', 'routing_numba', 'blas', 'soilinit',
     'earthkit', 'numba_threading_layer', and 'host' (host core count). 'numba'
     is the concrete land-phase numba count (the restore target after the routing
     cap); 'routing_numba' is the applied routing-substep cap (an int), or None
@@ -491,11 +479,11 @@ def resolve_routing_numba_threads(binding, host=None):
 
 
 def resolve_pool_threads(binding, key, num_pixels=None):
-    """Decide the thread count for a shared library pool (numexpr / BLAS).
+    """Decide the thread count for a shared library pool (BLAS).
 
-    These pools work on per-call arrays that are small relative to the whole
-    domain, and they coexist with (and nest inside) the numba routing pool. A
-    full-core numexpr/BLAS pool therefore oversubscribes the node against the
+    This pool works on per-call arrays that are small relative to the whole
+    domain, and it coexists with (and nests inside) the numba routing pool. A
+    full-core BLAS pool therefore oversubscribes the node against the
     numba OpenMP threads rather than adding useful throughput. The behaviour
     is:
 
@@ -530,7 +518,7 @@ def resolve_soilinit_workers(binding, real_cpu_count):
 
     Controlled by the dedicated 'numCPUs_soilInit' setting (process-based
     parallelism for the per-pixel scipy least_squares solve; unrelated to the
-    numba/numexpr/BLAS thread pools). Values: a positive integer, or
+    numba/BLAS thread pools). Values: a positive integer, or
     0 / "all" / "auto" for all available cores. Defaults to 0 (all cores) when
     unset; the solve is bit-identical regardless of the worker count.
     """
@@ -616,7 +604,7 @@ def resolve_routing_dtype(binding):
 
 
 def configure_parallelism(binding, num_pixels=None):
-    """Apply thread-pool limits for numba, numexpr and BLAS/OpenMP.
+    """Apply thread-pool limits for numba and BLAS/OpenMP.
 
     numba's thread count is decided here (including the small-domain auto-tune)
     and applied via ``numba.set_num_threads``; it governs the soilloop and the
@@ -632,7 +620,7 @@ def configure_parallelism(binding, num_pixels=None):
     Returns
     -------
     dict
-        The effective thread counts, keyed 'numba', 'routing_numba', 'numexpr',
+        The effective thread counts, keyed 'numba', 'routing_numba',
         'blas', 'soilinit', 'earthkit', 'numba_threading_layer', and 'host'.
         'numba' is the concrete land-phase count (the routing cap's restore
         target); 'routing_numba' is the applied routing-substep cap (an int), or
@@ -671,43 +659,14 @@ def configure_parallelism(binding, num_pixels=None):
     else:
         effective_numba = None            # Numba not available
 
-    # numexpr and BLAS: when the user does not set them, the default is a flat
-    # serial 1 on all domain sizes. Their per-call arrays are small and the
-    # pools nest inside (and contend with) the numba routing pool, so a
-    # full-core pool only oversubscribes the node rather than adding throughput.
-    # An explicit value in the settings is always honored verbatim.
-    numexpr_threads = resolve_pool_threads(binding, "numCPUs_parallelNumexpr", num_pixels)
+    # BLAS: when the user does not set it, the default is a flat serial 1 on
+    # all domain sizes. The per-call arrays are small and the pool nests inside
+    # (and contends with) the numba routing pool, so a full-core pool only
+    # oversubscribes the node rather than adding throughput. An explicit value
+    # in the settings is always honored verbatim.
     blas_threads = resolve_pool_threads(binding, "numCPUs_BLAS", num_pixels)
 
     host = _host_cpu_count()
-
-    # --- numexpr ---
-    if _HAVE_NUMEXPR:
-        # Desired number of threads from the settings (None → “all cores”)
-        target = numexpr_threads if numexpr_threads is not None else host
-
-        # Hard limit imposed by NumExpr (defaults to 64 when the variable
-        # is not defined).
-        try:
-            max_threads = int(os.getenv("NUMEXPR_MAX_THREADS"))
-        except (TypeError, ValueError):
-            max_threads = 64
-
-        # Ensure a sensible value: ≥1, ≤ host cores and ≤ NumExpr limit.
-        target = max(1, min(target, host, max_threads))
-
-        # Apply and keep the environment variable in sync for any child
-        # processes that might import numexpr later.
-        try:
-            numexpr.set_num_threads(target)
-            os.environ["NUMEXPR_NUM_THREADS"] = str(target)
-        except Exception:  # pragma: no cover - defensive
-            pass
-
-        # *** store the *effective* value that was really set ***
-        effective_numexpr = target
-    else:
-        effective_numexpr = None
 
     # --- BLAS / OpenMP (numpy, scipy) ---
     if blas_threads is not None:
@@ -771,7 +730,6 @@ def configure_parallelism(binding, num_pixels=None):
     effective = {
         "numba": effective_numba,
         "routing_numba": routing_applied,
-        "numexpr": effective_numexpr,
         "blas": effective_blas,
         "soilinit": soilinit_workers,
         "earthkit": effective_earthkit,

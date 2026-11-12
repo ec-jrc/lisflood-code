@@ -18,7 +18,6 @@ from __future__ import absolute_import, print_function
 from nine import range
 
 import numpy as np
-import numexpr as nx
 from numba import njit, prange, vectorize
 from builtins import min, max
 # from . import HydroModule
@@ -590,8 +589,8 @@ class soilloop(HydroModule):
         # ***********************************************************************************************************************
         # ***** POTENTIAL INTERCEPTION EVAPORATION ******************************************************************************
         # ***********************************************************************************************************************
-        one_minus_LAITerm = nx.evaluate('1. - LAITerm', local_dict={'LAITerm': self.var.LAITerm.sel(vegetation=self.var.prescribed_vegetation).values})
-        TaInterceptionMax = nx.evaluate('EWRef * one_minus_LAITerm', global_dict={'EWRef': self.var.EWRef[None]})
+        one_minus_LAITerm = 1. - self.var.LAITerm.sel(vegetation=self.var.prescribed_vegetation).values
+        TaInterceptionMax = self.var.EWRef[None] * one_minus_LAITerm
         ## SG if self.settings.option.get('cropsEPIC'):
         if option['cropsEPIC']:
             TaInterceptionMax = np.vstack((TaInterceptionMax, self.var.crop_module.potential_interception_evaporation.values))
@@ -608,8 +607,7 @@ class soilloop(HydroModule):
         # ***********************************************************************************************************************
         # ***** POTENTIAL PLANT TRANSPIRATION ***********************************************************************************
         # ***********************************************************************************************************************
-        gl_dict = {'CropCoef': self.var.CropCoef[self.index_landuse_prescr], 'ETRef': self.var.ETRef[None]}
-        TranspirMax = nx.evaluate('CropCoef * ETRef * one_minus_LAITerm', global_dict=gl_dict)
+        TranspirMax = self.var.CropCoef[self.index_landuse_prescr] * self.var.ETRef[None] * one_minus_LAITerm
         if option['cropsEPIC']:
             TranspirMax = np.vstack((TranspirMax, self.var.crop_module.potential_crop_ET.values))
         # maximum transpiration rate ([mm] per timestep)
@@ -683,7 +681,7 @@ class soilloop(HydroModule):
         """ Dynamic part of the soil/vegetation loop describing soil processes (after canopy ones have been processed):
             """
         # Maximum evaporation from a shaded soil surface in [mm] per time step
-        ESMax = nx.evaluate('ESRef * LAITerm', local_dict={'ESRef': self.var.ESRef[None], 'LAITerm': self.var.LAITerm.sel(vegetation=self.var.prescribed_vegetation).values})
+        ESMax = self.var.ESRef[None] * self.var.LAITerm.sel(vegetation=self.var.prescribed_vegetation).values
         ### SG if self.settings.option.get('cropsEPIC'):
         if option['cropsEPIC']:
             ESMax = np.vstack((ESMax, self.var.crop_module.potential_undercanopy_evaporation.values))

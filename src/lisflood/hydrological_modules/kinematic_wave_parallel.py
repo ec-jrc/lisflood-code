@@ -36,7 +36,6 @@ from platform import system
 
 import numpy as np
 import pandas as pd
-import numexpr as nx
 
 from ..global_modules.errors import LisfloodWarning
 
@@ -189,7 +188,7 @@ class kinematicWave:
         place (narrow boundary: everything outside the kernel stays float64).
         """
         # Lateral inflow (m3 s-1)
-        lateral_inflow = nx.evaluate("q * dx", local_dict={"q": specific_lateral_inflow, "dx": self.space_delta})
+        lateral_inflow = specific_lateral_inflow * self.space_delta
         # Choose between main channel and floodplain routing
         if section == "main_channel":
             a_dx_div_dt = self.a_dx_div_dt_channel
@@ -207,8 +206,7 @@ class kinematicWave:
             # Newton tolerance is now passed explicitly (== the former module
             # constant NEWTON_TOL = 1e-12), so results are identical.
             # Constant term in f(x) evaluation for Newton-Raphson method
-            local_dict = {"a_dx_div_dt": a_dx_div_dt, "Qold": discharge, "b": self.beta, "lateral_inflow": lateral_inflow}
-            constant = nx.evaluate("a_dx_div_dt * Qold ** b + lateral_inflow", local_dict=local_dict)
+            constant = a_dx_div_dt * discharge ** self.beta + lateral_inflow
             # Solve the Kinematic wave equation
             kwpt.kinematicRouting(discharge_avg, discharge, lateral_inflow, constant, self.upstream_lookup,\
                                   self.num_upstream_pixels, self.pixels_ordered, self.order_start_stop,\
@@ -218,17 +216,17 @@ class kinematicWave:
             # --- float32 narrow-boundary path (opt-in) ---
             dt = self.routing_dtype
             # float32 copies of the dynamic arrays; the kernel mutates these in place.
-            disch32 = discharge.astype(dt)
-            disch_avg32 = discharge_avg.astype(dt)
-            lat32 = lateral_inflow.astype(dt)
-            # Constants coherent in dtype so numexpr/numba do not upcast to float64.
+            discharge32 = discharge.astype(dt)
+            discharge_avg32 = discharge_avg.astype(dt)
+            lateral_inflow32 = lateral_inflow.astype(dt)
+            # Constants coherent in dtype so numba does not upcast to float64.
             a_dx_div_dt32 = a_dx_div_dt.astype(dt)
             b_a_dx_div_dt32 = b_a_dx_div_dt.astype(dt)
             a_dx32 = a_dx.astype(dt)
             # Constant term in f(x) evaluation for Newton-Raphson method
-            constant = (a_dx_div_dt32 * disch32 ** dt.type(self.beta) + lat32).astype(dt)
+            constant = (a_dx_div_dt32 * discharge32 ** dt.type(self.beta) + lateral_inflow32).astype(dt)
             # Solve the Kinematic wave equation
-            kwpt.kinematicRouting(disch_avg32, disch32, lat32, constant, self.upstream_lookup,\
+            kwpt.kinematicRouting(discharge_avg32, discharge32, lateral_inflow32, constant, self.upstream_lookup,\
                                   self.num_upstream_pixels, self.pixels_ordered, self.order_start_stop,\
                                   dt.type(self.inv_time_delta), dt.type(self.beta), dt.type(self.inv_beta),\
                                   dt.type(self.b_minus_1), a_dx_div_dt32, b_a_dx_div_dt32, a_dx32,\
@@ -236,8 +234,8 @@ class kinematicWave:
             # Cast results back into the caller's float64 arrays in place, so the rest
             # of routing.dynamic (storage recompute, MCT, mass balance, coupling) sees
             # float64 exactly as before.
-            discharge[:] = disch32
-            discharge_avg[:] = disch_avg32
+            discharge[:] = discharge32
+            discharge_avg[:] = discharge_avg32
 
         # NaN/Inf check runs for BOTH precision paths (the float64 path previously
         # ran it unconditionally; keep that behaviour).
