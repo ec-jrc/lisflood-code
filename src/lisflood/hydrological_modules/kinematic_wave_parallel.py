@@ -187,7 +187,10 @@ class kinematicWave:
         back into the caller's float64 ``discharge``/``discharge_avg`` arrays in
         place (narrow boundary: everything outside the kernel stays float64).
         """
-        # Lateral inflow (m3 s-1)
+        # Lateral inflow (m3 s-1). space_delta may be a per-pixel array or a
+        # scalar cell size, so this broadcast multiply stays on the host; only the
+        # heavier Newton constant term (with the ** beta power) is folded into the
+        # kernel's parallel loop below.
         lateral_inflow = specific_lateral_inflow * self.space_delta
         # Choose between main channel and floodplain routing
         if section == "main_channel":
@@ -202,13 +205,14 @@ class kinematicWave:
             raise Exception("The section parameter must be either 'main_channel' or 'floodplain'!")
 
         if self.routing_dtype == np.float64:
-            # Historical path - unchanged (bit-identical). Only addition: the
-            # Newton tolerance is now passed explicitly (== the former module
-            # constant NEWTON_TOL = 1e-12), so results are identical.
-            # Constant term in f(x) evaluation for Newton-Raphson method
-            constant = a_dx_div_dt * discharge ** self.beta + lateral_inflow
+            # Historical path - bit-identical. The Newton tolerance is passed
+            # explicitly (== the former module constant NEWTON_TOL = 1e-12). The
+            # Newton f(x) constant term is now derived inside the kernel's parallel
+            # loop (from a_dx_div_dt, discharge and lateral_inflow), so it runs on
+            # the governed routing pool; the per-pixel arithmetic and operator
+            # order are unchanged, keeping the result identical.
             # Solve the Kinematic wave equation
-            kwpt.kinematicRouting(discharge_avg, discharge, lateral_inflow, constant, self.upstream_lookup,\
+            kwpt.kinematicRouting(discharge_avg, discharge, lateral_inflow, self.upstream_lookup,\
                                   self.num_upstream_pixels, self.pixels_ordered, self.order_start_stop,\
                                   self.inv_time_delta, self.beta, self.inv_beta, self.b_minus_1,\
                                   a_dx_div_dt, b_a_dx_div_dt, a_dx, kwpt.NEWTON_TOL)
@@ -223,10 +227,10 @@ class kinematicWave:
             a_dx_div_dt32 = a_dx_div_dt.astype(dt)
             b_a_dx_div_dt32 = b_a_dx_div_dt.astype(dt)
             a_dx32 = a_dx.astype(dt)
-            # Constant term in f(x) evaluation for Newton-Raphson method
-            constant = (a_dx_div_dt32 * discharge32 ** dt.type(self.beta) + lateral_inflow32).astype(dt)
-            # Solve the Kinematic wave equation
-            kwpt.kinematicRouting(discharge_avg32, discharge32, lateral_inflow32, constant, self.upstream_lookup,\
+            # Solve the Kinematic wave equation. The Newton constant term is folded
+            # into the kernel; passing float32 a_dx_div_dt32/discharge32 keeps the
+            # ** beta power in float32, matching the former float32 precompute.
+            kwpt.kinematicRouting(discharge_avg32, discharge32, lateral_inflow32, self.upstream_lookup,\
                                   self.num_upstream_pixels, self.pixels_ordered, self.order_start_stop,\
                                   dt.type(self.inv_time_delta), dt.type(self.beta), dt.type(self.inv_beta),\
                                   dt.type(self.b_minus_1), a_dx_div_dt32, b_a_dx_div_dt32, a_dx32,\
