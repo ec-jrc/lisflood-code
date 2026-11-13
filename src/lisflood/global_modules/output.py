@@ -27,7 +27,7 @@ from .netcdf import write_netcdf_header, iterOpenNetcdf, nanCheckMap, uncompress
 from .netcdf import hdf5_lock as _hdf5_lock
 from .errors import LisfloodFileError, LisfloodWarning
 from .settings import inttodate, CDFFlags, LisSettings, MaskInfo
-from netCDF4 import default_fillvals
+from netCDF4 import default_fillvals, date2num
 
 # ------------------------------------------------------------------------
 # Optional earthkit-hydro acceleration of the PCRaster reductions
@@ -59,8 +59,101 @@ except ImportError:  # pragma: no cover - earthkit-hydro not installed
 # Packing constants for int16 CF scale/offset encoding
 # ------------------------------------------------------------------------
 PACK_FILL = np.int16(default_fillvals['i2'])      # -32767
-PACK_MIN = PACK_FILL + 1                          # -32766
-PACK_MAX = np.iinfo(np.int16).max                 #  32767
+# Keep PACK_MIN / PACK_MAX as plain Python ints: arithmetic between np.int16
+# scalars silently overflows under numpy 2.x NEP 50 semantics (e.g.
+# PACK_MAX - PACK_MIN wraps to -3), which would corrupt derived quantities such
+# as LOG_PACK_SCALE below. Python ints are unbounded, so the span is exact, and
+# they still broadcast/clip correctly against int16 arrays.
+PACK_MIN = int(PACK_FILL) + 1                     # -32766
+PACK_MAX = int(np.iinfo(np.int16).max)            #  32767
+
+# ------------------------------------------------------------------------
+# Logarithmic int16 packing for discharge (OutputPackingDischarge)
+# ------------------------------------------------------------------------
+# Discharge spans several orders of magnitude on a global domain, so the
+# linear CF scale/offset packing used for the other variables would lose too
+# much precision. Instead we pack log10(discharge) linearly into int16, which
+# gives (near) constant RELATIVE precision across the whole range.
+#
+# This is a NON-CF encoding: readers cannot auto-decode it via the standard
+# scale_factor/add_offset attributes. Instead, the writer tags the variable
+# with explicit custom attributes (see LOG_PACK_ATTRS below) describing the
+# transform so a decoder can invert it:
+#
+#     stored = round((log10(q) - LOG_PACK_MIN) / LOG_PACK_SCALE) + PACK_MIN
+#     q      = 10 ** (LOG_PACK_MIN + LOG_PACK_SCALE * (stored - PACK_MIN))
+#
+# Discharge values below LOG_PACK_QMIN (0.01 m3/s) -- including zero and
+# negatives -- carry no useful information at this precision and are stored as
+# _FillValue (read back as masked). Values above LOG_PACK_QMAX are clipped.
+LOG_PACK_QMIN = 0.01        # m3/s, smallest resolved discharge
+LOG_PACK_QMAX = 500000.0    # m3/s, largest resolved discharge
+LOG_PACK_MIN = np.log10(LOG_PACK_QMIN)   # -2.0
+LOG_PACK_MAX = np.log10(LOG_PACK_QMAX)   # ~5.69897
+# Map [LOG_PACK_MIN, LOG_PACK_MAX] onto the usable int16 range
+# [PACK_MIN, PACK_MAX] (PACK_FILL is reserved as _FillValue).
+LOG_PACK_SCALE = (LOG_PACK_MAX - LOG_PACK_MIN) / float(PACK_MAX - PACK_MIN)
+
+# Custom attributes written on a log-packed discharge variable so downstream
+# tooling can invert the transform. These are NOT CF scale_factor/add_offset.
+LOG_PACK_ATTRS = {
+    'packing': 'log10',
+    'packing_log_min': np.float64(LOG_PACK_MIN),
+    'packing_log_scale': np.float64(LOG_PACK_SCALE),
+    'packing_int_offset': np.float64(PACK_MIN),
+    'packing_valid_min': np.float64(LOG_PACK_QMIN),
+    'packing_valid_max': np.float64(LOG_PACK_QMAX),
+}
+
+
+def pack_discharge_log(values):
+    """Pack a discharge array (float, physical m3/s) into int16 log space.
+
+    Parameters
+    ----------
+    values : numpy.ndarray
+        Discharge values in m3/s. May contain NaN / fill (-9999) / non-positive
+        entries; all of those are stored as PACK_FILL.
+
+    Returns
+    -------
+    numpy.ndarray (int16)
+        Log-packed discharge, same shape as `values`.
+    """
+    q = np.asarray(values, dtype=np.float64)
+    # Resolvable cells: finite and >= the minimum resolved discharge. Zero,
+    # negative, NaN, and the -9999 sentinel all fall out here and become fill.
+    resolved = np.isfinite(q) & (q >= LOG_PACK_QMIN)
+
+    packed = np.full(q.shape, PACK_FILL, dtype=np.int16)
+    if resolved.any():
+        qr = np.clip(q[resolved], LOG_PACK_QMIN, LOG_PACK_QMAX)
+        idx = np.round((np.log10(qr) - LOG_PACK_MIN) / LOG_PACK_SCALE) + PACK_MIN
+        idx = np.clip(idx, PACK_MIN, PACK_MAX)
+        packed[resolved] = idx.astype(np.int16)
+    return packed
+
+
+def unpack_discharge_log(packed):
+    """Invert :func:`pack_discharge_log`.
+
+    Parameters
+    ----------
+    packed : numpy.ndarray (int16)
+        Log-packed discharge as produced by `pack_discharge_log`.
+
+    Returns
+    -------
+    numpy.ndarray (float64)
+        Discharge in m3/s. Fill cells are returned as NaN.
+    """
+    stored = np.asarray(packed)
+    out = np.full(stored.shape, np.nan, dtype=np.float64)
+    valid = stored != PACK_FILL
+    if valid.any():
+        exponent = LOG_PACK_MIN + LOG_PACK_SCALE * (stored[valid].astype(np.float64) - PACK_MIN)
+        out[valid] = np.power(10.0, exponent)
+    return out
 
 # ------------------------------------------------------------------------
 # Writer classes
@@ -161,6 +254,16 @@ class NetcdfStepsWriter(NetcdfWriter):
         self.end_step = end_step
         self.step_range = []
         self.data_steps = []
+        # Per-slice time coordinates for temporal AGGREGATES only. Left empty for
+        # every-step ('all') outputs, whose time axis is fixed and pre-written by
+        # write_netcdf_header. MapOutputAggregated appends one stamp per flushed
+        # period here so the writer can grow the (unlimited) time axis in lock-
+        # step with the data slices - guaranteeing #time-coords == #data-slices.
+        self.time_stamps = []
+        # Set True by MapOutputAggregated for monthly/yearly SUM aggregates to
+        # suppress the logarithmic discharge packing (those sums can exceed the
+        # calibrated range). Daily sums and mean aggregates leave it False.
+        self.log_pack_disabled = False
 
         super().__init__(var, map_key, map_value, map_path, frequency)
 
@@ -216,11 +319,28 @@ class NetcdfStepsWriter(NetcdfWriter):
                 is_packed = packing_enabled and raw_scale is not None and raw_offset is not None
                 packed_scale = np.float64(raw_scale) if is_packed else None
                 packed_offset = np.float64(raw_offset) if is_packed else None
+                # Logarithmic discharge packing is a COMPLETELY separate opt-in
+                # (OutputPackingDischarge), independent of OutputPacking above.
+                # It only applies to the DischargeMaps output and uses the
+                # custom log10 int16 encoding (pack_discharge_log), never the
+                # linear CF scale/offset path. This predicate MUST stay in sync
+                # with write_netcdf_header's `is_log_packed`.
+                is_log_packed = (self.settings.binding.get('OutputPackingDischarge', 'False') == 'True'
+                                 and self.map_key == 'DischargeMaps'
+                                 and not self.log_pack_disabled)
                 maskinfo = MaskInfo.instance()
 
                 prepared_steps = []
                 for step, data in zip(self.step_range, self.data_steps):
-                    if is_packed:
+                    if is_log_packed:
+                        # Pack BEFORE uncompressing (same rationale as the
+                        # linear path): operate on the staged compressed
+                        # in-domain vector so masking can never hide NaN.
+                        map_in = np.ma.getdata(data).astype(np.float64)
+                        packed_in = pack_discharge_log(map_in)
+                        packed = np.full(maskinfo.info.shape, PACK_FILL, dtype=np.int16)
+                        packed.reshape(-1)[~maskinfo.info.maskflat] = packed_in
+                    elif is_packed:
                         # Pack BEFORE uncompressing: operate on the staged
                         # compressed in-domain vector (np.ma.getdata = the
                         # positional raw buffer, as a plain ndarray) so np.ma
@@ -272,7 +392,8 @@ class NetcdfStepsWriter(NetcdfWriter):
                     if self.step_range[0] == 0:
                         nf1 = write_netcdf_header(self.settings, self.map_name, self.map_path, self.var.DtDay,
                                                 self.map_key, self.map_value.output_var, self.map_value.unit,
-                                                start_date, rep_steps, self.frequency, map_value=self.map_value)
+                                                start_date, rep_steps, self.frequency, map_value=self.map_value,
+                                                log_packed=is_log_packed)
                     else:
                         nf1 = iterOpenNetcdf(self.map_path, "", 'a', format='NETCDF4')
 
@@ -282,10 +403,25 @@ class NetcdfStepsWriter(NetcdfWriter):
                     for step, packed in prepared_steps:
                         nc_var[step, :, :] = packed
 
+                    # Temporal aggregates grow an UNLIMITED time axis: write each
+                    # flushed slice's own time coordinate so the number of time
+                    # coords always equals the number of data slices (no fixed
+                    # pre-sized axis to overflow). Non-aggregated writers leave
+                    # time_stamps empty and skip this - their axis is pre-written
+                    # by write_netcdf_header. Kept INSIDE the HDF5 lock because
+                    # assigning past the current extent grows the unlimited
+                    # dimension, an HDF5 state change that must not race with the
+                    # threaded writers / forcing readers.
+                    if self.time_stamps:
+                        nc_time = nf1.variables['time']
+                        for step, stamp in zip(self.step_range, self.time_stamps):
+                            nc_time[step] = date2num(stamp, nc_time.units, nc_time.calendar)
+
                     nf1.close()
 
                 self.step_range.clear()
                 self.data_steps.clear()
+                self.time_stamps.clear()
             else:
                 raise Exception('You need to stage data before writing!')
 
@@ -520,16 +656,30 @@ class MapOutputAggregated(MapOutput):
         self._accum_count = 0
         self._write_step = 0  # own step counter for NetCDF time dimension
 
-        # Disable int16 packing for sum aggregates — monthly/yearly sums can exceed
-        # the int16 range calibrated for daily values. Mean aggregates stay within
-        # the same value range as daily output, so packing remains valid.
-        if operation == 'sum':
+        # Packing of SUM aggregates depends on the aggregation period:
+        #  - MONTHLY / YEARLY sums accumulate many timesteps and overflow the
+        #    int16 range that scale_factor/add_offset were calibrated for, so
+        #    they are written UNPACKED (float), as originally.
+        #  - DAILY sums stay close to the per-step value range (at most a few
+        #    timesteps per day), so they keep int16 packing.
+        # MEAN aggregates always keep packing (they stay in the per-step range).
+        pack_disabled = (operation == 'sum' and frequency in ('monthly', 'yearly'))
+        if pack_disabled:
             map_value_no_pack = map_value._replace(scale_factor=None, add_offset=None)
         else:
             map_value_no_pack = map_value
 
         super().__init__(var, out_type, frequency, map_key, map_value_no_pack)
-        
+
+        # Same reasoning for the independent logarithmic DISCHARGE packing: a
+        # monthly/yearly SUM of discharge can exceed the calibrated log range
+        # (max 500000 m3/s), so disable log packing for those. Daily sums and
+        # mean aggregates keep it. The linear _replace() above cannot express
+        # this (log packing does not use scale_factor/add_offset), so flag it
+        # on the writer directly.
+        if pack_disabled and hasattr(self, 'writer'):
+            self.writer.log_pack_disabled = True
+
         # Force immediate write for aggregated outputs (one slice per period)
         if hasattr(self, 'writer') and hasattr(self.writer, 'chunks'):
             self.writer.chunks = 1
@@ -558,7 +708,16 @@ class MapOutputAggregated(MapOutput):
         self._accum_count += 1
 
     def write(self):
-        """Write only at period boundary (day-end, month-end or year-end)."""
+        """Write at each period boundary (day/month/year-end) and at end-of-run.
+
+        A period is flushed when the next step crosses into a new day/month/year.
+        The final step of the run is ALSO treated as a flush point so a run that
+        stops mid-period still writes its last (partial) aggregate instead of
+        silently dropping the accumulator. This is safe because the output time
+        axis for aggregates is unlimited (see write_netcdf_header): the writer
+        appends one time coordinate per flushed slice, so the count can never
+        overflow regardless of how many periods there are.
+        """
         current_date = self.var.CalendarDate
         next_date = current_date + datetime.timedelta(days=self.var.DtDay)
         if self.frequency == 'daily':
@@ -570,16 +729,24 @@ class MapOutputAggregated(MapOutput):
         else:
             is_boundary = True
 
-        if is_boundary and self._accum_buffer is not None:
+        # End-of-run also flushes the current (possibly partial) period. When the
+        # last step happens to be a real boundary this stays a SINGLE flush (one
+        # combined condition, no double write).
+        is_last_step = self.var.currentTimeStep() == self.var.nrTimeSteps()
+
+        if (is_boundary or is_last_step) and self._accum_buffer is not None:
             # Finalize
             if self._operation == 'mean':
                 result = self._accum_buffer / self._accum_count
             else:  # sum
                 result = self._accum_buffer
 
-            # Stage the aggregated result into the writer
+            # Stage the aggregated result into the writer, together with this
+            # period's representative date (the boundary step's CalendarDate,
+            # matching the historical *_end timestamp convention).
             self.writer.data_steps.append(result)
             self.writer.step_range.append(self._write_step)
+            self.writer.time_stamps.append(current_date)
             self.writer.write(self._start_date, self._rep_steps)
 
             # Increment own step counter and reset accumulator
@@ -646,13 +813,27 @@ class OutputMapsFactory():
         }
         aggregated_vars = set()  # track which vars are aggregated
 
+        # Match aggregation-list entries against ReportedMap.name, which is the
+        # identifier used everywhere else in the output system: the per-step/all
+        # outputs are keyed and path-resolved by rm.name (see
+        # settings._reported_maps), and the output settings textvars are named
+        # after rm.name too. The reportedmaps DICT KEY is only an internal dict
+        # handle and for a few entries differs from rm.name (e.g. key
+        # 'SeepSubToGWforestMaps' vs name 'SeepSubToGWForestMaps'). Matching the
+        # user's list against the dict key (as before) meant that for those
+        # entries no spelling worked: the dict-key spelling passed the lookup but
+        # then failed path resolution (aggregate dropped, per-step file kept at
+        # full resolution), while the rm.name spelling failed the lookup outright.
+        # Keying by rm.name makes the aggregate resolve to the right file AND
+        # match the surviving per-step output in the cleanup below.
         reportedmaps = settings.options['reportedmaps']
+        maps_by_name = {rm.name: rm for rm in reportedmaps.values()}
         for setting_key, (frequency, operation) in aggregation_configs.items():
             var_list = binding.get(setting_key, '').split(';')
             for var_name in var_list:
                 var_name = var_name.strip()
-                if var_name and var_name in reportedmaps:
-                    map_value = reportedmaps[var_name]
+                if var_name and var_name in maps_by_name:
+                    map_value = maps_by_name[var_name]
                     out = MapOutputAggregated(var, var_name, map_value, frequency, operation)
                     if out.is_valid():
                         outputs.append(out)

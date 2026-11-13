@@ -110,7 +110,46 @@ Values falling outside the representable range are clipped to the nearest bound,
 ### Variables that are never packed
 
 - **State and "end" maps** (used to initialise warm-start runs) are always written at full floating-point precision, regardless of the `OutputPacking` setting. This preserves the exact model state needed for a bit-reproducible restart.
-- Variables whose value range is too wide to pack meaningfully (for example **discharge**, which spans several orders of magnitude globally) are intentionally left unpacked to avoid an unacceptable loss of precision.
+- Variables whose value range is too wide to pack meaningfully with a *linear* scale/offset (for example **discharge**, which spans several orders of magnitude globally) are intentionally excluded from `OutputPacking`. Discharge has its own dedicated logarithmic packing option, described next.
+
+### Logarithmic packing of discharge (`OutputPackingDischarge`)
+
+Discharge cannot be packed with the linear `scale_factor`/`add_offset` scheme without unacceptable precision loss, because on a global domain it spans several orders of magnitude (from near-zero headwater flows to hundreds of thousands of m³/s at major river mouths). A single linear step size is either far too coarse for small flows or wastes the entire integer range on the largest ones.
+
+`OutputPackingDischarge` solves this by packing discharge in **log10 space**, which gives near-constant *relative* precision (about 0.027% per step) across the whole range.
+
+This option is **completely independent** of `OutputPacking`. You can enable either, both, or neither:
+
+```xml
+<textvar name="OutputPackingDischarge" value="True"/>
+```
+
+- `"False"` (default): discharge is written as raw floating-point values.
+- `"True"`: the `DischargeMaps` output is packed into `int16` using the logarithmic encoding below.
+
+**Encoding.** The resolved range is `0.01` to `500000` m³/s. The transform is:
+
+```
+stored = round( (log10(q) - packing_log_min) / packing_log_scale ) + packing_int_offset
+q      = 10 ** ( packing_log_min + packing_log_scale * (stored - packing_int_offset) )
+```
+
+**This is a non-CF encoding**, so standard netCDF readers will **not** auto-unpack it via `scale_factor`/`add_offset`. Instead, the writer tags the variable with explicit custom attributes describing the transform so a post-processing step can invert it:
+
+| Attribute | Meaning |
+|-----------|---------|
+| `packing` | `"log10"` — identifies the scheme |
+| `packing_log_min` | `log10(0.01) = -2.0` |
+| `packing_log_scale` | log-space step size per integer level |
+| `packing_int_offset` | integer offset (`-32766`) mapped to `packing_log_min` |
+| `packing_valid_min` / `packing_valid_max` | resolved physical range (`0.01` / `500000` m³/s) |
+
+**Value handling.**
+- Discharge **below 0.01 m³/s** — including zero, negative, and missing values — is stored as `_FillValue` (read back as masked/NaN). Such values carry no useful information at this precision.
+- Discharge **above 500000 m³/s** is clipped to the maximum.
+- As with any lossy packing, a small relative quantization error (~0.027% per step, well under 0.02% round-trip) is expected.
+
+**Interaction with temporal aggregation.** Monthly/yearly **mean** discharge keeps log packing (it stays within the resolved range). **Sum**-aggregated discharge disables log packing automatically (a period sum can exceed 500000 m³/s), and is written as floating-point — the same policy used for linear packing.
 
 ## Temporal aggregation of output maps
 

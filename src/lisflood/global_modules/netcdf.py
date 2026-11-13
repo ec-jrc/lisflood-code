@@ -624,7 +624,8 @@ def write_netcdf_header(settings,
                         start_date,
                         rep_steps,
                         frequency,
-                        map_value=None):
+                        map_value=None,
+                        log_packed=None):
     
     """ Writes a netcdf header without the data inside
     
@@ -654,6 +655,11 @@ def write_netcdf_header(settings,
         Output variable metadata from default_options.py. When provided and OutputPacking is
         enabled, its scale_factor and add_offset attributes are used for int16 packing.
         If None (default), no packing is applied.
+    log_packed: bool or None, optional
+        Explicit override for the logarithmic discharge packing decision. When None
+        (default), the decision is derived from OutputPackingDischarge and the map
+        identity. The writer passes its own decision here so the on-disk dtype and
+        the per-step packing stay in sync (e.g. SUM aggregates disable log packing).
 
     Returns
     -------
@@ -754,7 +760,19 @@ def write_netcdf_header(settings,
         else:
             raise ValueError(f'ERROR! Frequency {frequency} not supported! Value accepted: [all, daily, monthly, yearly]')
         
-        nf1.createDimension('time', steps.size)
+        # For temporal aggregates (daily/monthly/yearly) the number of output
+        # slices is decided solely by MapOutputAggregated at run time (it flushes
+        # one slice per completed period, plus any final partial period). Pre-
+        # sizing the time axis here from an independent month/year-end filter is a
+        # second, fragile source of truth: if the two counts disagree by even one
+        # period (calendar edge cases, fractional DtDay, runs not ending on a
+        # clean period boundary) the writer overflows the fixed axis with
+        # "NetCDF: Index exceeds dimension bound" on the very last write. So make
+        # the axis UNLIMITED for aggregates and let the writer append each slice's
+        # own time coordinate (see NetcdfStepsWriter.write). The every-step 'all'
+        # path maps 1:1 to rep_steps and keeps its fixed, pre-written axis.
+        aggregated_freq = frequency in ('daily', 'monthly', 'yearly')
+        nf1.createDimension('time', None if aggregated_freq else steps.size)
         time = nf1.createVariable('time', float, ('time'))
         time.standard_name = 'time'
         time.calendar = binding["calendar_type"]
@@ -769,7 +787,8 @@ def write_netcdf_header(settings,
         elif DtDay_in_sec >= 60 and DtDay_in_sec <3600:
             # CM: minutes to hours model time step
             time.units = 'minutes since %s' % start_date.strftime("%Y-%m-%d %H:%M:%S.0")
-        nf1.variables["time"][:] = date2num(time_stamps, time.units, time.calendar)
+        if not aggregated_freq:
+            nf1.variables["time"][:] = date2num(time_stamps, time.units, time.calendar)
 
         # value = nf1.createVariable(var_name, dtype, ('time', dim_lat_y, dim_lon_x), zlib=True, fill_value=-9999, chunksizes=(1, nrow, ncol))
         # Packing: use int16 with CF scale/offset if enabled and variable has packing metadata
@@ -777,7 +796,21 @@ def write_netcdf_header(settings,
         has_packing = (map_value is not None
                        and getattr(map_value, 'scale_factor', None) is not None
                        and getattr(map_value, 'add_offset', None) is not None)
-        if packing_enabled and has_packing:
+        # Logarithmic discharge packing: a COMPLETELY independent opt-in
+        # (OutputPackingDischarge), separate from OutputPacking above. It only
+        # applies to the DischargeMaps output and writes a custom log10 int16
+        # encoding (non-CF). This predicate MUST stay in sync with
+        # NetcdfStepsWriter.write's `is_log_packed`.
+        if log_packed is not None:
+            is_log_packed = bool(log_packed)
+        else:
+            is_log_packed = (binding.get('OutputPackingDischarge', 'False') == 'True'
+                             and map_value is not None
+                             and getattr(map_value, 'name', None) == 'DischargeMaps')
+        if is_log_packed:
+            var_dtype = 'i2'
+            var_fill = default_fillvals['i2']
+        elif packing_enabled and has_packing:
             var_dtype = 'i2'
             var_fill = default_fillvals['i2']
         else:
@@ -786,7 +819,14 @@ def write_netcdf_header(settings,
 
         value = nf1.createVariable(var_name, var_dtype, ('time', dim_lat_y, dim_lon_x),
                                    zlib=True, fill_value=var_fill, chunksizes=(1, nrow, ncol))
-        if packing_enabled and has_packing:
+        if is_log_packed:
+            # Custom (non-CF) log10 encoding. Do NOT set scale_factor/add_offset
+            # here: that would make CF readers auto-decode the int16 as a linear
+            # value. Instead tag the explicit transform so tooling can invert it.
+            from .output import LOG_PACK_ATTRS
+            for _attr, _val in LOG_PACK_ATTRS.items():
+                value.setncattr(_attr, _val)
+        elif packing_enabled and has_packing:
             value.scale_factor = np.float64(map_value.scale_factor)
             value.add_offset = np.float64(map_value.add_offset)
 
