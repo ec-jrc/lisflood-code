@@ -4324,7 +4324,19 @@ You can use builtin path variables in this template and reference to other paths
 
       <textvar name="GwPercUZLZForestMaps" value="$(PathOut)/uz2lzF">
       <comment>
-      Reported percolation from upper to lower zone [mm]
+      Reported percolation from upper to lower zone, forest fraction [mm]
+      </comment>
+      </textvar>
+
+      <textvar name="GwPercUZLZOtherMaps" value="$(PathOut)/uz2lzO">
+      <comment>
+      Reported percolation from upper to lower zone, other fraction [mm]
+      </comment>
+      </textvar>
+
+      <textvar name="GwPercUZLZIrrigationMaps" value="$(PathOut)/uz2lzI">
+      <comment>
+      Reported percolation from upper to lower zone, irrigation fraction [mm]
       </comment>
       </textvar>
 

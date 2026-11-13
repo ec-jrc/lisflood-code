@@ -249,8 +249,9 @@ class NetcdfStepsWriter(NetcdfWriter):
         self.end_step = end_step
         self.step_range = []
         self.data_steps = []
-        # Set True by MapOutputAggregated for SUM aggregates to suppress the
-        # logarithmic discharge packing (sums can exceed the calibrated range).
+        # Set True by MapOutputAggregated for monthly/yearly SUM aggregates to
+        # suppress the logarithmic discharge packing (those sums can exceed the
+        # calibrated range). Daily sums and mean aggregates leave it False.
         self.log_pack_disabled = False
 
         super().__init__(var, map_key, map_value, map_path, frequency)
@@ -629,23 +630,28 @@ class MapOutputAggregated(MapOutput):
         self._accum_count = 0
         self._write_step = 0  # own step counter for NetCDF time dimension
 
-        # Disable int16 packing for sum aggregates — monthly/yearly sums can exceed
-        # the int16 range calibrated for daily values. Mean aggregates stay within
-        # the same value range as daily output, so packing remains valid.
-        if operation == 'sum':
+        # Packing of SUM aggregates depends on the aggregation period:
+        #  - MONTHLY / YEARLY sums accumulate many timesteps and overflow the
+        #    int16 range that scale_factor/add_offset were calibrated for, so
+        #    they are written UNPACKED (float), as originally.
+        #  - DAILY sums stay close to the per-step value range (at most a few
+        #    timesteps per day), so they keep int16 packing.
+        # MEAN aggregates always keep packing (they stay in the per-step range).
+        pack_disabled = (operation == 'sum' and frequency in ('monthly', 'yearly'))
+        if pack_disabled:
             map_value_no_pack = map_value._replace(scale_factor=None, add_offset=None)
         else:
             map_value_no_pack = map_value
 
         super().__init__(var, out_type, frequency, map_key, map_value_no_pack)
 
-        # Same reasoning for the independent logarithmic discharge packing: a
+        # Same reasoning for the independent logarithmic DISCHARGE packing: a
         # monthly/yearly SUM of discharge can exceed the calibrated log range
-        # (max 500000 m3/s), so disable log packing for sum aggregates. Mean
-        # aggregates stay in the daily value range and keep log packing. The
-        # linear _replace() trick above cannot express this (log packing does
-        # not use scale_factor/add_offset), so flag it on the writer directly.
-        if operation == 'sum' and hasattr(self, 'writer'):
+        # (max 500000 m3/s), so disable log packing for those. Daily sums and
+        # mean aggregates keep it. The linear _replace() above cannot express
+        # this (log packing does not use scale_factor/add_offset), so flag it
+        # on the writer directly.
+        if pack_disabled and hasattr(self, 'writer'):
             self.writer.log_pack_disabled = True
 
         # Force immediate write for aggregated outputs (one slice per period)
