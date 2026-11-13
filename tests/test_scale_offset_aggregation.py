@@ -19,7 +19,11 @@ from netCDF4 import Dataset
 
 from lisflood.main import lisfloodexe
 from lisflood.global_modules.default_options import default_options
-from lisflood.global_modules.output import PACK_MIN, PACK_MAX, PACK_FILL
+from lisflood.global_modules.output import (
+    PACK_MIN, PACK_MAX, PACK_FILL,
+    LOG_PACK_QMIN, LOG_PACK_QMAX, LOG_PACK_MIN, LOG_PACK_SCALE, LOG_PACK_ATTRS,
+    pack_discharge_log, unpack_discharge_log,
+)
 from lisflood.global_modules.settings import LisSettings
 
 
@@ -877,6 +881,59 @@ class TestTemporalAggregation:
                 f"{filename}: daily {operation} (unpacked) max relative difference {max_rel_diff} exceeds tolerance 1e-5"
         return 1
 
+    def test_daily_run_monthly_aggregation_ends_on_period_boundary(self):
+        """Regression: a DAILY run ending exactly on a month+year boundary with
+        monthly aggregation must not crash with 'NetCDF: Index exceeds dimension
+        bound'.
+
+        Previously the output time axis for aggregates was pre-sized by an
+        independent month/year-end filter in write_netcdf_header, while
+        MapOutputAggregated decided flushes from CalendarDate boundaries. When the
+        two counts diverged (e.g. a run ending on Dec 31, crossing a year boundary
+        during monthly aggregation) the writer wrote one slice past the fixed axis
+        and crashed on the very last write. The axis is now unlimited and each
+        flushed slice writes its own time coordinate, so #time-coords always
+        equals #data-slices.
+
+        The variable is reported BOTH per-step (repLZMaps) and as a monthly mean,
+        mirroring the configuration that triggered the crash, and packing is on.
+        """
+        step_start = '02/01/2016 06:00'
+        step_end = '31/12/2016 06:00'   # ends on month + year boundary
+
+        out_dir = self._run_lisflood(
+            'test_agg_daily_boundary',
+            dt_sec='86400',
+            step_start=step_start,
+            step_end=step_end,
+            opts_to_set=['repLZMaps', 'repE2O2'],
+            new_vars={
+                'OutputPacking': 'True',
+                'OutputMonthlyMean': 'LZMaps',
+                'OutputMonthlySum': '',
+                'OutputYearlyMean': '',
+                'OutputYearlySum': '',
+            },
+        )
+
+        # The run must complete and produce lz.nc (crash would have aborted it).
+        nc_path = os.path.join(out_dir, 'lz.nc')
+        assert os.path.exists(nc_path), f"Output not found (run likely crashed): {nc_path}"
+
+        # 2016 is a leap year; Jan 2 .. Dec 31 contains all 12 month-ends, so the
+        # monthly-mean file must hold exactly 12 time slices, each with a finite
+        # time coordinate (no leftover fill from a pre-sized axis).
+        with Dataset(nc_path, 'r') as ds:
+            tvar = ds.variables['time']
+            n_time = tvar.shape[0]
+            tvals = np.asarray(tvar[:], dtype=np.float64)
+            vname = _find_data_var(ds)
+            data_shape = ds.variables[vname].shape
+        assert n_time == 12, f"expected 12 monthly slices, got {n_time}"
+        assert data_shape[0] == n_time, \
+            f"data slices ({data_shape[0]}) != time coords ({n_time})"
+        assert np.all(np.isfinite(tvals)), "time axis has non-finite (unfilled) coordinates"
+
     def test_aggregation_sum_disables_packing(self):
         """Sum-aggregated outputs should NOT use int16 packing even when OutputPacking=True.
 
@@ -913,4 +970,198 @@ class TestTemporalAggregation:
         if os.path.exists(out_base):
             for d in os.listdir(out_base):
                 if d.startswith('test_agg_'):
+                    shutil.rmtree(os.path.join(out_base, d), ignore_errors=True)
+
+
+# ---------------------------------------------------------------------------
+# Logarithmic discharge packing (OutputPackingDischarge)
+# ---------------------------------------------------------------------------
+
+class TestDischargeLogPackRoundtrip:
+    """Unit tests for the pure log10 pack/unpack functions.
+
+    These exercise pack_discharge_log / unpack_discharge_log directly (no model
+    run), so they are fast and run anywhere. They verify the three defining
+    properties of the encoding: (near) constant RELATIVE precision across the
+    whole resolved range, clipping of out-of-range values, and that
+    zero/negative/NaN/sub-minimum values map to the fill value (read back as
+    NaN).
+    """
+
+    def test_roundtrip_relative_precision(self):
+        """Values in [QMIN, QMAX] survive a pack/unpack round-trip within the
+        quantization step, i.e. roughly constant relative precision."""
+        # Sample the whole dynamic range geometrically (constant ratio spacing)
+        q = np.logspace(np.log10(LOG_PACK_QMIN), np.log10(LOG_PACK_QMAX), 2000)
+
+        packed = pack_discharge_log(q)
+        assert packed.dtype == np.int16
+        back = unpack_discharge_log(packed)
+
+        assert np.all(np.isfinite(back)), "all in-range values must round-trip to finite"
+
+        # One quantization step in log space is LOG_PACK_SCALE; the worst-case
+        # relative error of a single rounding step is therefore bounded by
+        # 10**(LOG_PACK_SCALE/2) - 1. Allow a hair of slack for float noise.
+        step_rel = 10.0 ** (LOG_PACK_SCALE / 2.0) - 1.0
+        rel_err = np.abs(back - q) / q
+        assert rel_err.max() <= step_rel * 1.05, \
+            f"max relative error {rel_err.max():.3e} exceeds one half-step {step_rel:.3e}"
+
+    def test_fill_for_nonpositive_and_subminimum(self):
+        """Zero, negatives, the -9999 sentinel, NaN, and values below QMIN all
+        pack to PACK_FILL and unpack to NaN."""
+        q = np.array([0.0, -1.0, -9999.0, np.nan, LOG_PACK_QMIN * 0.5], dtype=np.float64)
+        packed = pack_discharge_log(q)
+        assert np.all(packed == PACK_FILL), \
+            "non-positive / sub-minimum / NaN discharge must map to PACK_FILL"
+        back = unpack_discharge_log(packed)
+        assert np.all(np.isnan(back)), "fill values must unpack to NaN"
+
+    def test_clipping_above_qmax(self):
+        """Values above QMAX are clipped to the maximum code (not wrapped) and
+        decode to ~QMAX."""
+        q = np.array([LOG_PACK_QMAX, LOG_PACK_QMAX * 10.0, 1e9], dtype=np.float64)
+        packed = pack_discharge_log(q)
+        assert np.all(packed == PACK_MAX), "values >= QMAX must clip to PACK_MAX"
+        back = unpack_discharge_log(packed)
+        # Decoded value of PACK_MAX is exactly QMAX (to float precision)
+        assert np.allclose(back, LOG_PACK_QMAX, rtol=1e-6)
+
+    def test_endpoints_map_to_code_range(self):
+        """QMIN and QMAX map to the ends of the usable int16 range."""
+        packed = pack_discharge_log(np.array([LOG_PACK_QMIN, LOG_PACK_QMAX]))
+        assert packed[0] == PACK_MIN
+        assert packed[1] == PACK_MAX
+
+
+@pytest.mark.slow
+class TestDischargeLogPacking:
+    """Integration test: a model run with OutputPackingDischarge=True must write
+    discharge as an int16 variable carrying the custom log10 packing attributes,
+    which decode back to the float discharge within the expected relative
+    tolerance. OutputPackingDischarge is completely independent of OutputPacking.
+    """
+
+    case_dir = os.path.join(os.path.dirname(__file__), 'data', 'LF_ETRS89_UseCase')
+    settings_file = os.path.join(case_dir, 'settings', 'full.xml')
+
+    def _run_lisflood(self, output_dir, dt_sec='86400',
+                      step_start='30/07/2016 06:00', step_end='05/08/2016 06:00',
+                      opts_to_set=None, new_vars=None):
+        """Run lisflood and return the output directory."""
+        full_out_dir = os.path.join(self.case_dir, 'out', output_dir)
+        if os.path.exists(full_out_dir):
+            shutil.rmtree(full_out_dir, ignore_errors=True)
+        os.makedirs(full_out_dir, exist_ok=True)
+
+        settings = setoptions_with_new_vars(
+            self.settings_file,
+            opts_to_set=list(opts_to_set or []),
+            vars_to_set={
+                'StepStart': step_start,
+                'StepEnd': step_end,
+                'DtSec': dt_sec,
+                'PathOut': full_out_dir,
+            },
+            new_vars=dict(new_vars or {}),
+        )
+        lisfloodexe(settings)
+        return full_out_dir
+
+    def test_discharge_log_packing_roundtrip(self):
+        """dis.nc written with OutputPackingDischarge=True is int16 + log attrs,
+        decodes (via unpack_discharge_log) to the float-run discharge within the
+        encoding's relative precision, and leaves OTHER linearly-packable maps
+        untouched (the two packing schemes are independent)."""
+        opts = ['repDischargeMaps']
+
+        # Reference run: no packing at all (float discharge).
+        out_float = self._run_lisflood(
+            'test_logpack_float',
+            opts_to_set=opts,
+            new_vars={'OutputPacking': 'False', 'OutputPackingDischarge': 'False'},
+        )
+
+        # Log-packed discharge, standard linear packing OFF (prove independence).
+        out_logpacked = self._run_lisflood(
+            'test_logpack_int16',
+            opts_to_set=opts,
+            new_vars={'OutputPacking': 'False', 'OutputPackingDischarge': 'True'},
+        )
+
+        fdis = os.path.join(out_float, 'dis.nc')
+        pdis = os.path.join(out_logpacked, 'dis.nc')
+        assert os.path.exists(fdis) and os.path.exists(pdis), \
+            f"dis.nc missing (float={os.path.exists(fdis)} logpacked={os.path.exists(pdis)})"
+
+        # On-disk variable must be int16 and carry the custom log attributes,
+        # NOT the CF scale_factor/add_offset (which would trigger linear decode).
+        with Dataset(pdis, 'r') as ds:
+            ds.set_auto_maskandscale(False)
+            vname = _find_data_var(ds)
+            var = ds.variables[vname]
+            ncattrs = var.ncattrs()
+            assert var.dtype == np.dtype('int16'), \
+                f"log-packed discharge must be int16, got {var.dtype}"
+            assert var.getncattr('packing') == LOG_PACK_ATTRS['packing'], \
+                "log-packed discharge must carry packing='log10'"
+            for attr in ('packing_log_min', 'packing_log_scale', 'packing_int_offset',
+                         'packing_valid_min', 'packing_valid_max'):
+                assert attr in ncattrs, f"missing custom log-packing attribute '{attr}'"
+            assert 'scale_factor' not in ncattrs and 'add_offset' not in ncattrs, \
+                "log-packed discharge must NOT carry CF scale_factor/add_offset"
+            raw = np.asarray(var[:])
+
+        # The file must not be entirely fill: a real catchment has resolvable
+        # discharge somewhere.
+        assert int((raw == float(PACK_FILL)).sum()) != raw.size, \
+            "dis.nc is entirely PACK_FILL - no discharge was packed"
+
+        # Decode the raw int16 with the documented inverse transform and compare
+        # to the float run. Only cells that are resolvable in BOTH (float >= QMIN
+        # and not fill) are comparable; the log scheme intentionally drops
+        # discharge below QMIN to fill.
+        decoded = unpack_discharge_log(raw)
+        data_float, _ = read_nc_variable(fdis)
+
+        comparable = (~np.isnan(decoded) & ~np.isnan(data_float)
+                      & (data_float >= LOG_PACK_QMIN) & (data_float <= LOG_PACK_QMAX))
+        assert comparable.any(), "no jointly-resolvable discharge cells to compare"
+
+        rel_err = np.abs(decoded[comparable] - data_float[comparable]) / data_float[comparable]
+        # One half-step of relative quantization error, with a small margin.
+        step_rel = 10.0 ** (LOG_PACK_SCALE / 2.0) - 1.0
+        assert rel_err.max() <= step_rel * 1.05, \
+            f"decoded discharge max relative error {rel_err.max():.3e} exceeds " \
+            f"the log-packing half-step {step_rel:.3e}"
+
+        # Sub-QMIN float discharge must have been stored as fill (dropped).
+        dropped = (~np.isnan(data_float)) & (data_float < LOG_PACK_QMIN)
+        if dropped.any():
+            assert np.all(raw[dropped] == PACK_FILL), \
+                "discharge below QMIN must be stored as PACK_FILL"
+
+    def test_independent_of_linear_packing(self):
+        """OutputPackingDischarge must not require OutputPacking: enabling only
+        the discharge log packing still produces an int16 log-packed dis.nc."""
+        out_dir = self._run_lisflood(
+            'test_logpack_only',
+            opts_to_set=['repDischargeMaps'],
+            new_vars={'OutputPacking': 'False', 'OutputPackingDischarge': 'True'},
+        )
+        pdis = os.path.join(out_dir, 'dis.nc')
+        assert os.path.exists(pdis), f"dis.nc missing: {pdis}"
+        info = get_nc_packing_info(pdis)
+        assert info['dtype'] == np.dtype('int16'), \
+            "discharge log packing must apply even with OutputPacking=False"
+        assert info['scale_factor'] is None, \
+            "log-packed discharge must not use CF scale_factor"
+
+    def teardown_method(self):
+        """Clean up output directories."""
+        out_base = os.path.join(self.case_dir, 'out')
+        if os.path.exists(out_base):
+            for d in os.listdir(out_base):
+                if d.startswith('test_logpack_'):
                     shutil.rmtree(os.path.join(out_base, d), ignore_errors=True)

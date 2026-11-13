@@ -27,7 +27,7 @@ from .netcdf import write_netcdf_header, iterOpenNetcdf, nanCheckMap, uncompress
 from .netcdf import hdf5_lock as _hdf5_lock
 from .errors import LisfloodFileError, LisfloodWarning
 from .settings import inttodate, CDFFlags, LisSettings, MaskInfo
-from netCDF4 import default_fillvals
+from netCDF4 import default_fillvals, date2num
 
 # ------------------------------------------------------------------------
 # Optional earthkit-hydro acceleration of the PCRaster reductions
@@ -59,8 +59,13 @@ except ImportError:  # pragma: no cover - earthkit-hydro not installed
 # Packing constants for int16 CF scale/offset encoding
 # ------------------------------------------------------------------------
 PACK_FILL = np.int16(default_fillvals['i2'])      # -32767
-PACK_MIN = PACK_FILL + 1                          # -32766
-PACK_MAX = np.iinfo(np.int16).max                 #  32767
+# Keep PACK_MIN / PACK_MAX as plain Python ints: arithmetic between np.int16
+# scalars silently overflows under numpy 2.x NEP 50 semantics (e.g.
+# PACK_MAX - PACK_MIN wraps to -3), which would corrupt derived quantities such
+# as LOG_PACK_SCALE below. Python ints are unbounded, so the span is exact, and
+# they still broadcast/clip correctly against int16 arrays.
+PACK_MIN = int(PACK_FILL) + 1                     # -32766
+PACK_MAX = int(np.iinfo(np.int16).max)            #  32767
 
 # ------------------------------------------------------------------------
 # Logarithmic int16 packing for discharge (OutputPackingDischarge)
@@ -249,6 +254,12 @@ class NetcdfStepsWriter(NetcdfWriter):
         self.end_step = end_step
         self.step_range = []
         self.data_steps = []
+        # Per-slice time coordinates for temporal AGGREGATES only. Left empty for
+        # every-step ('all') outputs, whose time axis is fixed and pre-written by
+        # write_netcdf_header. MapOutputAggregated appends one stamp per flushed
+        # period here so the writer can grow the (unlimited) time axis in lock-
+        # step with the data slices - guaranteeing #time-coords == #data-slices.
+        self.time_stamps = []
         # Set True by MapOutputAggregated for monthly/yearly SUM aggregates to
         # suppress the logarithmic discharge packing (those sums can exceed the
         # calibrated range). Daily sums and mean aggregates leave it False.
@@ -392,10 +403,25 @@ class NetcdfStepsWriter(NetcdfWriter):
                     for step, packed in prepared_steps:
                         nc_var[step, :, :] = packed
 
+                    # Temporal aggregates grow an UNLIMITED time axis: write each
+                    # flushed slice's own time coordinate so the number of time
+                    # coords always equals the number of data slices (no fixed
+                    # pre-sized axis to overflow). Non-aggregated writers leave
+                    # time_stamps empty and skip this - their axis is pre-written
+                    # by write_netcdf_header. Kept INSIDE the HDF5 lock because
+                    # assigning past the current extent grows the unlimited
+                    # dimension, an HDF5 state change that must not race with the
+                    # threaded writers / forcing readers.
+                    if self.time_stamps:
+                        nc_time = nf1.variables['time']
+                        for step, stamp in zip(self.step_range, self.time_stamps):
+                            nc_time[step] = date2num(stamp, nc_time.units, nc_time.calendar)
+
                     nf1.close()
 
                 self.step_range.clear()
                 self.data_steps.clear()
+                self.time_stamps.clear()
             else:
                 raise Exception('You need to stage data before writing!')
 
@@ -682,7 +708,16 @@ class MapOutputAggregated(MapOutput):
         self._accum_count += 1
 
     def write(self):
-        """Write only at period boundary (day-end, month-end or year-end)."""
+        """Write at each period boundary (day/month/year-end) and at end-of-run.
+
+        A period is flushed when the next step crosses into a new day/month/year.
+        The final step of the run is ALSO treated as a flush point so a run that
+        stops mid-period still writes its last (partial) aggregate instead of
+        silently dropping the accumulator. This is safe because the output time
+        axis for aggregates is unlimited (see write_netcdf_header): the writer
+        appends one time coordinate per flushed slice, so the count can never
+        overflow regardless of how many periods there are.
+        """
         current_date = self.var.CalendarDate
         next_date = current_date + datetime.timedelta(days=self.var.DtDay)
         if self.frequency == 'daily':
@@ -694,16 +729,24 @@ class MapOutputAggregated(MapOutput):
         else:
             is_boundary = True
 
-        if is_boundary and self._accum_buffer is not None:
+        # End-of-run also flushes the current (possibly partial) period. When the
+        # last step happens to be a real boundary this stays a SINGLE flush (one
+        # combined condition, no double write).
+        is_last_step = self.var.currentTimeStep() == self.var.nrTimeSteps()
+
+        if (is_boundary or is_last_step) and self._accum_buffer is not None:
             # Finalize
             if self._operation == 'mean':
                 result = self._accum_buffer / self._accum_count
             else:  # sum
                 result = self._accum_buffer
 
-            # Stage the aggregated result into the writer
+            # Stage the aggregated result into the writer, together with this
+            # period's representative date (the boundary step's CalendarDate,
+            # matching the historical *_end timestamp convention).
             self.writer.data_steps.append(result)
             self.writer.step_range.append(self._write_step)
+            self.writer.time_stamps.append(current_date)
             self.writer.write(self._start_date, self._rep_steps)
 
             # Increment own step counter and reset accumulator

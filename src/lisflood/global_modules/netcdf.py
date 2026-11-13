@@ -760,7 +760,19 @@ def write_netcdf_header(settings,
         else:
             raise ValueError(f'ERROR! Frequency {frequency} not supported! Value accepted: [all, daily, monthly, yearly]')
         
-        nf1.createDimension('time', steps.size)
+        # For temporal aggregates (daily/monthly/yearly) the number of output
+        # slices is decided solely by MapOutputAggregated at run time (it flushes
+        # one slice per completed period, plus any final partial period). Pre-
+        # sizing the time axis here from an independent month/year-end filter is a
+        # second, fragile source of truth: if the two counts disagree by even one
+        # period (calendar edge cases, fractional DtDay, runs not ending on a
+        # clean period boundary) the writer overflows the fixed axis with
+        # "NetCDF: Index exceeds dimension bound" on the very last write. So make
+        # the axis UNLIMITED for aggregates and let the writer append each slice's
+        # own time coordinate (see NetcdfStepsWriter.write). The every-step 'all'
+        # path maps 1:1 to rep_steps and keeps its fixed, pre-written axis.
+        aggregated_freq = frequency in ('daily', 'monthly', 'yearly')
+        nf1.createDimension('time', None if aggregated_freq else steps.size)
         time = nf1.createVariable('time', float, ('time'))
         time.standard_name = 'time'
         time.calendar = binding["calendar_type"]
@@ -775,7 +787,8 @@ def write_netcdf_header(settings,
         elif DtDay_in_sec >= 60 and DtDay_in_sec <3600:
             # CM: minutes to hours model time step
             time.units = 'minutes since %s' % start_date.strftime("%Y-%m-%d %H:%M:%S.0")
-        nf1.variables["time"][:] = date2num(time_stamps, time.units, time.calendar)
+        if not aggregated_freq:
+            nf1.variables["time"][:] = date2num(time_stamps, time.units, time.calendar)
 
         # value = nf1.createVariable(var_name, dtype, ('time', dim_lat_y, dim_lon_x), zlib=True, fill_value=-9999, chunksizes=(1, nrow, ncol))
         # Packing: use int16 with CF scale/offset if enabled and variable has packing metadata
