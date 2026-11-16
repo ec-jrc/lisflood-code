@@ -881,58 +881,212 @@ class TestTemporalAggregation:
                 f"{filename}: daily {operation} (unpacked) max relative difference {max_rel_diff} exceeds tolerance 1e-5"
         return 1
 
-    def test_daily_run_monthly_aggregation_ends_on_period_boundary(self):
-        """Regression: a DAILY run ending exactly on a month+year boundary with
-        monthly aggregation must not crash with 'NetCDF: Index exceeds dimension
-        bound'.
+    # Shared configuration: LZMaps monthly mean reported next to the per-step
+    # output, so the aggregate and the plain writer coexist in one run.
+    _AGG_LZ_VARS = {
+        'OutputPacking': 'True',
+        'OutputMonthlyMean': 'LZMaps',
+        'OutputMonthlySum': '',
+        'OutputYearlyMean': '',
+        'OutputYearlySum': '',
+    }
 
-        Previously the output time axis for aggregates was pre-sized by an
-        independent month/year-end filter in write_netcdf_header, while
-        MapOutputAggregated decided flushes from CalendarDate boundaries. When the
-        two counts diverged (e.g. a run ending on Dec 31, crossing a year boundary
-        during monthly aggregation) the writer wrote one slice past the fixed axis
-        and crashed on the very last write. The axis is now unlimited and each
-        flushed slice writes its own time coordinate, so #time-coords always
-        equals #data-slices.
+    @staticmethod
+    def _read_time_and_data(nc_path):
+        """Return (time values, units, calendar, data array) of a netCDF output."""
+        with Dataset(nc_path, 'r') as ds:
+            tvar = ds.variables['time']
+            tvals = np.asarray(tvar[:], dtype=np.float64)
+            units, calendar = tvar.units, tvar.calendar
+            data = ds.variables[_find_data_var(ds)][:]
+        return tvals, units, calendar, data
+
+    @pytest.mark.parametrize('threaded', [False, True])
+    def test_daily_run_monthly_aggregation_ends_on_period_boundary(self, threaded):
+        """Regression: a DAILY run ending exactly on a month+year boundary with
+        monthly aggregation must produce exactly one slice per month.
+
+        The aggregate flush decision is taken from the model calendar date. With
+        the threaded writer (outputThreads) write() runs on a worker thread while
+        the main thread has already advanced the clock, so reading the live date
+        shifts every period boundary by one step and produces an extra slice that
+        overflows the fixed time axis ("NetCDF: Index exceeds dimension bound").
+        The synchronous variant cannot trigger that race; the threaded variant is
+        the one that guards it.
 
         The variable is reported BOTH per-step (repLZMaps) and as a monthly mean,
-        mirroring the configuration that triggered the crash, and packing is on.
+        and packing is on.
         """
-        step_start = '02/01/2016 06:00'
-        step_end = '31/12/2016 06:00'   # ends on month + year boundary
-
         out_dir = self._run_lisflood(
-            'test_agg_daily_boundary',
+            'test_agg_daily_boundary_%s' % ('thr' if threaded else 'sync'),
             dt_sec='86400',
-            step_start=step_start,
-            step_end=step_end,
-            opts_to_set=['repLZMaps', 'repE2O2'],
-            new_vars={
-                'OutputPacking': 'True',
-                'OutputMonthlyMean': 'LZMaps',
-                'OutputMonthlySum': '',
-                'OutputYearlyMean': '',
-                'OutputYearlySum': '',
-            },
+            step_start='02/01/2016 06:00',
+            step_end='31/12/2016 06:00',   # ends on month + year boundary
+            opts_to_set=['repLZMaps', 'repE2O2'] + (['outputThreads'] if threaded else []),
+            new_vars=self._AGG_LZ_VARS,
         )
-
-        # The run must complete and produce lz.nc (crash would have aborted it).
         nc_path = os.path.join(out_dir, 'lz.nc')
         assert os.path.exists(nc_path), f"Output not found (run likely crashed): {nc_path}"
 
-        # 2016 is a leap year; Jan 2 .. Dec 31 contains all 12 month-ends, so the
-        # monthly-mean file must hold exactly 12 time slices, each with a finite
-        # time coordinate (no leftover fill from a pre-sized axis).
-        with Dataset(nc_path, 'r') as ds:
-            tvar = ds.variables['time']
-            n_time = tvar.shape[0]
-            tvals = np.asarray(tvar[:], dtype=np.float64)
-            vname = _find_data_var(ds)
-            data_shape = ds.variables[vname].shape
-        assert n_time == 12, f"expected 12 monthly slices, got {n_time}"
-        assert data_shape[0] == n_time, \
-            f"data slices ({data_shape[0]}) != time coords ({n_time})"
+        # 2016 is a leap year; Jan 2 .. Dec 31 contains all 12 month-ends.
+        tvals, units, calendar, data = self._read_time_and_data(nc_path)
+        assert tvals.size == 12, f"expected 12 monthly slices, got {tvals.size}"
+        assert data.shape[0] == tvals.size
         assert np.all(np.isfinite(tvals)), "time axis has non-finite (unfilled) coordinates"
+        assert np.all(np.diff(tvals) > 0), "time stamps must be strictly increasing"
+        # Time stamps must be the 12 month-end dates (no shifted/duplicate stamps).
+        expected = [datetime.datetime(2016, m, d, 6, 0) for m, d in
+                    zip(range(1, 13), [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31])]
+        from netCDF4 import num2date
+        got = num2date(tvals, units, calendar)
+        assert [(g.year, g.month, g.day) for g in got] == [(e.year, e.month, e.day) for e in expected]
+
+    @pytest.mark.parametrize('threaded', [False, True])
+    def test_daily_run_monthly_aggregation_ends_mid_period(self, threaded):
+        """A run ending mid-period writes completed periods only: the partial
+        final month is NOT written, and the time axis length equals the data
+        length."""
+        out_dir = self._run_lisflood(
+            'test_agg_mid_period_%s' % ('thr' if threaded else 'sync'),
+            dt_sec='86400',
+            step_start='02/01/2016 06:00',
+            step_end='15/06/2016 06:00',   # 5 completed months (Jan-May), June partial
+            opts_to_set=['repLZMaps', 'repE2O2'] + (['outputThreads'] if threaded else []),
+            new_vars=self._AGG_LZ_VARS,
+        )
+        nc_path = os.path.join(out_dir, 'lz.nc')
+        assert os.path.exists(nc_path), f"Output not found (run likely crashed): {nc_path}"
+        tvals, units, calendar, data = self._read_time_and_data(nc_path)
+        assert tvals.size == 5, f"expected 5 completed monthly slices, got {tvals.size}"
+        assert data.shape[0] == tvals.size
+        assert np.all(np.isfinite(tvals)), "time axis has non-finite (unfilled) coordinates"
+        from netCDF4 import num2date
+        got = num2date(tvals, units, calendar)
+        assert [(g.year, g.month) for g in got] == [(2016, m) for m in range(1, 6)]
+
+    def test_threaded_aggregation_equals_synchronous(self):
+        """Aggregated outputs (monthly mean + yearly sum) must be identical
+        between the threaded and synchronous writers."""
+        new_vars = {
+            'OutputPacking': 'False',
+            'OutputMonthlyMean': 'LZMaps',
+            'OutputMonthlySum': 'UZMaps',
+            'OutputYearlyMean': '',
+            'OutputYearlySum': '',
+        }
+        results = {}
+        for label, extra in (('sync', []), ('thr', ['outputThreads'])):
+            out_dir = self._run_lisflood(
+                'test_agg_eq_%s' % label,
+                dt_sec='86400',
+                step_start='02/01/2016 06:00',
+                step_end='15/06/2016 06:00',
+                opts_to_set=['repLZMaps', 'repUZMaps', 'repE2O2'] + extra,
+                new_vars=new_vars,
+            )
+            results[label] = {
+                name: self._read_time_and_data(os.path.join(out_dir, name))
+                for name in ('lz.nc', 'uz.nc')
+                if os.path.exists(os.path.join(out_dir, name))
+            }
+        assert results['sync'], "no aggregated output produced"
+        assert results['sync'].keys() == results['thr'].keys()
+        for name, (t_s, _, _, d_s) in results['sync'].items():
+            t_t, _, _, d_t = results['thr'][name]
+            assert np.array_equal(t_s, t_t), f"{name}: time axes differ"
+            assert d_s.shape == d_t.shape, f"{name}: shapes differ"
+            assert np.array_equal(np.ma.getmaskarray(d_s), np.ma.getmaskarray(d_t)), f"{name}: masks differ"
+            assert np.array_equal(np.ma.getdata(d_s), np.ma.getdata(d_t)), f"{name}: values differ"
+
+    @pytest.mark.parametrize('threaded', [False, True])
+    def test_legacy_monthly_output_time_axis(self, threaded):
+        """Legacy monthly outputs (ReportedMap monthly=True, selected through
+        repWIndex/repWaterUse + ReportSteps; no packing/aggregation settings)
+        must keep a fixed, pre-written time axis: finite month-end stamps and as
+        many time values as data slices."""
+        from netCDF4 import num2date
+        cal_start = datetime.datetime(1999, 12, 31, 6, 0)
+        start = datetime.datetime(2016, 1, 2, 6, 0)
+        end = datetime.datetime(2016, 12, 31, 6, 0)
+        # Step d is dated CalendarDayStart + (d-1)*DtDay.
+        first = (start - cal_start).days + 1
+        last = (end - cal_start).days + 1
+        out_dir = self._run_lisflood(
+            'test_agg_legacy_%s' % ('thr' if threaded else 'sync'),
+            dt_sec='86400',
+            step_start=start.strftime('%d/%m/%Y %H:%M'),
+            step_end=end.strftime('%d/%m/%Y %H:%M'),
+            opts_to_set=['repWIndex', 'repWaterUse'] + (['outputThreads'] if threaded else []),
+            new_vars={'ReportSteps': '%d..%d' % (first, last)},
+        )
+        # Only the ReportedMaps flagged monthly=True use the month-end axis; other
+        # 'steps' outputs enabled by the same options are written every step.
+        binding = LisSettings.instance().binding
+        monthly_files = sorted({
+            os.path.basename(binding[key]) + '.nc'
+            for key, rm in default_options['reportedmaps'].items()
+            if getattr(rm, 'monthly', False) and key in binding
+        } & set(os.listdir(out_dir)))
+        assert monthly_files, "no legacy monthly output produced"
+        checked = 0
+        for fname in monthly_files:
+            tvals, units, calendar, data = self._read_time_and_data(os.path.join(out_dir, fname))
+            assert np.all(np.isfinite(tvals)) and np.all(tvals < 1e30), \
+                f"{fname}: time coordinate holds fill values: {tvals}"
+            assert data.shape[0] == tvals.size, f"{fname}: data slices != time coords"
+            got = num2date(tvals, units, calendar)
+            for g in got:
+                assert (g + datetime.timedelta(days=1)).month != g.month, \
+                    f"{fname}: {g} is not a month-end"
+            checked += 1
+        assert checked > 0
+
+    def test_legacy_monthly_steps_threaded_matches_sync(self):
+        """Legacy monthly=True map outputs on MapOutputSteps with a sparse
+        ReportSteps (all steps but a few month-ends) must be identical (time axis,
+        values) with and without outputThreads. The month-end test uses the model clock, so a
+        live read on the worker thread would select the wrong steps."""
+        from netCDF4 import num2date
+        cal_start = datetime.datetime(1999, 12, 31, 6, 0)
+
+        def step_of(y, m, d):
+            return (datetime.datetime(y, m, d, 6, 0) - cal_start).days + 1
+
+        ends = [(1, 31), (2, 29), (3, 31)]
+        skipped = {(2, 29)}
+        # Dense selection (every step) except one month-end step,
+        # so a month-end flag read one step late selects a wrong step.
+        first, last = step_of(2016, 1, 2), step_of(2016, 3, 31)
+        skipped_steps = {step_of(2016, m, d) for m, d in skipped}
+        rep_steps = [s for s in range(first, last + 1) if s not in skipped_steps]
+        expected = [e for e in ends if e not in skipped]
+        results = {}
+        for label, extra in (('sync', []), ('thr', ['outputThreads'])):
+            out_dir = self._run_lisflood(
+                'test_agg_legacy_sparse_%s' % label,
+                dt_sec='86400',
+                step_start='02/01/2016 06:00',
+                step_end='31/03/2016 06:00',
+                opts_to_set=['repWIndex', 'repWaterUse'] + extra,
+                new_vars={'ReportSteps': ','.join(str(s) for s in rep_steps)},
+            )
+            binding = LisSettings.instance().binding
+            monthly_files = sorted({
+                os.path.basename(binding[key]) + '.nc'
+                for key, rm in default_options['reportedmaps'].items()
+                if getattr(rm, 'monthly', False) and key in binding
+            } & set(os.listdir(out_dir)))
+            assert monthly_files, "no legacy monthly output produced"
+            results[label] = {f: self._read_time_and_data(os.path.join(out_dir, f))
+                              for f in monthly_files}
+        assert results['sync'].keys() == results['thr'].keys()
+        for name, (t_s, units, cal, d_s) in results['sync'].items():
+            t_t, _, _, d_t = results['thr'][name]
+            got = [(g.month, g.day) for g in num2date(t_s, units, cal)]
+            assert got == expected, f"{name}: unexpected month-end selection {got}"
+            assert np.array_equal(t_s, t_t), f"{name}: time axes differ"
+            assert np.array_equal(np.ma.getmaskarray(d_s), np.ma.getmaskarray(d_t)), f"{name}: masks differ"
+            assert np.array_equal(np.ma.getdata(d_s), np.ma.getdata(d_t)), f"{name}: values differ"
 
     def test_aggregation_sum_disables_packing(self):
         """Sum-aggregated outputs should NOT use int16 packing even when OutputPacking=True.
@@ -971,6 +1125,38 @@ class TestTemporalAggregation:
             for d in os.listdir(out_base):
                 if d.startswith('test_agg_'):
                     shutil.rmtree(os.path.join(out_base, d), ignore_errors=True)
+
+
+class TestAggregationRequiresNetcdf:
+    """Temporal aggregation is netCDF-only: PCRaster output must be rejected
+    at setup with a clear error."""
+
+    case_dir = os.path.join(os.path.dirname(__file__), 'data', 'LF_ETRS89_UseCase')
+    settings_file = os.path.join(case_dir, 'settings', 'full.xml')
+    out_dir = os.path.join(case_dir, 'out', 'test_agg_pcraster_reject')
+
+    @pytest.mark.parametrize('option', ['OutputDailyMean', 'OutputMonthlySum', 'OutputYearlyMean'])
+    def test_aggregation_with_pcraster_output_rejected(self, option):
+        from lisflood.global_modules.errors import LisfloodError
+        os.makedirs(self.out_dir, exist_ok=True)
+        new_vars = {'OutputDailyMean': '', 'OutputDailySum': '', 'OutputMonthlyMean': '',
+                    'OutputMonthlySum': '', 'OutputYearlyMean': '', 'OutputYearlySum': ''}
+        new_vars[option] = 'LZMaps'
+        settings = setoptions_with_new_vars(
+            self.settings_file,
+            opts_to_set=['repLZMaps', 'repE2O2'],
+            opts_to_unset=['writeNetcdf', 'writeNetcdfStack'],
+            vars_to_set={'StepStart': '02/01/2016 06:00', 'StepEnd': '05/01/2016 06:00',
+                         'DtSec': '86400', 'PathOut': self.out_dir},
+            new_vars=new_vars,
+        )
+        with pytest.raises(LisfloodError) as exc:
+            lisfloodexe(settings)
+        msg = str(exc.value)
+        assert option in msg and 'requires netCDF output' in msg
+
+    def teardown_method(self):
+        shutil.rmtree(self.out_dir, ignore_errors=True)
 
 
 # ---------------------------------------------------------------------------

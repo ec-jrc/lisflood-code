@@ -18,6 +18,8 @@ import os
 import datetime
 import numpy as np
 from pcraster import ifthen, catchmenttotal, mapmaximum, pcr2numpy
+from pcraster import report as pcraster_report
+from pcraster.framework.frameworkBase import generateNameT
 import sys
 import warnings
 
@@ -25,9 +27,9 @@ from .zusatz import TimeoutputTimeseries
 from .add1 import decompress, valuecell, loadmap, compressArray
 from .netcdf import write_netcdf_header, iterOpenNetcdf, nanCheckMap, uncompress_array
 from .netcdf import hdf5_lock as _hdf5_lock
-from .errors import LisfloodFileError, LisfloodWarning
+from .errors import LisfloodError, LisfloodFileError, LisfloodWarning
 from .settings import inttodate, CDFFlags, LisSettings, MaskInfo
-from netCDF4 import default_fillvals, date2num
+from netCDF4 import default_fillvals
 
 # ------------------------------------------------------------------------
 # Optional earthkit-hydro acceleration of the PCRaster reductions
@@ -254,12 +256,8 @@ class NetcdfStepsWriter(NetcdfWriter):
         self.end_step = end_step
         self.step_range = []
         self.data_steps = []
-        # Per-slice time coordinates for temporal AGGREGATES only. Left empty for
-        # every-step ('all') outputs, whose time axis is fixed and pre-written by
-        # write_netcdf_header. MapOutputAggregated appends one stamp per flushed
-        # period here so the writer can grow the (unlimited) time axis in lock-
-        # step with the data slices - guaranteeing #time-coords == #data-slices.
-        self.time_stamps = []
+        # End-of-run flag snapshotted in stage() (main thread); see _checkpoint.
+        self._stage_end_run = False
         # Set True by MapOutputAggregated for monthly/yearly SUM aggregates to
         # suppress the logarithmic discharge packing (those sums can exceed the
         # calibrated range). Daily sums and mean aggregates leave it False.
@@ -271,7 +269,9 @@ class NetcdfStepsWriter(NetcdfWriter):
         """ Private, makes sure this is the right time to write
         """
         write = False
-        end_run = self.var.currentTimeStep() == self.end_step
+        # Use the snapshot taken in stage(): write() may run on a worker thread
+        # while the main thread has already advanced the model clock.
+        end_run = self._stage_end_run
         if len(self.data_steps) == self.chunks or end_run:
             write = True
         return write
@@ -288,6 +288,7 @@ class NetcdfStepsWriter(NetcdfWriter):
     
         self.step_range.append(step)
         self.data_steps.append(map_np)
+        self._stage_end_run = self.var.currentTimeStep() == self.end_step
 
     def write(self, start_date, rep_steps):
         if self._checkpoint():
@@ -403,25 +404,10 @@ class NetcdfStepsWriter(NetcdfWriter):
                     for step, packed in prepared_steps:
                         nc_var[step, :, :] = packed
 
-                    # Temporal aggregates grow an UNLIMITED time axis: write each
-                    # flushed slice's own time coordinate so the number of time
-                    # coords always equals the number of data slices (no fixed
-                    # pre-sized axis to overflow). Non-aggregated writers leave
-                    # time_stamps empty and skip this - their axis is pre-written
-                    # by write_netcdf_header. Kept INSIDE the HDF5 lock because
-                    # assigning past the current extent grows the unlimited
-                    # dimension, an HDF5 state change that must not race with the
-                    # threaded writers / forcing readers.
-                    if self.time_stamps:
-                        nc_time = nf1.variables['time']
-                        for step, stamp in zip(self.step_range, self.time_stamps):
-                            nc_time[step] = date2num(stamp, nc_time.units, nc_time.calendar)
-
                     nf1.close()
 
                 self.step_range.clear()
                 self.data_steps.clear()
-                self.time_stamps.clear()
             else:
                 raise Exception('You need to stage data before writing!')
 
@@ -430,6 +416,14 @@ class PCRasterWriter(Writer):
     """ Main PCRaster writer class
         Doesn't require another class to handle multiple steps as PCRaster doesn't support temporal metadata
         Writing outputs in temporal chunks not supported for PCRaster
+
+        Thread-safety: with 'outputThreads' write() runs on worker threads.
+        All model state is snapshotted in stage() on the main thread, and each
+        writer reports to its own file name, so no two workers write the same
+        file. The pcraster.report calls themselves are NOT serialised by a
+        lock (unlike netCDF/HDF5 calls, which go through hdf5_lock); the
+        assumption that concurrent reports to distinct files are safe is
+        verified empirically by tests, not guaranteed by the PCRaster library.
     """
 
     def __init__(self, var, map_value, map_path):
@@ -440,10 +434,23 @@ class PCRasterWriter(Writer):
 
     def stage(self):
         self.data = self._extract_map()
+        # Snapshot the model clock (and the Monte Carlo sample directory) on
+        # the main thread: the PCRaster framework names dynamic reports from
+        # the live currentTimeStep(), which the main thread advances while
+        # write() may still be running on a worker thread.
+        self._stage_step = self.var.currentTimeStep()
+        self._stage_prefix = ''
+        if hasattr(self.var, '_inStochastic') and self.var._inStochastic():
+            self._stage_prefix = str(self.var.currentSampleNumber())
 
     def write(self, start_date, rep_steps):
         if self.data is not None:
-            self.var.report(decompress(self.data), str(self.map_path))
+            # Build the file name from the staged snapshot and call
+            # pcraster.report directly, mirroring DynamicFramework._reportNew
+            # for the dynamic section without reading any live model state.
+            # generateNameT rejects extensions and over-long names, like report().
+            path = os.path.join(self._stage_prefix, generateNameT(str(self.map_path), self._stage_step))
+            pcraster_report(decompress(self.data), path)
         else:
             raise Exception('You need to stage data before writing!')
 
@@ -548,13 +555,17 @@ class MapOutput():
         """ Registers map for output at current step
         """
         self.step = self.var.currentTimeStep()
-        if self._output_checkpoint():
+        # Evaluate the checkpoint here (main thread) and reuse it in write():
+        # it may read live model state (monthend/yearend flags) that the main
+        # thread overwrites while write() runs on a worker thread.
+        self._staged_checkpoint = self._output_checkpoint()
+        if self._staged_checkpoint:
             self.writer.stage()
     
     def write(self):
         """ Writes staged maps
         """
-        if self._output_checkpoint():
+        if self._staged_checkpoint:
             return self.writer.write(self._start_date, self._rep_steps)
     
 
@@ -699,6 +710,12 @@ class MapOutputAggregated(MapOutput):
     def stage(self):
         """Accumulate instead of storing instantaneous values."""
         self.step = self.var.currentTimeStep()
+        # Snapshot the model clock here (main thread). write() may run on a
+        # worker thread while the main thread advances CalendarDate and the
+        # step counter, so write() must only use these snapshots.
+        self._stage_date = self.var.CalendarDate
+        self._stage_dt_day = self.var.DtDay
+        self.writer._stage_end_run = self.step == self.writer.end_step
         map_np = self.writer._extract_map()
 
         if self._accum_buffer is None:
@@ -708,18 +725,14 @@ class MapOutputAggregated(MapOutput):
         self._accum_count += 1
 
     def write(self):
-        """Write at each period boundary (day/month/year-end) and at end-of-run.
+        """Write only at the end of a completed period (day, month or year).
 
-        A period is flushed when the next step crosses into a new day/month/year.
-        The final step of the run is ALSO treated as a flush point so a run that
-        stops mid-period still writes its last (partial) aggregate instead of
-        silently dropping the accumulator. This is safe because the output time
-        axis for aggregates is unlimited (see write_netcdf_header): the writer
-        appends one time coordinate per flushed slice, so the count can never
-        overflow regardless of how many periods there are.
+        A value is flushed when the next step crosses into a new day/month/year.
+        A partial period left at the end of the run is not written. Only the
+        snapshots taken in stage() are used (never live model state).
         """
-        current_date = self.var.CalendarDate
-        next_date = current_date + datetime.timedelta(days=self.var.DtDay)
+        current_date = self._stage_date
+        next_date = current_date + datetime.timedelta(days=self._stage_dt_day)
         if self.frequency == 'daily':
             is_boundary = current_date.day != next_date.day
         elif self.frequency == 'monthly':
@@ -729,24 +742,16 @@ class MapOutputAggregated(MapOutput):
         else:
             is_boundary = True
 
-        # End-of-run also flushes the current (possibly partial) period. When the
-        # last step happens to be a real boundary this stays a SINGLE flush (one
-        # combined condition, no double write).
-        is_last_step = self.var.currentTimeStep() == self.var.nrTimeSteps()
-
-        if (is_boundary or is_last_step) and self._accum_buffer is not None:
+        if is_boundary and self._accum_buffer is not None:
             # Finalize
             if self._operation == 'mean':
                 result = self._accum_buffer / self._accum_count
             else:  # sum
                 result = self._accum_buffer
 
-            # Stage the aggregated result into the writer, together with this
-            # period's representative date (the boundary step's CalendarDate,
-            # matching the historical *_end timestamp convention).
+            # Stage the aggregated result into the writer
             self.writer.data_steps.append(result)
             self.writer.step_range.append(self._write_step)
-            self.writer.time_stamps.append(current_date)
             self.writer.write(self._start_date, self._rep_steps)
 
             # Increment own step counter and reset accumulator
@@ -812,6 +817,8 @@ class OutputMapsFactory():
             'OutputYearlySum': ('yearly', 'sum'),
         }
         aggregated_vars = set()  # track which vars are aggregated
+        # Aggregated outputs are written by the netCDF steps writer only.
+        netcdf_output = settings.options['writeNetcdf'] or settings.options['writeNetcdfStack']
 
         # Match aggregation-list entries against ReportedMap.name, which is the
         # identifier used everywhere else in the output system: the per-step/all
@@ -833,6 +840,13 @@ class OutputMapsFactory():
             for var_name in var_list:
                 var_name = var_name.strip()
                 if var_name and var_name in maps_by_name:
+                    if not netcdf_output:
+                        raise LisfloodError(
+                            'Temporal aggregation (%s) requires netCDF output, but '
+                            'writeNetcdf/writeNetcdfStack is not set; "%s" cannot be '
+                            'aggregated with PCRaster map output. Enable netCDF output '
+                            'or remove it from the OutputDaily*/OutputMonthly*/'
+                            'OutputYearly* settings.' % (setting_key, var_name))
                     map_value = maps_by_name[var_name]
                     out = MapOutputAggregated(var, var_name, map_value, frequency, operation)
                     if out.is_valid():

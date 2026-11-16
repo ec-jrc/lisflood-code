@@ -171,6 +171,10 @@ Four settings control temporal aggregation, each taking a semicolon-separated li
 
 The aggregation boundaries are detected directly from the calendar date and therefore work for daily as well as sub-daily time steps.
 
+**Requirement:** temporal aggregation is only available with netCDF output (`writeNetcdf` or `writeNetcdfStack`). Listing a variable in an aggregation setting while writing PCRaster maps stops the run at start-up with an error.
+
+**Threaded output (`outputThreads`):** when enabled, map output is written by background threads. The output is identical to synchronous output, including aggregated values and file or time-step selection: the model clock state needed for a write (step, date, end-of-run flag, reporting checkpoint) is captured when the write is staged, not when the worker thread executes it.
+
 **Interaction with packing:**
 
 - **Mean** aggregates stay within the same value range as the daily values, so `int16` packing (if `OutputPacking = True`) is applied as usual.
