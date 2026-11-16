@@ -895,6 +895,8 @@ class LisfloodRunInfo(Warning):
         # Packing and aggregation info
         if binding.get('OutputPacking', 'False') == 'True':
             msg += "\t[X] Output Packing: int16 scale/offset enabled\n"
+        if binding.get('OutputPackingDischarge', 'False') == 'True':
+            msg += "\t[X] Output Packing (Discharge): int16 log10 encoding enabled\n"
         for agg_key in ['OutputDailyMean', 'OutputDailySum',
                         'OutputMonthlyMean', 'OutputMonthlySum',
                         'OutputYearlyMean', 'OutputYearlySum']:
