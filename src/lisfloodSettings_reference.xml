@@ -240,7 +240,7 @@ You can use builtin path variables in this template and reference to other paths
             **************************************************************
         </comment>
 
-		<textvar name="numCPUs_parallelNumba" value="0">
+		<textvar name="numCPUs_parallelNumba" value="auto">
 		<comment>
         !-- Parallelisation of using Numba runtime compiled library .
         The option "numCPUs_parallelNumba" may take the following values:
