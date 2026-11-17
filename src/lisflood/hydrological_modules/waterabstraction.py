@@ -14,7 +14,7 @@ import os
 import warnings
 
 from pcraster import boolean, nominal, ifthen, defined, areamaximum, downstream, cover, lddrepair, ifthenelse, upstream, \
-    scalar, accuflux, celllength, windowtotal, areaaverage
+    scalar, accuflux, celllength, windowtotal, areaaverage, pcr2numpy
 from pcraster.operators import pcrDiv
 import numpy as np
 from numba import njit, prange
@@ -25,6 +25,14 @@ from ..global_modules.settings import get_calendar_type, calendar_inconsistency_
 from . import HydroModule
 from ..global_modules.netcdf import xarray_reader
 from ..global_modules.errors import LisfloodError
+
+try:
+    from ..global_modules.earthkit_network import (
+        earthkit_available, ek_upstream_sum,
+    )
+except ImportError:  # pragma: no cover - earthkit-hydro not installed
+    earthkit_available = lambda: False
+    ek_upstream_sum = None
 
 
 @njit(parallel=True, fastmath=False, cache=True)
@@ -834,7 +842,16 @@ class waterabstraction(HydroModule):
             # 12.4 Bookkeeping for over-all water balance, and repwateruseGauges and repwateruseSites
             self.var.cumulated_CH_withdrawal += self.var.withdrawal_CH_actual_M3 # bookkeeping for over-all water balance
             if (option['repwateruseGauges']) or (option['repwateruseSites']):
-                self.var.WUseSumM3 = compressArray(accuflux(self.var.Ldd, decompress(self.var.withdrawal_CH_actual_M3)*self.var.InvDtSec))
+                if option['useEarthkitHydro'] and earthkit_available():
+                    # the shared bridge cache already keys the network on the
+                    # Ldd, so no per-module cache is needed
+                    from ..global_modules.earthkit_network import get_earthkit_network
+                    net = get_earthkit_network(pcr2numpy(self.var.Ldd, 0))
+                    self.var.WUseSumM3 = ek_upstream_sum(
+                        net,
+                        np.asarray(self.var.withdrawal_CH_actual_M3, dtype=np.float64) * self.var.InvDtSec)
+                else:
+                    self.var.WUseSumM3 = compressArray(accuflux(self.var.Ldd, decompress(self.var.withdrawal_CH_actual_M3)*self.var.InvDtSec))
                 
             # ********************************************************************************************
             # 13. Actual surface water abstractions (except prescribed paddy rice)

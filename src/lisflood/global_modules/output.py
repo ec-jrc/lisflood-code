@@ -17,7 +17,9 @@ See the Licence for the specific language governing permissions and limitations 
 import os
 import datetime
 import numpy as np
-from pcraster import ifthen, catchmenttotal, mapmaximum
+from pcraster import ifthen, catchmenttotal, mapmaximum, pcr2numpy
+from pcraster import report as pcraster_report
+from pcraster.framework.frameworkBase import generateNameT
 import sys
 import warnings
 
@@ -25,17 +27,135 @@ from .zusatz import TimeoutputTimeseries
 from .add1 import decompress, valuecell, loadmap, compressArray
 from .netcdf import write_netcdf_header, iterOpenNetcdf, nanCheckMap, uncompress_array
 from .netcdf import hdf5_lock as _hdf5_lock
-from .errors import LisfloodFileError, LisfloodWarning
+from .errors import LisfloodError, LisfloodFileError, LisfloodWarning
 from .settings import inttodate, CDFFlags, LisSettings, MaskInfo
 from netCDF4 import default_fillvals
+
+# ------------------------------------------------------------------------
+# Optional earthkit-hydro acceleration of the PCRaster reductions
+# (`useEarthkitHydro` setoption, default True; set it to 0 to use the
+# historical PCRaster path). See earthkit_network.py.
+# ------------------------------------------------------------------------
+try:
+    from .earthkit_network import (
+        earthkit_available,
+        get_earthkit_network,
+        ek_upstream_sum,
+        ek_upstream_sum_batch,
+        ek_upstream_mean,
+        model_precision,
+    )
+except ImportError:  # pragma: no cover - earthkit-hydro not installed
+    earthkit_available = staticmethod(lambda: False)
+    get_earthkit_network = None
+    ek_upstream_sum = None
+    ek_upstream_sum_batch = None
+    ek_upstream_mean = None
+
+    def model_precision():
+        from .parallelization import get_model_dtype
+        return get_model_dtype()
 
 
 # ------------------------------------------------------------------------
 # Packing constants for int16 CF scale/offset encoding
 # ------------------------------------------------------------------------
 PACK_FILL = np.int16(default_fillvals['i2'])      # -32767
-PACK_MIN = PACK_FILL + 1                          # -32766
-PACK_MAX = np.iinfo(np.int16).max                 #  32767
+# Keep PACK_MIN / PACK_MAX as plain Python ints: arithmetic between np.int16
+# scalars silently overflows under numpy 2.x NEP 50 semantics (e.g.
+# PACK_MAX - PACK_MIN wraps to -3), which would corrupt derived quantities such
+# as LOG_PACK_SCALE below. Python ints are unbounded, so the span is exact, and
+# they still broadcast/clip correctly against int16 arrays.
+PACK_MIN = int(PACK_FILL) + 1                     # -32766
+PACK_MAX = int(np.iinfo(np.int16).max)            #  32767
+
+# ------------------------------------------------------------------------
+# Logarithmic int16 packing for discharge (OutputPackingDischarge)
+# ------------------------------------------------------------------------
+# Discharge spans several orders of magnitude on a global domain, so the
+# linear CF scale/offset packing used for the other variables would lose too
+# much precision. Instead we pack log10(discharge) linearly into int16, which
+# gives (near) constant RELATIVE precision across the whole range.
+#
+# This is a NON-CF encoding: readers cannot auto-decode it via the standard
+# scale_factor/add_offset attributes. Instead, the writer tags the variable
+# with explicit custom attributes (see LOG_PACK_ATTRS below) describing the
+# transform so a decoder can invert it:
+#
+#     stored = round((log10(q) - LOG_PACK_MIN) / LOG_PACK_SCALE) + PACK_MIN
+#     q      = 10 ** (LOG_PACK_MIN + LOG_PACK_SCALE * (stored - PACK_MIN))
+#
+# Discharge values below LOG_PACK_QMIN (0.01 m3/s) -- including zero and
+# negatives -- carry no useful information at this precision and are stored as
+# _FillValue (read back as masked). Values above LOG_PACK_QMAX are clipped.
+LOG_PACK_QMIN = 0.01        # m3/s, smallest resolved discharge
+LOG_PACK_QMAX = 500000.0    # m3/s, largest resolved discharge
+LOG_PACK_MIN = np.log10(LOG_PACK_QMIN)   # -2.0
+LOG_PACK_MAX = np.log10(LOG_PACK_QMAX)   # ~5.69897
+# Map [LOG_PACK_MIN, LOG_PACK_MAX] onto the usable int16 range
+# [PACK_MIN, PACK_MAX] (PACK_FILL is reserved as _FillValue).
+LOG_PACK_SCALE = (LOG_PACK_MAX - LOG_PACK_MIN) / float(PACK_MAX - PACK_MIN)
+
+# Custom attributes written on a log-packed discharge variable so downstream
+# tooling can invert the transform. These are NOT CF scale_factor/add_offset.
+LOG_PACK_ATTRS = {
+    'packing': 'log10',
+    'packing_log_min': np.float64(LOG_PACK_MIN),
+    'packing_log_scale': np.float64(LOG_PACK_SCALE),
+    'packing_int_offset': np.float64(PACK_MIN),
+    'packing_valid_min': np.float64(LOG_PACK_QMIN),
+    'packing_valid_max': np.float64(LOG_PACK_QMAX),
+}
+
+
+def pack_discharge_log(values):
+    """Pack a discharge array (float, physical m3/s) into int16 log space.
+
+    Parameters
+    ----------
+    values : numpy.ndarray
+        Discharge values in m3/s. May contain NaN / fill (-9999) / non-positive
+        entries; all of those are stored as PACK_FILL.
+
+    Returns
+    -------
+    numpy.ndarray (int16)
+        Log-packed discharge, same shape as `values`.
+    """
+    q = np.asarray(values, dtype=np.float64)
+    # Resolvable cells: finite and >= the minimum resolved discharge. Zero,
+    # negative, NaN, and the -9999 sentinel all fall out here and become fill.
+    resolved = np.isfinite(q) & (q >= LOG_PACK_QMIN)
+
+    packed = np.full(q.shape, PACK_FILL, dtype=np.int16)
+    if resolved.any():
+        qr = np.clip(q[resolved], LOG_PACK_QMIN, LOG_PACK_QMAX)
+        idx = np.round((np.log10(qr) - LOG_PACK_MIN) / LOG_PACK_SCALE) + PACK_MIN
+        idx = np.clip(idx, PACK_MIN, PACK_MAX)
+        packed[resolved] = idx.astype(np.int16)
+    return packed
+
+
+def unpack_discharge_log(packed):
+    """Invert :func:`pack_discharge_log`.
+
+    Parameters
+    ----------
+    packed : numpy.ndarray (int16)
+        Log-packed discharge as produced by `pack_discharge_log`.
+
+    Returns
+    -------
+    numpy.ndarray (float64)
+        Discharge in m3/s. Fill cells are returned as NaN.
+    """
+    stored = np.asarray(packed)
+    out = np.full(stored.shape, np.nan, dtype=np.float64)
+    valid = stored != PACK_FILL
+    if valid.any():
+        exponent = LOG_PACK_MIN + LOG_PACK_SCALE * (stored[valid].astype(np.float64) - PACK_MIN)
+        out[valid] = np.power(10.0, exponent)
+    return out
 
 # ------------------------------------------------------------------------
 # Writer classes
@@ -136,6 +256,12 @@ class NetcdfStepsWriter(NetcdfWriter):
         self.end_step = end_step
         self.step_range = []
         self.data_steps = []
+        # End-of-run flag snapshotted in stage() (main thread); see _checkpoint.
+        self._stage_end_run = False
+        # Set True by MapOutputAggregated for monthly/yearly SUM aggregates to
+        # suppress the logarithmic discharge packing (those sums can exceed the
+        # calibrated range). Daily sums and mean aggregates leave it False.
+        self.log_pack_disabled = False
 
         super().__init__(var, map_key, map_value, map_path, frequency)
 
@@ -143,7 +269,9 @@ class NetcdfStepsWriter(NetcdfWriter):
         """ Private, makes sure this is the right time to write
         """
         write = False
-        end_run = self.var.currentTimeStep() == self.end_step
+        # Use the snapshot taken in stage(): write() may run on a worker thread
+        # while the main thread has already advanced the model clock.
+        end_run = self._stage_end_run
         if len(self.data_steps) == self.chunks or end_run:
             write = True
         return write
@@ -160,6 +288,7 @@ class NetcdfStepsWriter(NetcdfWriter):
     
         self.step_range.append(step)
         self.data_steps.append(map_np)
+        self._stage_end_run = self.var.currentTimeStep() == self.end_step
 
     def write(self, start_date, rep_steps):
         if self._checkpoint():
@@ -191,11 +320,28 @@ class NetcdfStepsWriter(NetcdfWriter):
                 is_packed = packing_enabled and raw_scale is not None and raw_offset is not None
                 packed_scale = np.float64(raw_scale) if is_packed else None
                 packed_offset = np.float64(raw_offset) if is_packed else None
+                # Logarithmic discharge packing is a COMPLETELY separate opt-in
+                # (OutputPackingDischarge), independent of OutputPacking above.
+                # It only applies to the DischargeMaps output and uses the
+                # custom log10 int16 encoding (pack_discharge_log), never the
+                # linear CF scale/offset path. This predicate MUST stay in sync
+                # with write_netcdf_header's `is_log_packed`.
+                is_log_packed = (self.settings.binding.get('OutputPackingDischarge', 'False') == 'True'
+                                 and self.map_key == 'DischargeMaps'
+                                 and not self.log_pack_disabled)
                 maskinfo = MaskInfo.instance()
 
                 prepared_steps = []
                 for step, data in zip(self.step_range, self.data_steps):
-                    if is_packed:
+                    if is_log_packed:
+                        # Pack BEFORE uncompressing (same rationale as the
+                        # linear path): operate on the staged compressed
+                        # in-domain vector so masking can never hide NaN.
+                        map_in = np.ma.getdata(data).astype(np.float64)
+                        packed_in = pack_discharge_log(map_in)
+                        packed = np.full(maskinfo.info.shape, PACK_FILL, dtype=np.int16)
+                        packed.reshape(-1)[~maskinfo.info.maskflat] = packed_in
+                    elif is_packed:
                         # Pack BEFORE uncompressing: operate on the staged
                         # compressed in-domain vector (np.ma.getdata = the
                         # positional raw buffer, as a plain ndarray) so np.ma
@@ -247,7 +393,8 @@ class NetcdfStepsWriter(NetcdfWriter):
                     if self.step_range[0] == 0:
                         nf1 = write_netcdf_header(self.settings, self.map_name, self.map_path, self.var.DtDay,
                                                 self.map_key, self.map_value.output_var, self.map_value.unit,
-                                                start_date, rep_steps, self.frequency, map_value=self.map_value)
+                                                start_date, rep_steps, self.frequency, map_value=self.map_value,
+                                                log_packed=is_log_packed)
                     else:
                         nf1 = iterOpenNetcdf(self.map_path, "", 'a', format='NETCDF4')
 
@@ -269,6 +416,14 @@ class PCRasterWriter(Writer):
     """ Main PCRaster writer class
         Doesn't require another class to handle multiple steps as PCRaster doesn't support temporal metadata
         Writing outputs in temporal chunks not supported for PCRaster
+
+        Thread-safety: with 'outputThreads' write() runs on worker threads.
+        All model state is snapshotted in stage() on the main thread, and each
+        writer reports to its own file name, so no two workers write the same
+        file. The pcraster.report calls themselves are NOT serialised by a
+        lock (unlike netCDF/HDF5 calls, which go through hdf5_lock); the
+        assumption that concurrent reports to distinct files are safe is
+        verified empirically by tests, not guaranteed by the PCRaster library.
     """
 
     def __init__(self, var, map_value, map_path):
@@ -279,10 +434,23 @@ class PCRasterWriter(Writer):
 
     def stage(self):
         self.data = self._extract_map()
+        # Snapshot the model clock (and the Monte Carlo sample directory) on
+        # the main thread: the PCRaster framework names dynamic reports from
+        # the live currentTimeStep(), which the main thread advances while
+        # write() may still be running on a worker thread.
+        self._stage_step = self.var.currentTimeStep()
+        self._stage_prefix = ''
+        if hasattr(self.var, '_inStochastic') and self.var._inStochastic():
+            self._stage_prefix = str(self.var.currentSampleNumber())
 
     def write(self, start_date, rep_steps):
         if self.data is not None:
-            self.var.report(decompress(self.data), str(self.map_path))
+            # Build the file name from the staged snapshot and call
+            # pcraster.report directly, mirroring DynamicFramework._reportNew
+            # for the dynamic section without reading any live model state.
+            # generateNameT rejects extensions and over-long names, like report().
+            path = os.path.join(self._stage_prefix, generateNameT(str(self.map_path), self._stage_step))
+            pcraster_report(decompress(self.data), path)
         else:
             raise Exception('You need to stage data before writing!')
 
@@ -387,13 +555,17 @@ class MapOutput():
         """ Registers map for output at current step
         """
         self.step = self.var.currentTimeStep()
-        if self._output_checkpoint():
+        # Evaluate the checkpoint here (main thread) and reuse it in write():
+        # it may read live model state (monthend/yearend flags) that the main
+        # thread overwrites while write() runs on a worker thread.
+        self._staged_checkpoint = self._output_checkpoint()
+        if self._staged_checkpoint:
             self.writer.stage()
     
     def write(self):
         """ Writes staged maps
         """
-        if self._output_checkpoint():
+        if self._staged_checkpoint:
             return self.writer.write(self._start_date, self._rep_steps)
     
 
@@ -495,16 +667,30 @@ class MapOutputAggregated(MapOutput):
         self._accum_count = 0
         self._write_step = 0  # own step counter for NetCDF time dimension
 
-        # Disable int16 packing for sum aggregates — monthly/yearly sums can exceed
-        # the int16 range calibrated for daily values. Mean aggregates stay within
-        # the same value range as daily output, so packing remains valid.
-        if operation == 'sum':
+        # Packing of SUM aggregates depends on the aggregation period:
+        #  - MONTHLY / YEARLY sums accumulate many timesteps and overflow the
+        #    int16 range that scale_factor/add_offset were calibrated for, so
+        #    they are written UNPACKED (float), as originally.
+        #  - DAILY sums stay close to the per-step value range (at most a few
+        #    timesteps per day), so they keep int16 packing.
+        # MEAN aggregates always keep packing (they stay in the per-step range).
+        pack_disabled = (operation == 'sum' and frequency in ('monthly', 'yearly'))
+        if pack_disabled:
             map_value_no_pack = map_value._replace(scale_factor=None, add_offset=None)
         else:
             map_value_no_pack = map_value
 
         super().__init__(var, out_type, frequency, map_key, map_value_no_pack)
-        
+
+        # Same reasoning for the independent logarithmic DISCHARGE packing: a
+        # monthly/yearly SUM of discharge can exceed the calibrated log range
+        # (max 500000 m3/s), so disable log packing for those. Daily sums and
+        # mean aggregates keep it. The linear _replace() above cannot express
+        # this (log packing does not use scale_factor/add_offset), so flag it
+        # on the writer directly.
+        if pack_disabled and hasattr(self, 'writer'):
+            self.writer.log_pack_disabled = True
+
         # Force immediate write for aggregated outputs (one slice per period)
         if hasattr(self, 'writer') and hasattr(self.writer, 'chunks'):
             self.writer.chunks = 1
@@ -524,6 +710,12 @@ class MapOutputAggregated(MapOutput):
     def stage(self):
         """Accumulate instead of storing instantaneous values."""
         self.step = self.var.currentTimeStep()
+        # Snapshot the model clock here (main thread). write() may run on a
+        # worker thread while the main thread advances CalendarDate and the
+        # step counter, so write() must only use these snapshots.
+        self._stage_date = self.var.CalendarDate
+        self._stage_dt_day = self.var.DtDay
+        self.writer._stage_end_run = self.step == self.writer.end_step
         map_np = self.writer._extract_map()
 
         if self._accum_buffer is None:
@@ -533,9 +725,14 @@ class MapOutputAggregated(MapOutput):
         self._accum_count += 1
 
     def write(self):
-        """Write only at period boundary (day-end, month-end or year-end)."""
-        current_date = self.var.CalendarDate
-        next_date = current_date + datetime.timedelta(days=self.var.DtDay)
+        """Write only at the end of a completed period (day, month or year).
+
+        A value is flushed when the next step crosses into a new day/month/year.
+        A partial period left at the end of the run is not written. Only the
+        snapshots taken in stage() are used (never live model state).
+        """
+        current_date = self._stage_date
+        next_date = current_date + datetime.timedelta(days=self._stage_dt_day)
         if self.frequency == 'daily':
             is_boundary = current_date.day != next_date.day
         elif self.frequency == 'monthly':
@@ -620,14 +817,37 @@ class OutputMapsFactory():
             'OutputYearlySum': ('yearly', 'sum'),
         }
         aggregated_vars = set()  # track which vars are aggregated
+        # Aggregated outputs are written by the netCDF steps writer only.
+        netcdf_output = settings.options['writeNetcdf'] or settings.options['writeNetcdfStack']
 
+        # Match aggregation-list entries against ReportedMap.name, which is the
+        # identifier used everywhere else in the output system: the per-step/all
+        # outputs are keyed and path-resolved by rm.name (see
+        # settings._reported_maps), and the output settings textvars are named
+        # after rm.name too. The reportedmaps DICT KEY is only an internal dict
+        # handle and for a few entries differs from rm.name (e.g. key
+        # 'SeepSubToGWforestMaps' vs name 'SeepSubToGWForestMaps'). Matching the
+        # user's list against the dict key (as before) meant that for those
+        # entries no spelling worked: the dict-key spelling passed the lookup but
+        # then failed path resolution (aggregate dropped, per-step file kept at
+        # full resolution), while the rm.name spelling failed the lookup outright.
+        # Keying by rm.name makes the aggregate resolve to the right file AND
+        # match the surviving per-step output in the cleanup below.
         reportedmaps = settings.options['reportedmaps']
+        maps_by_name = {rm.name: rm for rm in reportedmaps.values()}
         for setting_key, (frequency, operation) in aggregation_configs.items():
             var_list = binding.get(setting_key, '').split(';')
             for var_name in var_list:
                 var_name = var_name.strip()
-                if var_name and var_name in reportedmaps:
-                    map_value = reportedmaps[var_name]
+                if var_name and var_name in maps_by_name:
+                    if not netcdf_output:
+                        raise LisfloodError(
+                            'Temporal aggregation (%s) requires netCDF output, but '
+                            'writeNetcdf/writeNetcdfStack is not set; "%s" cannot be '
+                            'aggregated with PCRaster map output. Enable netCDF output '
+                            'or remove it from the OutputDaily*/OutputMonthly*/'
+                            'OutputYearly* settings.' % (setting_key, var_name))
+                    map_value = maps_by_name[var_name]
                     out = MapOutputAggregated(var, var_name, map_value, frequency, operation)
                     if out.is_valid():
                         outputs.append(out)
@@ -750,6 +970,20 @@ class outputTssMap(object):
 
     def __init__(self, out_variable):
         self.var = out_variable
+        # earthkit-hydro RiverNetwork (lazily built in initial(), see below)
+        self._ek_net = None
+
+    def _ek_network(self):
+        """ Build (once) the earthkit RiverNetwork from the model Ldd for the
+        opt-in useEarthkitHydro reporting path. The network node order equals
+        LISFLOOD's compressed 1D order, so compressed arrays can be passed
+        directly. Raises if earthkit-hydro is unavailable (caller only calls
+        this when option['useEarthkitHydro'] and earthkit_available()).
+        """
+        if self._ek_net is None:
+            ldd_np = pcr2numpy(self.var.Ldd, 0)
+            self._ek_net = get_earthkit_network(ldd_np)
+        return self._ek_net
 
     def initial(self):
         """ initial part of the output module
@@ -759,9 +993,23 @@ class outputTssMap(object):
         flags = settings.flags
         binding = settings.binding
         report_time_serie_act = settings.report_timeseries
+        maskinfo = MaskInfo.instance()
         binding['Catchments'] = self.var.Catchments
         # output for single column eg mapmaximum
         self.var.Tss = {}
+
+        # --- opt-in earthkit-hydro acceleration of the reporting path --------
+        # Precompute the 1D arrays the earthkit path needs (upstream area and
+        # pixel area in compressed order), and the per-series zone-code arrays
+        # for multi-cell gauge zones. Nothing here touches the PCRaster path.
+        if option['useEarthkitHydro'] and earthkit_available():
+            net = self._ek_network()
+            pixelarea_1d = np.asarray(self.var.PixelArea, dtype=np.float64)
+            self.var.EkPixelArea = pixelarea_1d
+            # UpArea recomputed on the network (fast, parallel) instead of
+            # reusing the PCRaster map: same accumulation, compressed order.
+            uparea_1d = ek_upstream_sum(net, pixelarea_1d, node_weights=None)
+            self.var.EkInvUpArea = 1.0 / uparea_1d
 
         # Resolve each distinct output-point location ("where": Gauges, Sites,
         # LakeSites, Catchments, ...) only ONCE. The resolved map is used read-only by
@@ -831,6 +1079,7 @@ class outputTssMap(object):
         settings = LisSettings.instance()
         option = settings.options
         flags = settings.flags
+        maskinfo = MaskInfo.instance()
         report_time_serie_act = settings.report_timeseries
 
         if not(option['InitLisfloodwithoutSplit']):
@@ -843,16 +1092,61 @@ class outputTssMap(object):
                     pass
                 sys.stdout.write("\n")
 
+            # earthkit/numpy fast path (opt-in useEarthkitHydro): the
+            # how=='total' series (the upstream-accumulation family) all share
+            # the same network and node_weights and differ only by field, so
+            # collect their fields in one pass and issue a SINGLE batched
+            # upstream accumulation for the whole step instead of one traversal
+            # per series. The batch axis is a pure outer vectorization, so each
+            # per-series result is bit-identical to the scalar path.
+            _fused_changed = {}
+            if option['useEarthkitHydro'] and earthkit_available():
+                _fused_fields = []
+                _fused_keys = []
+                for tss in report_time_serie_act:
+                    _how = report_time_serie_act[tss].operation[0] if len(report_time_serie_act[tss].operation) else ''
+                    if _how == 'total':
+                        _what = 'self.var.' + report_time_serie_act[tss].output_var
+                        _x_1d = eval(_what)
+                        _fused_fields.append(np.asarray(_x_1d, dtype=np.float64))
+                        _fused_keys.append(tss)
+                if _fused_fields:
+                    _net = self._ek_network()
+                    _stacked = np.stack(_fused_fields)
+                    _tot = ek_upstream_sum_batch(_net, _stacked,
+                                                 node_weights=self.var.EkPixelArea)
+                    _mp = model_precision()
+                    for _k, _key in enumerate(_fused_keys):
+                        _fused_changed[_key] = (_tot[_k] * self.var.EkInvUpArea).astype(
+                            _mp, copy=False)
+
             for tss in report_time_serie_act:
                 # report time series
                 what = 'self.var.' + report_time_serie_act[tss].output_var
                 how = report_time_serie_act[tss].operation[0] if len(report_time_serie_act[tss].operation) else ''
-                if how == 'mapmaximum':
-                    changed = compressArray(mapmaximum(decompress(eval(what))))
-                    what = 'changed'
-                if how == 'total':
-                    changed = compressArray(catchmenttotal(decompress(eval(what)) * self.var.PixelAreaPcr, self.var.Ldd) * self.var.InvUpArea)
-                    what = 'changed'
+                # earthkit/numpy fast path (opt-in useEarthkitHydro): operate on
+                # the 1D compressed arrays directly, never building 2D PCRaster
+                # maps (kills the decompress/numpy2pcr/pcr2numpy round-trips and
+                # the single-threaded PCRaster engine reductions). The historical
+                # PCRaster statements are kept verbatim in the else branches.
+                if option['useEarthkitHydro'] and earthkit_available():
+                    if how == 'mapmaximum':
+                        x_1d = eval(what)
+                        with np.errstate(invalid='ignore'):
+                            changed = np.full(maskinfo.info.mapC, np.nanmax(x_1d),
+                                              dtype=np.float64)
+                        what = 'changed'
+                    elif how == 'total':
+                        # distribute the pre-batched upstream sum for this series
+                        changed = _fused_changed[tss]
+                        what = 'changed'
+                else:
+                    if how == 'mapmaximum':
+                        changed = compressArray(mapmaximum(decompress(eval(what))))
+                        what = 'changed'
+                    if how == 'total':
+                        changed = compressArray(catchmenttotal(decompress(eval(what)) * self.var.PixelAreaPcr, self.var.Ldd) * self.var.InvUpArea)
+                        what = 'changed'
                 tss_obj = self.var.Tss[tss]
                 value_1d = eval(what)
                 # Fast path: when every gauge is a single cell, the inherited
@@ -865,6 +1159,14 @@ class outputTssMap(object):
                 # non-spatial gauges, or non-ndarray values).
                 if getattr(tss_obj, '_compressed_sampling_ok', False) and isinstance(value_1d, np.ndarray):
                     tss_obj.sample_compressed(value_1d)
+                elif option['useEarthkitHydro'] and earthkit_available() and \
+                        getattr(tss_obj, '_ek_zone_codes', None) is not None and \
+                        isinstance(value_1d, np.ndarray):
+                    # multi-cell gauge zones: numpy zone-mean (equivalent of the
+                    # .sample() -> pcraster.areaaverage fallback), still without
+                    # any 2D map round-trip
+                    from .earthkit_network import ek_sample_zone_means
+                    ek_sample_zone_means(tss_obj, value_1d)
                 else:
                     tss_obj.sample(decompress(value_1d))
 
@@ -872,7 +1174,7 @@ class outputTssMap(object):
         # ***** WRITING RESULTS: MAPS   ******************************
         # ************************************************************
 
-        self.output_maps.write()      
+        self.output_maps.write()
 
         # update local output steps
         cdfflags = CDFFlags.instance()

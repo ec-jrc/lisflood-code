@@ -22,7 +22,7 @@ from collections import OrderedDict
 
 import numpy as np
 from numba import njit, prange
-# Thread-pool governance (numba/numexpr/BLAS) lives in parallelization.py.
+# Thread-pool governance (numba/BLAS) lives in parallelization.py.
 
 
 from .global_modules.settings import CutMap, LisSettings, NetCDFMetadata, EPICSettings, MaskInfo
@@ -144,7 +144,7 @@ class LisfloodModel_ini(DynamicModel):
         flags = self.settings.flags
         report_steps = self.settings.report_steps
 
-        # Centrally govern the numba, numexpr and BLAS/OpenMP thread pools to
+        # Centrally govern the numba and BLAS/OpenMP thread pools to
         # avoid oversubscription. Nested thread pools each sized to the host
         # core count cause heavy context-switching and can make runs slower
         # than serial, especially on small/narrow domains. Thread counts affect

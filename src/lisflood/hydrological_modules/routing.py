@@ -586,7 +586,7 @@ class routing(HydroModule):
                 if option['simulateLakes']:
                    self.var.StorageStepINIT += self.var.LakeStorageIniM3
                    # DisStructure += np.where(compressArray(self.var.IsUpsOfStructureLake), 0.5 * self.var.ChanQ * self.var.DtRouting, 0) #cm22-1
-                   DisStructure += np.where(compressArray(self.var.IsUpsOfStructureLake), 0.5 * self.var.ChanQAvgDt * self.var.DtRouting, 0)
+                   DisStructure += np.where(self.var.IsUpsOfStructureLakeC, 0.5 * self.var.ChanQAvgDt * self.var.DtRouting, 0)
                 self.var.DischargeM3StructuresIni = np.take(np.bincount(self.var.Catchments, weights=DisStructure), self.var.Catchments)
            else:
                 # self.var.StorageStepINIT= self.var.ChanM3Kin+self.var.Chan2M3Kin-self.var.Chan2M3Start

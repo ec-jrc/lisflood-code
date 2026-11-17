@@ -38,7 +38,7 @@ MIN_DISCHARGE = 1e-30 # Minimum allowed discharge value to avoid numerical insta
 # ROUTING FUNCTIONS
 # -------------------------------------------------------------------------------------------------
 @njit(parallel=True, fastmath=False, cache=True)
-def kinematicRouting(discharge_avg, discharge, lateral_inflow, constant, upstream_lookup,\
+def kinematicRouting(discharge_avg, discharge, lateral_inflow, upstream_lookup,\
                      num_upstream_pixels, ordered_pixels, start_stop, inv_time_delta, beta, inv_beta,\
                      b_minus_1, a_dx_div_dt, b_a_dx_div_dt, a_dx, newton_tol):
     """
@@ -46,7 +46,6 @@ def kinematicRouting(discharge_avg, discharge, lateral_inflow, constant, upstrea
     :param discharge_avg:
     :param discharge:
     :param lateral_inflow:
-    :param constant:
     :param upstream_lookup:
     :param num_upstream_pixels:
     :param ordered_pixels:
@@ -69,8 +68,15 @@ def kinematicRouting(discharge_avg, discharge, lateral_inflow, constant, upstrea
         for index in prange(first, last):  # this is a parallel loop
             # Solve the kinematic wave for the current pixel
             pix = ordered_pixels[index]
+            # Derive the Newton f(x) constant term per pixel inside this parallel
+            # loop so the elementwise power/multiply/add runs on this kernel's
+            # governed pool instead of a serial host pass. Operator order
+            # (** before *, then +) matches the former numpy precompute, and
+            # constant_pix reads the pre-solve discharge[pix] (the old-timestep
+            # value) because solve1Pixel mutates discharge[pix] in place below.
+            constant_pix = a_dx_div_dt[pix] * discharge[pix] ** beta + lateral_inflow[pix]
             discharge_before = discharge[pix]
-            if solve1Pixel(pix, discharge, constant[pix], upstream_lookup,\
+            if solve1Pixel(pix, discharge, constant_pix, upstream_lookup,\
                         num_upstream_pixels, a_dx_div_dt[pix], b_a_dx_div_dt[pix], beta, inv_beta, b_minus_1, newton_tol):                        
                 solve1PixelAvg(pix, discharge_avg, discharge_before, discharge[pix], lateral_inflow[pix], upstream_lookup,\
                             num_upstream_pixels, inv_time_delta, beta, a_dx[pix])
