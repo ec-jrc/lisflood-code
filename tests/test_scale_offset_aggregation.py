@@ -45,6 +45,21 @@ def _find_data_var(ds):
             return name
     raise ValueError(f"No data variable found in {ds.filepath()}")
 
+_AGG_KEYS = ('OutputDailyMean', 'OutputDailySum', 'OutputMonthlyMean',
+             'OutputMonthlySum', 'OutputYearlyMean', 'OutputYearlySum')
+
+
+def agg_vars(packing='False', **enabled):
+    """Settings overrides with every aggregation key blanked except `enabled`.
+
+    Blanking all keys guarantees that no aggregate leaks in from the base
+    settings file.
+    """
+    bad = set(enabled) - set(_AGG_KEYS)
+    assert not bad, f"unknown aggregation keys: {sorted(bad)}"
+    return {'OutputPacking': packing, **{k: enabled.get(k, '') for k in _AGG_KEYS}}
+
+
 def setoptions_with_new_vars(settings_file, opts_to_set=None, opts_to_unset=None,
                              vars_to_set=None, new_vars=None):
     """Extended version of setoptions that can inject NEW textvar entries.
@@ -479,13 +494,7 @@ class TestTemporalAggregation:
             step_start=step_start,
             step_end=step_end,
             opts_to_set=opts,
-            new_vars={
-                'OutputPacking': 'False',
-                'OutputMonthlyMean': '',
-                'OutputMonthlySum': '',
-                'OutputYearlyMean': '',
-                'OutputYearlySum': '',
-            },
+            new_vars=agg_vars('False'),
         )
 
         # Run with temporal aggregation for all packed variables
@@ -494,13 +503,7 @@ class TestTemporalAggregation:
             step_start=step_start,
             step_end=step_end,
             opts_to_set=opts,
-            new_vars={
-                'OutputPacking': 'False',
-                'OutputMonthlyMean': agg_var_list if agg_setting == 'OutputMonthlyMean' else '',
-                'OutputMonthlySum': agg_var_list if agg_setting == 'OutputMonthlySum' else '',
-                'OutputYearlyMean': agg_var_list if agg_setting == 'OutputYearlyMean' else '',
-                'OutputYearlySum': agg_var_list if agg_setting == 'OutputYearlySum' else '',
-            },
+            new_vars=agg_vars('False', **{agg_setting: agg_var_list}),
         )
 
         # Aggregation function for manual computation
@@ -631,15 +634,7 @@ class TestTemporalAggregation:
             step_start=step_start,
             step_end=step_end,
             opts_to_set=opts,
-            new_vars={
-                'OutputPacking': 'False',
-                'OutputDailyMean': '',
-                'OutputDailySum': '',
-                'OutputMonthlyMean': '',
-                'OutputMonthlySum': '',
-                'OutputYearlyMean': '',
-                'OutputYearlySum': '',
-            },
+            new_vars=agg_vars('False'),
         )
 
         # Same run with daily aggregation enabled
@@ -649,15 +644,7 @@ class TestTemporalAggregation:
             step_start=step_start,
             step_end=step_end,
             opts_to_set=opts,
-            new_vars={
-                'OutputPacking': 'False',
-                'OutputDailyMean': agg_var_list if agg_setting == 'OutputDailyMean' else '',
-                'OutputDailySum': agg_var_list if agg_setting == 'OutputDailySum' else '',
-                'OutputMonthlyMean': '',
-                'OutputMonthlySum': '',
-                'OutputYearlyMean': '',
-                'OutputYearlySum': '',
-            },
+            new_vars=agg_vars('False', **{agg_setting: agg_var_list}),
         )
 
         agg_func = np.nanmean if operation == 'mean' else np.nansum
@@ -772,15 +759,7 @@ class TestTemporalAggregation:
             step_start=step_start,
             step_end=step_end,
             opts_to_set=opts,
-            new_vars={
-                'OutputPacking': 'False',
-                'OutputDailyMean': '',
-                'OutputDailySum': '',
-                'OutputMonthlyMean': '',
-                'OutputMonthlySum': '',
-                'OutputYearlyMean': '',
-                'OutputYearlySum': '',
-            },
+            new_vars=agg_vars('False'),
         )
 
         # Same run with daily aggregation enabled
@@ -790,15 +769,7 @@ class TestTemporalAggregation:
             step_start=step_start,
             step_end=step_end,
             opts_to_set=opts,
-            new_vars={
-                'OutputPacking': 'False',
-                'OutputDailyMean': agg_var_list if agg_setting == 'OutputDailyMean' else '',
-                'OutputDailySum': agg_var_list if agg_setting == 'OutputDailySum' else '',
-                'OutputMonthlyMean': '',
-                'OutputMonthlySum': '',
-                'OutputYearlyMean': '',
-                'OutputYearlySum': '',
-            },
+            new_vars=agg_vars('False', **{agg_setting: agg_var_list}),
         )
 
         checked_count = 0
@@ -881,16 +852,6 @@ class TestTemporalAggregation:
                 f"{filename}: daily {operation} (unpacked) max relative difference {max_rel_diff} exceeds tolerance 1e-5"
         return 1
 
-    # Shared configuration: LZMaps monthly mean reported next to the per-step
-    # output, so the aggregate and the plain writer coexist in one run.
-    _AGG_LZ_VARS = {
-        'OutputPacking': 'True',
-        'OutputMonthlyMean': 'LZMaps',
-        'OutputMonthlySum': '',
-        'OutputYearlyMean': '',
-        'OutputYearlySum': '',
-    }
-
     @staticmethod
     def _read_time_and_data(nc_path):
         """Return (time values, units, calendar, data array) of a netCDF output."""
@@ -923,7 +884,7 @@ class TestTemporalAggregation:
             step_start='02/01/2016 06:00',
             step_end='31/12/2016 06:00',   # ends on month + year boundary
             opts_to_set=['repLZMaps', 'repE2O2'] + (['outputThreads'] if threaded else []),
-            new_vars=self._AGG_LZ_VARS,
+            new_vars=agg_vars('True', OutputMonthlyMean='LZMaps'),
         )
         nc_path = os.path.join(out_dir, 'lz.nc')
         assert os.path.exists(nc_path), f"Output not found (run likely crashed): {nc_path}"
@@ -952,7 +913,7 @@ class TestTemporalAggregation:
             step_start='02/01/2016 06:00',
             step_end='15/06/2016 06:00',   # 5 completed months (Jan-May), June partial
             opts_to_set=['repLZMaps', 'repE2O2'] + (['outputThreads'] if threaded else []),
-            new_vars=self._AGG_LZ_VARS,
+            new_vars=agg_vars('True', OutputMonthlyMean='LZMaps'),
         )
         nc_path = os.path.join(out_dir, 'lz.nc')
         assert os.path.exists(nc_path), f"Output not found (run likely crashed): {nc_path}"
@@ -967,13 +928,7 @@ class TestTemporalAggregation:
     def test_threaded_aggregation_equals_synchronous(self):
         """Aggregated outputs (monthly mean + yearly sum) must be identical
         between the threaded and synchronous writers."""
-        new_vars = {
-            'OutputPacking': 'False',
-            'OutputMonthlyMean': 'LZMaps',
-            'OutputMonthlySum': 'UZMaps',
-            'OutputYearlyMean': '',
-            'OutputYearlySum': '',
-        }
+        new_vars = agg_vars('False', OutputMonthlyMean='LZMaps', OutputMonthlySum='UZMaps')
         results = {}
         for label, extra in (('sync', []), ('thr', ['outputThreads'])):
             out_dir = self._run_lisflood(
@@ -1099,13 +1054,7 @@ class TestTemporalAggregation:
             step_start='02/07/2016 06:00',
             step_end='01/09/2016 06:00',
             opts_to_set=['repThetaMaps', 'repE2O2'],
-            new_vars={
-                'OutputPacking': 'True',
-                'OutputMonthlyMean': '',
-                'OutputMonthlySum': 'Theta1Maps',
-                'OutputYearlyMean': '',
-                'OutputYearlySum': '',
-            },
+            new_vars=agg_vars('True', OutputMonthlySum='Theta1Maps'),
         )
 
         nc_path = os.path.join(out_dir, 'tha.nc')
@@ -1117,6 +1066,55 @@ class TestTemporalAggregation:
             "Sum-aggregated output should NOT be int16-packed"
         assert info['scale_factor'] is None, \
             "Sum-aggregated output should not have scale_factor attribute"
+
+    def test_daily_sum_keeps_packing(self):
+        """Daily sums stay within the per-step range (at most a few sub-daily
+        steps per day), so OutputDailySum keeps int16 packing with
+        OutputPacking=True, unlike monthly/yearly sums."""
+        out_dir = self._run_lisflood(
+            'test_agg_daily_sum_packing',
+            dt_sec='21600',
+            step_start='02/07/2016 00:00',
+            step_end='05/07/2016 00:00',
+            opts_to_set=['repThetaMaps', 'repE2O2'],
+            new_vars=agg_vars('True', OutputDailySum='Theta1Maps'),
+        )
+
+        nc_path = os.path.join(out_dir, 'tha.nc')
+        assert os.path.exists(nc_path), f"Output not found: {nc_path}"
+
+        info = get_nc_packing_info(nc_path)
+        assert info['dtype'] == np.dtype('int16'), \
+            "Daily-sum output should stay int16-packed"
+        assert info['scale_factor'] is not None, \
+            "Daily-sum output should keep the scale_factor attribute"
+
+    @pytest.mark.parametrize('packing', ['False', 'True'])
+    @pytest.mark.parametrize('setting', ['OutputDailyMean', 'OutputDailySum'])
+    def test_threaded_daily_aggregation_equals_synchronous(self, setting, packing):
+        """Daily aggregates (sub-daily run) must be identical between the
+        threaded and synchronous writers, with and without packing."""
+        new_vars = agg_vars(packing, **{setting: 'LZMaps'})
+        results = {}
+        for label, extra in (('sync', []), ('thr', ['outputThreads'])):
+            out_dir = self._run_lisflood(
+                f'test_agg_daily_eq_{setting}_{packing}_{label}',
+                dt_sec='21600',
+                step_start='02/07/2016 00:00',
+                step_end='05/07/2016 00:00',
+                opts_to_set=['repLZMaps', 'repE2O2'] + extra,
+                new_vars=new_vars,
+            )
+            nc_path = os.path.join(out_dir, 'lz.nc')
+            assert os.path.exists(nc_path), f"Output not found: {nc_path}"
+            results[label] = self._read_time_and_data(nc_path)
+        t_s, _, _, d_s = results['sync']
+        t_t, _, _, d_t = results['thr']
+        assert d_s.shape[0] == 3, f"expected 3 daily slices, got {d_s.shape[0]}"
+        assert np.array_equal(t_s, t_t), "time axes differ"
+        assert d_s.shape == d_t.shape, "shapes differ"
+        assert np.array_equal(np.ma.getmaskarray(d_s), np.ma.getmaskarray(d_t)), "masks differ"
+        assert np.array_equal(np.ma.getdata(d_s), np.ma.getdata(d_t)), "values differ"
 
     def teardown_method(self):
         """Clean up output directories."""
@@ -1139,9 +1137,7 @@ class TestAggregationRequiresNetcdf:
     def test_aggregation_with_pcraster_output_rejected(self, option):
         from lisflood.global_modules.errors import LisfloodError
         os.makedirs(self.out_dir, exist_ok=True)
-        new_vars = {'OutputDailyMean': '', 'OutputDailySum': '', 'OutputMonthlyMean': '',
-                    'OutputMonthlySum': '', 'OutputYearlyMean': '', 'OutputYearlySum': ''}
-        new_vars[option] = 'LZMaps'
+        new_vars = agg_vars('False', **{option: 'LZMaps'})
         settings = setoptions_with_new_vars(
             self.settings_file,
             opts_to_set=['repLZMaps', 'repE2O2'],
