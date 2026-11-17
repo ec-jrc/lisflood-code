@@ -1,9 +1,10 @@
 """
 Unit tests for the earthkit-hydro bridge (lisflood.global_modules.
-earthkit_network) behind the opt-in useEarthkitHydro reporting path.
+earthkit_network) behind the useEarthkitHydro reporting path (default True).
 
-The end-to-end suite cannot catch a regression here: the flag defaults to
-False and the PCRaster fallback silently takes over. These tests pin the two
+The end-to-end suite cannot reliably catch a regression here: if the bridge
+breaks or earthkit-hydro is missing, the PCRaster fallback silently takes
+over. These tests pin the two
 contracts the bridge must uphold:
 
   1. Accumulation - a RiverNetwork built by the bridge from a numpy Ldd must

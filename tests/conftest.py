@@ -11,17 +11,17 @@ def pytest_addoption(parser):
 
 
 def pytest_configure(config):
-    # Opt-in suite-wide activation of the earthkit-hydro reporting path:
-    #   LISFLOOD_TEST_EARTHKIT_ON=1 pytest tests/
-    # flips the useEarthkitHydro default to True before any settings file is
-    # parsed, so every end-to-end test exercises the earthkit path (the PCRaster
-    # fallback stays in place for environments without earthkit-hydro).
-    # Unset (default) leaves the suite on the historical OFF behaviour.
+    # useEarthkitHydro defaults to True, so by default every end-to-end test
+    # exercises the earthkit-hydro reporting path (with automatic PCRaster
+    # fallback when earthkit-hydro is not installed). To cover the PCRaster
+    # path, run the suite a second time with:
+    #   LISFLOOD_TEST_EARTHKIT_OFF=1 pytest tests/
+    # which flips the default to False before any settings file is parsed.
     import os
-    if os.environ.get('LISFLOOD_TEST_EARTHKIT_ON') == '1':
+    if os.environ.get('LISFLOOD_TEST_EARTHKIT_OFF') == '1':
         from lisflood.global_modules import default_options as _do
         assert 'useEarthkitHydro' in _do.default_options
-        _do.default_options['useEarthkitHydro'] = True
+        _do.default_options['useEarthkitHydro'] = False
 
 
 
