@@ -94,7 +94,8 @@ class Reservoir(HydroModule):
         if option['simulateReservoirs']:
             # load reservoir locations and keep only those on the channel network
             reservoirs = loadmap('ReservoirSites')                  # moved here to use the caching feature during calibration
-            reservoirs[(reservoirs < 1) | (self.var.IsChannel == 0)] = 0
+            # ~(>= 1) also zeroes NaN, keeping ReservoirIndex aligned with ReservoirSitesCC
+            reservoirs[~(reservoirs >= 1) | (self.var.IsChannel == 0)] = 0
             self.var.ReservoirSitesC = reservoirs
             self.var.ReservoirSitesCC = np.compress(reservoirs > 0, reservoirs)
             self.var.ReservoirIndex = np.nonzero(reservoirs)[0]
