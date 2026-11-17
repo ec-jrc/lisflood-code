@@ -1082,16 +1082,6 @@ class outputTssMap(object):
         maskinfo = MaskInfo.instance()
         report_time_serie_act = settings.report_timeseries
 
-        # Opt-in reporting-path wall timers (LISFLOOD_EK_PROFILE=1).
-        # cProfile mis-attributes the PCRaster engine reductions here
-        # (recursion accounting), so these wall timers are the only
-        # trustworthy measurement of the reporting path.
-        import os as _os
-        _ek_prof = _os.environ.get('LISFLOOD_EK_PROFILE') == '1'
-        _ek_times = {'mapmaximum': 0.0, 'total': 0.0, 'sample': 0.0,
-                     'sample_compressed': 0.0, 'sample_zone_means': 0.0}
-        import time as _time
-
         if not(option['InitLisfloodwithoutSplit']):
 
             if flags['loud']:
@@ -1108,12 +1098,9 @@ class outputTssMap(object):
             # collect their fields in one pass and issue a SINGLE batched
             # upstream accumulation for the whole step instead of one traversal
             # per series. The batch axis is a pure outer vectorization, so each
-            # per-series result is bit-identical to the scalar path. The batched
-            # accumulation is timed under the 'total' bucket to keep the
-            # LISFLOOD_EK_PROFILE before/after comparison meaningful.
+            # per-series result is bit-identical to the scalar path.
             _fused_changed = {}
             if option['useEarthkitHydro'] and earthkit_available():
-                _t0 = _time.perf_counter() if _ek_prof else None
                 _fused_fields = []
                 _fused_keys = []
                 for tss in report_time_serie_act:
@@ -1132,8 +1119,6 @@ class outputTssMap(object):
                     for _k, _key in enumerate(_fused_keys):
                         _fused_changed[_key] = (_tot[_k] * self.var.EkInvUpArea).astype(
                             _mp, copy=False)
-                if _ek_prof:
-                    _ek_times['total'] += _time.perf_counter() - _t0
 
             for tss in report_time_serie_act:
                 # report time series
@@ -1144,7 +1129,6 @@ class outputTssMap(object):
                 # maps (kills the decompress/numpy2pcr/pcr2numpy round-trips and
                 # the single-threaded PCRaster engine reductions). The historical
                 # PCRaster statements are kept verbatim in the else branches.
-                _t0 = _time.perf_counter() if _ek_prof else None
                 if option['useEarthkitHydro'] and earthkit_available():
                     if how == 'mapmaximum':
                         x_1d = eval(what)
@@ -1163,8 +1147,6 @@ class outputTssMap(object):
                     if how == 'total':
                         changed = compressArray(catchmenttotal(decompress(eval(what)) * self.var.PixelAreaPcr, self.var.Ldd) * self.var.InvUpArea)
                         what = 'changed'
-                if _ek_prof and how in _ek_times:
-                    _ek_times[how] += _time.perf_counter() - _t0
                 tss_obj = self.var.Tss[tss]
                 value_1d = eval(what)
                 # Fast path: when every gauge is a single cell, the inherited
@@ -1175,11 +1157,8 @@ class outputTssMap(object):
                 # a 1D numpy array implies Scalar/Directional here. Falls back to
                 # the exact PCRaster path otherwise (e.g. multi-cell gauge zones,
                 # non-spatial gauges, or non-ndarray values).
-                _t0 = _time.perf_counter() if _ek_prof else None
-                _sample_kind = 'sample'
                 if getattr(tss_obj, '_compressed_sampling_ok', False) and isinstance(value_1d, np.ndarray):
                     tss_obj.sample_compressed(value_1d)
-                    _sample_kind = 'sample_compressed'
                 elif option['useEarthkitHydro'] and earthkit_available() and \
                         getattr(tss_obj, '_ek_zone_codes', None) is not None and \
                         isinstance(value_1d, np.ndarray):
@@ -1188,11 +1167,8 @@ class outputTssMap(object):
                     # any 2D map round-trip
                     from .earthkit_network import ek_sample_zone_means
                     ek_sample_zone_means(tss_obj, value_1d)
-                    _sample_kind = 'sample_zone_means'
                 else:
                     tss_obj.sample(decompress(value_1d))
-                if _ek_prof:
-                    _ek_times[_sample_kind] += _time.perf_counter() - _t0
 
         # ************************************************************
         # ***** WRITING RESULTS: MAPS   ******************************
@@ -1203,13 +1179,3 @@ class outputTssMap(object):
         # update local output steps
         cdfflags = CDFFlags.instance()
         cdfflags.update(self.var)
-
-        if _ek_prof and self.var.currentTimeStep() == self.var.nrTimeSteps():
-            sys.stdout.write(
-                '[ek-profile] reporting-path wall seconds '
-                'mapmaximum=%.2f total=%.2f sample=%.2f '
-                'sample_compressed=%.2f sample_zone_means=%.2f\n'
-                % (_ek_times['mapmaximum'], _ek_times['total'],
-                   _ek_times['sample'], _ek_times['sample_compressed'],
-                   _ek_times['sample_zone_means']))
-            sys.stdout.flush()
