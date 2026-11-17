@@ -31,7 +31,7 @@ from .errors import LisfloodWarning
 #   - earthkit node order == LISFLOOD compressed 1D (maskflat) order,
 #   - accumulation results BIT-IDENTICAL on finite (in-domain) cells
 #     (see tests/test_earthkit_network.py).
-# The PCRaster path is kept verbatim behind the flag (default False).
+# The PCRaster path is kept verbatim behind the flag.
 
 try:
     import earthkit.hydro as _ekh

@@ -145,7 +145,7 @@ q      = 10 ** ( packing_log_min + packing_log_scale * (stored - packing_int_off
 | `packing_valid_min` / `packing_valid_max` | resolved physical range (`0.01` / `500000` m³/s) |
 
 **Value handling.**
-- Discharge **below 0.01 m³/s** — including zero, negative, and missing values — is stored as `_FillValue` (read back as masked/NaN). Such values carry no useful information at this precision.
+- Discharge **below 0.01 m³/s** — including zero, negative, and missing values — is stored as `_FillValue` (read back as masked/NaN). Such values carry no useful information at this precision. **Please note that same `_FillValue` is also used in masked region, thus you will need mask map to check whether the value is outside the mask or is just below 0.01**
 - Discharge **above 500000 m³/s** is clipped to the maximum.
 - As with any lossy packing, a small relative quantization error (~0.027% per step, well under 0.02% round-trip) is expected.
 
@@ -153,11 +153,13 @@ q      = 10 ** ( packing_log_min + packing_log_scale * (stored - packing_int_off
 
 ## Temporal aggregation of output maps
 
-Instead of writing a value at every model time step, LISFLOOD can aggregate selected output variables to monthly or yearly means or sums. This dramatically reduces output volume for long simulations while retaining the climatologically relevant signal.
+Instead of writing a value at every model time step, LISFLOOD can aggregate selected output variables to daily, monthly or yearly means or sums. This dramatically reduces output volume for long simulations while retaining the climatologically relevant signal.
 
-Four settings control temporal aggregation, each taking a semicolon-separated list of output variable names:
+Six settings control temporal aggregation, each taking a semicolon-separated list of output variable names:
 
 ```xml
+<textvar name="OutputDailyMean"   value="DischargeMaps"/>
+<textvar name="OutputDailySum"    value="ETActMaps"/>
 <textvar name="OutputMonthlyMean" value="SnowCoverMaps;DischargeMaps;UZMaps;LZMaps"/>
 <textvar name="OutputMonthlySum"  value="ETActMaps;SurfaceRunoffMaps"/>
 <textvar name="OutputYearlyMean"  value="Theta1Maps;Theta2Maps"/>
@@ -166,10 +168,10 @@ Four settings control temporal aggregation, each taking a semicolon-separated li
 
 - **Mean** aggregation writes the average of all time steps within each period.
 - **Sum** aggregation writes the accumulated total over each period.
-- A value is written only at the end of a completed period (month-end or year-end). Partial periods at the end of a simulation are not written.
+- A value is written only at the end of a completed period (day-end, month-end or year-end). Partial periods at the end of a simulation are not written.
 - When a variable is listed for aggregation, its normal per-time-step output is suppressed to avoid duplication.
 
-The aggregation boundaries are detected directly from the calendar date and therefore work for daily as well as sub-daily time steps.
+The aggregation boundaries are detected directly from the calendar date and therefore work for daily as well as sub-daily time steps. Daily aggregation is mainly useful with sub-daily steps (e.g. 6-hourly), where it writes one value per calendar day; with a daily time step it reproduces the per-step values.
 
 **Requirement:** temporal aggregation is only available with netCDF output (`writeNetcdf` or `writeNetcdfStack`). Listing a variable in an aggregation setting while writing PCRaster maps stops the run at start-up with an error.
 

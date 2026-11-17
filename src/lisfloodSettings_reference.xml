@@ -462,6 +462,20 @@ You can use builtin path variables in this template and reference to other paths
         </comment>
         </textvar>
 
+        <textvar name="OutputDailyMean" value="">
+        <comment>
+        Semicolon-separated list of variable names to output as daily mean
+        (useful with sub-daily time steps; one value per calendar day).
+        Variables listed here are excluded from normal ReportSteps output.
+        Example: "DischargeMaps;Theta1Maps;UZMaps"
+        Leave empty to disable. Requires netCDF output.
+        </comment>
+        </textvar>
+        <textvar name="OutputDailySum" value="">
+        <comment>
+        See OutputDailyMean
+        </comment>
+        </textvar>
         <textvar name="OutputMonthlyMean" value="">
         <comment>
         Semicolon-separated list of variable names to output as monthly mean.
@@ -2086,6 +2100,20 @@ You can use builtin path variables in this template and reference to other paths
       </comment>
       </textvar>
 
+      <textvar name="OutputDailyMean" value="$(OutputDailyMean)">
+      <comment>
+      Semicolon-separated list of variable names to output as daily mean
+      (useful with sub-daily time steps; one value per calendar day).
+      Variables listed here are excluded from normal ReportSteps output.
+      Example: "DischargeMaps;Theta1Maps;UZMaps"
+      Leave empty to disable. Requires netCDF output.
+      </comment>
+      </textvar>
+      <textvar name="OutputDailySum" value="$(OutputDailySum)">
+      <comment>
+      See OutputDailyMean
+      </comment>
+      </textvar>
       <textvar name="OutputMonthlyMean" value="$(OutputMonthlyMean)">
       <comment>
       Semicolon-separated list of variable names to output as monthly mean.
