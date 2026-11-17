@@ -173,7 +173,7 @@ The aggregation boundaries are detected directly from the calendar date and ther
 
 **Requirement:** temporal aggregation is only available with netCDF output (`writeNetcdf` or `writeNetcdfStack`). Listing a variable in an aggregation setting while writing PCRaster maps stops the run at start-up with an error.
 
-**Threaded output (`outputThreads`):** when enabled, map output is written by background threads. The output is identical to synchronous output, including aggregated values and file or time-step selection: the model clock state needed for a write (step, date, end-of-run flag, reporting checkpoint) is captured when the write is staged, not when the worker thread executes it.
+**Threaded output (`outputThreads`):** when enabled, map output is written by background threads. The output is identical to synchronous output, including aggregated values and file or time-step selection: the model clock state needed for a write (step, date, end-of-run flag, reporting checkpoint) is captured when the write is staged.
 
 **Interaction with packing:**
 

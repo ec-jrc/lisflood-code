@@ -33,8 +33,8 @@ from netCDF4 import default_fillvals
 
 # ------------------------------------------------------------------------
 # Optional earthkit-hydro acceleration of the PCRaster reductions
-# (opt-in via the `useEarthkitHydro` setoption; default False keeps the
-# historical PCRaster path bit-identical). See earthkit_network.py.
+# (`useEarthkitHydro` setoption, default True; set it to 0 to use the
+# historical PCRaster path). See earthkit_network.py.
 # ------------------------------------------------------------------------
 try:
     from .earthkit_network import (
