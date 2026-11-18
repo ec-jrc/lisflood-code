@@ -16,10 +16,11 @@ See the Licence for the specific language governing permissions and limitations 
 """
 from __future__ import absolute_import, print_function
 
-from pcraster import downstream, boolean, cover, lddrepair, ifthenelse
+import numpy as np
+from pcraster import ldd, nominal
 
 from ..global_modules.add1 import decompress, compressArray
-from ..global_modules.settings import LisSettings
+from ..global_modules.settings import LisSettings, MaskInfo
 
 
 class structures(object):
@@ -57,27 +58,43 @@ class structures(object):
         option = settings.options
         if not option['InitLisflood']:
             # not done in Init Lisflood
-            IsUpsOfStructureKinematic = downstream(     #pcr map
-                self.var.LddKinematic,
-                cover(boolean(decompress(self.var.IsStructureKinematic)), boolean(0))
-            )
-            # Downstream assigns to result the expression value of the neighbouring downstream cell
-            # Over is used to cover missing values on an expression with values taken from one or more different expression(s)
-            # Decompress is numpy2pcr
-            # Find location of pixels immediately upstream of a structure on the LddKinematic
+            maskinfo = MaskInfo.instance()
+            n_cells = maskinfo.info.mapC[0]
+            downs = self.var.downstruct
+            is_pit = downs >= n_cells
 
-            IsUpsOfStructureChan = downstream(      #pcr map
-                self.var.LddChan,
-                cover(boolean(decompress(self.var.IsStructureChan)), boolean(0))
-            )
-            # Find location of pixels immediately upstream of a structure on the LddChan
+            # Cell-immediately-upstream-of-structure mask: each cell takes the
+            # structure boolean of its downstream neighbour. Pit cells (no
+            # downstream neighbour, flagged by the sentinel index) keep their own
+            # value, matching PCRaster downstream pit semantics. downstruct is the
+            # compressed downstream-cell index for the channel LDD, which equals
+            # the kinematic LDD at this point in initialisation (the MCT channel
+            # split happens later), so the same index serves both gathers.
+            IsStructureKinematicC = np.asarray(self.var.IsStructureKinematic).astype(bool)
+            IsStructureChanC = np.asarray(self.var.IsStructureChan).astype(bool)
 
-            self.var.IsUpsOfStructureKinematicC = compressArray(IsUpsOfStructureKinematic)  #np compressed array
+            self.var.IsUpsOfStructureKinematicC = np.where(     #np compressed array
+                is_pit, IsStructureKinematicC,
+                IsStructureKinematicC[np.minimum(downs, n_cells - 1)])
             # Location of pixels immediately upstream of a structure on the LddKinematic
-            self.var.IsUpsOfStructureChanC = compressArray(IsUpsOfStructureChan)    #np compressed array
+            self.var.IsUpsOfStructureChanC = np.where(      #np compressed array
+                is_pit, IsStructureChanC,
+                IsStructureChanC[np.minimum(downs, n_cells - 1)])
             # Location of pixels immediately upstream of a structure on the LddChan
 
-            self.var.LddKinematic = lddrepair(ifthenelse(IsUpsOfStructureKinematic, 5, self.var.LddKinematic))  #pcr map
+            # Insert a pit (ldd=5) at each cell immediately upstream of a
+            # structure. On a valid LDD this is equivalent to
+            # lddrepair(ifthenelse(mask, 5, Ldd)): adding a pit cannot create a
+            # loop or an off-map pointer, so LDD re-validation is a no-op. The
+            # maps are rebuilt as PCRaster LDD-typed fields because later modules
+            # (initialMCT/initialKinematicWave) consume them as LDDs; decompress
+            # yields a scalar field, so an explicit ldd(nominal(...)) cast
+            # restores the LDD type the consumers require.
+            LddKinematicC = compressArray(self.var.LddKinematic)
+            LddChanC = compressArray(self.var.LddChan)
+            LddKinematicC[self.var.IsUpsOfStructureKinematicC] = 5
+            LddChanC[self.var.IsUpsOfStructureChanC] = 5
+            self.var.LddKinematic = ldd(nominal(decompress(LddKinematicC)))   #pcr map
             # Update LddKinematic by adding a pit in the pixel immediately upstream of a structure
-            self.var.LddChan = lddrepair(ifthenelse(IsUpsOfStructureChan, 5, self.var.LddChan))     #pcr map
+            self.var.LddChan = ldd(nominal(decompress(LddChanC)))     #pcr map
             # Update LddChan by adding a pit in the pixel immediately upstream of a structure

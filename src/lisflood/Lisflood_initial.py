@@ -21,8 +21,8 @@ import uuid
 from collections import OrderedDict
 
 import numpy as np
-from numba import njit
-# Thread-pool governance (numba/numexpr/BLAS) lives in parallelization.py.
+from numba import njit, prange
+# Thread-pool governance (numba/BLAS) lives in parallelization.py.
 
 
 from .global_modules.settings import CutMap, LisSettings, NetCDFMetadata, EPICSettings, MaskInfo
@@ -62,8 +62,60 @@ from .global_modules.add1 import readInputWithBackup
 from .global_modules.add1 import NumpyModified
 
 @njit(fastmath=False, cache=True)
-def _vegSum(ax_veg, variable, soil_fracs):
+def _vegSum_serial(ax_veg, variable, soil_fracs):
     return (soil_fracs * variable).sum(ax_veg)
+
+
+# numpy switches its reduction from a straight sequential sum to pairwise
+# summation once an axis has >= 8 elements, so a plain sequential accumulation
+# only reproduces ``(a).sum(0)`` bit-for-bit for small vegetation counts. The
+# production SoilFraction has 3 vegetation rows (Rainfed/Forest/Irrigated), so
+# the parallel path is taken; anything with >= 8 vegetation rows falls back to
+# the serial numpy reduction to stay bitwise-identical (see _vegSum).
+_VEGSUM_PARALLEL_MAX_VEG = 7
+
+
+@njit(parallel=True, fastmath=False, cache=True)
+def _vegSum_2d_axis0(variable, soil_fracs):
+    """Parallel weighted sum over the vegetation axis of a (vegetation, pixel)
+    array, equivalent to ``(soil_fracs * variable).sum(axis=0)``.
+
+    Only used when the vegetation axis has <= ``_VEGSUM_PARALLEL_MAX_VEG``
+    elements, where a straight sequential reduction matches numpy's own
+    sequential summation bit-for-bit. Parallelism is over the retained *pixel*
+    axis; the per-pixel reduction over the (small) vegetation axis runs in a
+    fixed ascending order, so the result is bit-identical to
+    ``(soil_fracs * variable).sum(0)`` (``fastmath=False`` preserves FP order).
+    ``prange`` only engages when numba is allowed more than one thread; the
+    central governance (parallelization.py) caps numba to 1 thread on small
+    domains, so this runs serially there.
+    """
+    nveg = variable.shape[0]
+    npix = variable.shape[1]
+    out = np.empty(npix, dtype=variable.dtype)
+    for p in prange(npix):
+        acc = 0.0
+        for v in range(nveg):
+            acc += soil_fracs[v, p] * variable[v, p]
+        out[p] = acc
+    return out
+
+
+def _vegSum(ax_veg, variable, soil_fracs):
+    """Weighted sum over the soil fractions of each pixel.
+
+    Fast path: the production case is a 2-D ``(vegetation, pixel)`` array
+    reduced over the vegetation axis (``ax_veg == 0``) with matching
+    ``soil_fracs`` shape; that is handled by the parallel kernel
+    ``_vegSum_2d_axis0``. Any other shape/axis (defensive — not produced by the
+    current callers) falls back to the original serial reduction so behaviour is
+    unchanged.
+    """
+    if (ax_veg == 0 and variable.ndim == 2 and soil_fracs.ndim == 2
+            and soil_fracs.shape == variable.shape
+            and variable.shape[0] <= _VEGSUM_PARALLEL_MAX_VEG):
+        return _vegSum_2d_axis0(variable, soil_fracs)
+    return _vegSum_serial(ax_veg, variable, soil_fracs)
 
 
 # --------------------------------------------
@@ -92,7 +144,7 @@ class LisfloodModel_ini(DynamicModel):
         flags = self.settings.flags
         report_steps = self.settings.report_steps
 
-        # Centrally govern the numba, numexpr and BLAS/OpenMP thread pools to
+        # Centrally govern the numba and BLAS/OpenMP thread pools to
         # avoid oversubscription. Nested thread pools each sized to the host
         # core count cause heavy context-switching and can make runs slower
         # than serial, especially on small/narrow domains. Thread counts affect
@@ -347,15 +399,22 @@ class LisfloodModel_ini(DynamicModel):
             iveg_list.append(self.vegetation.index(veg))
         return iveg_list,iveg_list_pres,ilanduse
 
-    def allocateVariableAllVegetation(self, dtype=float):
-        """Allocate xarray.DataArray filled by 0 with dimensions 'vegetation' and 'pixel'. It covers all vegetation types (including EPIC crops, if simulated)."""
+    def allocateVariableAllVegetation(self, dtype=None):
+        """Allocate xarray.DataArray filled by 0 with dimensions 'vegetation' and 'pixel'. It covers all vegetation types (including EPIC crops, if simulated).
+        dtype=None defers to the resolved model dtype (float64, or float32 when modelPrecision=float32)."""
         return self.allocateDataArray(self.coord_vegetation, dtype)
 
-    def allocateDataArray(self, dimensions, dtype=float):
+    def allocateDataArray(self, dimensions, dtype=None):
         """Allocate xarray.DataArray filled by 0 with input dimensions.
            Argument 'dimensions' is a list of tuples of the type ('dimension name', coordinate list/array)."""
         coords = OrderedDict(dimensions)
         option = self.settings.options
+        if dtype is None:
+            # Default to the resolved model dtype (float64 unless modelPrecision=
+            # float32), so vegetation/soil state stacks (UZ, W1, ...) are born in
+            # the model precision. An explicit dtype argument is honoured as-is.
+            from .global_modules.parallelization import get_model_dtype
+            dtype = get_model_dtype()
         if option.get('cropsEPIC'):
             return xr.DataArray(np.zeros([len(v) for v in coords.values()], dtype), coords=coords, dims=coords.keys())
         else:

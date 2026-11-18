@@ -751,30 +751,40 @@ Within the 'lfoptions' element of the settings file, each option is defined usin
 
 + **NetCDFTimeChunks**: chunking size in the time dimension. This option was implemented to optimize the loading of the meteo maps. Recommended value is “auto" but chunking size can be specified manually (e.g. "10") or set to “-1" to load the whole time series into memory (very fast but expensive in terms of memory). 
 + **MapsCaching** (True or False): option designed for lisflood calibration. If set to True, all the static maps and forcings will be stored in a cache so that they don't have to be loaded by each lisflood instance. This option sets the value of NetCDFTimeChunks to "-1", meaning that the whole time series in the NetCDF inputs is loaded into memory. 
++ **NetCDFTimeChunksPrefetch** (1 or 0, default 0): when set to 1, the next forcing time chunk is loaded in a background thread while the model is still computing with the current one, so the chunk boundary no longer stalls the run. This only helps when forcing reads are slow compared to the computation (e.g. forcings on a network file system); on fast local disks the benefit is negligible. It requires `readNetcdfStack=1` and has no effect when `NetCDFTimeChunks` results in a single chunk (e.g. `-1` or `MapsCaching=1`), because there is no next chunk to load. Model outputs are identical with the option on or off.
 
 ### Options to manage output files
 
 + **OutputMapsChunks**: this option is used to write output maps every X steps (default 1).  
 + **OutputMapsDataType**: this option sets the output data type and may take the following values: "float64" or "float32" (default float64). This option applies to all output maps.
 
-### Options to control parallelization
+### Option to select the reporting engine
++ **useEarthkitHydro** (1 or 0, default 1): selects the engine used for the river-network reductions of the reporting step, i.e. upstream accumulation (`accuflux`/`catchmenttotal`-type series) and the zonal means at gauge locations written to time series. When 1, these are computed with [earthkit-hydro](https://github.com/ecmwf/earthkit-hydro) directly on the model's compressed 1D arrays, which avoids the conversions to and from 2D PCRaster maps and the single-threaded PCRaster engine; it reduces run time compared to PCRaster. When 0, the original PCRaster operations are used. If the `earthkit-hydro` package is not installed, LISFLOOD falls back to the PCRaster path automatically. Install it with `pip install earthkit-hydro` (listed in `requirements.txt`). To force the PCRaster path (for example to reproduce results of earlier versions), add to the settings file:
+```xml
+<setoption name="useEarthkitHydro" choice="0"/>
+```
+The thread pool used by earthkit-hydro can be limited with `numCPUs_earthkit` (see below).
 
-LISFLOOD uses several independent parallelization mechanisms. They all affect run time only, never results: model outputs are identical regardless of the values below. Each option accepts a positive integer (number of threads/processes), or `0` / `"all"` / `"auto"` meaning "use all available CPU cores".
+
+LISFLOOD uses several independent parallelization mechanisms. They all affect run time only, never results: model outputs are identical regardless of the values below. Every `numCPUs_*` option shares the same value legend: **absent or `"auto"`** selects the automatic policy (the default; each option's policy is described below), **`"all"` or `"0"`** forces all available CPU cores, and a **positive integer** sets a fixed thread/process count. Left at `auto`, LISFLOOD sizes each pool automatically from the host core count and the domain size, so most users do not need to set these at all.
 
 These are `lfuser`/`lfbinding` variables (add them like any other `textvar`), for example:
 
 ```xml
-<textvar name="numCPUs_parallelNumba" value="0"/>
-<textvar name="numCPUs_parallelNumexpr" value="auto"/>
+<textvar name="numCPUs_parallelNumba" value="auto"/>
+<textvar name="numCPUs_routingNumba" value="auto"/>
 <textvar name="numCPUs_BLAS" value="auto"/>
-<textvar name="numCPUs_soilInit" value="0"/>
+<textvar name="numCPUs_soilInit" value="auto"/>
+<textvar name="modelPrecision" value="float64"/>
 ```
 
-+ **numCPUs_parallelNumba**: number of threads used by the Numba just-in-time compiled kernels (the kinematic-wave / Muskingum-Cunge routing and the soil/vegetation loop). Value `0` uses all cores (or the `NUMBA_NUM_THREADS` environment variable if set). On small catchments, thread fork/join overhead can make multi-threaded execution slower than serial, so LISFLOOD auto-tunes this to 1 (serial) for small domains when left on `0`; large domains benefit from more threads.
-+ **numCPUs_parallelNumexpr**: number of threads used by the `numexpr` library (vectorized array maths in the kinematic-wave routing). Default `auto`: a domain-size-aware choice that runs serial on small catchments (where `numexpr`'s pool gives no speedup and oversubscribes against Numba/BLAS) and uses all cores on large/global domains (where it is measurably faster). You can force a value: `1` (serial), `0`/`all` (all cores), or a specific number. The large/small cutoff is the same valid-pixel threshold used by the Numba auto-tune. **Set this to `1` under an outer parallel driver** (e.g. [lisflood-calibration](https://github.com/ec-jrc/lisflood-calibration), one LISFLOOD per DEAP individual) so each instance stays single-core.
-+ **numCPUs_BLAS**: number of threads used by the BLAS/OpenMP backend of NumPy/SciPy (e.g. the linear algebra in the soil-hydraulics fitting during initialization). Default `auto`, with the same domain-size-aware behaviour and overrides as `numCPUs_parallelNumexpr`; set it to `1` under an outer parallel driver.
++ **numCPUs_parallelNumba**: threads for the **land-phase** Numba kernels (the soil/vegetation loop, water abstraction, surface routing). `auto` is domain-size-aware: serial on small catchments (where thread fork/join overhead makes multi-threaded execution slower) and all cores on large/global domains. `0`/`all` forces all cores; a positive integer sets a fixed count.
++ **numCPUs_routingNumba**: threads for the **channel-routing substep** Numba kernels (kinematic-wave / Muskingum-Cunge), capped *independently* of the land-phase pool above. These kernels run many times per model step with a small per-call payload, so beyond a modest thread count the OpenMP fork/join cost dominates and more threads make routing *slower*. `auto` applies a host-relative cap (about half the cores, clamped to the 8–16 band, never above the land-phase count); `all`/`0` removes the routing-specific cap; a positive integer sets a fixed count. This is scheduling only — routing results are identical for any thread count.
++ **numCPUs_BLAS**: threads for the BLAS/OpenMP backend of NumPy/SciPy. In LISFLOOD, BLAS is used only by the cold-start soil-hydraulics least-squares solve (a scalar per-pixel fit, no matrix algebra) and is idle during the dynamic loop, so extra BLAS threads do not speed the model up and only risk oversubscribing against the soil-init process pool. `auto` is therefore a single thread (1); `0`/`all` forces all cores; a positive integer sets a fixed count.
 + **numCPUs_soilInit**: number of worker **processes** used to solve the soil layer-2 saturation during a cold start. This is a per-pixel SciPy solve that can dominate initialization time on large/global domains (turning it from serial minutes/hours into a few minutes with many cores). This is process-based parallelism, independent of the thread options above. Default `0` (use all available cores); the solve is bit-identical regardless of the worker count.
++ **numCPUs_earthkit**: thread count of the earthkit-hydro (rayon) pool used when `useEarthkitHydro` is 1. Default (absent or `auto`) is 1, which avoids oversubscribing the node against the routing kernel threads; a positive integer caps the pool to that many threads; `0` or `all` leaves it uncapped. Thread count affects scheduling only, not results.
     - **Set `numCPUs_soilInit` to `1` when an outer tool already runs many LISFLOOD instances in parallel** — most importantly [lisflood-calibration](https://github.com/ec-jrc/lisflood-calibration), which runs one LISFLOOD per DEAP individual and expects each instance to use a single core. As a safeguard, this parallelization automatically disables itself (falls back to serial) when LISFLOOD detects it is running inside a forked/daemon worker, so an accidental high value cannot cause oversubscription under calibration.
++ **modelPrecision**: floating-point precision of the LISFLOOD model state and the kinematic-wave routing kernel. This is a performance/precision lever, separate from the thread options above. Default `float64` reproduces previous LISFLOOD output bit-for-bit (use it for calibration and any bitwise-reproducibility need). Setting it to `float32` makes the routing kernel faster by halving its memory traffic; results are **not** bit-identical but stay within the LISFLOOD reference tolerance (`atol=1e-4, rtol=1e-3`) on tested catchments, with discharge and channel storage differing only at the last reported digit. The Muskingum-Cunge-Todini (MCT) routing and all mass-balance reductions always stay `float64` regardless of this setting. An unknown value falls back to `float64` (precision is never silently degraded).
 
 ### Reference settings file
 In order to facilitate the preparation of the settings file, a complete example is provided [here](https://github.com/ec-jrc/lisflood-code/tree/master/src/lisfloodSettings_reference.xml). The user is encouraged to update the paths, the names of the maps and of the tables in the provided template.

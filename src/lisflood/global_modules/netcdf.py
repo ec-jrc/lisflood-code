@@ -1,6 +1,7 @@
 import os
 import glob
 import warnings
+import threading
 import xarray as xr
 import dask
 import numpy as np
@@ -20,7 +21,55 @@ from .zusatz import iterOpenNetcdf
 from .add1 import nanCheckMap, decompress
 from netCDF4 import default_fillvals
 
+# Global HDF5 lock shared by ALL netCDF4/HDF5 Dataset access in the process
+# (reads and writes). The conda-forge netCDF4/HDF5 libraries are not built
+# --enable-threadsafe, so *any* concurrent call into the HDF5 library -- even
+# on DISTINCT files -- corrupts HDF5 global state and aborts the process
+# (SIGSEGV or Fatal Python error: Aborted).
+# The lock is deliberately NARROW: it is held only around actual HDF5
+# library operations (file open, variable/attribute read, array write, close),
+# never around pure-numpy/dask work such as CF decoding, packing/unpacking or
+# array arithmetic. Readers pass it to xarray via `lock=hdf5_lock` on the
+# open_dataset/open_mfdataset calls, so xarray acquires it around every
+# C-level netCDF4 access (including the GC-triggered lazy close of cached
+# file handles). Writers (output.py) acquire it per operation around their
+# open/header, slice writes and close. Holding several file handles open at
+# once across threads is fine: only non-overlapping *calls* matter, and this
+# per-operation serialisation is the same model the reader side has always
+# used. An RLock is used so a thread that legitimately re-enters (e.g. a
+# writer calling a helper that also takes the lock) is not deadlocked.
+# NOTE: building netCDF4/HDF5 with --enable-threadsafe would make this lock
+# unnecessary.
+hdf5_lock = threading.RLock()
+
 from .. import __authors__, __version__, __date__, __status__, __institution__
+
+_OUTPUT_DTYPE_WARNED = False
+
+
+def _coherent_output_dtype(binding, dtype):
+    """Return the output map dtype, downgrading float64 -> float32 (with a
+    one-time warning) when the model itself runs in float32 (modelPrecision).
+    Writing float64 maps for a float32 model stores non-existent precision and
+    doubles file size. Any non-float64 OutputMapsDataType (e.g. an explicit
+    float32) is left untouched."""
+    global _OUTPUT_DTYPE_WARNED
+    try:
+        from .parallelization import resolve_model_dtype
+        model_dt = resolve_model_dtype(binding)
+    except Exception:
+        return dtype
+    if model_dt == np.float32 and str(dtype).strip().lower() in ("float64", "f8", "double"):
+        if not _OUTPUT_DTYPE_WARNED:
+            warnings.warn(LisfloodWarning(
+                "OutputMapsDataType=float64 but modelPrecision=float32: the model "
+                "state is float32, so float64 output would store no extra precision. "
+                "Writing output as float32 instead. Set OutputMapsDataType=float32 "
+                "to silence this, or modelPrecision=float64 for full precision."))
+            _OUTPUT_DTYPE_WARNED = True
+        return "float32"
+    return dtype
+
 
 def mask_array_np(data, mask, crop, name, valid_min, valid_max, func_x, func_y):
     data_cut = func_x(func_y(data))[:, crop[2]:crop[3], crop[0]:crop[1]]
@@ -93,9 +142,14 @@ def check_dataset_calendar_type(ds, path):
     # check calendar type
     # if using multiple files, the encoding will be droppped (bug in xarray), let's check the calendar fom the first file
     if '*' in path:
-        ds = xr.open_dataset(glob.glob(path)[0], chunks={'time': -1})
-    
-    calendar = ds.time.encoding['calendar']
+        # lock=hdf5_lock: every C-level netCDF4 access on this ad-hoc handle
+        # (open, header read, and its close when the with-block exits) must be
+        # serialised against the writer threads; closing it deterministically
+        # here also removes a GC-timed unlocked close from the dynamic phase.
+        with xr.open_dataset(glob.glob(path)[0], chunks={'time': -1}, lock=hdf5_lock) as ds:
+            calendar = ds.time.encoding['calendar']
+    else:
+        calendar = ds.time.encoding['calendar']
     if calendar != binding['calendar_type']:
         print('WARNING! Wrong calendar type in dataset {}, is \"{}\" and should be \"{}\"\n Please double check your forcing datasets and update them to use the correct calendar type'.format(path, ds.time.encoding['calendar'], binding['calendar_type']))
 
@@ -172,18 +226,46 @@ class XarrayChunked():
     """ Class that handles the reading of netcdf files with temporal chunks
     """
 
-    def __init__(self, data_path, time_chunk, dates, indexer=None, climatology=False):
+    def __init__(self, data_path, time_chunk, dates, indexer=None, climatology=False, prefetch=False):
 
         # load dataset using xarray
         if time_chunk != 'auto' and time_chunk is not None:
             time_chunk = int(time_chunk)
         data_path = data_path + ".nc" if not data_path.endswith('.nc') else data_path
+        # Forcing decode precision. Default float64 keeps the historical
+        # mask_and_scale=True decode, bit-identical. When modelPrecision=float32
+        # (opt-in), decode the forcing NATIVELY in float32: open raw (no decode),
+        # retype the CF scale_factor/add_offset to float32, then xr.decode_cf ->
+        # xarray runs the WHOLE decode (scale/offset + fill mask) in float32,
+        # halving the per-element decode cost (_scale_offset_decoding/_apply_mask/
+        # astype) AND letting the forcing meet float32 model state with no upcast.
+        # decode_cf restores scale_factor/add_offset into .encoding, so the
+        # valid_min/max scaling below is unchanged; forcing is read-only input and
+        # the int16xscale packing carries far fewer significant digits than float32,
+        # so no real precision is lost (verified within reference tolerance).
+        from .parallelization import get_model_dtype
+        _f32_forcing = (get_model_dtype() == np.float32)
         try:
-            ds = xr.open_mfdataset(
-                data_path, engine='netcdf4', 
-                chunks={'time': time_chunk}, combine='by_coords',
-                mask_and_scale=True
-            )
+            if _f32_forcing:
+                ds = xr.open_mfdataset(
+                    data_path, engine='netcdf4',
+                    chunks={'time': time_chunk}, combine='by_coords',
+                    mask_and_scale=False,
+                    lock=hdf5_lock  # serialise C-level HDF5 access with the writer threads
+                )
+                for _v in ds.data_vars:
+                    _a = ds[_v].attrs
+                    for _k in ('scale_factor', 'add_offset'):
+                        if _k in _a and np.issubdtype(np.asarray(_a[_k]).dtype, np.floating):
+                            _a[_k] = np.float32(_a[_k])
+                ds = xr.decode_cf(ds, mask_and_scale=True)
+            else:
+                ds = xr.open_mfdataset(
+                    data_path, engine='netcdf4',
+                    chunks={'time': time_chunk}, combine='by_coords',
+                    mask_and_scale=True,
+                    lock=hdf5_lock  # serialise C-level HDF5 access with the writer threads
+                )
         except OSError:
             raise OSError(f"Could not open file {data_path}")
 
@@ -238,10 +320,50 @@ class XarrayChunked():
         if not flags['skipvalreplace']:
             valid_min_scaled = (da.attrs['valid_min']*scale_factor+add_offset) if 'valid_min' in da.attrs else None
             valid_max_scaled = (da.attrs['valid_max']*scale_factor+add_offset) if 'valid_max' in da.attrs else None
+
         self.dataset = compress_xarray(mask, crop, da, var_name, valid_min_scaled, valid_max_scaled, func_x, func_y) # final dataset to store
 
         # initialise class variables and load first chunk
+        # (self.prefetch must exist before init_chunks: load_next_chunk reads it;
+        # it is switched on below, after the first synchronous chunk load)
+        self.prefetch = False
         self.init_chunks(self.dataset, time_chunk)
+
+        # Opt-in background prefetch of the next time chunk. The loaded chunk
+        # is held in _pf_ready and promoted to dataset_chunk by the model
+        # thread at the boundary, so only one next chunk is ever in flight.
+        if prefetch and len(self.chunk_indexes) > 2:
+            # no benefit with a single chunk (no next chunk to load)
+            self.prefetch = True
+            self._pf_cond = threading.Condition()
+            self._pf_state = 'idle'      # idle -> running -> ready | error -> (promoted) idle
+            self._pf_error = None
+            self._pf_ready = None             # prefetched chunk awaiting promotion
+            self._pf_scheduled_ichunk = None  # next-chunk index already in flight
+
+    # ------------------------------------------------------------------
+    # background chunk prefetch machinery
+    # ------------------------------------------------------------------
+    def _prefetch_worker(self, ichunk):
+        """Load chunk `ichunk` into the holding slot _pf_ready. Exceptions are
+        captured and re-raised in the model thread by load_next_chunk."""
+        try:
+            begin = self.chunk_indexes[ichunk]
+            end = self.chunk_indexes[ichunk + 1]
+            chunk = self.dataset.isel(time=range(begin, end))
+            # Same lock discipline as the synchronous path (see load_next_chunk):
+            # the chunk is never written to dataset_chunk here; the model thread
+            # promotes it at the boundary.
+            self._pf_ready = chunk.load()
+        except BaseException as e:  # re-raised in the model thread
+            self._pf_error = e
+        finally:
+            with self._pf_cond:
+                if self._pf_error is not None:
+                    self._pf_state = 'error'
+                else:
+                    self._pf_state = 'ready'
+                self._pf_cond.notify_all()
 
     def init_chunks(self, dataset, time_chunk):
         # compute chunks indexes in dataset
@@ -257,21 +379,59 @@ class XarrayChunked():
         self.ichunk = -1
         self.load_next_chunk()
 
+    def _schedule_prefetch(self, next_ichunk):
+        """Start loading chunk `next_ichunk` in the background if it is not
+        already in flight."""
+        with self._pf_cond:
+            if self._pf_state == 'running' or self._pf_scheduled_ichunk == next_ichunk:
+                return  # already loading this (or a later) chunk
+            self._pf_state = 'running'
+            self._pf_scheduled_ichunk = next_ichunk
+        t = threading.Thread(target=self._prefetch_worker, args=(next_ichunk,),
+                             name=f'lisflood-prefetch-{next_ichunk}', daemon=True)
+        t.start()
+
+    def _wait_prefetch_done(self):
+        """Block until any in-flight prefetch finishes; promote the prefetched
+        chunk, re-raising any worker error in the calling thread."""
+        with self._pf_cond:
+            while self._pf_state == 'running':
+                self._pf_cond.wait()
+            if self._pf_state == 'error':
+                self._pf_state = 'idle'
+                err = self._pf_error
+                self._pf_error = None
+                self._pf_scheduled_ichunk = None
+                raise err
+            # success: promote the prefetched chunk
+            self.ichunk += 1
+            self.dataset_chunk = self._pf_ready
+            self._pf_ready = None
+            self._pf_state = 'idle'
+            self._pf_scheduled_ichunk = None
+
     def load_next_chunk(self):
+        if self.prefetch:
+            # Boundary reached while the prefetch of this chunk is running or
+            # ready: promote it. Otherwise fall through to the synchronous load.
+            with self._pf_cond:
+                pf_active = self._pf_state in ('running', 'ready')
+            if pf_active:
+                self._wait_prefetch_done()
+                return
+
         self.ichunk += 1
         begin = self.chunk_indexes[self.ichunk]
         end = self.chunk_indexes[self.ichunk+1]
 
         chunk = self.dataset.isel(time=range(begin, end))
-        # Force the single-threaded (synchronous) dask scheduler for this read.
-        # The netCDF4/HDF5 libraries shipped by conda-forge are built without
-        # thread-safety (nompi). Under dask's default threaded scheduler, several
-        # worker threads read from the same HDF5 file concurrently while, at the
-        # same time, garbage collection in another thread may close a netCDF file
-        # handle (NetCDF4DataStore.__del__ -> close). Concurrent read/close on a
-        # non-threadsafe HDF5 corrupts its global state and aborts the process
-        # (Fatal Python error: Aborted / SIGABRT). Reads were already serialized
-        # by xarray's HDF5 lock, so running synchronously removes the crash.
+        # The conda-forge netCDF4/HDF5 libraries are not thread-safe, so every
+        # C-level netCDF4 access must hold the process-wide hdf5_lock: the
+        # datasets are opened with `lock=hdf5_lock` (see __init__) and xarray
+        # acquires it around each netCDF4 operation. The lock is NOT held for
+        # the whole chunk.load(): decoding/masking run outside it, so chunk
+        # loads only serialise on the actual HDF5 reads (also with the
+        # prefetch thread and the threaded map-output writer).
         # TODO: check the synchronous issue, as actually this slows down the loading of chunks
         #       so it is commented right now
         #with dask.config.set(scheduler='synchronous'):
@@ -284,6 +444,14 @@ class XarrayChunked():
         # if at the end of chunk, load new chunk
         if dataset_index == self.chunk_indexes[self.ichunk+1]:
             self.load_next_chunk()
+
+        # Prefetch (opt-in): near the end of the current chunk, start loading
+        # the next one in the background.
+        if self.prefetch:
+            next_boundary = self.chunk_indexes[self.ichunk+1]
+            # schedule only if a next chunk exists (ichunk+1 <= last chunk index)
+            if dataset_index >= next_boundary - 2 and self.ichunk + 2 <= len(self.chunk_indexes) - 1:
+                self._schedule_prefetch(self.ichunk + 1)
 
         local_index = dataset_index - self.chunk_indexes[self.ichunk]
 
@@ -343,13 +511,17 @@ def xarray_reader(dataname, indexer=None, climatology=False):
     # extract chunk from bindings
     time_chunk = binding['NetCDFTimeChunks']  # -1 to load everything, 'auto' to let xarray decide
 
+    # opt-in background prefetch of the next time chunk (no effect with a
+    # single chunk: time_chunk=-1, MapsCaching, climatology)
+    prefetch = bool(settings.options.get('NetCDFTimeChunksPrefetch', False))
+
     if binding['MapsCaching'] == "True":
         data = XarrayCached(data_path, dates, indexer, climatology)
     else:
         if climatology:  # for climatology, load the entire dataset
             data = XarrayChunked(data_path, None, dates, indexer, climatology)
         else:
-            data = XarrayChunked(data_path, time_chunk, dates, indexer, climatology)
+            data = XarrayChunked(data_path, time_chunk, dates, indexer, climatology, prefetch=prefetch)
     
     return data
 
@@ -452,7 +624,8 @@ def write_netcdf_header(settings,
                         start_date,
                         rep_steps,
                         frequency,
-                        map_value=None):
+                        map_value=None,
+                        log_packed=None):
     
     """ Writes a netcdf header without the data inside
     
@@ -482,6 +655,11 @@ def write_netcdf_header(settings,
         Output variable metadata from default_options.py. When provided and OutputPacking is
         enabled, its scale_factor and add_offset attributes are used for int16 packing.
         If None (default), no packing is applied.
+    log_packed: bool or None, optional
+        Explicit override for the logarithmic discharge packing decision. When None
+        (default), the decision is derived from OutputPackingDischarge and the map
+        identity. The writer passes its own decision here so the on-disk dtype and
+        the per-step packing stay in sync (e.g. SUM aggregates disable log packing).
 
     Returns
     -------
@@ -493,6 +671,11 @@ def write_netcdf_header(settings,
 
     binding = settings.binding
     dtype = binding['OutputMapsDataType']
+    # Coherence: writing float64 output while the model runs in float32 wastes
+    # space and implies a precision the model does not have. If modelPrecision is
+    # float32 but OutputMapsDataType is float64, switch the output to float32 and
+    # warn once (the state carries no more than float32 precision anyway).
+    dtype = _coherent_output_dtype(binding, dtype)
 
     # general Attributes
     nf1.settingsfile = os.path.realpath(settings.settings_path)
@@ -554,6 +737,14 @@ def write_netcdf_header(settings,
         if frequency == "all":
             steps = all_steps
             time_stamps = all_dates
+        elif frequency == 'daily':
+            # check next date (step+1) and see if we are still in the same day;
+            # selects one stamp per calendar day (the last sub-daily step of the
+            # day), matching MapOutputAggregated's daily period boundary.
+            next_date_times = np.array([j + datetime.timedelta(seconds=int(binding["DtSec"])) for j in all_dates])
+            days_end = np.array([all_dates[j].day != next_date_times[j].day for j in range(n_steps)])
+            steps = all_steps[days_end]
+            time_stamps = all_dates[days_end]
         elif frequency == 'monthly':
             # check next date (step+1) and see if we are still in the same month
             next_date_times = np.array([j + datetime.timedelta(seconds=int(binding["DtSec"])) for j in all_dates])
@@ -567,7 +758,7 @@ def write_netcdf_header(settings,
             steps = all_steps[years_end]
             time_stamps= all_dates[years_end]
         else:
-            raise ValueError(f'ERROR! Frequency {frequency} not supported! Value accepted: [all, monthly, yearly]')
+            raise ValueError(f'ERROR! Frequency {frequency} not supported! Value accepted: [all, daily, monthly, yearly]')
         
         nf1.createDimension('time', steps.size)
         time = nf1.createVariable('time', float, ('time'))
@@ -592,7 +783,21 @@ def write_netcdf_header(settings,
         has_packing = (map_value is not None
                        and getattr(map_value, 'scale_factor', None) is not None
                        and getattr(map_value, 'add_offset', None) is not None)
-        if packing_enabled and has_packing:
+        # Logarithmic discharge packing: a COMPLETELY independent opt-in
+        # (OutputPackingDischarge), separate from OutputPacking above. It only
+        # applies to the DischargeMaps output and writes a custom log10 int16
+        # encoding (non-CF). This predicate MUST stay in sync with
+        # NetcdfStepsWriter.write's `is_log_packed`.
+        if log_packed is not None:
+            is_log_packed = bool(log_packed)
+        else:
+            is_log_packed = (binding.get('OutputPackingDischarge', 'False') == 'True'
+                             and map_value is not None
+                             and getattr(map_value, 'name', None) == 'DischargeMaps')
+        if is_log_packed:
+            var_dtype = 'i2'
+            var_fill = default_fillvals['i2']
+        elif packing_enabled and has_packing:
             var_dtype = 'i2'
             var_fill = default_fillvals['i2']
         else:
@@ -601,7 +806,14 @@ def write_netcdf_header(settings,
 
         value = nf1.createVariable(var_name, var_dtype, ('time', dim_lat_y, dim_lon_x),
                                    zlib=True, fill_value=var_fill, chunksizes=(1, nrow, ncol))
-        if packing_enabled and has_packing:
+        if is_log_packed:
+            # Custom (non-CF) log10 encoding. Do NOT set scale_factor/add_offset
+            # here: that would make CF readers auto-decode the int16 as a linear
+            # value. Instead tag the explicit transform so tooling can invert it.
+            from .output import LOG_PACK_ATTRS
+            for _attr, _val in LOG_PACK_ATTRS.items():
+                value.setncattr(_attr, _val)
+        elif packing_enabled and has_packing:
             value.scale_factor = np.float64(map_value.scale_factor)
             value.add_offset = np.float64(map_value.add_offset)
 

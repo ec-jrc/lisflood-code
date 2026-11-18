@@ -2,6 +2,8 @@
 *.sublime-project
 *.sublime-workspace
 .kiro
+.glm53flash
+.agents
 .bundle
 .DS_Store
 .jekyll-metadata

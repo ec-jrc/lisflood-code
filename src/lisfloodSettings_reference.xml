@@ -68,6 +68,15 @@ You can use builtin path variables in this template and reference to other paths
       <setoption choice="1"  name="writeNetcdfStack"/>
       <setoption choice="1"  name="writeNetcdf"/>
 
+      # option to write map output asynchronously on a thread pool, overlapping
+      # NetCDF disk I/O with the model computation of the next time step
+      # (helps map-heavy runs; default off = historical synchronous writing)
+      <setoption choice="0" name="outputThreads"/>
+
+      # option to prefetch the next NetCDF forcing time chunk in a background
+      # thread while the current one is consumed (needs NetCDFTimeChunks > 1)
+      <setoption choice="0" name="NetCDFTimeChunksPrefetch"/>
+
       # option to Report PaddyRiceDebug information in CSV file for debugging Paddy Rice Water Abstraction issue on dry Channels
 		  <setoption choice="0"  name="repPaddyRiceDebug"/>
 
@@ -225,13 +234,33 @@ You can use builtin path variables in this template and reference to other paths
     </comment>
     </textvar>
 
+    <textvar name="OutputPackingDischarge" value="False">
+    <comment>
+    The option "OutputPackingDischarge" enables LOGARITHMIC int16 packing of the
+    DischargeMaps output only. It is COMPLETELY INDEPENDENT of "OutputPacking":
+    discharge is excluded from the linear scale/offset packing because its global
+    value range spans several orders of magnitude, which a linear int16 encoding
+    cannot represent without unacceptable precision loss.
+        - "False" (default): discharge written as raw floating-point values
+        - "True": pack discharge into signed 16-bit integers in log10 space,
+                  giving near-constant RELATIVE precision across the full range.
+    Encoding (custom, NON-CF attributes written on the variable):
+        stored = round((log10(q) - packing_log_min) / packing_log_scale) + packing_int_offset
+        q      = 10 ** (packing_log_min + packing_log_scale * (stored - packing_int_offset))
+    Resolved range: 0.01 to 500000 m3/s. Discharge below 0.01 m3/s (and zero,
+    negative or missing values) is stored as _FillValue; values above 500000 are
+    clipped. Because this encoding is non-CF, standard readers will NOT auto-unpack
+    it: use the packing_* attributes to invert the transform.
+    </comment>
+    </textvar>
+
         <comment>
             **************************************************************
             PARALLELISATION WITH NUMBA (USED IN ROUTING AND SOILLOOP)
             **************************************************************
         </comment>
 
-		<textvar name="numCPUs_parallelNumba" value="0">
+		<textvar name="numCPUs_parallelNumba" value="auto">
 		<comment>
         !-- Parallelisation of using Numba runtime compiled library .
         The option "numCPUs_parallelNumba" may take the following values:
@@ -239,42 +268,46 @@ You can use builtin path variables in this template and reference to other paths
                               (if NUMBA_NUM_THREADS is not set, will take the number of CPU cores determined by python's multiprocessing.cpu_count())
             - "1"           : serial execution (not parallel)
             - "2", "3", ... : manual setting of the number of parallel threads.
-                              (if exceeding NUMBA_NUM_THREADS, the value is set to NUMBA_NUM_THREADS) -->
+                              (if exceeding NUMBA_NUM_THREADS, the value is set to NUMBA_NUM_THREADS)
+        Value legend (shared by every numCPUs_* setting): absent or "auto" => the
+        automatic policy (the default); "all" or "0" => all available cores;
+        a positive integer => that fixed count. This key governs the LAND-PHASE
+        Numba kernels (soil/vegetation loop, water abstraction, surface routing);
+        its "auto" default is domain-size-aware (serial on small catchments where
+        thread fork/join dominates, all cores on large/global domains). -->
 		</comment>
 		</textvar>
 
-		<textvar name="numCPUs_parallelNumexpr" value="auto">
+		<textvar name="numCPUs_routingNumba" value="auto">
 		<comment>
-        !-- Number of threads used by the numexpr library (vectorized math in
-        the kinematic-wave routing). Small routing arrays on typical catchments
-        gain nothing from the pool and cause oversubscription, whereas on large/
-        global domains all-cores is measurably faster. Values:
-            - "auto"              : domain-size-aware default (recommended):
-                                    serial on small domains, all cores on large
-                                    ones (threshold = numba auto-tune pixels)
-            - "1"                 : force serial
-            - "0" / "all"         : force all available cores
-            - "2", "3", ...       : manual thread count
-        Set this to "1" when an outer tool already runs many LISFLOOD instances
-        in parallel (e.g. lisflood-calibration, one LISFLOOD per DEAP individual)
-        so each instance stays single-core and avoids oversubscription. -->
+        !-- Number of Numba threads used specifically for the channel-routing
+        SUBSTEP kernels (kinematic-wave / Muskingum-Cunge), which run many times
+        per model step. Each substep kernel has a small per-call payload, so
+        beyond a modest thread count the OpenMP fork/join cost dominates and more
+        threads make routing slower. This is capped INDEPENDENTLY of the
+        land-phase pool (numCPUs_parallelNumba), which keeps using all cores.
+        Values:
+            - "auto" (default)    : host-relative cap -- about half the cores,
+                                    clamped to the 8..16 band, and never above
+                                    the land-phase count
+            - "all" / "0"         : all available cores (no routing-specific cap)
+            - "1", "2", ...       : manual thread count for the routing kernels
+        Scheduling only: the routing result is identical for any thread count. -->
 		</comment>
 		</textvar>
 
 		<textvar name="numCPUs_BLAS" value="auto">
 		<comment>
-        !-- Number of threads used by the BLAS/OpenMP backend of numpy/scipy
-        (e.g. the SVD in the soil-hydraulics least-squares fit during
-        initialization). Values:
-            - "auto"              : domain-size-aware default (recommended):
-                                    serial on small domains, all cores on large
-                                    ones (threshold = numba auto-tune pixels)
-            - "1"                 : force serial
-            - "0" / "all"         : force all available cores
-            - "2", "3", ...       : manual thread count
-        Set this to "1" when an outer tool already runs many LISFLOOD instances
-        in parallel (e.g. lisflood-calibration) so each instance stays
-        single-core and avoids oversubscription. -->
+        !-- Number of threads used by the BLAS/OpenMP backend of numpy/scipy.
+        In LISFLOOD, BLAS is used only by the cold-start soil-hydraulics
+        least-squares solve (a scalar per-pixel fit with no matrix algebra) and
+        is idle during the dynamic loop, so extra BLAS threads do not speed the
+        model up; they only oversubscribe against the soil-init process pool.
+        Values (shared legend): absent or "auto" => the automatic policy default,
+        which is a single thread (1); "all" or "0" => all available cores;
+        a positive integer => that fixed count.
+        Leave at "auto" (=1); set a higher value only if a specific BLAS-bound
+        step is known to benefit. -->
 		</comment>
 		</textvar>
 
@@ -283,7 +316,7 @@ You can use builtin path variables in this template and reference to other paths
         !-- Number of worker PROCESSES used for the cold-start soil-layer-2
         saturation solve (a per-pixel scipy least-squares that can dominate
         initialization time on large/global domains). This is process-based
-        parallelism, independent of the numba/numexpr/BLAS thread pools; results
+        parallelism, independent of the numba/BLAS thread pools; results
         are identical regardless of the value. Values:
             - "0" / "all" / "auto": use all available cores (default)
             - "1"                 : serial
@@ -293,6 +326,24 @@ You can use builtin path variables in this template and reference to other paths
         instance must stay single-process to avoid oversubscription. As a
         safeguard, this parallelism auto-disables when LISFLOOD detects it is
         running inside a forked/daemon worker. -->
+		</comment>
+		</textvar>
+
+		<textvar name="modelPrecision" value="float64">
+		<comment>
+        !-- Floating-point precision of the LISFLOOD model state and the
+        kinematic-wave routing kernel. PERFORMANCE/precision lever (separate from the thread settings).
+        Values:
+            - "float64" (default) : historical path; bit-identical to previous
+                                    LISFLOOD versions. Use for calibration and any
+                                    bitwise-reproducibility need.
+            - "float32"           : faster routing kernel (halves its memory
+                                    traffic). NOT bit-identical but stays within the
+                                    LISFLOOD reference tolerance (atol=1e-4,
+                                    rtol=1e-3) on tested catchments. The
+                                    Muskingum-Cunge-Todini (MCT) routing and all
+                                    mass-balance reductions remain float64.
+        An unknown value falls back to "float64" (never silently degrades). -->
 		</comment>
 		</textvar>
 
@@ -411,6 +462,20 @@ You can use builtin path variables in this template and reference to other paths
         </comment>
         </textvar>
 
+        <textvar name="OutputDailyMean" value="">
+        <comment>
+        Semicolon-separated list of variable names to output as daily mean
+        (useful with sub-daily time steps; one value per calendar day).
+        Variables listed here are excluded from normal ReportSteps output.
+        Example: "DischargeMaps;Theta1Maps;UZMaps"
+        Leave empty to disable. Requires netCDF output.
+        </comment>
+        </textvar>
+        <textvar name="OutputDailySum" value="">
+        <comment>
+        See OutputDailyMean
+        </comment>
+        </textvar>
         <textvar name="OutputMonthlyMean" value="">
         <comment>
         Semicolon-separated list of variable names to output as monthly mean.
@@ -1944,9 +2009,10 @@ You can use builtin path variables in this template and reference to other paths
       -->
       <group>
       <textvar name="numCPUs_parallelNumba" value="$(numCPUs_parallelNumba)"/>
-      <textvar name="numCPUs_parallelNumexpr" value="$(numCPUs_parallelNumexpr)"/>
+      <textvar name="numCPUs_routingNumba" value="$(numCPUs_routingNumba)"/>
       <textvar name="numCPUs_BLAS" value="$(numCPUs_BLAS)"/>
       <textvar name="numCPUs_soilInit" value="$(numCPUs_soilInit)"/>
+      <textvar name="modelPrecision" value="$(modelPrecision)"/>
 
       <textvar name="proj4_params" value="$(proj4_params)">
       <comment>
@@ -1957,6 +2023,7 @@ You can use builtin path variables in this template and reference to other paths
       <textvar name="OutputMapsChunks" value="$(OutputMapsChunks)"/>
       <textvar name="OutputMapsDataType" value="$(OutputMapsDataType)"/>
       <textvar name="OutputPacking" value="$(OutputPacking)"/>
+      <textvar name="OutputPackingDischarge" value="$(OutputPackingDischarge)"/>
       <textvar name="NetCDFTimeChunks" value="$(NetCDFTimeChunks)"/>
       <textvar name="MapsCaching" value="$(MapsCaching)"/>
 
@@ -2033,6 +2100,20 @@ You can use builtin path variables in this template and reference to other paths
       </comment>
       </textvar>
 
+      <textvar name="OutputDailyMean" value="$(OutputDailyMean)">
+      <comment>
+      Semicolon-separated list of variable names to output as daily mean
+      (useful with sub-daily time steps; one value per calendar day).
+      Variables listed here are excluded from normal ReportSteps output.
+      Example: "DischargeMaps;Theta1Maps;UZMaps"
+      Leave empty to disable. Requires netCDF output.
+      </comment>
+      </textvar>
+      <textvar name="OutputDailySum" value="$(OutputDailySum)">
+      <comment>
+      See OutputDailyMean
+      </comment>
+      </textvar>
       <textvar name="OutputMonthlyMean" value="$(OutputMonthlyMean)">
       <comment>
       Semicolon-separated list of variable names to output as monthly mean.
@@ -4275,7 +4356,19 @@ You can use builtin path variables in this template and reference to other paths
 
       <textvar name="GwPercUZLZForestMaps" value="$(PathOut)/uz2lzF">
       <comment>
-      Reported percolation from upper to lower zone [mm]
+      Reported percolation from upper to lower zone, forest fraction [mm]
+      </comment>
+      </textvar>
+
+      <textvar name="GwPercUZLZOtherMaps" value="$(PathOut)/uz2lzO">
+      <comment>
+      Reported percolation from upper to lower zone, other fraction [mm]
+      </comment>
+      </textvar>
+
+      <textvar name="GwPercUZLZIrrigationMaps" value="$(PathOut)/uz2lzI">
+      <comment>
+      Reported percolation from upper to lower zone, irrigation fraction [mm]
       </comment>
       </textvar>
 
