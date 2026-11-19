@@ -68,7 +68,7 @@ class Singleton(type):
             new_init_args = []
             for a in init_args:
                 if isinstance(a[1], np.ndarray):
-                    new_init_args.append((a[0], a[1].tostring()))
+                    new_init_args.append((a[0], a[1].tobytes()))
                 else:
                     new_init_args.append(a)
             key = (cls, frozenset(new_init_args))
@@ -102,7 +102,7 @@ class ThreadSingleton(type):
             new_init_args = []
             for a in init_args:
                 if isinstance(a[1], np.ndarray):
-                    new_init_args.append((a[0], a[1].tostring()))
+                    new_init_args.append((a[0], a[1].tobytes()))
                 else:
                     new_init_args.append(a)
             key = (task_id, cls, str(new_init_args))
@@ -887,9 +887,9 @@ class LisfloodRunInfo(Warning):
             import numpy as _np
             _rdt = resolve_model_dtype(binding)
             if _rdt == _np.float32:
-                msg += "\t[X] Model precision: float32 (OPT-IN; default is float64/bit-identical)\n"
+                msg += "\t[X] Model precision: float32\n"
             else:
-                msg += "\t[X] Model precision: float64 (default, bit-identical)\n"
+                msg += "\t[X] Model precision: float64\n"
         except Exception:
             pass
         # Packing and aggregation info
