@@ -102,7 +102,7 @@ class waterbalance(object):
             # CM
             if option['simulateLakes']:
                 # DisStructure += np.where(compressArray(self.var.IsUpsOfStructureLake), 0.5 * self.var.ChanQ * self.var.DtRouting, 0)
-                DisStructure += np.where(compressArray(self.var.IsUpsOfStructureLake), 0.5 * self.var.ChanQAvgDt * self.var.DtRouting, 0)
+                DisStructure += np.where(self.var.IsUpsOfStructureLakeC, 0.5 * self.var.ChanQAvgDt * self.var.DtRouting, 0)
 
                 # DisStructure += cover(ifthen(self.var.IsUpsOfStructureLake,
                 #  0.5 * self.var.ChanQ * self.var.DtRouting), scalar(0.0))
@@ -141,11 +141,7 @@ class waterbalance(object):
         option = settings.options        
         maskinfo = MaskInfo.instance()
 
-        if (not(option['InitLisflood'])) and option['repTotalWaterStorageMaps']:
-            ChannelStoredM3 = self.storage_channel(option)
-            HillslopeStoredM3 = self.storage_hillslope()
-            self.var.TotalWaterStorageMM = (ChannelStoredM3 + HillslopeStoredM3) * self.var.M3toMM
-        
+
         if (not(option['InitLisflood'])) and option['repMBTs']:
 
             # ************************************************************

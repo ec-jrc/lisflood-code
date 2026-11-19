@@ -68,7 +68,7 @@ class Singleton(type):
             new_init_args = []
             for a in init_args:
                 if isinstance(a[1], np.ndarray):
-                    new_init_args.append((a[0], a[1].tostring()))
+                    new_init_args.append((a[0], a[1].tobytes()))
                 else:
                     new_init_args.append(a)
             key = (cls, frozenset(new_init_args))
@@ -102,7 +102,7 @@ class ThreadSingleton(type):
             new_init_args = []
             for a in init_args:
                 if isinstance(a[1], np.ndarray):
-                    new_init_args.append((a[0], a[1].tostring()))
+                    new_init_args.append((a[0], a[1].tobytes()))
                 else:
                     new_init_args.append(a)
             key = (task_id, cls, str(new_init_args))
@@ -144,23 +144,26 @@ class CDFFlags(with_metaclass(Singleton)):
         if out_type == 'end':
             flag = 0
         elif out_type == 'steps':
-            if frequency == 'all':
+            # 'daily' is a temporal-aggregation frequency (MapOutputAggregated);
+            # it manages its own period boundary and always-True checkpoint, so
+            # it reuses the 'all' step counter rather than needing its own flag.
+            if frequency in ('all', 'daily'):
                 flag = 1
             elif frequency == 'monthly':
                 flag = 3
             elif frequency == 'yearly':
                 flag = 4
             else:
-                raise ValueError(f'Output frequency {frequency} not recognised! Valid values are: (all, monthly, yearly)')
+                raise ValueError(f'Output frequency {frequency} not recognised! Valid values are: (all, daily, monthly, yearly)')
         elif out_type == 'all':
-            if frequency == 'all':
+            if frequency in ('all', 'daily'):
                 flag = 2
             elif frequency == 'monthly':
                 flag = 5
             elif frequency == 'yearly':
                 flag = 6
             else:
-                raise ValueError(f'Output frequency {frequency} not recognised! Valid values are: (all, monthly, yearly)')
+                raise ValueError(f'Output frequency {frequency} not recognised! Valid values are: (all, daily, monthly, yearly)')
         else:
             raise ValueError(f'Output type {out_type} not recognised! Valid values are: (end, steps, all)')
        
@@ -200,14 +203,18 @@ class CDFFlags(with_metaclass(Singleton)):
             self.inc(6)
 
     def frequency_check(self, var, frequency):
-        if frequency == 'all':
+        # 'daily' is a temporal-aggregation frequency handled entirely by
+        # MapOutputAggregated (always-True checkpoint + own day boundary), so it
+        # never reaches here via the normal all/steps path; treat it like 'all'
+        # for defensiveness rather than raising.
+        if frequency in ('all', 'daily'):
             check = True
         elif frequency == 'monthly':
             check = var.monthend
         elif frequency == 'yearly':
             check = var.yearend
         else:
-            raise ValueError(f'Output frequency {frequency} not recognised! Valid values are: (all, monthly, yearly)')
+            raise ValueError(f'Output frequency {frequency} not recognised! Valid values are: (all, daily, monthly, yearly)')
         return check
 
 
@@ -245,12 +252,29 @@ class MaskInfo(with_metaclass(Singleton)):
         self.info = self.Info(mask, mask.shape, self.flat, self.flat.shape, self.mask_compressed.shape, self.mask_all)
         self._in_zero = np.zeros(self.mask_compressed.shape)
         self._in_one = np.ones(self.mask_compressed.shape)
+        # dtype of the cached templates; rebuilt lazily if the model dtype changes
+        self._template_dtype = self._in_zero.dtype
         self.maskmap = maskmap
 
+    def _sync_template_dtype(self):
+        """Rebuild the zero/one templates if the model precision (modelPrecision)
+        differs from their current dtype. float64 (default) is a no-op, so the
+        historical behaviour is bit-identical; float32 makes in_zero/in_one emit
+        float32 templates (half the memory traffic, and so the state arrays they
+        seed are born float32)."""
+        from .parallelization import get_model_dtype
+        want = np.dtype(get_model_dtype())
+        if want != self._template_dtype:
+            self._in_zero = np.zeros(self.mask_compressed.shape, dtype=want)
+            self._in_one = np.ones(self.mask_compressed.shape, dtype=want)
+            self._template_dtype = want
+
     def in_zero(self):
+        self._sync_template_dtype()
         return self._in_zero.copy()
 
     def in_one(self):
+        self._sync_template_dtype()
         return self._in_one.copy()
 
     def __iter__(self):
@@ -616,6 +640,10 @@ class LisSettings(with_metaclass(ThreadSingleton)):
         # overwrite defaults
         options.update(option_setting)
         options['nonInit'] = not options['InitLisflood']
+        # Total Water Storage output is only meaningful when at least one
+        # storage/TWS map output is requested. Derived flag lets restrictoption
+        # (pure AND) express "repTWSMaps OR repStorageMaps".
+        options['repTWS'] = options['repTWSMaps'] or options['repStorageMaps']
         return options
 
     def _filter_steps(self, user_settings):
@@ -818,6 +846,7 @@ class LisfloodRunInfo(Warning):
         header = "\n\n ========================== LISFLOOD Simulation Information and Setting =============================\n"
         msg = ''
         settings = LisSettings.instance()
+        binding = settings.binding
         option = settings.options
         out_dir = settings.output_dir
         ens_members = settings.ens_members[0]
@@ -841,6 +870,39 @@ class LisfloodRunInfo(Warning):
         msg += "\t[X] The simulation output as specified in the settings file can be found in {}\n".format(out_dir)
         msg += "\t[X] Activated modules: {}\n".format(activated_options)
         msg += "\t[X] Report options: {}\n".format(activated_rep)
+        # Thread-pool governance (numba/BLAS) plus the soil-init worker
+        # process count. Affects performance only, not results. "all" means every
+        # available core is used.
+        from .parallelization import get_effective_parallelism
+        _par = get_effective_parallelism()
+        if _par is not None:
+            msg += "\t[X] Parallelization: numba={}, routingNumba={}, BLAS={}, soilInit={}, earthkit={}, numbaLayer={} (host cores={})\n".format(
+                _par.get('numba'), _par.get('routing_numba'),
+                _par.get('blas'), _par.get('soilinit'),
+                _par.get('earthkit'),
+                _par.get('numba_threading_layer'), _par.get('host'))
+        # Routing precision (opt-in float32; default float64 == bit-identical).
+        try:
+            from .parallelization import resolve_model_dtype
+            import numpy as _np
+            _rdt = resolve_model_dtype(binding)
+            if _rdt == _np.float32:
+                msg += "\t[X] Model precision: float32\n"
+            else:
+                msg += "\t[X] Model precision: float64\n"
+        except Exception:
+            pass
+        # Packing and aggregation info
+        if binding.get('OutputPacking', 'False') == 'True':
+            msg += "\t[X] Output Packing: int16 scale/offset enabled\n"
+        if binding.get('OutputPackingDischarge', 'False') == 'True':
+            msg += "\t[X] Output Packing (Discharge): int16 log10 encoding enabled\n"
+        for agg_key in ['OutputDailyMean', 'OutputDailySum',
+                        'OutputMonthlyMean', 'OutputMonthlySum',
+                        'OutputYearlyMean', 'OutputYearlySum']:
+            agg_val = binding.get(agg_key, '').strip()
+            if agg_val:
+                msg += "\t[X] {}: {}\n".format(agg_key, agg_val)
         self._msg = '{}{}'.format(header, msg)
 
     def __str__(self):

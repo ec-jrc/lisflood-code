@@ -18,10 +18,12 @@ class TestTSSResults():
     case_dir = os.path.join(os.path.dirname(__file__), 'data', 'LF_ETRS89_UseCase')
 
     def run_mct(self, date_start, date_end, dtsec, dtsec_chan, type):
-        mk_path_out(os.path.join(self.case_dir, 'out'))
+        os.makedirs(os.path.join(self.case_dir, 'out'), exist_ok=True)
         # generate lisflood results
         out_path_ref = os.path.join(self.case_dir, 'reference', 'output_reference_mct_'+type)
-        self.out_path_run = os.path.join(self.case_dir, 'out', 'output_mct_'+type)
+        # Capture the (worker-scoped under xdist) path from mk_path_out and use it
+        # for PathOut so the created dir and the LISFLOOD output dir match.
+        self.out_path_run = mk_path_out(os.path.join(self.case_dir, 'out', 'output_mct_'+type))
         settings_file = os.path.join(self.case_dir, 'settings', 'mct_cold.xml')
         if "_calib" in type:
             opt_to_set = ['MCTRouting', 'TransLoss', 'simulateCalibrationPoints']
@@ -83,10 +85,10 @@ class TestTSSResults():
         comparator.compare_files(reference, output_tss)
 
     def run_mcts(self, date_start, date_end, dtsec, dtsec_chan, type):
-        mk_path_out(os.path.join(self.case_dir, 'out'))
+        os.makedirs(os.path.join(self.case_dir, 'out'), exist_ok=True)
         # generate lisflood results
         out_path_ref = os.path.join(self.case_dir, 'reference', 'output_reference_mcts_'+type)
-        self.out_path_run = os.path.join(self.case_dir, 'out', 'output_mcts_'+type)
+        self.out_path_run = mk_path_out(os.path.join(self.case_dir, 'out', 'output_mcts_'+type))
         settings_file = os.path.join(self.case_dir, 'settings', 'mct_cold.xml')
         if "_calib" in type:
             opt_to_set = ['MCTRouting', 'SplitRouting', 'simulateCalibrationPoints']
@@ -155,10 +157,10 @@ class TestTSSResults():
         comparator.compare_files(reference, output_tss)
 
     def run_kin(self, date_start, date_end, dtsec, dtsec_chan, type):
-        mk_path_out(os.path.join(self.case_dir, 'out'))
+        os.makedirs(os.path.join(self.case_dir, 'out'), exist_ok=True)
         # generate lisflood results
         out_path_ref = os.path.join(self.case_dir, 'reference', 'output_reference_kin_'+type)
-        self.out_path_run = os.path.join(self.case_dir, 'out', 'output_kin_'+type)
+        self.out_path_run = mk_path_out(os.path.join(self.case_dir, 'out', 'output_kin_'+type))
         settings_file = os.path.join(self.case_dir, 'settings', 'mct_cold.xml')
         settings = setoptions(settings_file,
                               opts_to_set=['TransLoss'],
@@ -210,10 +212,10 @@ class TestTSSResults():
         comparator.compare_files(reference, output_tss)
 
     def run_split(self, date_start, date_end, dtsec, dtsec_chan, type):
-        mk_path_out(os.path.join(self.case_dir, 'out'))
+        os.makedirs(os.path.join(self.case_dir, 'out'), exist_ok=True)
         # generate lisflood results
         out_path_ref = os.path.join(self.case_dir, 'reference', 'output_reference_split_'+type)
-        self.out_path_run = os.path.join(self.case_dir, 'out', 'output_split_'+type)
+        self.out_path_run = mk_path_out(os.path.join(self.case_dir, 'out', 'output_split_'+type))
         settings_file = os.path.join(self.case_dir, 'settings', 'mct_cold.xml')
         settings = setoptions(settings_file,
                               opts_to_set = ['SplitRouting'],
@@ -269,8 +271,10 @@ class TestTSSResults():
 
     def teardown_method(self):
         print('Cleaning directories')
-        out_path = os.path.join(self.case_dir, 'out')
-        if os.path.exists(out_path) and os.path.isdir(out_path):
+        # Remove only the subfolder this test created, not the shared 'out/'
+        # directory, so tests running afterwards still find 'out/' in place.
+        out_path = getattr(self, 'out_path_run', None)
+        if out_path and os.path.exists(out_path) and os.path.isdir(out_path):
             shutil.rmtree(out_path, ignore_errors=True)
 
 

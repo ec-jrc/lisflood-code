@@ -61,7 +61,7 @@ Output time series can be classified in the following categories:
 | infiltration                                                 | $\frac{mm}{timestep}$      | InfiltrationAvUpsTS    | infiltrationUps.tss    |
 | preferential (bypass) flow                                   | $\frac{mm}{timestep}$      | PrefFlowAvUpsTS        | prefFlowUps.tss        |
 | percolation upper to lower soil layer                        | $\frac{mm}{timestep}$      | PercolationAvUpsTS     | dTopToSubUps.tss       |
-| percolation lower soil layer to subsoil                      | $\frac{mm}{timestep}$      | SeepSubToGWAvUpsTS     | dSubToUzUps.tss        |
+| percolation lower soil layer to Upper Zone                   | $\frac{mm}{timestep}$      | SeepSubToGWAvUpsTS     | dSubToUzUps.tss        |
 | surface runoff                                               | $\frac{mm}{timestep}$      | SurfaceRunoffAvUpsTS   | surfaceRunoffUps.tss   |
 | outflow from upper zone                                      | $\frac{mm}{timestep}$      | UZOutflowAvUpsTS       | qUzUps.tss             |
 | outflow from lower zone                                      | $\frac{mm}{timestep}$      | LZOutflowAvUpsTS       | qLzUps.tss             |
@@ -148,7 +148,9 @@ To speed up the pre-run and to prevent that results are taken from the pre-run, 
 | storage in lower groundwater zone       | repLZMaps              | $mm$                       | LZMaps                           | lz      |
 | number of days since last rain          | repDSLRMaps            | $days$                     | DSLRMaps <br> DSLRForestMaps                       | dslr <br> dslF  |
 | frost index                             | repFrostIndexMaps      | $\frac{°C}{days}$          | FrostIndexMaps                                     | frost           |
-| Total Water Storage                             | repTotalWaterStorageMaps      | $mm$          | TotalWaterStorageMaps                                     | tws           |
+| Total Water Storage                             | repTWSMaps      | $m$          | TWSMaps                                     | TotalWS           |
+| Individual Water Storage Compartments           | repStorageMaps  | $m$          | LakeSMaps <br> RiverSMaps <br> SoilSMaps <br> GWSMaps <br> SnowSMaps <br> CumSMaps | Lakestor <br> Riverstor <br> Soilstor <br> GWstor <br> Snowstor <br> Cumstor          |
+| Flow Momentum                           | repFlowMomMaps  | $\frac{kgm}{s}$          | FlowMomMaps                                 | FlowMomentum  |
 | **RATE VARIABLES**                 |                        |                            |                                                    |                 |
 | rain (excluding snow)                   | repRainMaps            | $\frac{mm}{timestep}$      | RainMaps                                           | rain            |
 | snow                                    | repSnowMaps            | $\frac{mm}{timestep}$      | SnowMaps                                           | snow            |
@@ -157,7 +159,7 @@ To speed up the pre-run and to prevent that results are taken from the pre-run, 
 | actual transpiration                    | repTaMaps              | $\frac{mm}{timestep}$      | TaMaps                                             | tact            |
 | rainfall interception                   | repInterceptionMaps    | $\frac{mm}{timestep}$      | InterceptionMaps <br> InterceptionForestMaps                                   | int <br> intF            |
 | evaporation of intercepted water        | repEWIntMaps           | $\frac{mm}{timestep}$      | EWIntMaps                                          | ewint           |
-| leaf drainage                           | repLeafDrainageMaps    | $\frac{mm}{timestep}$      | LeafDrainageMaps <br> LeafDrainageForestMaps                                   | ldra <br> draF            |
+| leaf drainage                           | repLeafDrainageMaps    | $\frac{mm}{timestep}$      | LeafDrainageMaps <br> LeafDrainageForestMaps                     no              | ldra <br> draF            |
 | infiltration                            | repInfiltrationMaps    | $\frac{mm}{timestep}$      | InfiltrationMaps <br> InfiltrationForestMaps                                   | inf <br> infF             |
 | preferential (bypass) flow              | repPrefFlowMaps        | $\frac{mm}{timestep}$      | PrefFlowMaps <br> PrefFlowtherMaps <br> PrefFlowForestMaps <br> PrefFlowIrrigationMaps                                       | pflowpixel <br> pflow <br> pflowF <br> pflowi           |
 | percolation upper to lower soil layer   | repPercolationMaps     | $\frac{mm}{timestep}$      | Percolation1ato1bOtherMaps <br> Percolation1to1bForestMaps <br> Percolation1ato1bIrrigationMaps <br> Percolation1bto2OtherMaps <br> Percolation1bto2ForestMaps <br> Percolation1bto2IrrigationMaps                                    | Percolation1ato1bOther <br> Percolation1ato1bForest <br> Percolation1to2Irrigation <br> Percolation1bto2Other <br> Percolation1bto2Forest <br> Percolation1bto2Irrigation           |
@@ -181,8 +183,9 @@ The users should be aware that some state maps are generated only if the relevan
 
 **Note**
 
-Some cumulative storages and volumes are computed internally by LISFLOOD. Some relevant example is described below:
-- Total Water Storage is the total water volume stored in channels, lakes, reservoirs, snow cover, sealed surfaces depressions, surface runoff, canopy interception, upper and lower groundwater zones. 
+Some cumulative storages and volumes are computed internally by LISFLOOD. Some relevant examples are described below:
+- Total Water Storage is the total water mass (expressed in equivalent water height) stored in channels, lakes, reservoirs, all soil layers, snow cover, sealed surfaces depressions, surface runoff, canopy interception, uppper and lower groundwater zones. Using the option "repStorageMaps" outputs the individual storage compartments (Rivers, Lakes/Reservoirs, Soil, Groundwater, Snow, Interception storage) which add up to TWS ("repTWSMaps"). For the computation of mass stored in lakes and reservoirs (i.e. "simulateLakes" and/or "simulateReservoirs" is set to 1), the initial LISFLOOD output of lake levels centered at the outlet location are distributed over the actual extents of the lakes/reservoirs, which requires two additional input maps when using the options "repTWSMaps" and "repStorageMaps" (see [Reservoirs and lakes](../4_Static-Maps_reservoirs-lakes/)).
+- Flow Momentum is the product of flow velocity and river mass, which is needed for special applications, e.g. the computation of Earth rotation excitation functions. 
 - Surface runoff is the sum of direct runoff (from sealed and water fractions) and runoff generated by the pervious land cover fractions (forest, irrigation, other).
 - Total runoff is the sum of surface runoff and sub-surface runoff. Sub-surface runoff is the outflow from upper and lower groundwater zones.
 

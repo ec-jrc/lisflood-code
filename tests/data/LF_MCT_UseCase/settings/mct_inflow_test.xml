@@ -160,7 +160,10 @@ You can use builtin path variables in this template and reference to other paths
         <setoption choice="0" name="repTotalAbs"/>
         <setoption choice="0" name="repTotalWUse"/>
         <setoption choice="0" name="repWIndex"/> 
-
+        
+        <setoption choice="0" name="repTWSMaps"/>
+        <setoption choice="0" name="repStorageMaps"/>
+        <setoption choice="0" name="repFlowMomMaps"/>
     </lfoptions>
 
     <lfuser>
@@ -3587,12 +3590,6 @@ LFBINDING: MORE LOW-LEVEL CONTROL OVER MODEL IN- AND OUTPUT
                         Reported storage in lower response box [mm]
                     </comment>
                 </textvar>
-
-				<textvar name="TotalWaterStorageMaps" value="$(PathOut)/tws">
-					<comment>
-						Reported total water storage [mm]
-					</comment>
-				</textvar>
 
                 <textvar name="DSLRMaps" value="$(PathOut)/dslr">
                     <comment>

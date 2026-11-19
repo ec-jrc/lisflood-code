@@ -42,7 +42,7 @@ jobs:
     - name: Install lisflood-module
       shell: bash -el {0}
       run: |
-        pip install .
+        pip install .[test]
     - name: Check installation
       shell: bash -el {0}
       run: |
@@ -52,5 +52,4 @@ jobs:
     - name: Test with pytest
       shell: bash -el {0}
       run: |
-        pip install pytest pytest-cov
         pytest -m "slow or not slow"

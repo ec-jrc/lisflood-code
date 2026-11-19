@@ -25,7 +25,6 @@ COPY src/lisflood/. /lisflood/
 COPY src/lisf1.py /
 COPY src/lisfloodSettings_reference.xml /
 COPY LICENSE /
-COPY VERSION /
 
 # RUN Tests
 COPY tests/. /tests/

@@ -9,16 +9,23 @@ from lisfloodutilities.compare.nc import NetCDFComparator
 from lisflood.main import lisfloodexe
 from lisflood.global_modules.settings import LisSettings
 
-from .test_utils import setoptions, mk_path_out, ETRS89TestCase
+from .test_utils import setoptions, mk_path_out, ETRS89TestCase, worker_out
 
 
 class TestChunking(ETRS89TestCase):
     case_dir = os.path.join(os.path.dirname(__file__), 'data', 'LF_ETRS89_UseCase')
     settings_file = os.path.join(case_dir, 'settings', 'full.xml')
-    out_dir_a = os.path.join(case_dir, 'out', 'a')
-    out_dir_b = os.path.join(case_dir, 'out', 'b')
-    out_dir_c = os.path.join(case_dir, 'out', 'c')
-    out_dir_d = os.path.join(case_dir, 'out', 'd')
+    # Output dirs are isolated per xdist worker (worker_out -> 'out/<gwN>/a' in
+    # parallel, 'out/a' serially) so concurrent test files do not clobber each
+    # other's shared 'out/a'..'out/d'.
+    out_dir_a = os.path.join(case_dir, worker_out('a'))
+    out_dir_b = os.path.join(case_dir, worker_out('b'))
+    out_dir_c = os.path.join(case_dir, worker_out('c'))
+    out_dir_d = os.path.join(case_dir, worker_out('d'))
+    pathout_a = '$(PathRoot)/' + worker_out('a')
+    pathout_b = '$(PathRoot)/' + worker_out('b')
+    pathout_c = '$(PathRoot)/' + worker_out('c')
+    pathout_d = '$(PathRoot)/' + worker_out('d')
 
     def test_chunking_24h(self):
       dt_sec = 86400
@@ -32,7 +39,7 @@ class TestChunking(ETRS89TestCase):
         
         settings_a = setoptions(self.settings_file,
                                 vars_to_set={'StepStart': '30/07/2016 06:00', 'StepEnd': '01/09/2016 06:00',
-                                             'DtSec': dt_sec, 'PathOut': '$(PathRoot)/out/a',
+                                             'DtSec': dt_sec, 'PathOut': self.pathout_a,
                                              'NetCDFTimeChunks': '1'})
         mk_path_out(self.out_dir_a)
         lisfloodexe(settings_a)
@@ -41,7 +48,7 @@ class TestChunking(ETRS89TestCase):
 
         settings_b = setoptions(self.settings_file,
                                 vars_to_set={'StepStart': '30/07/2016 06:00', 'StepEnd': '01/09/2016 06:00',
-                                             'DtSec': dt_sec, 'PathOut': '$(PathRoot)/out/b',
+                                             'DtSec': dt_sec, 'PathOut': self.pathout_b,
                                              'NetCDFTimeChunks': '10'})
         mk_path_out(self.out_dir_b)
         lisfloodexe(settings_b)
@@ -50,7 +57,7 @@ class TestChunking(ETRS89TestCase):
 
         settings_c = setoptions(self.settings_file,
                                 vars_to_set={'StepStart': '30/07/2016 06:00', 'StepEnd': '01/09/2016 06:00',
-                                             'DtSec': dt_sec, 'PathOut': '$(PathRoot)/out/c',
+                                             'DtSec': dt_sec, 'PathOut': self.pathout_c,
                                              'NetCDFTimeChunks': 'auto'})
         mk_path_out(self.out_dir_c)
         lisfloodexe(settings_c)
@@ -59,7 +66,7 @@ class TestChunking(ETRS89TestCase):
 
         settings_d = setoptions(self.settings_file,
                                 vars_to_set={'StepStart': '30/07/2016 06:00', 'StepEnd': '01/09/2016 06:00',
-                                             'DtSec': dt_sec, 'PathOut': '$(PathRoot)/out/d',
+                                             'DtSec': dt_sec, 'PathOut': self.pathout_d,
                                              'NetCDFTimeChunks': '-1'})
         mk_path_out(self.out_dir_d)
         lisfloodexe(settings_d)
@@ -72,3 +79,70 @@ class TestChunking(ETRS89TestCase):
         shutil.rmtree(self.out_dir_b, ignore_errors=True)
         shutil.rmtree(self.out_dir_c, ignore_errors=True)
         shutil.rmtree(self.out_dir_d, ignore_errors=True)
+
+
+class TestChunkingPrefetch(ETRS89TestCase):
+    """Bit-identity gate for the opt-in NetCDFTimeChunksPrefetch background
+    chunk prefetch: outputs must be identical to the synchronous path for the
+    same NetCDFTimeChunks setting."""
+
+    case_dir = os.path.join(os.path.dirname(__file__), 'data', 'LF_ETRS89_UseCase')
+    settings_file = os.path.join(case_dir, 'settings', 'full.xml')
+    # Output dirs are isolated per xdist worker so concurrent test files do
+    # not clobber each other's shared 'out/a'..'out/d'.
+    out_dir_a = os.path.join(case_dir, worker_out('pa'))
+    out_dir_b = os.path.join(case_dir, worker_out('pb'))
+    out_dir_c = os.path.join(case_dir, worker_out('pc'))
+    pathout_a = '$(PathRoot)/' + worker_out('pa')
+    pathout_b = '$(PathRoot)/' + worker_out('pb')
+    pathout_c = '$(PathRoot)/' + worker_out('pc')
+
+    def test_prefetch_24h(self):
+      self.run_lisflood_prefetch(86400)
+
+    @pytest.mark.slow
+    def test_prefetch_6h(self):
+      self.run_lisflood_prefetch(21600)
+
+    def run_lisflood_prefetch(self, dt_sec):
+
+        # reference: chunked load, synchronous (historical behaviour)
+        settings_a = setoptions(self.settings_file,
+                                vars_to_set={'StepStart': '30/07/2016 06:00', 'StepEnd': '01/09/2016 06:00',
+                                             'DtSec': dt_sec, 'PathOut': self.pathout_a,
+                                             'NetCDFTimeChunks': '10'})
+        mk_path_out(self.out_dir_a)
+        lisfloodexe(settings_a)
+        comparator = NetCDFComparator(settings_a.maskpath, array_equal=True)
+        out_a = settings_a.output_dir
+
+        # same chunking WITH background prefetch: must be bit-identical
+        settings_b = setoptions(self.settings_file,
+                                opts_to_set='NetCDFTimeChunksPrefetch',
+                                vars_to_set={'StepStart': '30/07/2016 06:00', 'StepEnd': '01/09/2016 06:00',
+                                             'DtSec': dt_sec, 'PathOut': self.pathout_b,
+                                             'NetCDFTimeChunks': '10'})
+        mk_path_out(self.out_dir_b)
+        lisfloodexe(settings_b)
+        out_b = settings_b.output_dir
+        comparator.compare_dirs(out_a, out_b)
+
+        # edge case: prefetch enabled with NetCDFTimeChunks=1 (a chunk per
+        # step): the scheduling window is never hit, so the loader falls
+        # back to the synchronous path
+        settings_c = setoptions(self.settings_file,
+                                opts_to_set='NetCDFTimeChunksPrefetch',
+                                vars_to_set={'StepStart': '30/07/2016 06:00', 'StepEnd': '01/09/2016 06:00',
+                                             'DtSec': dt_sec, 'PathOut': self.pathout_c,
+                                             'NetCDFTimeChunks': '1'})
+        mk_path_out(self.out_dir_c)
+        lisfloodexe(settings_c)
+        out_c = settings_c.output_dir
+        comparator.compare_dirs(out_a, out_c)
+
+    def teardown_method(self):
+        print('Cleaning directories')
+        shutil.rmtree(self.out_dir_a, ignore_errors=True)
+        shutil.rmtree(self.out_dir_b, ignore_errors=True)
+        shutil.rmtree(self.out_dir_c, ignore_errors=True)
+

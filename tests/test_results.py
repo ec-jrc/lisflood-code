@@ -30,7 +30,8 @@ from .test_utils import setoptions, mk_path_out, ETRS89TestCase
 @pytest.mark.slow
 class TestCatch(ETRS89TestCase):
     case_dir = os.path.join(os.path.dirname(__file__), 'data', 'LF_ETRS89_UseCase')
-    mk_path_out(os.path.join(case_dir, 'out'))
+    # Ensure the shared 'out/' exists without wiping it (would clobber other tests).
+    os.makedirs(os.path.join(case_dir, 'out'), exist_ok=True)
 
     modules_to_set = (
         'SplitRouting',
@@ -64,7 +65,7 @@ class TestCatch(ETRS89TestCase):
                               opts_to_set=('repDischargeTs', 'repDischargeMaps',
                                             "repThetaMaps", "repThetaForestMaps",
                                             "repThetaIrrigationMaps", "repE2O2",
-                                            "repTotalWaterStorageMaps") + self.modules_to_set,
+                                            "repTWSMaps", "repStorageMaps", "repFlowMomMaps") + self.modules_to_set,
                               opts_to_unset=opts_to_unset,
                               vars_to_set={'StepStart': step_start,
                                            'StepEnd': step_end,
@@ -72,7 +73,7 @@ class TestCatch(ETRS89TestCase):
                                            'PathOut': output_dir})
         mk_path_out(output_dir)
         lisfloodexe(settings)
-
+        
     def test_output_daily(self):
         self.run('86400', '02/01/2016 06:00', '02/07/2016 06:00')
         self.compare_reference('dis', check='map', step_length='86400')
@@ -85,7 +86,21 @@ class TestCatch(ETRS89TestCase):
         self.compare_reference('tha', check='map', step_length='86400')
         self.compare_reference('thc', check='map', step_length='86400')
         self.compare_reference('lz', check='map', step_length='86400')
-        self.compare_reference('tws', check='map', step_length='86400')
+        self.compare_reference('TotalWS', check='map', step_length='86400')
+        self.compare_reference('GWstor', check='map', step_length='86400')
+        self.compare_reference('Soilstor', check='map', step_length='86400')
+        self.compare_reference('Riverstor', check='map', step_length='86400')
+        self.compare_reference('Lakestor', check='map', step_length='86400')
+        self.compare_reference('Snowstor', check='map', step_length='86400')
+        self.compare_reference('Cumstor', check='map', step_length='86400')
+        # FlowMomentum = area*length*1000*velocity reaches ~1e6-1e9 kgm/s. The
+        # comparator checks the absolute diff against zero (rtol collapses to 0
+        # against a zero target), so a tiny relative perturbation from float
+        # rounding in the numba water-demand kernels shows up as a large absolute
+        # diff. Measured max abs diff ~0.6 kgm/s daily / ~1.0 kgm/s 6h (max relative
+        # diff ~1.5e-5); atol=5.0 clears both with margin (still ~3e-6 relative to
+        # the field median) while catching any real regression.
+        self.compare_reference('FlowMomentum', check='map', step_length='86400', atol=5.0, rtol=1e-4)
 
     def test_output_6h(self):
         self.run('21600', '02/01/2016 06:00', '02/07/2016 06:00')
@@ -99,7 +114,17 @@ class TestCatch(ETRS89TestCase):
         self.compare_reference('tha', check='map', step_length='21600')
         self.compare_reference('thc', check='map', step_length='21600')
         self.compare_reference('lz', check='map', step_length='21600')
-        self.compare_reference('tws', check='map', step_length='21600')
+        self.compare_reference('TotalWS', check='map', step_length='21600')
+        self.compare_reference('GWstor', check='map', step_length='21600')
+        self.compare_reference('Soilstor', check='map', step_length='21600')
+        self.compare_reference('Riverstor', check='map', step_length='21600')
+        self.compare_reference('Lakestor', check='map', step_length='21600')
+        self.compare_reference('Snowstor', check='map', step_length='21600')
+        self.compare_reference('Cumstor', check='map', step_length='21600')
+        # See test_output_daily: FlowMomentum magnitude (~1e6-1e9 kgm/s) makes the
+        # absolute-diff check hypersensitive; measured max abs diff ~1.0 kgm/s at 6h
+        # (relative ~1.5e-5), so atol=5.0 stays far below any real regression.
+        self.compare_reference('FlowMomentum', check='map', step_length='21600', atol=5.0, rtol=1e-4)
 
     def test_initvars(self):
         output_dir = mk_path_out(os.path.join(self.case_dir, 'out/test_results_initvars'))

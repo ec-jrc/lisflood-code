@@ -28,7 +28,7 @@ from lisfloodutilities.compare.pcr import TSSComparator
 
 from lisflood.main import lisfloodexe
 
-from .test_utils import setoptions, mk_path_out
+from .test_utils import setoptions, mk_path_out, worker_out
 
 
 class TestWarmStart():
@@ -110,7 +110,9 @@ class TestWarmStart():
 
         check_every = 13  # steps
 
-        self.path_out_reference = os.path.join(self.case_dir, 'out', 'longrun_reference{}'.format(dt_sec))
+        # mk_path_out returns the (per-xdist-worker) scoped path; use it for PathOut
+        # so the created dir and the LISFLOOD output dir stay in sync under parallel runs.
+        self.path_out_reference = mk_path_out(os.path.join(self.case_dir, 'out', 'longrun_reference{}'.format(dt_sec)))
 
         if mct_case == 'mct':
             opts_to_set = ['repStateMaps','TransLoss']
@@ -141,8 +143,7 @@ class TestWarmStart():
                                                    'DtSec': dt_sec,
                                                    'DtSecChannel': dt_sec_channel,
                                                    'TransSub': 0.3})
-        # ** execute
-        mk_path_out(self.path_out_reference)
+        # ** execute (path already created by mk_path_out above)
         lisfloodexe(settings_longrun)
 
 
@@ -150,7 +151,7 @@ class TestWarmStart():
         run_number = 1
         cold_start_step_end = step_start
 
-        self.path_out = os.path.join(self.case_dir, 'out', 'run{}_{}'.format(dt_sec, run_number))
+        self.path_out = mk_path_out(os.path.join(self.case_dir, 'out', 'run{}_{}'.format(dt_sec, run_number)))
 
         settings_coldstart = setoptions(self.settings_files['cold'],
                                         opts_to_set=opts_to_set,
@@ -163,8 +164,7 @@ class TestWarmStart():
                                                         'DtSec': dt_sec,
                                                         'DtSecChannel': dt_sec_channel,
                                                         'TransSub': 0.3})
-        # ** execute
-        mk_path_out(self.path_out)
+        # ** execute (path already created by mk_path_out above)
         lisfloodexe(settings_coldstart)
 
         # warm run (2. single step warm start/stop with initial conditions from previous run)
@@ -188,7 +188,7 @@ class TestWarmStart():
         while warm_step_start <= step_limit:
             run_number += 1
             path_init = prev_settings.output_dir
-            self.path_out = (os.path.join(self.case_dir, 'out', 'run{}_{}'.format(dt_sec, run_number)))
+            self.path_out = mk_path_out(os.path.join(self.case_dir, 'out', 'run{}_{}'.format(dt_sec, run_number)))
 
             settings_warmstart = setoptions(self.settings_files[warm_settings_file],
                                             opts_to_set=opts_to_set,
@@ -203,8 +203,7 @@ class TestWarmStart():
                                                             'DtSec': dt_sec,
                                                             'DtSecChannel': dt_sec_channel,
                                                             'TransSub': 0.3})
-            # ** execute
-            mk_path_out(self.path_out)
+            # ** execute (path already created by mk_path_out above)
             lisfloodexe(settings_warmstart)
 
             # checking values at current timestep (using datetime)
@@ -232,7 +231,10 @@ class TestWarmStart():
 
     def teardown_method(self):
         print('Cleaning directories')
-        folders_list = glob.glob(os.path.join(os.path.dirname(__file__), self.case_dir, 'out/run*')) + \
-            glob.glob(os.path.join(os.path.dirname(__file__), self.case_dir, 'out/longrun_reference*')) 
+        # Clean only this worker's output subtree (worker_out() -> 'out' serially,
+        # 'out/<gwN>' under xdist) to avoid removing another worker's dirs.
+        base = os.path.join(os.path.dirname(__file__), self.case_dir, worker_out())
+        folders_list = glob.glob(os.path.join(base, 'run*')) + \
+            glob.glob(os.path.join(base, 'longrun_reference*'))
         for folder in folders_list:
             shutil.rmtree(folder)

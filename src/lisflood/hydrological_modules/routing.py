@@ -34,6 +34,7 @@ from .mct import MCTWave
 from ..global_modules.settings import LisSettings, MaskInfo
 from ..global_modules.errors import LisfloodWarning
 from ..global_modules.add1 import loadmap, loadmap_base, compressArray, decompress
+from ..global_modules.parallelization import resolve_model_dtype
 from . import HydroModule
 
 
@@ -548,9 +549,13 @@ class routing(HydroModule):
         # Initialise parallel kinematic wave router: main channel-only routing if self.var.ChannelAlpha2 is None; else split-routing(main channel + floodplains)
         # Initialization includes LDD for kinematic routing
         maskinfo = MaskInfo.instance()
+        # Routing precision (opt-in float32); default resolves to float64 = unchanged.
+        self.var.model_dtype = resolve_model_dtype(settings.binding)
+        self.var.routing_dtype = self.var.model_dtype
         self.river_router = kinematicWave(compressArray(self.var.LddKinematic), ~maskinfo.info.mask, self.var.ChannelAlpha,
                                            self.var.Beta, self.var.ChanLength, self.var.DtRouting,
-                                          alpha_floodplains=self.var.ChannelAlpha2, flagnancheck=flags['nancheck'])
+                                          alpha_floodplains=self.var.ChannelAlpha2, flagnancheck=flags['nancheck'],
+                                          routing_dtype=self.var.routing_dtype)
 
         # ************************************************************
         # ***** WATER BALANCE                             ************
@@ -581,7 +586,7 @@ class routing(HydroModule):
                 if option['simulateLakes']:
                    self.var.StorageStepINIT += self.var.LakeStorageIniM3
                    # DisStructure += np.where(compressArray(self.var.IsUpsOfStructureLake), 0.5 * self.var.ChanQ * self.var.DtRouting, 0) #cm22-1
-                   DisStructure += np.where(compressArray(self.var.IsUpsOfStructureLake), 0.5 * self.var.ChanQAvgDt * self.var.DtRouting, 0)
+                   DisStructure += np.where(self.var.IsUpsOfStructureLakeC, 0.5 * self.var.ChanQAvgDt * self.var.DtRouting, 0)
                 self.var.DischargeM3StructuresIni = np.take(np.bincount(self.var.Catchments, weights=DisStructure), self.var.Catchments)
            else:
                 # self.var.StorageStepINIT= self.var.ChanM3Kin+self.var.Chan2M3Kin-self.var.Chan2M3Start
@@ -611,7 +616,7 @@ class routing(HydroModule):
             maskinfo = MaskInfo.instance()
 
             # self.var.IsChannelKinematicPcr = (self.var.IsChannelPcr == 1) & (self.var.IsChannelMCTPcr == 0)  #pcr
-            # self.var.IsChannelKinematic = np.bool8(compressArray(self.var.IsChannelKinematicPcr))   #np
+            # self.var.IsChannelKinematic = np.bool(compressArray(self.var.IsChannelKinematicPcr))   #np
             # # Identify channel pixels where Kinematic wave is used instead of MCT
 
             self.var.LddMCT = lddmask(self.var.LddChan, self.var.IsChannelMCTPcr)  #pcr
@@ -1032,8 +1037,8 @@ class routing(HydroModule):
 
             # Legacy
             # TotalCrossSectionArea = np.maximum(self.var.ChanM3Kin * self.var.InvChanLength, 0.01)
-            TotalCrossSectionArea = np.maximum(self.var.ChanM3 * self.var.InvChanLength, 0.01)
-            self.var.FlowVelocity = np.minimum(self.var.ChanQKin/TotalCrossSectionArea, 0.36*self.var.ChanQKin**0.24)
+            tmpLocalVarTotalCrossSectionArea = np.maximum(self.var.ChanM3 * self.var.InvChanLength, 0.01)  # added prefix tmpLocalVar to avoid confusion with self.var.TotalCrossSectionArea
+            self.var.FlowVelocity = np.minimum(self.var.ChanQKin/tmpLocalVarTotalCrossSectionArea, 0.36*self.var.ChanQKin**0.24)
             # Channel velocity (m/s); dividing Q (m3/s) by CrossSectionArea (m2)
             # avoid extreme velocities by using the Wollheim 2006 equation
             # assume 0.1 for upstream areas (outside ChanLdd)
@@ -1043,6 +1048,12 @@ class routing(HydroModule):
             # if flow is fast, Traveltime=1, TravelDistance is high: Pixellength*DtSec
             # if flow is slow, Traveltime=DtSec then TravelDistance=PixelLength
             # maximum set to 30km/day for 5km cell, is at DtSec/Traveltime=6, is at Traveltime<DtSec/6
+
+            ####### added by Robert Dill, 2025/03/13
+            # calculate momentum map flow velocity * rivermass [kgm/s]
+            if option["repFlowMomMaps"]:
+                self.var.FlowMomentum = self.var.TotalCrossSectionArea * self.var.ChanLength * 1000 * self.var.FlowVelocity
+            #######
 
 
     def KinRouting(self,SideflowChan):
