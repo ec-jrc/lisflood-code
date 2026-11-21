@@ -205,6 +205,11 @@ setup(
     # These entries cover the file-based installs that pyproject cannot express.
     data_files=[('settings', ['src/lisfloodSettings_reference.xml'])],
     scripts=['bin/lisflood'],
+    entry_points={
+        'console_scripts': [
+            'lisflood-settings=lisflood.settings_tool:main',
+        ],
+    },
     zip_safe=True,
     cmdclass={
         'upload': UploadCommand,
